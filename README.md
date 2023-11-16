@@ -1,58 +1,115 @@
-# create-svelte
+# Svelte UI Components
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This library provides a collection of reusable UI components built with [Svelte](https://svelte.dev/).
 
-Read more about creating a library [in the docs](https://kit.svelte.dev/docs/packaging).
+## Installation
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+This library is publish on npm & can be installed via any npm client.
+Use the following command to install the library.
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+npm install @juspay/svelte-ui-components
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+## Usage
 
-## Building
+The library contains a collection of components that can be imported & used in your svelte project.
 
-To build your library:
+### Available components
 
-```bash
-npm run package
+- Accordion
+- Badge
+- Banner
+- Brand Loader (aka Splash Screen )
+- Button
+- Carousel
+- Checkbox / Checklist Item
+- Icon
+- Input
+- Input with attached Button
+- List Item
+- Loader
+- Modal
+- Select
+- Status Screen
+- Table
+- Toggle
+- Toolbar
+
+All of the components can be easily imported from the 'svelte-ui-components' package.
+
+#### Example: Importing component from the package
+
+```svelte
+<script>
+  import { Button } from '@juspay/svelte-ui-components';
+</script>
+
+<Button>Click me</Button>
 ```
 
-To create a production version of your showcase app:
+### Customizing the components
 
-```bash
-npm run build
-```
+Each component comes with a set of configuration options that can be used to customize the component.
+There are two ways to customize the component.
 
-You can preview the production build with `npm run preview`.
+1. Using css variables:
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+   - All the components have exposed css variables for all the properties available.
+   - The css variables can be used to customize the component.
 
-## Publishing
+2. Using props:
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
+   - All the components have exposed props for dynamic values/variables.
+   - The props can be used to customize the component.
 
-To publish your library to [npm](https://www.npmjs.com):
+#### Example: Customizing the component
 
-```bash
-npm publish
-```
+````svelte
+<script lang="ts">
+  import {
+    Button,
+    type ButtonProperties,
+    defaultButtonProperties
+  } from '@juspay/svelte-ui-components';
+
+  const buttonProperties: ButtonProperties = {
+    ...defaultButtonProperties,
+    text: 'Submit'
+  };
+
+  function handleSubmitClick() {
+    // handle click
+  }
+</script>
+
+```svelte
+<div class="form">
+  <Button properties={buttonProperties} on:click={handleSubmitClick} />
+</div>
+
+<style>
+  .form {
+    --button-color: black;
+    --button-text-color: white;
+    // and many more
+  }
+</style>
+````
+
+### Contributing
+
+- Clone the repository
+- Install dependencies using `pnpm install`
+- Make changes to the components
+- Run tests using `pnpm run test`
+- Commit the changes
+- Push the changes
+- Create a pull request
+
+### Todo Items
+
+- [ ] Add demo support
+- [ ] Add documentation for all components
+- [ ] Add more components
+- [ ] Add tests

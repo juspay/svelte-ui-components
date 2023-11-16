@@ -1,55 +1,156 @@
 {
-	"name": "svelte-ui-components",
-	"version": "0.0.1",
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build && npm run package",
-		"preview": "vite preview",
-		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
-		"test": "npm run test:integration && npm run test:unit",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write .",
-		"test:integration": "playwright test",
-		"test:unit": "vitest"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js"
-		}
-	},
-	"files": [
-		"dist",
-		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
-	],
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
-	"devDependencies": {
-		"@playwright/test": "^1.39.0",
-		"@sveltejs/adapter-auto": "^2.1.1",
-		"@sveltejs/kit": "^1.27.6",
-		"@sveltejs/package": "^2.2.2",
-		"@typescript-eslint/eslint-plugin": "^6.11.0",
-		"@typescript-eslint/parser": "^6.11.0",
-		"eslint": "^8.53.0",
-		"eslint-config-prettier": "^9.0.0",
-		"eslint-plugin-svelte": "^2.35.0",
-		"prettier": "^3.1.0",
-		"prettier-plugin-svelte": "^3.1.0",
-		"publint": "^0.2.5",
-		"svelte": "^4.2.3",
-		"svelte-check": "^3.6.0",
-		"tslib": "^2.6.2",
-		"typescript": "^5.2.2",
-		"vite": "^4.5.0",
-		"vitest": "^0.34.6"
-	},
-	"svelte": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"type": "module"
+  "name": "svelte-ui-components",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && npm run package",
+    "preview": "vite preview",
+    "package": "svelte-kit sync && svelte-package && publint",
+    "prepublishOnly": "npm run package",
+    "test": "npm run test:integration && npm run test:unit",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write .",
+    "test:integration": "playwright test",
+    "test:unit": "vitest"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "peerDependencies": {
+    "svelte": "^4.0.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.2",
+    "@commitlint/config-conventional": "^18.4.2",
+    "@digitalroute/cz-conventional-changelog-for-jira": "^8.0.1",
+    "@playwright/test": "^1.39.0",
+    "@sveltejs/adapter-auto": "^2.1.1",
+    "@sveltejs/kit": "^1.27.6",
+    "@sveltejs/package": "^2.2.2",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "commitizen": "^4.3.0",
+    "commitlint-config-jira": "^1.6.4",
+    "commitlint-plugin-jira-rules": "^1.6.4",
+    "eslint": "^8.53.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-svelte": "^2.35.0",
+    "husky": "^8.0.3",
+    "prettier": "^3.1.0",
+    "prettier-plugin-svelte": "^3.1.0",
+    "publint": "^0.2.5",
+    "svelte": "^4.2.3",
+    "svelte-check": "^3.6.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "vitest": "^0.34.6"
+  },
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
+      "jiraPrefix": "BZ",
+      "jiraLocation": "pre-type",
+      "jiraAppend": ":"
+    }
+  },
+  "standard-version": {
+    "skip": {
+      "commit": true,
+      "changelog": true
+    },
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features",
+        "release": "minor"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes",
+        "release": "minor"
+      },
+      {
+        "type": "test",
+        "section": "Tests"
+      },
+      {
+        "type": "build",
+        "section": "Build System"
+      },
+      {
+        "type": "docs",
+        "section": "Documentation"
+      },
+      {
+        "type": "style",
+        "hidden": true
+      },
+      {
+        "type": "refactor",
+        "section": "Improvements"
+      },
+      {
+        "type": "perf",
+        "section": "Improvements"
+      },
+      {
+        "type": "ci",
+        "hidden": true
+      },
+      {
+        "type": "chore",
+        "hidden": true
+      }
+    ],
+    "issuePrefixes": [
+      "BZ-"
+    ],
+    "issueUrlFormat": "https://juspay.atlassian.net/browse/{{prefix}}{{id}}",
+    "commitUrlFormat": "https://github.com/juspay/svelte-ui-components/commits/{{hash}}",
+    "compareUrlFormat": "https://github.com/juspay/svelte-ui-components/branches/compare/{{currentTag}}%0D{{previousTag}}",
+    "releaseCommitMessageFormat": "chore(release): {{currentTag}} {{prefix}}{{id}}"
+  },
+  "commitlint": {
+    "plugins": [
+      "commitlint-plugin-jira-rules"
+    ],
+    "extends": [
+      "jira"
+    ],
+    "rules": {
+      "jira-task-id-max-length": [
+        0
+      ]
+    }
+  },
+  "auto-changelog": {
+    "output": "docs/CHANGELOG.md",
+    "template": "./docs/templates/changelog.hbs",
+    "commitLimit": false,
+    "breakingPattern": "(!:)",
+    "issueUrl": "https://juspay.atlassian.net/browse/{id}",
+    "issuePattern": "[A-Z]{2,}-\\d+",
+    "compareUrl": "https://github.com/juspay/svelte-ui-components/compare/{to}..{from}",
+    "unreleased": true,
+    "releaseSummary": true,
+    "hideCredit": false,
+    "ignoreCommitPattern": "(\\[skip ci\\])",
+    "replaceText": {
+      "(ABC-\\d+)": "[`$1`](https://juspay.atlassian.net/browse/$1)"
+    }
+  }
 }

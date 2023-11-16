@@ -1,6 +1,6 @@
 {
-  "name": "svelte-ui-components",
-  "version": "0.0.1",
+  "name": "@juspay/svelte-ui-components",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && npm run package",

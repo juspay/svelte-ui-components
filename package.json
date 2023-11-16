@@ -27,7 +27,8 @@
     "!dist/**/*.spec.*"
   ],
   "peerDependencies": {
-    "svelte": "^4.0.0"
+    "svelte": "^4.0.0",
+    "type-decoder": "^1.2.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.2",
@@ -54,7 +55,8 @@
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
-    "vitest": "^0.34.6"
+    "vitest": "^0.34.6",
+    "type-decoder": "^1.2.0"
   },
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",

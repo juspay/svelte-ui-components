@@ -67,6 +67,9 @@ devDependencies:
   tslib:
     specifier: ^2.6.2
     version: 2.6.2
+  type-decoder:
+    specifier: ^1.2.0
+    version: 1.2.0
   typescript:
     specifier: ^5.2.2
     version: 5.2.2
@@ -3582,6 +3585,10 @@ packages:
     engines: {node: '>= 0.8.0'}
     dependencies:
       prelude-ls: 1.2.1
+    dev: true
+
+  /type-decoder@1.2.0:
+    resolution: {integrity: sha512-hBeqgSqL0ZOruOZVh7kIoP6+aRSdQaYf07ZE5lNTv9GWiJGLqoOT0U1oIpJCcM5xDERV6x/AAmOTv80AuXW3yg==}
     dev: true
 
   /type-detect@4.0.8:

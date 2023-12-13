@@ -4,6 +4,8 @@
  */
 export type InputDataType = 'text' | 'tel' | 'password' | 'email';
 
+export type ModalTransition = 'IN' | 'ALL';
+
 export type AutoCompleteType =
   | 'tel'
   | 'name'

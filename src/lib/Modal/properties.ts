@@ -1,11 +1,15 @@
+import type { ModalTransition } from '$lib/types';
+
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';
 export type ModalAlign = 'top' | 'center' | 'bottom';
+
 export type ModalProperties = {
   size: ModalSize;
   align: ModalAlign;
   showOverlay: boolean;
   supportHardwareBackPress: boolean;
   enableTransition: boolean;
+  transitionType: ModalTransition;
   header: {
     leftImage: string | null;
     rightImage: string | null;
@@ -23,5 +27,6 @@ export const defaultModalProperties: ModalProperties = {
     rightImage: null,
     text: null
   },
-  enableTransition: true
+  enableTransition: true,
+  transitionType: 'ALL'
 };

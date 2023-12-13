@@ -72,7 +72,11 @@
       role="button"
       tabindex="0"
     >
-      <ModalAnimation enable={properties.enableTransition} align={properties.align}>
+      <ModalAnimation
+        enable={properties.enableTransition}
+        align={properties.align}
+        transitionType={properties.transitionType}
+      >
         <div class="modal-content {properties.size}">
           {#if properties.header.leftImage !== null || properties.header.text !== null || properties.header.rightImage !== null}
             <div class="header">

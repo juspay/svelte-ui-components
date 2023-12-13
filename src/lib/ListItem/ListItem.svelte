@@ -10,6 +10,7 @@
   export let showLoader = false;
   export let showRightContentLoader = false;
   export let expand = false;
+  export let focusable = true;
 
   function handleLeftImageClick(): void {
     dispatch('leftImageClick');
@@ -37,9 +38,15 @@
     {#if showLoader}
       <div class="item-loader" />
     {/if}
-    <div class="item" on:click={handleItemClick} on:keydown role="button" tabindex="0">
+    <div
+      class="item + {focusable ? '' : 'prevent-focus'}"
+      on:click={handleItemClick}
+      on:keydown
+      role="button"
+      tabindex="0"
+    >
       <div
-        class="top-section"
+        class="top-section + {focusable ? '' : 'prevent-focus'}"
         on:click={handleTopSectionClick}
         on:keydown
         role="button"
@@ -47,7 +54,13 @@
       >
         <div class="left-content">
           {#if properties.leftImageUrl}
-            <div on:click={handleLeftImageClick} on:keydown role="button" tabindex="0">
+            <div
+              class={focusable ? '' : 'prevent-focus'}
+              on:click={handleLeftImageClick}
+              on:keydown
+              role="button"
+              tabindex="0"
+            >
               <img class="left-img" src={properties.leftImageUrl} alt="" />
             </div>
           {/if}
@@ -58,7 +71,7 @@
         <div class="center-content">
           {#if properties.label}
             <div
-              class="center-text"
+              class="center-text + {focusable ? '' : 'prevent-focus'}"
               on:click={handleCenterTextClick}
               on:keydown
               role="button"
@@ -77,7 +90,13 @@
             <slot name="rightContent" />
           {/if}
           {#if properties.rightImageUrl}
-            <div on:click={handleRightImageClick} on:keydown role="button" tabindex="0">
+            <div
+              class={focusable ? '' : 'prevent-focus'}
+              on:click={handleRightImageClick}
+              on:keydown
+              role="button"
+              tabindex="0"
+            >
               <img class="right-img" src={properties.rightImageUrl} alt="" />
             </div>
           {/if}
@@ -200,5 +219,9 @@
     cursor: var(--list-item-right-content-text-cursor, pointer);
     font-family: var(--list-item-right-content-text-font-family);
     justify-content: var(--list-item-right-content-text-justify-content);
+  }
+
+  .prevent-focus:focus {
+    outline: none;
   }
 </style>

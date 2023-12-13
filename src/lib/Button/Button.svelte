@@ -52,8 +52,8 @@
     font-family: var(--button-font-family);
     font-weight: var(--button-font-weight, 500);
     font-size: var(--button-font-size, 14px);
-    background-color: var(--button-color, var(--primary-button-color, #3a4550));
-    color: var(--button-text-color, var(--primary-text-color, white));
+    background-color: var(--button-color, #3a4550);
+    color: var(--button-text-color, white);
     height: var(--button-height, fit-content);
     padding: var(--button-padding, 16px);
     margin: var(--button-margin);
@@ -68,6 +68,12 @@
     flex-direction: row;
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
+  }
+
+  button:hover {
+    background: var(--button-hover-color, var(--button-color, #3a4550));
+    color: var(--button-hover-text-color, var(--button-text-color, white));
+    border: var(--button-hover-border, var(--button-border, none));
   }
 
   .button-progress-bar {

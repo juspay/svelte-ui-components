@@ -160,6 +160,15 @@
     box-shadow: var(--list-item-box-shadow, none);
     width: var(--list-item-box-width);
     border-radius: var(--list-item-border-radius, 0px);
+    margin: var(--list-item-margin);
+    padding: var(--list-item-padding);
+    border: var(--list-item-border);
+    transition: var(--list-item-transition);
+  }
+
+  .item:hover {
+    background-color: var(--list-item-hover-background-color, var(--list-item-background-color));
+    border: var(--list-item-hover-border, var(--list-item-border));
   }
 
   .top-section {
@@ -200,6 +209,14 @@
     border-radius: var(--list-item-left-image-border-radius, 0px);
     margin: var(--list-item-left-image-margin, 0px);
     filter: var(--list-item-left-image-filter, none);
+    background: var(--list-item-left-image-background);
+    border: var(--list-item-left-image-border);
+    transition: var(--list-item-transition);
+  }
+
+  .left-img:hover {
+    background: var(--list-item-left-image-hover-background, var(--list-item-left-image-background));
+    border: var(--list-item-left-image-hover-border, var(--list-item-left-image-border));
   }
 
   .right-img {
@@ -208,6 +225,15 @@
     padding: var(--list-item-right-image-padding, 0px);
     border-radius: var(--list-item-right-image-border-radius, 0px);
     margin: var(--list-item-right-image-margin, 0px);
+    filter: var(--list-item-right-image-filter);
+    background: var(--list-item-right-image-background);
+    border: var(--list-item-right-image-border);
+    transition: var(--list-item-transition);
+  }
+
+  .right-img:hover {
+    background: var(--list-item-right-image-hover-background, var(--list-item-right-image-background));
+    border: var(--list-item-right-image-hover-border, var(--list-item-right-image-border));
   }
 
   .right-content-text {

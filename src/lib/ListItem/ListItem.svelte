@@ -215,7 +215,10 @@
   }
 
   .left-img:hover {
-    background: var(--list-item-left-image-hover-background, var(--list-item-left-image-background));
+    background: var(
+      --list-item-left-image-hover-background,
+      var(--list-item-left-image-background)
+    );
     border: var(--list-item-left-image-hover-border, var(--list-item-left-image-border));
   }
 
@@ -232,7 +235,10 @@
   }
 
   .right-img:hover {
-    background: var(--list-item-right-image-hover-background, var(--list-item-right-image-background));
+    background: var(
+      --list-item-right-image-hover-background,
+      var(--list-item-right-image-background)
+    );
     border: var(--list-item-right-image-hover-border, var(--list-item-right-image-border));
   }
 

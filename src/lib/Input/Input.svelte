@@ -227,6 +227,7 @@
     resize: none;
     visibility: var(--input-visibility, visible);
     text-align: var(--input-text-align, left);
+    color: var(--input-text-color);
   }
 
   textarea:focus,

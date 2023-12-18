@@ -2,20 +2,18 @@
   import { createEventDispatcher } from 'svelte';
 
   export let text: string;
-  export let checked: boolean;
+  export let checked: boolean = false;
 
   const dispatch = createEventDispatcher();
 
-  function handleCheckboxClick(e: MouseEvent): void {
-    if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
-      checked = e.target.checked;
-    }
+  function handleCheckboxClick(): void {
+    checked = !checked
     dispatch('click');
   }
 </script>
 
-<div class="container">
-  <input type="checkbox" class="checkbox" bind:checked on:click={handleCheckboxClick} />
+<div class="container" on:click={handleCheckboxClick} on:keydown role="button" tabindex="0">
+  <input type="checkbox" class="checkbox" bind:checked />
   <span class="text">
     <!-- eslint-disable-next-line -->
     {@html text}
@@ -27,6 +25,7 @@
     display: var(--check-list-item-display, flex);
     align-items: var(--check-list-item-align-items, center);
     width: var(--check-list-item-width, 100%);
+    padding: var(--check-list-item-padding, 0px);
   }
 
   .text {
@@ -40,5 +39,6 @@
     border: 5px solid red;
     height: var(--checkbox-height, 24px);
     width: var(--checkbox-width, 24px);
+    margin: var(--checkbox-margin);
   }
 </style>

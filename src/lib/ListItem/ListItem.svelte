@@ -164,6 +164,8 @@
     padding: var(--list-item-padding);
     border: var(--list-item-border);
     transition: var(--list-item-transition);
+    background: var(--list-item-background, #efefef);
+    margin-bottom: var(--list-item-margin-bottom);
   }
 
   .item:hover {

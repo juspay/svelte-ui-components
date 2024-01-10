@@ -184,7 +184,16 @@
   .center-text {
     display: flex;
     flex-direction: column;
+    justify-content: var(--list-item-center-text-justify-content, flex-start);
     padding: var(--list-item-center-text-padding, 0px 20px);
+    color: var(--list-item-center-text-color, #2f3841);
+    font-size: var(--list-item-center-text-font-size, 12px);
+    font-weight: var(--list-item-center-text-font-weight, 300);
+    align-items: var(--list-item-center-text-vertical-align);
+    margin: var(--list-item-center-text-margin);
+    border: var(--list-item-center-text-border);
+    cursor: var(--list-item-center-text-cursor, pointer);
+    font-family: var(--list-item-center-text-font-family);
   }
 
   .center-content {

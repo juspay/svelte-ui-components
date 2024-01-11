@@ -79,10 +79,15 @@
   }
 
   .back {
-    height: 20px;
-    width: 20px;
-    padding: 20px 14px;
-    cursor: pointer;
+    height: var(--toolbar-back-button-height, 20px);
+    width: var(--toolbar-back-button-width, 20px);
+    padding: var(--toolbar-back-button-padding, 20px 14px);
+    cursor: var(--toolbar-back-button-cursor, pointer);
+  }
+
+  .back img{
+    height: var(--toolbar-back-image-height, 16px);
+    width: var(--toolbar-back-image-width, 16px);
   }
 
   .center-content {

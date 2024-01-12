@@ -186,14 +186,15 @@
   .header {
     display: flex;
     background-color: var(--modal-header-background-color, #f6f7f9);
-    padding: 18px 20px;
+    padding: var(--modal-header-padding, 18px 20px);
+    border-radius: var(--modal-header-border-radius, 0px);
   }
 
   .header-text {
     display: flex;
     align-items: center;
     flex: 1;
-    font-size: 16px;
+    font-size: var(--header-text-size, 16px);
   }
 
   .header-left-img,
@@ -203,7 +204,7 @@
   }
 
   .header-left-img {
-    margin-right: 18px;
+    margin: var(--header-left-image-margin, 0px 18px 0px 0px);
     width: var(--header-left-image-width, 25px);
     height: var(--header-left-image-height, 25px);
   }

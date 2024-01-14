@@ -1,6 +1,7 @@
 <script lang="ts">
   import Accordion from '$lib/Accordion/Accordion.svelte';
   import Loader from '$lib/Loader/Loader.svelte';
+  import Img from '$lib/Img/Img.svelte';
   import { defaultListItemProperties, type ListItemProperties } from './properties';
   import { createEventDispatcher } from 'svelte';
 
@@ -63,7 +64,11 @@
               role="button"
               tabindex="0"
             >
-              <img class="left-img" src={properties.leftImageUrl} alt="" />
+              <Img
+                src={properties.leftImageUrl}
+                alt=""
+                fallback={properties.leftImageFallbackUrl}
+              />
             </div>
           {/if}
           {#if $$slots.leftContent}
@@ -179,6 +184,24 @@
 
   .left-content {
     display: flex;
+    --image-height: var(--list-item-left-image-height, 24px);
+    --image-width: var(--list-item-left-image-width, 24px);
+    --image-padding: var(--list-item-left-image-padding, 0px);
+    --image-border-radius: var(--list-item-left-image-border-radius, 0px);
+    --image-margin: var(--list-item-left-image-margin, 0px);
+    --image-filter: var(--list-item-left-image-filter, none);
+    --image-background: var(--list-item-left-image-background);
+    --image-border: var(--list-item-left-image-border);
+    --image-transition: var(--list-item-transition);
+    --image-object-fit: var(--list-item-left-image-object-fit);
+    --image-hover-background: var(
+      --list-item-left-image-hover-background,
+      var(--list-item-left-image-background)
+    );
+    --image-hover-border: var(
+      --list-item-left-image-hover-border,
+      var(--list-item-left-image-border)
+    );
   }
 
   .center-text {
@@ -209,26 +232,6 @@
   .bottom-section {
     flex-direction: row;
     margin-top: 0;
-  }
-
-  .left-img {
-    height: var(--list-item-left-image-height, 24px);
-    width: var(--list-item-left-image-width, 24px);
-    padding: var(--list-item-left-image-padding, 0px);
-    border-radius: var(--list-item-left-image-border-radius, 0px);
-    margin: var(--list-item-left-image-margin, 0px);
-    filter: var(--list-item-left-image-filter, none);
-    background: var(--list-item-left-image-background);
-    border: var(--list-item-left-image-border);
-    transition: var(--list-item-transition);
-  }
-
-  .left-img:hover {
-    background: var(
-      --list-item-left-image-hover-background,
-      var(--list-item-left-image-background)
-    );
-    border: var(--list-item-left-image-hover-border, var(--list-item-left-image-border));
   }
 
   .right-img {

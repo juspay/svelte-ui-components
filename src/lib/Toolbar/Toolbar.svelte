@@ -85,7 +85,7 @@
     cursor: var(--toolbar-back-button-cursor, pointer);
   }
 
-  .back img{
+  .back img {
     height: var(--toolbar-back-image-height, 16px);
     width: var(--toolbar-back-image-width, 16px);
   }

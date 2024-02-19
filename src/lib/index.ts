@@ -18,6 +18,7 @@ export { default as Toggle } from './Toggle/Toggle.svelte';
 export { default as Accordion } from './Accordion/Accordion.svelte';
 export { default as CheckListItem } from './CheckListItem/CheckListItem.svelte';
 export { default as Table } from './Table/Table.svelte';
+export { default as Stepper } from './Stepper/Stepper.svelte';
 
 export type { ButtonProperties } from './Button/properties';
 export type { ModalProperties, ModalAlign, ModalSize } from './Modal/properties';
@@ -37,6 +38,7 @@ export type { CarouselProperties } from './Carousel/properties';
 export type { BadgeProperties } from './Badge/properties';
 export type { BannerProperties } from './Banner/properties';
 export type { TableProperties } from './Table/properties';
+export type { StepperProperties } from './Stepper/properties';
 
 export { defaultIconProperties } from './Icon/properties';
 export { defaultButtonProperties } from './Button/properties';
@@ -48,5 +50,6 @@ export { defaultStatusProperties } from './Status/properties';
 export { defaultListItemProperties } from './ListItem/properties';
 export { defaultToolbarProperties } from './Toolbar/properties';
 export { defaultCarouselProperties } from './Carousel/properties';
+export { defaultStepperProperties } from './Stepper/properties';
 
 export { validateInput } from './utils';

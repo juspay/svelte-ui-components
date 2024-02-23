@@ -41,11 +41,11 @@ All of the components can be easily imported from the 'svelte-ui-components' pac
 #### Example: Importing component from the package
 
 ```svelte
-<script>
-  import { Button } from '@juspay/svelte-ui-components';
+<script lang="ts">
+  import { Button, defaultButtonProperties } from '@juspay/svelte-ui-components';
 </script>
 
-<Button>Click me</Button>
+<Button properties={{ ...defaultButtonProperties, text: 'Click' }} />
 ```
 
 ### Customizing the components
@@ -65,7 +65,7 @@ There are two ways to customize the component.
 
 #### Example: Customizing the component
 
-````svelte
+```svelte
 <script lang="ts">
   import {
     Button,
@@ -83,7 +83,6 @@ There are two ways to customize the component.
   }
 </script>
 
-```svelte
 <div class="form">
   <Button properties={buttonProperties} on:click={handleSubmitClick} />
 </div>
@@ -92,10 +91,10 @@ There are two ways to customize the component.
   .form {
     --button-color: black;
     --button-text-color: white;
-    // and many more
+    /* Other styling values */
   }
 </style>
-````
+```
 
 ### Contributing
 

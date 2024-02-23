@@ -113,16 +113,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    width: 100vw;
-    height: 100vh;
+    width: var(--modal-width, 100vw);
+    height: var(--modal-height, 100vh);
     display: flex;
     flex-direction: column;
     z-index: var(--modal-z-index, 15);
     -webkit-tap-highlight-color: transparent;
-    margin-top: var(--margin-top, 0px);
-    margin-bottom: var(--margin-bottom, 0px);
-    margin-left: var(--margin-left, 0px);
-    margin-right: var(--margin-right, 0px);
+    margin: var(--modal-margin);
   }
 
   .overlay-active {
@@ -136,7 +133,7 @@
 
   .modal-content {
     pointer-events: auto;
-    background-color: var(--content-background-color, #ffffff);
+    background-color: var(--modal-content-background-color, #ffffff);
     cursor: auto;
     display: flex;
     flex-direction: column;

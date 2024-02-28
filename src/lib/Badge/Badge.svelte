@@ -42,7 +42,8 @@
     border-radius: var(--badge-img-border-radius, 6px);
     width: var(--badge-img-width, 64px);
     height: var(--badge-img-height, 64px);
-    object-fit: contain;
+    object-fit: var(--badge-object-fit, contain);
     box-shadow: var(--badge-img-icon-shadow, 0 0 0 0.5px #798fa54d);
+    background-color: var(--badge-img-background-color);
   }
 </style>

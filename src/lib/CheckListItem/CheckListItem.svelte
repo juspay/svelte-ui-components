@@ -16,10 +16,14 @@
 
 <div class="container">
   <input type="checkbox" class="checkbox" bind:checked on:click={handleCheckboxClick} />
-  <span class="text">
-    <!-- eslint-disable-next-line -->
-    {@html text}
-  </span>
+  {#if $$slots.checkboxLabel}
+    <slot name="checkboxLabel" />
+  {:else}
+    <span class="text">
+      <!-- eslint-disable-next-line -->
+      {@html text}
+    </span>
+  {/if}
 </div>
 
 <style>
@@ -40,5 +44,9 @@
     border: 5px solid red;
     height: var(--checkbox-height, 24px);
     width: var(--checkbox-width, 24px);
+    margin: var(--checkbox-margin);
+    padding: var(--checkbox-padding);
+    border-radius: var(--checkbox-border-radius);
+    visibility: var(--checkbox-visibility);
   }
 </style>

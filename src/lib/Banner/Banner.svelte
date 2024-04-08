@@ -26,14 +26,14 @@
     position: var(--banner-position, sticky);
     top: var(--banner-top, 0px);
     display: var(--banner-display, flex);
-    align-items: center;
+    align-items: var(--banner-align-items, center);
     background-color: var(--banner-bg-color, #637c9529);
     width: var(--banner-width, 100%);
     height: var(--banner-height, 37px);
     padding: var(--banner-padding, 10px 12px, 10px, 12px);
     gap: var(--banner-gap, 8px);
-    justify-content: center;
-    cursor: pointer;
+    justify-content: var(--banner-justify-content, center);
+    cursor: var(--banner-cursor, pointer);
   }
 
   .banner-image {
@@ -41,7 +41,7 @@
     width: var(--banner-img-width, 18px);
     height: var(--banner-img-height, 11.69px);
     margin-bottom: var(--banner-img-margin-bottom, 6px);
-    align-items: center;
+    align-items: var(--banner-image-align-items, center);
   }
 
   .banner-text {
@@ -52,10 +52,10 @@
     font-size: var(--banner-font-size, 14px);
     line-height: var(--banner-line-height, 17.75px);
     font-weight: var(--banner-font-weight, 500);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    align-items: center;
+    overflow: var(--banner-overflow, hidden);
+    text-overflow: var(--banner-text-overflow, ellipsis);
+    white-space: var(--banner-text-white-space, nowrap);
+    align-items: var(--banner-text-align-items, center);
   }
 
   .link-text {

@@ -6,4 +6,5 @@ export type SelectProperties = {
   selectedItemLabel: string | string[] | null;
   showSelectedItemInDropdown: boolean;
   selectMultipleItems: boolean;
+  iconPath:string | null;
 };

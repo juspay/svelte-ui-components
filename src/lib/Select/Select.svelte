@@ -6,6 +6,7 @@
 
   let selectedElementDiv: HTMLDivElement | null = null;
 
+  export let alt='';
   export let properties: SelectProperties = {
     placeholder: '',
     label: '',
@@ -13,7 +14,8 @@
     selectedItem: '',
     selectedItemLabel: null,
     showSelectedItemInDropdown: false,
-    selectMultipleItems: false
+    selectMultipleItems: false,
+    iconPath:''
   };
 
   const applyButtonProps: ButtonProperties = {
@@ -139,6 +141,11 @@
       role="button"
       tabindex="0"
     >
+    {#if properties.iconPath !== null && properties.iconPath !== ""}
+      <div class="icon-container">
+        <img src={properties.iconPath} class="icon" alt={alt} />
+      </div>
+    {/if}
       {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
         {#if properties.selectedItem.length === 0}
           {properties.placeholder}
@@ -216,8 +223,8 @@
   }
 
   .arrow {
-    height: 16px;
-    width: 16px;
+    height:var(--dropdown-arrow-icon-height, 16px);
+    width: var(--dropdown-arrow-icon-width, 16px);
     transform: rotate(-0.25turn);
     transition: transform 0.1s;
   }
@@ -255,6 +262,7 @@
   .non-selected-items {
     display: var(--non-selected-display);
     background-color: var(--non-selected-item-bgcolor, #ffffff);
+    color: var(--non-selected-item-color);
     box-shadow: 0px 1px 8px #2f537733;
     width: var(--non-selected-width, fit-content);
     min-width: var(--non-selected-min-width, 100%);
@@ -264,6 +272,7 @@
     z-index: 10;
     word-wrap: var(--non-selected-word-break, break-word);
     white-space: var(--non-selected-white-space);
+    font-weight: var(--non-select-font-weight, 500)
   }
 
   ::-webkit-scrollbar {
@@ -296,4 +305,23 @@
     white-space: var(--multipleSelect-btn-white-space, nowrap);
     padding: var(--multipleSelect-btn-padding, 2px);
   }
+
+  .icon {
+    width: var(--select-icon-width,16px);
+    height: var(--select-icon-height,16px);
+  }
+  .icon-container{
+    width: var(--select-icon-container-width,32px);
+    height: var(--select-icon-container-height,32px);
+    gap: var(--select-icon-container-gap,0px);
+    border-radius: var(--select-icon-container-border-radius,333px);
+    opacity: var(--select-icon-container-opacity,0px);
+    background: var(--select-icon-container-background,#EEEEEE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: var(--select-icon-container-margin,0px 8px 0px 0px);
+    padding: var(--select-icon-container-padding);
+}
+
 </style>

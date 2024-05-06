@@ -16,11 +16,7 @@
     selectedItemLabel: null,
     showSelectedItemInDropdown: false,
     selectMultipleItems: false,
-    leftIcon: {
-      src: '',
-      alt: '',
-      fallback: null
-    }
+    leftIcon: null
   };
 
   const dropDownIcon = properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
@@ -148,7 +144,7 @@
       role="button"
       tabindex="0"
     >
-      {#if properties.leftIcon !== null && properties.leftIcon.src !== ''}
+      {#if properties.leftIcon !== null}
         <div class="icon-container">
           <Img {...properties.leftIcon} />
         </div>

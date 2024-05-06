@@ -1,3 +1,4 @@
+import type { ImgProps } from "$lib/Img/properties";
 export type SelectProperties = {
   placeholder: string;
   label: string;
@@ -6,5 +7,5 @@ export type SelectProperties = {
   selectedItemLabel: string | string[] | null;
   showSelectedItemInDropdown: boolean;
   selectMultipleItems: boolean;
-  iconPath:string | null;
+  leftIcon: ImgProps | null;
 };

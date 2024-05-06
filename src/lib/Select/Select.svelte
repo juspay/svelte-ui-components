@@ -2,11 +2,10 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import type { SelectProperties } from './properties';
   import type { ButtonProperties } from '$lib/Button/properties';
+  import Img from '$lib/Img/Img.svelte';
   import Button from '$lib/Button/Button.svelte';
 
   let selectedElementDiv: HTMLDivElement | null = null;
-
-  export let alt='';
   export let properties: SelectProperties = {
     placeholder: '',
     label: '',
@@ -15,7 +14,11 @@
     selectedItemLabel: null,
     showSelectedItemInDropdown: false,
     selectMultipleItems: false,
-    iconPath:''
+    leftIcon: {
+      src: '',
+      alt: '',
+      fallback: null
+    }
   };
 
   const applyButtonProps: ButtonProperties = {
@@ -141,11 +144,11 @@
       role="button"
       tabindex="0"
     >
-    {#if properties.iconPath !== null && properties.iconPath !== ""}
-      <div class="icon-container">
-        <img src={properties.iconPath} class="icon" alt={alt} />
-      </div>
-    {/if}
+      {#if properties.leftIcon !== null && properties.leftIcon.src !== ''}
+        <div class="icon-container">
+          <Img {...properties.leftIcon} />
+        </div>
+      {/if}
       {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
         {#if properties.selectedItem.length === 0}
           {properties.placeholder}
@@ -223,7 +226,7 @@
   }
 
   .arrow {
-    height:var(--dropdown-arrow-icon-height, 16px);
+    height: var(--dropdown-arrow-icon-height, 16px);
     width: var(--dropdown-arrow-icon-width, 16px);
     transform: rotate(-0.25turn);
     transition: transform 0.1s;
@@ -267,12 +270,12 @@
     width: var(--non-selected-width, fit-content);
     min-width: var(--non-selected-min-width, 100%);
     position: absolute;
-    border-radius: 4px 4px 4px 4px;
-    margin: 4px 0px 0px 0px;
+    border-radius: var(--non-selected-border-radius, 4px);
+    margin: var(--non-selected-margin, 4px 0px 0px 0px);
     z-index: 10;
     word-wrap: var(--non-selected-word-break, break-word);
     white-space: var(--non-selected-white-space);
-    font-weight: var(--non-select-font-weight, 500)
+    font-weight: var(--non-select-font-weight, 500);
   }
 
   ::-webkit-scrollbar {
@@ -306,22 +309,18 @@
     padding: var(--multipleSelect-btn-padding, 2px);
   }
 
-  .icon {
-    width: var(--select-icon-width,16px);
-    height: var(--select-icon-height,16px);
-  }
-  .icon-container{
-    width: var(--select-icon-container-width,32px);
-    height: var(--select-icon-container-height,32px);
-    gap: var(--select-icon-container-gap,0px);
-    border-radius: var(--select-icon-container-border-radius,333px);
-    opacity: var(--select-icon-container-opacity,0px);
-    background: var(--select-icon-container-background,#EEEEEE);
+  .icon-container {
+    width: var(--select-icon-container-width, fit-content);
+    height: var(--select-icon-container-height, fit-content);
+    border-radius: var(--select-icon-container-border-radius);
+    opacity: var(--select-icon-container-opacity);
+    background: var(--select-icon-container-background);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: var(--select-icon-container-margin,0px 8px 0px 0px);
+    margin: var(--select-icon-container-margin, 0px 8px 0px 0px);
     padding: var(--select-icon-container-padding);
-}
-
+    --image-height: var(--select-icon-height);
+    --image-width: var(--select-icon-height);
+  }
 </style>

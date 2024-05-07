@@ -6,6 +6,8 @@
   import Button from '$lib/Button/Button.svelte';
 
   let selectedElementDiv: HTMLDivElement | null = null;
+
+  export let dropDownIconAlt = '';
   export let properties: SelectProperties = {
     placeholder: '',
     label: '',
@@ -20,6 +22,8 @@
       fallback: null
     }
   };
+
+  const dropDownIcon = properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
 
   const applyButtonProps: ButtonProperties = {
     text: 'Apply',
@@ -165,11 +169,13 @@
         {properties.selectedItemLabel}
       {/if}
       <div class="filler" />
-      <img
-        src="https://sdk.breeze.in/gallery/icons/right-arrow.svg"
-        alt=""
-        class="arrow {isSelectOpen ? 'active' : ''}"
-      />
+      {#if !properties.hideDropDownIcon}
+        <img
+          src={dropDownIcon}
+          alt= {dropDownIconAlt}
+          class="arrow {isSelectOpen ? 'active' : ''}"
+        />
+      {/if}
     </div>
     <div
       class="non-selected-items"
@@ -211,7 +217,7 @@
     font-weight: var(--select-font-weight, 400);
     width: var(--select-width, 100%);
     min-width: var(--select-min-width);
-    box-shadow: 0px 1px 8px #2f537733;
+    box-shadow: var(--select-box-shadow, 0px 1px 8px #2f537733);
     -webkit-appearance: none !important; /* For Safari MWeb */
     outline: none;
     cursor: pointer;
@@ -225,15 +231,18 @@
     --button-border-radius: 2px;
   }
 
+  .select:hover {
+    background-color: var(--select-hover-bgcolor, #ffffff);
+  }
+
   .arrow {
     height: var(--dropdown-arrow-icon-height, 16px);
     width: var(--dropdown-arrow-icon-width, 16px);
-    transform: rotate(-0.25turn);
     transition: transform 0.1s;
   }
 
   .active {
-    transform: rotate(0.25turn);
+    transform: rotate(0.5turn);
   }
 
   .item {
@@ -289,7 +298,7 @@
   }
 
   .item-selected::after {
-    content: '✔';
+    content: var(--selected-option-icon, '✔');
     position: absolute;
     right: 7px;
   }

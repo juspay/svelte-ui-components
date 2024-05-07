@@ -7,5 +7,7 @@ export type SelectProperties = {
   selectedItemLabel: string | string[] | null;
   showSelectedItemInDropdown: boolean;
   selectMultipleItems: boolean;
+  hideDropDownIcon?: boolean;
+  dropDownIcon?: string;
   leftIcon: ImgProps | null;
 };

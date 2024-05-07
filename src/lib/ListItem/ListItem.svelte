@@ -183,7 +183,7 @@
   }
 
   .left-content {
-    display: flex;
+    display: var(--list-item-left-content-display, flex);
     --image-height: var(--list-item-left-image-height, 24px);
     --image-width: var(--list-item-left-image-width, 24px);
     --image-padding: var(--list-item-left-image-padding, 0px);
@@ -226,7 +226,7 @@
   }
 
   .right-content {
-    display: flex;
+    display: var(--list-item-right-content-display, flex);
   }
 
   .bottom-section {

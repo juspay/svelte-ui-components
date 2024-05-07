@@ -285,6 +285,10 @@
     word-wrap: var(--non-selected-word-break, break-word);
     white-space: var(--non-selected-white-space);
     font-weight: var(--non-select-font-weight, 500);
+    left: var(--non-selected-left);
+    right: var(--non-selected-right);
+    top: var(--non-selected-top);
+    bottom: var(--non-selected-bottom);
   }
 
   ::-webkit-scrollbar {

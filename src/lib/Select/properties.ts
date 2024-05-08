@@ -1,4 +1,4 @@
-import type { ImgProps } from "$lib/Img/properties";
+import type { ImgProps } from '$lib/Img/properties';
 export type SelectProperties = {
   placeholder: string;
   label: string;

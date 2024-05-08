@@ -19,7 +19,8 @@
     leftIcon: null
   };
 
-  const dropDownIcon = properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
+  const dropDownIcon =
+    properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
 
   const applyButtonProps: ButtonProperties = {
     text: 'Apply',
@@ -168,7 +169,7 @@
       {#if !properties.hideDropDownIcon}
         <img
           src={dropDownIcon}
-          alt= {dropDownIconAlt}
+          alt={dropDownIconAlt}
           class="arrow {isSelectOpen ? 'active' : ''}"
         />
       {/if}

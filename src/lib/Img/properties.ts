@@ -1,5 +1,5 @@
 export type ImgProps = {
-    src: string;
-    alt: string;
-    fallback: string | null;
-}
+  src: string;
+  alt: string;
+  fallback: string | null;
+};

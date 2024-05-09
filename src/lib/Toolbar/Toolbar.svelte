@@ -50,7 +50,7 @@
     padding: var(--toolbar-padding, 0px);
     height: fit-content;
     width: 100vw;
-    position: fixed;
+    position: var(--toolbar-position, fixed);
     top: 0;
     left: 0;
     right: 0;

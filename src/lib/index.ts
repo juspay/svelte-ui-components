@@ -20,6 +20,7 @@ export { default as CheckListItem } from './CheckListItem/CheckListItem.svelte';
 export { default as Table } from './Table/Table.svelte';
 export { default as Stepper } from './Stepper/Stepper.svelte';
 export { default as Step } from './Stepper/Step.svelte';
+export { default as Toast } from './Toast/Toast.svelte';
 
 export type { ButtonProperties } from './Button/properties';
 export type { ModalProperties, ModalAlign, ModalSize } from './Modal/properties';
@@ -40,6 +41,7 @@ export type { BadgeProperties } from './Badge/properties';
 export type { BannerProperties } from './Banner/properties';
 export type { TableProperties } from './Table/properties';
 export type { StepperProperties } from './Stepper/properties';
+export type { ToastProperties } from './Toast/properties';
 
 export { defaultIconProperties } from './Icon/properties';
 export { defaultButtonProperties } from './Button/properties';
@@ -51,5 +53,6 @@ export { defaultStatusProperties } from './Status/properties';
 export { defaultListItemProperties } from './ListItem/properties';
 export { defaultToolbarProperties } from './Toolbar/properties';
 export { defaultCarouselProperties } from './Carousel/properties';
+export { defaultToastProperties } from './Toast/properties';
 
 export { validateInput } from './utils';

@@ -55,13 +55,21 @@
       : item !== properties.selectedItem
   );
 
+  function isSelected(selectedItem: string | string[], item: string) {
+    if (Array.isArray(selectedItem)) {
+      return selectedItem.includes(item);
+    } else {
+      return selectedItem.trim() === item.trim();
+    }
+  }
+
   function selectItem(item: string) {
     if (
       properties.selectMultipleItems &&
       Array.isArray(properties.selectedItemLabel) &&
       Array.isArray(properties.selectedItem)
     ) {
-      if (properties.selectedItem.includes(item)) {
+      if (isSelected(properties.selectedItem, item)) {
         properties.selectedItem = properties.selectedItem.filter(
           (selectedItem) => selectedItem !== item
         );
@@ -192,7 +200,7 @@
             on:click={() => {
               selectItem(item);
             }}
-            class="item {properties.selectedItem.includes(item) ? 'selected item-selected' : ''}"
+            class="item {isSelected(properties.selectedItem, item) ? 'selected item-selected' : ''}"
             role="button"
             tabindex="0"
           >

@@ -62,13 +62,7 @@ await _fs.writeFile(
 );
 
 // Tagging the latest commit with the new version tag
-const prePublishCommands = [
-  `git add package.json`,
-  `COMMIT_MODE=amend git commit --amend --no-edit --no-verify`,
-  `git tag ${newVersion}`,
-  `rm -rf dist`,
-  `npm run build`
-];
+const prePublishCommands = [`git add package.json`, `rm -rf dist`, `npm run build`];
 
 const postPublishCommands = [
   (otp) => {

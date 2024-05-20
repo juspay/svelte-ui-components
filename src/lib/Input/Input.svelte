@@ -244,6 +244,7 @@
   .input-container {
     display: flex;
     flex-direction: column;
+    margin: var(--input-container-margin);
   }
 
   .label {

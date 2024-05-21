@@ -4,6 +4,7 @@
   import type { ButtonProperties } from '$lib/Button/properties';
   import Img from '$lib/Img/Img.svelte';
   import Button from '$lib/Button/Button.svelte';
+  import { InputButton, defaultInputButtonProperties } from '$lib';
 
   let selectedElementDiv: HTMLDivElement | null = null;
 
@@ -47,6 +48,7 @@
   };
 
   let isSelectOpen = false;
+  let isInput = false;
   const dispatch = createEventDispatcher();
 
   $: nonSelectedItems = properties.allItems.filter((item) =>
@@ -74,6 +76,7 @@
       }
     } else {
       properties.selectedItem = [item];
+      properties.selectedItemLabel=[item];
     }
     if (!properties.selectMultipleItems) {
       toggleSelect();
@@ -107,15 +110,31 @@
       const isApplyButtonClicked = clickedElement.classList.contains('apply-btn');
       const isClearAllButtonClicked = clickedElement.innerText === 'Clear All';
       const isSelectAllButtonClicked = clickedElement.innerText === 'Select All';
+      const isInputSelected = properties.addInputButton && isInput;
       if (
         !isItemClicked &&
         !isApplyButtonClicked &&
         !isClearAllButtonClicked &&
-        !isSelectAllButtonClicked
+        !isSelectAllButtonClicked &&
+        isInputSelected
       ) {
         isSelectOpen = false;
       }
     }
+  }
+
+  function handleSelectInput(event: CustomEvent) {
+    if(event && event.detail) {
+      properties.selectedItem=event.detail.value;
+      properties.selectedItemLabel=event.detail.value;
+    }
+    dispatch('selectInput', event.detail.value);
+    isInput = false;
+    isSelectOpen = false;
+  }
+
+  function toggleIsInput() {
+    isInput = true;
   }
 
   onMount(() => {
@@ -200,6 +219,11 @@
           </div>
         {/each}
       </div>
+      {#if properties.addInputButton && properties.addInputButtonProps}
+        <div class="input-button">
+          <InputButton properties = {{...defaultInputButtonProperties, rightButtonProperties: null, bottomButtonProperties: properties.addInputButtonProps}} on:input={toggleIsInput} on:bottomButtonClick={handleSelectInput}/>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -226,6 +250,7 @@
     color: var(--select-color);
     --button-margin: 1px;
     --button-border-radius: 2px;
+    --input-button-margin: 10px;
   }
 
   .select:hover {

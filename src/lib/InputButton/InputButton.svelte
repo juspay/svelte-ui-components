@@ -28,6 +28,12 @@
     dispatch('leftButtonClick');
   }
 
+  function bottomButtonClick(): void {
+    if (state === 'Valid') {
+      dispatch('bottomButtonClick', { value: properties.inputProperties.value });
+    }
+  }
+
   function triggerRightClickIfValid(event: KeyboardEvent): void {
     if (event?.key === 'Enter') {
       rightButtonClick();
@@ -73,6 +79,11 @@
       </div>
     {/if}
   </div>
+  {#if properties.bottomButtonProperties != null}
+    <div class="bottom-button">
+      <Button properties={properties.bottomButtonProperties} on:click={bottomButtonClick} />
+    </div>
+  {/if}
 </div>
 {#if properties.inputProperties.message.onError !== '' && state === 'Invalid'}
   <div class="error-message">
@@ -116,6 +127,20 @@
     flex: 1;
     min-width: 0px;
     --button-height: 54px;
+  }
+
+  .bottom-button {
+    padding: var(--input-bottom-btn-padding, 10px 0px);
+    --cursor: var(--bottom-button-cursor);
+    --button-color: var(--bottom-button-color);
+    --button-text-color: var(--bottom-button-text-color);
+    --button-font-family: var(--bottom-button-font-family);
+    --button-font-weight: var(--bottom-button-font-weight);
+    --button-font-size: var(--bottom-button-font-size);
+    --button-height: var(--bottom-button-height, 54px);
+    --button-padding: var(--bottom-button-padding);
+    --button-border-radius: var(--bottom-button-border-radius);
+    --button-width: var(--bottom-button-width);
   }
 
   .label {

@@ -6,6 +6,7 @@ export type InputButtonProperties = {
   inputProperties: InputProperties;
   rightButtonProperties: ButtonProperties | null;
   leftButtonProperties: ButtonProperties | null;
+  bottomButtonProperties: ButtonProperties | null;
 };
 
 const inputProperties: InputProperties = {
@@ -24,5 +25,6 @@ const rightButtonProperties: ButtonProperties = {
 export const defaultInputButtonProperties: InputButtonProperties = {
   inputProperties,
   rightButtonProperties,
-  leftButtonProperties: null
+  leftButtonProperties: null,
+  bottomButtonProperties: null
 };

@@ -31,6 +31,7 @@ export type { InputDataType } from './types';
 export type { AutoCompleteType } from './types';
 export type { CustomValidator } from './types';
 export type { ValidationState } from './types';
+export type { FlyAnimationConfig } from './types';
 export type { IconProperties } from './Icon/properties';
 export type { BrandLoaderProperties } from './BrandLoader/properties';
 export type { StatusProperties } from './Status/properties';

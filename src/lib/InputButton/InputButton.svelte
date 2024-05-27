@@ -46,6 +46,10 @@
     }
     dispatch('stateChange', event);
   }
+
+  function onFocusOut(event: CustomEvent) {
+    dispatch('focusout', event);
+  }
 </script>
 
 {#if properties.inputProperties.label && properties.inputProperties.label !== ''}
@@ -69,6 +73,7 @@
         on:keyup={triggerRightClickIfValid}
         on:stateChange={handleState}
         on:input={(event) => dispatch('input', event)}
+        on:focusout={onFocusOut}
         on:focus
         --input-width="auto"
       />
@@ -106,6 +111,7 @@
     --button-width: 100%;
     --input-border: none;
     --input-focus-border: none;
+    border: var(--input-button-container-border);
   }
 
   .input-button {

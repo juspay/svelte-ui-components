@@ -4,7 +4,6 @@
   import type { ButtonProperties } from '$lib/Button/properties';
   import Img from '$lib/Img/Img.svelte';
   import Button from '$lib/Button/Button.svelte';
-  import { InputButton, defaultInputButtonProperties } from '$lib';
 
   let selectedElementDiv: HTMLDivElement | null = null;
 
@@ -23,9 +22,10 @@
   const dropDownIcon =
     properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
 
-  const applyButtonProps: ButtonProperties = {
-    text: 'Apply',
-    enable: true,
+    let applyButtonProps: ButtonProperties;
+    $: applyButtonProps = {
+    text: `Select (${properties.selectedItem.length})`,
+    enable: properties.selectedItem.length > 0,
     showLoader: false,
     loaderType: null,
     type: 'submit'
@@ -48,7 +48,6 @@
   };
 
   let isSelectOpen = false;
-  let isInput = false;
   const dispatch = createEventDispatcher();
 
   $: nonSelectedItems = properties.allItems.filter((item) =>
@@ -94,6 +93,7 @@
 
   function dispatchEvent() {
     dispatch('message', { selectedItems: properties.selectedItem });
+    isSelectOpen = false;
   }
 
   function toggleSelect() {
@@ -118,31 +118,15 @@
       const isApplyButtonClicked = clickedElement.classList.contains('apply-btn');
       const isClearAllButtonClicked = clickedElement.innerText === 'Clear All';
       const isSelectAllButtonClicked = clickedElement.innerText === 'Select All';
-      const isInputSelected = properties.addInputButton && isInput;
       if (
         !isItemClicked &&
         !isApplyButtonClicked &&
         !isClearAllButtonClicked &&
-        !isSelectAllButtonClicked &&
-        isInputSelected
-      ) {
+        !isSelectAllButtonClicked )
+      {
         isSelectOpen = false;
       }
     }
-  }
-
-  function handleSelectInput(event: CustomEvent) {
-    if(event && event.detail) {
-      properties.selectedItem=event.detail.value;
-      properties.selectedItemLabel=event.detail.value;
-    }
-    dispatch('selectInput', event.detail.value);
-    isInput = false;
-    isSelectOpen = false;
-  }
-
-  function toggleIsInput() {
-    isInput = true;
   }
 
   onMount(() => {
@@ -177,21 +161,23 @@
           <Img {...properties.leftIcon} />
         </div>
       {/if}
-      {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
-        {#if properties.selectedItem.length === 0}
+      <div class="selected-content">
+        {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
+          {#if properties.selectedItem.length === 0}
+            {properties.placeholder}
+          {:else if properties.selectedItemLabel?.length === 0 || properties.showSelectedItemInDropdown}
+            {properties.selectedItem.join(', ')}
+          {:else}
+            {properties.selectedItemLabel.join(', ')}
+          {/if}
+        {:else if properties.selectedItem === ''}
           {properties.placeholder}
-        {:else if properties.selectedItemLabel?.length === 0 || properties.showSelectedItemInDropdown}
-          {properties.selectedItem.join(', ')}
+        {:else if properties.selectedItemLabel === null || properties.selectedItemLabel === ''}
+          {properties.selectedItem}
         {:else}
-          {properties.selectedItemLabel.join(', ')}
+          {properties.selectedItemLabel}
         {/if}
-      {:else if properties.selectedItem === ''}
-        {properties.placeholder}
-      {:else if properties.selectedItemLabel === null || properties.selectedItemLabel === ''}
-        {properties.selectedItem}
-      {:else}
-        {properties.selectedItemLabel}
-      {/if}
+      </div>
       <div class="filler" />
       {#if !properties.hideDropDownIcon}
         <img
@@ -205,13 +191,12 @@
       class="non-selected-items"
       style="--non-selected-display:{isSelectOpen ? 'inline-block' : 'none'};"
     >
-      {#if properties.selectMultipleItems}
-        <div class="multipleSelect-btn">
-          <Button properties={applyButtonProps} on:click={dispatchEvent} />
-          <Button properties={selectAllButtonProps} on:click={selectAllItems} />
-          <Button properties={clearAllButtonProps} on:click={clearAllItems} />
-        </div>
-      {/if}
+    {#if properties.selectMultipleItems && !properties.showSingleSelectButton}
+      <div class="multipleSelect-btn">
+        <Button properties={selectAllButtonProps} on:click={selectAllItems} />
+        <Button properties={clearAllButtonProps} on:click={clearAllItems} />
+      </div>
+    {/if}
       <div class="item-list">
         {#each properties.showSelectedItemInDropdown ? properties.allItems : nonSelectedItems as item}
           <div
@@ -219,7 +204,7 @@
             on:click={() => {
               selectItem(item);
             }}
-            class="item {isSelected(properties.selectedItem, item) ? 'selected item-selected' : ''}"
+            class="item {isSelected(properties.selectedItem, item) ? ' item-selected' : ''}"
             role="button"
             tabindex="0"
           >
@@ -227,9 +212,12 @@
           </div>
         {/each}
       </div>
-      {#if properties.addInputButton && properties.addInputButtonProps}
-        <div class="input-button">
-          <InputButton properties = {{...defaultInputButtonProperties, rightButtonProperties: null, bottomButtonProperties: properties.addInputButtonProps}} on:input={toggleIsInput} on:bottomButtonClick={handleSelectInput}/>
+      {#if $$slots.bottomContent}
+        <slot name="bottomContent"/>
+      {/if}
+      {#if properties.selectMultipleItems}
+        <div class="apply-btn-container">
+          <Button properties={applyButtonProps} on:click={dispatchEvent} />
         </div>
       {/if}
     </div>
@@ -248,17 +236,16 @@
     min-width: var(--select-min-width);
     box-shadow: var(--select-box-shadow, 0px 1px 8px #2f537733);
     -webkit-appearance: none !important; /* For Safari MWeb */
-    outline: none;
-    cursor: pointer;
-    border: var(--select-border);
-    word-break: var(--select-word-break, break-word);
+    outline: var(--select-outline, none);
     resize: none;
-    position: relative;
-    white-space: var(--select-white-space);
-    color: var(--select-color);
-    --button-margin: 1px;
-    --button-border-radius: 2px;
-    --input-button-margin: 10px;
+    cursor: pointer;
+    border: var(--select-border, 1px solid #ccc);
+    position: var(--select-position, relative);
+    color: var(--select-color, #333);
+    display: var(--select-display, inline-block);
+    --button-margin: var(--select-btn-margin, 1px);
+    --button-border-radius: var(--select-btn-border-radius, 2px);
+    --input-button-margin: var(--select-input-button-margin, 10px);
   }
 
   .select:hover {
@@ -269,6 +256,8 @@
     height: var(--dropdown-arrow-icon-height, 16px);
     width: var(--dropdown-arrow-icon-width, 16px);
     transition: transform 0.1s;
+    position: absolute;
+    right: 10px;
   }
 
   .active {
@@ -276,8 +265,12 @@
   }
 
   .item {
-    padding: var(--item-padding, 8px);
-    border-radius: 4px;
+    padding: var(--item-padding, 8px 16px);
+    background-color: var(--item-background-color, #fff);
+    border-radius: var(--item-border-radius);
+    cursor: pointer;
+    position: relative;
+
   }
 
   .filler {
@@ -285,15 +278,27 @@
   }
 
   .item:hover {
-    background-color: var(--non-selected-hover-bg, #00000010);
+    background-color: var(--non-selected-hover-bg, #f0f0f0);
     color: var(--non-selected-hover-color);
   }
 
   .selected {
-    margin: 0px;
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    align-items: var(--selected-align-items,center);
+    margin: var(--selected-margin,0px 0px 0px 0px);
+    justify-content: var(--selected-justify-content,flex-start);
+    background-color: var(--selected-item-background-color, #f9f9f9);
+    white-space: var(--selected-item-white-space, nowrap);
+    overflow: var(--selected-item-overflow, hidden);
+    text-overflow: var(--selected-item-text-overflow, ellipsis);
+    max-width: var(--selected-item-max-widhh, 100%);
+  }
+
+  .selected-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 20px);
   }
 
   .selected:hover {
@@ -306,50 +311,81 @@
     background-color: var(--non-selected-item-bgcolor, #ffffff);
     color: var(--non-selected-item-color);
     box-shadow: 0px 1px 8px #2f537733;
-    width: var(--non-selected-width, fit-content);
+    width: var(--non-selected-width, 100%);
     min-width: var(--non-selected-min-width, 100%);
-    position: absolute;
-    border-radius: var(--non-selected-border-radius, 4px);
-    margin: var(--non-selected-margin, 4px 0px 0px 0px);
-    z-index: 10;
     word-wrap: var(--non-selected-word-break, break-word);
-    white-space: var(--non-selected-white-space);
+    position: var(--non-selected-items-position, absolute);
+    border-radius: var(--non-selected-items-border-radius, 4px);
+    margin: var(--non-selected-margin, 4px 0px 0px 0px);
     font-weight: var(--non-select-font-weight, 500);
     left: var(--non-selected-left);
     right: var(--non-selected-right);
     top: var(--non-selected-top);
     bottom: var(--non-selected-bottom);
+    z-index: 10;
+    overflow-y: auto;
   }
 
   ::-webkit-scrollbar {
-    width: 0;
+    width: var(--scrollbar-width, 0);
   }
 
   .item-list {
-    max-height: var(--non-selected-max-height, 135px);
+    max-height: var(--non-selected-max-height, 165px);
     overflow-y: auto;
-    position: relative;
   }
 
   .item-selected::after {
     content: var(--selected-option-icon, '✔');
     position: absolute;
     right: 7px;
+    color: var(--item-selected-icon-color);
   }
 
   .label-container {
     font-weight: var(--label-text-weight, 400);
     font-size: var(--label-text-size, 12px);
-    color: var(--label-text-color, #000000);
-    margin-bottom: 4px;
-    display: inline-block;
+    color: var(--label-text-color,  #333);
+    margin-bottom: var(--label-container-margin-bottom, 4px);
+    display: var(--label-container-display, inline-block);
   }
 
   .multipleSelect-btn {
     display: flex;
-    width: var(--multipleSelect-btn-width, 100%);
+    width: var(--multipleSelect-btn-width, 99%);
     white-space: var(--multipleSelect-btn-white-space, nowrap);
-    padding: var(--multipleSelect-btn-padding, 2px);
+    padding: var(--multipleSelect-btn-padding, 1px);
+    --button-border: var(--multipleSelect-btn-border, 1px solid white);
+    --button-font-size: var(--multipleSelect-btn-font-size, 12px);
+    --button-width: var(--multipleSelect-btn-width, 100%);
+  }
+
+  .icon-container {
+    width: var(--select-icon-container-width, fit-content);
+    height: var(--select-icon-container-height, fit-content);
+    border-radius: var(--select-icon-container-border-radius);
+    opacity: var(--select-icon-container-opacity);
+    background: var(--select-icon-container-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: var(--select-icon-container-margin, 0px 8px 0px 0px);
+    padding: var(--select-icon-container-padding);
+    --image-height: var(--select-icon-height);
+    --image-width: var(--select-icon-height);
+  }
+
+  .apply-btn-container {
+    padding: var(--apply-btn-container-padding, 5px);
+    border-top: var(--apply-btn-container-border-top, 1px solid #ddd);
+    background-color: var(--apply-btn-container-background-color, #f9f9f9);
+    position: var(--apply-btn-container-position, sticky);
+    width: var(--apply-btn-container-width, 94%);
+    display: var(--apply-btn-display, flex);
+    flex-direction: var(--apply-btn-flex-direction, column);
+    --button-width: var(--apply-btn-width, 100%);
+    --button-padding: var(--apply-btn-padding, 10px);
+    --button-font-size: var(--apply-btn-font-size, 14px);
   }
 
   .icon-container {

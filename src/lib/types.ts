@@ -1,3 +1,5 @@
+import type { FlyParams } from 'svelte/transition';
+
 /**
  * @name InputDataType
  * @description Different types of input data which can be passed to the Input Component
@@ -36,3 +38,11 @@ export type TextTransformer = (text: string) => string;
  * @description Type Map for All possible output of an Input Filed Validation
  */
 export type ValidationState = 'Valid' | 'InProgress' | 'Invalid';
+
+/**
+ * @description Type for animation configuration
+ */
+export type FlyAnimationConfig = {
+  in: FlyParams;
+  out: FlyParams;
+};

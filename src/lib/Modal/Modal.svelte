@@ -165,14 +165,17 @@
 
   .small {
     height: var(--modal-small-height, 20vh);
+    width: var(--modal-small-width);
   }
 
   .medium {
     height: var(--modal-medium-height, 50vh);
+    width: var(--modal-medium-width);
   }
 
   .large {
     height: var(--modal-large-height, 80vh);
+    width: var(--modal-large-width);
   }
 
   .fit-content {

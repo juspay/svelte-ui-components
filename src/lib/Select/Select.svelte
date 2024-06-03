@@ -22,8 +22,8 @@
   const dropDownIcon =
     properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
 
-    let applyButtonProps: ButtonProperties;
-    $: applyButtonProps = {
+  let applyButtonProps: ButtonProperties;
+  $: applyButtonProps = {
     text: `Select (${properties.selectedItem.length})`,
     enable: properties.selectedItem.length > 0,
     showLoader: false,
@@ -83,7 +83,7 @@
       }
     } else {
       properties.selectedItem = [item];
-      properties.selectedItemLabel=[item];
+      properties.selectedItemLabel = [item];
     }
     if (!properties.selectMultipleItems) {
       toggleSelect();
@@ -122,8 +122,8 @@
         !isItemClicked &&
         !isApplyButtonClicked &&
         !isClearAllButtonClicked &&
-        !isSelectAllButtonClicked )
-      {
+        !isSelectAllButtonClicked
+      ) {
         isSelectOpen = false;
       }
     }
@@ -191,12 +191,12 @@
       class="non-selected-items"
       style="--non-selected-display:{isSelectOpen ? 'inline-block' : 'none'};"
     >
-    {#if properties.selectMultipleItems && !properties.showSingleSelectButton}
-      <div class="multipleSelect-btn">
-        <Button properties={selectAllButtonProps} on:click={selectAllItems} />
-        <Button properties={clearAllButtonProps} on:click={clearAllItems} />
-      </div>
-    {/if}
+      {#if properties.selectMultipleItems && !properties.showSingleSelectButton}
+        <div class="multipleSelect-btn">
+          <Button properties={selectAllButtonProps} on:click={selectAllItems} />
+          <Button properties={clearAllButtonProps} on:click={clearAllItems} />
+        </div>
+      {/if}
       <div class="item-list">
         {#each properties.showSelectedItemInDropdown ? properties.allItems : nonSelectedItems as item}
           <div
@@ -213,7 +213,7 @@
         {/each}
       </div>
       {#if $$slots.bottomContent}
-        <slot name="bottomContent"/>
+        <slot name="bottomContent" />
       {/if}
       {#if properties.selectMultipleItems}
         <div class="apply-btn-container">
@@ -270,7 +270,6 @@
     border-radius: var(--item-border-radius);
     cursor: pointer;
     position: relative;
-
   }
 
   .filler {
@@ -284,9 +283,9 @@
 
   .selected {
     display: flex;
-    align-items: var(--selected-align-items,center);
-    margin: var(--selected-margin,0px 0px 0px 0px);
-    justify-content: var(--selected-justify-content,flex-start);
+    align-items: var(--selected-align-items, center);
+    margin: var(--selected-margin, 0px 0px 0px 0px);
+    justify-content: var(--selected-justify-content, flex-start);
     background-color: var(--selected-item-background-color, #f9f9f9);
     white-space: var(--selected-item-white-space, nowrap);
     overflow: var(--selected-item-overflow, hidden);
@@ -345,7 +344,7 @@
   .label-container {
     font-weight: var(--label-text-weight, 400);
     font-size: var(--label-text-size, 12px);
-    color: var(--label-text-color,  #333);
+    color: var(--label-text-color, #333);
     margin-bottom: var(--label-container-margin-bottom, 4px);
     display: var(--label-container-display, inline-block);
   }

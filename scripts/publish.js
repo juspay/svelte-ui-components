@@ -67,9 +67,7 @@ const prePublishCommands = [`git add package.json`, `rm -rf dist`, `npm run buil
 const postPublishCommands = [
   (otp) => {
     return `npm publish --otp ${otp} --access public`;
-  },
-  `git push -f`,
-  `git push --tags`
+  }
 ];
 
 for (const command of prePublishCommands) {

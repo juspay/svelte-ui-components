@@ -11,4 +11,5 @@ export type SelectProperties = {
   dropDownIcon?: string;
   leftIcon: ImgProps | null;
   showSingleSelectButton?: boolean | null;
+  showSelectedItem?: boolean;
 };

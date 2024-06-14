@@ -13,9 +13,9 @@
 
 <style>
   .toggle-container {
-    display: flex;
+    display: var(--toggle-container-display, flex);
     align-items: center;
-    gap: 8px;
+    gap: var(--toggle-containter-gap, 8px);
   }
 
   .toggle-text {
@@ -28,8 +28,8 @@
   .switch {
     position: relative;
     display: inline-block;
-    width: 46px;
-    height: 25px;
+    width: var(--toggle-switch-width, 46px);
+    height: var(--toggle-switch-height, 25px);
   }
 
   .switch .input-checkbox {
@@ -41,10 +41,10 @@
   .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: var(--toggle-slider-top, 0);
+    left: var(--toggle-slider-left, 0);
+    right: var(--toggle-slider-right, 0);
+    bottom: var(--toggle-slider-bottom, 0);
     background-color: var(--slider-unchecked-color, #ccc);
     -webkit-transition: 0.4s;
     transition: 0.4s;
@@ -53,12 +53,12 @@
   .slider:before {
     position: absolute;
     content: '';
-    height: 23px;
-    width: 23px;
-    left: 2px;
-    bottom: 1px;
-    top: 1px;
-    background-color: white;
+    height: var(--toggle-slider-before-height, 23px);
+    width: var(--toggle-slider-before-width, 23px);
+    left: var(--toggle-slider-before-left, 2px);
+    bottom: var(--toggle-slider-before-bottom, 1px);
+    top: var(--toggle-slider-before-top, 1px);
+    background-color: var(--toggle-slider-before-background-color, white);
     -webkit-transition: 0.4s;
     transition: 0.4s;
   }
@@ -78,10 +78,10 @@
   }
 
   .slider.round {
-    border-radius: 23px;
+    border-radius: var(--slider-round-border-radius, 23px);
   }
 
   .slider.round:before {
-    border-radius: 50%;
+    border-radius: var(--slider-round-before-border-radius, 50%);
   }
 </style>

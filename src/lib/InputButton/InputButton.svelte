@@ -79,7 +79,7 @@
       />
     </div>
     {#if properties.rightButtonProperties != null}
-      <div class="button">
+      <div class="right-button">
         <Button properties={properties.rightButtonProperties} on:click={rightButtonClick} />
       </div>
     {/if}
@@ -127,12 +127,6 @@
   .input {
     flex: 2;
     min-width: 0px;
-  }
-
-  .button {
-    flex: 1;
-    min-width: 0px;
-    --button-height: 54px;
   }
 
   .bottom-button {
@@ -192,5 +186,30 @@
     align-items: center;
     flex-direction: row;
     --button-content-gap: var(--left-button-content-gap);
+    --button-content-flex-direction: var(--left-button-content-flex-direction, row);
+  }
+  
+  .right-button {
+    flex: var(--right-button-flex, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    min-width: var(--right-button-min-width, 0px);
+    --button-color: var(--right-button-color);
+    --button-text-color: var(--right-button-text-color);
+    --button-font-family: var(--right-button-font-family);
+    --button-font-weight: var(--right-button-font-weight);
+    --button-font-size: var(--right-button-font-size);
+    --button-height: var(--right-button-height, 54px);
+    --button-padding: var(--right-button-padding);
+    --button-border-radius: var(--right-button-border-radius);
+    --button-width: var(--right-button-width, 100%);
+    --cursor: var(--right-button-cursor);
+    --opacity: var(--right-button-opacity);
+    --button-border: var(--right-button-border);
+    --button-content-gap: var(--right-button-content-gap);
+    --button-visibility: var(--right-button-visibility, visible);
+    --button-content-flex-direction: var(--right-button-content-flex-direction, row);
   }
 </style>

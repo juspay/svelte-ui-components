@@ -31,10 +31,10 @@
     disabled={!(properties.enable && !properties.showLoader)}
     type={properties.type}
   >
-      {#if properties.showLoader && properties.loaderType === 'Circular'}
-        <div class="button-loader"><Loader /></div>
-      {/if}
-      {#if $$slots.icon}
+    {#if properties.showLoader && properties.loaderType === 'Circular'}
+      <div class="button-loader"><Loader /></div>
+    {/if}
+    {#if $$slots.icon}
       <div class="button-icon"><slot name="icon" /></div>
     {/if}
     <div class="button-text">{properties.text}</div>
@@ -65,7 +65,7 @@
     display: flex;
     justify-content: var(--button-justify-content, center);
     align-items: center;
-    flex-direction: var(--button-content-flex-direction, row);;
+    flex-direction: var(--button-content-flex-direction, row);
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
   }

@@ -166,7 +166,7 @@
         {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
           {#if properties.selectedItem.length === 0}
             {properties.placeholder}
-          {:else if properties.selectedItemLabel?.length === 0 || properties.showSelectedItemInDropdown && properties.showSelectedItem !== false}
+          {:else if properties.selectedItemLabel?.length === 0 || (properties.showSelectedItemInDropdown && properties.showSelectedItem !== false)}
             {properties.selectedItem.join(', ')}
           {:else if properties.showSelectedItem !== false}
             {properties.selectedItemLabel.join(', ')}
@@ -175,7 +175,7 @@
           {/if}
         {:else if properties.selectedItem === ''}
           {properties.placeholder}
-        {:else if properties.selectedItemLabel === null || properties.selectedItemLabel === '' && properties.showSelectedItem !== false}
+        {:else if properties.selectedItemLabel === null || (properties.selectedItemLabel === '' && properties.showSelectedItem !== false)}
           {properties.selectedItem}
         {:else if properties.showSelectedItem !== false}
           {properties.selectedItemLabel}

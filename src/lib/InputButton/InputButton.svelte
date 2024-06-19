@@ -188,7 +188,7 @@
     --button-content-gap: var(--left-button-content-gap);
     --button-content-flex-direction: var(--left-button-content-flex-direction, row);
   }
-  
+
   .right-button {
     flex: var(--right-button-flex, 1);
     display: flex;

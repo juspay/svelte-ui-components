@@ -261,8 +261,6 @@
     height: var(--dropdown-arrow-icon-height, 16px);
     width: var(--dropdown-arrow-icon-width, 16px);
     transition: transform 0.1s;
-    position: absolute;
-    right: 10px;
   }
 
   .active {
@@ -364,20 +362,6 @@
     --button-width: var(--multipleSelect-btn-width, 100%);
   }
 
-  .icon-container {
-    width: var(--select-icon-container-width, fit-content);
-    height: var(--select-icon-container-height, fit-content);
-    border-radius: var(--select-icon-container-border-radius);
-    opacity: var(--select-icon-container-opacity);
-    background: var(--select-icon-container-background);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: var(--select-icon-container-margin, 0px 8px 0px 0px);
-    padding: var(--select-icon-container-padding);
-    --image-height: var(--select-icon-height);
-    --image-width: var(--select-icon-height);
-  }
 
   .apply-btn-container {
     padding: var(--apply-btn-container-padding, 5px);

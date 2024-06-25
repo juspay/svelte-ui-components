@@ -141,7 +141,7 @@
   });
 </script>
 
-{#if properties.label !== null}
+{#if properties.label !== null && properties.label !== ''}
   <label class="label-container" for={properties.label}>
     {properties.label}
   </label>
@@ -295,7 +295,8 @@
     white-space: var(--selected-item-white-space, nowrap);
     overflow: var(--selected-item-overflow, hidden);
     text-overflow: var(--selected-item-text-overflow, ellipsis);
-    max-width: var(--selected-item-max-widhh, 100%);
+    max-width: var(--selected-item-max-width, 100%);
+    padding: var(--selected-item-padding, var(--item-padding, 8px 16px));
   }
 
   .selected-content {

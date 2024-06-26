@@ -106,6 +106,13 @@
 
     <div class="toast-message">
       {properties.message}
+      {#if properties.subtext}
+        <div class="toast-subtext">{properties.subtext}</div>
+      {/if}
+
+      {#if $$slots.bottomContent}
+        <slot name="bottomContent" />
+      {/if}
     </div>
 
     {#if properties.rightIcon}
@@ -120,14 +127,18 @@
   .toast {
     padding: var(--toast-padding, 10px);
     font-size: var(--toast-font-size, 14px);
+    font-family: var(--toast-font-family);
+    font-weight: var(--toast-font-weight);
     height: var(--toast-height, auto);
     border-radius: var(--toast-border-radius, 0px);
+    border: var(--toast-border, none);
+    border-style: var(--toast-border-style);
     width: var(--toast-width, auto);
     align-items: var(--toast-align-items, center);
     margin: var(--toast-margin, 0px 10px 10px 10px);
     justify-content: var(--toast-justify-content, space-between);
     z-index: var(--toast-z-index, 1000);
-    display: var(--taost-dispay, flex);
+    display: var(--toast-display, flex);
     position: var(--toast-position, absolute);
     top: var(--toast-top, 10px);
     left: var(--toast-left, 0);
@@ -142,7 +153,7 @@
   .toast-icon-wrapper {
     width: var(--toast-icon-wrapper-width, 20px);
     height: var(--toast-icon-wrapper-height, 20px);
-    margin: var(--toast-icon-margin, 0 6px 0 0);
+    margin: var(--toast-icon-margin, 0px 6px 0px 0px);
     padding: var(--toast-icon-wrapper-padding, 1px);
   }
 
@@ -153,8 +164,16 @@
 
   .toast-message {
     display: var(--toast-message-display, flex);
-    flex: var(--taost-message-flex, 1);
+    flex: var(--toast-message-flex, 1);
     padding: var(--toast-message-padding, 1px);
+    flex-direction: column;
+  }
+
+  .toast-subtext {
+    color: var(--toast-subtext-color, #c7c7c7);
+    font-size: var(--toast-subtext-font-size, 10px);
+    font-weight: var(--toast-subtext-font-weight, 400);
+    margin: var(--toast-subtext-margin, 10px 0px 0px 0px);
   }
 
   .close-button {
@@ -162,7 +181,7 @@
     height: var(--toast-close-button-height, 20px);
     cursor: var(--toast-close-button-cursor, pointer);
     gap: var(--toast-close-button-gap, 6px);
-    margin: var(--toast-close-button-margin, 0 0 0 10px);
+    margin: var(--toast-close-button-margin, 0px 0px 0px 10px);
     display: var(--toast-close-button-display, flex);
     align-items: var(--toast-close-button-align-items, center);
     justify-content: var(--toast-close-button-justify-content, center);
@@ -172,20 +191,24 @@
   .success {
     color: var(--toast-success-text, #fff);
     background-color: var(--toast-background-color, #24aa5a);
+    --toast-border: var(--toast-success-border);
   }
 
   .info {
     color: var(--toast-info-text, #fff);
     background-color: var(--toast-background-color, #87ceeb);
+    --toast-border: var(--toast-info-border);
   }
 
   .warn {
     color: var(--toast-warn-text, #fff);
     background-color: var(--toast-background-color, #f3a42d);
+    --toast-border: var(--toast-warn-border);
   }
 
   .error {
     color: var(--toast-error-text, #fff);
     background-color: var(--toast-background-color, #f04438);
+    --toast-border: var(--toast-error-border);
   }
 </style>

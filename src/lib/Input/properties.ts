@@ -22,6 +22,7 @@ export type InputProperties = {
   autoComplete: AutoCompleteType;
   name: string;
   textTransformers: TextTransformer[];
+  dataPw?: string;
 };
 
 export const defaultInputProperties: InputProperties = {

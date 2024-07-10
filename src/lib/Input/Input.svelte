@@ -185,6 +185,7 @@
       on:focusout={onFocusOut}
       on:input={onInput}
       on:paste={onPaste}
+      data-pw={properties.dataPw}
       class="
       {properties.actionInput ? 'action-input' : ''}
     "

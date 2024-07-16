@@ -15,6 +15,7 @@ export type ModalProperties = {
     rightImage: string | null;
     text: string | null;
   };
+  debounceTime: number;
 };
 
 export const defaultModalProperties: ModalProperties = {
@@ -28,5 +29,6 @@ export const defaultModalProperties: ModalProperties = {
     text: null
   },
   enableTransition: true,
-  transitionType: 'ALL'
+  transitionType: 'ALL',
+  debounceTime: 700,
 };

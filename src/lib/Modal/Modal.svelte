@@ -4,12 +4,15 @@
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { defaultModalProperties } from './properties';
+  import { createDebouncer } from '../utils';
 
   const dispatch = createEventDispatcher();
   let overlayDiv: HTMLDivElement;
   let backPressed = false;
 
   export let properties: ModalProperties = defaultModalProperties;
+  
+  const debounce = createDebouncer(properties.debounceTime);
 
   function handlePopstate() {
     backPressed = true;
@@ -26,7 +29,9 @@
 
   function handleOverlayClick(event: MouseEvent) {
     if (event.target && event.target === overlayDiv) {
-      dispatch('overlayClick');
+      debounce(() => {
+        dispatch('overlayClick');
+      });
     }
   }
 

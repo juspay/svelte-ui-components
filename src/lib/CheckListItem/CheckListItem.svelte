@@ -10,7 +10,7 @@
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
       checked = e.target.checked;
     }
-    dispatch('click', { text, checked });
+    dispatch('click');
   }
 </script>
 
@@ -19,7 +19,7 @@
   {#if $$slots.checkboxLabel}
     <slot name="checkboxLabel" />
   {:else}
-    <span class="text {checked ? 'checked' : ''}">
+    <span class="text">
       <!-- eslint-disable-next-line -->
       {@html text}
     </span>
@@ -37,11 +37,6 @@
     margin: var(--check-list-item-margin, 0px 0px 0px 8px);
     font-size: var(--check-list-item-text-size, 12px);
     color: var(--check-list-item-text-color);
-  }
-
-  .text.checked {
-    color: var(--check-list-item-checked-text-color);
-    font-weight: var(--check-list-item-checked-font-weight);
   }
 
   input.checkbox {

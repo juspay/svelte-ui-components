@@ -109,7 +109,9 @@
             </div>
           {/if}
           {#if showRightContentLoader}
-            <Loader />
+            <div class="right-content-loader">
+              <Loader />
+            </div>
           {/if}
           {#if properties.rightContentText && properties.rightContentText !== ''}
             <span class="right-content-text">{properties.rightContentText}</span>
@@ -227,6 +229,10 @@
 
   .right-content {
     display: var(--list-item-right-content-display, flex);
+  }
+
+  .right-content-loader {
+    margin: var(--list-item-right-content-loader-margin);
   }
 
   .bottom-section {

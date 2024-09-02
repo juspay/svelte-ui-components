@@ -363,7 +363,6 @@
     --button-width: var(--multipleSelect-btn-width, 100%);
   }
 
-
   .apply-btn-container {
     padding: var(--apply-btn-container-padding, 5px);
     border-top: var(--apply-btn-container-border-top, 1px solid #ddd);

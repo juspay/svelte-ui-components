@@ -5,7 +5,7 @@ export type ToastProperties = {
   duration: number;
   leftIcon?: string;
   message: string;
-  subtext?: string,
+  subtext?: string;
   rightIcon?: string;
   type?: ToastType;
   direction?: ToastDirection;

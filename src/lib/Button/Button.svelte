@@ -37,7 +37,9 @@
     {#if $$slots.icon}
       <div class="button-icon"><slot name="icon" /></div>
     {/if}
-    <div class="button-text">{properties.text}</div>
+    {#if properties.text !== null && properties.text.length > 0}
+      <div class="button-text">{properties.text}</div>
+    {/if}
   </button>
 </div>
 

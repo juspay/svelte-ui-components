@@ -11,7 +11,7 @@
   let backPressed = false;
 
   export let properties: ModalProperties = defaultModalProperties;
-  
+
   const debounce = createDebouncer(properties.debounceTime);
 
   function handlePopstate() {
@@ -146,9 +146,9 @@
   }
 
   .slot-content {
-    display: flex;
-    overflow-y: scroll;
-    scrollbar-width: none;
+    display: var(--modal-display, flex);
+    overflow-y: var(--modal-overflow-y, scroll);
+    scrollbar-width: var(--modal-scrollbar-width, none);
   }
 
   .slot-content::-webkit-scrollbar {

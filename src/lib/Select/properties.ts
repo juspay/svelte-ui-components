@@ -12,4 +12,5 @@ export type SelectProperties = {
   leftIcon: ImgProps | null;
   showSingleSelectButton?: boolean | null;
   showSelectedItem?: boolean;
+  showSelectedItemCount?: boolean;
 };

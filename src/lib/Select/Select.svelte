@@ -4,6 +4,7 @@
   import type { ButtonProperties } from '$lib/Button/properties';
   import Img from '$lib/Img/Img.svelte';
   import Button from '$lib/Button/Button.svelte';
+  import CheckListItem from '$lib/CheckListItem/CheckListItem.svelte';
 
   let selectedElementDiv: HTMLDivElement | null = null;
 
@@ -17,7 +18,8 @@
     showSelectedItemInDropdown: false,
     selectMultipleItems: false,
     leftIcon: null,
-    showSelectedItem: true
+    showSelectedItem: true,
+    showSelectedItemCount: false
   };
 
   const dropDownIcon =
@@ -34,14 +36,6 @@
 
   const selectAllButtonProps: ButtonProperties = {
     text: 'Select All',
-    enable: true,
-    showLoader: false,
-    loaderType: null,
-    type: 'submit'
-  };
-
-  const clearAllButtonProps: ButtonProperties = {
-    text: 'Clear All',
     enable: true,
     showLoader: false,
     loaderType: null,
@@ -102,14 +96,14 @@
     dispatch('dropdownClick');
   }
 
-  function clearAllItems() {
-    properties.selectedItem = [];
-    properties.selectedItemLabel = [];
-  }
-
   function selectAllItems() {
-    properties.selectedItem = [...properties.allItems];
-    properties.selectedItemLabel = [...properties.allItems];
+    if (properties.selectedItem.length === properties.allItems.length) {
+      properties.selectedItem = [];
+      properties.selectedItemLabel = [];
+    } else {
+      properties.selectedItem = [...properties.allItems];
+      properties.selectedItemLabel = [...properties.allItems];
+    }
   }
 
   function closeSelect(event: Event) {
@@ -119,11 +113,13 @@
       const isApplyButtonClicked = clickedElement.classList.contains('apply-btn');
       const isClearAllButtonClicked = clickedElement.innerText === 'Clear All';
       const isSelectAllButtonClicked = clickedElement.innerText === 'Select All';
+      const isCheckListClicked = clickedElement.classList.contains('checkbox');
       if (
         !isItemClicked &&
         !isApplyButtonClicked &&
         !isClearAllButtonClicked &&
-        !isSelectAllButtonClicked
+        !isSelectAllButtonClicked &&
+        !isCheckListClicked
       ) {
         isSelectOpen = false;
       }
@@ -184,6 +180,11 @@
         {/if}
       </div>
       <div class="filler" />
+      {#if properties.showSelectedItemCount && properties.selectMultipleItems && Array.isArray(properties.selectedItem)}
+        <div class="selected-item-count">
+          {properties.selectedItem.length}
+        </div>
+      {/if}
       {#if !properties.hideDropDownIcon}
         <img
           src={dropDownIcon}
@@ -197,9 +198,14 @@
       style="--non-selected-display:{isSelectOpen ? 'inline-block' : 'none'};"
     >
       {#if properties.selectMultipleItems && !properties.showSingleSelectButton}
-        <div class="multipleSelect-btn">
+        <div class="select-all-btn">
+          <CheckListItem
+            checked={Array.isArray(properties.selectedItem) &&
+              properties.selectedItem.length === properties.allItems.length}
+            text=""
+            on:click={selectAllItems}
+          />
           <Button properties={selectAllButtonProps} on:click={selectAllItems} />
-          <Button properties={clearAllButtonProps} on:click={clearAllItems} />
         </div>
       {/if}
       <div class="item-list">
@@ -213,6 +219,9 @@
             role="button"
             tabindex="0"
           >
+            {#if properties.selectMultipleItems}
+              <CheckListItem checked={isSelected(properties.selectedItem, item)} text="" />
+            {/if}
             {item}
           </div>
         {/each}
@@ -251,6 +260,13 @@
     --button-margin: var(--select-btn-margin, 1px);
     --button-border-radius: var(--select-btn-border-radius, 2px);
     --input-button-margin: var(--select-input-button-margin, 10px);
+    --check-list-item-margin: var(--select-check-list-item-margin, 0px);
+    --checkbox-margin: var(--select-checkbox-margin, 2px 8px 0px 0px);
+    --checkbox-height: var(--select-checkbox-height, 14px);
+    --checkbox-width: var(--select-checkbox-width, 14px);
+    --checkbox-accent-color: var(--select-checkbox-accent-color, #3a4550);
+    --check-list-item-checked-font-weight: var(--select-check-list-item-checked-font-weight, bold);
+    --check-list-item-width: var(--select-check-list-item-width, fit-content);
   }
 
   .select:hover {
@@ -273,6 +289,7 @@
     border-radius: var(--item-border-radius);
     cursor: pointer;
     position: relative;
+    display: flex;
   }
 
   .filler {
@@ -353,14 +370,17 @@
     display: var(--label-container-display, inline-block);
   }
 
-  .multipleSelect-btn {
+  .select-all-btn {
     display: flex;
-    width: var(--multipleSelect-btn-width, 99%);
-    white-space: var(--multipleSelect-btn-white-space, nowrap);
-    padding: var(--multipleSelect-btn-padding, 1px);
-    --button-border: var(--multipleSelect-btn-border, 1px solid white);
-    --button-font-size: var(--multipleSelect-btn-font-size, 12px);
-    --button-width: var(--multipleSelect-btn-width, 100%);
+    width: var(--select-all-btn-width, 99%);
+    white-space: var(--select-all-btn-white-space, nowrap);
+    padding: var(--select-all-btn-padding, 10px 16px);
+    --button-font-size: var(--select-all-btn-font-size, 14px);
+    --button-width: var(--select-all-btn-width, 100%);
+    --button-color: var(--select-all-btn-color, #ffffff);
+    --button-text-color: var(--select-all-btn-text-color, #333);
+    --button-padding: var(--select-all-btn-inner-padding, 0px);
+    --button-justify-content: var(--select-all-btn-justify-content, flex-start);
   }
 
   .apply-btn-container {
@@ -389,5 +409,19 @@
     padding: var(--select-icon-container-padding);
     --image-height: var(--select-icon-height);
     --image-width: var(--select-icon-height);
+  }
+
+  .selected-item-count {
+    margin: var(--selected-item-count-margin, 0px 6px);
+    height: var(--selected-item-count-height, 18px);
+    width: var(--selected-item-count-width, 18px);
+    min-width: var(--selected-item-count-min-width, 18px);
+    padding: var(--selected-item-count-padding, 4px);
+    display: var(--selected-item-count-display, flex);
+    justify-content: var(--selected-item-count-justify-content, center);
+    align-items: var(--selected-item-count-align-item, center);
+    background-color: var(--selected-item-count-bg-color, #3a4550);
+    color: var(--selected-item-count-text-color, #ffffff);
+    border-radius: var(--selected-item-count-border-radius, 4px);
   }
 </style>

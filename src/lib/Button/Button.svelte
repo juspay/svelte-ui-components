@@ -70,6 +70,7 @@
     flex-direction: var(--button-content-flex-direction, row);
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
+    box-shadow: var(--button-box-shadow, none);
   }
 
   .button-loader {

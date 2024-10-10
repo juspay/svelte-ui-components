@@ -21,6 +21,7 @@ export { default as Table } from './Table/Table.svelte';
 export { default as Stepper } from './Stepper/Stepper.svelte';
 export { default as Step } from './Stepper/Step.svelte';
 export { default as Toast } from './Toast/Toast.svelte';
+export { default as GridItem } from './GridItem/GridItem.svelte';
 
 export type { ButtonProperties } from './Button/properties';
 export type { ModalProperties, ModalAlign, ModalSize } from './Modal/properties';

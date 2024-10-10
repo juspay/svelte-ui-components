@@ -10,10 +10,10 @@
   let startTouch: number;
   let startMouse: number;
   let endMouse: number;
-  let carouselWidth: string;
   let carouselDiv: HTMLDivElement | undefined;
   let activeSlideIndex = 0;
   let widthUnits: string;
+  $: carouselWidth = '300px';
 
   function nextSlide() {
     if (activeSlideIndex != properties.views.length - 1 || properties.isScrollableLast) {
@@ -108,9 +108,22 @@
   }
 
   onMount(() => {
+    const carouselContainer = document.querySelector('.carousel-container');
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.target === carouselContainer) {
+          carouselWidth = getComputedStyle(carouselContainer).getPropertyValue('width');
+          setWidthUnit(carouselWidth);
+        }
+      }
+    });
+
+    if (carouselContainer){
+      resizeObserver.observe(carouselContainer);
+    }
+
     if (carouselDiv) {
-      carouselWidth = getComputedStyle(carouselDiv).getPropertyValue('--carousel-width');
-      setWidthUnit(carouselWidth);
       carouselDiv.addEventListener('touchstart', handleTouchStart);
       carouselDiv.addEventListener('touchend', handleTouchEnd);
       carouselDiv.addEventListener('mousedown', handleMouseDown);
@@ -128,7 +141,7 @@
   });
 </script>
 
-<div class="carousel-container">
+<div class="carousel-container" style="--carousel-container-width: {carouselWidth};">
   {#if properties.views.length}
     <div class="carousel" bind:this={carouselDiv}>
       <div class="slidesDiv" bind:this={slidesDiv}>
@@ -161,17 +174,18 @@
 
 <style>
   .carousel-container {
-    width: var(--carousel-width);
+    max-width: var(--carousel-width);
+    width: 100%;
   }
   .current-slide {
-    width: var(--carousel-width, 300px);
+    width: var(--carousel-container-width);
     height: var(--carousel-height, 100px);
     flex-shrink: 0;
   }
   .carousel {
     box-shadow: var(--carousel-shadow);
     height: var(--carousel-height, 100px);
-    width: var(--carousel-width, 300px);
+    width: var(--carousel-container-width);
     overflow: hidden;
     border-radius: var(--carousel-border-radius, 0%);
   }

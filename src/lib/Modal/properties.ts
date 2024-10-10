@@ -1,3 +1,4 @@
+import type { ButtonProperties } from '$lib/Button/properties';
 import type { ModalTransition } from '$lib/types';
 
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';
@@ -15,6 +16,10 @@ export type ModalProperties = {
     rightImage: string | null;
     text: string | null;
   };
+  footer?: {
+    primaryButton?: ButtonProperties,
+    secondaryButton?: ButtonProperties,
+  }
   debounceTime: number;
 };
 
@@ -30,5 +35,5 @@ export const defaultModalProperties: ModalProperties = {
   },
   enableTransition: true,
   transitionType: 'ALL',
-  debounceTime: 700,
+  debounceTime: 700
 };

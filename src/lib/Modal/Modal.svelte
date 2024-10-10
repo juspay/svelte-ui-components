@@ -5,6 +5,7 @@
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { defaultModalProperties } from './properties';
   import { createDebouncer } from '../utils';
+  import Button from '$lib/Button/Button.svelte';
 
   const dispatch = createEventDispatcher();
   let overlayDiv: HTMLDivElement;
@@ -25,6 +26,14 @@
 
   function handleLeftImageClick(): void {
     dispatch('headerLeftImageClick');
+  }
+
+  function handlePrimaryButtonClick(): void {
+    dispatch('primaryButtonClick');
+  }
+
+  function handleSecondaryButtonClick(): void {
+    dispatch('secondaryButtonClick');
   }
 
   function handleOverlayClick(event: MouseEvent) {
@@ -105,6 +114,32 @@
           <div class="slot-content">
             <slot name="content" />
           </div>
+          {#if $$slots.footer}
+            <div class="footer-content">
+              <slot name="footer" />
+            </div>
+          {:else if properties.footer?.primaryButton || properties.footer?.secondaryButton}
+            <div class="footer-content">
+              <div class="footer-action-buttons">
+                {#if properties.footer.secondaryButton}
+                  <div class="footer-secondary-button">
+                    <Button
+                      properties={properties.footer.secondaryButton}
+                      on:click={handleSecondaryButtonClick}
+                    />
+                  </div>
+                {/if}
+                {#if properties.footer.primaryButton}
+                  <div class="footer-primary-button">
+                    <Button
+                      properties={properties.footer.primaryButton}
+                      on:click={handlePrimaryButtonClick}
+                    />
+                  </div>
+                {/if}
+              </div>
+            </div>
+          {/if}
         </div>
       </ModalAnimation>
     </div>
@@ -143,6 +178,7 @@
     display: flex;
     flex-direction: column;
     border-radius: var(--modal-border-radius, 0px);
+    overflow: var(--modal-content-overflow, auto);
   }
 
   .slot-content {
@@ -193,6 +229,75 @@
     background-color: var(--modal-header-background-color, #f6f7f9);
     padding: var(--modal-header-padding, 18px 20px);
     border-radius: var(--modal-header-border-radius, 0px);
+    border-bottom: var(--modal-header-border-bottom, none);
+  }
+
+  .footer-content {
+    display: flex;
+    background-color: var(--modal-footer-background-color, #f6f7f9);
+    padding: var(--modal-footer-padding, 18px 20px);
+    border-radius: var(--modal-footer-border-radius, 0px);
+    border-top: var(--modal-footer-border-top, none);
+    justify-content: var(--modal-footer-justify-content, none);
+  }
+
+  .footer-action-buttons {
+    display: flex;
+    gap: var(--modal-footer-gap, 0px);
+    width: var(--modal-footer-action-buttons-width, auto);
+  }
+
+  .footer-secondary-button {
+    --button-max-height: var(--modal-footer-secondary-button-max-height);
+    --button-max-width: var(--modal-footer-secondary-button-max-width);
+    --button-font-family: var(--modal-footer-secondary-button-font-family);
+    --button-font-weight: var(--modal-footer-secondary-button-font-weight, 500);
+    --button-font-size: var(--modal-footer-secondary-button-font-size, 14px);
+    --button-color: var(--modal-footer-secondary-button-color, #3a4550);
+    --button-text-color: var(--modal-footer-secondary-button-text-color, white);
+    --button-height: var(--modal-footer-secondary-button-height, fit-content);
+    --button-padding: var(--modal-footer-secondary-button-padding, 16px);
+    --button-margin: var(--modal-footer-secondary-button-margin);
+    --button-border-radius: var(--modal-footer-secondary-button-border-radius, 0px);
+    --button-width: var(--modal-footer-secondary-button-width, fit-content);
+    --cursor: var(--modal-footer-secondary-button-cursor, pointer);
+    --opacity: var(--modal-footer-secondary-button-opacity, 1);
+    --button-border: var(--modal-footer-secondary-button-border, none);
+    --button-justify-content: var(--modal-footer-secondary-button-justify-content, center);
+    --button-content-flex-direction: var(
+      --modal-footer-secondary-button-content-flex-direction,
+      row
+    );
+    --button-content-gap: var(--modal-footer-secondary-button-content-gap, 16px);
+    --button-visibility: var(--modal-footer-secondary-button-visibility, visible);
+    --button-box-shadow: var(--modal-footer-secondary-button-box-shadow, none);
+    order: var(--modal-secondary-button-order, none);
+    flex: var(--modal-footer-secondary-button-flex-value, none);
+  }
+
+  .footer-primary-button {
+    --button-max-height: var(--modal-footer-primary-button-max-height);
+    --button-max-width: var(--modal-footer-primary-button-max-width);
+    --button-font-family: var(--modal-footer-primary-button-font-family);
+    --button-font-weight: var(--modal-footer-primary-button-font-weight, 500);
+    --button-font-size: var(--modal-footer-primary-button-font-size, 14px);
+    --button-color: var(--modal-footer-primary-button-color, #3a4550);
+    --button-text-color: var(--modal-footer-primary-button-text-color, white);
+    --button-height: var(--modal-footer-primary-button-height, fit-content);
+    --button-padding: var(--modal-footer-primary-button-padding, 16px);
+    --button-margin: var(--modal-footer-primary-button-margin);
+    --button-border-radius: var(--modal-footer-primary-button-border-radius, 0px);
+    --button-width: var(--modal-footer-primary-button-width, fit-content);
+    --cursor: var(--modal-footer-primary-button-cursor, pointer);
+    --opacity: var(--modal-footer-primary-button-opacity, 1);
+    --button-border: var(--modal-footer-primary-button-border, none);
+    --button-justify-content: var(--modal-footer-primary-button-justify-content, center);
+    --button-content-flex-direction: var(--modal-footer-primary-button-content-flex-direction, row);
+    --button-content-gap: var(--modal-footer-primary-button-content-gap, 16px);
+    --button-visibility: var(--modal-footer-primary-button-visibility, visible);
+    --button-box-shadow: var(--modal-footer-primary-button-box-shadow, none);
+    order: var(--modal-primary-button-order, none);
+    flex: var(--modal-footer-primary-button-flex-value, none);
   }
 
   .header-text {

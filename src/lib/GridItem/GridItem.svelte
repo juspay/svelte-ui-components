@@ -10,7 +10,7 @@
 
   function onClick() {
     showLoader = !showLoader;
-    dispatch('onClick');
+    dispatch('click');
   }
 </script>
 
@@ -29,8 +29,8 @@
 <style>
   .container {
     box-sizing: border-box;
-    height: var(--grid-item-height, fit-content);
-    width: var(--grid-item-width, fit-content);
+    height: var(--grid-item-height, 98px);
+    width: var(--grid-item-width, 66px);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -58,8 +58,8 @@
   }
 
   .grid-item-body {
-    height: var(--grid-item-height, 64px);
-    width: var(--grid-item-width, 64px);
+    height: var(--grid-item-body-height, 64px);
+    width: var(--grid-item-body-width, 64px);
     background-color: var(--grid-item-background-color, #faf9f9);
     border: var(--grid-item-border, 1px solid #eaeaea);
     border-radius: var(--grid-item-border-radius, 4px);
@@ -80,6 +80,12 @@
     margin: var(--grid-item-footer-margin, 8px 0 0 0);
     font-size: var(--grid-item-font-size, 14px);
     color: var(--grid-item-color, #333);
+    text-overflow: var(--grid-item-footer-text-overflow, ellipsis);
+    white-space: var(--grid-item-footer-white-space, nowrap);
+    overflow: var(--grid-item-footer-overflow, hidden);
+    width: var(--grid-item-footer-width, 100%);
+    text-align: var(--grid-item-footer-text-align, center);
+    height: var(--grid-item-footer-height, fit-content);
   }
 
   .grid-body-loader {
@@ -94,7 +100,7 @@
     margin: var(--grid-item-margin, 8px 0 0 0);
     border-radius: var(--grid-item-border-radius, 4px);
     border: var(--animation-version, 32px solid #cbcccf66);
-    animation: clipperAnimation var(--loader-animation-duration) infinite linear;
+    animation: clipperAnimation var(--loader-animation-duration, 3s) infinite linear;
   }
 
   @keyframes clipperAnimation {

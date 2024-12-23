@@ -1,28 +1,40 @@
 <script lang="ts">
-  export let toggleValue = false;
-  export let toggleText = '';
+  import { createEventDispatcher } from "svelte";
+
+  export let checked = false;
+  export let text = '';
+
+  const dispatch = createEventDispatcher();
+
+  function handleCheckboxClick(e: MouseEvent): void {
+    if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
+      checked = e.target.checked;
+    }
+    dispatch('click', checked);
+  }
 </script>
 
-<div class="toggle-container">
-  <div class="toggle-text">{toggleText}</div>
+<div class="container">
+  <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
-    <input class="input-checkbox" type="checkbox" bind:checked={toggleValue} />
+    <input class="input-checkbox" type="checkbox" bind:checked={checked} on:click={handleCheckboxClick} />
     <span class="slider round" />
   </label>
 </div>
 
 <style>
-  .toggle-container {
+  .container {
     display: var(--toggle-container-display, flex);
-    align-items: center;
-    gap: var(--toggle-containter-gap, 8px);
+    align-items: var(--toggle-container-align-items, center);
+    gap: var(--toggle-container-gap, 8px);
   }
 
-  .toggle-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: #4a4a4a;
-    margin-right: 8px;
+  .text {
+    font-size: var(--toggle-text-font-size, 14px);
+    font-weight: var(--toggle-text-font-weight, 400);
+    color: var(--toggle-text-color, #4a4a4a);
+    margin: var(--toggle-text-margin, 0px 8px 0px 0px);
+    order: var(--toggle-text-order, 0);
   }
 
   .switch {
@@ -46,21 +58,21 @@
     right: var(--toggle-slider-right, 0);
     bottom: var(--toggle-slider-bottom, 0);
     background-color: var(--slider-unchecked-color, #ccc);
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
+    -webkit-transition: var(--toggle-slider-transition, 0.4s);
+    transition: var(--toggle-slider-transition, 0.4s);
   }
 
   .slider:before {
     position: absolute;
     content: '';
-    height: var(--toggle-slider-before-height, 23px);
-    width: var(--toggle-slider-before-width, 23px);
+    height: var(--toggle-ball-height, 23px);
+    width: var(--toggle-ball-width, 23px);
     left: var(--toggle-slider-before-left, 2px);
     bottom: var(--toggle-slider-before-bottom, 1px);
     top: var(--toggle-slider-before-top, 1px);
     background-color: var(--toggle-slider-before-background-color, white);
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
+    -webkit-transition: var(--toggle-slider-transition, 0.4s);
+    transition: var(--toggle-slider-transition, 0.4s);
   }
 
   .input-checkbox:checked + .slider {
@@ -78,10 +90,10 @@
   }
 
   .slider.round {
-    border-radius: var(--slider-round-border-radius, 23px);
+    border-radius: var(--slider-border-radius, 23px);
   }
 
   .slider.round:before {
-    border-radius: var(--slider-round-before-border-radius, 50%);
+    border-radius: var(--slider-border-radius-before, 50%);
   }
 </style>

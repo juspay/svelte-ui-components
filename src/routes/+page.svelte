@@ -1,5 +1,10 @@
 <script lang="ts">
   import GridItem from '$lib/GridItem/GridItem.svelte';
+  import Toggle from '$lib/Toggle/Toggle.svelte';
+
+  function toggle(event: CustomEvent) {
+    console.log(event.detail);
+  }
 </script>
 
 <div class="container">
@@ -9,6 +14,7 @@
 
   <div class="components">
     <GridItem />
+    <Toggle text="text" on:click={toggle} />
   </div>
 </div>
 
@@ -23,5 +29,10 @@
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+    --toggle-text-order: 1;
+    --toggle-switch-width: 40px;
+    --toggle-switch-height: 20px;
+    --toggle-ball-height: 18px;
+    --toggle-ball-width: 18px;
   }
 </style>

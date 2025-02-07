@@ -79,10 +79,12 @@
 
   .button-icon {
     order: var(--button-icon-order, 2);
+    display: var(--button-icon-display);
   }
 
   .button-text {
     order: var(--button-text-order, 3);
+    display: var(--button-text-display);
   }
 
   button:hover {

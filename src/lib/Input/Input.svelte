@@ -84,6 +84,7 @@
     properties.value = currentValue;
     // Adding reactivity
     properties = properties;
+    dispatch('valueChange', { value: currentValue });
     dispatch('input', event);
   }
 

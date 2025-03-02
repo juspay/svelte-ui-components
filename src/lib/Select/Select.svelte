@@ -157,6 +157,7 @@
         <div class="icon-container">
           <Img {...properties.leftIcon} />
         </div>
+        <slot name="leftContent" />
       {/if}
       <div class="selected-content">
         {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}

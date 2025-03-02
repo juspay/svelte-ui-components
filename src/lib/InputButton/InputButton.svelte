@@ -84,6 +84,7 @@
         on:stateChange={handleState}
         on:input={(event) => dispatch('input', event)}
         on:focusout={onFocusOut}
+        on:valueChange
         on:focus
         on:click={onInputClick}
         --input-width="auto"

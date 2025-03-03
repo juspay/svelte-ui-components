@@ -4,7 +4,7 @@ import type { FlyParams } from 'svelte/transition';
  * @name InputDataType
  * @description Different types of input data which can be passed to the Input Component
  */
-export type InputDataType = 'text' | 'tel' | 'password' | 'email';
+export type InputDataType = 'text' | 'tel' | 'password' | 'email' | 'number';
 
 export type ModalTransition = 'IN' | 'ALL';
 

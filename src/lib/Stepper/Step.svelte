@@ -15,7 +15,9 @@
 <div class="step" on:click={handleStepClick} role="button" tabindex="0" on:keydown>
   {#if icon !== null}
     <div class="step-icon-container">
-      <img class="step-icon" src={icon} alt="" />
+      <slot name="step-icon-slot">
+        <img class="step-icon" src={icon} alt="" />
+      </slot>
     </div>
   {:else}
     <div class="step-index-container">

@@ -105,7 +105,9 @@
               role="button"
               tabindex="0"
             >
+            <slot name='right-img-icon'>
               <img class="right-img" src={properties.rightImageUrl} alt="" />
+            </slot>
             </div>
           {/if}
           {#if showRightContentLoader}

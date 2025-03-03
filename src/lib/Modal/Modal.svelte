@@ -96,7 +96,9 @@
             <div class="header">
               {#if properties.header.leftImage}
                 <div on:click={handleLeftImageClick} on:keydown role="button" tabindex="0">
-                  <img class="header-left-img" src={properties.header.leftImage} alt="" />
+                  <slot name="header-left-img-slot">
+                    <img class="header-left-img" src={properties.header.leftImage} alt="" />
+                  </slot>
                 </div>
               {/if}
               {#if properties.header.text}
@@ -106,7 +108,9 @@
               {/if}
               {#if properties.header.rightImage}
                 <div role="button" tabindex="0" on:click={handleRightImageClick} on:keydown>
-                  <img class="header-right-img" src={properties.header.rightImage} alt="" />
+                  <slot name="header-right-img-slot">
+                    <img class="header-right-img" src={properties.header.rightImage} alt="" />
+                  </slot>
                 </div>
               {/if}
             </div>

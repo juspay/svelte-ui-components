@@ -100,7 +100,9 @@
   >
     {#if properties.leftIcon}
       <div class="toast-icon-wrapper">
-        <img class="toast-icon" src={properties.leftIcon} alt="toast-icon" />
+        <slot name="toast-icon-slot">
+          <img class="toast-icon" src={properties.leftIcon} alt="toast-icon" />
+        </slot>
       </div>
     {/if}
 
@@ -117,7 +119,9 @@
 
     {#if properties.rightIcon}
       <div class="close-button" tabindex="0" role="button" on:click={hideToast} on:keypress>
-        <img class="toast-icon" src={properties.rightIcon} alt="close-icon" />
+        <slot name='right-icon-slot'>
+          <img class="toast-icon" src={properties.rightIcon} alt="close-icon" />
+        </slot>
       </div>
     {/if}
   </div>

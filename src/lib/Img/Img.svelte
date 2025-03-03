@@ -11,7 +11,9 @@
 </script>
 
 {#if typeof src === 'string' && typeof alt === 'string'}
-  <img {src} {alt} on:error|once={handleFallback} />
+  <slot name='image-slot'>
+    <img {src} {alt} on:error|once={handleFallback} />
+  </slot>
 {/if}
 
 <style>

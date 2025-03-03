@@ -16,11 +16,15 @@
 
 <div class="container" on:click={onClick} on:keydown role="button" tabindex="0">
   <div class="grid-header">
-    <img src={headerIcon} alt="" class="grid-item-header-icon" />
+    <slot name="grid-header-icon-slot">
+      <img src={headerIcon} alt="" class="grid-item-header-icon" />
+    </slot>
   </div>
   <div class:grid-body-loader={showLoader}>
     <div class="grid-item-body">
-      <img src={icon} alt="" class="grid-item-icon" />
+      <slot name="grid-body-icon-slot">
+        <img src={icon} alt="" class="grid-item-icon" />
+      </slot>
     </div>
   </div>
   <div class="grid-item-footer">{text}</div>

@@ -6,7 +6,9 @@
 </script>
 
 <div class="icon-container" on:click on:keydown role="button" tabindex="0">
-  <img src={properties.icon} alt="" />
+  <slot name='icon-container-slot'>
+    <img src={properties.icon} alt="" />
+  </slot>
   {#if properties.text !== ''}
     <div class="icon-text">{properties.text}</div>
   {/if}

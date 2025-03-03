@@ -18,7 +18,9 @@
       <slot name="leftContent" />
     {:else if properties.showBackButton && properties.backIcon !== null}
       <div class="back" on:click={handleBackClick} on:keydown role="button" tabindex="0">
-        <img src={properties.backIcon} alt="Back" />
+        <slot name='back-icon-slot'>
+          <img src={properties.backIcon} alt="Back" />
+        </slot>
       </div>
     {/if}
     {#if $$slots.centerContent}

@@ -8,7 +8,9 @@
   <div class="banner" on:click on:keydown role="button" tabindex="0">
     {#if properties.icon !== null}
       <div class="banner-image">
-        <img src={properties.icon} alt="" />
+        <slot name="banner-image-slot">
+          <img src={properties.icon} alt="" />
+        </slot>
       </div>
     {/if}
     <div class="banner-text">

@@ -21,7 +21,11 @@
 
 <div class="background">
   <div class="order-status">
-    <div class="status-image"><img src={properties.statusIcon} alt="status" /></div>
+    <div class="status-image">
+      <slot namme="status-image-slot">
+        <img src={properties.statusIcon} alt="status" />
+      </slot>
+    </div>
     <div class="status-text">{properties.statusText}</div>
     <div class="status-description">
       <!-- eslint-disable-next-line -->

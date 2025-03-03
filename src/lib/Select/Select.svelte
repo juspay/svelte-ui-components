@@ -187,11 +187,13 @@
         </div>
       {/if}
       {#if !properties.hideDropDownIcon}
-        <img
-          src={dropDownIcon}
-          alt={dropDownIconAlt}
-          class="arrow {isSelectOpen ? 'active' : ''}"
-        />
+        <slot name="dropdown-icon-slot">
+          <img
+            src={dropDownIcon}
+            alt={dropDownIconAlt}
+            class="arrow {isSelectOpen ? 'active' : ''}"
+          />
+        </slot>
       {/if}
     </div>
     <div
@@ -271,6 +273,7 @@
   }
 
   .select:hover {
+    color: var(--select-hover-color, #000);
     background-color: var(--select-hover-bgcolor, #ffffff);
   }
 

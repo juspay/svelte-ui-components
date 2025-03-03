@@ -13,7 +13,9 @@
 
 <div class="background">
   <div class="loader">
-    <img src={properties.brandLogoURL} alt="" />
+    <slot name='brand-loader-icon-slot'>
+      <img src={properties.brandLogoURL} alt="" />
+    </slot>
     <div class="text">{properties.brandText}</div>
     {#if properties.subText}
       <div class="sub-text">{properties.subText}</div>

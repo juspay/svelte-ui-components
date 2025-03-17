@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { type IconProperties } from './properties';
-  export let icons: IconProperties[];
+  import { type IconStackProperties } from './properties';
+  export let icons: IconStackProperties[];
 </script>
 
 <div class="stack-container">

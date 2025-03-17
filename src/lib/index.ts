@@ -22,6 +22,7 @@ export { default as Stepper } from './Stepper/Stepper.svelte';
 export { default as Step } from './Stepper/Step.svelte';
 export { default as Toast } from './Toast/Toast.svelte';
 export { default as GridItem } from './GridItem/GridItem.svelte';
+export { default as IconStack } from './IconStack/IconStack.svelte';
 
 export type { ButtonProperties } from './Button/properties';
 export type { ModalProperties, ModalAlign, ModalSize } from './Modal/properties';
@@ -44,6 +45,7 @@ export type { BannerProperties } from './Banner/properties';
 export type { TableProperties } from './Table/properties';
 export type { StepperProperties } from './Stepper/properties';
 export type { ToastProperties } from './Toast/properties';
+export type { IconStackProperties } from './IconStack/properties';
 
 export { defaultIconProperties } from './Icon/properties';
 export { defaultButtonProperties } from './Button/properties';

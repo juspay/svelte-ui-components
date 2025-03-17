@@ -5,6 +5,11 @@ export type ListItemProperties = {
   label: string | null;
   useAccordion: boolean;
   rightContentText: string | null;
+  testId?: string;
+  topSectionTestId?: string;
+  rightImageTestId?: string;
+  leftImageTestId?: string;
+  centerTextTestId?: string;
 };
 
 export const defaultListItemProperties: ListItemProperties = {

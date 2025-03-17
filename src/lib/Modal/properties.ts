@@ -21,6 +21,9 @@ export type ModalProperties = {
     secondaryButton?: ButtonProperties,
   }
   debounceTime: number;
+  leftImageTestId?: string;
+  rightImageTestId?: string;
+  testId?: string;
 };
 
 export const defaultModalProperties: ModalProperties = {

@@ -46,6 +46,7 @@
       on:keydown
       role="button"
       tabindex="0"
+      data-pw={properties.testId}
     >
       <div
         class="top-section"
@@ -54,6 +55,7 @@
         on:keydown
         role="button"
         tabindex="0"
+        data-pw={properties.topSectionTestId}
       >
         <div class="left-content">
           {#if properties.leftImageUrl}
@@ -63,6 +65,7 @@
               on:keydown
               role="button"
               tabindex="0"
+              data-pw={properties.leftImageTestId}
             >
               <Img
                 src={properties.leftImageUrl}
@@ -84,6 +87,7 @@
               on:keydown
               role="button"
               tabindex="0"
+              data-pw={properties.centerTextTestId}
             >
               <!-- eslint-disable-next-line -->
               {@html properties.label}
@@ -104,6 +108,7 @@
               on:keydown
               role="button"
               tabindex="0"
+              data-pw={properties.rightImageTestId}
             >
               <img class="right-img" src={properties.rightImageUrl} alt="" />
             </div>

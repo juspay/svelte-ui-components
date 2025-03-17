@@ -85,6 +85,7 @@
       on:keydown
       role="button"
       tabindex="0"
+      data-pw={properties.testId}
     >
       <ModalAnimation
         enable={properties.enableTransition}
@@ -95,7 +96,13 @@
           {#if properties.header.leftImage !== null || properties.header.text !== null || properties.header.rightImage !== null}
             <div class="header">
               {#if properties.header.leftImage}
-                <div on:click={handleLeftImageClick} on:keydown role="button" tabindex="0">
+                <div
+                  on:click={handleLeftImageClick}
+                  on:keydown
+                  role="button"
+                  tabindex="0"
+                  data-pw={properties.leftImageTestId}
+                >
                   <img class="header-left-img" src={properties.header.leftImage} alt="" />
                 </div>
               {/if}
@@ -105,7 +112,13 @@
                 </div>
               {/if}
               {#if properties.header.rightImage}
-                <div role="button" tabindex="0" on:click={handleRightImageClick} on:keydown>
+                <div
+                  role="button"
+                  tabindex="0"
+                  on:click={handleRightImageClick}
+                  on:keydown
+                  data-pw={properties.rightImageTestId}
+                >
                   <img class="header-right-img" src={properties.header.rightImage} alt="" />
                 </div>
               {/if}

@@ -271,6 +271,7 @@
   }
 
   .select:hover {
+    color: var(--select-hover-color, #000);
     background-color: var(--select-hover-bgcolor, #ffffff);
   }
 

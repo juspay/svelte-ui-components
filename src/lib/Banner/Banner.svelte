@@ -18,6 +18,11 @@
         <div>{properties.text}</div>
       {/if}
     </div>
+    {#if $$slots.rightContent}
+      <div class="right-content">
+        <slot name="rightContent" />
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -45,6 +50,8 @@
   }
 
   .banner-text {
+    flex: var(--banner-text-flex);
+    order: var(--banner-text-order);
     size: var(--banner-text-size, 14px);
     font-family: var(--banner-font-family, Euclid Circular A);
     font-style: var(--banner-font-style, normal);
@@ -60,5 +67,10 @@
 
   .link-text {
     color: var(--banner-linktext-color, #0099ff);
+  }
+
+  .right-content {
+    order: var(--banner-right-content-order);
+    display: var(--banner-right-content-display, flex);
   }
 </style>

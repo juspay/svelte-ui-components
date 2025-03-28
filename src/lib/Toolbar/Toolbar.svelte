@@ -48,22 +48,23 @@
     display: flex;
     flex-direction: column;
     padding: var(--toolbar-padding, 0px);
-    height: fit-content;
-    width: 100vw;
+    height: var(--toolbar-height, fit-content);
+    width: var(--toolbar-width, 100vw);
     position: var(--toolbar-position, fixed);
-    top: 0;
-    left: 0;
-    right: 0;
+    top: var(--toolbar-top, 0);
+    left: var(--toolbar-left, 0);
+    right: var(--toolbar-right, 0);
     background: var(--toolbar-background, #ffffff);
     box-shadow: var(--toolbar-box-shadow, 0px 2px 12px #55687c1a);
     z-index: var(--toolbar-z-index, 10);
+    border-radius: var(--toolbar-border-radius, 0px);
   }
 
   .content {
     display: flex;
     flex-direction: row;
-    padding: var(--toolbar-content-padding, 0px);
     align-items: center;
+    padding: var(--toolbar-content-padding, 0px);
     justify-content: var(--toolbar-justify-content, normal);
     visibility: var(--toolbar-content-visibility, visible);
   }
@@ -71,8 +72,8 @@
   .additional-content {
     display: flex;
     flex-direction: row;
-    padding: var(--toolbar-additional-content-padding, 0px);
     align-items: center;
+    padding: var(--toolbar-additional-content-padding, 0px);
     height: var(--toolbar-additional-content-height, fit-content);
     justify-content: var(--toolbar-justify-additional-content, normal);
     visibility: var(--toolbar-additional-content-visibility, visible);
@@ -97,9 +98,5 @@
 
   .text {
     font-size: 18px;
-  }
-
-  .right-content {
-    margin-left: auto;
   }
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import GridItem from '$lib/GridItem/GridItem.svelte';
   import Toggle from '$lib/Toggle/Toggle.svelte';
+  import Toolbar from '$lib/Toolbar/Toolbar.svelte';
 
   function toggle(event: CustomEvent) {
     console.log(event.detail);
@@ -13,6 +14,7 @@
   <h3>Components</h3>
 
   <div class="components">
+    <Toolbar />
     <GridItem />
     <Toggle text="text" on:click={toggle} />
   </div>

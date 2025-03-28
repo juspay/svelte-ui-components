@@ -31,11 +31,13 @@
   .background {
     height: var(--loader-background-height);
     width: var(--loader-background-width);
+    border-radius: var(--loader-background-border-radius, 0px);
   }
 
   .loader {
     height: var(--loader-height, 100vh);
     width: var(--loader-width, 100vw);
+    border-radius: var(--loader-background-border-radius, 0px);
     display: flex;
     justify-content: center;
     align-items: center;

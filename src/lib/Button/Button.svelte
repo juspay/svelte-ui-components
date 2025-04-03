@@ -30,6 +30,7 @@
     on:click={handleButtonClick}
     disabled={!(properties.enable && !properties.showLoader)}
     type={properties.type}
+    data-pw={properties.dataPw}
   >
     {#if properties.showLoader && properties.loaderType === 'Circular'}
       <div class="button-loader"><Loader /></div>

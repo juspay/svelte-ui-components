@@ -138,7 +138,7 @@
 </script>
 
 {#if properties.label !== null && properties.label !== ''}
-  <label class="label-container" for={properties.label}>
+  <label class="label-container" for={properties.label} data-pw={properties.labelTestId}>
     {properties.label}
   </label>
 {/if}
@@ -152,6 +152,7 @@
       on:keydown
       role="button"
       tabindex="0"
+      data-pw={properties.testId}
     >
       {#if properties.leftIcon !== null}
         <div class="icon-container">
@@ -219,6 +220,7 @@
             class="item {isSelected(properties.selectedItem, item) ? ' item-selected' : ''}"
             role="button"
             tabindex="0"
+            data-pw={`${properties.itemTestId}-${item}`}
           >
             {#if properties.selectMultipleItems}
               <CheckListItem checked={isSelected(properties.selectedItem, item)} text="" />

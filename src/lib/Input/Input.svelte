@@ -201,7 +201,7 @@
       on:input={onInput}
       on:paste={onPaste}
       on:click={onClick}
-      data-pw={properties.dataPw}
+      data-pw={properties.testId}
       class="
       {properties.actionInput ? 'action-input' : ''}
     "

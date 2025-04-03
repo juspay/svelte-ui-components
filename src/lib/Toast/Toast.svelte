@@ -104,10 +104,10 @@
       </div>
     {/if}
 
-    <div class="toast-message">
+    <div class="toast-message" data-pw={properties.messageTestId}>
       {properties.message}
       {#if properties.subtext}
-        <div class="toast-subtext">{properties.subtext}</div>
+        <div class="toast-subtext" data-pw={properties.subTextTestId}>{properties.subtext}</div>
       {/if}
 
       {#if $$slots.bottomContent}
@@ -116,7 +116,7 @@
     </div>
 
     {#if properties.rightIcon}
-      <div class="close-button" tabindex="0" role="button" on:click={hideToast} on:keypress>
+      <div class="close-button" tabindex="0" role="button" on:click={hideToast} on:keypress data-pw={properties.closeIconTestId}>
         <img class="toast-icon" src={properties.rightIcon} alt="close-icon" />
       </div>
     {/if}

@@ -15,6 +15,8 @@ export type ModalProperties = {
     leftImage: string | null;
     rightImage: string | null;
     text: string | null;
+    testId?: string;
+    buttonTestId?: string;
   };
   footer?: {
     primaryButton?: ButtonProperties,

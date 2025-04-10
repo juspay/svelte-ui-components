@@ -13,4 +13,5 @@ export type SelectProperties = {
   showSingleSelectButton?: boolean | null;
   showSelectedItem?: boolean;
   showSelectedItemCount?: boolean;
+  dataPw?: string;
 };

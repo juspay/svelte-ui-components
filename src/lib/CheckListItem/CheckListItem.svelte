@@ -31,6 +31,7 @@
     display: var(--check-list-item-display, flex);
     align-items: var(--check-list-item-align-items, center);
     width: var(--check-list-item-width, 100%);
+    padding: var(--check-list-item-padding);
   }
 
   .text {

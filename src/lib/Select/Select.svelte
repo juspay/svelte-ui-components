@@ -257,6 +257,7 @@
     border: var(--select-border, 1px solid #ccc);
     position: var(--select-position, relative);
     color: var(--select-color, #333);
+    align-content: var(--select-align-content);
     display: var(--select-display, inline-block);
     --button-margin: var(--select-btn-margin, 1px);
     --button-border-radius: var(--select-btn-border-radius, 2px);
@@ -288,6 +289,8 @@
     padding: var(--item-padding, 8px 16px);
     background-color: var(--item-background-color, #fff);
     border-radius: var(--item-border-radius);
+    align-items: var(--item-align-items);
+    height: var(--item-height);
     cursor: pointer;
     position: relative;
     display: flex;

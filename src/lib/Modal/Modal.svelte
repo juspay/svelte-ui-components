@@ -205,16 +205,18 @@
   }
 
   .center {
-    justify-content: center;
-    align-items: center;
+    justify-content: var(--modal-center-justify-content, center);
+    align-items: var(--modal-center-align-items, center);
   }
 
   .bottom {
-    justify-content: flex-end;
+    justify-content: var(--modal-bottom-justify-content, flex-end);
+    align-items: var(--modal-bottom-align-items);
   }
 
   .top {
-    justify-content: flex-start;
+    justify-content: var(--modal-top-justify-content, flex-start);
+    align-items: var(--modal-top-align-items);
   }
 
   .small {

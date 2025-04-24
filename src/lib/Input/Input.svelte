@@ -227,7 +227,7 @@
 <style>
   textarea,
   input {
-    box-sizing: border-box;
+    box-sizing: var(--input-box-sizing, border-box);
     height: var(--input-height, fit-content);
     background-color: var(--input-background, white);
     font-size: var(--input-font-size, 16px) !important;

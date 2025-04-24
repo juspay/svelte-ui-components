@@ -163,11 +163,12 @@
     font-weight: var(--input-label-msg-text-weight, 400);
     font-size: var(--input-label-msg-text-size, 12px);
     color: var(--input-label-msg-text-color, #637c95);
+    line-height: var(--input-label-msg-text-line-height);
     margin-bottom: 6px;
   }
 
   .invalid {
-    outline: 1px solid var(--input-field-error-stroke, #e11900);
+    outline: var(--invalid-outline, 1px solid var(--input-field-error-stroke, #e11900));
   }
 
   .error-message {

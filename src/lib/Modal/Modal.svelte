@@ -335,5 +335,6 @@
   .header-right-img {
     width: var(--header-right-image-width, 25px);
     height: var(--header-right-image-height, 25px);
+    padding: var(--header-right-image-padding);
   }
 </style>

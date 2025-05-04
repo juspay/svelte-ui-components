@@ -13,4 +13,7 @@ export type SelectProperties = {
   showSingleSelectButton?: boolean | null;
   showSelectedItem?: boolean;
   showSelectedItemCount?: boolean;
+  testId?: string;
+  labelTestId?: string;
+  itemTestId?: string;
 };

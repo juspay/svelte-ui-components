@@ -107,18 +107,12 @@
                 </div>
               {/if}
               {#if properties.header.text}
-                <div class="header-text">
+                <div class="header-text" data-pw={properties.header.testId}>
                   {properties.header.text}
                 </div>
               {/if}
               {#if properties.header.rightImage}
-                <div
-                  role="button"
-                  tabindex="0"
-                  on:click={handleRightImageClick}
-                  on:keydown
-                  data-pw={properties.rightImageTestId}
-                >
+                <div role="button" tabindex="0" on:click={handleRightImageClick} on:keydown data-pw={properties.header.buttonTestId}>
                   <img class="header-right-img" src={properties.header.rightImage} alt="" />
                 </div>
               {/if}

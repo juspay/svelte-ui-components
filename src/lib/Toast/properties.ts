@@ -14,6 +14,10 @@ export type ToastProperties = {
   inAnimationDuration?: number;
   outAnimationOffset?: number;
   outAnimationDuration?: number;
+  testId?: string;
+  messageTestId?: string;
+  subTextTestId?: string;
+  closeIconTestId?: string;
 };
 
 export const defaultToastProperties: ToastProperties = {

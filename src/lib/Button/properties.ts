@@ -6,7 +6,7 @@ export type ButtonProperties = {
   showLoader: boolean;
   loaderType: LoaderType | null;
   type: 'submit' | 'reset' | 'button';
-  dataPw?: string;
+  testId?: string;
 };
 
 export const defaultButtonProperties: ButtonProperties = {

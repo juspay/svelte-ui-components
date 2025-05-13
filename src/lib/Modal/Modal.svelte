@@ -192,6 +192,7 @@
     flex-direction: column;
     border-radius: var(--modal-border-radius, 0px);
     overflow: var(--modal-content-overflow, auto);
+    border-top: var(--modal-content-border-top);
   }
 
   .slot-content {
@@ -318,6 +319,9 @@
     align-items: center;
     flex: 1;
     font-size: var(--header-text-size, 16px);
+    font-weight: var(--modal-header-text-weight);
+    line-height: var(--modal-header-text-line-height);
+    letter-spacing: var(--modal-header-text-letter-spacing);
   }
 
   .header-left-img,

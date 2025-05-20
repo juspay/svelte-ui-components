@@ -1,10 +1,18 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  export let icon: string = '';
-  export let text: string = '';
-  export let headerIcon: string = '';
-  export let showLoader: boolean = false;
+  let {
+    icon = '',
+    text = '',
+    headerIcon = '',
+    ...rest
+  } = $props<{
+    icon?: string;
+    text?: string;
+    headerIcon?: string;
+  }>();
+
+  let showLoader = $state(false);
 
   const dispatch = createEventDispatcher();
 
@@ -12,9 +20,15 @@
     showLoader = !showLoader;
     dispatch('click');
   }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      onClick();
+    }
+  }
 </script>
 
-<div class="container" on:click={onClick} on:keydown role="button" tabindex="0">
+<div class="container" onclick={onClick} onkeydown={handleKeyDown} role="button" tabindex="0">
   <div class="grid-header">
     <img src={headerIcon} alt="" class="grid-item-header-icon" />
   </div>

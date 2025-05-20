@@ -1,24 +1,38 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
 
-  export let checked = false;
-  export let text = '';
+  let {
+    checked = false,
+    text = '',
+    ...rest
+  } = $props<{
+    checked?: boolean;
+    text?: string;
+  }>();
+
+  // Create a local state that can be modified
+  let isChecked = $state(checked);
+
+  // Watch for props changes
+  $effect(() => {
+    isChecked = checked;
+  });
 
   const dispatch = createEventDispatcher();
 
   function handleCheckboxClick(e: MouseEvent): void {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
-      checked = e.target.checked;
+      isChecked = e.target.checked;
+      dispatch('click', isChecked);
     }
-    dispatch('click', checked);
   }
 </script>
 
 <div class="container">
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
-    <input class="input-checkbox" type="checkbox" bind:checked={checked} on:click={handleCheckboxClick} />
-    <span class="slider round" />
+    <input class="input-checkbox" type="checkbox" checked={isChecked} onclick={handleCheckboxClick} />
+    <span class="slider round"></span>
   </label>
 </div>
 

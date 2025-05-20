@@ -2,9 +2,10 @@
   import { createEventDispatcher } from 'svelte';
   import Loader from '../Loader/Loader.svelte';
   import { defaultButtonProperties } from './properties';
-  export let properties = defaultButtonProperties;
 
-  export let showProgressBar = false;
+  let { properties = defaultButtonProperties, ...rest } = $props();
+
+  let showProgressBar = $state(false);
 
   const dispatch = createEventDispatcher();
 
@@ -27,7 +28,7 @@
     style="
       --opacity: {properties.enable ? 1 : 0.4};
       --cursor: {properties.enable ? 'pointer' : 'not-allowed'};"
-    on:click={handleButtonClick}
+    onclick={handleButtonClick}
     disabled={!(properties.enable && !properties.showLoader)}
     type={properties.type}
     data-pw={properties.testId}

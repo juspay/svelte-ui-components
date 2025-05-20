@@ -3,42 +3,61 @@
   import { defaultToolbarProperties } from './properties';
   import type { ToolbarProperties } from './properties';
 
-  export let properties: ToolbarProperties = defaultToolbarProperties;
+  let {
+    properties = defaultToolbarProperties,
+    leftContent,
+    centerContent,
+    rightContent,
+    additionalContent,
+    ...rest
+  } = $props<{
+    properties?: ToolbarProperties;
+    leftContent?: any;
+    centerContent?: any;
+    rightContent?: any;
+    additionalContent?: any;
+  }>();
 
   const dispatch = createEventDispatcher();
 
   function handleBackClick() {
     dispatch('backClick');
   }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      dispatch('backClick');
+    }
+  }
 </script>
 
 <div class="toolbar">
   <div class="content">
-    {#if $$slots.leftContent}
-      <slot name="leftContent" />
+    {#if leftContent}
+      {@render leftContent()}
     {:else if properties.showBackButton && properties.backIcon !== null}
-      <div class="back" on:click={handleBackClick} on:keydown role="button" tabindex="0">
+      <div class="back" onclick={handleBackClick} onkeydown={handleKeyDown} role="button" tabindex="0">
         <img src={properties.backIcon} alt="Back" />
       </div>
     {/if}
-    {#if $$slots.centerContent}
+    {#if centerContent}
       <div class="center-content">
-        <slot name="centerContent" />
+        {@render centerContent()}
       </div>
     {:else if properties.text !== null}
       <div class="text">
         {properties.text}
       </div>
     {/if}
-    {#if $$slots.rightContent}
+    {#if rightContent}
       <div class="right-content">
-        <slot name="rightContent" />
+        {@render rightContent()}
       </div>
     {/if}
   </div>
   <div class="additional-content">
-    {#if $$slots.additionalContent}
-      <slot name="additionalContent" />
+    {#if additionalContent}
+      {@render additionalContent()}
     {/if}
   </div>
 </div>

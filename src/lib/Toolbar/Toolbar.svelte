@@ -1,78 +1,96 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { defaultToolbarProperties } from './properties';
-  import type { ToolbarProperties } from './properties';
+  import type { ComponentType } from 'svelte';
 
   let {
-    properties = defaultToolbarProperties,
-    leftContent,
-    centerContent,
-    rightContent,
-    additionalContent,
-    ...rest
-  } = $props<{
-    properties?: ToolbarProperties;
-    leftContent?: any;
-    centerContent?: any;
-    rightContent?: any;
-    additionalContent?: any;
-  }>();
+    class: className = '', // Renamed from class
+    style = '',
+    leftContent = null,
+    centerContent = null,
+    rightContent = null,
+    additionalContent = null,
+    testId = 'toolbar'
+  }: {
+    class?: string;
+    style?: string;
+    leftContent?: ComponentType | string | null;
+    centerContent?: ComponentType | string | null;
+    rightContent?: ComponentType | string | null;
+    additionalContent?: ComponentType | string | null;
+    testId?: string;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{ backClick: void }>();
 
-  function handleBackClick() {
-    dispatch('backClick');
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      dispatch('backClick');
-    }
-  }
+  // backClick event is now formally declared.
+  // UI for it was removed as per new props.
+  // If back button functionality is desired with new props,
+  // it would need a dedicated prop like `showBackButton` and `onBackClick` callback.
 </script>
 
-<div class="toolbar">
+<div class="toolbar {className}" {style} data-testid={testId}>
   <div class="content">
     {#if leftContent}
-      {@render leftContent()}
-    {:else if properties.showBackButton && properties.backIcon !== null}
-      <div class="back" onclick={handleBackClick} onkeydown={handleKeyDown} role="button" tabindex="0">
-        <img src={properties.backIcon} alt="Back" />
+      <div class="toolbar-content left">
+        {#if typeof leftContent === 'string'}
+          {@html leftContent}
+        {:else if leftContent}
+          <svelte:component this={leftContent} />
+        {/if}
       </div>
     {/if}
     {#if centerContent}
-      <div class="center-content">
-        {@render centerContent()}
-      </div>
-    {:else if properties.text !== null}
-      <div class="text">
-        {properties.text}
+      <div class="toolbar-content center-content">
+        {#if typeof centerContent === 'string'}
+          {@html centerContent}
+        {:else if centerContent}
+          <svelte:component this={centerContent} />
+        {/if}
       </div>
     {/if}
     {#if rightContent}
-      <div class="right-content">
-        {@render rightContent()}
+      <div class="toolbar-content right-content">
+        {#if typeof rightContent === 'string'}
+          {@html rightContent}
+        {:else if rightContent}
+          <svelte:component this={rightContent} />
+        {/if}
       </div>
     {/if}
   </div>
   <div class="additional-content">
     {#if additionalContent}
-      {@render additionalContent()}
+      <div class="toolbar-content additional">
+        {#if typeof additionalContent === 'string'}
+          {@html additionalContent}
+        {:else if additionalContent}
+          <svelte:component this={additionalContent} />
+        {/if}
+      </div>
     {/if}
   </div>
 </div>
 
 <style>
+  /* Ensure styles for .center-content and .right-content exist or are adapted if needed */
+  /* Added .left class and .toolbar-content generic class */
+  .toolbar-content {
+    display: flex; /* Basic styling for content wrappers */
+    align-items: center;
+  }
+  /* Removed empty .left CSS rule */
   .toolbar {
+    /* Existing styles for toolbar */
     display: flex;
     flex-direction: column;
-    padding: var(--toolbar-padding, 0px);
-    height: var(--toolbar-height, fit-content);
-    width: var(--toolbar-width, 100vw);
-    position: var(--toolbar-position, fixed);
-    top: var(--toolbar-top, 0);
-    left: var(--toolbar-left, 0);
-    right: var(--toolbar-right, 0);
+    /* Ensure other styles like padding, height, width etc. are appropriate */
+    padding: var(--toolbar-padding, 0px); /* Default to 0px if not set by consumer */
+    height: var(--toolbar-height, fit-content); /* Default to fit-content */
+    width: var(--toolbar-width, 100%); /* Default to 100% */
+    position: var(--toolbar-position, relative); /* Default to relative, common for inline usage */
+    top: var(--toolbar-top, auto);
+    left: var(--toolbar-left, auto);
+    right: var(--toolbar-right, auto);
     background: var(--toolbar-background, #ffffff);
     box-shadow: var(--toolbar-box-shadow, 0px 2px 12px #55687c1a);
     z-index: var(--toolbar-z-index, 10);
@@ -84,8 +102,12 @@
     flex-direction: row;
     align-items: center;
     padding: var(--toolbar-content-padding, 0px);
-    justify-content: var(--toolbar-justify-content, normal);
+    justify-content: var(
+      --toolbar-justify-content,
+      space-between
+    ); /* Adjusted for typical toolbar */
     visibility: var(--toolbar-content-visibility, visible);
+    flex: 1; /* Allow content to take available space */
   }
 
   .additional-content {
@@ -98,24 +120,20 @@
     visibility: var(--toolbar-additional-content-visibility, visible);
   }
 
-  .back {
-    height: var(--toolbar-back-button-height, 20px);
-    width: var(--toolbar-back-button-width, 20px);
-    padding: var(--toolbar-back-button-padding, 20px 14px);
-    cursor: var(--toolbar-back-button-cursor, pointer);
-  }
-
-  .back img {
-    height: var(--toolbar-back-image-height, 16px);
-    width: var(--toolbar-back-image-width, 16px);
-  }
+  /* Removed .back and .text styles as the elements were removed */
 
   .center-content {
-    display: flex;
-    flex: 1;
+    /* Style for explicit center content slot */
+    /* display: flex; */ /* Already handled by .toolbar-content */
+    justify-content: center; /* Center its own content */
+    flex: 1; /* Allow it to grow and push left/right apart if needed */
   }
 
-  .text {
-    font-size: 18px;
+  /* Removed empty .right-content CSS rule */
+
+  .additional {
+    /* Specific styles for additional content if needed */
+    width: 100%; /* Example: make it full width within its parent */
   }
+  /* Styles for leftContent would be implicitly handled unless it needs specific wrapper */
 </style>

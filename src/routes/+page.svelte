@@ -6,25 +6,25 @@
   import { defaultButtonProperties } from '$lib/Button/properties';
 
   function handleToggle(event: CustomEvent) {
-    console.log("Toggle clicked:", event.detail);
+    console.log('Toggle clicked:', event.detail);
   }
 
   function handleButtonClick() {
-    console.log("Button clicked");
+    console.log('Button clicked');
   }
 
   function handleGridItemClick() {
-    console.log("GridItem clicked");
+    console.log('GridItem clicked');
   }
 
   function handleToolbarBackClick() {
-    console.log("Toolbar back button clicked");
+    console.log('Toolbar back button clicked');
   }
 
   // Button properties for testing
   const buttonProps = {
     ...defaultButtonProperties,
-    text: "Click me",
+    text: 'Click me',
     enable: true
   };
 
@@ -41,8 +41,8 @@
     <h4>Button Component</h4>
     <div class="component-test">
       <Button properties={buttonProps} on:click={handleButtonClick} />
-      <Button properties={{...buttonProps, text: "Disabled", enable: false}} />
-      <Button properties={{...buttonProps, text: "With loader", showLoader: true}} />
+      <Button properties={{ ...buttonProps, text: 'Disabled', enable: false }} />
+      <Button properties={{ ...buttonProps, text: 'With loader', showLoader: true }} />
     </div>
   </div>
 
@@ -65,21 +65,21 @@
     <h4>Toolbar Component</h4>
     <div class="component-test toolbar-test">
       <Toolbar
-        properties={{
-          text: "Toolbar Title",
-          showBackButton: true,
-          backIcon: "https://cdn-icons-png.flaticon.com/512/93/93634.png"
-        }}
+        centerContent="Toolbar Title"
         on:backClick={handleToolbarBackClick}
+        testId="toolbar-main"
+        style="--toolbar-background: #e9ecef;"
+        class="custom-toolbar-class"
       />
+      <!-- Note: The explicit back button (via properties.showBackButton & properties.backIcon) 
+           was removed from Toolbar's direct API. 
+           To have a back button, it should be passed as a component to leftContent. -->
 
       <Toolbar
-        properties={{
-          text: null,
-          showBackButton: false,
-          backIcon: null
-        }}
-        leftContent={toolbarCustomContent}
+        leftContent={toolbarCustomContent()}
+        centerContent={null}
+        testId="toolbar-custom"
+        style="--toolbar-background: #f8f9fa; margin-top: 10px;"
       />
     </div>
   </div>
@@ -139,7 +139,7 @@
     --toolbar-height: auto;
     --toolbar-width: 100%;
     --toolbar-background: #f9f9f9;
-    --toolbar-box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+    --toolbar-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
     --toolbar-border-radius: 8px;
     --toolbar-padding: 10px;
   }

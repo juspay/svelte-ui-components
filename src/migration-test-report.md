@@ -1,11 +1,13 @@
 # Svelte 5 Migration Test Report
 
 ## Overview
+
 This report documents the migration of the Svelte UI Components library from Svelte 4 to Svelte 5. The migration focused on updating component APIs to use Svelte 5's runes syntax and ensuring backward compatibility where possible.
 
 ## Migration Changes
 
 ### Configuration Updates
+
 - **Svelte**: Updated from 4.x to 5.x
 - **Svelte Kit**: Updated dependencies for compatibility
 - **Vite**: Updated to v5.x
@@ -17,25 +19,30 @@ This report documents the migration of the Svelte UI Components library from Sve
 
 We established the following patterns for migrating components to Svelte 5:
 
-1. **Props**: 
+1. **Props**:
+
    - Before: `export let property = defaultValue;`
    - After: `let { property = defaultValue, ...rest } = $props<{ property?: Type }>();`
 
-2. **State**: 
+2. **State**:
+
    - Before: Component instance variables
    - After: `let state = $state(initialValue);`
 
-3. **Effects**: 
+3. **Effects**:
+
    - Before: `$: { /* code */ }`
    - After: `$effect(() => { /* code */ });`
 
-4. **Events**: 
+4. **Events**:
+
    - Before: `<button on:click={handler}>` and event dispatchers
    - After: Kept as `on:event` in component usage for typing compatibility, but uses `$props()`
 
 5. **Slots**:
+
    - Before: `<slot name="slotName" />`
-   - After: 
+   - After:
      - Define in props: `leftContent, ...rest } = $props<{leftContent?: any}>();`
      - Render: `{#if leftContent}{@render leftContent()}{/if}`
 
@@ -46,21 +53,25 @@ We established the following patterns for migrating components to Svelte 5:
 ## Migrated Components
 
 ### Button Component
+
 - Migrated to use `$props()` and `$state()`
 - Maintained original functionality including loading states and event dispatching
 - Updated event handlers from `on:click` to `onclick`
 
 ### Toggle Component
+
 - Implemented `$state()` and `$effect()` for reactive state management
 - Updated HTML to use proper closing tags
 - Preserved event handling functionality
 
 ### GridItem Component
+
 - Migrated to use `$props()` for component props
 - Implemented local state with `$state()`
 - Updated event handlers with proper TypeScript typing
 
 ### Toolbar Component
+
 - Complex component with multiple slots
 - Updated to use `$props()` for both properties and slots
 - Implemented Svelte 5's `{@render slotName()}` pattern for slots
@@ -70,13 +81,16 @@ We established the following patterns for migrating components to Svelte 5:
 The following tests were conducted:
 
 1. **Build Test**: `pnpm run build`
+
    - Result: ✅ Successful build with no errors
 
 2. **Component Rendering Test**:
+
    - All components render correctly in the test page
    - Styling and layout match the original design
 
 3. **Event Handling Test**:
+
    - Button clicks and interactions function as expected
    - Events are properly dispatched with the correct payloads
 
@@ -87,10 +101,12 @@ The following tests were conducted:
 ## Issues and Solutions
 
 1. **Event Handling Syntax**:
+
    - Issue: TypeScript errors with `onclick` attributes
    - Solution: Maintained original `on:click` event syntax for component usage while updating internal implementations
 
 2. **Slot API Changes**:
+
    - Issue: Svelte 5 deprecates `<slot>` elements
    - Solution: Implemented `$props()` and `{@render}` pattern for slots
 
@@ -102,7 +118,8 @@ The following tests were conducted:
 
 To migrate the remaining components, follow these steps:
 
-1. **Props**: 
+1. **Props**:
+
    ```svelte
    <!-- Before -->
    <script>
@@ -116,6 +133,7 @@ To migrate the remaining components, follow these steps:
    ```
 
 2. **State**:
+
    ```svelte
    <!-- Before -->
    <script>
@@ -129,6 +147,7 @@ To migrate the remaining components, follow these steps:
    ```
 
 3. **Event Dispatch**:
+
    ```svelte
    <!-- Before -->
    <script>
@@ -150,16 +169,17 @@ To migrate the remaining components, follow these steps:
    ```
 
 4. **Slots**:
-   ```svelte
-   <!-- Before -->
-   <div>
-     <slot name="content" />
-   </div>
 
+   ```svelte
    <!-- After -->
    <script>
      let { content } = $props<{ content?: any }>();
    </script>
+
+   <!-- Before -->
+   <div>
+     <slot name="content" />
+   </div>
    <div>
      {#if content}{@render content()}{/if}
    </div>

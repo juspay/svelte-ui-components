@@ -39,26 +39,26 @@
     width: var(--loader-width, 100vw);
     border-radius: var(--loader-background-border-radius, 0px);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+    justify-content: var(--loader-justify-content, center);
+    align-items: var(--loader-align-items, center);
+    flex-direction: var(--loader-flex-direction, column);
   }
 
   .loader img {
-    height: 40px;
-    width: 71px;
+    height: var(--loader-img-height, 40px);
+    width: var(--loader-img-width, 71px);
   }
 
   .text {
-    font-size: 22px;
-    padding: 16px 0px;
+    font-size: var(--loader-text-font-size, 22px);
+    padding: var(--loader-text-padding, 16px 0px);
     color: var(--loader-text-color, white);
     font-family: var(--loader-text-font, Euclid Circular A);
   }
 
   .sub-text {
-    font-size: 12px;
-    margin-bottom: 16px;
+    font-size: var(--loader-sub-text-font-size, 12px);
+    margin: var(--loader-sub-text-margin, 16px);
   }
 
   @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
@@ -69,26 +69,26 @@
 
     .loader {
       background-color: var(--loader-background-color, #ffffff33);
-      -webkit-backdrop-filter: blur(50px);
-      backdrop-filter: blur(50px);
+      -webkit-backdrop-filter: blur(var(--loader-webkit-backdrop-filter, 50px));
+      backdrop-filter: blur(var(--loader-backdrop-blur, 50px));
     }
   }
 
   .lds-ellipsis {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
+    display: var(--loader-ellipsis-display, inline-block);
+    position: var(--loader-ellipsis-position, relative);
+    width: var(--loader-ellipsis-width, 80px);
+    height: var(--loader-ellipsis-height, 80px);
   }
   .lds-ellipsis div {
-    display: inherit;
-    position: absolute;
-    top: 5px;
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
+    display: var(--loader-ellipsis-div-display, inherit);
+    position: var(--loader-ellipsis-div-position, absolute);
+    top: var(--loader-ellipsis-div-top, 5px);
+    width: var(--loader-ellipsis-div-width, 13px);
+    height: var(--loader-ellipsis-div-height, 13px);
+    border-radius: var(--loader-ellipsis-div-border-radius, 50%);
     background: var(--loader-dot-color, #3a4550);
-    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+    animation-timing-function: var(--loader-ellipsis-animation-timing, cubic-bezier(0, 1, 1, 0));
   }
   .lds-ellipsis div:nth-child(1) {
     left: 8px;

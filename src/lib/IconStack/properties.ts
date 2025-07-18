@@ -1,4 +1,4 @@
 export type IconStackProperties = {
-  type: "image" | "text";
+  type: 'image' | 'text';
   content: string;
 };

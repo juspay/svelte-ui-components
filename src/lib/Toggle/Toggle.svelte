@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher } from 'svelte';
 
   export let checked = false;
   export let text = '';
@@ -17,7 +17,7 @@
 <div class="container">
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
-    <input class="input-checkbox" type="checkbox" bind:checked={checked} on:click={handleCheckboxClick} />
+    <input class="input-checkbox" type="checkbox" bind:checked on:click={handleCheckboxClick} />
     <span class="slider round" />
   </label>
 </div>

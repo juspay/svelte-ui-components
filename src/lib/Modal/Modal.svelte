@@ -112,7 +112,13 @@
                 </div>
               {/if}
               {#if properties.header.rightImage}
-                <div role="button" tabindex="0" on:click={handleRightImageClick} on:keydown data-pw={properties.header.buttonTestId}>
+                <div
+                  role="button"
+                  tabindex="0"
+                  on:click={handleRightImageClick}
+                  on:keydown
+                  data-pw={properties.header.buttonTestId}
+                >
                   <img class="header-right-img" src={properties.header.rightImage} alt="" />
                 </div>
               {/if}

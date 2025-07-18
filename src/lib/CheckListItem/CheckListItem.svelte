@@ -19,7 +19,7 @@
   {#if $$slots.checkboxLabel}
     <slot name="checkboxLabel" />
   {:else}
-    <span class="text" class:checked={checked}>
+    <span class="text" class:checked>
       <!-- eslint-disable-next-line -->
       {@html text}
     </span>

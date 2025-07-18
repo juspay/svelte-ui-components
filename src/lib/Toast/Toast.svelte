@@ -116,7 +116,14 @@
     </div>
 
     {#if properties.rightIcon}
-      <div class="close-button" tabindex="0" role="button" on:click={hideToast} on:keypress data-pw={properties.closeIconTestId}>
+      <div
+        class="close-button"
+        tabindex="0"
+        role="button"
+        on:click={hideToast}
+        on:keypress
+        data-pw={properties.closeIconTestId}
+      >
         <img class="toast-icon" src={properties.rightIcon} alt="close-icon" />
       </div>
     {/if}

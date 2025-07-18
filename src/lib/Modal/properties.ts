@@ -19,9 +19,9 @@ export type ModalProperties = {
     buttonTestId?: string;
   };
   footer?: {
-    primaryButton?: ButtonProperties,
-    secondaryButton?: ButtonProperties,
-  }
+    primaryButton?: ButtonProperties;
+    secondaryButton?: ButtonProperties;
+  };
   debounceTime: number;
   leftImageTestId?: string;
   rightImageTestId?: string;

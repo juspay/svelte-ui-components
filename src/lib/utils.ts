@@ -168,7 +168,6 @@ function validatePhoneNumber(phoneNumber: string): ValidationState {
   return phoneNumber.length === 10 ? 'Valid' : phoneNumber.length > 10 ? 'InProgress' : 'Invalid';
 }
 
-
 /**
  * @description Creates a debouncer function that delays invoking the provided callback until a specified delay period has elapsed since the last invocation.
  * @param delay The delay period in milliseconds before invoking the callback.
@@ -176,11 +175,11 @@ function validatePhoneNumber(phoneNumber: string): ValidationState {
  */
 export function createDebouncer(delay: number) {
   let lastCallTime = 0;
-  return function(callback: Function, ...args: any[]) {
-        const now = Date.now();
-        if (now - lastCallTime > delay) {
-          lastCallTime = now;
-          callback(...args);
-        }
-    };
+  return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {
+    const now = Date.now();
+    if (now - lastCallTime > delay) {
+      lastCallTime = now;
+      callback(...args);
+    }
+  };
 }

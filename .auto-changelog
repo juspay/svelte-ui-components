@@ -1,0 +1,16 @@
+{
+  "output": "docs/CHANGELOG.md",
+  "template": "./docs/templates/changelog.hbs",
+  "commitLimit": false,
+  "breakingPattern": "(!:)",
+  "issueUrl": "https://juspay.atlassian.net/browse/{id}",
+  "issuePattern": "[A-Z]{2,}-\\d+",
+  "compareUrl": "https://github.com/juspay/svelte-ui-components/compare/{to}..{from}",
+  "unreleased": true,
+  "releaseSummary": true,
+  "hideCredit": false,
+  "ignoreCommitPattern": "(\\[skip ci\\])",
+  "replaceText": {
+    "(ABC-\\d+)": "[`$1`](https://juspay.atlassian.net/browse/$1)"
+  }
+}

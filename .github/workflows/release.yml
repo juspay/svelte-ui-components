@@ -1,0 +1,192 @@
+name: Release and Publish
+
+on:
+  push:
+    branches: [release]
+  pull_request:
+    branches: [release]
+    types: [closed]
+
+jobs:
+  release:
+    # Only run on direct pushes to release branch or when PR is merged
+    if: |
+      (github.event_name == 'push') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Determine version bump type
+        id: version-type
+        run: |
+          # Get the latest commit message
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          echo "Latest commit: $COMMIT_MSG"
+
+          # Determine version bump based on commit message
+          if echo "$COMMIT_MSG" | grep -iE "^feat(\(.+\))?!?:" > /dev/null; then
+            if echo "$COMMIT_MSG" | grep -E "!" > /dev/null; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=minor" >> $GITHUB_OUTPUT
+              echo "Version bump: MINOR (new feature)"
+            fi
+          elif echo "$COMMIT_MSG" | grep -iE "^fix(\(.+\))?:" > /dev/null; then
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH (bug fix)"
+          elif echo "$COMMIT_MSG" | grep -iE "^(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?:" > /dev/null; then
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH (maintenance)"
+          else
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH (default)"
+          fi
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version and generate changelog
+        id: version-bump
+        run: |
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Bump version based on type
+          if [ "${{ steps.version-type.outputs.version_type }}" = "major" ]; then
+            NEW_VERSION=$(pnpm version major --no-git-tag-version)
+          elif [ "${{ steps.version-type.outputs.version_type }}" = "minor" ]; then
+            NEW_VERSION=$(pnpm version minor --no-git-tag-version)
+          else
+            NEW_VERSION=$(pnpm version patch --no-git-tag-version)
+          fi
+
+          # Clean up version string (remove 'v' prefix if present)
+          NEW_VERSION=$(echo $NEW_VERSION | sed 's/^v//')
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        run: |
+          # Install auto-changelog if not already installed
+          if ! command -v auto-changelog &> /dev/null; then
+            npm install -g auto-changelog
+          fi
+
+          # Ensure docs directory exists
+          mkdir -p docs
+
+          # Generate changelog
+          auto-changelog --config .auto-changelog
+
+          # If changelog generation failed, create a basic one
+          if [ ! -f "docs/CHANGELOG.md" ]; then
+            echo "# Changelog" > docs/CHANGELOG.md
+            echo "" >> docs/CHANGELOG.md
+            echo "## [v${{ steps.version-bump.outputs.new_version }}] - $(date +%Y-%m-%d)" >> docs/CHANGELOG.md
+            echo "" >> docs/CHANGELOG.md
+            echo "### Changes" >> docs/CHANGELOG.md
+            echo "- $(git log -1 --pretty=format:"%s")" >> docs/CHANGELOG.md
+          fi
+
+      - name: Build package
+        run: |
+          pnpm build
+
+      - name: Create git tag
+        run: |
+          git tag -a "v${{ steps.version-bump.outputs.new_version }}" -m "Release v${{ steps.version-bump.outputs.new_version }}"
+
+      - name: Stage and commit changes
+        run: |
+          # Check if there are any changes to commit
+          if [ -n "$(git status --porcelain)" ]; then
+            git add package.json
+            if [ -f "docs/CHANGELOG.md" ]; then
+              git add docs/CHANGELOG.md
+            fi
+            git commit -m "chore(release): v${{ steps.version-bump.outputs.new_version }}"
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Push changes and tags
+        run: |
+          # Push changes first
+          git push origin release
+
+          # Then push the tag
+          git push origin "v${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Successfully pushed version v${{ steps.version-bump.outputs.new_version }}"
+
+      - name: Publish to NPM
+        run: |
+          # Check if this version already exists on NPM
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Publish to NPM
+          pnpm publish --access public --no-git-checks
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        id: create_release
+        with:
+          tag_name: v${{ steps.version-bump.outputs.new_version }}
+          name: Release v${{ steps.version-bump.outputs.new_version }}
+          body: |
+            ## What's Changed
+
+            See [CHANGELOG.md](https://github.com/juspay/svelte-ui-components/blob/release/docs/CHANGELOG.md) for detailed changes.
+
+            **Full Changelog**: https://github.com/juspay/svelte-ui-components/compare/v${{ steps.version-bump.outputs.previous_version }}...v${{ steps.version-bump.outputs.new_version }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

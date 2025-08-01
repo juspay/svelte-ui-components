@@ -3,7 +3,6 @@
   import type { CarouselProperties } from './properties';
   import { defaultCarouselProperties } from './properties';
   export let properties: CarouselProperties = defaultCarouselProperties;
-
   let slidesDiv: HTMLDivElement | undefined;
   let intervalId: number;
   let endTouch: number;
@@ -148,7 +147,7 @@
     <div class="dots-wrapper">
       <!-- eslint-disable-next-line -->
       {#each properties.views as _, index}
-        <div
+        <div data-pw={(defaultCarouselProperties.testId)}-{index}
           class={activeSlideIndex == index ? 'active-dot' : 'dot'}
           on:click={() => moveSlideToIndex(index)}
           on:keydown

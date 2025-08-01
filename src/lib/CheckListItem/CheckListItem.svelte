@@ -15,7 +15,7 @@
 </script>
 
 <div class="container">
-  <input type="checkbox" class="checkbox" bind:checked on:click={handleCheckboxClick} />
+  <input type="checkbox" class="checkbox" bind:checked on:click={handleCheckboxClick} data-pw={text}/>
   {#if $$slots.checkboxLabel}
     <slot name="checkboxLabel" />
   {:else}

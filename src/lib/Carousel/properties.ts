@@ -6,6 +6,7 @@ export type CarouselProperties = {
   autoplayInterval: number;
   showDots: boolean;
   isScrollableLast: boolean;
+  testId?: string;
 };
 
 export const defaultCarouselProperties = {
@@ -13,5 +14,6 @@ export const defaultCarouselProperties = {
   views: [],
   autoplayInterval: 1000,
   showDots: false,
-  isScrollableLast: false
+  isScrollableLast: false,
+  testId: 'carousel'
 };

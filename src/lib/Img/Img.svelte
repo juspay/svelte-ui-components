@@ -2,6 +2,7 @@
   export let src: string;
   export let alt: string;
   export let fallback: string | null = null;
+  export let testId: string = '';
 
   function handleFallback(): void {
     if (fallback !== null) {
@@ -11,7 +12,7 @@
 </script>
 
 {#if typeof src === 'string' && typeof alt === 'string'}
-  <img {src} {alt} on:error|once={handleFallback} />
+  <img {src} {alt} on:error|once={handleFallback} data-pw={testId}/>
 {/if}
 
 <style>

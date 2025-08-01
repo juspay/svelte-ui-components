@@ -7,7 +7,7 @@
 {#if properties !== null}
   <div class="badge-icon">
     <div class="badge-wrap">
-      <img class="icon-img" src={properties.image} alt="" />
+      <img class="icon-img" data-pw={properties.testId} src={properties.image} alt="" />
       <div class="badge">{properties.value}</div>
     </div>
   </div>

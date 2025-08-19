@@ -1,19 +1,52 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Loader from '../Loader/Loader.svelte';
-  import { defaultButtonProperties } from './properties';
-  export let properties = defaultButtonProperties;
+  import type { Snippet } from 'svelte';
 
-  export let showProgressBar = false;
+  // Local types (cleaned and localized)
+  type LoaderType = 'Circular' | 'ProgressBar';
 
-  const dispatch = createEventDispatcher();
+  type ButtonProps = {
+    text: string;
+    enable: boolean;
+    showLoader: boolean;
+    loaderType: LoaderType | null;
+    type: 'submit' | 'reset' | 'button';
+    testId: string;
+  };
 
-  function handleButtonClick(): void {
-    if (showProgressBar) {
-      return;
-    }
-    dispatch('click');
-    if (properties.showLoader && properties.loaderType === 'ProgressBar') {
+  type OptionalProps = Partial<{
+    properties?: Partial<ButtonProps>;
+    showProgressBar?: boolean;
+    icon?: Snippet;
+    onclick?: (event: MouseEvent) => void;
+  }>;
+
+  // Default props
+  const defaultButtonProps: ButtonProps = {
+    text: 'click',
+    enable: true,
+    showLoader: false,
+    loaderType: null,
+    type: 'submit',
+    testId: ''
+  };
+
+  const rawProps = $props() as OptionalProps;
+
+  const buttonProps: ButtonProps = {
+    ...defaultButtonProps,
+    ...rawProps.properties
+  };
+
+  const icon = rawProps.icon;
+  const onclick = rawProps.onclick ?? (() => {});
+  const initialShowProgressBar = rawProps.showProgressBar ?? false;
+  let showProgressBar = $state(initialShowProgressBar);
+
+  function handleButtonClick(event: MouseEvent) {
+    if (showProgressBar) return;
+    onclick(event);
+    if (buttonProps.showLoader && buttonProps.loaderType === 'ProgressBar') {
       showProgressBar = true;
     }
   }
@@ -21,25 +54,28 @@
 
 <div class="button-container">
   {#if showProgressBar}
-    <div class="button-progress-bar" />
+    <div class="button-progress-bar"></div>
   {/if}
+
   <button
     style="
-      --opacity: {properties.enable ? 1 : 0.4};
-      --cursor: {properties.enable ? 'pointer' : 'not-allowed'};"
-    on:click={handleButtonClick}
-    disabled={!(properties.enable && !properties.showLoader)}
-    type={properties.type}
-    data-pw={properties.testId}
+      --opacity: {buttonProps.enable ? 1 : 0.4};
+      --cursor: {buttonProps.enable ? 'pointer' : 'not-allowed'};"
+    onclick={handleButtonClick}
+    disabled={!(buttonProps.enable && !buttonProps.showLoader)}
+    type={buttonProps.type}
+    data-pw={buttonProps.testId}
   >
-    {#if properties.showLoader && properties.loaderType === 'Circular'}
+    {#if buttonProps.showLoader && buttonProps.loaderType === 'Circular'}
       <div class="button-loader"><Loader /></div>
     {/if}
-    {#if $$slots.icon}
-      <div class="button-icon"><slot name="icon" /></div>
+
+    {#if icon}
+      <div class="button-icon">{icon()}</div>
     {/if}
-    {#if properties.text !== null && properties.text.length > 0}
-      <div class="button-text">{properties.text}</div>
+
+    {#if buttonProps.text.length > 0}
+      <div class="button-text">{buttonProps.text}</div>
     {/if}
   </button>
 </div>

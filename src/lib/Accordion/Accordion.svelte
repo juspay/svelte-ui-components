@@ -1,39 +1,45 @@
 <script lang="ts">
-  import { afterUpdate, onMount } from 'svelte';
+  import type { Snippet } from 'svelte';
 
-  export let expand = false;
-  let maxHeight = 0;
+  const emptySnippet: Snippet = () => {};
+
+  type AccordionProps = {
+    expand: boolean;
+    children: Snippet;
+    onexpandchange: (e: { expand: boolean }) => void;
+  };
+
+  const defaultAccordionProps: AccordionProps = {
+    expand: false,
+    children: emptySnippet,
+    onexpandchange: () => {}
+  };
+
+  const rawProps = $props();
+  const accordionProps: AccordionProps = {
+    ...defaultAccordionProps,
+    ...rawProps
+  };
+
   let accordionRef: HTMLElement;
 
-  function updateMaxHeight() {
-    try {
-      if (expand) {
-        accordionRef.style.maxHeight = `${maxHeight}px`;
-      } else {
-        accordionRef.style.maxHeight = '0';
-      }
-    } catch (e) {
-      console.error('Error while updating style of accordian', e);
+  $effect.pre(() => {
+    if (!accordionRef) return;
+
+    if (accordionRef.style.transitionDuration === '0s') {
+      accordionRef.style.transition = 'max-height 0.2s ease-out';
     }
-  }
 
-  afterUpdate(updateMaxHeight);
+    const scrollHeight = accordionRef.scrollHeight;
 
-  onMount(() => {
-    accordionRef.style.transition = 'max-height 0.2s ease-out';
-    updateMaxHeight();
+    accordionRef.style.maxHeight = accordionProps.expand ? `${scrollHeight}px` : '0';
+
+    accordionProps.onexpandchange({ expand: accordionProps.expand });
   });
-
-  $: {
-    if (accordionRef) {
-      maxHeight = accordionRef.scrollHeight;
-      updateMaxHeight();
-    }
-  }
 </script>
 
 <div class="accordion" bind:this={accordionRef}>
-  <slot />
+  {accordionProps.children()}
 </div>
 
 <style>

@@ -1,17 +1,30 @@
 <script lang="ts">
-  import type { BadgeProperties } from './properties';
+  // Define props shape
+  type BadgeProps = {
+    image: string;
+    value: string;
+  };
 
-  export let properties: BadgeProperties | null = null;
+  // Default props defined in main file
+  const defaultProps: BadgeProps = {
+    image: '',
+    value: ''
+  };
+
+  // Top-level declaration of $props()
+  const incomingProps = $props();
+
+  // Merge incoming props with defaults manually
+  const image: string = (incomingProps.image ?? defaultProps.image) as string;
+  const value: string = (incomingProps.value ?? defaultProps.value) as string;
 </script>
 
-{#if properties !== null}
-  <div class="badge-icon">
-    <div class="badge-wrap">
-      <img class="icon-img" src={properties.image} alt="" />
-      <div class="badge">{properties.value}</div>
-    </div>
+<div class="badge-icon">
+  <div class="badge-wrap">
+    <img class="icon-img" src={image} alt="badge" />
+    <div class="badge">{value}</div>
   </div>
-{/if}
+</div>
 
 <style>
   .badge-wrap {

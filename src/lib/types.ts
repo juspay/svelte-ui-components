@@ -26,7 +26,7 @@ export type AutoCompleteType =
 export type CustomValidator = (
   inputValue: string,
   currentValidationState: ValidationState
-) => ValidationState;
+) => ValidationState | Promise<ValidationState>;
 
 export type TextTransformer = (text: string) => string;
 

@@ -1,17 +1,15 @@
 <script lang="ts">
   import type { BadgeProperties } from './properties';
 
-  export let properties: BadgeProperties | null = null;
+  let { image, value }: BadgeProperties = $props();
 </script>
 
-{#if properties !== null}
-  <div class="badge-icon">
-    <div class="badge-wrap">
-      <img class="icon-img" src={properties.image} alt="" />
-      <div class="badge">{properties.value}</div>
-    </div>
+<div class="badge-icon">
+  <div class="badge-wrap">
+    <img class="icon-img" src={image} alt="" />
+    <div class="badge">{value}</div>
   </div>
-{/if}
+</div>
 
 <style>
   .badge-wrap {

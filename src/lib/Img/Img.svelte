@@ -1,17 +1,19 @@
 <script lang="ts">
-  export let src: string;
-  export let alt: string;
-  export let fallback: string | null = null;
+  import type { ImgProperties } from './properties';
+
+  let { src, alt, fallback }: ImgProperties = $props();
+
+  let currentSrc = $derived(src);
 
   function handleFallback(): void {
-    if (fallback !== null) {
-      src = fallback;
+    if (fallback && currentSrc !== fallback) {
+      currentSrc = fallback;
     }
   }
 </script>
 
-{#if typeof src === 'string' && typeof alt === 'string'}
-  <img {src} {alt} on:error|once={handleFallback} />
+{#if currentSrc && alt}
+  <img src={currentSrc} {alt} onerror={handleFallback} />
 {/if}
 
 <style>

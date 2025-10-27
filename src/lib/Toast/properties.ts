@@ -3,24 +3,19 @@ export type ToastDirection = 'left-to-right' | 'right-to-left' | 'top-to-bottom'
 
 export type ToastProperties = {
   duration: number;
-  leftIcon?: string;
+  leftIcon?: string | null;
   message: string;
-  subtext?: string;
-  rightIcon?: string;
-  type?: ToastType;
-  direction?: ToastDirection;
+  subtext?: string | null;
+  rightIcon?: string | null;
+  type?: ToastType | null;
+  direction?: ToastDirection | null;
   overlapPage?: boolean;
-  inAnimationOffset?: number;
-  inAnimationDuration?: number;
-  outAnimationOffset?: number;
-  outAnimationDuration?: number;
-  testId?: string;
+  inAnimationOffset?: number | null;
+  inAnimationDuration?: number | null;
+  outAnimationOffset?: number | null;
+  outAnimationDuration?: number | null;
+  testId?: string | null;
   messageTestId?: string;
   subTextTestId?: string;
   closeIconTestId?: string;
-};
-
-export const defaultToastProperties: ToastProperties = {
-  duration: 2000,
-  message: ''
 };

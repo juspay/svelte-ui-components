@@ -1,20 +1,22 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import type { GridItemProperties } from './properties';
 
-  export let icon: string = '';
-  export let text: string = '';
-  export let headerIcon: string = '';
-  export let showLoader: boolean = false;
+  let {
+    icon = '',
+    text = '',
+    headerIcon = '',
+    showLoader = $bindable(false),
+    onclick,
+    onkeydown
+  }: GridItemProperties = $props();
 
-  const dispatch = createEventDispatcher();
-
-  function onClick() {
+  function handleClick(event: MouseEvent) {
     showLoader = !showLoader;
-    dispatch('click');
+    onclick?.(event);
   }
 </script>
 
-<div class="container" on:click={onClick} on:keydown role="button" tabindex="0">
+<div class="container" onclick={handleClick} {onkeydown} role="button" tabindex="0">
   <div class="grid-header">
     <img src={headerIcon} alt="" class="grid-item-header-icon" />
   </div>

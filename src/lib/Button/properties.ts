@@ -1,18 +1,16 @@
+import type { Snippet } from 'svelte';
+
 export type LoaderType = 'Circular' | 'ProgressBar';
 
 export type ButtonProperties = {
   text: string;
-  enable: boolean;
-  showLoader: boolean;
-  loaderType: LoaderType | null;
-  type: 'submit' | 'reset' | 'button';
+  enable?: boolean;
+  showProgressBar?: boolean;
+  showLoader?: boolean;
+  loaderType?: LoaderType;
+  type?: 'submit' | 'reset' | 'button';
   testId?: string;
-};
-
-export const defaultButtonProperties: ButtonProperties = {
-  text: 'click',
-  enable: true,
-  showLoader: false,
-  loaderType: null,
-  type: 'submit'
+  onclick?: (event: MouseEvent) => void;
+  onkeyup?: (event: KeyboardEvent) => void;
+  icon?: Snippet;
 };

@@ -1,19 +1,27 @@
-import type { ImgProps } from '$lib/Img/properties';
+import type { Snippet } from 'svelte';
+import type { ImgProperties } from '$lib/Img/properties';
+
 export type SelectProperties = {
-  placeholder: string;
-  label: string;
-  allItems: string[];
-  selectedItem: string | string[];
-  selectedItemLabel: string | string[] | null;
-  showSelectedItemInDropdown: boolean;
-  selectMultipleItems: boolean;
+  dropDownIconAlt?: string;
+  placeholder?: string | null;
+  label?: string | null;
+  allItems?: string[];
+  selectedItem?: string | string[];
+  selectedItemLabel?: string | string[] | null;
+  showSelectedItemInDropdown?: boolean;
+  selectMultipleItems?: boolean;
   hideDropDownIcon?: boolean;
   dropDownIcon?: string;
-  leftIcon: ImgProps | null;
-  showSingleSelectButton?: boolean | null;
+  leftIcon?: ImgProperties | null;
+  showSingleSelectButton?: boolean;
   showSelectedItem?: boolean;
   showSelectedItemCount?: boolean;
   testId?: string;
   labelTestId?: string;
   itemTestId?: string;
+  leftContent?: Snippet;
+  bottomContent?: Snippet;
+  onselect?: (event: { selectedItems: string | string[] }) => void;
+  ondropdownClick?: () => void;
+  onkeydown?: (event: KeyboardEvent) => void;
 };

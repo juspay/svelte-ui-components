@@ -1,30 +1,28 @@
 <script lang="ts">
   import type { BannerProperties } from './properties';
 
-  export let properties: BannerProperties | null = null;
+  let { icon, text, linkText, rightContent, onclick, onkeydown }: BannerProperties = $props();
 </script>
 
-{#if properties !== null}
-  <div class="banner" on:click on:keydown role="button" tabindex="0">
-    {#if properties.icon !== null}
-      <div class="banner-image">
-        <img src={properties.icon} alt="" />
-      </div>
-    {/if}
-    <div class="banner-text">
-      {#if properties.linkText !== null}
-        <div>{properties.text}<span class="link-text">{properties.linkText}</span></div>
-      {:else}
-        <div>{properties.text}</div>
-      {/if}
+<div class="banner" {onclick} {onkeydown} role="button" tabindex="0">
+  {#if icon}
+    <div class="banner-image">
+      <img src={icon} alt="" />
     </div>
-    {#if $$slots.rightContent}
-      <div class="right-content">
-        <slot name="rightContent" />
-      </div>
+  {/if}
+  <div class="banner-text">
+    {#if linkText}
+      <div>{text}<span class="link-text">{linkText}</span></div>
+    {:else}
+      <div>{text}</div>
     {/if}
   </div>
-{/if}
+  {#if rightContent}
+    <div class="right-content">
+      {@render rightContent()}
+    </div>
+  {/if}
+</div>
 
 <style>
   .banner {

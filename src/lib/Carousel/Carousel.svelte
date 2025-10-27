@@ -1,45 +1,52 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { CarouselProperties } from './properties';
-  import { defaultCarouselProperties } from './properties';
-  export let properties: CarouselProperties = defaultCarouselProperties;
 
-  let slidesDiv: HTMLDivElement | undefined;
+  let {
+    views,
+    autoplay = false,
+    autoplayInterval = 1000,
+    showDots = false,
+    isScrollableLast = false,
+    onkeydown
+  }: CarouselProperties = $props();
+
+  let slidesDiv: HTMLDivElement | undefined = $state();
   let intervalId: number;
   let endTouch: number;
   let startTouch: number;
   let startMouse: number;
   let endMouse: number;
   let carouselWidth: string;
-  let carouselDiv: HTMLDivElement | undefined;
-  let activeSlideIndex = 0;
+  let carouselDiv: HTMLDivElement | undefined = $state();
+  let activeSlideIndex = $state(0);
   let widthUnits: string;
 
   function nextSlide() {
-    if (activeSlideIndex != properties.views.length - 1 || properties.isScrollableLast) {
+    if (activeSlideIndex != views.length - 1 || isScrollableLast) {
       activeSlideIndex++;
       changeCurrentSlide();
-      if (properties.autoplay) {
+      if (autoplay) {
         resetInterval();
       }
     }
   }
 
   function previousSlide() {
-    if (activeSlideIndex != 0 || properties.isScrollableLast) {
+    if (activeSlideIndex != 0 || isScrollableLast) {
       activeSlideIndex--;
       changeCurrentSlide();
-      if (properties.autoplay) {
+      if (autoplay) {
         resetInterval();
       }
     }
   }
 
   function changeCurrentSlide() {
-    if (activeSlideIndex > properties.views.length - 1) {
+    if (activeSlideIndex > views.length - 1) {
       activeSlideIndex = 0;
     } else if (activeSlideIndex < 0) {
-      activeSlideIndex = properties.views.length - 1;
+      activeSlideIndex = views.length - 1;
     }
     if (slidesDiv) {
       slidesDiv.style.transform = `translateX(${
@@ -55,7 +62,7 @@
 
   function resetInterval() {
     clearInterval(intervalId);
-    intervalId = window.setInterval(nextSlide, properties.autoplayInterval);
+    intervalId = window.setInterval(nextSlide, autoplayInterval);
   }
 
   function handleTouchStart(event: TouchEvent) {
@@ -116,44 +123,44 @@
       carouselDiv.addEventListener('mousedown', handleMouseDown);
       carouselDiv.addEventListener('mouseup', handeMouseUp);
     }
-    if (properties.autoplay) {
-      intervalId = window.setInterval(nextSlide, properties.autoplayInterval);
+    if (autoplay) {
+      intervalId = window.setInterval(nextSlide, autoplayInterval);
     }
   });
 
   onDestroy(() => {
-    if (properties.autoplay) {
+    if (autoplay) {
       clearInterval(intervalId);
     }
   });
 </script>
 
 <div class="carousel-container">
-  {#if properties.views.length}
+  {#if views.length}
     <div class="carousel" bind:this={carouselDiv}>
       <div class="slidesDiv" bind:this={slidesDiv}>
-        {#each properties.views as view}
+        {#each views as view}
           <div class="current-slide">
             {#if view.properties}
-              <svelte:component this={view.component} properties={view.properties} />
+              <view.component properties={view.properties} />
             {:else}
-              <svelte:component this={view.component} />
+              <view.component />
             {/if}
           </div>
         {/each}
       </div>
     </div>
   {/if}
-  {#if properties.showDots}
+  {#if showDots}
     <div class="dots-wrapper">
       <!-- eslint-disable-next-line -->
-      {#each properties.views as _, index}
+      {#each views as _, index}
         <div
           class={activeSlideIndex == index ? 'active-dot' : 'dot'}
-          on:click={() => moveSlideToIndex(index)}
-          on:keydown
+          onclick={() => moveSlideToIndex(index)}
+          {onkeydown}
           role="none"
-        />
+        ></div>
       {/each}
     </div>
   {/if}

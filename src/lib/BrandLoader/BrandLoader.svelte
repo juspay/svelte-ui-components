@@ -1,28 +1,21 @@
-<script lang="ts" context="module">
-  // Used by svelte
-  export const prerender = true;
-</script>
-
 <script lang="ts">
-  import { defaultBrandLoaderProperties } from './properties';
   import type { BrandLoaderProperties } from './properties';
 
-  // Exported props
-  export let properties: BrandLoaderProperties = defaultBrandLoaderProperties;
+  let { brandLogoURL, brandText, subText }: BrandLoaderProperties = $props();
 </script>
 
 <div class="background">
   <div class="loader">
-    <img src={properties.brandLogoURL} alt="" />
-    <div class="text">{properties.brandText}</div>
-    {#if properties.subText}
-      <div class="sub-text">{properties.subText}</div>
+    <img src={brandLogoURL} alt="" />
+    <div class="text">{brandText}</div>
+    {#if subText}
+      <div class="sub-text">{subText}</div>
     {/if}
     <div class="lds-ellipsis">
-      <div />
-      <div />
-      <div />
-      <div />
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
   </div>
 </div>

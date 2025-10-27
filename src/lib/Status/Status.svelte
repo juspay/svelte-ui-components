@@ -1,34 +1,26 @@
-<script lang="ts" context="module">
-  // Used by svelte
-  export const prerender = true;
-</script>
-
 <script lang="ts">
-  import { defaultStatusProperties } from './properties';
   import type { StatusProperties } from './properties';
   import Button from '$lib/Button/Button.svelte';
-  import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher();
-
-  // Exported props
-  export let properties: StatusProperties = defaultStatusProperties;
-
-  function handleButtonClick() {
-    dispatch('buttonClick');
-  }
+  let {
+    statusIcon = 'icons/order-success-icon.svg',
+    statusText = '',
+    statusDescription = '',
+    buttonProperties,
+    onbuttonClick
+  }: StatusProperties = $props();
 </script>
 
 <div class="background">
   <div class="order-status">
-    <div class="status-image"><img src={properties.statusIcon} alt="status" /></div>
-    <div class="status-text">{properties.statusText}</div>
+    <div class="status-image"><img src={statusIcon} alt="status" /></div>
+    <div class="status-text">{statusText}</div>
     <div class="status-description">
       <!-- eslint-disable-next-line -->
-      {@html properties.statusDescription}
+      {@html statusDescription}
     </div>
-    {#if properties.buttonProperties !== null}
-      <Button properties={properties.buttonProperties} on:click={handleButtonClick} />
+    {#if buttonProperties}
+      <Button {...buttonProperties} onclick={onbuttonClick} />
     {/if}
   </div>
 </div>

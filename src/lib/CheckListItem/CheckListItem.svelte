@@ -1,23 +1,25 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import type { CheckListItemProperties } from './properties';
 
-  export let text: string;
-  export let checked: boolean;
-
-  const dispatch = createEventDispatcher();
+  let {
+    text,
+    checked = $bindable(false),
+    checkboxLabel,
+    onclick
+  }: CheckListItemProperties = $props();
 
   function handleCheckboxClick(e: MouseEvent): void {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
       checked = e.target.checked;
     }
-    dispatch('click', checked);
+    onclick?.(checked);
   }
 </script>
 
 <div class="container">
-  <input type="checkbox" class="checkbox" bind:checked on:click={handleCheckboxClick} />
-  {#if $$slots.checkboxLabel}
-    <slot name="checkboxLabel" />
+  <input type="checkbox" class="checkbox" bind:checked onclick={handleCheckboxClick} />
+  {#if checkboxLabel}
+    {@render checkboxLabel?.()}
   {:else}
     <span class="text" class:checked>
       <!-- eslint-disable-next-line -->

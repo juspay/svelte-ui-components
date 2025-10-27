@@ -1,8 +1,4 @@
-<script lang="ts" context="module">
-  export const prerender = true;
-</script>
-
-<div class="loader" />
+<div class="loader"></div>
 
 <style>
   .loader {

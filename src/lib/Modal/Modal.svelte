@@ -1,59 +1,79 @@
 <script lang="ts">
   import type { ModalProperties } from './properties';
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
-  import { defaultModalProperties } from './properties';
   import { createDebouncer } from '../utils';
   import Button from '$lib/Button/Button.svelte';
 
-  const dispatch = createEventDispatcher();
-  let overlayDiv: HTMLDivElement;
+  let overlayDiv: HTMLDivElement | undefined = $state();
   let backPressed = false;
 
-  export let properties: ModalProperties = defaultModalProperties;
+  let {
+    size = 'fit-content',
+    align = 'center',
+    showOverlay = true,
+    supportHardwareBackPress = false,
+    enableTransition = true,
+    transitionType = 'ALL',
+    header = { leftImage: undefined, rightImage: undefined, text: undefined },
+    footer,
+    debounceTime = 700,
+    leftImageTestId,
+    testId,
+    content,
+    footerSnippet,
+    onclose,
+    onheaderRightImageClick,
+    onheaderLeftImageClick,
+    onprimaryButtonClick,
+    onsecondaryButtonClick,
+    onoverlayClick,
+    onkeydown
+  }: ModalProperties = $props();
 
-  const debounce = createDebouncer(properties.debounceTime);
+  const debounce = createDebouncer(debounceTime);
 
   function handlePopstate() {
     backPressed = true;
-    dispatch('close');
+    onclose?.();
   }
 
-  function handleRightImageClick(): void {
-    dispatch('headerRightImageClick');
+  function handleRightImageClick(event: MouseEvent): void {
+    onheaderRightImageClick?.(event);
   }
 
-  function handleLeftImageClick(): void {
-    dispatch('headerLeftImageClick');
+  function handleLeftImageClick(event: MouseEvent): void {
+    onheaderLeftImageClick?.(event);
   }
 
-  function handlePrimaryButtonClick(): void {
-    dispatch('primaryButtonClick');
+  function handlePrimaryButtonClick(event: MouseEvent): void {
+    onprimaryButtonClick?.(event);
   }
 
-  function handleSecondaryButtonClick(): void {
-    dispatch('secondaryButtonClick');
+  function handleSecondaryButtonClick(event: MouseEvent): void {
+    onsecondaryButtonClick?.(event);
   }
 
   function handleOverlayClick(event: MouseEvent) {
     if (event.target && event.target === overlayDiv) {
       debounce(() => {
-        dispatch('overlayClick');
+        onoverlayClick?.();
       });
     }
   }
 
   function handleKeyDown(event: KeyboardEvent): void {
+    onkeydown?.(event);
     let key = event?.key;
     if (key === 'Escape') {
-      dispatch('overlayClick');
+      onoverlayClick?.();
     }
   }
 
   onMount(() => {
     document.body.style.overflow = 'hidden';
-    if (properties.supportHardwareBackPress) {
+    if (supportHardwareBackPress) {
       history.pushState(null, '', window.location.href);
       window.addEventListener('popstate', handlePopstate);
     }
@@ -62,7 +82,7 @@
   onDestroy(() => {
     if (typeof window !== 'undefined') {
       document.body.style.overflow = '';
-      if (properties.supportHardwareBackPress) {
+      if (supportHardwareBackPress) {
         if (!backPressed) {
           history.back();
         }
@@ -72,82 +92,70 @@
   });
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} />
 
-{#if $$slots.content}
+{#if content}
   <OverlayAnimation>
     <div
       bind:this={overlayDiv}
-      class="modal {properties.align} {properties.showOverlay
-        ? 'overlay-active'
-        : 'overlay-inactive'}"
-      on:click={handleOverlayClick}
-      on:keydown
+      class="modal {align} {showOverlay ? 'overlay-active' : 'overlay-inactive'}"
+      onclick={handleOverlayClick}
+      {onkeydown}
       role="button"
       tabindex="0"
-      data-pw={properties.testId}
+      data-pw={testId}
     >
-      <ModalAnimation
-        enable={properties.enableTransition}
-        align={properties.align}
-        transitionType={properties.transitionType}
-      >
-        <div class="modal-content {properties.size}">
-          {#if properties.header.leftImage !== null || properties.header.text !== null || properties.header.rightImage !== null}
+      <ModalAnimation enable={enableTransition} {align} {transitionType}>
+        <div class="modal-content {size}">
+          {#if header?.leftImage || header?.text || header?.rightImage}
             <div class="header">
-              {#if properties.header.leftImage}
+              {#if header.leftImage}
                 <div
-                  on:click={handleLeftImageClick}
-                  on:keydown
+                  onclick={handleLeftImageClick}
+                  {onkeydown}
                   role="button"
                   tabindex="0"
-                  data-pw={properties.leftImageTestId}
+                  data-pw={leftImageTestId}
                 >
-                  <img class="header-left-img" src={properties.header.leftImage} alt="" />
+                  <img class="header-left-img" src={header.leftImage} alt="" />
                 </div>
               {/if}
-              {#if properties.header.text}
-                <div class="header-text" data-pw={properties.header.testId}>
-                  {properties.header.text}
+              {#if header.text}
+                <div class="header-text" data-pw={header.testId}>
+                  {header.text}
                 </div>
               {/if}
-              {#if properties.header.rightImage}
+              {#if header.rightImage}
                 <div
                   role="button"
                   tabindex="0"
-                  on:click={handleRightImageClick}
-                  on:keydown
-                  data-pw={properties.header.buttonTestId}
+                  onclick={handleRightImageClick}
+                  {onkeydown}
+                  data-pw={header.buttonTestId}
                 >
-                  <img class="header-right-img" src={properties.header.rightImage} alt="" />
+                  <img class="header-right-img" src={header.rightImage} alt="" />
                 </div>
               {/if}
             </div>
           {/if}
           <div class="slot-content">
-            <slot name="content" />
+            {@render content?.()}
           </div>
-          {#if $$slots.footer}
+          {#if footerSnippet}
             <div class="footer-content">
-              <slot name="footer" />
+              {@render footerSnippet?.()}
             </div>
-          {:else if properties.footer?.primaryButton || properties.footer?.secondaryButton}
+          {:else if footer?.primaryButton || footer?.secondaryButton}
             <div class="footer-content">
               <div class="footer-action-buttons">
-                {#if properties.footer.secondaryButton}
+                {#if footer.secondaryButton}
                   <div class="footer-secondary-button">
-                    <Button
-                      properties={properties.footer.secondaryButton}
-                      on:click={handleSecondaryButtonClick}
-                    />
+                    <Button {...footer.secondaryButton} onclick={handleSecondaryButtonClick} />
                   </div>
                 {/if}
-                {#if properties.footer.primaryButton}
+                {#if footer.primaryButton}
                   <div class="footer-primary-button">
-                    <Button
-                      properties={properties.footer.primaryButton}
-                      on:click={handlePrimaryButtonClick}
-                    />
+                    <Button {...footer.primaryButton} onclick={handlePrimaryButtonClick} />
                   </div>
                 {/if}
               </div>

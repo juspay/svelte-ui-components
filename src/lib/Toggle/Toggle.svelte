@@ -1,24 +1,21 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import type { ToggleProperties } from './properties';
 
-  export let checked = false;
-  export let text = '';
-
-  const dispatch = createEventDispatcher();
+  let { checked = false, text = '', onclick }: ToggleProperties = $props();
 
   function handleCheckboxClick(e: MouseEvent): void {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
       checked = e.target.checked;
     }
-    dispatch('click', checked);
+    onclick?.(checked);
   }
 </script>
 
 <div class="container">
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
-    <input class="input-checkbox" type="checkbox" bind:checked on:click={handleCheckboxClick} />
-    <span class="slider round" />
+    <input class="input-checkbox" type="checkbox" {checked} onclick={handleCheckboxClick} />
+    <span class="slider round"></span>
   </label>
 </div>
 

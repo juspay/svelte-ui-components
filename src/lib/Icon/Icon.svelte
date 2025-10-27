@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { defaultIconProperties } from './properties';
   import type { IconProperties } from './properties';
 
-  export let properties: IconProperties = defaultIconProperties;
+  let { icon, text, onclick, onkeydown }: IconProperties = $props();
 </script>
 
-<div class="icon-container" on:click on:keydown role="button" tabindex="0">
-  <img src={properties.icon} alt="" />
-  {#if properties.text !== ''}
-    <div class="icon-text">{properties.text}</div>
+<div class="icon-container" {onclick} {onkeydown} role="button" tabindex="0">
+  <img src={icon} alt="" />
+  {#if text}
+    <div class="icon-text">{text}</div>
   {/if}
 </div>
 

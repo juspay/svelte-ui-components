@@ -4,13 +4,9 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this proj
 
 ## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..1.34.1)
 
-This workflow triggers on merges to the `release` branch and performs the following actions:
-- Determines the semantic version bump (major, minor, patch) based on conventional commit messages.
-- Updates the package version.
-- Generates a `CHANGELOG.md` using `auto-changelog`.
-- Builds the package.
-- Commits changes, pushes a new git tag, and creates a GitHub Release.
-- Publishes the new version to the NPM registry.
+- migrated all components to runes (sv5) syntax
+- updated props for all components
+- default props are not prebuilt; no need to explictly pass default props
 
 ## [1.34.1](https://github.com/juspay/svelte-ui-components/compare/1.34.1..v1.34.1) - 6 August 2025
 

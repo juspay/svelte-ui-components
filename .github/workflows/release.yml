@@ -53,24 +53,51 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=format:"%s")
           echo "Latest commit: $COMMIT_MSG"
 
-          # Determine version bump based on commit message
-          if echo "$COMMIT_MSG" | grep -iE "^feat(\(.+\))?!?:" > /dev/null; then
-            if echo "$COMMIT_MSG" | grep -E "!" > /dev/null; then
+          # Check for BREAKING CHANGE in commit body
+          COMMIT_BODY=$(git log -1 --pretty=format:"%b")
+          HAS_BREAKING_CHANGE=false
+          if echo "$COMMIT_BODY" | grep -iE "^BREAKING CHANGE:" > /dev/null; then
+            HAS_BREAKING_CHANGE=true
+          fi
+
+          # Determine version bump based on commit message (with optional Jira prefix like BZ-1234:)
+          # Pattern: [JIRA-123: ]feat[!|scope!]: message
+          if echo "$COMMIT_MSG" | grep -iE "(^|: )feat(\(.+\))?!?:" > /dev/null; then
+            # Check for breaking change indicator (!) or BREAKING CHANGE in body
+            if echo "$COMMIT_MSG" | grep -E "feat(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
               echo "version_type=major" >> $GITHUB_OUTPUT
               echo "Version bump: MAJOR (breaking change)"
             else
               echo "version_type=minor" >> $GITHUB_OUTPUT
               echo "Version bump: MINOR (new feature)"
             fi
-          elif echo "$COMMIT_MSG" | grep -iE "^fix(\(.+\))?:" > /dev/null; then
-            echo "version_type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH (bug fix)"
-          elif echo "$COMMIT_MSG" | grep -iE "^(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?:" > /dev/null; then
-            echo "version_type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH (maintenance)"
+          elif echo "$COMMIT_MSG" | grep -iE "(^|: )fix(\(.+\))?!?:" > /dev/null; then
+            # Check for breaking change in fix commits
+            if echo "$COMMIT_MSG" | grep -E "fix(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change in fix)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (bug fix)"
+            fi
+          elif echo "$COMMIT_MSG" | grep -iE "(^|: )(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!?:" > /dev/null; then
+            # Check for breaking change in other commit types
+            if echo "$COMMIT_MSG" | grep -E "(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (maintenance)"
+            fi
           else
-            echo "version_type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH (default)"
+            # Default to patch, but check for breaking change
+            if [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (default)"
+            fi
           fi
 
       - name: Configure Git
@@ -155,33 +182,6 @@ jobs:
 
           echo "Successfully pushed changes for version ${{ steps.version-bump.outputs.new_version }}"
 
-      - name: Publish to NPM
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          # Create .npmrc file for authentication
-          cat > ~/.npmrc << EOF
-          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
-          registry=https://registry.npmjs.org/
-          always-auth=true
-          EOF
-
-          # Check if this version already exists on NPM
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
-
-          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
-          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
-            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
-            exit 0
-          fi
-
-          # Publish to NPM (with organization scope support)
-          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public
-          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
-
       - name: Create and push git tag
         run: |
           TAG_NAME="${{ steps.version-bump.outputs.new_version }}"
@@ -220,7 +220,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         id: create_release
         with:
           tag_name: ${{ steps.version-bump.outputs.new_version }}
@@ -230,11 +230,35 @@ jobs:
 
             See [CHANGELOG.md](https://github.com/juspay/svelte-ui-components/blob/release/docs/CHANGELOG.md) for detailed changes.
 
-            **Full Changelog**: https://github.com/juspay/svelte-ui-components/compare/${{ steps.version-bump.outputs.previous_version }}...${{ steps.version-bump.outputs.new_version }}
+            **Full Changelog**: https://github.com/juspay/svelte-ui-components/commits/release
           draft: false
           prerelease: false
-          files: |
-            dist/**
-          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Create .npmrc file for authentication
+          cat > ~/.npmrc << EOF
+          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+          registry=https://registry.npmjs.org/
+          always-auth=true
+          EOF
+
+          # Check if this version already exists on NPM
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Publish to NPM (with organization scope support)
+          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
+          npm publish --access public
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"

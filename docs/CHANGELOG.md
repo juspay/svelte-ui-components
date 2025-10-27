@@ -2,11 +2,13 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..1.34.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..1.34.2)
 
-- migrated all components to runes (sv5) syntax
-- updated props for all components
-- default props are not prebuilt; no need to explictly pass default props
+- Performing major bump for sv5 migration
+- updated workflow for gh releases & breaking change detection
+- BREAKING CHANGE
+
+## [1.34.2](https://github.com/juspay/svelte-ui-components/compare/1.34.2..1.34.1) - 27 October 2025
 
 ## [1.34.1](https://github.com/juspay/svelte-ui-components/compare/1.34.1..v1.34.1) - 6 August 2025
 

@@ -1,54 +1,60 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import type { SelectProperties } from './properties';
   import type { ButtonProperties } from '$lib/Button/properties';
   import Img from '$lib/Img/Img.svelte';
   import Button from '$lib/Button/Button.svelte';
   import CheckListItem from '$lib/CheckListItem/CheckListItem.svelte';
 
-  let selectedElementDiv: HTMLDivElement | null = null;
+  let selectedElementDiv: HTMLDivElement | null = $state(null);
 
-  export let dropDownIconAlt = '';
-  export let properties: SelectProperties = {
-    placeholder: '',
-    label: '',
-    allItems: [],
-    selectedItem: '',
-    selectedItemLabel: null,
-    showSelectedItemInDropdown: false,
-    selectMultipleItems: false,
-    leftIcon: null,
-    showSelectedItem: true,
-    showSelectedItemCount: false
-  };
+  let {
+    dropDownIconAlt = '',
+    placeholder = '',
+    label = '',
+    allItems = [],
+    selectedItem = '',
+    selectedItemLabel = null,
+    showSelectedItemInDropdown = false,
+    selectMultipleItems = false,
+    hideDropDownIcon,
+    dropDownIcon,
+    leftIcon = null,
+    showSingleSelectButton,
+    showSelectedItem = true,
+    showSelectedItemCount = false,
+    testId,
+    labelTestId,
+    itemTestId,
+    leftContent,
+    bottomContent,
+    onselect,
+    ondropdownClick,
+    onkeydown
+  }: SelectProperties = $props();
 
-  const dropDownIcon =
-    properties.dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
+  const dropDownIconUrl = dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
 
-  let applyButtonProps: ButtonProperties;
-  $: applyButtonProps = {
-    text: `Select (${properties.selectedItem.length})`,
-    enable: properties.selectedItem.length > 0,
+  let applyButtonProps: ButtonProperties = $derived({
+    text: `Select (${selectedItem.length})`,
+    enable: selectedItem.length > 0,
     showLoader: false,
-    loaderType: null,
     type: 'submit'
-  };
+  });
 
   const selectAllButtonProps: ButtonProperties = {
     text: 'Select All',
     enable: true,
     showLoader: false,
-    loaderType: null,
     type: 'submit'
   };
 
-  let isSelectOpen = false;
-  const dispatch = createEventDispatcher();
+  let isSelectOpen = $state(false);
 
-  $: nonSelectedItems = properties.allItems.filter((item) =>
-    properties.selectMultipleItems
-      ? !properties.selectedItem.includes(item)
-      : item !== properties.selectedItem
+  let nonSelectedItems = $derived(
+    allItems.filter((item) =>
+      selectMultipleItems ? !selectedItem.includes(item) : item !== selectedItem
+    )
   );
 
   function isSelected(selectedItem: string | string[], item: string) {
@@ -60,49 +66,41 @@
   }
 
   function selectItem(item: string) {
-    if (
-      properties.selectMultipleItems &&
-      Array.isArray(properties.selectedItemLabel) &&
-      Array.isArray(properties.selectedItem)
-    ) {
-      if (isSelected(properties.selectedItem, item)) {
-        properties.selectedItem = properties.selectedItem.filter(
-          (selectedItem) => selectedItem !== item
-        );
-        properties.selectedItemLabel = properties.selectedItemLabel.filter(
-          (label) => label !== item
-        );
+    if (selectMultipleItems && Array.isArray(selectedItemLabel) && Array.isArray(selectedItem)) {
+      if (isSelected(selectedItem, item)) {
+        selectedItem = selectedItem.filter((selected) => selected !== item);
+        selectedItemLabel = selectedItemLabel.filter((label) => label !== item);
       } else {
-        properties.selectedItem = [...properties.selectedItem, item];
-        properties.selectedItemLabel = [...properties.selectedItemLabel, item];
+        selectedItem = [...selectedItem, item];
+        selectedItemLabel = [...selectedItemLabel, item];
       }
     } else {
-      properties.selectedItem = [item];
-      properties.selectedItemLabel = [item];
+      selectedItem = [item];
+      selectedItemLabel = [item];
     }
-    if (!properties.selectMultipleItems) {
+    if (!selectMultipleItems) {
       toggleSelect();
       dispatchEvent();
     }
   }
 
   function dispatchEvent() {
-    dispatch('message', { selectedItems: properties.selectedItem });
+    onselect?.({ selectedItems: selectedItem });
     isSelectOpen = false;
   }
 
   function toggleSelect() {
     isSelectOpen = !isSelectOpen;
-    dispatch('dropdownClick');
+    ondropdownClick?.();
   }
 
   function selectAllItems() {
-    if (properties.selectedItem.length === properties.allItems.length) {
-      properties.selectedItem = [];
-      properties.selectedItemLabel = [];
+    if (selectedItem.length === allItems.length) {
+      selectedItem = [];
+      selectedItemLabel = [];
     } else {
-      properties.selectedItem = [...properties.allItems];
-      properties.selectedItemLabel = [...properties.allItems];
+      selectedItem = [...allItems];
+      selectedItemLabel = [...allItems];
     }
   }
 
@@ -137,59 +135,61 @@
   });
 </script>
 
-{#if properties.label !== null && properties.label !== ''}
-  <label class="label-container" for={properties.label} data-pw={properties.labelTestId}>
-    {properties.label}
+{#if label !== null && label !== ''}
+  <label class="label-container" for={label} data-pw={labelTestId}>
+    {label}
   </label>
 {/if}
 
-{#if properties.allItems.length !== 0}
+{#if allItems.length !== 0}
   <div class="select">
     <div
       class="selected item"
-      on:click={toggleSelect}
+      onclick={toggleSelect}
       bind:this={selectedElementDiv}
-      on:keydown
+      {onkeydown}
       role="button"
       tabindex="0"
-      data-pw={properties.testId}
+      data-pw={testId}
     >
-      {#if properties.leftIcon !== null}
+      {#if leftIcon !== null}
         <div class="icon-container">
-          <Img {...properties.leftIcon} />
+          <Img {...leftIcon} />
         </div>
-        <slot name="leftContent" />
+      {/if}
+      {#if leftContent}
+        {@render leftContent()}
       {/if}
       <div class="selected-content">
-        {#if properties.selectMultipleItems && Array.isArray(properties.selectedItemLabel) && Array.isArray(properties.selectedItem)}
-          {#if properties.selectedItem.length === 0}
-            {properties.placeholder}
-          {:else if properties.selectedItemLabel?.length === 0 || (properties.showSelectedItemInDropdown && properties.showSelectedItem !== false)}
-            {properties.selectedItem.join(', ')}
-          {:else if properties.showSelectedItem !== false}
-            {properties.selectedItemLabel.join(', ')}
+        {#if selectMultipleItems && Array.isArray(selectedItemLabel) && Array.isArray(selectedItem)}
+          {#if selectedItem.length === 0}
+            {placeholder}
+          {:else if selectedItemLabel?.length === 0 || (showSelectedItemInDropdown && showSelectedItem !== false)}
+            {selectedItem.join(', ')}
+          {:else if showSelectedItem !== false}
+            {selectedItemLabel.join(', ')}
           {:else}
-            {properties.placeholder}
+            {placeholder}
           {/if}
-        {:else if properties.selectedItem === ''}
-          {properties.placeholder}
-        {:else if properties.selectedItemLabel === null || (properties.selectedItemLabel === '' && properties.showSelectedItem !== false)}
-          {properties.selectedItem}
-        {:else if properties.showSelectedItem !== false}
-          {properties.selectedItemLabel}
+        {:else if selectedItem === ''}
+          {placeholder}
+        {:else if selectedItemLabel === null || (selectedItemLabel === '' && showSelectedItem !== false)}
+          {selectedItem}
+        {:else if showSelectedItem !== false}
+          {selectedItemLabel}
         {:else}
-          {properties.placeholder}
+          {placeholder}
         {/if}
       </div>
-      <div class="filler" />
-      {#if properties.showSelectedItemCount && properties.selectMultipleItems && Array.isArray(properties.selectedItem)}
+      <div class="filler"></div>
+      {#if showSelectedItemCount && selectMultipleItems && Array.isArray(selectedItem)}
         <div class="selected-item-count">
-          {properties.selectedItem.length}
+          {selectedItem.length}
         </div>
       {/if}
-      {#if !properties.hideDropDownIcon}
+      {#if !hideDropDownIcon}
         <img
-          src={dropDownIcon}
+          src={dropDownIconUrl}
           alt={dropDownIconAlt}
           class="arrow {isSelectOpen ? 'active' : ''}"
         />
@@ -199,42 +199,41 @@
       class="non-selected-items"
       style="--non-selected-display:{isSelectOpen ? 'inline-block' : 'none'};"
     >
-      {#if properties.selectMultipleItems && !properties.showSingleSelectButton}
+      {#if selectMultipleItems && !showSingleSelectButton}
         <div class="select-all-btn">
           <CheckListItem
-            checked={Array.isArray(properties.selectedItem) &&
-              properties.selectedItem.length === properties.allItems.length}
+            checked={Array.isArray(selectedItem) && selectedItem.length === allItems.length}
             text=""
-            on:click={selectAllItems}
+            onclick={selectAllItems}
           />
-          <Button properties={selectAllButtonProps} on:click={selectAllItems} />
+          <Button {...selectAllButtonProps} onclick={selectAllItems} />
         </div>
       {/if}
       <div class="item-list">
-        {#each properties.showSelectedItemInDropdown ? properties.allItems : nonSelectedItems as item}
+        {#each showSelectedItemInDropdown ? allItems : nonSelectedItems as item (item)}
           <div
-            on:keydown
-            on:click={() => {
+            {onkeydown}
+            onclick={() => {
               selectItem(item);
             }}
-            class="item {isSelected(properties.selectedItem, item) ? ' item-selected' : ''}"
+            class="item {isSelected(selectedItem, item) ? ' item-selected' : ''}"
             role="button"
             tabindex="0"
-            data-pw={`${properties.itemTestId}-${item}`}
+            data-pw={`${itemTestId}-${item}`}
           >
-            {#if properties.selectMultipleItems}
-              <CheckListItem checked={isSelected(properties.selectedItem, item)} text="" />
+            {#if selectMultipleItems}
+              <CheckListItem checked={isSelected(selectedItem, item)} text="" />
             {/if}
             {item}
           </div>
         {/each}
       </div>
-      {#if $$slots.bottomContent}
-        <slot name="bottomContent" />
+      {#if bottomContent}
+        {@render bottomContent()}
       {/if}
-      {#if properties.selectMultipleItems}
+      {#if selectMultipleItems}
         <div class="apply-btn-container">
-          <Button properties={applyButtonProps} on:click={dispatchEvent} />
+          <Button {...applyButtonProps} onclick={dispatchEvent} />
         </div>
       {/if}
     </div>

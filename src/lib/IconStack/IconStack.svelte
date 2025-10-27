@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { type IconStackProperties } from './properties';
-  export let icons: IconStackProperties[];
+  import type { IconStackProperties } from './properties';
+
+  let { icons }: IconStackProperties = $props();
 </script>
 
 <div class="stack-container">
   {#each icons as icon, i}
-    <div class="stack-icon" style="z-index: {icons.length - i}">
+    <div class="stack-icon" style:z-index={icons.length - i}>
       {#if icon.type === 'image'}
         <img src={icon.content} alt="icon" />
       {:else}

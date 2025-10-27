@@ -47,16 +47,4 @@ export type { StepperProperties } from './Stepper/properties';
 export type { ToastProperties } from './Toast/properties';
 export type { IconStackProperties } from './IconStack/properties';
 
-export { defaultIconProperties } from './Icon/properties';
-export { defaultButtonProperties } from './Button/properties';
-export { defaultModalProperties } from './Modal/properties';
-export { defaultInputProperties } from './Input/properties';
-export { defaultInputButtonProperties } from './InputButton/properties';
-export { defaultBrandLoaderProperties } from './BrandLoader/properties';
-export { defaultStatusProperties } from './Status/properties';
-export { defaultListItemProperties } from './ListItem/properties';
-export { defaultToolbarProperties } from './Toolbar/properties';
-export { defaultCarouselProperties } from './Carousel/properties';
-export { defaultToastProperties } from './Toast/properties';
-
 export { validateInput } from './utils';

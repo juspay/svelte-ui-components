@@ -15,8 +15,6 @@
 
   <div class="components">
     <Toolbar />
-    <GridItem />
-    <Toggle text="text" on:click={toggle} />
   </div>
 </div>
 

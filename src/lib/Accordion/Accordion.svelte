@@ -1,45 +1,26 @@
 <script lang="ts">
-  import { afterUpdate, onMount } from 'svelte';
-
-  export let expand = false;
-  let maxHeight = 0;
-  let accordionRef: HTMLElement;
-
-  function updateMaxHeight() {
-    try {
-      if (expand) {
-        accordionRef.style.maxHeight = `${maxHeight}px`;
-      } else {
-        accordionRef.style.maxHeight = '0';
-      }
-    } catch (e) {
-      console.error('Error while updating style of accordian', e);
-    }
-  }
-
-  afterUpdate(updateMaxHeight);
-
-  onMount(() => {
-    accordionRef.style.transition = 'max-height 0.2s ease-out';
-    updateMaxHeight();
-  });
-
-  $: {
-    if (accordionRef) {
-      maxHeight = accordionRef.scrollHeight;
-      updateMaxHeight();
-    }
-  }
+  let { expand = false, children } = $props();
 </script>
 
-<div class="accordion" bind:this={accordionRef}>
-  <slot />
+<div class="accordion" class:expanded={expand}>
+  <div class="accordion-content">
+    {@render children?.()}
+  </div>
 </div>
 
 <style>
   .accordion {
-    max-height: 0;
+    display: grid;
+    grid-template-rows: 0fr;
     overflow: hidden;
-    transition: max-height 0s ease-in;
+    transition: grid-template-rows 0.2s ease-out;
+  }
+
+  .accordion.expanded {
+    grid-template-rows: 1fr;
+  }
+
+  .accordion-content {
+    min-height: 0;
   }
 </style>

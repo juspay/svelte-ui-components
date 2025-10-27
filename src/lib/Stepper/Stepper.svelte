@@ -2,20 +2,20 @@
   import type { StepperProperties } from './properties';
   import Step from './Step.svelte';
 
-  export let properties: StepperProperties;
+  let { steps, currentStepIndex, onhandleStepClick }: StepperProperties = $props();
 </script>
 
 <div class="container">
-  {#each properties.steps as currentStep, stepIndex}
+  {#each steps as currentStep, stepIndex}
     <div
-      class:active-step={properties.currentStepIndex === stepIndex}
-      class:completed-step={properties.currentStepIndex > stepIndex}
+      class:active-step={currentStepIndex === stepIndex}
+      class:completed-step={currentStepIndex > stepIndex}
       class="step-container"
     >
       <Step
-        on:handleStepClick
+        onclick={onhandleStepClick}
         label={currentStep.label}
-        icon={currentStep.icon ?? null}
+        icon={currentStep.icon}
         stepIndex={stepIndex + 1}
       />
     </div>

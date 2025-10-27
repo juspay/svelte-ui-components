@@ -1,33 +1,29 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import type { StepProperties } from './properties';
 
-  export let stepIndex: number;
-  export let label: string;
-  export let icon: string | null;
-
-  const dispatch = createEventDispatcher();
+  let { stepIndex, label, icon, onclick, onkeydown }: StepProperties = $props();
 
   function handleStepClick() {
-    dispatch('handleStepClick', { selectedIndex: stepIndex });
+    onclick?.({ selectedIndex: stepIndex });
   }
 </script>
 
-<div class="step" on:click={handleStepClick} role="button" tabindex="0" on:keydown>
-  {#if icon !== null}
+<div class="step" onclick={handleStepClick} {onkeydown} role="button" tabindex="0">
+  {#if icon}
     <div class="step-icon-container">
       <img class="step-icon" src={icon} alt="" />
     </div>
   {:else}
     <div class="step-index-container">
-      <div class={'step-index-text'}>
+      <div class="step-index-text">
         {stepIndex}
       </div>
     </div>
   {/if}
-  <div class={'step-text'}>
+  <div class="step-text">
     {label}
   </div>
-  <div class={'separator'} />
+  <div class="separator"></div>
 </div>
 
 <style>

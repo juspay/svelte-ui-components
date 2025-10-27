@@ -1,43 +1,53 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { fly, fade } from 'svelte/transition';
   import type { ModalAlign } from '$lib/Modal/properties';
   import type { ModalTransition } from '$lib/types';
-  export let enable = true;
-  export let align: ModalAlign = 'bottom';
-  export let transitionType: ModalTransition = 'ALL';
 
-  let flyAnimationProperties = { x: 0, y: 0, duration: 380 };
+  type Props = {
+    enable?: boolean;
+    align?: ModalAlign;
+    transitionType?: ModalTransition;
+    children?: Snippet;
+  };
+
+  let { enable = true, align = 'bottom', transitionType = 'ALL', children }: Props = $props();
+
+  let flyAnimationProperties = $derived.by(() => {
+    const base = { x: 0, y: 0, duration: 380 };
+
+    switch (align) {
+      case 'top':
+        return { ...base, y: -30 };
+      case 'bottom':
+        return { ...base, y: 300 };
+      default:
+        return base;
+    }
+  });
+
   let fadeAnimationProperties = { duration: 300 };
-  switch (align) {
-    case 'top':
-      flyAnimationProperties = { ...flyAnimationProperties, y: -30 };
-      break;
-    case 'bottom':
-      flyAnimationProperties = { ...flyAnimationProperties, y: 300 };
-      break;
-  }
+
+  let useFlyAnimation = $derived(align === 'top' || align === 'bottom');
+  let useOutTransition = $derived(transitionType === 'ALL');
 </script>
 
 {#if enable}
-  {#if align === 'top' || align === 'bottom'}
-    {#if transitionType === 'IN'}
-      <div in:fly|global={flyAnimationProperties}>
-        <slot />
-      </div>
-    {:else}
-      <div in:fly|global={flyAnimationProperties} out:fly|global={flyAnimationProperties}>
-        <slot />
-      </div>
-    {/if}
-  {:else if transitionType === 'IN'}
-    <div in:fade|global={fadeAnimationProperties}>
-      <slot />
+  {#if useFlyAnimation}
+    <div
+      in:fly|global={flyAnimationProperties}
+      out:fly|global={useOutTransition ? flyAnimationProperties : undefined}
+    >
+      {@render children?.()}
     </div>
   {:else}
-    <div in:fade|global={fadeAnimationProperties} out:fade|global={fadeAnimationProperties}>
-      <slot />
+    <div
+      in:fade|global={fadeAnimationProperties}
+      out:fade|global={useOutTransition ? fadeAnimationProperties : undefined}
+    >
+      {@render children?.()}
     </div>
   {/if}
 {:else}
-  <slot />
+  {@render children?.()}
 {/if}

@@ -1,60 +1,47 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import Input from '$lib/Input/Input.svelte';
-  import { createEventDispatcher } from 'svelte';
-  import { defaultInputButtonProperties, type InputButtonProperties } from './properties';
+  import type { InputButtonProperties } from './properties';
   import type { ValidationState } from '$lib/types';
+  import type { SvelteComponent } from 'svelte';
 
-  const dispatch = createEventDispatcher();
-  export let properties: InputButtonProperties = defaultInputButtonProperties;
+  let {
+    value = $bindable(''),
+    inputProperties,
+    rightButtonProperties,
+    leftButtonProperties,
+    bottomButtonProperties,
+    leftIcon
+  }: InputButtonProperties = $props();
 
-  let inputRef: Input;
+  let validationState = $state<ValidationState>('InProgress');
 
-  $: state = 'InProgress' as ValidationState;
+  let inputRef: SvelteComponent | null = $state(null);
 
-  $: {
-    if (properties.rightButtonProperties != null) {
-      properties.rightButtonProperties.enable = state === 'Valid';
-      properties = properties;
+  // Derive enable state for right button
+  let isRightButtonEnabled = $derived(validationState === 'Valid');
+
+  function rightButtonClick(event: MouseEvent): void {
+    if (validationState === 'Valid') {
+      rightButtonProperties?.onclick?.(event);
     }
   }
 
-  function rightButtonClick(): void {
-    if (state === 'Valid') {
-      dispatch('rightButtonClick', { value: properties.inputProperties.value });
-    }
-  }
-
-  function leftButtonClick(event: CustomEvent): void {
-    event.preventDefault();
-    dispatch('leftButtonClick');
-  }
-
-  function bottomButtonClick(): void {
-    if (state === 'Valid') {
-      dispatch('bottomButtonClick', { value: properties.inputProperties.value });
+  function bottomButtonClick(event: MouseEvent): void {
+    if (validationState === 'Valid') {
+      bottomButtonProperties?.onclick?.(event);
     }
   }
 
   function triggerRightClickIfValid(event: KeyboardEvent): void {
-    if (event?.key === 'Enter') {
-      rightButtonClick();
+    if (event?.key === 'Enter' && validationState === 'Valid') {
+      rightButtonProperties?.onkeyup?.(event);
     }
   }
 
-  function handleState(event: CustomEvent): void {
-    if (event && event?.detail?.state) {
-      state = event.detail.state;
-    }
-    dispatch('stateChange', event);
-  }
-
-  function onFocusOut(event: CustomEvent) {
-    dispatch('focusout', event);
-  }
-
-  function onInputClick(event: CustomEvent) {
-    dispatch('inputClick', event);
+  function handleStateChange(state: ValidationState): void {
+    validationState = state;
+    inputProperties.onStateChange?.(state);
   }
 
   export function focus() {
@@ -62,68 +49,66 @@
   }
 </script>
 
-{#if properties.inputProperties.label && properties.inputProperties.label !== ''}
-  <label class="label" for={properties.inputProperties.name}>
-    {properties.inputProperties.label}
+{#if inputProperties.label && inputProperties.label !== ''}
+  <label class="label" for={inputProperties.name}>
+    {inputProperties.label}
   </label>
 {/if}
 
 <div class="input-button-container">
-  <div class="input-button {state === 'Invalid' ? 'invalid' : 'valid'}">
-    {#if properties.leftButtonProperties != null}
+  <div class="input-button {validationState === 'Invalid' ? 'invalid' : 'valid'}">
+    {#if leftButtonProperties != null}
       <div class="left-button">
-        <Button properties={properties.leftButtonProperties} on:click={leftButtonClick}>
-          <slot name="left-icon" slot="icon" />
-        </Button>
+        <Button {...leftButtonProperties} icon={leftIcon} />
       </div>
     {/if}
-    <div class="input">
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="input" onkeyup={triggerRightClickIfValid}>
       <Input
-        properties={properties.inputProperties}
-        on:keyup={triggerRightClickIfValid}
-        on:stateChange={handleState}
-        on:input={(event) => dispatch('input', event)}
-        on:focusout={onFocusOut}
-        on:valueChange
-        on:focus
-        on:click={onInputClick}
-        --input-width="auto"
+        {...inputProperties}
+        bind:value
         bind:this={inputRef}
+        onStateChange={handleStateChange}
+        --input-width="auto"
       />
     </div>
-    {#if properties.rightButtonProperties != null}
+    {#if rightButtonProperties != null}
       <div class="right-button">
-        <Button properties={properties.rightButtonProperties} on:click={rightButtonClick} />
+        <Button
+          {...rightButtonProperties}
+          enable={isRightButtonEnabled}
+          onclick={rightButtonClick}
+        />
       </div>
     {/if}
   </div>
-  {#if properties.bottomButtonProperties != null}
+  {#if bottomButtonProperties != null}
     <div class="bottom-button">
-      <Button properties={properties.bottomButtonProperties} on:click={bottomButtonClick} />
+      <Button {...bottomButtonProperties} onclick={bottomButtonClick} />
     </div>
   {/if}
 </div>
-{#if properties.inputProperties.message.onError !== '' && state === 'Invalid'}
+{#if inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
   <div class="error-message">
-    {properties.inputProperties.message.onError}
+    {inputProperties.onErrorMessage}
   </div>
 {/if}
-{#if typeof properties.inputProperties.message.info === 'string' && properties.inputProperties.message.info !== ''}
+{#if typeof inputProperties.infoMessage === 'string' && inputProperties.infoMessage !== ''}
   <div class="info-message">
-    {properties.inputProperties.message.info}
+    {inputProperties.infoMessage}
   </div>
 {/if}
 
 <style>
   .input-button-container {
+    --button-width: 100%;
+    --input-border: none;
+    --input-focus-border: none;
     height: var(--input-height, fit-content);
     font-size: var(--input-font-size, 16px) !important;
     font-weight: 500;
     margin: var(--input-button-margin);
     border-radius: var(--input-button-radius, 4px);
-    --button-width: 100%;
-    --input-border: none;
-    --input-focus-border: none;
     border: var(--input-button-container-border);
     background: var(--input-button-container-background);
     padding: var(--input-button-container-padding);

@@ -1,11 +1,13 @@
-export type ToolbarProperties = {
-  showBackButton: boolean;
-  text: string | null;
-  backIcon: string | null;
-};
+import type { Snippet } from 'svelte';
 
-export const defaultToolbarProperties: ToolbarProperties = {
-  showBackButton: true,
-  text: null,
-  backIcon: 'https://sdk.breeze.in/gallery/icons/back.svg'
+export type ToolbarProperties = {
+  showBackButton?: boolean;
+  text?: string | null;
+  backIcon?: string | null;
+  leftContent?: Snippet;
+  centerContent?: Snippet;
+  rightContent?: Snippet;
+  additionalContent?: Snippet;
+  onbackClick?: () => void;
+  onkeydown?: (event: KeyboardEvent) => void;
 };

@@ -1,36 +1,34 @@
 <script lang="ts">
   import { validateInput } from '$lib/utils';
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { defaultInputProperties, type InputProperties } from './properties';
+  import type { InputProperties } from './properties';
   import type { ValidationState } from '$lib/types';
 
-  const dispatch = createEventDispatcher();
-
-  export let properties: InputProperties = defaultInputProperties;
-  let inputElement: HTMLInputElement | HTMLTextAreaElement;
-
-  $: state = getValidationState(properties) as ValidationState;
-
-  // For making this function reactive, prop was passed as param
-  function getValidationState(prop: InputProperties): ValidationState {
-    const valueValidation: ValidationState = validateInput(
-      prop.value,
-      prop.dataType,
-      prop.validationPattern,
-      prop.inProgressPattern,
-      prop.validators
-    );
-    if (
-      valueValidation === 'InProgress' &&
-      prop.value.length > 0 &&
-      inputElement &&
-      inputElement !== document.activeElement
-    ) {
-      return 'Invalid';
-    } else {
-      return valueValidation;
-    }
-  }
+  let {
+    value = $bindable(''),
+    placeholder = '',
+    dataType = 'text',
+    label = '',
+    onErrorMessage = '',
+    infoMessage = '',
+    validators = [],
+    disable = false,
+    validationPattern = null,
+    inProgressPattern = null,
+    addFocusColor = false,
+    maxLength = 1000,
+    minLength = 0,
+    actionInput = false,
+    useTextArea = false,
+    autoComplete = 'on',
+    name = '',
+    testId = '',
+    textTransformers = [],
+    onFocusout = () => {},
+    onInput = () => {},
+    onPaste = () => {},
+    onStateChange = () => {},
+    onClick = () => {}
+  }: InputProperties = $props();
 
   export function focus() {
     try {
@@ -41,51 +39,58 @@
     }
   }
 
-  $: showErrorMessage = state === 'Invalid';
+  let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
-  function onInput(event: Event) {
+  let validationState = $derived.by(() => {
+    const valueValidation: ValidationState = validateInput(
+      value,
+      dataType,
+      validationPattern,
+      inProgressPattern,
+      validators
+    );
+    if (
+      valueValidation === 'InProgress' &&
+      value.length > 0 &&
+      inputElement &&
+      inputElement !== document.activeElement
+    ) {
+      return 'Invalid';
+    }
+    return valueValidation;
+  });
+
+  let showErrorMessage = $derived(validationState === 'Invalid');
+
+  function handleOnInput(event: Event) {
+    if (inputElement === null) {
+      return;
+    }
+
     let currentValue = inputElement.value;
-    if (properties.dataType === 'tel' && currentValue.length > 0) {
-      /**
-       * removes everything except numbers
-       */
-      currentValue = properties.textTransformers.reduce((prevValue, currIndexFunction) => {
+    if (dataType === 'tel' && currentValue.length > 0) {
+      currentValue = textTransformers.reduce((prevValue, currIndexFunction) => {
         let newValue = currIndexFunction(prevValue);
         return newValue;
       }, currentValue);
       currentValue = currentValue.replace(/\D+|\D/gm, '');
       const numberLength = currentValue.length;
-      /**
-       * ignore all entered inputs and return if input is non numeric
-       */
       if (numberLength === 0) {
-        inputElement.value = properties.value;
+        inputElement.value = value;
         return;
       }
-      if (numberLength > properties.maxLength) {
-        const existingInput = properties.value;
-        /**
-         * ignore all entered inputs if current input length is maxed at max length passed in props
-         */
-        if (existingInput.length == properties.maxLength) {
-          inputElement.value = properties.value;
+      if (numberLength > maxLength) {
+        const existingInput = value;
+        if (existingInput.length == maxLength) {
+          inputElement.value = value;
           return;
         }
-        /**
-         * choose last max length number of digits if length is bigger than max length
-         */
-        currentValue = currentValue.substring(numberLength - properties.maxLength);
+        currentValue = currentValue.substring(numberLength - maxLength);
       }
-      /**
-       * update the DOM
-       */
       inputElement.value = currentValue;
     }
-    properties.value = currentValue;
-    // Adding reactivity
-    properties = properties;
-    dispatch('valueChange', { value: currentValue });
-    dispatch('input', event);
+    value = inputElement.value;
+    onInput(inputElement.value, event);
   }
 
   /**
@@ -93,11 +98,15 @@
    * @param event
    * ENABLED ONLY FOR 'dataType = tel'
    */
-  function onPaste(event: ClipboardEvent) {
+  function handleOnPaste(event: ClipboardEvent) {
+    if (inputElement === null) {
+      return;
+    }
+
     if (event.clipboardData) {
-      if (properties.dataType === 'tel') {
+      if (dataType === 'tel') {
         let unfilteredNumber = event.clipboardData.getData('text');
-        unfilteredNumber = properties.textTransformers.reduce((prevValue, currIndexFunction) => {
+        unfilteredNumber = textTransformers.reduce((prevValue, currIndexFunction) => {
           let newValue = currIndexFunction(prevValue);
           return newValue;
         }, unfilteredNumber);
@@ -110,21 +119,19 @@
          * pasted text is non numeric
          */
         if (filteredNumber.length === 0) {
-          properties = properties;
           event.preventDefault();
         }
         /**
          * user pasted 10+ digit number , overrides all cases
          */
-        if (filteredNumber.length > properties.maxLength) {
+        if (filteredNumber.length > maxLength) {
           /**
            * choose last max length number of digits if length is bigger than max length passed in props
            */
-          const finalValue = filteredNumber.substring(filteredNumberLength - properties.maxLength);
+          const finalValue = filteredNumber.substring(filteredNumberLength - maxLength);
           // Adding reactivity
-          properties.value = finalValue;
-          properties = properties;
-          dispatch('paste', event);
+          value = finalValue;
+          onPaste(event);
           event.preventDefault(); // prevent bubble and let finalValue be entered
         }
         /**
@@ -134,92 +141,63 @@
     }
   }
 
-  function onFocusOut(event: FocusEvent) {
-    if (state === 'InProgress' && properties.value.length > 0) {
-      state = 'Invalid';
-    }
-    dispatch('focusout', event);
-  }
-
-  function onClick(event: MouseEvent) {
-    dispatch('click', event);
-  }
-
-  onMount(() => {
-    if (properties.focus) {
-      inputElement.focus();
-    }
-    dispatch('stateChange', { state: state });
+  $effect(() => {
+    onStateChange(validationState);
   });
-  $: {
-    dispatch('stateChange', { state: state });
-  }
 </script>
 
 <div class="input-container">
-  {#if properties.label && properties.label !== '' && !properties.actionInput}
-    <label class="label" for={properties.name}>
-      {properties.label}
+  {#if typeof label === 'string' && label !== '' && !actionInput}
+    <label class="label" for={name}>
+      {label}
     </label>
   {/if}
 
-  {#if properties.useTextArea}
+  {#if useTextArea}
+    <!-- svelte-ignore element_invalid_self_closing_tag -->
     <textarea
-      value={properties.value}
-      placeholder={properties.placeholder}
-      autocomplete={properties.autoComplete}
-      name={properties.name}
-      on:keydown
-      on:keyup
-      on:keypress
-      on:focus
-      on:focusout={onFocusOut}
-      on:input={onInput}
-      on:paste={onPaste}
-      on:click={onClick}
-      class="
-        {properties.actionInput ? 'action-input' : ''}
-      "
-      style="--focus-border: {properties.addFocusColor ? 1 : 0}px;"
-      disabled={properties.disable}
+      {value}
+      {placeholder}
+      autocomplete={autoComplete}
+      {name}
+      onfocusout={onFocusout}
+      oninput={handleOnInput}
+      onpaste={handleOnPaste}
+      onclick={onClick}
+      class:action-input={actionInput}
+      style="--focus-border: {addFocusColor ? 1 : 0}px;"
+      disabled={disable}
       bind:this={inputElement}
-      maxlength={properties.dataType === 'tel' ? undefined : properties.maxLength}
-      minlength={properties.minLength}
+      maxlength={dataType === 'tel' ? undefined : maxLength}
+      minlength={minLength}
     />
   {:else}
     <input
-      type={properties.dataType}
-      value={properties.value}
-      placeholder={properties.placeholder}
-      autocomplete={properties.autoComplete}
-      name={properties.name}
-      on:keydown
-      on:keyup
-      on:keypress
-      on:focus
-      on:focusout={onFocusOut}
-      on:input={onInput}
-      on:paste={onPaste}
-      on:click={onClick}
-      data-pw={properties.testId}
-      class="
-      {properties.actionInput ? 'action-input' : ''}
-    "
-      disabled={properties.disable}
+      type={dataType}
+      {value}
+      {placeholder}
+      autocomplete={autoComplete}
+      {name}
+      onfocusout={onFocusout}
+      oninput={handleOnInput}
+      onpaste={onPaste}
+      data-pw={testId}
+      class:action-input={actionInput}
+      disabled={disable}
       bind:this={inputElement}
-      maxlength={properties.dataType === 'tel' ? undefined : properties.maxLength}
-      minlength={properties.minLength}
+      maxlength={dataType === 'tel' ? undefined : maxLength}
+      minlength={minLength}
     />
   {/if}
 
-  {#if properties.message.onError !== '' && showErrorMessage && !properties.actionInput}
+  {#if onErrorMessage !== '' && showErrorMessage && !actionInput}
     <div class="error-message">
-      {properties.message.onError}
+      {onErrorMessage}
     </div>
   {/if}
-  {#if properties.message.info !== '' && !properties.actionInput}
+  {#if infoMessage !== '' && !actionInput}
     <div class="info-message">
-      {properties.message.info}
+      {infoMessage}
     </div>
   {/if}
 </div>
@@ -238,6 +216,7 @@
     font-weight: var(--input-font-weight, 500);
     width: var(--input-width, fit-content);
     margin: var(--input-margin, 0px 0px 12px 0px);
+    appearance: none !important;
     -webkit-appearance: none !important; /* For Safari MWeb */
     box-shadow: var(--input-box-shadow, 0px 1px 8px #2f537733);
     border: var(--input-border, none);

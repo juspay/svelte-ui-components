@@ -1,19 +1,26 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import Loader from '../Loader/Loader.svelte';
-  import { defaultButtonProperties } from './properties';
-  export let properties = defaultButtonProperties;
+  import type { ButtonProperties } from './properties';
 
-  export let showProgressBar = false;
+  let {
+    text,
+    enable = true,
+    showLoader = false,
+    loaderType,
+    type = 'submit',
+    testId,
+    onclick,
+    onkeyup = () => {},
+    showProgressBar = $bindable(false),
+    icon
+  }: ButtonProperties = $props();
 
-  const dispatch = createEventDispatcher();
-
-  function handleButtonClick(): void {
+  function handleButtonClick(event: MouseEvent): void {
     if (showProgressBar) {
       return;
     }
-    dispatch('click');
-    if (properties.showLoader && properties.loaderType === 'ProgressBar') {
+    onclick?.(event);
+    if (showLoader && loaderType === 'ProgressBar') {
       showProgressBar = true;
     }
   }
@@ -21,25 +28,25 @@
 
 <div class="button-container">
   {#if showProgressBar}
-    <div class="button-progress-bar" />
+    <div class="button-progress-bar"></div>
   {/if}
   <button
-    style="
-      --opacity: {properties.enable ? 1 : 0.4};
-      --cursor: {properties.enable ? 'pointer' : 'not-allowed'};"
-    on:click={handleButtonClick}
-    disabled={!(properties.enable && !properties.showLoader)}
-    type={properties.type}
-    data-pw={properties.testId}
+    style:--opacity={enable ? 1 : 0.4}
+    style:--cursor={enable ? 'pointer' : 'not-allowed'}
+    onclick={handleButtonClick}
+    {onkeyup}
+    disabled={!(enable && !showLoader)}
+    {type}
+    data-pw={testId}
   >
-    {#if properties.showLoader && properties.loaderType === 'Circular'}
+    {#if showLoader && loaderType === 'Circular'}
       <div class="button-loader"><Loader /></div>
     {/if}
-    {#if $$slots.icon}
-      <div class="button-icon"><slot name="icon" /></div>
+    {#if icon}
+      <div class="button-icon">{@render icon()}</div>
     {/if}
-    {#if properties.text !== null && properties.text.length > 0}
-      <div class="button-text">{properties.text}</div>
+    {#if text}
+      <div class="button-text">{text}</div>
     {/if}
   </button>
 </div>

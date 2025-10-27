@@ -1,25 +1,60 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { defaultToastProperties, type ToastProperties, type ToastDirection } from './properties';
+  import type { Snippet } from 'svelte';
+  import type { ToastDirection } from './properties';
   import type { FlyAnimationConfig } from '$lib/types';
 
-  export let properties: ToastProperties = defaultToastProperties;
-  const dispatch = createEventDispatcher();
-  const animationConfig: FlyAnimationConfig = getAnimationConfig(
-    properties.direction,
-    properties.overlapPage ?? true
-  );
+  let {
+    duration = 2000,
+    leftIcon,
+    message = '',
+    subtext,
+    rightIcon,
+    type,
+    direction,
+    overlapPage = true,
+    inAnimationOffset,
+    inAnimationDuration,
+    outAnimationOffset,
+    outAnimationDuration,
+    testId,
+    messageTestId,
+    subTextTestId,
+    closeIconTestId,
+    onToastHide,
+    bottomContent
+  }: {
+    duration?: number | null;
+    leftIcon?: string | null;
+    message?: string | null;
+    subtext?: string | null;
+    rightIcon?: string | null;
+    type?: 'success' | 'error' | 'info' | 'warn' | null;
+    direction: ToastDirection;
+    overlapPage?: boolean;
+    inAnimationOffset?: number | null;
+    inAnimationDuration?: number | null;
+    outAnimationOffset?: number | null;
+    outAnimationDuration?: number | null;
+    testId?: string | null;
+    messageTestId?: string | null;
+    subTextTestId?: string | null;
+    closeIconTestId?: string | null;
+    onToastHide?: () => void;
+    bottomContent?: Snippet;
+  } = $props();
 
-  let showToast = false;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const animationConfig: FlyAnimationConfig = getAnimationConfig(direction, overlapPage);
+
+  let showToast = $state(false);
+  let timeoutId = $state<ReturnType<typeof setTimeout> | null>(null);
 
   function hideToast() {
     showToast = false;
   }
 
   function handleAnimationEnd() {
-    dispatch('onToastHide');
+    onToastHide?.();
   }
 
   /**
@@ -29,7 +64,7 @@
    * @returns {FlyAnimationConfig} Animation configuration object.
    */
   function getAnimationConfig(
-    toastDirection: ToastDirection | null = null,
+    toastDirection: ToastDirection | undefined = undefined,
     overlapPage: boolean
   ): FlyAnimationConfig {
     // Initializing variables to store animation offsets
@@ -43,24 +78,24 @@
     switch (toastDirection) {
       case 'left-to-right':
         // Calculating horizontal offsets for left-to-right animation
-        inX = -1 * (properties.inAnimationOffset ?? 500);
-        outX = -1 * (properties.outAnimationOffset ?? 500);
+        inX = -1 * (inAnimationOffset ?? 500);
+        outX = -1 * (outAnimationOffset ?? 500);
         break;
       case 'right-to-left':
         // Calculating horizontal offsets for right-to-left animation
-        inX = properties.inAnimationOffset ?? 500;
-        outX = properties.outAnimationOffset ?? 500;
+        inX = inAnimationOffset ?? 500;
+        outX = outAnimationOffset ?? 500;
         break;
       case 'bottom-to-top':
         // Calculating vertical offsets for bottom-to-top animation
-        inY = properties.inAnimationOffset ?? (overlapPage ? 500 : 20);
-        outY = properties.outAnimationOffset ?? (overlapPage ? 500 : 20);
+        inY = inAnimationOffset ?? (overlapPage ? 500 : 20);
+        outY = outAnimationOffset ?? (overlapPage ? 500 : 20);
         break;
       case 'top-to-bottom':
       default:
         // Calculating vertical offsets for top-to-bottom animation
-        inY = -1 * (properties.inAnimationOffset ?? (overlapPage ? 500 : 20));
-        outY = -1 * (properties.outAnimationOffset ?? (overlapPage ? 100 : 20));
+        inY = -1 * (inAnimationOffset ?? (overlapPage ? 500 : 20));
+        outY = -1 * (outAnimationOffset ?? (overlapPage ? 100 : 20));
         break;
     }
     // Returning animation configuration object
@@ -68,63 +103,69 @@
       in: {
         x: inX,
         y: inY,
-        duration: properties.inAnimationDuration ?? 400
+        duration: inAnimationDuration ?? 400
       },
       out: {
         x: outX,
         y: outY,
-        duration: properties.outAnimationDuration ?? 800
+        duration: outAnimationDuration ?? 800
       }
     };
   }
 
-  onMount(() => {
+  $effect(() => {
     showToast = true;
-    timeoutId = setTimeout(hideToast, properties.duration);
-  });
+    timeoutId = setTimeout(hideToast, 200);
 
-  onDestroy(() => {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
+    return () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
   });
 </script>
 
 {#if showToast}
   <div
-    class="toast {properties.type ?? ''}"
-    class:no-page-overlap={!(properties?.overlapPage ?? true)}
+    class="toast {type ?? ''}"
+    class:no-page-overlap={!overlapPage}
     in:fly={animationConfig.in}
     out:fly={animationConfig.out}
-    on:outroend={handleAnimationEnd}
+    onoutroend={handleAnimationEnd}
+    data-pw={testId}
   >
-    {#if properties.leftIcon}
+    {#if leftIcon}
       <div class="toast-icon-wrapper">
-        <img class="toast-icon" src={properties.leftIcon} alt="toast-icon" />
+        <img class="toast-icon" src={leftIcon} alt="toast-icon" />
       </div>
     {/if}
 
-    <div class="toast-message" data-pw={properties.messageTestId}>
-      {properties.message}
-      {#if properties.subtext}
-        <div class="toast-subtext" data-pw={properties.subTextTestId}>{properties.subtext}</div>
+    <div class="toast-message" data-pw={messageTestId}>
+      {message}
+      {#if subtext}
+        <div class="toast-subtext" data-pw={subTextTestId}>{subtext}</div>
       {/if}
 
-      {#if $$slots.bottomContent}
-        <slot name="bottomContent" />
+      {#if bottomContent}
+        {@render bottomContent()}
       {/if}
     </div>
 
-    {#if properties.rightIcon}
+    {#if rightIcon}
       <div
         class="close-button"
         tabindex="0"
         role="button"
-        on:click={hideToast}
-        on:keypress
-        data-pw={properties.closeIconTestId}
+        onclick={hideToast}
+        onkeypress={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            hideToast();
+          }
+        }}
+        data-pw={closeIconTestId}
       >
-        <img class="toast-icon" src={properties.rightIcon} alt="close-icon" />
+        <img class="toast-icon" src={rightIcon} alt="close-icon" />
       </div>
     {/if}
   </div>

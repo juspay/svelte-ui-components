@@ -2,115 +2,130 @@
   import Accordion from '$lib/Accordion/Accordion.svelte';
   import Loader from '$lib/Loader/Loader.svelte';
   import Img from '$lib/Img/Img.svelte';
-  import { defaultListItemProperties, type ListItemProperties } from './properties';
-  import { createEventDispatcher } from 'svelte';
+  import type { ListItemProperties } from './properties';
 
-  const dispatch = createEventDispatcher();
+  let {
+    leftImageUrl,
+    leftImageFallbackUrl,
+    rightImageUrl,
+    label,
+    useAccordion = false,
+    rightContentText,
+    testId,
+    topSectionTestId,
+    rightImageTestId,
+    leftImageTestId,
+    centerTextTestId,
+    showLoader = false,
+    showRightContentLoader = false,
+    expand = $bindable(false),
+    preventFocus = false,
+    leftContent,
+    centerContent,
+    rightContent,
+    bottomContent,
+    onleftImageClick,
+    onrightImageClick,
+    oncenterTextClick,
+    onitemClick,
+    ontopSectionClick,
+    onkeydown
+  }: ListItemProperties = $props();
 
-  export let properties: ListItemProperties = defaultListItemProperties;
-  export let showLoader = false;
-  export let showRightContentLoader = false;
-  export let expand = false;
-  export let preventFocus = false;
-
-  function handleLeftImageClick(): void {
-    dispatch('leftImageClick');
+  function handleLeftImageClick(event: MouseEvent): void {
+    onleftImageClick?.(event);
   }
 
-  function handleRightImageClick(): void {
-    dispatch('rightImageClick');
+  function handleRightImageClick(event: MouseEvent): void {
+    onrightImageClick?.(event);
   }
 
-  function handleCenterTextClick(): void {
-    dispatch('centerTextClick');
+  function handleCenterTextClick(event: MouseEvent): void {
+    oncenterTextClick?.(event);
   }
 
-  function handleItemClick(): void {
-    dispatch('itemClick');
+  function handleItemClick(event: MouseEvent): void {
+    onitemClick?.(event);
   }
 
-  function handleTopSectionClick(): void {
-    dispatch('topSectionClick');
+  function handleTopSectionClick(event: MouseEvent): void {
+    ontopSectionClick?.(event);
   }
 </script>
 
-{#if properties.leftImageUrl || properties.rightImageUrl || properties.label || $$slots.leftContent || $$slots.centerContent || $$slots.rightContent || $$slots.bottomContent}
+{#if leftImageUrl || rightImageUrl || label || leftContent || centerContent || rightContent || bottomContent}
   <div class="item-container">
     {#if showLoader}
-      <div class="item-loader" />
+      <div class="item-loader"></div>
     {/if}
     <div
       class="item"
       class:prevent-focus={preventFocus}
-      on:click={handleItemClick}
-      on:keydown
+      onclick={handleItemClick}
+      {onkeydown}
       role="button"
       tabindex="0"
-      data-pw={properties.testId}
+      data-pw={testId}
     >
       <div
         class="top-section"
         class:prevent-focus={preventFocus}
-        on:click={handleTopSectionClick}
-        on:keydown
+        onclick={handleTopSectionClick}
+        {onkeydown}
         role="button"
         tabindex="0"
-        data-pw={properties.topSectionTestId}
+        data-pw={topSectionTestId}
       >
         <div class="left-content">
-          {#if properties.leftImageUrl}
+          {#if leftImageUrl}
             <div
               class:prevent-focus={preventFocus}
-              on:click={handleLeftImageClick}
-              on:keydown
+              onclick={handleLeftImageClick}
+              {onkeydown}
               role="button"
               tabindex="0"
-              data-pw={properties.leftImageTestId}
+              data-pw={leftImageTestId}
             >
-              <Img
-                src={properties.leftImageUrl}
-                alt=""
-                fallback={properties.leftImageFallbackUrl}
-              />
+              <Img src={leftImageUrl} alt="" fallback={leftImageFallbackUrl} />
             </div>
           {/if}
-          {#if $$slots.leftContent}
-            <slot name="leftContent" />
+          {#if leftContent}
+            {@render leftContent?.()}
           {/if}
         </div>
         <div class="center-content">
-          {#if properties.label}
+          {#if label}
             <div
               class="center-text"
               class:prevent-focus={preventFocus}
-              on:click={handleCenterTextClick}
-              on:keydown
+              onclick={handleCenterTextClick}
+              {onkeydown}
               role="button"
               tabindex="0"
-              data-pw={properties.centerTextTestId}
+              data-pw={centerTextTestId}
             >
               <!-- eslint-disable-next-line -->
-              {@html properties.label}
+              {@html label}
             </div>
           {/if}
-          {#if $$slots.centerContent}
-            <slot name="centerContent" />
+          {#if centerContent}
+            {@render centerContent?.()}
           {/if}
         </div>
         <div class="right-content">
-          {#if $$slots.rightContent}
-            <slot name="rightContent" />
+          {#if rightContent}
+            {@render rightContent?.()}
           {/if}
-          {#if properties.rightImageUrl}
+          {#if rightImageUrl}
             <div
               class:prevent-focus={preventFocus}
-              on:click={handleRightImageClick}
-              on:keydown
+              onclick={handleRightImageClick}
+              {onkeydown}
               role="button"
               tabindex="0"
-              data-pw={properties.rightImageTestId}
+              data-pw={rightImageTestId}
             >
-              <img class="right-img" src={properties.rightImageUrl} alt="" />
+              <img class="right-img" src={rightImageUrl} alt="" />
             </div>
           {/if}
           {#if showRightContentLoader}
@@ -118,15 +133,15 @@
               <Loader />
             </div>
           {/if}
-          {#if properties.rightContentText && properties.rightContentText !== ''}
-            <span class="right-content-text">{properties.rightContentText}</span>
+          {#if rightContentText && rightContentText !== ''}
+            <span class="right-content-text">{rightContentText}</span>
           {/if}
         </div>
       </div>
       <div class="bottom-section">
-        {#if $$slots.bottomContent && properties.useAccordion}
-          <Accordion bind:expand>
-            <slot name="bottomContent" />
+        {#if bottomContent && useAccordion}
+          <Accordion {expand}>
+            {@render bottomContent?.()}
           </Accordion>
         {/if}
       </div>

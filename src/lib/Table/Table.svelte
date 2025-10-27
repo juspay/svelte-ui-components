@@ -1,37 +1,37 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { TableProperties } from './properties';
 
-  export let properties: TableProperties = {
-    tableTitle: '',
-    tableHeaders: [],
-    tableData: [],
-    isTableScrollable: false,
-    isContentScrollable: false
-  };
-  let sortOrders: { [key: string]: 'asc' | 'desc' } = {};
+  let {
+    tableTitle = '',
+    tableHeaders = [],
+    tableData = [],
+    isTableScrollable = false,
+    isContentScrollable = false
+  }: TableProperties = $props();
 
-  let sortedTableData = [...properties.tableData];
+  let sortOrders = $state<{ [key: string]: 'asc' | 'desc' }>({});
 
-  function sortTableData(column: string) {
-    if (!sortOrders[column]) {
-      sortOrders[column] = 'asc';
-    } else {
-      sortOrders[column] = sortOrders[column] === 'asc' ? 'desc' : 'asc';
+  let sortedTableData = $derived.by(() => {
+    const columns = Object.keys(sortOrders);
+    if (columns.length === 0) {
+      return [...tableData];
     }
-    sortedTableData = [...properties.tableData].sort((a, b) => {
-      const colIndex = properties.tableHeaders.indexOf(column);
+
+    // Sort by the last clicked column
+    const column = columns[columns.length - 1];
+    const order = sortOrders[column];
+
+    return [...tableData].sort((a, b) => {
+      const colIndex = tableHeaders.indexOf(column);
       const valueA = a[colIndex];
       const valueB = b[colIndex];
 
       if (typeof valueA === 'number' && typeof valueB === 'number') {
-        return sortOrders[column] === 'asc' ? valueA - valueB : valueB - valueA;
+        return order === 'asc' ? valueA - valueB : valueB - valueA;
       } else if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return sortOrders[column] === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
+        return order === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
       } else if (typeof valueA === 'boolean' && typeof valueB === 'boolean') {
-        return sortOrders[column] === 'asc'
+        return order === 'asc'
           ? valueA === valueB
             ? 0
             : valueA
@@ -46,43 +46,50 @@
         return 0;
       }
     });
-    return 0;
+  });
+
+  function sortTableData(column: string) {
+    if (!sortOrders[column]) {
+      sortOrders[column] = 'asc';
+    } else {
+      sortOrders[column] = sortOrders[column] === 'asc' ? 'desc' : 'asc';
+    }
   }
 
-  onMount(() => {
-    sortedTableData = [...properties.tableData];
-  });
+  function handleKeydown(event: KeyboardEvent, header: string) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      sortTableData(header);
+    }
+  }
 </script>
 
-{#if properties && properties.tableTitle}
+{#if tableTitle}
   <div class="table-title">
-    {properties.tableTitle}
+    {tableTitle}
   </div>
 {/if}
-{#if properties.tableHeaders.length !== 0 || properties.tableData.length !== 0}
-  <div
-    class="table-container {properties.isTableScrollable ? 'scrollable-table' : ' '}"
-    role="grid"
-  >
+{#if tableHeaders.length !== 0 || tableData.length !== 0}
+  <div class="table-container {isTableScrollable ? 'scrollable-table' : ' '}" role="grid">
     <table>
       <thead>
         <tr>
-          {#each properties.tableHeaders as header}
-            <th class="table-header {properties.isTableScrollable ? 'table-header-sticky' : ' '}">
+          {#each tableHeaders as header}
+            <th class="table-header {isTableScrollable ? 'table-header-sticky' : ' '}">
               {header}
               {#if sortOrders[header] === 'asc'}
                 <span
                   class="sort-arrow"
-                  on:click={() => sortTableData(header)}
-                  on:keydown
+                  onclick={() => sortTableData(header)}
+                  onkeydown={(e) => handleKeydown(e, header)}
                   role="button"
                   tabindex="0">▼</span
                 >
               {:else}
                 <span
                   class="sort-arrow"
-                  on:click={() => sortTableData(header)}
-                  on:keydown
+                  onclick={() => sortTableData(header)}
+                  onkeydown={(e) => handleKeydown(e, header)}
                   role="button"
                   tabindex="0">▲</span
                 >
@@ -96,7 +103,7 @@
           <tr>
             {#each row as cell}
               <td class="table-content">
-                <div class={properties.isContentScrollable ? 'scrollable-content' : ' '}>
+                <div class={isContentScrollable ? 'scrollable-content' : ' '}>
                   {cell}
                 </div>
               </td>

@@ -7,16 +7,16 @@ import type { CustomValidator, InputDataType, ValidationState } from '$lib/types
  * @param validPattern Regular expression which is supposed to be applied on the input string
  * @param inProgressPattern Regular expression which is supposed to be applied on the input string while input is in progress
  * @param customValidators Array of customer validator functions
- * @returns ValidationState : InProgress | Valid | Invalid
+ * @returns Promise<ValidationState> : Promise that resolves to InProgress | Valid | Invalid
  */
 
-export function validateInput(
+export async function validateInput(
   inputValue: string,
   dataType: InputDataType,
   validPattern: RegExp | null,
   inProgressPattern: RegExp | null,
   customValidators: CustomValidator[]
-): ValidationState {
+): Promise<ValidationState> {
   let validationResult: ValidationState = 'Valid';
 
   switch (dataType) {
@@ -40,17 +40,19 @@ export function validateInput(
       break;
   }
 
-  customValidators.forEach((validator: CustomValidator) => {
-    const currentResult = validator(inputValue, validationResult);
+  for (const validator of customValidators) {
+    const currentResult = await validator(inputValue, validationResult);
     if (currentResult === 'Invalid') {
       validationResult = 'Invalid';
+      break;
     } else if (currentResult === 'InProgress') {
       validationResult = 'InProgress';
+      break;
     } else {
       validationResult =
         validationResult === 'Valid' && currentResult === 'Valid' ? 'Valid' : validationResult;
     }
-  });
+  }
 
   return validationResult;
 }

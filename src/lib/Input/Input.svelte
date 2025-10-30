@@ -41,23 +41,50 @@
 
   let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
-  let validationState = $derived.by(() => {
-    const valueValidation: ValidationState = validateInput(
-      value,
-      dataType,
-      validationPattern,
-      inProgressPattern,
-      validators
-    );
-    if (
-      valueValidation === 'InProgress' &&
-      value.length > 0 &&
-      inputElement &&
-      inputElement !== document.activeElement
-    ) {
-      return 'Invalid';
-    }
-    return valueValidation;
+  // Use $state instead of $derived because validateInput is now async
+  let validationState = $state<ValidationState>('InProgress');
+
+  // Run async validation whenever dependencies change
+  $effect(() => {
+    // Capture current values to track dependencies
+    const currentValue = value;
+    const currentDataType = dataType;
+    const currentValidationPattern = validationPattern;
+    const currentInProgressPattern = inProgressPattern;
+    const currentValidators = validators;
+    const currentInputElement = inputElement;
+
+    // Track if this effect is still valid (prevents race conditions)
+    let isCurrentEffect = true;
+
+    // Run async validation
+    validateInput(
+      currentValue,
+      currentDataType,
+      currentValidationPattern,
+      currentInProgressPattern,
+      currentValidators
+    ).then((valueValidation) => {
+      // Only update state if this effect hasn't been superseded by a newer one
+      if (!isCurrentEffect) return;
+
+      // Check if validation result should be overridden to Invalid
+      if (
+        valueValidation === 'InProgress' &&
+        currentValue.length > 0 &&
+        currentInputElement &&
+        currentInputElement !== document.activeElement
+      ) {
+        validationState = 'Invalid';
+      } else {
+        validationState = valueValidation;
+      }
+    });
+
+    // Cleanup function: mark this effect as stale when it re-runs
+    return () => {
+      isCurrentEffect = false;
+    };
   });
 
   let showErrorMessage = $derived(validationState === 'Invalid');

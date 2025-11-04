@@ -6,8 +6,11 @@ import type {
   ValidationState
 } from '$lib/types';
 
-export type InputProperties = {
+export type InputProperties = OptionalInputProps & {
   value: string;
+}
+
+export type OptionalInputProps = {
   placeholder?: string | null;
   dataType?: InputDataType;
   label?: string | null;

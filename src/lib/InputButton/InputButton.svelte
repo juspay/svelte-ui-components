@@ -49,6 +49,8 @@
   }
 </script>
 
+
+<div class="container">
 {#if inputProperties.label && inputProperties.label !== ''}
   <label class="label" for={inputProperties.name}>
     {inputProperties.label}
@@ -69,7 +71,7 @@
         bind:value
         bind:this={inputRef}
         onStateChange={handleStateChange}
-        --input-width="auto"
+        actionInput={true}
       />
     </div>
     {#if rightButtonProperties != null}
@@ -93,17 +95,27 @@
     {inputProperties.onErrorMessage}
   </div>
 {/if}
-{#if typeof inputProperties.infoMessage === 'string' && inputProperties.infoMessage !== ''}
+{#if inputProperties.infoMessage !== ''}
   <div class="info-message">
     {inputProperties.infoMessage}
   </div>
 {/if}
+</div>
+
 
 <style>
+  .container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .input-button-container {
     --button-width: 100%;
     --input-border: none;
     --input-focus-border: none;
+    --input-box-shadow: none;
+    --input-margin: none;
+    --input-width: auto;
     height: var(--input-height, fit-content);
     font-size: var(--input-font-size, 16px) !important;
     font-weight: 500;
@@ -205,7 +217,7 @@
     --button-font-size: var(--right-button-font-size);
     --button-height: var(--right-button-height, 54px);
     --button-padding: var(--right-button-padding);
-    --button-border-radius: var(--right-button-border-radius);
+    --button-border-radius: var(--right-button-border-radius, 0px 4px 4px 0px);
     --button-width: var(--right-button-width, 100%);
     --cursor: var(--right-button-cursor);
     --opacity: var(--right-button-opacity);

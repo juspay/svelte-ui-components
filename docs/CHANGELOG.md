@@ -2,11 +2,13 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..1.34.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.0.0)
 
-- Performing major bump for sv5 migration
-- updated workflow for gh releases & breaking change detection
-- BREAKING CHANGE
+- added better error indication for Input & Input Button
+- exported Optional params for Input separately
+- added sample integration for Input & InputButton in base page
+
+## [2.0.0](https://github.com/juspay/svelte-ui-components/compare/2.0.0..1.34.2) - 27 October 2025
 
 ## [1.34.2](https://github.com/juspay/svelte-ui-components/compare/1.34.2..1.34.1) - 27 October 2025
 

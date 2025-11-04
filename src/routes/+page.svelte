@@ -1,11 +1,30 @@
 <script lang="ts">
-  import GridItem from '$lib/GridItem/GridItem.svelte';
-  import Toggle from '$lib/Toggle/Toggle.svelte';
+  import type { InputButtonProperties } from '$lib';
+  import Input from '$lib/Input/Input.svelte';
+  import InputButton from '$lib/InputButton/InputButton.svelte';
   import Toolbar from '$lib/Toolbar/Toolbar.svelte';
 
-  function toggle(event: CustomEvent) {
-    console.log(event.detail);
+
+  let phoneNumber: string = $state('');
+  let inputButtonPhoneNumber: string = $state('');
+
+  let props: Omit<InputButtonProperties, 'value'> = {
+    inputProperties: {
+      validationPattern: new RegExp('^[6-9]{1}[0-9]{9}$'),
+      inProgressPattern: new RegExp('^[6-9]{1}[0-9]{0,9}$'),
+      onErrorMessage: "Enter Valid phone number",
+      maxLength: 10,
+      minLength: 10
+    },
+    rightButtonProperties: {
+      text: "Submit",
+      enable: false,
+      loaderType: 'Circular',
+      onclick: () => {
+      }
+    }
   }
+
 </script>
 
 <div class="container">
@@ -15,6 +34,10 @@
 
   <div class="components">
     <Toolbar />
+
+    <Input dataType="tel" bind:value={phoneNumber} {...props.inputProperties}/>
+    <InputButton bind:value={inputButtonPhoneNumber} {...props}/>
+
   </div>
 </div>
 

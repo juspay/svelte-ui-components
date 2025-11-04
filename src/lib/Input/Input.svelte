@@ -141,12 +141,19 @@
     }
   }
 
+  function _onFocusOut(event: FocusEvent) {
+    if (validationState === 'InProgress' && value.length > 0) {
+      validationState = 'Invalid';
+    }
+    onFocusout(event);
+  }
+
   $effect(() => {
     onStateChange(validationState);
   });
 </script>
 
-<div class="input-container">
+<div class="input-container" class:input-error={validationState === 'Invalid' && !actionInput}>
   {#if typeof label === 'string' && label !== '' && !actionInput}
     <label class="label" for={name}>
       {label}
@@ -160,7 +167,7 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
-      onfocusout={onFocusout}
+      onfocusout={_onFocusOut}
       oninput={handleOnInput}
       onpaste={handleOnPaste}
       onclick={onClick}
@@ -178,7 +185,7 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
-      onfocusout={onFocusout}
+      onfocusout={_onFocusOut}
       oninput={handleOnInput}
       onpaste={onPaste}
       data-pw={testId}
@@ -219,7 +226,7 @@
     appearance: none !important;
     -webkit-appearance: none !important; /* For Safari MWeb */
     box-shadow: var(--input-box-shadow, 0px 1px 8px #2f537733);
-    border: var(--input-border, none);
+    border: var(--input-border, 1px solid transparent);
     resize: none;
     visibility: var(--input-visibility, visible);
     text-align: var(--input-text-align, left);
@@ -228,7 +235,12 @@
 
   textarea:focus,
   input:focus {
-    border: var(--input-focus-border);
+    border: var(--input-focus-border, 1px solid transparent);
+  }
+
+  .input-error {
+    --input-focus-border: var(--input-error-border, 1px solid var(--input-error-msg-text-color, #fa1405)) !important;
+    --input-border: var(--input-error-border, 1px solid var(--input-error-msg-text-color, #fa1405)) !important;
   }
 
   .action-input {

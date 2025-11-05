@@ -1,7 +1,12 @@
-import type { SvelteComponent } from 'svelte';
+import type { Component } from 'svelte';
 
-export type CarouselProperties = {
-  views: { properties?: Record<string, unknown>; component: typeof SvelteComponent }[];
+export type CarouselView<TProps extends Record<string, unknown> = Record<string, unknown>> = {
+  properties?: TProps;
+  component: Component<TProps>;
+};
+
+export type CarouselProperties<TProps extends Record<string, unknown> = Record<string, unknown>> = {
+  views: CarouselView<TProps>[];
   autoplay?: boolean;
   autoplayInterval?: number;
   showDots?: boolean;

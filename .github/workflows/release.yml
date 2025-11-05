@@ -3,16 +3,9 @@ name: Release and Publish
 on:
   push:
     branches: [release]
-  pull_request:
-    branches: [release]
-    types: [closed]
 
 jobs:
   release:
-    # Only run on direct pushes to release branch or when PR is merged
-    if: |
-      (github.event_name == 'push') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
     runs-on: ubuntu-latest
     environment: npm

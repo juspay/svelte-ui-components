@@ -27,7 +27,7 @@ export { default as IconStack } from './IconStack/IconStack.svelte';
 export type { ButtonProperties } from './Button/properties';
 export type { ModalProperties, ModalAlign, ModalSize } from './Modal/properties';
 export type { InputProperties, OptionalInputProps } from './Input/properties';
-export type { InputButtonProperties } from './InputButton/properties';
+export type { InputButtonProperties, OptionalInputButtonProperties } from './InputButton/properties';
 export type { ListItemProperties } from './ListItem/properties';
 export type { InputDataType } from './types';
 export type { AutoCompleteType } from './types';

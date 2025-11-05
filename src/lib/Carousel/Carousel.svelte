@@ -9,7 +9,7 @@
     showDots = false,
     isScrollableLast = false,
     onkeydown
-  }: CarouselProperties<Record<string, unknown>> = $props();
+  }: CarouselProperties = $props();
 
   let slidesDiv: HTMLDivElement | undefined = $state();
   let intervalId: number;

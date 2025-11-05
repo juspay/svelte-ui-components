@@ -2,11 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.0.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.1.0)
 
-- added better error indication for Input & Input Button
-- exported Optional params for Input separately
-- added sample integration for Input & InputButton in base page
+- updated typings for carousel component
+
+## [2.1.0](https://github.com/juspay/svelte-ui-components/compare/2.1.0..2.0.0) - 4 November 2025
 
 ## [2.0.0](https://github.com/juspay/svelte-ui-components/compare/2.0.0..1.34.2) - 27 October 2025
 

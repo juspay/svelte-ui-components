@@ -1,14 +1,16 @@
+import type { Snippet } from "svelte";
+
 export type ToastType = 'success' | 'error' | 'info' | 'warn';
 export type ToastDirection = 'left-to-right' | 'right-to-left' | 'top-to-bottom' | 'bottom-to-top';
 
 export type ToastProperties = {
-  duration: number;
+  duration?: number;
   leftIcon?: string | null;
   message: string;
   subtext?: string | null;
   rightIcon?: string | null;
   type?: ToastType | null;
-  direction?: ToastDirection | null;
+  direction?: ToastDirection;
   overlapPage?: boolean;
   inAnimationOffset?: number | null;
   inAnimationDuration?: number | null;
@@ -18,4 +20,6 @@ export type ToastProperties = {
   messageTestId?: string;
   subTextTestId?: string;
   closeIconTestId?: string;
+  bottomContent?: Snippet;
+  onToastHide?: () => void;
 };

@@ -12,9 +12,7 @@
   }
 </script>
 
-{#if currentSrc && alt}
-  <img src={currentSrc} {alt} onerror={handleFallback} />
-{/if}
+<img src={currentSrc} {alt} onerror={handleFallback} />
 
 <style>
   img {

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
-  import type { Snippet } from 'svelte';
-  import type { ToastDirection } from './properties';
+  import type { ToastDirection, ToastProperties } from './properties';
   import type { FlyAnimationConfig } from '$lib/types';
+  import { onMount } from 'svelte';
 
   let {
     duration = 2000,
@@ -23,28 +23,9 @@
     closeIconTestId,
     onToastHide,
     bottomContent
-  }: {
-    duration?: number | null;
-    leftIcon?: string | null;
-    message?: string | null;
-    subtext?: string | null;
-    rightIcon?: string | null;
-    type?: 'success' | 'error' | 'info' | 'warn' | null;
-    direction: ToastDirection;
-    overlapPage?: boolean;
-    inAnimationOffset?: number | null;
-    inAnimationDuration?: number | null;
-    outAnimationOffset?: number | null;
-    outAnimationDuration?: number | null;
-    testId?: string | null;
-    messageTestId?: string | null;
-    subTextTestId?: string | null;
-    closeIconTestId?: string | null;
-    onToastHide?: () => void;
-    bottomContent?: Snippet;
-  } = $props();
+  }: ToastProperties = $props();
 
-  const animationConfig: FlyAnimationConfig = getAnimationConfig(direction, overlapPage);
+  const animationConfig: FlyAnimationConfig = $derived(getAnimationConfig(overlapPage, direction));
 
   let showToast = $state(false);
   let timeoutId = $state<ReturnType<typeof setTimeout> | null>(null);
@@ -64,8 +45,8 @@
    * @returns {FlyAnimationConfig} Animation configuration object.
    */
   function getAnimationConfig(
-    toastDirection: ToastDirection | undefined = undefined,
-    overlapPage: boolean
+    overlapPage: boolean,
+    toastDirection?: ToastDirection,
   ): FlyAnimationConfig {
     // Initializing variables to store animation offsets
     let inX: number = 0;
@@ -113,9 +94,9 @@
     };
   }
 
-  $effect(() => {
+  onMount(() => {
     showToast = true;
-    timeoutId = setTimeout(hideToast, 200);
+    timeoutId = setTimeout(hideToast, duration);
 
     return () => {
       if (timeoutId !== null) {

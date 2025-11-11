@@ -2,11 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.2.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.2.3)
 
-- fixed props imported for toast
-- removed effect and used onMount instead
-- fixed duration for toast show
+- split all props into mandatory, optioanl & event based types
+- helps usage of $derived with $state based runes in props
+
+## [2.2.3](https://github.com/juspay/svelte-ui-components/compare/2.2.3..2.2.2) - 10 November 2025
 
 ## [2.2.2](https://github.com/juspay/svelte-ui-components/compare/2.2.2..2.2.1) - 10 November 2025
 

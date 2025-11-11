@@ -5,11 +5,20 @@ export type CarouselView = {
   component: Component<Record<string, unknown>>;
 };
 
-export type CarouselProperties = {
+export type CarouselProperties = CarouselEventProperties &
+  OptionalCarouselProperties &
+  MandatoryCarouselProperties;
+
+export type MandatoryCarouselProperties = {
   views: CarouselView[];
+};
+export type OptionalCarouselProperties = {
   autoplay?: boolean;
   autoplayInterval?: number;
   showDots?: boolean;
   isScrollableLast?: boolean;
+};
+
+export type CarouselEventProperties = {
   onkeydown?: (event: KeyboardEvent) => void;
 };

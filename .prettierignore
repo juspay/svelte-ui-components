@@ -1,3 +1,11 @@
-# Ignore everything except src directory
-*
-!src/
+# Ignore build outputs and dependencies
+node_modules/
+dist/
+.svelte-kit/
+build/
+package/
+.DS_Store
+*.log
+
+# Don't ignore src directory - format everything in src
+!src/**

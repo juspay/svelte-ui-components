@@ -239,8 +239,14 @@
   }
 
   .input-error {
-    --input-focus-border: var(--input-error-border, 1px solid var(--input-error-msg-text-color, #fa1405)) !important;
-    --input-border: var(--input-error-border, 1px solid var(--input-error-msg-text-color, #fa1405)) !important;
+    --input-focus-border: var(
+      --input-error-border,
+      1px solid var(--input-error-msg-text-color, #fa1405)
+    ) !important;
+    --input-border: var(
+      --input-error-border,
+      1px solid var(--input-error-msg-text-color, #fa1405)
+    ) !important;
   }
 
   .action-input {

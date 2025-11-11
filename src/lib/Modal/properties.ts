@@ -5,7 +5,7 @@ import type { Snippet } from 'svelte';
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';
 export type ModalAlign = 'top' | 'center' | 'bottom';
 
-export type ModalProperties = {
+export type ModalProperties = ModalEventProperties & {
   size?: ModalSize;
   align?: ModalAlign;
   showOverlay?: boolean;
@@ -28,6 +28,9 @@ export type ModalProperties = {
   testId?: string;
   content?: Snippet;
   footerSnippet?: Snippet;
+};
+
+export type ModalEventProperties = {
   onclose?: () => void;
   onheaderRightImageClick?: (event: MouseEvent) => void;
   onheaderLeftImageClick?: (event: MouseEvent) => void;

@@ -11,6 +11,10 @@
     rightButtonProperties,
     leftButtonProperties,
     bottomButtonProperties,
+    inputEventProperties,
+    rightButtonEventProperties,
+    leftButtonEventProperties,
+    bottomButtonEventProperties,
     leftIcon
   }: InputButtonProperties = $props();
 
@@ -23,25 +27,25 @@
 
   function rightButtonClick(event: MouseEvent): void {
     if (validationState === 'Valid') {
-      rightButtonProperties?.onclick?.(event);
+      rightButtonEventProperties?.onclick?.(event);
     }
   }
 
   function bottomButtonClick(event: MouseEvent): void {
     if (validationState === 'Valid') {
-      bottomButtonProperties?.onclick?.(event);
+      bottomButtonEventProperties?.onclick?.(event);
     }
   }
 
   function triggerRightClickIfValid(event: KeyboardEvent): void {
     if (event?.key === 'Enter' && validationState === 'Valid') {
-      rightButtonProperties?.onkeyup?.(event);
+      rightButtonEventProperties?.onkeyup?.(event);
     }
   }
 
   function handleStateChange(state: ValidationState): void {
     validationState = state;
-    inputProperties.onStateChange?.(state);
+    inputEventProperties?.onStateChange?.(state);
   }
 
   export function focus() {
@@ -49,59 +53,57 @@
   }
 </script>
 
-
 <div class="container">
-{#if inputProperties.label && inputProperties.label !== ''}
-  <label class="label" for={inputProperties.name}>
-    {inputProperties.label}
-  </label>
-{/if}
+  {#if inputProperties.label && inputProperties.label !== ''}
+    <label class="label" for={inputProperties.name}>
+      {inputProperties.label}
+    </label>
+  {/if}
 
-<div class="input-button-container">
-  <div class="input-button {validationState === 'Invalid' ? 'invalid' : 'valid'}">
-    {#if leftButtonProperties != null}
-      <div class="left-button">
-        <Button {...leftButtonProperties} icon={leftIcon} />
-      </div>
-    {/if}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="input" onkeyup={triggerRightClickIfValid}>
-      <Input
-        {...inputProperties}
-        bind:value
-        bind:this={inputRef}
-        onStateChange={handleStateChange}
-        actionInput={true}
-      />
-    </div>
-    {#if rightButtonProperties != null}
-      <div class="right-button">
-        <Button
-          {...rightButtonProperties}
-          enable={isRightButtonEnabled}
-          onclick={rightButtonClick}
+  <div class="input-button-container">
+    <div class="input-button {validationState === 'Invalid' ? 'invalid' : 'valid'}">
+      {#if leftButtonProperties != null}
+        <div class="left-button">
+          <Button {...leftButtonProperties} {...leftButtonEventProperties} icon={leftIcon} />
+        </div>
+      {/if}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="input" onkeyup={triggerRightClickIfValid}>
+        <Input
+          {...inputProperties}
+          bind:value
+          bind:this={inputRef}
+          onStateChange={handleStateChange}
+          actionInput={true}
         />
+      </div>
+      {#if rightButtonProperties != null}
+        <div class="right-button">
+          <Button
+            {...rightButtonProperties}
+            enable={isRightButtonEnabled}
+            onclick={rightButtonClick}
+          />
+        </div>
+      {/if}
+    </div>
+    {#if bottomButtonProperties != null}
+      <div class="bottom-button">
+        <Button {...bottomButtonProperties} onclick={bottomButtonClick} />
       </div>
     {/if}
   </div>
-  {#if bottomButtonProperties != null}
-    <div class="bottom-button">
-      <Button {...bottomButtonProperties} onclick={bottomButtonClick} />
+  {#if inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
+    <div class="error-message">
+      {inputProperties.onErrorMessage}
+    </div>
+  {/if}
+  {#if inputProperties.infoMessage !== ''}
+    <div class="info-message">
+      {inputProperties.infoMessage}
     </div>
   {/if}
 </div>
-{#if inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
-  <div class="error-message">
-    {inputProperties.onErrorMessage}
-  </div>
-{/if}
-{#if inputProperties.infoMessage !== ''}
-  <div class="info-message">
-    {inputProperties.infoMessage}
-  </div>
-{/if}
-</div>
-
 
 <style>
   .container {

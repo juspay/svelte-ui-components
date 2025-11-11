@@ -6,11 +6,15 @@ import type {
   ValidationState
 } from '$lib/types';
 
-export type InputProperties = OptionalInputProps & {
-  value: string;
-}
+export type InputProperties = OptionalInputProperties &
+  InputEventProperties &
+  MandatoryInputProperties;
 
-export type OptionalInputProps = {
+export type MandatoryInputProperties = {
+  value: string;
+};
+
+export type OptionalInputProperties = {
   placeholder?: string | null;
   dataType?: InputDataType;
   label?: string | null;
@@ -29,6 +33,9 @@ export type OptionalInputProps = {
   name?: string;
   textTransformers?: TextTransformer[];
   testId?: string;
+};
+
+export type InputEventProperties = {
   onInput?: (value: string, event: Event) => void;
   onFocusout?: (event: FocusEvent) => void;
   onPaste?: (event: ClipboardEvent) => void;

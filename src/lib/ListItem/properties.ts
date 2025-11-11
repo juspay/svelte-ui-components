@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte';
 
-export type ListItemProperties = {
+export type ListItemProperties = ListItemEventProperties & {
   leftImageUrl?: string | null;
   leftImageFallbackUrl?: string | null;
   rightImageUrl?: string | null;
@@ -20,6 +20,9 @@ export type ListItemProperties = {
   centerContent?: Snippet;
   rightContent?: Snippet;
   bottomContent?: Snippet;
+};
+
+export type ListItemEventProperties = {
   onleftImageClick?: (event: MouseEvent) => void;
   onrightImageClick?: (event: MouseEvent) => void;
   oncenterTextClick?: (event: MouseEvent) => void;

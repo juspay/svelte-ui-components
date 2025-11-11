@@ -1,9 +1,12 @@
 import type { ButtonProperties } from '$lib/Button/properties';
 
-export type StatusProperties = {
+export type StatusProperties = StatusEventProperties & {
   statusIcon: string;
   statusText: string;
   statusDescription: string;
   buttonProperties?: ButtonProperties;
+};
+
+export type StatusEventProperties = {
   onbuttonClick?: () => void;
 };

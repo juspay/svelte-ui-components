@@ -9,10 +9,17 @@ export type Step = {
   icon?: string;
 };
 
-export type StepProperties = {
-  stepIndex: number;
-  label: string;
+export type StepProperties = OptionalStepProperties &
+  StepEventProperties & {
+    stepIndex: number;
+    label: string;
+  };
+
+export type OptionalStepProperties = {
   icon?: string;
+};
+
+export type StepEventProperties = {
   onclick?: (event: { selectedIndex: number }) => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

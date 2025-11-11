@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte';
 
-export type ToolbarProperties = {
+export type ToolbarProperties = ToolbarEventProperties & {
   showBackButton?: boolean;
   text?: string | null;
   backIcon?: string | null;
@@ -8,6 +8,9 @@ export type ToolbarProperties = {
   centerContent?: Snippet;
   rightContent?: Snippet;
   additionalContent?: Snippet;
+};
+
+export type ToolbarEventProperties = {
   onbackClick?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

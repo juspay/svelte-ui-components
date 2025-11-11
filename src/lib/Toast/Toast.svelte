@@ -46,7 +46,7 @@
    */
   function getAnimationConfig(
     overlapPage: boolean,
-    toastDirection?: ToastDirection,
+    toastDirection?: ToastDirection
   ): FlyAnimationConfig {
     // Initializing variables to store animation offsets
     let inX: number = 0;

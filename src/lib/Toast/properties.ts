@@ -1,9 +1,9 @@
-import type { Snippet } from "svelte";
+import type { Snippet } from 'svelte';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warn';
 export type ToastDirection = 'left-to-right' | 'right-to-left' | 'top-to-bottom' | 'bottom-to-top';
 
-export type ToastProperties = {
+export type ToastProperties = ToastEventProperties & {
   duration?: number;
   leftIcon?: string | null;
   message: string;
@@ -21,5 +21,8 @@ export type ToastProperties = {
   subTextTestId?: string;
   closeIconTestId?: string;
   bottomContent?: Snippet;
+};
+
+export type ToastEventProperties = {
   onToastHide?: () => void;
 };

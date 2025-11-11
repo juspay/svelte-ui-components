@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte';
 import type { ImgProperties } from '$lib/Img/properties';
 
-export type SelectProperties = {
+export type SelectProperties = SelectEventProperties & {
   dropDownIconAlt?: string;
   placeholder?: string | null;
   label?: string | null;
@@ -21,6 +21,9 @@ export type SelectProperties = {
   itemTestId?: string;
   leftContent?: Snippet;
   bottomContent?: Snippet;
+};
+
+export type SelectEventProperties = {
   onselect?: (event: { selectedItems: string | string[] }) => void;
   ondropdownClick?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;

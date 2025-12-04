@@ -12,6 +12,7 @@
     infoMessage = '',
     validators = [],
     disable = false,
+    filterPattern = null,
     validationPattern = null,
     inProgressPattern = null,
     addFocusColor = false,
@@ -23,6 +24,7 @@
     name = '',
     testId = '',
     textTransformers = [],
+    onFocus = () => {},
     onFocusout = () => {},
     onInput = () => {},
     onPaste = () => {},
@@ -73,7 +75,10 @@
         let newValue = currIndexFunction(prevValue);
         return newValue;
       }, currentValue);
-      currentValue = currentValue.replace(/\D+|\D/gm, '');
+      currentValue =
+        filterPattern !== null
+          ? currentValue.replace(filterPattern, '')
+          : currentValue.replace(/\D+|\D/gm, '');
       const numberLength = currentValue.length;
       if (numberLength === 0) {
         inputElement.value = value;
@@ -113,7 +118,10 @@
         /**
          * removes everything except numbers
          */
-        const filteredNumber = unfilteredNumber.replace(/\D+|\D/gm, '');
+        const filteredNumber =
+          filterPattern !== null
+            ? unfilteredNumber.replace(filterPattern, '')
+            : unfilteredNumber.replace(/\D+|\D/gm, '');
         const filteredNumberLength = filteredNumber.length;
         /**
          * pasted text is non numeric
@@ -139,6 +147,10 @@
          */
       }
     }
+  }
+
+  function _onFocus(event: FocusEvent) {
+    onFocus(event);
   }
 
   function _onFocusOut(event: FocusEvent) {
@@ -167,6 +179,7 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      onfocus={_onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
       onpaste={handleOnPaste}
@@ -185,9 +198,11 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      onfocus={_onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
-      onpaste={onPaste}
+      onpaste={handleOnPaste}
+      onclick={onClick}
       data-pw={testId}
       class:action-input={actionInput}
       disabled={disable}

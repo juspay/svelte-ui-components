@@ -22,6 +22,7 @@ export type OptionalInputProperties = {
   infoMessage?: string | null;
   validators?: CustomValidator[];
   disable?: boolean;
+  filterPattern?: RegExp | null;
   validationPattern?: RegExp | null;
   inProgressPattern?: RegExp | null;
   addFocusColor?: boolean;
@@ -37,6 +38,7 @@ export type OptionalInputProperties = {
 
 export type InputEventProperties = {
   onInput?: (value: string, event: Event) => void;
+  onFocus?: (event: FocusEvent) => void;
   onFocusout?: (event: FocusEvent) => void;
   onPaste?: (event: ClipboardEvent) => void;
   onClick?: (event: MouseEvent) => void;

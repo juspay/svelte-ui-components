@@ -23,6 +23,7 @@ export { default as Step } from './Stepper/Step.svelte';
 export { default as Toast } from './Toast/Toast.svelte';
 export { default as GridItem } from './GridItem/GridItem.svelte';
 export { default as IconStack } from './IconStack/IconStack.svelte';
+export { default as Img } from './Img/Img.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -42,5 +43,6 @@ export type * from './Table/properties';
 export type * from './Stepper/properties';
 export type * from './Toast/properties';
 export type * from './IconStack/properties';
+export type * from './Img/properties';
 
 export { validateInput } from './utils';

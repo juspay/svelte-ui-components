@@ -31,8 +31,7 @@
     <div class="button-progress-bar"></div>
   {/if}
   <button
-    style:--opacity={enable ? 1 : 0.4}
-    style:--cursor={enable ? 'pointer' : 'not-allowed'}
+    class:disabled={!enable}
     onclick={handleButtonClick}
     {onkeyup}
     disabled={!(enable && !showLoader)}
@@ -79,6 +78,11 @@
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
     box-shadow: var(--button-box-shadow, none);
+  }
+
+  .disabled {
+    cursor: var(--disabled-cursor, not-allowed);
+    opacity: var(--disabled-opacity, 0.4);
   }
 
   .button-loader {

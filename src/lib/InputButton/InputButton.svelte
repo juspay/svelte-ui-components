@@ -15,7 +15,8 @@
     rightButtonEventProperties,
     leftButtonEventProperties,
     bottomButtonEventProperties,
-    leftIcon
+    leftIcon,
+    rightIcon
   }: InputButtonProperties = $props();
 
   let validationState = $state<ValidationState>('InProgress');
@@ -23,7 +24,7 @@
   let inputRef: SvelteComponent | null = $state(null);
 
   // Derive enable state for right button
-  let isRightButtonEnabled = $derived(validationState === 'Valid');
+  const isRightButtonEnabled = $derived(validationState === 'Valid');
 
   function rightButtonClick(event: MouseEvent): void {
     if (validationState === 'Valid') {
@@ -71,6 +72,7 @@
       <div class="input" onkeyup={triggerRightClickIfValid}>
         <Input
           {...inputProperties}
+          {...inputEventProperties}
           bind:value
           bind:this={inputRef}
           onStateChange={handleStateChange}
@@ -83,6 +85,7 @@
             {...rightButtonProperties}
             enable={isRightButtonEnabled}
             onclick={rightButtonClick}
+            icon={rightIcon}
           />
         </div>
       {/if}
@@ -203,6 +206,11 @@
     flex-direction: row;
     --button-content-gap: var(--left-button-content-gap);
     --button-content-flex-direction: var(--left-button-content-flex-direction, row);
+    --button-icon-order: var(--left-button-icon-order);
+    --button-icon-display: var(--left-button-icon-display);
+    --button-text-order: var(--left-button-text-order);
+    --disabled-cursor: var(--left-button-disabled-cursor);
+    --disabled-opacity: var(--left-button-disabled-opacity);
   }
 
   .right-button {
@@ -227,5 +235,10 @@
     --button-content-gap: var(--right-button-content-gap);
     --button-visibility: var(--right-button-visibility, visible);
     --button-content-flex-direction: var(--right-button-content-flex-direction, row);
+    --button-icon-order: var(--right-button-icon-order);
+    --button-icon-display: var(--right-button-icon-display);
+    --button-text-order: var(--right-button-text-order);
+    --disabled-cursor: var(--right-button-disabled-cursor);
+    --disabled-opacity: var(--right-button-disabled-opacity);
   }
 </style>

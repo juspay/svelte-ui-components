@@ -32,11 +32,13 @@ export type OptionalInputProperties = {
   autoComplete?: AutoCompleteType;
   name?: string;
   textTransformers?: TextTransformer[];
+  textViewPresentation?: TextTransformer[];
   testId?: string;
 };
 
 export type InputEventProperties = {
   onInput?: (value: string, event: Event) => void;
+  onFocus?: (event: FocusEvent) => void;
   onFocusout?: (event: FocusEvent) => void;
   onPaste?: (event: ClipboardEvent) => void;
   onClick?: (event: MouseEvent) => void;

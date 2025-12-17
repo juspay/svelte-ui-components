@@ -19,6 +19,7 @@ export type OptionalInputButtonProperties = {
   leftButtonProperties?: _ButtonProperties | null;
   bottomButtonProperties?: _ButtonProperties | null;
   leftIcon?: Snippet;
+  rightIcon?: Snippet;
 };
 
 export type InputButtonEventProperties = {

@@ -23,6 +23,8 @@
     name = '',
     testId = '',
     textTransformers = [],
+    textViewPresentation = [],
+    onFocus = () => {},
     onFocusout = () => {},
     onInput = () => {},
     onPaste = () => {},
@@ -60,7 +62,7 @@
     return valueValidation;
   });
 
-  let showErrorMessage = $derived(validationState === 'Invalid');
+  const showErrorMessage = $derived(validationState === 'Invalid');
 
   function handleOnInput(event: Event) {
     if (inputElement === null) {
@@ -81,12 +83,16 @@
       }
       if (numberLength > maxLength) {
         const existingInput = value;
-        if (existingInput.length == maxLength) {
-          inputElement.value = value;
+        if (existingInput.length === maxLength) {
+          inputElement.value = applyTextPresentation(value);
           return;
         }
+        /**
+         * choose last max length number of digits if length is bigger than max length passed in props
+         */
         currentValue = currentValue.substring(numberLength - maxLength);
       }
+      currentValue = applyTextPresentation(currentValue);
       inputElement.value = currentValue;
     }
     value = inputElement.value;
@@ -128,7 +134,9 @@
           /**
            * choose last max length number of digits if length is bigger than max length passed in props
            */
-          const finalValue = filteredNumber.substring(filteredNumberLength - maxLength);
+          const finalValue = applyTextPresentation(
+            filteredNumber.substring(filteredNumberLength - maxLength)
+          );
           // Adding reactivity
           value = finalValue;
           onPaste(event);
@@ -139,6 +147,13 @@
          */
       }
     }
+  }
+
+  function applyTextPresentation(currentValue: string): string {
+    return textViewPresentation.reduce((prevValue, currIndexFunction) => {
+      let newValue = currIndexFunction(prevValue);
+      return newValue;
+    }, currentValue);
   }
 
   function _onFocusOut(event: FocusEvent) {
@@ -167,6 +182,7 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      onfocus={onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
       onpaste={handleOnPaste}
@@ -185,9 +201,11 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      onfocus={onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
-      onpaste={onPaste}
+      onpaste={handleOnPaste}
+      onclick={onClick}
       data-pw={testId}
       class:action-input={actionInput}
       disabled={disable}

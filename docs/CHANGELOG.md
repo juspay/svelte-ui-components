@@ -2,12 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.3.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.4.0)
 
-- Added textViewTransformers in Input to let input value be transformed post validation for display transformation
-- Added rightIcon support in InputButton
-- Added onFocus event in Input
-- Exposed css in Button and InputButton components
+## [2.4.0](https://github.com/juspay/svelte-ui-components/compare/2.4.0..2.3.0) - 23 December 2025
 
 ## [2.3.0](https://github.com/juspay/svelte-ui-components/compare/2.3.0..2.2.4) - 25 November 2025
 

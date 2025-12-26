@@ -269,7 +269,7 @@
 
   .action-input {
     border-radius: var(--input-radius, 4px 0px 0px 4px);
-    box-shadow: 0px 0px 0px #ffffff;
+    box-shadow: var(--input-box-shadow, 0px 0px 0px #ffffff);
     margin-bottom: 0;
   }
 

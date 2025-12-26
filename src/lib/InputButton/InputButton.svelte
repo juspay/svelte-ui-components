@@ -166,7 +166,7 @@
     font-size: var(--input-label-msg-text-size, 12px);
     color: var(--input-label-msg-text-color, #637c95);
     line-height: var(--input-label-msg-text-line-height);
-    margin-bottom: 6px;
+    margin: var(--input-label-msg-text-margin, 0px 0px 6px 0px);
   }
 
   .invalid {

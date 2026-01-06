@@ -45,7 +45,7 @@
       <div class="button-icon">{@render icon()}</div>
     {/if}
     {#if text}
-      <div class="button-text">{text}</div>
+      <div class="button-text">{@html text}</div>
     {/if}
   </button>
 </div>

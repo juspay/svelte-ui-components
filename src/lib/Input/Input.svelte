@@ -29,7 +29,8 @@
     onInput = () => {},
     onPaste = () => {},
     onStateChange = () => {},
-    onClick = () => {}
+    onClick = () => {},
+    onKeyDown = () => {}
   }: InputProperties = $props();
 
   export function focus() {
@@ -187,6 +188,7 @@
       oninput={handleOnInput}
       onpaste={handleOnPaste}
       onclick={onClick}
+      onkeydown={onKeyDown}
       class:action-input={actionInput}
       style="--focus-border: {addFocusColor ? 1 : 0}px;"
       disabled={disable}
@@ -206,6 +208,7 @@
       oninput={handleOnInput}
       onpaste={handleOnPaste}
       onclick={onClick}
+      onkeydown={onKeyDown}
       data-pw={testId}
       class:action-input={actionInput}
       disabled={disable}
@@ -278,6 +281,7 @@
     flex-direction: column;
     margin: var(--input-container-margin);
     padding: var(--input-container-padding);
+    width: var(--input-container-width);
   }
 
   .label {

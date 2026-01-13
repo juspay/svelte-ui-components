@@ -43,4 +43,5 @@ export type InputEventProperties = {
   onPaste?: (event: ClipboardEvent) => void;
   onClick?: (event: MouseEvent) => void;
   onStateChange?: (state: ValidationState) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
 };

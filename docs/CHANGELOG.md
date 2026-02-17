@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.8.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.9.0)
+
+- added mcp to the project for seamless llm based integration
+- added docs for all components
+- added roadmap for future development
+- added keywords and details to package.json for better discoverability
+
+## [2.9.0](https://github.com/juspay/svelte-ui-components/compare/2.9.0..2.8.0) - 21 January 2026
 
 ## [2.8.0](https://github.com/juspay/svelte-ui-components/compare/2.8.0..2.7.0) - 7 January 2026
 

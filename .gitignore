@@ -2,6 +2,7 @@
 node_modules
 /build
 /dist
+/mcp/build
 /.svelte-kit
 /package
 .env

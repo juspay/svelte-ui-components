@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Modal",
+    "description": "A dialog overlay component that renders on top of the page with configurable size, alignment, header (with left/right images and text), footer (with primary/secondary Button components), and transition animations. It locks body scroll on mount and optionally handles hardware back-press navigation. The overlay supports click-to-dismiss (debounced) and Escape key handling."
+  },
+  {
+    "name": "BrandLoader",
+    "description": "A full-screen loading screen that displays a brand logo image, main text, optional subtext, and an animated bouncing ellipsis spinner. Uses backdrop-filter blur for a frosted-glass visual effect. Ideal for app loading / splash screens."
+  },
+  {
+    "name": "Button",
+    "description": "An action button that supports two loader modes: a circular spinner overlay or a horizontal progress bar that fills over time. The button text supports HTML content. When `showLoader` is true with `loaderType='ProgressBar'`, clicking the button triggers a progress bar animation and prevents further clicks until complete. Includes icon slot support for rendering custom icon content next to the text."
+  },
+  {
+    "name": "Input",
+    "description": "A text input field with built-in validation for email, phone (tel), password, and text patterns. Validates automatically using `validationPattern` and `inProgressPattern` RegExp props, plus optional custom validator functions. Shows error messages when validation fails and info messages below the input. For `tel` dataType, automatically strips non-digit characters and enforces `maxLength`. Supports text transformers that modify the raw input value and view presentation transformers that format the displayed value (e.g., adding spaces to a card number). The validation state (`Valid` / `InProgress` / `Invalid`) is computed reactively and reported via `onStateChange`. Can render as a `<textarea>` when `useTextArea` is true."
+  },
+  {
+    "name": "InputButton",
+    "description": "A composite component that combines an Input field with optional left, right, and bottom Button components. The right and bottom buttons are automatically disabled until the input validation state becomes `Valid`. Pressing Enter in the input triggers the right button's `onkeyup` handler when validation passes. The input label and error/info messages are rendered outside the input-button group. Internally uses the Input component with `actionInput=true` for seamless visual integration."
+  },
+  {
+    "name": "ListItem",
+    "description": "A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts."
+  },
+  {
+    "name": "Loader",
+    "description": "A rotating circular spinner with a gradient foreground that transitions from `--loader-foreground` to `--loader-foreground-end`. The center is cut out using an `::after` pseudo-element with `--loader-background` color, creating a ring/donut shape. Spins continuously with a 1.4s linear animation."
+  },
+  {
+    "name": "Toolbar",
+    "description": "A fixed-position header bar with a back button (left), center title text, and customizable left/center/right content areas via Snippet slots. The `additionalContent` snippet renders a second row below the main toolbar content. If `leftContent` snippet is provided, it replaces the default back button. If `centerContent` snippet is provided, it replaces the `text` prop."
+  },
+  {
+    "name": "Icon",
+    "description": "A clickable icon component that displays an image with an optional text label below. The entire container is a button for accessibility. Layout direction (row or column) is controlled via CSS variable `--icon-container-direction`."
+  },
+  {
+    "name": "Select",
+    "description": "A dropdown selector that supports single-select and multi-select modes. In single-select mode, clicking an item immediately selects it and closes the dropdown. In multi-select mode, items have checkboxes, a 'Select All' toggle, and an 'Apply' button to confirm selection. Displays the selected item label (or a custom `selectedItemLabel`), optional selected-item count badge, and a rotating dropdown arrow. Closes automatically when clicking outside. Supports a left icon (using Img component), custom left content snippet, and bottom content snippet inside the dropdown."
+  },
+  {
+    "name": "ModalAnimation",
+    "description": "A wrapper that applies fly or fade Svelte transitions to its children based on the modal's `align` prop. For `top` alignment, content flies in from above; for `bottom`, from below; for `center`, a fade transition is used. The `transitionType` controls whether the out-transition is also animated ('ALL') or only the in-transition ('IN')."
+  },
+  {
+    "name": "OverlayAnimation",
+    "description": "A wrapper that applies a fade-out transition (350ms) to its children when they are removed from the DOM. Used internally by Modal to animate the overlay background."
+  },
+  {
+    "name": "Status",
+    "description": "A full-screen status display with a centered icon image, title text, description text (supports HTML), and an optional action Button. Uses backdrop-filter blur for visual effect. Ideal for order success/failure screens."
+  },
+  {
+    "name": "Carousel",
+    "description": "An auto-playing slideshow that renders Svelte components as slides. Supports touch swipe (20px threshold) and mouse drag for navigation. Each slide is a `CarouselView` object containing a Svelte Component reference and optional properties. Shows optional dot indicators below the slides for direct navigation. The carousel width is read from the `--carousel-width` CSS variable at mount time."
+  },
+  {
+    "name": "Badge",
+    "description": "An icon with a numeric/text badge overlay positioned in the top-right corner. Displays an image with a small badge bubble containing the `value` text. Commonly used for notification counts on icons."
+  },
+  {
+    "name": "Banner",
+    "description": "A notification banner (sticky by default, positioned at top) with an optional left icon image, text content, optional link text (rendered inline with different color), and an optional right content snippet. The entire banner is clickable. Good for promotional messages or alerts."
+  },
+  {
+    "name": "Toggle",
+    "description": "A labeled on/off switch with sliding ball animation. The `checked` prop controls the toggle state and the `onclick` event returns the new boolean state after toggling. The text label can be positioned relative to the switch using CSS order."
+  },
+  {
+    "name": "Accordion",
+    "description": "An expandable/collapsible container that uses CSS grid row animation for smooth open/close transitions. When `expand` is true, the content is visible (grid-template-rows: 1fr); when false, it collapses to 0fr. Transition takes 0.2s ease-out. Render children content using the default `children` snippet."
+  },
+  {
+    "name": "CheckListItem",
+    "description": "A checkbox list item with an HTML-capable text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet to replace the default text display. The checked state is bindable for two-way binding."
+  },
+  {
+    "name": "Table",
+    "description": "A sortable data table with clickable column headers for sort toggling (ascending/descending). Supports string, number, and boolean sorting. The `isTableScrollable` prop enables vertical scrolling with sticky headers. The `isContentScrollable` prop enables per-cell content scrolling for long values. Table data is an array of arrays (rows × columns)."
+  },
+  {
+    "name": "Stepper",
+    "description": "A progress indicator showing numbered steps with completion and active states. Each step shows either a step number or a custom icon, a label, and a dashed separator line to the next step. Steps before `currentStepIndex` are styled as completed (green), the step at `currentStepIndex` is active (dark), and remaining steps are inactive (grey). Each step is clickable, firing `onhandleStepClick` with the selected index."
+  },
+  {
+    "name": "Step",
+    "description": "An individual step within a Stepper. Displays either a numbered circle or an icon image, a text label, and a dashed separator line. When clicked, fires the `onclick` event with `{ selectedIndex }`. The separator is hidden for the last step via CSS `--separator-display: none`."
+  },
+  {
+    "name": "Toast",
+    "description": "An animated notification that slides in from a configurable direction, stays visible for `duration` milliseconds, then slides out and fires `onToastHide`. Supports type variants (success/error/info/warn) that apply different background colors. The toast can overlap the page (absolute positioning) or be inline (relative). Has optional left icon, right icon (acts as close button), subtext, and bottom content snippet."
+  },
+  {
+    "name": "GridItem",
+    "description": "A square grid cell with a header icon (top-right), centered main icon, and text label below. Clicking toggles a loading overlay animation (clip-path radial sweep). The `showLoader` state is bindable and toggles on each click. Good for payment method or app icon grids."
+  },
+  {
+    "name": "IconStack",
+    "description": "A horizontal stack of circular icons/avatars with negative margin layering (each icon overlaps the previous one). Each item can be either an `image` (renders an `<img>`) or `text` (renders a text span). Icons are z-indexed so the first icon appears on top. Commonly used for showing multiple user avatars or bank icons in a compact space."
+  },
+  {
+    "name": "Img",
+    "description": "An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling for interactive image use cases."
+  }
+]

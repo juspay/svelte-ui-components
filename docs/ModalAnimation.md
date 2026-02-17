@@ -1,0 +1,21 @@
+# ModalAnimation
+
+A wrapper that applies fly or fade Svelte transitions to its children based on the modal's `align` prop. For `top` alignment, content flies in from above; for `bottom`, from below; for `center`, a fade transition is used. The `transitionType` controls whether the out-transition is also animated ('ALL') or only the in-transition ('IN').
+
+## Usage
+
+```svelte
+<script>
+  import { ModalAnimation } from '@juspay/svelte-ui-components';
+</script>
+
+<ModalAnimation />
+```
+
+## Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| enable | `unknown` | No | `true` | When true, applies transition animations. When false, renders children without any transitions. |
+| align | `unknown` | No | `'bottom'` | Determines the transition type: 'top' and 'bottom' use fly transitions, 'center' uses fade. |
+| transitionType | `unknown` | No | `'ALL'` | Controls whether the out-transition is animated. 'ALL' animates both in and out. 'IN' only animates the in-transition. |

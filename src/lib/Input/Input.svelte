@@ -43,6 +43,14 @@
     }
   }
 
+  export function blur() {
+    try {
+      inputElement?.blur();
+    } catch (error) {
+      console.error('Error blurring inputElement:', error);
+    }
+  }
+
   let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
   let validationState = $derived.by(() => {

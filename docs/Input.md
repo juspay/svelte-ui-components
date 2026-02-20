@@ -38,6 +38,15 @@ A text input field with built-in validation for email, phone (tel), password, an
 | testId               | `string`                                                                                                                            | No       | `''`     | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                                                                   |
 | classes              | `string`                                                                                                                            | No       | `-`      | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                    |
 
+## Methods
+
+Exported methods that can be called via `bind:this` on the component instance.
+
+| Method    | Signature    | Description                                                                           |
+| --------- | ------------ | ------------------------------------------------------------------------------------- |
+| `focus()` | `() => void` | Programmatically focuses the underlying `<input>` or `<textarea>` element.            |
+| `blur()`  | `() => void` | Programmatically removes focus from the underlying `<input>` or `<textarea>` element. |
+
 ## Events
 
 | Event         | Type                                    | Description                                                                                                                                                                                           |

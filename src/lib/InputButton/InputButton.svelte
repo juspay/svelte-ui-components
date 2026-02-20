@@ -53,6 +53,10 @@
   export function focus() {
     inputRef?.focus();
   }
+
+  export function blur() {
+    inputRef?.blur();
+  }
 </script>
 
 <div class="container {classes ?? ''}">

@@ -23,6 +23,15 @@ A composite component that combines an Input field with optional left, right, an
 | bottomButtonProperties | `OptionalButtonProperties \| null`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | No       | `-`     | Configuration for the bottom Button (rendered below the input row). Auto-disabled when input validation is not 'Valid'. Set to null to hide.                           |
 | classes                | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
+## Methods
+
+Exported methods that can be called via `bind:this` on the component instance.
+
+| Method    | Signature    | Description                                                       |
+| --------- | ------------ | ----------------------------------------------------------------- |
+| `focus()` | `() => void` | Programmatically focuses the underlying input element.            |
+| `blur()`  | `() => void` | Programmatically removes focus from the underlying input element. |
+
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.

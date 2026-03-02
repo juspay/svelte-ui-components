@@ -2,12 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.9.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.10.0)
 
-- added mcp to the project for seamless llm based integration
-- added docs for all components
-- added roadmap for future development
-- added keywords and details to package.json for better discoverability
+- added new components: Avatar, Book, Browser,
+Calendar, Checkbox, Choicebox, CommandMenu,
+ContextMenu, Gauge, KeyboardInput, LoadingDots,
+Menu, Pagination, Phone, Pill, Progress, Radio,
+RelativeTime, Scroller, Sheet, Shimmer, Slider,
+Snippet, SplitButton, Tabs, ThemeSwitcher,
+Tooltip
+- refactored existing components with classes prop, testId support, and improved accessibility
+- added interactive demo pages for all components under /components route
+- added GitHub Pages workflow for automated deployment from main and release branches
+- rewrote README with comprehensive component catalog, theming guide, and usage examples
+- added SVG icon assets used by new components
+- updated documentation for all new and existing components
+
+## [2.10.0](https://github.com/juspay/svelte-ui-components/compare/2.10.0..2.9.0) - 17 February 2026
 
 ## [2.9.0](https://github.com/juspay/svelte-ui-components/compare/2.9.0..2.8.0) - 21 January 2026
 

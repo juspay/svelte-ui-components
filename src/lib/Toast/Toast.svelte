@@ -3,6 +3,7 @@
   import type { ToastDirection, ToastProperties } from './properties';
   import type { FlyAnimationConfig } from '$lib/types';
   import { onMount } from 'svelte';
+  import Img from '../Img/Img.svelte';
 
   let {
     duration = 2000,
@@ -22,7 +23,8 @@
     subTextTestId,
     closeIconTestId,
     onToastHide,
-    bottomContent
+    bottomContent,
+    classes
   }: ToastProperties = $props();
 
   const animationConfig: FlyAnimationConfig = $derived(getAnimationConfig(overlapPage, direction));
@@ -38,48 +40,35 @@
     onToastHide?.();
   }
 
-  /**
-   * Function to generate animation configuration for toast animations.
-   * @param {ToastDirection | null} toastDirection - Direction of the toast animation.
-   * @param {boolean} overlapPage - Flag indicating whether toast should overlap page content.
-   * @returns {FlyAnimationConfig} Animation configuration object.
-   */
   function getAnimationConfig(
     overlapPage: boolean,
     toastDirection?: ToastDirection
   ): FlyAnimationConfig {
-    // Initializing variables to store animation offsets
     let inX: number = 0;
     let inY: number = 0;
     let outX: number = 0;
     let outY: number = 0;
 
-    // Determining animation offsets based on toast direction
-    // Multiplying by -1 effectively flips the direction of movement along the specified axis, ensuring that the toast animation moves in the intended direction based on the chosen toast direction.
     switch (toastDirection) {
       case 'left-to-right':
-        // Calculating horizontal offsets for left-to-right animation
         inX = -1 * (inAnimationOffset ?? 500);
         outX = -1 * (outAnimationOffset ?? 500);
         break;
       case 'right-to-left':
-        // Calculating horizontal offsets for right-to-left animation
         inX = inAnimationOffset ?? 500;
         outX = outAnimationOffset ?? 500;
         break;
       case 'bottom-to-top':
-        // Calculating vertical offsets for bottom-to-top animation
         inY = inAnimationOffset ?? (overlapPage ? 500 : 20);
         outY = outAnimationOffset ?? (overlapPage ? 500 : 20);
         break;
       case 'top-to-bottom':
       default:
-        // Calculating vertical offsets for top-to-bottom animation
         inY = -1 * (inAnimationOffset ?? (overlapPage ? 500 : 20));
         outY = -1 * (outAnimationOffset ?? (overlapPage ? 100 : 20));
         break;
     }
-    // Returning animation configuration object
+
     return {
       in: {
         x: inX,
@@ -108,31 +97,33 @@
 
 {#if showToast}
   <div
-    class="toast {type ?? ''}"
+    class="toast {type ?? ''} {classes ?? ''}"
     class:no-page-overlap={!overlapPage}
+    role="alert"
+    aria-live="assertive"
     in:fly={animationConfig.in}
     out:fly={animationConfig.out}
     onoutroend={handleAnimationEnd}
     data-pw={testId}
   >
-    {#if leftIcon}
+    {#if typeof leftIcon === 'string' && leftIcon.length > 0}
       <div class="toast-icon-wrapper">
-        <img class="toast-icon" src={leftIcon} alt="toast-icon" />
+        <Img src={leftIcon} alt="" />
       </div>
     {/if}
 
     <div class="toast-message" data-pw={messageTestId}>
       {message}
-      {#if subtext}
+      {#if typeof subtext === 'string' && subtext.length > 0}
         <div class="toast-subtext" data-pw={subTextTestId}>{subtext}</div>
       {/if}
 
-      {#if bottomContent}
+      {#if typeof bottomContent === 'function'}
         {@render bottomContent()}
       {/if}
     </div>
 
-    {#if rightIcon}
+    {#if typeof rightIcon === 'string' && rightIcon.length > 0}
       <div
         class="close-button"
         tabindex="0"
@@ -146,7 +137,7 @@
         }}
         data-pw={closeIconTestId}
       >
-        <img class="toast-icon" src={rightIcon} alt="close-icon" />
+        <Img src={rightIcon} alt="Close" />
       </div>
     {/if}
   </div>
@@ -156,13 +147,13 @@
   .toast {
     padding: var(--toast-padding, 10px);
     font-size: var(--toast-font-size, 14px);
-    font-family: var(--toast-font-family);
+    font-family: var(--toast-font-family, inherit);
     font-weight: var(--toast-font-weight);
-    height: var(--toast-height, auto);
+    height: var(--toast-height, fit-content);
     border-radius: var(--toast-border-radius, 0px);
     border: var(--toast-border, none);
     border-style: var(--toast-border-style);
-    width: var(--toast-width, auto);
+    width: var(--toast-width, fit-content);
     align-items: var(--toast-align-items, center);
     margin: var(--toast-margin, 0px 10px 10px 10px);
     justify-content: var(--toast-justify-content, space-between);
@@ -188,12 +179,11 @@
     margin: var(--toast-icon-margin, 0px 6px 0px 0px);
     padding: var(--toast-icon-wrapper-padding, 1px);
     align-items: center;
-  }
 
-  .toast-icon {
-    height: var(--toast-icon-height, 100%);
-    filter: var(--toast-icon-filter);
-    border-radius: var(--toast-icon-border-radius, 50%);
+    --image-height: var(--toast-icon-height, 100%);
+    --image-width: fit-content;
+    --image-filter: var(--toast-icon-filter, none);
+    --image-border-radius: var(--toast-icon-border-radius, 50%);
   }
 
   .toast-message {
@@ -220,6 +210,11 @@
     align-items: var(--toast-close-button-align-items, center);
     justify-content: var(--toast-close-button-justify-content, center);
     padding: var(--toast-close-button-padding, 1px);
+
+    --image-height: var(--toast-icon-height, 100%);
+    --image-width: fit-content;
+    --image-filter: var(--toast-icon-filter, none);
+    --image-border-radius: var(--toast-icon-border-radius, 50%);
   }
 
   .success {

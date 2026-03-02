@@ -29,7 +29,8 @@
     oncenterTextClick,
     onitemClick,
     ontopSectionClick,
-    onkeydown
+    onkeydown,
+    classes
   }: ListItemProperties = $props();
 
   function handleLeftImageClick(event: MouseEvent): void {
@@ -53,8 +54,8 @@
   }
 </script>
 
-{#if leftImageUrl || rightImageUrl || label || leftContent || centerContent || rightContent || bottomContent}
-  <div class="item-container">
+{#if (typeof leftImageUrl === 'string' && leftImageUrl.length > 0) || (typeof rightImageUrl === 'string' && rightImageUrl.length > 0) || (typeof label === 'string' && label.length > 0) || typeof leftContent === 'function' || typeof centerContent === 'function' || typeof rightContent === 'function' || typeof bottomContent === 'function'}
+  <div class="item-container {classes ?? ''}">
     {#if showLoader}
       <div class="item-loader"></div>
     {/if}
@@ -77,7 +78,7 @@
         data-pw={topSectionTestId}
       >
         <div class="left-content">
-          {#if leftImageUrl}
+          {#if typeof leftImageUrl === 'string' && leftImageUrl.length > 0}
             <div
               class:prevent-focus={preventFocus}
               onclick={handleLeftImageClick}
@@ -89,12 +90,12 @@
               <Img src={leftImageUrl} alt="" fallback={leftImageFallbackUrl} />
             </div>
           {/if}
-          {#if leftContent}
+          {#if typeof leftContent === 'function'}
             {@render leftContent?.()}
           {/if}
         </div>
         <div class="center-content">
-          {#if label}
+          {#if typeof label === 'string' && label.length > 0}
             <div
               class="center-text"
               class:prevent-focus={preventFocus}
@@ -108,15 +109,15 @@
               {@html label}
             </div>
           {/if}
-          {#if centerContent}
+          {#if typeof centerContent === 'function'}
             {@render centerContent?.()}
           {/if}
         </div>
         <div class="right-content">
-          {#if rightContent}
+          {#if typeof rightContent === 'function'}
             {@render rightContent?.()}
           {/if}
-          {#if rightImageUrl}
+          {#if typeof rightImageUrl === 'string' && rightImageUrl.length > 0}
             <div
               class:prevent-focus={preventFocus}
               onclick={handleRightImageClick}
@@ -125,7 +126,9 @@
               tabindex="0"
               data-pw={rightImageTestId}
             >
-              <img class="right-img" src={rightImageUrl} alt="" />
+              <div class="right-img-wrapper">
+                <Img src={rightImageUrl} alt="" />
+              </div>
             </div>
           {/if}
           {#if showRightContentLoader}
@@ -133,15 +136,15 @@
               <Loader />
             </div>
           {/if}
-          {#if rightContentText && rightContentText !== ''}
+          {#if typeof rightContentText === 'string' && rightContentText.length > 0}
             <span class="right-content-text">{rightContentText}</span>
           {/if}
         </div>
       </div>
       <div class="bottom-section">
-        {#if bottomContent && useAccordion}
+        {#if typeof bottomContent === 'function' && useAccordion}
           <Accordion {expand}>
-            {@render bottomContent?.()}
+            {@render bottomContent()}
           </Accordion>
         {/if}
       </div>
@@ -260,24 +263,24 @@
     margin-top: 0;
   }
 
-  .right-img {
-    height: var(--list-item-right-image-height, 18px);
-    width: var(--list-item-right-image-width, 18px);
-    padding: var(--list-item-right-image-padding, 0px);
-    border-radius: var(--list-item-right-image-border-radius, 0px);
-    margin: var(--list-item-right-image-margin, 0px);
-    filter: var(--list-item-right-image-filter);
-    background: var(--list-item-right-image-background);
-    border: var(--list-item-right-image-border);
-    transition: var(--list-item-transition);
-  }
-
-  .right-img:hover {
-    background: var(
+  .right-img-wrapper {
+    --image-height: var(--list-item-right-image-height, 18px);
+    --image-width: var(--list-item-right-image-width, 18px);
+    --image-padding: var(--list-item-right-image-padding, 0px);
+    --image-border-radius: var(--list-item-right-image-border-radius, 0px);
+    --image-margin: var(--list-item-right-image-margin, 0px);
+    --image-filter: var(--list-item-right-image-filter);
+    --image-background: var(--list-item-right-image-background);
+    --image-border: var(--list-item-right-image-border);
+    --image-transition: var(--list-item-transition);
+    --image-hover-background: var(
       --list-item-right-image-hover-background,
       var(--list-item-right-image-background)
     );
-    border: var(--list-item-right-image-hover-border, var(--list-item-right-image-border));
+    --image-hover-border: var(
+      --list-item-right-image-hover-border,
+      var(--list-item-right-image-border)
+    );
   }
 
   .right-content-text {

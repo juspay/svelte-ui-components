@@ -9,37 +9,38 @@
     centerContent,
     rightContent,
     additionalContent,
+    classes,
     onbackClick,
     onkeydown
   }: ToolbarProperties = $props();
 </script>
 
-<div class="toolbar">
+<div class="toolbar {classes ?? ''}">
   <div class="content">
-    {#if leftContent}
+    {#if typeof leftContent === 'function'}
       {@render leftContent()}
-    {:else if showBackButton && backIcon}
+    {:else if showBackButton && typeof backIcon === 'string' && backIcon.length > 0}
       <div class="back" onclick={onbackClick} {onkeydown} role="button" tabindex="0">
         <img src={backIcon} alt="Back" />
       </div>
     {/if}
-    {#if centerContent}
+    {#if typeof centerContent === 'function'}
       <div class="center-content">
         {@render centerContent()}
       </div>
-    {:else if text}
+    {:else if typeof text === 'string' && text.length > 0}
       <div class="text">
         {text}
       </div>
     {/if}
-    {#if rightContent}
+    {#if typeof rightContent === 'function'}
       <div class="right-content">
         {@render rightContent()}
       </div>
     {/if}
   </div>
   <div class="additional-content">
-    {#if additionalContent}
+    {#if typeof additionalContent === 'function'}
       {@render additionalContent()}
     {/if}
   </div>

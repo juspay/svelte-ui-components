@@ -2,11 +2,11 @@
   import type { StepperProperties } from './properties';
   import Step from './Step.svelte';
 
-  let { steps, currentStepIndex, onhandleStepClick }: StepperProperties = $props();
+  let { steps, currentStepIndex, classes, onhandleStepClick }: StepperProperties = $props();
 </script>
 
-<div class="container">
-  {#each steps as currentStep, stepIndex}
+<div class="container {classes ?? ''}">
+  {#each steps as currentStep, stepIndex (stepIndex)}
     <div
       class:active-step={currentStepIndex === stepIndex}
       class:completed-step={currentStepIndex > stepIndex}

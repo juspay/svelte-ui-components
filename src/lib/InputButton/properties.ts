@@ -1,8 +1,4 @@
-import type {
-  ButtonEventProperties,
-  MandatoryButtonProperties,
-  OptionalButtonProperties
-} from '../Button/properties';
+import type { ButtonEventProperties, OptionalButtonProperties } from '../Button/properties';
 import type { InputEventProperties, OptionalInputProperties } from '../Input/properties';
 import type { Snippet } from 'svelte';
 
@@ -11,15 +7,14 @@ export type InputButtonProperties = OptionalInputButtonProperties &
     value: string;
   };
 
-type _ButtonProperties = OptionalButtonProperties & MandatoryButtonProperties;
-
 export type OptionalInputButtonProperties = {
   inputProperties: OptionalInputProperties;
-  rightButtonProperties?: _ButtonProperties | null;
-  leftButtonProperties?: _ButtonProperties | null;
-  bottomButtonProperties?: _ButtonProperties | null;
+  rightButtonProperties?: OptionalButtonProperties | null;
+  leftButtonProperties?: OptionalButtonProperties | null;
+  bottomButtonProperties?: OptionalButtonProperties | null;
   leftIcon?: Snippet;
   rightIcon?: Snippet;
+  classes?: string;
 };
 
 export type InputButtonEventProperties = {

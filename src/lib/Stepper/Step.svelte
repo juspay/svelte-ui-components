@@ -1,15 +1,15 @@
 <script lang="ts">
   import type { StepProperties } from './properties';
 
-  let { stepIndex, label, icon, onclick, onkeydown }: StepProperties = $props();
+  let { stepIndex, label, icon, classes, onclick, onkeydown }: StepProperties = $props();
 
   function handleStepClick() {
     onclick?.({ selectedIndex: stepIndex });
   }
 </script>
 
-<div class="step" onclick={handleStepClick} {onkeydown} role="button" tabindex="0">
-  {#if icon}
+<div class="step {classes ?? ''}" onclick={handleStepClick} {onkeydown} role="button" tabindex="0">
+  {#if typeof icon === 'string' && icon.length > 0}
     <div class="step-icon-container">
       <img class="step-icon" src={icon} alt="" />
     </div>

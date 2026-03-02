@@ -6,7 +6,8 @@
     tableHeaders = [],
     tableData = [],
     isTableScrollable = false,
-    isContentScrollable = false
+    isContentScrollable = false,
+    classes
   }: TableProperties = $props();
 
   let sortOrders = $state<{ [key: string]: 'asc' | 'desc' }>({});
@@ -18,7 +19,10 @@
     }
 
     // Sort by the last clicked column
-    const column = columns[columns.length - 1];
+    const column = columns.at(-1);
+    if (!column) {
+      return [...tableData];
+    }
     const order = sortOrders[column];
 
     return [...tableData].sort((a, b) => {
@@ -49,7 +53,7 @@
   });
 
   function sortTableData(column: string) {
-    if (!sortOrders[column]) {
+    if (typeof sortOrders[column] === 'undefined') {
       sortOrders[column] = 'asc';
     } else {
       sortOrders[column] = sortOrders[column] === 'asc' ? 'desc' : 'asc';
@@ -64,17 +68,20 @@
   }
 </script>
 
-{#if tableTitle}
+{#if typeof tableTitle === 'string' && tableTitle.length > 0}
   <div class="table-title">
     {tableTitle}
   </div>
 {/if}
 {#if tableHeaders.length !== 0 || tableData.length !== 0}
-  <div class="table-container {isTableScrollable ? 'scrollable-table' : ' '}" role="grid">
+  <div
+    class="table-container {isTableScrollable ? 'scrollable-table' : ' '} {classes ?? ''}"
+    role="grid"
+  >
     <table>
       <thead>
         <tr>
-          {#each tableHeaders as header}
+          {#each tableHeaders as header (header)}
             <th class="table-header {isTableScrollable ? 'table-header-sticky' : ' '}">
               {header}
               {#if sortOrders[header] === 'asc'}
@@ -99,9 +106,9 @@
         </tr>
       </thead>
       <tbody>
-        {#each sortedTableData as row}
+        {#each sortedTableData as row, rowIndex (rowIndex)}
           <tr>
-            {#each row as cell}
+            {#each row as cell, cellIndex (cellIndex)}
               <td class="table-content">
                 <div class={isContentScrollable ? 'scrollable-content' : ' '}>
                   {cell}

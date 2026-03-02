@@ -1,4 +1,10 @@
-<div class="loader"></div>
+<script lang="ts">
+  import type { LoaderProperties } from './properties';
+
+  let { classes }: LoaderProperties = $props();
+</script>
+
+<div class="loader {classes ?? ''}"></div>
 
 <style>
   .loader {
@@ -56,12 +62,10 @@
     height: var(--loader-after-height, 15px);
     border-radius: var(--loader-after-border-radius, 50%);
     content: '';
-    margin: var(--loader-after-margin, auto);
     position: var(--loader-after-position, absolute);
-    top: var(--loader-after-top, 0);
-    left: var(--loader-after-left, 0);
-    bottom: var(--loader-after-bottom, 0);
-    right: var(--loader-after-right, 0);
+    top: var(--loader-after-top, 50%);
+    left: var(--loader-after-left, 50%);
+    transform: translate(-50%, -50%);
   }
   @-webkit-keyframes load3 {
     0% {

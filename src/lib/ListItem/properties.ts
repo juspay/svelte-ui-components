@@ -20,6 +20,7 @@ export type ListItemProperties = ListItemEventProperties & {
   centerContent?: Snippet;
   rightContent?: Snippet;
   bottomContent?: Snippet;
+  classes?: string;
 };
 
 export type ListItemEventProperties = {

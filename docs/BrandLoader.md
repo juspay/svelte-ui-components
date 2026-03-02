@@ -14,44 +14,45 @@ A full-screen loading screen that displays a brand logo image, main text, option
 
 ## Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| brandLogoURL | `string` | No | `-` | URL of the brand logo image displayed at the center. |
-| brandText | `string` | No | `-` | Main text displayed below the logo (e.g., brand name or loading message). |
-| subText | `string \| null` | No | `-` | Optional smaller text displayed below the main text. |
+| Prop         | Type             | Required | Default | Description                                                                                                                                                                                                                |
+| ------------ | ---------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| brandLogoURL | `string`         | No       | `-`     | URL of the brand logo image displayed at the center.                                                                                                                                                                       |
+| brandText    | `string`         | No       | `-`     | Main text displayed below the logo (e.g., brand name or loading message).                                                                                                                                                  |
+| subText      | `string \| null` | No       | `-`     | Optional smaller text displayed below the main text.                                                                                                                                                                       |
+| classes      | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable | Default | CSS Property | Description |
-|----------|---------|-------------|-------------|
-| `--loader-background-height` | `-` | height | Height of the background container. |
-| `--loader-background-width` | `-` | width | Width of the background container. |
-| `--loader-background-border-radius` | `0px` | border-radius | Corner rounding of the background container. |
-| `--loader-height` | `100vh` | height | Height of the full loader screen. |
-| `--loader-width` | `100vw` | width | Width of the full loader screen. |
-| `--loader-justify-content` | `center` | justify-content | Horizontal alignment of loader content. |
-| `--loader-align-items` | `center` | align-items | Vertical alignment of loader content. |
-| `--loader-flex-direction` | `column` | flex-direction | Layout direction of loader content. |
-| `--loader-img-height` | `40px` | height | Height of the brand logo image. |
-| `--loader-img-width` | `71px` | width | Width of the brand logo image. |
-| `--loader-text-font-size` | `22px` | font-size | Font size of the brand text. |
-| `--loader-text-padding` | `16px 0px` | padding | Padding around the brand text. |
-| `--loader-text-color` | `white` | color | Color of the brand text. |
-| `--loader-text-font` | `Euclid Circular A` | font-family | Font family of the brand text. |
-| `--loader-sub-text-font-size` | `12px` | font-size | Font size of the subtext. |
-| `--loader-sub-text-margin` | `16px` | margin | Margin around the subtext. |
-| `--loader-background-color` | `#ffffff33` | background-color | Background color of the frosted-glass overlay. |
-| `--loader-ellipsis-display` | `inline-block` | display | Display mode of the bouncing dots container. |
-| `--loader-ellipsis-position` | `relative` | position | CSS position of the bouncing dots container. |
-| `--loader-ellipsis-width` | `80px` | width | Width of the bouncing dots container. |
-| `--loader-ellipsis-height` | `80px` | height | Height of the bouncing dots container. |
-| `--loader-ellipsis-div-display` | `inherit` | display | Display mode of each bouncing dot. |
-| `--loader-ellipsis-div-position` | `absolute` | position | CSS position of each bouncing dot. |
-| `--loader-ellipsis-div-top` | `5px` | top | Top offset of each bouncing dot. |
-| `--loader-ellipsis-div-width` | `13px` | width | Width of each bouncing dot. |
-| `--loader-ellipsis-div-height` | `13px` | height | Height of each bouncing dot. |
-| `--loader-ellipsis-div-border-radius` | `50%` | border-radius | Corner rounding of each bouncing dot. |
-| `--loader-dot-color` | `#3a4550` | background | Background color of the bouncing dots. |
-| `--loader-ellipsis-animation-timing` | `cubic-bezier(0, 1, 1, 0` | animation-timing-function | Animation timing function for the bouncing dots. |
+| Variable                              | Default                   | CSS Property              | Description                                      |
+| ------------------------------------- | ------------------------- | ------------------------- | ------------------------------------------------ |
+| `--loader-background-height`          | `-`                       | height                    | Height of the background container.              |
+| `--loader-background-width`           | `-`                       | width                     | Width of the background container.               |
+| `--loader-background-border-radius`   | `0px`                     | border-radius             | Corner rounding of the background container.     |
+| `--loader-height`                     | `100vh`                   | height                    | Height of the full loader screen.                |
+| `--loader-width`                      | `100vw`                   | width                     | Width of the full loader screen.                 |
+| `--loader-justify-content`            | `center`                  | justify-content           | Horizontal alignment of loader content.          |
+| `--loader-align-items`                | `center`                  | align-items               | Vertical alignment of loader content.            |
+| `--loader-flex-direction`             | `column`                  | flex-direction            | Layout direction of loader content.              |
+| `--loader-img-height`                 | `40px`                    | height                    | Height of the brand logo image.                  |
+| `--loader-img-width`                  | `71px`                    | width                     | Width of the brand logo image.                   |
+| `--loader-text-font-size`             | `22px`                    | font-size                 | Font size of the brand text.                     |
+| `--loader-text-padding`               | `16px 0px`                | padding                   | Padding around the brand text.                   |
+| `--loader-text-color`                 | `white`                   | color                     | Color of the brand text.                         |
+| `--loader-text-font`                  | `Euclid Circular A`       | font-family               | Font family of the brand text.                   |
+| `--loader-sub-text-font-size`         | `12px`                    | font-size                 | Font size of the subtext.                        |
+| `--loader-sub-text-margin`            | `16px`                    | margin                    | Margin around the subtext.                       |
+| `--loader-background-color`           | `#ffffff33`               | background-color          | Background color of the frosted-glass overlay.   |
+| `--loader-ellipsis-display`           | `inline-block`            | display                   | Display mode of the bouncing dots container.     |
+| `--loader-ellipsis-position`          | `relative`                | position                  | CSS position of the bouncing dots container.     |
+| `--loader-ellipsis-width`             | `80px`                    | width                     | Width of the bouncing dots container.            |
+| `--loader-ellipsis-height`            | `80px`                    | height                    | Height of the bouncing dots container.           |
+| `--loader-ellipsis-div-display`       | `inherit`                 | display                   | Display mode of each bouncing dot.               |
+| `--loader-ellipsis-div-position`      | `absolute`                | position                  | CSS position of each bouncing dot.               |
+| `--loader-ellipsis-div-top`           | `5px`                     | top                       | Top offset of each bouncing dot.                 |
+| `--loader-ellipsis-div-width`         | `13px`                    | width                     | Width of each bouncing dot.                      |
+| `--loader-ellipsis-div-height`        | `13px`                    | height                    | Height of each bouncing dot.                     |
+| `--loader-ellipsis-div-border-radius` | `50%`                     | border-radius             | Corner rounding of each bouncing dot.            |
+| `--loader-dot-color`                  | `#3a4550`                 | background                | Background color of the bouncing dots.           |
+| `--loader-ellipsis-animation-timing`  | `cubic-bezier(0, 1, 1, 0` | animation-timing-function | Animation timing function for the bouncing dots. |

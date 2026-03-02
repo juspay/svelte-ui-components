@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { BadgeProperties } from './properties';
 
-  let { image, value }: BadgeProperties = $props();
+  let { image, value, classes }: BadgeProperties = $props();
 </script>
 
-<div class="badge-icon">
+<div class="badge-icon {classes ?? ''}">
   <div class="badge-wrap">
     <img class="icon-img" src={image} alt="" />
     <div class="badge">{value}</div>

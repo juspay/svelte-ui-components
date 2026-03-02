@@ -17,6 +17,7 @@ export type OptionalCarouselProperties = {
   autoplayInterval?: number;
   showDots?: boolean;
   isScrollableLast?: boolean;
+  classes?: string;
 };
 
 export type CarouselEventProperties = {

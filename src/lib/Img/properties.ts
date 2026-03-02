@@ -1,4 +1,4 @@
-export type ImgProperties = OptionalImgProperties & MandatoryImgProperties;
+export type ImgProperties = MandatoryImgProperties & OptionalImgProperties & ImgEventProperties;
 
 export type MandatoryImgProperties = {
   src: string;
@@ -7,4 +7,9 @@ export type MandatoryImgProperties = {
 
 export type OptionalImgProperties = {
   fallback?: string | null;
+  classes?: string;
+};
+
+export type ImgEventProperties = {
+  onerror?: () => void;
 };

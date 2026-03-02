@@ -6,4 +6,5 @@ export type TableProperties = {
   tableData?: Array<JSONValue[]>;
   isTableScrollable?: boolean;
   isContentScrollable?: boolean;
+  classes?: string;
 };

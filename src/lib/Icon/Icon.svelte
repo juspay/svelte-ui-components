@@ -1,12 +1,12 @@
 <script lang="ts">
   import type { IconProperties } from './properties';
 
-  let { icon, text, onclick, onkeydown }: IconProperties = $props();
+  let { icon, text, onclick, onkeydown, classes }: IconProperties = $props();
 </script>
 
-<div class="icon-container" {onclick} {onkeydown} role="button" tabindex="0">
+<div class="icon-container {classes ?? ''}" {onclick} {onkeydown} role="button" tabindex="0">
   <img src={icon} alt="" />
-  {#if text}
+  {#if typeof text === 'string' && text.length > 0}
     <div class="icon-text">{text}</div>
   {/if}
 </div>

@@ -5,15 +5,22 @@
   let {
     text,
     enable = true,
+    disabled = false,
     showLoader = false,
     loaderType,
-    type = 'submit',
+    type = 'button',
     testId,
+    ariaLabel,
+    ariaExpanded,
     onclick,
     onkeyup = () => {},
     showProgressBar = $bindable(false),
-    icon
+    icon,
+    children,
+    classes
   }: ButtonProperties = $props();
+
+  let isDisabled = $derived(!enable || disabled || showLoader);
 
   function handleButtonClick(event: MouseEvent): void {
     if (showProgressBar) {
@@ -26,26 +33,32 @@
   }
 </script>
 
-<div class="button-container">
+<div class="button-container {classes ?? ''}">
   {#if showProgressBar}
     <div class="button-progress-bar"></div>
   {/if}
   <button
-    class:disabled={!enable}
+    class:disabled={isDisabled}
     onclick={handleButtonClick}
     {onkeyup}
-    disabled={!(enable && !showLoader)}
+    disabled={isDisabled}
     {type}
     data-pw={testId}
+    aria-label={ariaLabel}
+    aria-expanded={ariaExpanded}
   >
     {#if showLoader && loaderType === 'Circular'}
       <div class="button-loader"><Loader /></div>
     {/if}
-    {#if icon}
+    {#if typeof icon === 'function'}
       <div class="button-icon">{@render icon()}</div>
     {/if}
-    {#if text}
+    {#if typeof text === 'string' && text.length > 0}
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
       <div class="button-text">{@html text}</div>
+    {/if}
+    {#if typeof children === 'function'}
+      {@render children()}
     {/if}
   </button>
 </div>

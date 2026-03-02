@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ToggleProperties } from './properties';
 
-  let { checked = false, text = '', onclick }: ToggleProperties = $props();
+  let { checked = false, text = '', classes, onclick }: ToggleProperties = $props();
 
   function handleCheckboxClick(e: MouseEvent): void {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
@@ -11,7 +11,7 @@
   }
 </script>
 
-<div class="container">
+<div class="container {classes ?? ''}">
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
     <input class="input-checkbox" type="checkbox" {checked} onclick={handleCheckboxClick} />

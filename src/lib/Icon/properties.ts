@@ -6,6 +6,7 @@ export type MandatoryIconProperties = {
 
 export type OptionalIconProperties = {
   text?: string | null;
+  classes?: string;
 };
 
 export type IconEventProperties = {

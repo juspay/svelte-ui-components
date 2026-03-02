@@ -1,8 +1,10 @@
 <script lang="ts">
-  let { expand = false, children } = $props();
+  import type { AccordionProperties } from './properties';
+
+  let { expand = false, children, classes }: AccordionProperties = $props();
 </script>
 
-<div class="accordion" class:expanded={expand}>
+<div class="accordion {classes ?? ''}" class:expanded={expand}>
   <div class="accordion-content">
     {@render children?.()}
   </div>

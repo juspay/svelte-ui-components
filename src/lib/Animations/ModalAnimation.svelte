@@ -33,18 +33,20 @@
 </script>
 
 {#if enable}
-  {#if useFlyAnimation}
-    <div
-      in:fly|global={flyAnimationProperties}
-      out:fly|global={useOutTransition ? flyAnimationProperties : undefined}
-    >
+  {#if useFlyAnimation && useOutTransition}
+    <div in:fly|global={flyAnimationProperties} out:fly|global={flyAnimationProperties}>
+      {@render children?.()}
+    </div>
+  {:else if useFlyAnimation}
+    <div in:fly|global={flyAnimationProperties}>
+      {@render children?.()}
+    </div>
+  {:else if useOutTransition}
+    <div in:fade|global={fadeAnimationProperties} out:fade|global={fadeAnimationProperties}>
       {@render children?.()}
     </div>
   {:else}
-    <div
-      in:fade|global={fadeAnimationProperties}
-      out:fade|global={useOutTransition ? fadeAnimationProperties : undefined}
-    >
+    <div in:fade|global={fadeAnimationProperties}>
       {@render children?.()}
     </div>
   {/if}

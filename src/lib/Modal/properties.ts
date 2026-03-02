@@ -28,6 +28,7 @@ export type ModalProperties = ModalEventProperties & {
   testId?: string;
   content?: Snippet;
   footerSnippet?: Snippet;
+  classes?: string;
 };
 
 export type ModalEventProperties = {

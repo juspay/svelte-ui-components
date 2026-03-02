@@ -8,17 +8,18 @@
     autoplayInterval = 1000,
     showDots = false,
     isScrollableLast = false,
-    onkeydown
+    onkeydown,
+    classes
   }: CarouselProperties = $props();
 
-  let slidesDiv: HTMLDivElement | undefined = $state();
+  let slidesDiv: HTMLDivElement | null = $state(null);
   let intervalId: number;
   let endTouch: number;
   let startTouch: number;
   let startMouse: number;
   let endMouse: number;
   let carouselWidth: string;
-  let carouselDiv: HTMLDivElement | undefined = $state();
+  let carouselDiv: HTMLDivElement | null = $state(null);
   let activeSlideIndex = $state(0);
   let widthUnits: string;
 
@@ -66,17 +67,19 @@
   }
 
   function handleTouchStart(event: TouchEvent) {
-    if (event.touches && Object.keys(event.touches).length > 0) {
-      if (event.touches[0] && typeof event.changedTouches[0].clientX !== 'undefined') {
-        startTouch = event.touches[0].clientX;
+    if (event.touches.length > 0) {
+      const touch = event.touches.item(0);
+      if (touch !== null) {
+        startTouch = touch.clientX;
       }
     }
   }
 
   function handleTouchEnd(event: TouchEvent) {
-    if (event.changedTouches && Object.keys(event.changedTouches).length > 0) {
-      if (event.changedTouches[0] && typeof event.changedTouches[0].clientX !== 'undefined') {
-        endTouch = event.changedTouches[0].clientX;
+    if (event.changedTouches.length > 0) {
+      const changedTouch = event.changedTouches.item(0);
+      if (changedTouch !== null) {
+        endTouch = changedTouch.clientX;
         if (startTouch - endTouch > 20) {
           nextSlide();
         } else {
@@ -89,13 +92,13 @@
   }
 
   function handleMouseDown(event: MouseEvent) {
-    if (event && Object.keys(event).length > 0 && typeof event.clientX !== 'undefined') {
+    if (typeof event.clientX !== 'undefined') {
       startMouse = event.clientX;
     }
   }
 
   function handeMouseUp(event: MouseEvent) {
-    if (event && Object.keys(event).length > 0 && typeof event.clientX !== 'undefined') {
+    if (typeof event.clientX !== 'undefined') {
       endMouse = event.clientX;
       if (startMouse - endMouse > 20) {
         nextSlide();
@@ -109,7 +112,7 @@
 
   function setWidthUnit(carouselWidth: string) {
     widthUnits = carouselWidth.slice(-3);
-    if (/^-?\d+$/.test(widthUnits[0])) {
+    if (/^-?\d+$/.test(widthUnits.at(0) ?? '')) {
       widthUnits = widthUnits.slice(-2);
     }
   }
@@ -135,13 +138,13 @@
   });
 </script>
 
-<div class="carousel-container">
-  {#if views.length}
+<div class="carousel-container {classes ?? ''}">
+  {#if views.length > 0}
     <div class="carousel" bind:this={carouselDiv}>
       <div class="slidesDiv" bind:this={slidesDiv}>
-        {#each views as view}
+        {#each views as view, index (index)}
           <div class="current-slide">
-            {#if view.properties}
+            {#if typeof view.properties === 'object'}
               <view.component properties={view.properties} />
             {:else}
               <view.component />

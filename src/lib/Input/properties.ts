@@ -34,6 +34,7 @@ export type OptionalInputProperties = {
   textTransformers?: TextTransformer[];
   textViewPresentation?: TextTransformer[];
   testId?: string;
+  classes?: string;
 };
 
 export type InputEventProperties = {

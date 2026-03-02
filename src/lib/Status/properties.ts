@@ -5,6 +5,7 @@ export type StatusProperties = StatusEventProperties & {
   statusText: string;
   statusDescription: string;
   buttonProperties?: ButtonProperties;
+  classes?: string;
 };
 
 export type StatusEventProperties = {

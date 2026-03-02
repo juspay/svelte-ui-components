@@ -6,7 +6,7 @@
   import { createDebouncer } from '../utils';
   import Button from '$lib/Button/Button.svelte';
 
-  let overlayDiv: HTMLDivElement | undefined = $state();
+  let overlayDiv: HTMLDivElement | null = $state(null);
   let backPressed = false;
 
   let {
@@ -16,7 +16,7 @@
     supportHardwareBackPress = false,
     enableTransition = true,
     transitionType = 'ALL',
-    header = { leftImage: undefined, rightImage: undefined, text: undefined },
+    header = {},
     footer,
     debounceTime = 700,
     leftImageTestId,
@@ -29,7 +29,8 @@
     onprimaryButtonClick,
     onsecondaryButtonClick,
     onoverlayClick,
-    onkeydown
+    onkeydown,
+    classes
   }: ModalProperties = $props();
 
   const debounce = createDebouncer(debounceTime);
@@ -94,11 +95,11 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-{#if content}
+{#if typeof content === 'function'}
   <OverlayAnimation>
     <div
       bind:this={overlayDiv}
-      class="modal {align} {showOverlay ? 'overlay-active' : 'overlay-inactive'}"
+      class="modal {align} {showOverlay ? 'overlay-active' : 'overlay-inactive'} {classes ?? ''}"
       onclick={handleOverlayClick}
       {onkeydown}
       role="button"
@@ -107,7 +108,7 @@
     >
       <ModalAnimation enable={enableTransition} {align} {transitionType}>
         <div class="modal-content {size}">
-          {#if header?.leftImage || header?.text || header?.rightImage}
+          {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
             <div class="header">
               {#if header.leftImage}
                 <div
@@ -141,11 +142,11 @@
           <div class="slot-content">
             {@render content?.()}
           </div>
-          {#if footerSnippet}
+          {#if typeof footerSnippet === 'function'}
             <div class="footer-content">
               {@render footerSnippet?.()}
             </div>
-          {:else if footer?.primaryButton || footer?.secondaryButton}
+          {:else if typeof footer?.primaryButton === 'object' || typeof footer?.secondaryButton === 'object'}
             <div class="footer-content">
               <div class="footer-action-buttons">
                 {#if footer.secondaryButton}
@@ -268,7 +269,7 @@
   .footer-action-buttons {
     display: flex;
     gap: var(--modal-footer-gap, 0px);
-    width: var(--modal-footer-action-buttons-width, auto);
+    width: var(--modal-footer-action-buttons-width, fit-content);
   }
 
   .footer-secondary-button {

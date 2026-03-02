@@ -5,4 +5,5 @@ export type IconStackItem = {
 
 export type IconStackProperties = {
   icons: IconStackItem[];
+  classes?: string;
 };

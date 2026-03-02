@@ -9,12 +9,17 @@ export type MandatoryBannerProperties = {
 };
 
 export type OptionalBannerProperties = {
-  icon?: string | null;
-  linkText?: string | null;
+  icon?: Snippet;
+  linkText?: string;
+  dismissible?: boolean;
+  visible?: boolean;
+  testId?: string;
   rightContent?: Snippet;
+  dismissIcon?: Snippet;
+  classes?: string;
 };
 
 export type BannerEventProperties = {
   onclick?: (event: MouseEvent) => void;
-  onkeydown?: (event: KeyboardEvent) => void;
+  ondismiss?: () => void;
 };

@@ -8,6 +8,7 @@ export type ToolbarProperties = ToolbarEventProperties & {
   centerContent?: Snippet;
   rightContent?: Snippet;
   additionalContent?: Snippet;
+  classes?: string;
 };
 
 export type ToolbarEventProperties = {

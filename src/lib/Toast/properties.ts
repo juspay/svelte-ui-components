@@ -21,6 +21,7 @@ export type ToastProperties = ToastEventProperties & {
   subTextTestId?: string;
   closeIconTestId?: string;
   bottomContent?: Snippet;
+  classes?: string;
 };
 
 export type ToastEventProperties = {

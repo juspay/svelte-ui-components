@@ -7,7 +7,8 @@
     headerIcon = '',
     showLoader = $bindable(false),
     onclick,
-    onkeydown
+    onkeydown,
+    classes
   }: GridItemProperties = $props();
 
   function handleClick(event: MouseEvent) {
@@ -16,7 +17,7 @@
   }
 </script>
 
-<div class="container" onclick={handleClick} {onkeydown} role="button" tabindex="0">
+<div class="container {classes ?? ''}" onclick={handleClick} {onkeydown} role="button" tabindex="0">
   <div class="grid-header">
     <img src={headerIcon} alt="" class="grid-item-header-icon" />
   </div>
@@ -54,7 +55,7 @@
 
   .grid-item-header-icon {
     height: var(--grid-item-header-icon-height, 16px);
-    width: var(--grid-item-header-icon-width, auto);
+    width: var(--grid-item-header-icon-width, fit-content);
     object-fit: var(--grid-item-header-icon-object-fit, contain);
     z-index: var(--grid-item-header-icon-z-index, 2);
   }
@@ -73,7 +74,7 @@
 
   .grid-item-icon {
     height: var(--grid-item-icon-height, 32px);
-    width: var(--grid-item-icon-width, auto);
+    width: var(--grid-item-icon-width, fit-content);
     object-fit: var(--grid-item-icon-object-fit, contain);
     z-index: var(--grid-item-icon-z-index, 100);
   }

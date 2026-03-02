@@ -14,6 +14,7 @@ An expandable/collapsible container that uses CSS grid row animation for smooth 
 
 ## Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| expand | `unknown` | No | `false` | Controls whether the accordion content is expanded (visible) or collapsed (hidden). Uses CSS grid animation. |
+| Prop    | Type      | Required | Default | Description                                                                                                                                                                                                                |
+| ------- | --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| expand  | `unknown` | No       | `false` | Controls whether the accordion content is expanded (visible) or collapsed (hidden). Uses CSS grid animation.                                                                                                               |
+| classes | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |

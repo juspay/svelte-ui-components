@@ -150,11 +150,9 @@ function validateEmailInput(emailId: string): ValidationState {
  * @returns ValidationState
  */
 function validatePhoneNumber(phoneNumber: string): ValidationState {
-  let validationPattern: RegExp | null = null;
-  let inProgressPattern: RegExp | null = null;
   try {
-    validationPattern = new RegExp('^[6-9]{1}[0-9]{9}$');
-    inProgressPattern = new RegExp('^[6-9]{1}[0-9]{0,9}$');
+    const validationPattern = new RegExp('^[6-9]{1}[0-9]{9}$');
+    const inProgressPattern = new RegExp('^[6-9]{1}[0-9]{0,9}$');
     if (validationPattern.test(phoneNumber)) {
       return 'Valid';
     } else if (inProgressPattern.test(phoneNumber) || phoneNumber.length === 0) {
@@ -173,6 +171,22 @@ function validatePhoneNumber(phoneNumber: string): ValidationState {
  * @param delay The delay period in milliseconds before invoking the callback.
  * @returns A debouncer function that accepts a callback and delays its invocation based on the specified delay.
  */
+export function getStorageItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function setStorageItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // localStorage unavailable (SSR, private browsing, storage full)
+  }
+}
+
 export function createDebouncer(delay: number) {
   let lastCallTime = 0;
   return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {

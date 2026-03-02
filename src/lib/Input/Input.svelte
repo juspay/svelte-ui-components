@@ -30,7 +30,8 @@
     onPaste = () => {},
     onStateChange = () => {},
     onClick = () => {},
-    onKeyDown = () => {}
+    onKeyDown = () => {},
+    classes
   }: InputProperties = $props();
 
   export function focus() {
@@ -164,12 +165,17 @@
     onFocusout(event);
   }
 
-  $effect(() => {
-    onStateChange(validationState);
+  let _validationStateForCallback = $derived.by(() => {
+    const state = validationState;
+    onStateChange(state);
+    return state;
   });
 </script>
 
-<div class="input-container" class:input-error={validationState === 'Invalid' && !actionInput}>
+<div
+  class="input-container {classes ?? ''}"
+  class:input-error={validationState === 'Invalid' && !actionInput}
+>
   {#if typeof label === 'string' && label !== '' && !actionInput}
     <label class="label" for={name}>
       {label}
@@ -193,7 +199,7 @@
       style="--focus-border: {addFocusColor ? 1 : 0}px;"
       disabled={disable}
       bind:this={inputElement}
-      maxlength={dataType === 'tel' ? undefined : maxLength}
+      maxlength={dataType === 'tel' ? null : maxLength}
       minlength={minLength}
     />
   {:else}
@@ -213,7 +219,7 @@
       class:action-input={actionInput}
       disabled={disable}
       bind:this={inputElement}
-      maxlength={dataType === 'tel' ? undefined : maxLength}
+      maxlength={dataType === 'tel' ? null : maxLength}
       minlength={minLength}
     />
   {/if}

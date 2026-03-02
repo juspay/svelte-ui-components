@@ -10,6 +10,7 @@ export type MandatoryGridItemProperties = {
 export type OptionalGridItemProperties = {
   headerIcon?: string | null;
   showLoader?: boolean;
+  classes?: string;
 };
 
 export type GridItemEventProperties = {

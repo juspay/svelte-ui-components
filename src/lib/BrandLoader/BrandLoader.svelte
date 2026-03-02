@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { BrandLoaderProperties } from './properties';
 
-  let { brandLogoURL, brandText, subText }: BrandLoaderProperties = $props();
+  let { brandLogoURL, brandText, subText, classes }: BrandLoaderProperties = $props();
 </script>
 
-<div class="background">
+<div class="background {classes ?? ''}">
   <div class="loader">
     <img src={brandLogoURL} alt="" />
     <div class="text">{brandText}</div>
-    {#if subText}
+    {#if typeof subText === 'string' && subText.length > 0}
       <div class="sub-text">{subText}</div>
     {/if}
     <div class="lds-ellipsis">

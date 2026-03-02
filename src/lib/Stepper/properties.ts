@@ -1,6 +1,7 @@
 export type StepperProperties = {
   steps: Array<Step>;
   currentStepIndex: number;
+  classes?: string;
   onhandleStepClick?: (event: { selectedIndex: number }) => void;
 };
 
@@ -17,6 +18,7 @@ export type StepProperties = OptionalStepProperties &
 
 export type OptionalStepProperties = {
   icon?: string;
+  classes?: string;
 };
 
 export type StepEventProperties = {

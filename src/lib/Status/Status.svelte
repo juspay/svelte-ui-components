@@ -1,25 +1,27 @@
 <script lang="ts">
   import type { StatusProperties } from './properties';
   import Button from '$lib/Button/Button.svelte';
+  import Img from '$lib/Img/Img.svelte';
 
   let {
     statusIcon = 'icons/order-success-icon.svg',
     statusText = '',
     statusDescription = '',
     buttonProperties,
+    classes,
     onbuttonClick
   }: StatusProperties = $props();
 </script>
 
-<div class="background">
+<div class="background {classes ?? ''}">
   <div class="order-status">
-    <div class="status-image"><img src={statusIcon} alt="status" /></div>
+    <div class="status-image"><Img src={statusIcon} alt="status" /></div>
     <div class="status-text">{statusText}</div>
     <div class="status-description">
       <!-- eslint-disable-next-line -->
       {@html statusDescription}
     </div>
-    {#if buttonProperties}
+    {#if typeof buttonProperties === 'object'}
       <Button {...buttonProperties} onclick={onbuttonClick} />
     {/if}
   </div>

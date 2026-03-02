@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { IconStackProperties } from './properties';
 
-  let { icons }: IconStackProperties = $props();
+  let { icons, classes }: IconStackProperties = $props();
 </script>
 
-<div class="stack-container">
-  {#each icons as icon, i}
+<div class="stack-container {classes ?? ''}">
+  {#each icons as icon, i (i)}
     <div class="stack-icon" style:z-index={icons.length - i}>
       {#if icon.type === 'image'}
         <img src={icon.content} alt="icon" />

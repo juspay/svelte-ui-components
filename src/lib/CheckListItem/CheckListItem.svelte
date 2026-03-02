@@ -1,30 +1,37 @@
 <script lang="ts">
   import type { CheckListItemProperties } from './properties';
+  import Checkbox from '../Checkbox/Checkbox.svelte';
 
   let {
     text,
     checked = $bindable(false),
+    disabled = false,
     checkboxLabel,
-    onclick
+    testId,
+    onclick,
+    classes
   }: CheckListItemProperties = $props();
 
-  function handleCheckboxClick(e: MouseEvent): void {
-    if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
-      checked = e.target.checked;
-    }
+  function handleClick(value: boolean): void {
+    checked = value;
     onclick?.(checked);
   }
 </script>
 
-<div class="container">
-  <input type="checkbox" class="checkbox" bind:checked onclick={handleCheckboxClick} />
-  {#if checkboxLabel}
-    {@render checkboxLabel?.()}
+<div class="container {classes ?? ''}" class:disabled data-pw={testId}>
+  <div class="checkbox-wrapper">
+    <Checkbox
+      text=""
+      bind:checked
+      {disabled}
+      onclick={handleClick}
+      {...typeof testId === 'string' ? { testId: `${testId}-checkbox` } : {}}
+    />
+  </div>
+  {#if typeof checkboxLabel === 'function'}
+    {@render checkboxLabel()}
   {:else}
-    <span class="text" class:checked>
-      <!-- eslint-disable-next-line -->
-      {@html text}
-    </span>
+    <span class="text" class:checked>{text}</span>
   {/if}
 </div>
 
@@ -34,27 +41,25 @@
     align-items: var(--check-list-item-align-items, center);
     width: var(--check-list-item-width, 100%);
     padding: var(--check-list-item-padding);
+    gap: var(--check-list-item-gap, 8px);
+  }
+
+  .container.disabled {
+    opacity: var(--check-list-item-disabled-opacity, 0.4);
+    cursor: not-allowed;
+  }
+
+  .checkbox-wrapper {
+    flex-shrink: 0;
   }
 
   .text {
-    margin: var(--check-list-item-margin, 0px 0px 0px 8px);
-    font-size: var(--check-list-item-text-size, 12px);
+    font-size: var(--check-list-item-text-size, 14px);
     color: var(--check-list-item-text-color);
   }
 
   .text.checked {
     color: var(--check-list-item-checked-text-color);
     font-weight: var(--check-list-item-checked-font-weight);
-  }
-
-  input.checkbox {
-    accent-color: var(--checkbox-accent-color, #000);
-    border: 5px solid red;
-    height: var(--checkbox-height, 24px);
-    width: var(--checkbox-width, 24px);
-    margin: var(--checkbox-margin);
-    padding: var(--checkbox-padding);
-    border-radius: var(--checkbox-border-radius);
-    visibility: var(--checkbox-visibility);
   }
 </style>

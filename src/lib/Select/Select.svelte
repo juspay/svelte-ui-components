@@ -1,433 +1,471 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte';
-  import type { SelectProperties } from './properties';
-  import type { ButtonProperties } from '$lib/Button/properties';
-  import Img from '$lib/Img/Img.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import CheckListItem from '$lib/CheckListItem/CheckListItem.svelte';
-
-  let selectedElementDiv: HTMLDivElement | null = $state(null);
+  import { onMount, tick } from 'svelte';
+  import type { SelectItem, SelectProperties } from './properties';
+  import Pill from '$lib/Pill/Pill.svelte';
+  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
   let {
-    dropDownIconAlt = '',
+    items,
+    value = $bindable([]),
+    multiple = false,
+    searchable = false,
     placeholder = '',
-    label = '',
-    allItems = [],
-    selectedItem = '',
-    selectedItemLabel = null,
-    showSelectedItemInDropdown = false,
-    selectMultipleItems = false,
-    hideDropDownIcon,
-    dropDownIcon,
-    leftIcon = null,
-    showSingleSelectButton,
-    showSelectedItem = true,
-    showSelectedItemCount = false,
+    disabled = false,
     testId,
-    labelTestId,
-    itemTestId,
-    leftContent,
-    bottomContent,
-    onselect,
-    ondropdownClick,
-    onkeydown
+    onchange,
+    classes
   }: SelectProperties = $props();
 
-  const dropDownIconUrl = dropDownIcon ?? 'https://sdk.breeze.in/gallery/icons/down-arrow.svg';
+  let isOpen = $state(false);
+  let query = $state('');
+  let highlightedIndex = $state(-1);
+  let containerEl: HTMLDivElement | null = $state(null);
+  let searchInputEl: HTMLInputElement | null = $state(null);
+  let triggerEl: HTMLDivElement | null = $state(null);
 
-  let applyButtonProps: ButtonProperties = $derived({
-    text: `Select (${selectedItem.length})`,
-    enable: selectedItem.length > 0,
-    showLoader: false,
-    type: 'submit'
-  });
+  const listboxId = `select-listbox-${Math.random().toString(36).slice(2, 9)}`;
 
-  const selectAllButtonProps: ButtonProperties = {
-    text: 'Select All',
-    enable: true,
-    showLoader: false,
-    type: 'submit'
-  };
+  function getLabel(id: string): string {
+    const found = items.find((item) => item.id === id);
+    return typeof found === 'object' ? found.label : id;
+  }
 
-  let isSelectOpen = $state(false);
-
-  let nonSelectedItems = $derived(
-    allItems.filter((item) =>
-      selectMultipleItems ? !selectedItem.includes(item) : item !== selectedItem
-    )
+  let filteredItems: SelectItem[] = $derived(
+    searchable && query.length > 0
+      ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
+      : items
   );
 
-  function isSelected(selectedItem: string | string[], item: string) {
-    if (Array.isArray(selectedItem)) {
-      return selectedItem.includes(item);
-    } else {
-      return selectedItem.trim() === item.trim();
+  let displayText = $derived.by(() => {
+    const firstId = value.at(0);
+    if (typeof firstId !== 'string') {
+      return '';
     }
-  }
+    return getLabel(firstId);
+  });
 
-  function selectItem(item: string) {
-    if (selectMultipleItems && Array.isArray(selectedItemLabel) && Array.isArray(selectedItem)) {
-      if (isSelected(selectedItem, item)) {
-        selectedItem = selectedItem.filter((selected) => selected !== item);
-        selectedItemLabel = selectedItemLabel.filter((label) => label !== item);
-      } else {
-        selectedItem = [...selectedItem, item];
-        selectedItemLabel = [...selectedItemLabel, item];
+  let highlightedOptionId: string | null = $derived(
+    highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : null
+  );
+
+  let searchPlaceholder = $derived(isOpen && displayText.length > 0 ? displayText : placeholder);
+
+  async function open(): Promise<void> {
+    if (disabled || isOpen) {
+      return;
+    }
+    isOpen = true;
+    highlightedIndex = -1;
+    query = '';
+    if (searchable) {
+      await tick();
+      if (searchInputEl !== null) {
+        searchInputEl.focus();
       }
+    }
+  }
+
+  function close(): void {
+    isOpen = false;
+    query = '';
+    highlightedIndex = -1;
+  }
+
+  function selectItem(id: string): void {
+    if (disabled) {
+      return;
+    }
+    if (multiple) {
+      value = value.includes(id) ? value.filter((v) => v !== id) : [...value, id];
     } else {
-      selectedItem = [item];
-      selectedItemLabel = [item];
+      value = [id];
+      close();
     }
-    if (!selectMultipleItems) {
-      toggleSelect();
-      dispatchEvent();
+    onchange?.(value);
+  }
+
+  function removeItem(id: string): void {
+    if (disabled) {
+      return;
     }
+    value = value.filter((v) => v !== id);
+    onchange?.(value);
   }
 
-  function dispatchEvent() {
-    onselect?.({ selectedItems: selectedItem });
-    isSelectOpen = false;
-  }
-
-  function toggleSelect() {
-    isSelectOpen = !isSelectOpen;
-    ondropdownClick?.();
-  }
-
-  function selectAllItems() {
-    if (selectedItem.length === allItems.length) {
-      selectedItem = [];
-      selectedItemLabel = [];
-    } else {
-      selectedItem = [...allItems];
-      selectedItemLabel = [...allItems];
+  function selectHighlighted(): void {
+    if (highlightedIndex < 0 || highlightedIndex >= filteredItems.length) {
+      return;
+    }
+    const item = filteredItems.at(highlightedIndex);
+    if (typeof item === 'object' && item !== null) {
+      selectItem(item.id);
     }
   }
 
-  function closeSelect(event: Event) {
-    const clickedElement = event.target as HTMLElement;
-    if (selectedElementDiv !== null && !selectedElementDiv.contains(clickedElement)) {
-      const isItemClicked = clickedElement.classList.contains('item');
-      const isApplyButtonClicked = clickedElement.classList.contains('apply-btn');
-      const isClearAllButtonClicked = clickedElement.innerText === 'Clear All';
-      const isSelectAllButtonClicked = clickedElement.innerText === 'Select All';
-      const isCheckListClicked = clickedElement.classList.contains('checkbox');
-      if (
-        !isItemClicked &&
-        !isApplyButtonClicked &&
-        !isClearAllButtonClicked &&
-        !isSelectAllButtonClicked &&
-        !isCheckListClicked
-      ) {
-        isSelectOpen = false;
+  async function moveHighlight(delta: number): Promise<void> {
+    const next = highlightedIndex + delta;
+    if (next < 0 || next >= filteredItems.length) {
+      return;
+    }
+    highlightedIndex = next;
+    await tick();
+    if (containerEl !== null) {
+      const el = containerEl.querySelector('.select-option.highlighted');
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ block: 'nearest' });
       }
+    }
+  }
+
+  function handleTriggerClick(event: MouseEvent): void {
+    if (event.target instanceof HTMLInputElement) {
+      if (!isOpen) {
+        open();
+      }
+      return;
+    }
+    if (multiple && searchable) {
+      open();
+    } else if (isOpen) {
+      close();
+    } else {
+      open();
+    }
+  }
+
+  function handleKeydown(event: KeyboardEvent): void {
+    if (disabled) {
+      return;
+    }
+    switch (event.key) {
+      case 'Enter':
+        event.preventDefault();
+        if (isOpen) {
+          selectHighlighted();
+        } else {
+          open();
+        }
+        break;
+      case ' ':
+        if (!(event.target instanceof HTMLInputElement)) {
+          event.preventDefault();
+          if (isOpen) {
+            selectHighlighted();
+          } else {
+            open();
+          }
+        }
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        if (isOpen) {
+          moveHighlight(1);
+        } else {
+          open();
+        }
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        moveHighlight(-1);
+        break;
+      case 'Escape':
+        if (isOpen) {
+          close();
+          if (!searchable && triggerEl !== null) {
+            triggerEl.focus();
+          }
+        }
+        break;
+      case 'Backspace':
+        if (multiple && query === '' && value.length > 0) {
+          const lastId = value.at(-1);
+          if (typeof lastId === 'string') {
+            removeItem(lastId);
+          }
+        }
+        break;
+      case 'Tab':
+        if (isOpen) {
+          close();
+        }
+        break;
+    }
+  }
+
+  function handleSearchInput(event: Event): void {
+    if (!(event.target instanceof HTMLInputElement)) {
+      return;
+    }
+    query = event.target.value;
+    if (!isOpen) {
+      isOpen = true;
+    }
+    highlightedIndex = -1;
+  }
+
+  function handleSearchFocus(): void {
+    if (!isOpen) {
+      open();
+    }
+  }
+
+  function handleClickOutside(event: Event): void {
+    if (
+      event.target instanceof Node &&
+      containerEl !== null &&
+      !containerEl.contains(event.target)
+    ) {
+      close();
     }
   }
 
   onMount(() => {
-    document.addEventListener('click', closeSelect);
-  });
-
-  onDestroy(() => {
-    if (typeof window !== 'undefined') {
-      document.removeEventListener('click', closeSelect);
-    }
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 </script>
 
-{#if label !== null && label !== ''}
-  <label class="label-container" for={label} data-pw={labelTestId}>
-    {label}
-  </label>
-{/if}
-
-{#if allItems.length !== 0}
-  <div class="select">
-    <div
-      class="selected item"
-      onclick={toggleSelect}
-      bind:this={selectedElementDiv}
-      {onkeydown}
-      role="button"
-      tabindex="0"
-      data-pw={testId}
-    >
-      {#if leftIcon !== null}
-        <div class="icon-container">
-          <Img {...leftIcon} />
-        </div>
-      {/if}
-      {#if leftContent}
-        {@render leftContent()}
-      {/if}
-      <div class="selected-content">
-        {#if selectMultipleItems && Array.isArray(selectedItemLabel) && Array.isArray(selectedItem)}
-          {#if selectedItem.length === 0}
-            {placeholder}
-          {:else if selectedItemLabel?.length === 0 || (showSelectedItemInDropdown && showSelectedItem !== false)}
-            {selectedItem.join(', ')}
-          {:else if showSelectedItem !== false}
-            {selectedItemLabel.join(', ')}
-          {:else}
-            {placeholder}
-          {/if}
-        {:else if selectedItem === ''}
-          {placeholder}
-        {:else if selectedItemLabel === null || (selectedItemLabel === '' && showSelectedItem !== false)}
-          {selectedItem}
-        {:else if showSelectedItem !== false}
-          {selectedItemLabel}
-        {:else}
-          {placeholder}
-        {/if}
-      </div>
-      <div class="filler"></div>
-      {#if showSelectedItemCount && selectMultipleItems && Array.isArray(selectedItem)}
-        <div class="selected-item-count">
-          {selectedItem.length}
-        </div>
-      {/if}
-      {#if !hideDropDownIcon}
-        <img
-          src={dropDownIconUrl}
-          alt={dropDownIconAlt}
-          class="arrow {isSelectOpen ? 'active' : ''}"
+<div
+  class="select {classes ?? ''}"
+  class:open={isOpen}
+  class:disabled
+  bind:this={containerEl}
+  {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
+>
+  <div
+    class="select-trigger"
+    bind:this={triggerEl}
+    onclick={handleTriggerClick}
+    onkeydown={handleKeydown}
+    role="combobox"
+    aria-expanded={isOpen}
+    aria-haspopup="listbox"
+    aria-controls={listboxId}
+    {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
+    tabindex={disabled ? -1 : searchable ? -1 : 0}
+  >
+    {#if multiple}
+      {#each value as id (id)}
+        <Pill
+          text={getLabel(id)}
+          dismissible
+          {disabled}
+          ondismiss={() => removeItem(id)}
+          {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
         />
+      {/each}
+      {#if searchable}
+        <input
+          class="select-search"
+          type="text"
+          value={query}
+          oninput={handleSearchInput}
+          onfocus={handleSearchFocus}
+          bind:this={searchInputEl}
+          placeholder={value.length === 0 ? placeholder : ''}
+          {disabled}
+          autocomplete="off"
+          tabindex={disabled ? -1 : 0}
+        />
+      {:else if value.length === 0}
+        <span class="select-placeholder">{placeholder}</span>
       {/if}
-    </div>
-    <div
-      class="non-selected-items"
-      style="--non-selected-display:{isSelectOpen ? 'inline-block' : 'none'};"
-    >
-      {#if selectMultipleItems && !showSingleSelectButton}
-        <div class="select-all-btn">
-          <CheckListItem
-            checked={Array.isArray(selectedItem) && selectedItem.length === allItems.length}
-            text=""
-            onclick={selectAllItems}
-          />
-          <Button {...selectAllButtonProps} onclick={selectAllItems} />
-        </div>
-      {/if}
-      <div class="item-list">
-        {#each showSelectedItemInDropdown ? allItems : nonSelectedItems as item (item)}
+    {:else if searchable}
+      <input
+        class="select-search"
+        type="text"
+        value={isOpen ? query : displayText}
+        oninput={handleSearchInput}
+        onfocus={handleSearchFocus}
+        bind:this={searchInputEl}
+        placeholder={searchPlaceholder}
+        {disabled}
+        autocomplete="off"
+        tabindex={disabled ? -1 : 0}
+      />
+    {:else}
+      <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
+        {displayText.length > 0 ? displayText : placeholder}
+      </span>
+    {/if}
+    <!-- eslint-disable svelte/no-at-html-tags -->
+    <span class="select-arrow">{@html chevronDownSvg}</span>
+  </div>
+
+  {#if isOpen && !disabled}
+    <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
+      {#if filteredItems.length === 0}
+        <div class="select-empty">No results</div>
+      {:else}
+        {#each filteredItems as item, index (item.id)}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
-            {onkeydown}
-            onclick={() => {
-              selectItem(item);
-            }}
-            class="item {isSelected(selectedItem, item) ? ' item-selected' : ''}"
-            role="button"
-            tabindex="0"
-            data-pw={`${itemTestId}-${item}`}
+            class="select-option"
+            class:selected={value.includes(item.id)}
+            class:highlighted={index === highlightedIndex}
+            role="option"
+            id={`${listboxId}-option-${index}`}
+            aria-selected={value.includes(item.id)}
+            tabindex="-1"
+            onclick={() => selectItem(item.id)}
+            onmouseenter={() => (highlightedIndex = index)}
           >
-            {#if selectMultipleItems}
-              <CheckListItem checked={isSelected(selectedItem, item)} text="" />
-            {/if}
-            {item}
+            {item.label}
           </div>
         {/each}
-      </div>
-      {#if bottomContent}
-        {@render bottomContent()}
-      {/if}
-      {#if selectMultipleItems}
-        <div class="apply-btn-container">
-          <Button {...applyButtonProps} onclick={dispatchEvent} />
-        </div>
       {/if}
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   .select {
-    height: var(--select-height, fit-content);
-    background-color: var(--select-bgcolor, #ffffff);
-    font-size: var(--select-font-size, 14px);
-    font-family: var(--select-font-family, Euclid Circular A);
-    border-radius: var(--select-radius, 4px);
-    font-weight: var(--select-font-weight, 400);
-    width: var(--select-width, 100%);
-    min-width: var(--select-min-width);
-    box-shadow: var(--select-box-shadow, 0px 1px 8px #2f537733);
-    -webkit-appearance: none !important; /* For Safari MWeb */
-    outline: var(--select-outline, none);
-    resize: none;
-    cursor: pointer;
-    border: var(--select-border, 1px solid #ccc);
-    position: var(--select-position, relative);
-    color: var(--select-color, #333);
-    align-content: var(--select-align-content);
-    display: var(--select-display, inline-block);
-    --button-margin: var(--select-btn-margin, 1px);
-    --button-border-radius: var(--select-btn-border-radius, 2px);
-    --input-button-margin: var(--select-input-button-margin, 10px);
-    --check-list-item-margin: var(--select-check-list-item-margin, 0px);
-    --checkbox-margin: var(--select-checkbox-margin, 2px 8px 0px 0px);
-    --checkbox-height: var(--select-checkbox-height, 14px);
-    --checkbox-width: var(--select-checkbox-width, 14px);
-    --checkbox-accent-color: var(--select-checkbox-accent-color, #3a4550);
-    --check-list-item-checked-font-weight: var(--select-check-list-item-checked-font-weight, bold);
-    --check-list-item-width: var(--select-check-list-item-width, fit-content);
-  }
-
-  .select:hover {
-    color: var(--select-hover-color, #000);
-    background-color: var(--select-hover-bgcolor, #ffffff);
-  }
-
-  .arrow {
-    height: var(--dropdown-arrow-icon-height, 16px);
-    width: var(--dropdown-arrow-icon-width, 16px);
-    transition: transform 0.1s;
-  }
-
-  .active {
-    transform: rotate(0.5turn);
-  }
-
-  .item {
-    padding: var(--item-padding, 8px 16px);
-    background-color: var(--item-background-color, #fff);
-    border-radius: var(--item-border-radius);
-    align-items: var(--item-align-items);
-    height: var(--item-height);
-    cursor: pointer;
     position: relative;
-    display: flex;
+    width: var(--select-width, 100%);
+    font-family: var(--select-font-family, inherit);
+    font-size: var(--select-font-size, 14px);
+    color: var(--select-color, #333333);
   }
 
-  .filler {
+  .select.disabled {
+    opacity: var(--select-disabled-opacity, 0.5);
+    cursor: var(--select-disabled-cursor, not-allowed);
+    pointer-events: none;
+  }
+
+  .select-trigger {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--select-trigger-gap, 4px);
+    min-height: var(--select-trigger-min-height, 40px);
+    padding: var(--select-trigger-padding, 8px 12px);
+    background: var(--select-trigger-background, #ffffff);
+    border: var(--select-trigger-border, 1px solid #cccccc);
+    border-radius: var(--select-trigger-border-radius, 6px);
+    cursor: pointer;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: var(--select-trigger-transition, border-color 0.15s, box-shadow 0.15s);
+  }
+
+  .select-trigger:hover:not(.disabled .select-trigger) {
+    border-color: var(--select-trigger-hover-border-color, #999999);
+  }
+
+  .select-trigger:focus-within,
+  .select.open .select-trigger {
+    border-color: var(--select-trigger-focus-border-color, #2563eb);
+    box-shadow: var(--select-trigger-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
+  }
+
+  .select-value {
     flex: 1;
-  }
-
-  .item:hover {
-    background-color: var(--non-selected-hover-bg, #f0f0f0);
-    color: var(--non-selected-hover-color);
-  }
-
-  .selected {
-    display: flex;
-    align-items: var(--selected-align-items, center);
-    margin: var(--selected-margin, 0px 0px 0px 0px);
-    justify-content: var(--selected-justify-content, flex-start);
-    background-color: var(--selected-item-background-color, #f9f9f9);
-    white-space: var(--selected-item-white-space, nowrap);
-    overflow: var(--selected-item-overflow, hidden);
-    text-overflow: var(--selected-item-text-overflow, ellipsis);
-    max-width: var(--selected-item-max-width, 100%);
-    padding: var(--selected-item-padding, var(--item-padding, 8px 16px));
-  }
-
-  .selected-content {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: calc(100% - 20px);
   }
 
-  .selected:hover {
-    background-color: var(--selected-hover-bg, transparent);
-    color: var(--selected-color, black);
+  .select-placeholder {
+    flex: 1;
+    color: var(--select-placeholder-color, #999999);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .non-selected-items {
-    display: var(--non-selected-display);
-    background-color: var(--non-selected-item-bgcolor, #ffffff);
-    color: var(--non-selected-item-color);
-    box-shadow: 0px 1px 8px #2f537733;
-    width: var(--non-selected-width, 100%);
-    min-width: var(--non-selected-min-width, 100%);
-    word-wrap: var(--non-selected-word-break, break-word);
-    position: var(--non-selected-items-position, absolute);
-    border-radius: var(--non-selected-items-border-radius, 4px);
-    margin: var(--non-selected-margin, 4px 0px 0px 0px);
-    font-weight: var(--non-select-font-weight, 500);
-    left: var(--non-selected-left);
-    right: var(--non-selected-right);
-    top: var(--non-selected-top);
-    bottom: var(--non-selected-bottom);
-    z-index: 10;
-    overflow-y: auto;
+  .select-search {
+    flex: 1;
+    min-width: 60px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    padding: 0;
+    cursor: text;
   }
 
-  ::-webkit-scrollbar {
-    width: var(--scrollbar-width, 0);
+  .select-search::placeholder {
+    color: var(--select-placeholder-color, #999999);
   }
 
-  .item-list {
-    max-height: var(--non-selected-max-height, 165px);
-    overflow-y: auto;
-  }
-
-  .item-selected::after {
-    content: var(--selected-option-icon, '✔');
-    position: absolute;
-    right: 7px;
-    color: var(--item-selected-icon-color);
-  }
-
-  .label-container {
-    font-weight: var(--label-text-weight, 400);
-    font-size: var(--label-text-size, 12px);
-    color: var(--label-text-color, #333);
-    margin-bottom: var(--label-container-margin-bottom, 4px);
-    display: var(--label-container-display, inline-block);
-  }
-
-  .select-all-btn {
-    display: flex;
-    width: var(--select-all-btn-width, 99%);
-    white-space: var(--select-all-btn-white-space, nowrap);
-    padding: var(--select-all-btn-padding, 10px 16px);
-    --button-font-size: var(--select-all-btn-font-size, 14px);
-    --button-width: var(--select-all-btn-width, 100%);
-    --button-color: var(--select-all-btn-color, #ffffff);
-    --button-text-color: var(--select-all-btn-text-color, #333);
-    --button-padding: var(--select-all-btn-inner-padding, 0px);
-    --button-justify-content: var(--select-all-btn-justify-content, flex-start);
-  }
-
-  .apply-btn-container {
-    padding: var(--apply-btn-container-padding, 5px);
-    border-top: var(--apply-btn-container-border-top, 1px solid #ddd);
-    background-color: var(--apply-btn-container-background-color, #f9f9f9);
-    position: var(--apply-btn-container-position, sticky);
-    width: var(--apply-btn-container-width, 94%);
-    display: var(--apply-btn-display, flex);
-    flex-direction: var(--apply-btn-flex-direction, column);
-    --button-width: var(--apply-btn-width, 100%);
-    --button-padding: var(--apply-btn-padding, 10px);
-    --button-font-size: var(--apply-btn-font-size, 14px);
-  }
-
-  .icon-container {
-    width: var(--select-icon-container-width, fit-content);
-    height: var(--select-icon-container-height, fit-content);
-    border-radius: var(--select-icon-container-border-radius);
-    opacity: var(--select-icon-container-opacity);
-    background: var(--select-icon-container-background);
-    display: flex;
+  .select-arrow {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: var(--select-icon-container-margin, 0px 8px 0px 0px);
-    padding: var(--select-icon-container-padding);
-    --image-height: var(--select-icon-height);
-    --image-width: var(--select-icon-height);
+    width: var(--select-arrow-size, 16px);
+    height: var(--select-arrow-size, 16px);
+    color: var(--select-arrow-color, #666666);
+    flex-shrink: 0;
+    transition: transform 0.15s;
   }
 
-  .selected-item-count {
-    margin: var(--selected-item-count-margin, 0px 6px);
-    height: var(--selected-item-count-height, 18px);
-    width: var(--selected-item-count-width, 18px);
-    min-width: var(--selected-item-count-min-width, 18px);
-    padding: var(--selected-item-count-padding, 4px);
-    display: var(--selected-item-count-display, flex);
-    justify-content: var(--selected-item-count-justify-content, center);
-    align-items: var(--selected-item-count-align-item, center);
-    background-color: var(--selected-item-count-bg-color, #3a4550);
-    color: var(--selected-item-count-text-color, #ffffff);
-    border-radius: var(--selected-item-count-border-radius, 4px);
+  .select.open .select-arrow {
+    transform: rotate(180deg);
+  }
+
+  .select-arrow :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: var(--select-dropdown-gap, 4px);
+    background: var(--select-dropdown-background, #ffffff);
+    border: var(--select-dropdown-border, 1px solid #cccccc);
+    border-radius: var(--select-dropdown-border-radius, 6px);
+    box-shadow: var(--select-dropdown-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+    max-height: var(--select-dropdown-max-height, 200px);
+    overflow-y: auto;
+    z-index: var(--select-dropdown-z-index, 10);
+  }
+
+  .select-option {
+    padding: var(--select-option-padding, 8px 12px);
+    color: var(--select-option-color, #333333);
+    font-size: var(--select-option-font-size, inherit);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .select-option:hover,
+  .select-option.highlighted {
+    background: var(--select-option-hover-background, #f0f0f0);
+    color: var(--select-option-hover-color, var(--select-option-color, #333333));
+  }
+
+  .select-option.selected {
+    background: var(--select-option-selected-background, #e8f0fe);
+    color: var(--select-option-selected-color, var(--select-option-color, #333333));
+  }
+
+  .select-option.selected.highlighted {
+    background: var(
+      --select-option-selected-hover-background,
+      var(--select-option-selected-background, #e8f0fe)
+    );
+  }
+
+  .select-empty {
+    padding: var(--select-empty-padding, 8px 12px);
+    color: var(--select-empty-color, #999999);
+    font-style: var(--select-empty-font-style, italic);
+    font-size: var(--select-empty-font-size, inherit);
+  }
+
+  .select-trigger :global(.pill) {
+    --pill-background: var(--select-pill-background, #e0e0e0);
+    --pill-color: var(--select-pill-color, #333333);
+    --pill-border-radius: var(--select-pill-border-radius, 999px);
+    --pill-padding: var(--select-pill-padding, 2px 8px);
+    --pill-font-size: var(--select-pill-font-size, 13px);
   }
 </style>

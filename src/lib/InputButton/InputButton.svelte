@@ -16,7 +16,8 @@
     leftButtonEventProperties,
     bottomButtonEventProperties,
     leftIcon,
-    rightIcon
+    rightIcon,
+    classes
   }: InputButtonProperties = $props();
 
   let validationState = $state<ValidationState>('InProgress');
@@ -54,7 +55,7 @@
   }
 </script>
 
-<div class="container">
+<div class="container {classes ?? ''}">
   {#if inputProperties.label && inputProperties.label !== ''}
     <label class="label" for={inputProperties.name}>
       {inputProperties.label}
@@ -121,7 +122,7 @@
     --input-focus-border: none;
     --input-box-shadow: none;
     --input-margin: none;
-    --input-width: auto;
+    --input-width: fit-content;
     height: var(--input-height, fit-content);
     font-size: var(--input-font-size, 16px) !important;
     font-weight: 500;

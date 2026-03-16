@@ -12,6 +12,44 @@ A small rounded label used for categorization, tagging, or filtering. Supports a
 <Pill text={'...'} />
 ```
 
+### Theming with Classes
+
+Define variant classes in your app's CSS that set Pill CSS variables, then pass them via the `classes` prop:
+
+```css
+/* app.css */
+.pill-success {
+  --pill-background: #d4edda;
+  --pill-color: #155724;
+  --pill-hover-background: #c3e6cb;
+}
+
+.pill-warning {
+  --pill-background: #fff3cd;
+  --pill-color: #856404;
+  --pill-hover-background: #ffeeba;
+}
+
+.pill-error {
+  --pill-background: #f8d7da;
+  --pill-color: #721c24;
+  --pill-hover-background: #f1b0b7;
+}
+
+.pill-info {
+  --pill-background: #d1ecf1;
+  --pill-color: #0c5460;
+  --pill-hover-background: #bee5eb;
+}
+```
+
+```svelte
+<Pill text="Active" classes="pill-success" />
+<Pill text="Pending" classes="pill-warning" />
+<Pill text="Failed" classes="pill-error" />
+<Pill text="New" classes="pill-info" />
+```
+
 ## Props
 
 | Prop        | Type      | Required | Default | Description                                                                                                                                                            |
@@ -40,7 +78,7 @@ Override these custom properties to theme the component.
 | `--pill-font-size`           | `13px`                                    | font-size        | Font size of the pill text.                                               |
 | `--pill-font-weight`         | `500`                                     | font-weight      | Font weight of the pill text.                                             |
 | `--pill-font-family`         | `-`                                       | font-family      | Font family of the pill text.                                             |
-| `--pill-padding`             | `4px 10px`                                | padding          | Inner padding of the pill.                                                |
+| `--pill-padding`             | `6px 10px`                                | padding          | Inner padding of the pill.                                                |
 | `--pill-border-radius`       | `999px`                                   | border-radius    | Corner rounding of the pill (999px creates a fully rounded shape).        |
 | `--pill-border`              | `none`                                    | border           | Border style of the pill.                                                 |
 | `--pill-gap`                 | `4px`                                     | gap              | Spacing between the text and the dismiss button.                          |

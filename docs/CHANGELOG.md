@@ -2,21 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.10.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.11.0)
 
-- added new components: Avatar, Book, Browser,
-Calendar, Checkbox, Choicebox, CommandMenu,
-ContextMenu, Gauge, KeyboardInput, LoadingDots,
-Menu, Pagination, Phone, Pill, Progress, Radio,
-RelativeTime, Scroller, Sheet, Shimmer, Slider,
-Snippet, SplitButton, Tabs, ThemeSwitcher,
-Tooltip
-- refactored existing components with classes prop, testId support, and improved accessibility
-- added interactive demo pages for all components under /components route
-- added GitHub Pages workflow for automated deployment from main and release branches
-- rewrote README with comprehensive component catalog, theming guide, and usage examples
-- added SVG icon assets used by new components
-- updated documentation for all new and existing components
+- modernized defaults: row separators, rounded corners, 100% width, clean header styling (replaces beige/grid borders)
+- added cell snippet for custom rendering (Pills, links, badges), empty state snippet, row click (onRowClick), and sort event (onSort)
+- added stickyHeader prop, sortable/sortableColumns controls, testId, and caption for accessibility
+- replaced inline SVG sort icons with asset imports, raw &lt;button&gt; with Button component per guidelines
+- fixed inverted sort indicators, duplicate-header keying bug, wasteful sort state, incorrect role="grid"
+- removed columnWidths prop in favor of CSS nth-child pattern; removed negative margins
+- updated docs, demo page, and rebuilt MCP server
+
+## [2.11.0](https://github.com/juspay/svelte-ui-components/compare/2.11.0..2.10.0) - 2 March 2026
 
 ## [2.10.0](https://github.com/juspay/svelte-ui-components/compare/2.10.0..2.9.0) - 17 February 2026
 

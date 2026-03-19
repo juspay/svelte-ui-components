@@ -64,3 +64,11 @@ Override these custom properties to theme the component.
 | `--radio-text-font-weight`      | `400`                               | font-weight      | Font weight of the label text.                                   |
 | `--radio-text-color`            | `#333333`                           | color            | Color of the label text.                                         |
 | `--radio-disabled-text-color`   | `#999999`                           | color            | Color of the label text when disabled.                           |
+
+## Web Component
+
+Tag: `<sui-radio>`
+
+```html
+<sui-radio text="Option A" checked></sui-radio>
+```

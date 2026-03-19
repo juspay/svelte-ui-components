@@ -43,6 +43,15 @@ A date or date-range picker that displays a monthly calendar grid with navigatio
 | testId        | `string`                              | No       | `undefined` | Value for the data-pw attribute on the root element, used for end-to-end testing selectors.                                                                                                                                |
 | classes       | `string`                              | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet           | Type      | Description                                                                                         |
+| ----------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| previousMonthIcon | `Snippet` | Custom content rendered inside the previous-month navigation button, replacing the default chevron. |
+| nextMonthIcon     | `Snippet` | Custom content rendered inside the next-month navigation button, replacing the default chevron.     |
+
 ## Events
 
 | Event         | Type                                                    | Description                                                                                                  |
@@ -67,7 +76,7 @@ Override these custom properties to theme the component.
 | `--calendar-header-margin-bottom`        | `12px`              | margin-bottom    | Space below the navigation header row.                                                  |
 | `--calendar-header-font-size`            | `16px`              | font-size        | Font size of the month/year label in the header.                                        |
 | `--calendar-header-font-weight`          | `600`               | font-weight      | Font weight of the month/year label.                                                    |
-| `--calendar-header-color`                | `#333333`           | color            | Text color of the month/year label.                                                     |
+| `--calendar-header-color`                | `#000000`           | color            | Text color of the month/year label.                                                     |
 | `--calendar-nav-button-size`             | `32px`              | width, height    | Size of the previous/next navigation arrow buttons.                                     |
 | `--calendar-nav-button-border-radius`    | `4px`               | border-radius    | Corner rounding of the navigation arrow buttons.                                        |
 | `--calendar-nav-button-color`            | `#666666`           | color            | Color of the navigation arrow SVG icons.                                                |
@@ -79,17 +88,34 @@ Override these custom properties to theme the component.
 | `--calendar-cell-size`                   | `36px`              | width, height    | Size of each day number cell in the grid.                                               |
 | `--calendar-cell-font-size`              | `14px`              | font-size        | Font size of the day numbers.                                                           |
 | `--calendar-cell-border-radius`          | `50%`               | border-radius    | Corner rounding of day cells. Use 50% for circles, a smaller value for rounded squares. |
-| `--calendar-cell-color`                  | `#333333`           | color            | Text color of selectable day numbers.                                                   |
+| `--calendar-cell-color`                  | `#000000`           | color            | Text color of selectable day numbers.                                                   |
 | `--calendar-cell-hover-background`       | `#f0f0f0`           | background-color | Background color of day cells on hover.                                                 |
-| `--calendar-today-border`                | `1px solid #333333` | border           | Border applied to today's date cell to distinguish it.                                  |
+| `--calendar-focus-ring-color`            | `#000000`           | outline-color    | Color of the focus ring shown on day cells when focused via keyboard.                   |
+| `--calendar-today-border`                | `1px solid #000000` | border           | Border applied to today's date cell to distinguish it.                                  |
 | `--calendar-today-font-weight`           | `700`               | font-weight      | Font weight of today's date number.                                                     |
-| `--calendar-selected-background`         | `#333333`           | background-color | Background color of the selected date cell.                                             |
+| `--calendar-selected-background`         | `#000000`           | background-color | Background color of the selected date cell.                                             |
 | `--calendar-selected-color`              | `#ffffff`           | color            | Text color of the selected date cell.                                                   |
 | `--calendar-range-background`            | `#e8e8e8`           | background-color | Background color of cells between range start and end dates.                            |
-| `--calendar-range-start-background`      | `#333333`           | background-color | Background color of the range start date cell.                                          |
-| `--calendar-range-end-background`        | `#333333`           | background-color | Background color of the range end date cell.                                            |
+| `--calendar-range-start-background`      | `#000000`           | background-color | Background color of the range start date cell.                                          |
+| `--calendar-range-end-background`        | `#000000`           | background-color | Background color of the range end date cell.                                            |
 | `--calendar-range-start-color`           | `#ffffff`           | color            | Text color of the range start date cell.                                                |
 | `--calendar-range-end-color`             | `#ffffff`           | color            | Text color of the range end date cell.                                                  |
 | `--calendar-disabled-color`              | `#cccccc`           | color            | Text color of disabled and out-of-range day numbers.                                    |
 | `--calendar-disabled-cursor`             | `not-allowed`       | cursor           | Cursor shown when hovering over disabled day cells.                                     |
 | `--calendar-outside-month-color`         | `#cccccc`           | color            | Text color of day numbers that belong to the previous or next month.                    |
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Button (for month navigation controls)
+
+## Web Component
+
+Tag: `<sui-calendar>`
+
+```html
+<sui-calendar mode="single" locale="en-US"></sui-calendar>
+```
+
+> **Note:** `value`, `rangeStart`, `rangeEnd`, `minDate`, `maxDate`, and `disabledDates` are object props — set them via JavaScript properties.

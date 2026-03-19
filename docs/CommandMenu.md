@@ -19,7 +19,7 @@ A full-screen action palette triggered by keyboard shortcut (Cmd+K / Ctrl+K). Di
 </script>
 
 <CommandMenu
-  {commands}
+  items={commands}
   bind:open
   placeholder="Type a command or search..."
   onselect={(item) => console.log('Selected:', item.value)}
@@ -34,16 +34,17 @@ A full-screen action palette triggered by keyboard shortcut (Cmd+K / Ctrl+K). Di
 | open        | `boolean`       | No       | `false`                | Controls visibility of the command menu. Bindable. Set to true to show, false to hide. Automatically toggled by Cmd+K / Ctrl+K keyboard shortcut.                                        |
 | placeholder | `string`        | No       | `'Search commands...'` | Placeholder text shown in the search input when no query is entered.                                                                                                                     |
 | emptyText   | `string`        | No       | `'No results found.'`  | Text displayed when the search query matches no items.                                                                                                                                   |
-| testId      | `string`        | No       | `''`                   | Value for `data-pw` on the overlay container for Playwright testing. Child elements get suffixed testIds (e.g., `{testId}-input`, `{testId}-item-{value}`).                              |
+| testId      | `string`        | No       | `-`                    | Value for `data-pw` on the overlay container for Playwright testing. Child elements get suffixed testIds (e.g., `{testId}-input`, `{testId}-item-{value}`).                              |
 | classes     | `string`        | No       | `-`                    | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                   |
 
 ## Snippets
 
 Svelte 5 Snippet props -- pass content blocks to the component.
 
-| Snippet  | Type                     | Description                                                                                                                                             |
-| -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| itemIcon | `Snippet<[CommandItem]>` | Custom icon renderer for each command item. Receives the CommandItem as an argument. When provided, takes precedence over the item's `icon` URL string. |
+| Snippet    | Type                     | Description                                                                                                                                             |
+| ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| itemIcon   | `Snippet<[CommandItem]>` | Custom icon renderer for each command item. Receives the CommandItem as an argument. When provided, takes precedence over the item's `icon` URL string. |
+| searchIcon | `Snippet`                | Custom icon for the search input.                                                                                                                       |
 
 ## Events
 
@@ -183,3 +184,19 @@ type CommandItem = {
   disabled?: boolean;
 };
 ```
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Img (for item icon rendering)
+
+## Web Component
+
+Tag: `<sui-command-menu>`
+
+```html
+<sui-command-menu open placeholder="Type a command..."></sui-command-menu>
+```
+
+> **Note:** The `items` prop is an array and `itemIcon` is a parameterized Snippet — set them via JavaScript properties.

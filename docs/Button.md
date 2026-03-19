@@ -118,3 +118,28 @@ type LoaderType = 'Circular' | 'ProgressBar';
 This component uses the following library components internally:
 
 - Loader (for the circular spinner mode)
+
+## Web Component
+
+Tag: `<sui-button>`
+
+```html
+<sui-button text="Submit"></sui-button>
+
+<!-- With icon slot -->
+<sui-button text="Download">
+  <svg slot="icon">...</svg>
+</sui-button>
+
+<!-- With custom content -->
+<sui-button>
+  <span>Custom <strong>content</strong></span>
+</sui-button>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                                  |
+| ----------- | --------------- | ------------------------------------------------------------ |
+| _(default)_ | `children`      | Custom content rendered inside the button (replaces `text`). |
+| `icon`      | `icon`          | Icon content rendered next to the button text.               |

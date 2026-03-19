@@ -43,3 +43,11 @@ Override these custom properties to theme the component.
 | `--progress-label-color`            | `#333`            | color              | Text color of the percentage label.                           |
 | `--progress-label-font-family`      | `inherit`         | font-family        | Font family of the percentage label.                          |
 | `--progress-label-margin`           | `0`               | margin             | Margin around the percentage label.                           |
+
+## Web Component
+
+Tag: `<sui-progress>`
+
+```html
+<sui-progress value="60" max="100" show-label></sui-progress>
+```

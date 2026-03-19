@@ -81,3 +81,19 @@ Override these custom properties to theme the component.
 This component uses the following library components internally:
 
 - Button (for the copy button)
+
+## Web Component
+
+Tag: `<sui-snippet>`
+
+```html
+<sui-snippet text="npm install @juspay/svelte-ui-components" show-copy-button>
+  <svg slot="copy-icon">...</svg>
+</sui-snippet>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                      |
+| ----------- | --------------- | -------------------------------- |
+| `copy-icon` | `copyIcon`      | Custom icon for the copy button. |

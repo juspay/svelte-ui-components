@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/wc/**/*.ts",
+    "src/wc/**/*.svelte",
+    "src/lib/**/*.ts",
+    "src/lib/**/*.svelte",
+    ".svelte-kit/ambient.d.ts"
+  ],
+  "exclude": ["node_modules"]
+}

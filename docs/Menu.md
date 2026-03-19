@@ -25,14 +25,12 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 
 ## Props
 
-| Prop      | Type                                                                        | Required | Default          | Description                                                                                                                                                                                    |
-| --------- | --------------------------------------------------------------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items     | `MenuItem[]`                                                                | Yes      | `-`              | Array of menu items to display. Each item defines a label, value, and optional icon, disabled, danger, or separator flags. See MenuItem type below.                                            |
-| open      | `boolean`                                                                   | No       | `false`          | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                                           |
-| position  | `MenuPosition = 'bottom-start' \| 'bottom-end' \| 'top-start' \| 'top-end'` | No       | `'bottom-start'` | Where the dropdown appears relative to the trigger element. "bottom-start" aligns to the left below the trigger; "bottom-end" aligns to the right below; "top-start" and "top-end" open above. |
-| maxHeight | `string`                                                                    | No       | `'240px'`        | Maximum height of the dropdown before it scrolls. Accepts any CSS length value (e.g., '300px', '50vh').                                                                                        |
-| testId    | `string`                                                                    | No       | `-`              | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                                         |
-| classes   | `string`                                                                    | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                         |
+| Prop    | Type         | Required | Default | Description                                                                                                                                                            |
+| ------- | ------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items   | `MenuItem[]` | Yes      | `-`     | Array of menu items to display. Each item defines a label, value, and optional icon, disabled, danger, or separator flags. See MenuItem type below.                    |
+| open    | `boolean`    | No       | `false` | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                   |
+| testId  | `string`     | No       | `-`     | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                 |
+| classes | `string`     | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets
 
@@ -67,6 +65,9 @@ Override these custom properties to theme the component.
 | `--menu-border-radius`                      | `6px`                                    | border-radius    | Corner rounding of the dropdown panel.                                 |
 | `--menu-box-shadow`                         | `0px 4px 16px rgba(0, 0, 0, 0.12)`       | box-shadow       | Shadow of the dropdown panel.                                          |
 | `--menu-min-width`                          | `160px`                                  | min-width        | Minimum width of the dropdown panel.                                   |
+| `--menu-max-height`                         | `240px`                                  | max-height       | Maximum height of the dropdown before it scrolls.                      |
+| `--menu-dropdown-top`                       | `100%`                                   | top              | Top position of the dropdown panel relative to its container.          |
+| `--menu-dropdown-left`                      | `0`                                      | left             | Left position of the dropdown panel relative to its container.         |
 | `--menu-padding`                            | `4px 0`                                  | padding          | Inner padding of the dropdown panel.                                   |
 | `--menu-margin`                             | `4px 0`                                  | margin           | Outer margin of the dropdown panel (gap between trigger and dropdown). |
 | `--menu-item-padding`                       | `8px 12px`                               | padding          | Inner padding of each menu item.                                       |
@@ -109,8 +110,26 @@ type MenuItem = {
 };
 ```
 
-### MenuPosition
+## Internal Dependencies
 
-```typescript
-type MenuPosition = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
+This component uses the following library components internally:
+
+- Img (for menu item icon rendering)
+
+## Web Component
+
+Tag: `<sui-menu>`
+
+```html
+<sui-menu position="bottom-start">
+  <button slot="trigger">Open Menu</button>
+</sui-menu>
 ```
+
+### Slots
+
+| Slot Name | Maps to Snippet | Description                               |
+| --------- | --------------- | ----------------------------------------- |
+| `trigger` | `trigger`       | The element that opens the menu on click. |
+
+> **Note:** The `items` prop is an array — set it via JavaScript property.

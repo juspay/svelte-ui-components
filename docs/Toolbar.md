@@ -69,3 +69,25 @@ Override these custom properties to theme the component.
 | `--toolbar-back-button-cursor`            | `pointer`                | cursor          | Cursor style for the back button.                    |
 | `--toolbar-back-image-height`             | `16px`                   | height          | Height of the back button icon image.                |
 | `--toolbar-back-image-width`              | `16px`                   | width           | Width of the back button icon image.                 |
+
+## Web Component
+
+Tag: `<sui-toolbar>`
+
+```html
+<sui-toolbar text="Page Title" show-back-button>
+  <button slot="left-content">Menu</button>
+  <span slot="center-content">Title</span>
+  <button slot="right-content">Settings</button>
+  <div slot="additional-content">Breadcrumbs</div>
+</sui-toolbar>
+```
+
+### Slots
+
+| Slot Name            | Maps to Snippet     | Description                                    |
+| -------------------- | ------------------- | ---------------------------------------------- |
+| `left-content`       | `leftContent`       | Content on the left side of the toolbar.       |
+| `center-content`     | `centerContent`     | Content in the center of the toolbar.          |
+| `right-content`      | `rightContent`      | Content on the right side of the toolbar.      |
+| `additional-content` | `additionalContent` | Additional content below the main toolbar row. |

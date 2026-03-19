@@ -16,8 +16,8 @@ An icon with a numeric/text badge overlay positioned in the top-right corner. Di
 
 | Prop    | Type     | Required | Default | Description                                                                                                                                                                                                                |
 | ------- | -------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| image   | `string` | No       | `-`     | URL of the main icon/image behind the badge.                                                                                                                                                                               |
-| value   | `string` | No       | `-`     | Text displayed inside the badge bubble (e.g., notification count like '3' or '99+').                                                                                                                                       |
+| image   | `string` | Yes      | `-`     | URL of the main icon/image behind the badge.                                                                                                                                                                               |
+| value   | `string` | Yes      | `-`     | Text displayed inside the badge bubble (e.g., notification count like '3' or '99+').                                                                                                                                       |
 | classes | `string` | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
 ## CSS Variables
@@ -47,3 +47,11 @@ Override these custom properties to theme the component.
 | `--badge-object-fit`           | `contain`               | object-fit       | Object-fit of the main icon image.                |
 | `--badge-img-icon-shadow`      | `0 0 0 0.5px #798fa54d` | box-shadow       | Box shadow of the main icon image.                |
 | `--badge-img-background-color` | `-`                     | background-color | Background color behind the main icon image.      |
+
+## Web Component
+
+Tag: `<sui-badge>`
+
+```html
+<sui-badge image="/icon.png" value="3"></sui-badge>
+```

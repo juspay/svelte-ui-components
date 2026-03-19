@@ -41,3 +41,11 @@ Override these custom properties to theme the component.
 | `--icon-text-padding`        | `4px`    | padding        | Padding around the text label.                                             |
 | `--icon-text-direction`      | `column` | flex-direction | Layout direction of the text area.                                         |
 | `--icon-text-font-size`      | `12px`   | font-size      | Font size of the text label.                                               |
+
+## Web Component
+
+Tag: `<sui-icon>`
+
+```html
+<sui-icon icon="<svg>...</svg>"></sui-icon>
+```

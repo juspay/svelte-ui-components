@@ -6,7 +6,6 @@ on:
 
 jobs:
   release:
-
     runs-on: ubuntu-latest
     environment: npm
 
@@ -146,6 +145,9 @@ jobs:
         run: |
           pnpm build
 
+      - name: Build web components
+        run: pnpm run build:wc
+
       - name: Stage and commit changes
         run: |
           # Check if there are any changes to commit
@@ -223,7 +225,18 @@ jobs:
 
             See [CHANGELOG.md](https://github.com/juspay/svelte-ui-components/blob/release/docs/CHANGELOG.md) for detailed changes.
 
+            ### Web Components CDN
+
+            ```html
+            <!-- Latest (GitHub Pages) -->
+            <script type="module" src="https://juspay.github.io/svelte-ui-components/wc/index.js"></script>
+
+            <!-- Pinned to this version (jsDelivr) -->
+            <script type="module" src="https://cdn.jsdelivr.net/gh/juspay/svelte-ui-components@${{ steps.version-bump.outputs.new_version }}/dist-wc/index.js"></script>
+            ```
+
             **Full Changelog**: https://github.com/juspay/svelte-ui-components/commits/release
+          files: dist-wc/index.js
           draft: false
           prerelease: false
         env:

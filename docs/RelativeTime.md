@@ -64,3 +64,13 @@ type RelativeTimeFormat = 'long' | 'short' | 'narrow';
 This component uses the following library components internally:
 
 - Tooltip (when `tooltip` prop is true)
+
+## Web Component
+
+Tag: `<sui-relative-time>`
+
+```html
+<sui-relative-time locale="en-US"></sui-relative-time>
+```
+
+> **Note:** The `date` prop is a Date object — set it via JavaScript property.

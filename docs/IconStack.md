@@ -16,7 +16,7 @@ A horizontal stack of circular icons/avatars with negative margin layering (each
 
 | Prop    | Type              | Required | Default | Description                                                                                                                                                            |
 | ------- | ----------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| icons   | `IconStackItem[]` | No       | `-`     | Array of IconStackItem objects. Each item has a `type` ('image' or 'text') and a `content` string (URL for images, display text for text items).                       |
+| icons   | `IconStackItem[]` | Yes      | `-`     | Array of IconStackItem objects. Each item has a `type` ('image' or 'text') and a `content` string (URL for images, display text for text items).                       |
 | classes | `string`          | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## CSS Variables
@@ -55,3 +55,13 @@ Custom types used by this component's props and events:
 ```typescript
 type IconStackItem = { type: 'image' | 'text'; content: string };
 ```
+
+## Web Component
+
+Tag: `<sui-icon-stack>`
+
+```html
+<sui-icon-stack></sui-icon-stack>
+```
+
+> **Note:** The `icons` prop is an array — set it via JavaScript property.

@@ -1,6 +1,6 @@
 # CheckListItem
 
-A checkbox list item with an HTML-capable text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet to replace the default text display. The checked state is bindable for two-way binding.
+A checkbox list item with a text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet to replace the default text display. The checked state is bindable for two-way binding.
 
 ## Usage
 
@@ -14,11 +14,13 @@ A checkbox list item with an HTML-capable text label. When clicked, toggles the 
 
 ## Props
 
-| Prop    | Type      | Required | Default | Description                                                                                                                                                            |
-| ------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text    | `string`  | Yes      | `-`     | The label text for the checkbox item. Supports HTML (rendered via {@html}).                                                                                            |
-| checked | `boolean` | No       | `false` | Bindable. The current checked state of the checkbox.                                                                                                                   |
-| classes | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop     | Type      | Required | Default     | Description                                                                                                                                                            |
+| -------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text     | `string`  | Yes      | `-`         | The label text for the checkbox item.                                                                                                                                  |
+| checked  | `boolean` | No       | `false`     | Bindable. The current checked state of the checkbox.                                                                                                                   |
+| disabled | `boolean` | No       | `false`     | When true, the checkbox item is non-interactive and visually dimmed.                                                                                                   |
+| testId   | `string`  | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
+| classes  | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets
 
@@ -38,21 +40,37 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                                | Default           | CSS Property  | Description                                                   |
-| --------------------------------------- | ----------------- | ------------- | ------------------------------------------------------------- |
-| `--check-list-item-display`             | `flex`            | display       | Display mode of the checkbox item container.                  |
-| `--check-list-item-align-items`         | `center`          | align-items   | Vertical alignment of checkbox and label.                     |
-| `--check-list-item-width`               | `100%`            | width         | Width of the checkbox item.                                   |
-| `--check-list-item-padding`             | `-`               | padding       | Inner padding of the checkbox item.                           |
-| `--check-list-item-margin`              | `0px 0px 0px 8px` | margin        | Margin of the label text.                                     |
-| `--check-list-item-text-size`           | `12px`            | font-size     | Font size of the label text.                                  |
-| `--check-list-item-text-color`          | `-`               | color         | Color of the label text when unchecked.                       |
-| `--check-list-item-checked-text-color`  | `-`               | color         | Color of the label text when checked.                         |
-| `--check-list-item-checked-font-weight` | `-`               | font-weight   | Font weight of the label text when checked.                   |
-| `--checkbox-accent-color`               | `#000`            | accent-color  | Accent color of the checkbox (browser-native checkbox color). |
-| `--checkbox-height`                     | `24px`            | height        | Height of the checkbox.                                       |
-| `--checkbox-width`                      | `24px`            | width         | Width of the checkbox.                                        |
-| `--checkbox-margin`                     | `-`               | margin        | Margin around the checkbox.                                   |
-| `--checkbox-padding`                    | `-`               | padding       | Padding inside the checkbox.                                  |
-| `--checkbox-border-radius`              | `-`               | border-radius | Corner rounding of the checkbox.                              |
-| `--checkbox-visibility`                 | `-`               | visibility    | Visibility of the checkbox (hidden to use custom checkbox).   |
+| Variable                                | Default  | CSS Property | Description                                  |
+| --------------------------------------- | -------- | ------------ | -------------------------------------------- |
+| `--check-list-item-display`             | `flex`   | display      | Display mode of the checkbox item container. |
+| `--check-list-item-align-items`         | `center` | align-items  | Vertical alignment of checkbox and label.    |
+| `--check-list-item-width`               | `100%`   | width        | Width of the checkbox item.                  |
+| `--check-list-item-padding`             | `-`      | padding      | Inner padding of the checkbox item.          |
+| `--check-list-item-gap`                 | `8px`    | gap          | Gap between the checkbox and the label.      |
+| `--check-list-item-disabled-opacity`    | `0.4`    | opacity      | Opacity of the entire item when disabled.    |
+| `--check-list-item-text-size`           | `14px`   | font-size    | Font size of the label text.                 |
+| `--check-list-item-text-color`          | `-`      | color        | Color of the label text when unchecked.      |
+| `--check-list-item-checked-text-color`  | `-`      | color        | Color of the label text when checked.        |
+| `--check-list-item-checked-font-weight` | `-`      | font-weight  | Font weight of the label text when checked.  |
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Checkbox (for the checkbox control)
+
+## Web Component
+
+Tag: `<sui-check-list-item>`
+
+```html
+<sui-check-list-item text="Task 1" checked>
+  <span slot="checkbox-label">Custom label</span>
+</sui-check-list-item>
+```
+
+### Slots
+
+| Slot Name        | Maps to Snippet | Description                            |
+| ---------------- | --------------- | -------------------------------------- |
+| `checkbox-label` | `checkboxLabel` | Custom label content for the checkbox. |

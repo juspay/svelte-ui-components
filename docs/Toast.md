@@ -18,7 +18,7 @@ An animated notification that slides in from a configurable direction, stays vis
 | -------------------- | ------------------------------------------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | duration             | `number`                                                                                    | No       | `2000`  | Time in milliseconds the toast stays visible before automatically hiding.                                                                                              |
 | leftIcon             | `string \| null`                                                                            | No       | `-`     | URL of an icon displayed on the left side of the toast (e.g., a status icon).                                                                                          |
-| message              | `string`                                                                                    | No       | `''`    | The main toast notification text.                                                                                                                                      |
+| message              | `string`                                                                                    | Yes      | `''`    | The main toast notification text.                                                                                                                                      |
 | subtext              | `string \| null`                                                                            | No       | `-`     | Optional secondary text displayed below the main message in smaller font.                                                                                              |
 | rightIcon            | `string \| null`                                                                            | No       | `-`     | URL of an icon displayed on the right side. Acts as a close button — clicking it hides the toast immediately.                                                          |
 | type                 | `ToastType \| null`                                                                         | No       | `-`     | Visual variant that sets the background color: 'success' (green), 'error' (red), 'info' (light blue), 'warn' (orange).                                                 |
@@ -56,13 +56,13 @@ Override these custom properties to theme the component.
 | -------------------------------------- | --------------------------------------- | ---------------- | ----------------------------------------------------------------------- |
 | `--toast-padding`                      | `10px`                                  | padding          | Padding inside the toast container.                                     |
 | `--toast-font-size`                    | `14px`                                  | font-size        | Font size of the toast text.                                            |
-| `--toast-font-family`                  | `-`                                     | font-family      | Font family of the toast text.                                          |
+| `--toast-font-family`                  | `inherit`                               | font-family      | Font family of the toast text.                                          |
 | `--toast-font-weight`                  | `-`                                     | font-weight      | Font weight of the toast text.                                          |
-| `--toast-height`                       | `auto`                                  | height           | Height of the toast container.                                          |
+| `--toast-height`                       | `fit-content`                           | height           | Height of the toast container.                                          |
 | `--toast-border-radius`                | `0px`                                   | border-radius    | Corner rounding of the toast.                                           |
 | `--toast-border`                       | `none`                                  | border           | Border of the toast.                                                    |
 | `--toast-border-style`                 | `-`                                     | border-style     |                                                                         |
-| `--toast-width`                        | `auto`                                  | width            | Width of the toast container.                                           |
+| `--toast-width`                        | `fit-content`                           | width            | Width of the toast container.                                           |
 | `--toast-align-items`                  | `center`                                | align-items      | Vertical alignment of content inside the toast.                         |
 | `--toast-margin`                       | `0px 10px 10px 10px`                    | margin           | Outer margin of the toast.                                              |
 | `--toast-justify-content`              | `space-between`                         | justify-content  | Horizontal alignment of content inside the toast.                       |
@@ -80,7 +80,7 @@ Override these custom properties to theme the component.
 | `--toast-icon-margin`                  | `0px 6px 0px 0px`                       | margin           | Margin around the left icon.                                            |
 | `--toast-icon-wrapper-padding`         | `1px`                                   | padding          |                                                                         |
 | `--toast-icon-height`                  | `100%`                                  | height           | Height of the toast icons.                                              |
-| `--toast-icon-filter`                  | `-`                                     | filter           | CSS filter applied to the toast icons.                                  |
+| `--toast-icon-filter`                  | `none`                                  | filter           | CSS filter applied to the toast icons.                                  |
 | `--toast-icon-border-radius`           | `50%`                                   | border-radius    | Corner rounding of the toast icons.                                     |
 | `--toast-message-display`              | `flex`                                  | display          |                                                                         |
 | `--toast-message-flex`                 | `1`                                     | flex             |                                                                         |
@@ -126,3 +126,19 @@ type ToastType = 'success' | 'error' | 'info' | 'warn';
 ```typescript
 type ToastDirection = 'left-to-right' | 'right-to-left' | 'top-to-bottom' | 'bottom-to-top';
 ```
+
+## Web Component
+
+Tag: `<sui-toast>`
+
+```html
+<sui-toast message="Saved!" type="success" duration="3000">
+  <a slot="bottom-content" href="/undo">Undo</a>
+</sui-toast>
+```
+
+### Slots
+
+| Slot Name        | Maps to Snippet | Description                               |
+| ---------------- | --------------- | ----------------------------------------- |
+| `bottom-content` | `bottomContent` | Content rendered below the toast message. |

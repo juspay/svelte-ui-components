@@ -10,6 +10,8 @@
       showPageIndicator: { type: 'Boolean', reflect: true },
       enableSwipe: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
+      previousIcon: { type: 'Object' },
+      nextIcon: { type: 'Object' },
       classes: { type: 'String' },
       onpagechange: { type: 'Object' }
     }
@@ -21,4 +23,11 @@
   let props = $props();
 </script>
 
-<Book {...props} />
+<Book {...props}>
+  {#snippet previousIcon()}
+    <slot name="previous-icon"></slot>
+  {/snippet}
+  {#snippet nextIcon()}
+    <slot name="next-icon"></slot>
+  {/snippet}
+</Book>

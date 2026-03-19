@@ -85,4 +85,11 @@ Tag: `<sui-tabs>`
 <sui-tabs active-index="0"></sui-tabs>
 ```
 
+### Slots
+
+| Slot Name           | Maps to Snippet   | Description                             |
+| ------------------- | ----------------- | --------------------------------------- |
+| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.  |
+| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow. |
+
 > **Note:** The `items` prop is an array — set it via JavaScript property.

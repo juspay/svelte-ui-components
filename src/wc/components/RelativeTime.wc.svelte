@@ -5,8 +5,9 @@
     props: {
       date: { type: 'Object' },
       locale: { type: 'String', reflect: true },
-      interval: { type: 'Number', reflect: true },
-      showTooltip: { type: 'Boolean', reflect: true },
+      format: { type: 'String', reflect: true },
+      updateInterval: { type: 'Number', reflect: true },
+      tooltip: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
       classes: { type: 'String' }
     }

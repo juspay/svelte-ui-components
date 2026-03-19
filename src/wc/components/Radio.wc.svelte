@@ -3,12 +3,14 @@
     tag: 'sui-radio',
     shadow: 'open',
     props: {
+      name: { type: 'String', reflect: true },
+      value: { type: 'String', reflect: true },
+      selectedValue: { type: 'String', reflect: true },
       text: { type: 'String', reflect: true },
-      checked: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
       classes: { type: 'String' },
-      onclick: { type: 'Object' }
+      onchange: { type: 'Object' }
     }
   }}
 />

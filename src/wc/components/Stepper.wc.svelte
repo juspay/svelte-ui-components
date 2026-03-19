@@ -5,9 +5,8 @@
     props: {
       steps: { type: 'Object' },
       currentStepIndex: { type: 'Number', reflect: true },
-      testId: { type: 'String' },
       classes: { type: 'String' },
-      onclick: { type: 'Object' }
+      onhandleStepClick: { type: 'Object' }
     }
   }}
 />

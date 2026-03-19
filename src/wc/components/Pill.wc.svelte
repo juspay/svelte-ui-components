@@ -7,6 +7,7 @@
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
+      dismissIcon: { type: 'Object' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       ondismiss: { type: 'Object' }
@@ -19,4 +20,8 @@
   let props = $props();
 </script>
 
-<Pill {...props} />
+<Pill {...props}>
+  {#snippet dismissIcon()}
+    <slot name="dismiss-icon"></slot>
+  {/snippet}
+</Pill>

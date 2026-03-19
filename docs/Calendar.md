@@ -118,4 +118,11 @@ Tag: `<sui-calendar>`
 <sui-calendar mode="single" locale="en-US"></sui-calendar>
 ```
 
+### Slots
+
+| Slot Name             | Maps to Snippet     | Description                                |
+| --------------------- | ------------------- | ------------------------------------------ |
+| `previous-month-icon` | `previousMonthIcon` | Custom icon for the previous month button. |
+| `next-month-icon`     | `nextMonthIcon`     | Custom icon for the next month button.     |
+
 > **Note:** `value`, `rangeStart`, `rangeEnd`, `minDate`, `maxDate`, and `disabledDates` are object props — set them via JavaScript properties.

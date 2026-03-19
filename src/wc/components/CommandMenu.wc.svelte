@@ -8,6 +8,7 @@
       placeholder: { type: 'String', reflect: true },
       emptyText: { type: 'String', reflect: true },
       testId: { type: 'String' },
+      searchIcon: { type: 'Object' },
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onclose: { type: 'Object' }
@@ -20,4 +21,8 @@
   let props = $props();
 </script>
 
-<CommandMenu {...props} />
+<CommandMenu {...props}>
+  {#snippet searchIcon()}
+    <slot name="search-icon"></slot>
+  {/snippet}
+</CommandMenu>

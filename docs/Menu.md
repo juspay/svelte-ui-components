@@ -121,7 +121,7 @@ This component uses the following library components internally:
 Tag: `<sui-menu>`
 
 ```html
-<sui-menu position="bottom-start">
+<sui-menu>
   <button slot="trigger">Open Menu</button>
 </sui-menu>
 ```

@@ -3,9 +3,8 @@
     tag: 'sui-loading-dots',
     shadow: 'open',
     props: {
-      size: { type: 'String', reflect: true },
+      dots: { type: 'Number', reflect: true },
       animation: { type: 'String', reflect: true },
-      duration: { type: 'Number', reflect: true },
       testId: { type: 'String' },
       classes: { type: 'String' }
     }

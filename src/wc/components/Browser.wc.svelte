@@ -11,6 +11,7 @@
       shadow: { type: 'Boolean', reflect: true },
       rounded: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
+      lockIcon: { type: 'Object' },
       classes: { type: 'String' }
     }
   }}
@@ -24,5 +25,8 @@
 <Browser {...props}>
   {#snippet children()}
     <slot></slot>
+  {/snippet}
+  {#snippet lockIcon()}
+    <slot name="lock-icon"></slot>
   {/snippet}
 </Browser>

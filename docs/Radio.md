@@ -70,5 +70,6 @@ Override these custom properties to theme the component.
 Tag: `<sui-radio>`
 
 ```html
-<sui-radio text="Option A" checked></sui-radio>
+<sui-radio name="color" value="red" text="Red"></sui-radio>
+<sui-radio name="color" value="blue" text="Blue"></sui-radio>
 ```

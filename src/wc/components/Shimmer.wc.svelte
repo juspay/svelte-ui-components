@@ -3,7 +3,8 @@
     tag: 'sui-shimmer',
     shadow: 'open',
     props: {
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String' }
     }
   }}
 />

@@ -70,7 +70,7 @@ Override these custom properties to theme the component.
 Tag: `<sui-phone>`
 
 ```html
-<sui-phone variant="iphone-14" color="black">
+<sui-phone variant="modern">
   <div>Screen content</div>
 </sui-phone>
 ```

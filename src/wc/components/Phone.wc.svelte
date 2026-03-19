@@ -4,12 +4,8 @@
     shadow: 'open',
     props: {
       variant: { type: 'String', reflect: true },
-      color: { type: 'String', reflect: true },
-      shadow: { type: 'Boolean', reflect: true },
       showStatusBar: { type: 'Boolean', reflect: true },
       showHomeBar: { type: 'Boolean', reflect: true },
-      orientation: { type: 'String', reflect: true },
-      scale: { type: 'Number', reflect: true },
       testId: { type: 'String' },
       classes: { type: 'String' }
     }

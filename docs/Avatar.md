@@ -76,5 +76,5 @@ This component uses the following library components internally:
 Tag: `<sui-avatar>`
 
 ```html
-<sui-avatar src="/photo.jpg" alt="User" size="40"></sui-avatar>
+<sui-avatar src="/photo.jpg" alt="User" size="medium"></sui-avatar>
 ```

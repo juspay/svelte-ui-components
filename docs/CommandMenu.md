@@ -199,4 +199,10 @@ Tag: `<sui-command-menu>`
 <sui-command-menu open placeholder="Type a command..."></sui-command-menu>
 ```
 
+### Slots
+
+| Slot Name     | Maps to Snippet | Description                       |
+| ------------- | --------------- | --------------------------------- |
+| `search-icon` | `searchIcon`    | Custom icon for the search input. |
+
 > **Note:** The `items` prop is an array and `itemIcon` is a parameterized Snippet — set them via JavaScript properties.

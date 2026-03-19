@@ -2,15 +2,37 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.11.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.12.0)
 
-- modernized defaults: row separators, rounded corners, 100% width, clean header styling (replaces beige/grid borders)
-- added cell snippet for custom rendering (Pills, links, badges), empty state snippet, row click (onRowClick), and sort event (onSort)
-- added stickyHeader prop, sortable/sortableColumns controls, testId, and caption for accessibility
-- replaced inline SVG sort icons with asset imports, raw &lt;button&gt; with Button component per guidelines
-- fixed inverted sort indicators, duplicate-header keying bug, wasteful sort state, incorrect role="grid"
-- removed columnWidths prop in favor of CSS nth-child pattern; removed negative margins
-- updated docs, demo page, and rebuilt MCP server
+Web Components:
+- Add 50 &lt;sui-*&gt; custom elements compiled via separate Vite build (vite.config.wc.ts)
+- Each wrapper maps Svelte 5 Snippet props to Shadow DOM &lt;slot&gt; elements
+- Explicit prop declarations for HTML attribute reflection on all wrappers
+- CDN delivery via GitHub Pages (latest) and jsDelivr release assets (versioned)
+- Separate tsconfig.wc.json and check:wc script for WC-specific type checking
+Build & CI:
+- Add build:wc script (not chained to main build — CI only)
+- Update pages.yml to include dist-wc/index.js in GitHub Pages deployment
+- Update release.yml to attach WC bundle as release asset with CDN usage in release notes
+- Remove WC exports from package.json (CDN-only, not shipped via npm)
+Tooling:
+- Add tsconfig.wc.json with vite/client types for ?raw import support
+- Exclude src/wc/ from main tsconfig and eslint (separate compilation context)
+- Fix 8 pre-existing unused CSS warnings in table demo page
+Docs — full audit and sync of all 50 component markdown files:
+- Rewrite Select.md and ThemeSwitcher.md from scratch (APIs had completely changed)
+- Fix wrong/missing props in 12 components (Choicebox, CheckListItem, Calendar, KeyboardInput, LoadingDots, Phone, Menu, Loader, Tabs, Gauge, Book, Checkbox)
+- Fix wrong required flags in 7 components (Badge, BrandLoader, IconStack, Status, Stepper, Toast, Toggle)
+- Fix wrong/missing CSS variable defaults across 15 components
+- Remove 24 ghost CSS variables from Pagination and 17 from Choicebox
+- Add 17 missing Step sub-component CSS variables to Stepper
+- Add missing snippets to 7 components (CommandMenu, Pill, Browser, Book, Checkbox, Tabs, Calendar)
+- Add missing events (Img onerror) and Internal Dependencies sections to 8 components
+- Fix broken CSS variable defaults (missing closing parens) in Img, InputButton, ListItem, BrandLoader
+- Add Web Component section to all 50 docs with tag names, HTML usage, and slot tables
+- Rebuild MCP server with updated docs
+
+## [2.12.0](https://github.com/juspay/svelte-ui-components/compare/2.12.0..2.11.0) - 16 March 2026
 
 ## [2.11.0](https://github.com/juspay/svelte-ui-components/compare/2.11.0..2.10.0) - 2 March 2026
 

@@ -5,8 +5,6 @@
     props: {
       items: { type: 'Object' },
       open: { type: 'Boolean', reflect: true },
-      position: { type: 'String', reflect: true },
-      maxHeight: { type: 'String', reflect: true },
       testId: { type: 'String' },
       classes: { type: 'String' },
       onselect: { type: 'Object' },

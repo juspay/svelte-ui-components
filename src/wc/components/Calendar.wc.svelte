@@ -13,6 +13,8 @@
       weekStartsOn: { type: 'Number', reflect: true },
       locale: { type: 'String', reflect: true },
       testId: { type: 'String' },
+      previousMonthIcon: { type: 'Object' },
+      nextMonthIcon: { type: 'Object' },
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onrangeselect: { type: 'Object' },
@@ -26,4 +28,11 @@
   let props = $props();
 </script>
 
-<Calendar {...props} />
+<Calendar {...props}>
+  {#snippet previousMonthIcon()}
+    <slot name="previous-month-icon"></slot>
+  {/snippet}
+  {#snippet nextMonthIcon()}
+    <slot name="next-month-icon"></slot>
+  {/snippet}
+</Calendar>

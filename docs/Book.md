@@ -101,4 +101,11 @@ Tag: `<sui-book>`
 <sui-book show-navigation show-page-indicator></sui-book>
 ```
 
+### Slots
+
+| Slot Name       | Maps to Snippet | Description                               |
+| --------------- | --------------- | ----------------------------------------- |
+| `previous-icon` | `previousIcon`  | Custom icon for the previous page button. |
+| `next-icon`     | `nextIcon`      | Custom icon for the next page button.     |
+
 > **Note:** The `pages` prop is an array of objects with Snippet content — set it via JavaScript property, not HTML attribute.

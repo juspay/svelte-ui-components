@@ -7,6 +7,8 @@
       activeIndex: { type: 'Number', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
+      scrollLeftIcon: { type: 'Object' },
+      scrollRightIcon: { type: 'Object' },
       classes: { type: 'String' },
       onchange: { type: 'Object' }
     }
@@ -18,4 +20,11 @@
   let props = $props();
 </script>
 
-<Tabs {...props} />
+<Tabs {...props}>
+  {#snippet scrollLeftIcon()}
+    <slot name="scroll-left-icon"></slot>
+  {/snippet}
+  {#snippet scrollRightIcon()}
+    <slot name="scroll-right-icon"></slot>
+  {/snippet}
+</Tabs>

@@ -41,5 +41,5 @@ Override these custom properties to theme the component.
 Tag: `<sui-loading-dots>`
 
 ```html
-<sui-loading-dots size="md" animation="bounce"></sui-loading-dots>
+<sui-loading-dots dots="3" animation="bounce"></sui-loading-dots>
 ```

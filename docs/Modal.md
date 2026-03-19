@@ -199,7 +199,7 @@ This component uses the following library components internally:
 Tag: `<sui-modal>`
 
 ```html
-<sui-modal size="md" show-overlay>
+<sui-modal size="medium" show-overlay>
   <p>Modal body content</p>
   <div slot="footer">
     <button>Cancel</button>

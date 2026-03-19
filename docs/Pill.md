@@ -114,3 +114,9 @@ Tag: `<sui-pill>`
 ```html
 <sui-pill text="Active" dismissible></sui-pill>
 ```
+
+### Slots
+
+| Slot Name      | Maps to Snippet | Description                               |
+| -------------- | --------------- | ----------------------------------------- |
+| `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button. |

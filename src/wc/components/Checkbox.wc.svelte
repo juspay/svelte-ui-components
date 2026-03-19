@@ -8,6 +8,8 @@
       disabled: { type: 'Boolean', reflect: true },
       indeterminate: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
+      checkedIcon: { type: 'Object' },
+      indeterminateIcon: { type: 'Object' },
       classes: { type: 'String' },
       onclick: { type: 'Object' }
     }
@@ -19,4 +21,11 @@
   let props = $props();
 </script>
 
-<Checkbox {...props} />
+<Checkbox {...props}>
+  {#snippet checkedIcon()}
+    <slot name="checked-icon"></slot>
+  {/snippet}
+  {#snippet indeterminateIcon()}
+    <slot name="indeterminate-icon"></slot>
+  {/snippet}
+</Checkbox>

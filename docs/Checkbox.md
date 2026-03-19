@@ -75,3 +75,10 @@ Tag: `<sui-checkbox>`
 ```html
 <sui-checkbox text="Accept terms" checked></sui-checkbox>
 ```
+
+### Slots
+
+| Slot Name            | Maps to Snippet     | Description                              |
+| -------------------- | ------------------- | ---------------------------------------- |
+| `checked-icon`       | `checkedIcon`       | Custom icon for the checked state.       |
+| `indeterminate-icon` | `indeterminateIcon` | Custom icon for the indeterminate state. |

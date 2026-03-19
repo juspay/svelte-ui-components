@@ -5,7 +5,9 @@
     props: {
       text: { type: 'String', reflect: true },
       checked: { type: 'Boolean', reflect: true },
+      disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
+      testId: { type: 'String' },
       onclick: { type: 'Object' }
     }
   }}

@@ -6,7 +6,8 @@
       src: { type: 'String', reflect: true },
       alt: { type: 'String', reflect: true },
       fallback: { type: 'String', reflect: true },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      onerror: { type: 'Object' }
     }
   }}
 />

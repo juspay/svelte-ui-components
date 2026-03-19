@@ -42,5 +42,5 @@ Override these custom properties to theme the component.
 Tag: `<sui-gauge>`
 
 ```html
-<sui-gauge value="75" size="120" show-label></sui-gauge>
+<sui-gauge value="75" show-label></sui-gauge>
 ```

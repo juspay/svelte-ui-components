@@ -3,9 +3,7 @@
     tag: 'sui-choicebox',
     shadow: 'open',
     props: {
-      text: { type: 'String', reflect: true },
       selected: { type: 'Boolean', reflect: true },
-      description: { type: 'String', reflect: true },
       mode: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String' },
@@ -21,7 +19,7 @@
 </script>
 
 <Choicebox {...props}>
-  {#snippet icon()}
-    <slot name="icon"></slot>
+  {#snippet children()}
+    <slot></slot>
   {/snippet}
 </Choicebox>

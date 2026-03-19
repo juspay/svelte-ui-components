@@ -98,7 +98,7 @@ type KeyboardInputEventProperties = {
 Tag: `<sui-keyboard-input>`
 
 ```html
-<sui-keyboard-input separator="+" size="sm"></sui-keyboard-input>
+<sui-keyboard-input separator="+"></sui-keyboard-input>
 ```
 
 > **Note:** The `keys` prop is an array — set it via JavaScript property.

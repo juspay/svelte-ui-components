@@ -68,3 +68,19 @@ Custom types used by this component's props and events:
 ```typescript
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 ```
+
+## Web Component
+
+Tag: `<sui-tooltip>`
+
+```html
+<sui-tooltip text="More info" position="top">
+  <button>Hover me</button>
+</sui-tooltip>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                          |
+| ----------- | --------------- | ---------------------------------------------------- |
+| _(default)_ | `children`      | The trigger element that shows the tooltip on hover. |

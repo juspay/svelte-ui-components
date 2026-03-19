@@ -111,3 +111,23 @@ type SheetSide = 'left' | 'right' | 'top' | 'bottom';
 This component uses the following library components internally:
 
 - Button (for the close button)
+
+## Web Component
+
+Tag: `<sui-sheet>`
+
+```html
+<sui-sheet open side="right" title="Settings">
+  <p>Sheet body content</p>
+  <div slot="footer">
+    <button>Save</button>
+  </div>
+</sui-sheet>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                           |
+| ----------- | --------------- | ------------------------------------- |
+| _(default)_ | `content`       | The main body content of the sheet.   |
+| `footer`    | `footer`        | Content rendered in the sheet footer. |

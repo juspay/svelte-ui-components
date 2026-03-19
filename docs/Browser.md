@@ -35,6 +35,7 @@ Svelte 5 Snippet props -- pass content blocks to the component.
 | Snippet  | Type      | Description                                                                                                 |
 | -------- | --------- | ----------------------------------------------------------------------------------------------------------- |
 | children | `Snippet` | The content rendered inside the browser viewport area. Accepts any markup such as images, iframes, or HTML. |
+| lockIcon | `Snippet` | Custom icon for the address bar lock indicator.                                                             |
 
 ## CSS Variables
 
@@ -79,3 +80,20 @@ Override these custom properties to theme the component.
 ```typescript
 type BrowserVariant = 'light' | 'dark';
 ```
+
+## Web Component
+
+Tag: `<sui-browser>`
+
+```html
+<sui-browser url="https://example.com" title="Demo" variant="light">
+  <div>Page content here</div>
+</sui-browser>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                     |
+| ----------- | --------------- | ----------------------------------------------- |
+| _(default)_ | `children`      | Content rendered inside the browser viewport.   |
+| `lock-icon` | `lockIcon`      | Custom icon for the address bar lock indicator. |

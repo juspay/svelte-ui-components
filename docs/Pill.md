@@ -60,6 +60,14 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 | testId      | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                |
 | classes     | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet     | Type      | Description                               |
+| ----------- | --------- | ----------------------------------------- |
+| dismissIcon | `Snippet` | Custom icon for the dismiss/close button. |
+
 ## Events
 
 | Event     | Type                          | Description                                                                                                                                                                          |
@@ -92,3 +100,17 @@ Override these custom properties to theme the component.
 | `--pill-dismiss-size`        | `14px`                                    | width, height    | Size of the dismiss button icon (X).                                      |
 | `--pill-dismiss-color`       | `currentColor`                            | color            | Color of the dismiss button icon.                                         |
 | `--pill-dismiss-hover-color` | `var(--pill-dismiss-color, currentColor)` | color            | Color of the dismiss button icon on hover.                                |
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Button (for the pill container and dismiss action)
+
+## Web Component
+
+Tag: `<sui-pill>`
+
+```html
+<sui-pill text="Active" dismissible></sui-pill>
+```

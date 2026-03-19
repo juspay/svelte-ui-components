@@ -54,98 +54,99 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                                               | Default            | CSS Property                    | Description                                                        |
-| ------------------------------------------------------ | ------------------ | ------------------------------- | ------------------------------------------------------------------ |
-| `--modal-width`                                        | `100vw`            | width                           | Width of the modal overlay container.                              |
-| `--modal-height`                                       | `100vh`            | height                          | Height of the modal overlay container.                             |
-| `--modal-z-index`                                      | `15`               | z-index                         | Z-index stacking order of the modal overlay.                       |
-| `--modal-margin`                                       | `-`                | margin                          | Outer margin of the modal overlay.                                 |
-| `--background-color`                                   | `#00000066`        | background-color                | Background color of the semi-transparent overlay behind the modal. |
-| `--modal-content-background-color`                     | `#ffffff`          | background-color                | Background color of the modal content panel.                       |
-| `--modal-border-radius`                                | `0px`              | border-radius                   | Corner rounding of the modal content panel.                        |
-| `--modal-content-overflow`                             | `auto`             | overflow                        | Overflow behavior of the modal content panel.                      |
-| `--modal-content-border-top`                           | `-`                | border-top                      | Top border of the modal content panel.                             |
-| `--modal-display`                                      | `flex`             | display                         | Display property of the scrollable content area.                   |
-| `--modal-overflow-y`                                   | `scroll`           | overflow-y                      | Vertical overflow behavior of the content area.                    |
-| `--modal-scrollbar-width`                              | `none`             | scrollbar-width                 | Scrollbar width for the content area (set 'none' to hide).         |
-| `--modal-center-justify-content`                       | `center`           | justify-content                 | Vertical positioning of the modal when align='center'.             |
-| `--modal-center-align-items`                           | `center`           | align-items                     | Horizontal positioning of the modal when align='center'.           |
-| `--modal-bottom-justify-content`                       | `flex-end`         | justify-content                 | Vertical positioning of the modal when align='bottom'.             |
-| `--modal-bottom-align-items`                           | `-`                | align-items                     | Horizontal positioning of the modal when align='bottom'.           |
-| `--modal-top-justify-content`                          | `flex-start`       | justify-content                 | Vertical positioning of the modal when align='top'.                |
-| `--modal-top-align-items`                              | `-`                | align-items                     | Horizontal positioning of the modal when align='top'.              |
-| `--modal-small-height`                                 | `20vh`             | height                          | Height of the modal content when size='small'.                     |
-| `--modal-small-width`                                  | `-`                | width                           | Width of the modal content when size='small'.                      |
-| `--modal-medium-height`                                | `50vh`             | height                          | Height of the modal content when size='medium'.                    |
-| `--modal-medium-width`                                 | `-`                | width                           | Width of the modal content when size='medium'.                     |
-| `--modal-large-height`                                 | `80vh`             | height                          | Height of the modal content when size='large'.                     |
-| `--modal-large-width`                                  | `-`                | width                           | Width of the modal content when size='large'.                      |
-| `--modal-fit-content-max-height`                       | `80vh`             | max-height                      | Maximum height of the modal when size='fit-content'.               |
-| `--modal-header-background-color`                      | `#f6f7f9`          | background-color                | Background color of the modal header bar.                          |
-| `--modal-header-padding`                               | `18px 20px`        | padding                         | Padding inside the header bar.                                     |
-| `--modal-header-border-radius`                         | `0px`              | border-radius                   | Corner rounding of the header bar.                                 |
-| `--modal-header-border-bottom`                         | `none`             | border-bottom                   | Bottom border of the header bar.                                   |
-| `--modal-footer-background-color`                      | `#f6f7f9`          | background-color                | Background color of the footer area.                               |
-| `--modal-footer-padding`                               | `18px 20px`        | padding                         | Padding inside the footer area.                                    |
-| `--modal-footer-border-radius`                         | `0px`              | border-radius                   | Corner rounding of the footer area.                                |
-| `--modal-footer-border-top`                            | `none`             | border-top                      | Top border of the footer area.                                     |
-| `--modal-footer-justify-content`                       | `none`             | justify-content                 | Horizontal alignment of footer content.                            |
-| `--modal-footer-gap`                                   | `0px`              | gap                             | Gap between primary and secondary footer buttons.                  |
-| `--modal-footer-action-buttons-width`                  | `auto`             | width                           | Width of the footer action buttons container.                      |
-| `--modal-footer-secondary-button-max-height`           | `-`                | --button-max-height             |                                                                    |
-| `--modal-footer-secondary-button-max-width`            | `-`                | --button-max-width              |                                                                    |
-| `--modal-footer-secondary-button-font-family`          | `-`                | --button-font-family            | Font family of the secondary footer button.                        |
-| `--modal-footer-secondary-button-font-weight`          | `500`              | --button-font-weight            | Font weight of the secondary footer button.                        |
-| `--modal-footer-secondary-button-font-size`            | `14px`             | --button-font-size              | Font size of the secondary footer button.                          |
-| `--modal-footer-secondary-button-color`                | `#3a4550`          | --button-color                  | Background color of the secondary footer button.                   |
-| `--modal-footer-secondary-button-text-color`           | `white`            | --button-text-color             | Text color of the secondary footer button.                         |
-| `--modal-footer-secondary-button-height`               | `fit-content`      | --button-height                 | Height of the secondary footer button.                             |
-| `--modal-footer-secondary-button-padding`              | `16px`             | --button-padding                | Padding inside the secondary footer button.                        |
-| `--modal-footer-secondary-button-margin`               | `-`                | --button-margin                 | Margin around the secondary footer button.                         |
-| `--modal-footer-secondary-button-border-radius`        | `0px`              | --button-border-radius          | Corner rounding of the secondary footer button.                    |
-| `--modal-footer-secondary-button-width`                | `fit-content`      | --button-width                  | Width of the secondary footer button.                              |
-| `--modal-footer-secondary-button-cursor`               | `pointer`          | --cursor                        |                                                                    |
-| `--modal-footer-secondary-button-opacity`              | `1`                | --opacity                       |                                                                    |
-| `--modal-footer-secondary-button-border`               | `none`             | --button-border                 | Border of the secondary footer button.                             |
-| `--modal-footer-secondary-button-justify-content`      | `center`           | --button-justify-content        |                                                                    |
-| `--modal-footer-secondary-button-content-gap`          | `16px`             | --button-content-gap            |                                                                    |
-| `--modal-footer-secondary-button-visibility`           | `visible`          | --button-visibility             |                                                                    |
-| `--modal-footer-secondary-button-box-shadow`           | `none`             | --button-box-shadow             | Box shadow of the secondary footer button.                         |
-| `--modal-secondary-button-order`                       | `none`             | order                           | Flex order of the secondary footer button.                         |
-| `--modal-footer-secondary-button-flex-value`           | `none`             | flex                            | Flex value of the secondary footer button.                         |
-| `--modal-footer-primary-button-max-height`             | `-`                | --button-max-height             |                                                                    |
-| `--modal-footer-primary-button-max-width`              | `-`                | --button-max-width              |                                                                    |
-| `--modal-footer-primary-button-font-family`            | `-`                | --button-font-family            | Font family of the primary footer button.                          |
-| `--modal-footer-primary-button-font-weight`            | `500`              | --button-font-weight            | Font weight of the primary footer button.                          |
-| `--modal-footer-primary-button-font-size`              | `14px`             | --button-font-size              | Font size of the primary footer button.                            |
-| `--modal-footer-primary-button-color`                  | `#3a4550`          | --button-color                  | Background color of the primary footer button.                     |
-| `--modal-footer-primary-button-text-color`             | `white`            | --button-text-color             | Text color of the primary footer button.                           |
-| `--modal-footer-primary-button-height`                 | `fit-content`      | --button-height                 | Height of the primary footer button.                               |
-| `--modal-footer-primary-button-padding`                | `16px`             | --button-padding                | Padding inside the primary footer button.                          |
-| `--modal-footer-primary-button-margin`                 | `-`                | --button-margin                 | Margin around the primary footer button.                           |
-| `--modal-footer-primary-button-border-radius`          | `0px`              | --button-border-radius          | Corner rounding of the primary footer button.                      |
-| `--modal-footer-primary-button-width`                  | `fit-content`      | --button-width                  | Width of the primary footer button.                                |
-| `--modal-footer-primary-button-cursor`                 | `pointer`          | --cursor                        |                                                                    |
-| `--modal-footer-primary-button-opacity`                | `1`                | --opacity                       |                                                                    |
-| `--modal-footer-primary-button-border`                 | `none`             | --button-border                 | Border of the primary footer button.                               |
-| `--modal-footer-primary-button-justify-content`        | `center`           | --button-justify-content        |                                                                    |
-| `--modal-footer-primary-button-content-flex-direction` | `row`              | --button-content-flex-direction |                                                                    |
-| `--modal-footer-primary-button-content-gap`            | `16px`             | --button-content-gap            |                                                                    |
-| `--modal-footer-primary-button-visibility`             | `visible`          | --button-visibility             |                                                                    |
-| `--modal-footer-primary-button-box-shadow`             | `none`             | --button-box-shadow             | Box shadow of the primary footer button.                           |
-| `--modal-primary-button-order`                         | `none`             | order                           | Flex order of the primary footer button.                           |
-| `--modal-footer-primary-button-flex-value`             | `none`             | flex                            | Flex value of the primary footer button.                           |
-| `--header-text-size`                                   | `16px`             | font-size                       | Font size of the header title text.                                |
-| `--modal-header-text-weight`                           | `-`                | font-weight                     | Font weight of the header title text.                              |
-| `--modal-header-text-line-height`                      | `-`                | line-height                     | Line height of the header title text.                              |
-| `--modal-header-text-letter-spacing`                   | `-`                | letter-spacing                  | Letter spacing of the header title text.                           |
-| `--header-img-top-padding`                             | `5px`              | padding-top                     | Top padding on both header images.                                 |
-| `--header-left-image-margin`                           | `0px 18px 0px 0px` | margin                          | Margin around the left header image.                               |
-| `--header-left-image-width`                            | `25px`             | width                           | Width of the left header image.                                    |
-| `--header-left-image-height`                           | `25px`             | height                          | Height of the left header image.                                   |
-| `--header-right-image-width`                           | `25px`             | width                           | Width of the right header image.                                   |
-| `--header-right-image-height`                          | `25px`             | height                          | Height of the right header image.                                  |
-| `--header-right-image-padding`                         | `-`                | padding                         | Padding around the right header image.                             |
+| Variable                                                 | Default            | CSS Property                    | Description                                                        |
+| -------------------------------------------------------- | ------------------ | ------------------------------- | ------------------------------------------------------------------ |
+| `--modal-width`                                          | `100vw`            | width                           | Width of the modal overlay container.                              |
+| `--modal-height`                                         | `100vh`            | height                          | Height of the modal overlay container.                             |
+| `--modal-z-index`                                        | `15`               | z-index                         | Z-index stacking order of the modal overlay.                       |
+| `--modal-margin`                                         | `-`                | margin                          | Outer margin of the modal overlay.                                 |
+| `--background-color`                                     | `#00000066`        | background-color                | Background color of the semi-transparent overlay behind the modal. |
+| `--modal-content-background-color`                       | `#ffffff`          | background-color                | Background color of the modal content panel.                       |
+| `--modal-border-radius`                                  | `0px`              | border-radius                   | Corner rounding of the modal content panel.                        |
+| `--modal-content-overflow`                               | `auto`             | overflow                        | Overflow behavior of the modal content panel.                      |
+| `--modal-content-border-top`                             | `-`                | border-top                      | Top border of the modal content panel.                             |
+| `--modal-display`                                        | `flex`             | display                         | Display property of the scrollable content area.                   |
+| `--modal-overflow-y`                                     | `scroll`           | overflow-y                      | Vertical overflow behavior of the content area.                    |
+| `--modal-scrollbar-width`                                | `none`             | scrollbar-width                 | Scrollbar width for the content area (set 'none' to hide).         |
+| `--modal-center-justify-content`                         | `center`           | justify-content                 | Vertical positioning of the modal when align='center'.             |
+| `--modal-center-align-items`                             | `center`           | align-items                     | Horizontal positioning of the modal when align='center'.           |
+| `--modal-bottom-justify-content`                         | `flex-end`         | justify-content                 | Vertical positioning of the modal when align='bottom'.             |
+| `--modal-bottom-align-items`                             | `-`                | align-items                     | Horizontal positioning of the modal when align='bottom'.           |
+| `--modal-top-justify-content`                            | `flex-start`       | justify-content                 | Vertical positioning of the modal when align='top'.                |
+| `--modal-top-align-items`                                | `-`                | align-items                     | Horizontal positioning of the modal when align='top'.              |
+| `--modal-small-height`                                   | `20vh`             | height                          | Height of the modal content when size='small'.                     |
+| `--modal-small-width`                                    | `-`                | width                           | Width of the modal content when size='small'.                      |
+| `--modal-medium-height`                                  | `50vh`             | height                          | Height of the modal content when size='medium'.                    |
+| `--modal-medium-width`                                   | `-`                | width                           | Width of the modal content when size='medium'.                     |
+| `--modal-large-height`                                   | `80vh`             | height                          | Height of the modal content when size='large'.                     |
+| `--modal-large-width`                                    | `-`                | width                           | Width of the modal content when size='large'.                      |
+| `--modal-fit-content-max-height`                         | `80vh`             | max-height                      | Maximum height of the modal when size='fit-content'.               |
+| `--modal-header-background-color`                        | `#f6f7f9`          | background-color                | Background color of the modal header bar.                          |
+| `--modal-header-padding`                                 | `18px 20px`        | padding                         | Padding inside the header bar.                                     |
+| `--modal-header-border-radius`                           | `0px`              | border-radius                   | Corner rounding of the header bar.                                 |
+| `--modal-header-border-bottom`                           | `none`             | border-bottom                   | Bottom border of the header bar.                                   |
+| `--modal-footer-background-color`                        | `#f6f7f9`          | background-color                | Background color of the footer area.                               |
+| `--modal-footer-padding`                                 | `18px 20px`        | padding                         | Padding inside the footer area.                                    |
+| `--modal-footer-border-radius`                           | `0px`              | border-radius                   | Corner rounding of the footer area.                                |
+| `--modal-footer-border-top`                              | `none`             | border-top                      | Top border of the footer area.                                     |
+| `--modal-footer-justify-content`                         | `none`             | justify-content                 | Horizontal alignment of footer content.                            |
+| `--modal-footer-gap`                                     | `0px`              | gap                             | Gap between primary and secondary footer buttons.                  |
+| `--modal-footer-action-buttons-width`                    | `fit-content`      | width                           | Width of the footer action buttons container.                      |
+| `--modal-footer-secondary-button-max-height`             | `-`                | --button-max-height             |                                                                    |
+| `--modal-footer-secondary-button-max-width`              | `-`                | --button-max-width              |                                                                    |
+| `--modal-footer-secondary-button-font-family`            | `-`                | --button-font-family            | Font family of the secondary footer button.                        |
+| `--modal-footer-secondary-button-font-weight`            | `500`              | --button-font-weight            | Font weight of the secondary footer button.                        |
+| `--modal-footer-secondary-button-font-size`              | `14px`             | --button-font-size              | Font size of the secondary footer button.                          |
+| `--modal-footer-secondary-button-color`                  | `#3a4550`          | --button-color                  | Background color of the secondary footer button.                   |
+| `--modal-footer-secondary-button-text-color`             | `white`            | --button-text-color             | Text color of the secondary footer button.                         |
+| `--modal-footer-secondary-button-height`                 | `fit-content`      | --button-height                 | Height of the secondary footer button.                             |
+| `--modal-footer-secondary-button-padding`                | `16px`             | --button-padding                | Padding inside the secondary footer button.                        |
+| `--modal-footer-secondary-button-margin`                 | `-`                | --button-margin                 | Margin around the secondary footer button.                         |
+| `--modal-footer-secondary-button-border-radius`          | `0px`              | --button-border-radius          | Corner rounding of the secondary footer button.                    |
+| `--modal-footer-secondary-button-width`                  | `fit-content`      | --button-width                  | Width of the secondary footer button.                              |
+| `--modal-footer-secondary-button-cursor`                 | `pointer`          | --cursor                        |                                                                    |
+| `--modal-footer-secondary-button-opacity`                | `1`                | --opacity                       |                                                                    |
+| `--modal-footer-secondary-button-border`                 | `none`             | --button-border                 | Border of the secondary footer button.                             |
+| `--modal-footer-secondary-button-justify-content`        | `center`           | --button-justify-content        |                                                                    |
+| `--modal-footer-secondary-button-content-gap`            | `16px`             | --button-content-gap            |                                                                    |
+| `--modal-footer-secondary-button-visibility`             | `visible`          | --button-visibility             |                                                                    |
+| `--modal-footer-secondary-button-box-shadow`             | `none`             | --button-box-shadow             | Box shadow of the secondary footer button.                         |
+| `--modal-footer-secondary-button-content-flex-direction` | `row`              | --button-content-flex-direction | Flex direction of the secondary footer button content.             |
+| `--modal-secondary-button-order`                         | `none`             | order                           | Flex order of the secondary footer button.                         |
+| `--modal-footer-secondary-button-flex-value`             | `none`             | flex                            | Flex value of the secondary footer button.                         |
+| `--modal-footer-primary-button-max-height`               | `-`                | --button-max-height             |                                                                    |
+| `--modal-footer-primary-button-max-width`                | `-`                | --button-max-width              |                                                                    |
+| `--modal-footer-primary-button-font-family`              | `-`                | --button-font-family            | Font family of the primary footer button.                          |
+| `--modal-footer-primary-button-font-weight`              | `500`              | --button-font-weight            | Font weight of the primary footer button.                          |
+| `--modal-footer-primary-button-font-size`                | `14px`             | --button-font-size              | Font size of the primary footer button.                            |
+| `--modal-footer-primary-button-color`                    | `#3a4550`          | --button-color                  | Background color of the primary footer button.                     |
+| `--modal-footer-primary-button-text-color`               | `white`            | --button-text-color             | Text color of the primary footer button.                           |
+| `--modal-footer-primary-button-height`                   | `fit-content`      | --button-height                 | Height of the primary footer button.                               |
+| `--modal-footer-primary-button-padding`                  | `16px`             | --button-padding                | Padding inside the primary footer button.                          |
+| `--modal-footer-primary-button-margin`                   | `-`                | --button-margin                 | Margin around the primary footer button.                           |
+| `--modal-footer-primary-button-border-radius`            | `0px`              | --button-border-radius          | Corner rounding of the primary footer button.                      |
+| `--modal-footer-primary-button-width`                    | `fit-content`      | --button-width                  | Width of the primary footer button.                                |
+| `--modal-footer-primary-button-cursor`                   | `pointer`          | --cursor                        |                                                                    |
+| `--modal-footer-primary-button-opacity`                  | `1`                | --opacity                       |                                                                    |
+| `--modal-footer-primary-button-border`                   | `none`             | --button-border                 | Border of the primary footer button.                               |
+| `--modal-footer-primary-button-justify-content`          | `center`           | --button-justify-content        |                                                                    |
+| `--modal-footer-primary-button-content-flex-direction`   | `row`              | --button-content-flex-direction |                                                                    |
+| `--modal-footer-primary-button-content-gap`              | `16px`             | --button-content-gap            |                                                                    |
+| `--modal-footer-primary-button-visibility`               | `visible`          | --button-visibility             |                                                                    |
+| `--modal-footer-primary-button-box-shadow`               | `none`             | --button-box-shadow             | Box shadow of the primary footer button.                           |
+| `--modal-primary-button-order`                           | `none`             | order                           | Flex order of the primary footer button.                           |
+| `--modal-footer-primary-button-flex-value`               | `none`             | flex                            | Flex value of the primary footer button.                           |
+| `--header-text-size`                                     | `16px`             | font-size                       | Font size of the header title text.                                |
+| `--modal-header-text-weight`                             | `-`                | font-weight                     | Font weight of the header title text.                              |
+| `--modal-header-text-line-height`                        | `-`                | line-height                     | Line height of the header title text.                              |
+| `--modal-header-text-letter-spacing`                     | `-`                | letter-spacing                  | Letter spacing of the header title text.                           |
+| `--header-img-top-padding`                               | `5px`              | padding-top                     | Top padding on both header images.                                 |
+| `--header-left-image-margin`                             | `0px 18px 0px 0px` | margin                          | Margin around the left header image.                               |
+| `--header-left-image-width`                              | `25px`             | width                           | Width of the left header image.                                    |
+| `--header-left-image-height`                             | `25px`             | height                          | Height of the left header image.                                   |
+| `--header-right-image-width`                             | `25px`             | width                           | Width of the right header image.                                   |
+| `--header-right-image-height`                            | `25px`             | height                          | Height of the right header image.                                  |
+| `--header-right-image-padding`                           | `-`                | padding                         | Padding around the right header image.                             |
 
 ## Type Reference
 
@@ -192,3 +193,24 @@ This component uses the following library components internally:
 
 - Animations
 - Button
+
+## Web Component
+
+Tag: `<sui-modal>`
+
+```html
+<sui-modal size="md" show-overlay>
+  <p>Modal body content</p>
+  <div slot="footer">
+    <button>Cancel</button>
+    <button>Confirm</button>
+  </div>
+</sui-modal>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                |
+| ----------- | --------------- | ------------------------------------------ |
+| _(default)_ | `content`       | The main body content of the modal.        |
+| `footer`    | `footerSnippet` | Content rendered in the modal footer area. |

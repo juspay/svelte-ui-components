@@ -19,9 +19,18 @@ A customizable checkbox control with optional label text. Supports checked, unch
 | text          | `string`  | Yes      | -           | Label text displayed next to the checkbox.                                                                                                                             |
 | checked       | `boolean` | No       | `false`     | The current checked state of the checkbox. Bindable.                                                                                                                   |
 | disabled      | `boolean` | No       | `false`     | When true, the checkbox is non-interactive and visually dimmed.                                                                                                        |
-| indeterminate | `boolean` | No       | `false`     | When true, displays an indeterminate (dash) state instead of a checkmark. Typically used for "select all" patterns where only some children are selected.              |
+| indeterminate | `boolean` | No       | `false`     | Bindable. When true, displays an indeterminate (dash) state instead of a checkmark. Typically used for "select all" patterns where only some children are selected.    |
 | testId        | `string`  | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
 | classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet           | Type      | Description                                                                                           |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| checkedIcon       | `Snippet` | Custom icon rendered inside the checkbox when in the checked state. Defaults to a built-in SVG.       |
+| indeterminateIcon | `Snippet` | Custom icon rendered inside the checkbox when in the indeterminate state. Defaults to a built-in SVG. |
 
 ## Events
 
@@ -58,3 +67,11 @@ Override these custom properties to theme the component.
 | `--checkbox-label-font-size`          | `14px`                              | font-size          | Font size of the label text.                                          |
 | `--checkbox-label-font-weight`        | `400`                               | font-weight        | Font weight of the label text.                                        |
 | `--checkbox-label-color`              | `#212121`                           | color              | Color of the label text.                                              |
+
+## Web Component
+
+Tag: `<sui-checkbox>`
+
+```html
+<sui-checkbox text="Accept terms" checked></sui-checkbox>
+```

@@ -32,12 +32,12 @@ A full-screen status display with a centered icon image, title text, description
 
 Override these custom properties to theme the component.
 
-| Variable                          | Default               | CSS Property | Description                           |
-| --------------------------------- | --------------------- | ------------ | ------------------------------------- |
-| `--status-font-weight`            | `600`                 | font-weight  | Font weight of the status title text. |
-| `--status-description-font-color` | `#2f3841`             | color        | Color of the description text.        |
-| `--order-font`                    | `'Euclid Circular A'` | font-family  | Font family for the status text.      |
-| `--order-font-size`               | `14px`                | font-size    | Font size for the status text.        |
+| Variable                          | Default               | CSS Property | Description                                                                                                                          |
+| --------------------------------- | --------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `--status-font-weight`            | `600`                 | font-weight  | Font weight of the status title text. Used with different fallbacks: `600` on status text and `400` on description.                  |
+| `--status-description-font-color` | `#2f3841`             | color        | Color of the description text. Used with different fallbacks: `#2f3841` on status text and `#436484cc` on the description paragraph. |
+| `--order-font`                    | `'Euclid Circular A'` | font-family  | Font family for the status text.                                                                                                     |
+| `--order-font-size`               | `14px`                | font-size    | Font size for the status text.                                                                                                       |
 
 ## Type Reference
 
@@ -64,4 +64,17 @@ type ButtonProperties = {
 
 This component uses the following library components internally:
 
-- Button
+- Button (for the action button)
+- Img (for the status icon)
+
+## Web Component
+
+Tag: `<sui-status>`
+
+```html
+<sui-status
+  status-icon="/icon.svg"
+  status-text="Success"
+  status-description="Operation completed."
+></sui-status>
+```

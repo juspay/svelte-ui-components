@@ -17,7 +17,7 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 | Prop    | Type      | Required | Default | Description                                                                                                                                                            |
 | ------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | checked | `boolean` | No       | `false` | The current on/off state of the toggle switch.                                                                                                                         |
-| text    | `string`  | No       | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
+| text    | `string`  | Yes      | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
 | classes | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events
@@ -57,3 +57,11 @@ Override these custom properties to theme the component.
 | `--slider-checked-color`                  | `#2196f3`         | background-color   | Background color of the track when checked (on).             |
 | `--slider-border-radius`                  | `23px`            | border-radius      | Corner rounding of the slider track.                         |
 | `--slider-border-radius-before`           | `50%`             | border-radius      | Corner rounding of the ball/thumb.                           |
+
+## Web Component
+
+Tag: `<sui-toggle>`
+
+```html
+<sui-toggle text="Dark mode" checked></sui-toggle>
+```

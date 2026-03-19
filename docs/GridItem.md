@@ -43,7 +43,7 @@ Override these custom properties to theme the component.
 | `--grid-header-top`                  | `5px`                  | top              | Top offset of the header icon.                               |
 | `--grid-header-z-index`              | `100`                  | z-index          | Z-index of the header icon.                                  |
 | `--grid-item-header-icon-height`     | `16px`                 | height           | Height of the header icon image.                             |
-| `--grid-item-header-icon-width`      | `auto`                 | width            | Width of the header icon image.                              |
+| `--grid-item-header-icon-width`      | `fit-content`          | width            | Width of the header icon image.                              |
 | `--grid-item-header-icon-object-fit` | `contain`              | object-fit       | Object-fit of the header icon image.                         |
 | `--grid-item-header-icon-z-index`    | `2`                    | z-index          | Z-index of the header icon image.                            |
 | `--grid-item-body-height`            | `64px`                 | height           | Height of the main icon container.                           |
@@ -53,7 +53,7 @@ Override these custom properties to theme the component.
 | `--grid-item-border-radius`          | `4px`                  | border-radius    | Corner rounding of the grid cell body.                       |
 | `--grid-item-margin`                 | `8px 0 0 0`            | margin           | Margin of the grid cell body.                                |
 | `--grid-item-icon-height`            | `32px`                 | height           | Height of the main center icon.                              |
-| `--grid-item-icon-width`             | `auto`                 | width            | Width of the main center icon.                               |
+| `--grid-item-icon-width`             | `fit-content`          | width            | Width of the main center icon.                               |
 | `--grid-item-icon-object-fit`        | `contain`              | object-fit       | Object-fit of the main center icon.                          |
 | `--grid-item-icon-z-index`           | `100`                  | z-index          | Z-index of the main center icon.                             |
 | `--grid-item-footer-margin`          | `8px 0 0 0`            | margin           | Margin above the text label.                                 |
@@ -66,3 +66,12 @@ Override these custom properties to theme the component.
 | `--grid-item-footer-text-align`      | `center`               | text-align       | Text alignment of the label.                                 |
 | `--grid-item-footer-height`          | `fit-content`          | height           | Height of the label area.                                    |
 | `--animation-version`                | `32px solid #cbcccf66` | border           | Border style for the loading animation overlay.              |
+| `--loader-animation-duration`        | `3s`                   | animation        | Duration of the loading animation.                           |
+
+## Web Component
+
+Tag: `<sui-grid-item>`
+
+```html
+<sui-grid-item icon="/icon.svg" text="Item"></sui-grid-item>
+```

@@ -22,11 +22,13 @@
   "scripts": {
     "dev": "vite dev --host",
     "build": "vite build && npm run package",
+    "build:wc": "vite build --config vite.config.wc.ts",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run package",
     "test": "npm run test:integration && npm run test:unit",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check src && eslint src",
     "format": "prettier --write src",

@@ -22,7 +22,7 @@ A range slider input for selecting a numeric value within min/max bounds. The `v
 | step      | `number`  | No       | `1`     | The increment between selectable values. The slider snaps to multiples of this value between min and max.                                                              |
 | disabled  | `boolean` | No       | `false` | Whether the slider is disabled. When true, the slider is visually dimmed, the thumb cannot be dragged, and no events fire.                                             |
 | showValue | `boolean` | No       | `false` | Whether to display the current numeric value as a label next to the slider track.                                                                                      |
-| testId    | `string`  | No       | `''`    | Value for the data-pw attribute on the range input, used for end-to-end testing selectors.                                                                             |
+| testId    | `string`  | No       | `-`     | Value for the data-pw attribute on the range input, used for end-to-end testing selectors.                                                                             |
 | classes   | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events
@@ -57,3 +57,11 @@ Override these custom properties to theme the component.
 | `--slider-value-color`         | `#333333`                      | color              | Color of the value label text.                                                  |
 | `--slider-value-font-weight`   | `500`                          | font-weight        | Font weight of the value label text.                                            |
 | `--slider-transition`          | `background 0.2s ease`         | transition         | Transition applied to the track background for smooth fill changes.             |
+
+## Web Component
+
+Tag: `<sui-slider>`
+
+```html
+<sui-slider value="50" min="0" max="100" step="1" show-value></sui-slider>
+```

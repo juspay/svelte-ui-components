@@ -124,3 +124,21 @@ This component uses the following library components internally:
 
 - Button (for the primary action button)
 - Menu (for the dropdown with keyboard navigation, typeahead, and a11y)
+
+## Web Component
+
+Tag: `<sui-split-button>`
+
+```html
+<sui-split-button text="Save">
+  <svg slot="dropdown-icon">...</svg>
+</sui-split-button>
+```
+
+### Slots
+
+| Slot Name       | Maps to Snippet | Description                         |
+| --------------- | --------------- | ----------------------------------- |
+| `dropdown-icon` | `dropdownIcon`  | Custom icon for the dropdown arrow. |
+
+> **Note:** The `items` prop is an array — set it via JavaScript property.

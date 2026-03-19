@@ -64,3 +64,17 @@ Override these custom properties to theme the component.
 ```typescript
 type AvatarSize = 'small' | 'medium' | 'large';
 ```
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Img (for image rendering with fallback support)
+
+## Web Component
+
+Tag: `<sui-avatar>`
+
+```html
+<sui-avatar src="/photo.jpg" alt="User" size="40"></sui-avatar>
+```

@@ -142,20 +142,20 @@
 </div>
 
 <style>
-  :global(.custom-cell-table) th:nth-child(1),
-  :global(.custom-cell-table) td:nth-child(1) {
+  :global(.custom-cell-table th:nth-child(1)),
+  :global(.custom-cell-table td:nth-child(1)) {
     width: 180px;
   }
-  :global(.custom-cell-table) th:nth-child(2),
-  :global(.custom-cell-table) td:nth-child(2) {
+  :global(.custom-cell-table th:nth-child(2)),
+  :global(.custom-cell-table td:nth-child(2)) {
     width: 140px;
   }
-  :global(.custom-cell-table) th:nth-child(3),
-  :global(.custom-cell-table) td:nth-child(3) {
+  :global(.custom-cell-table th:nth-child(3)),
+  :global(.custom-cell-table td:nth-child(3)) {
     width: 120px;
   }
-  :global(.custom-cell-table) th:nth-child(4),
-  :global(.custom-cell-table) td:nth-child(4) {
+  :global(.custom-cell-table th:nth-child(4)),
+  :global(.custom-cell-table td:nth-child(4)) {
     width: 80px;
   }
 

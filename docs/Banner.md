@@ -110,3 +110,22 @@ Override these custom properties to theme the component.
 This component uses the following library components internally:
 
 - Button (for the dismiss button)
+
+## Web Component
+
+Tag: `<sui-banner>`
+
+```html
+<sui-banner text="Update available" dismissible>
+  <svg slot="icon">...</svg>
+  <a slot="right-content" href="/update">Update now</a>
+</sui-banner>
+```
+
+### Slots
+
+| Slot Name       | Maps to Snippet | Description                                       |
+| --------------- | --------------- | ------------------------------------------------- |
+| `icon`          | `icon`          | Icon content rendered at the start of the banner. |
+| `right-content` | `rightContent`  | Content rendered on the right side.               |
+| `dismiss-icon`  | `dismissIcon`   | Custom dismiss/close icon.                        |

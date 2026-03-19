@@ -113,3 +113,19 @@ type ContextMenuItem = {
   separator?: boolean; // When true, renders a horizontal line instead of a clickable item
 };
 ```
+
+## Web Component
+
+Tag: `<sui-context-menu>`
+
+```html
+<sui-context-menu>
+  <button>Right-click me</button>
+</sui-context-menu>
+```
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                                     |
+| ----------- | --------------- | --------------------------------------------------------------- |
+| _(default)_ | `children`      | The trigger element that opens the context menu on right-click. |

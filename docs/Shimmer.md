@@ -66,3 +66,11 @@ Override these custom properties to theme the component.
 | `--shimmer-highlight`     | `rgba(255, 255, 255, 0.4)` | gradient color     | Color of the sweeping highlight in the shimmer animation. |
 | `--shimmer-duration`      | `1.5s`                     | animation-duration | Duration of one complete shimmer animation cycle.         |
 | `--shimmer-opacity`       | `1`                        | opacity            | Opacity of the shimmer element.                           |
+
+## Web Component
+
+Tag: `<sui-shimmer>`
+
+```html
+<sui-shimmer></sui-shimmer>
+```

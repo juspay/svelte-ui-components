@@ -22,6 +22,15 @@ A horizontal tab bar with clickable tab items and an animated active indicator. 
 | testId      | `string`   | No       | `undefined` | Value applied to the `data-pw` attribute on the tab bar container for test selectors.                                                                                  |
 | classes     | `string`   | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet         | Type      | Description                                                                                    |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------- |
+| scrollLeftIcon  | `Snippet` | Custom icon rendered inside the left scroll arrow button. Defaults to a built-in chevron SVG.  |
+| scrollRightIcon | `Snippet` | Custom icon rendered inside the right scroll arrow button. Defaults to a built-in chevron SVG. |
+
 ## Events
 
 | Event    | Type                                     | Description                                                                                                                                    |
@@ -38,6 +47,7 @@ Override these custom properties to theme the component.
 | `--tabs-bar-padding`             | `0px`                                   | padding          | Padding inside the tab bar container.                     |
 | `--tabs-bar-gap`                 | `0px`                                   | gap              | Gap between individual tab items.                         |
 | `--tabs-bar-border-bottom`       | `1px solid #e0e0e0`                     | border-bottom    | Bottom border of the tab bar container.                   |
+| `--tabs-bar-border-radius`       | `0`                                     | border-radius    | Corner rounding of the tab bar container.                 |
 | `--tabs-item-padding`            | `12px 16px`                             | padding          | Padding inside each tab item.                             |
 | `--tabs-item-font-size`          | `14px`                                  | font-size        | Font size of tab label text.                              |
 | `--tabs-item-font-weight`        | `400`                                   | font-weight      | Font weight of inactive tab label text.                   |
@@ -45,8 +55,10 @@ Override these custom properties to theme the component.
 | `--tabs-item-color`              | `#666666`                               | color            | Text color of inactive tab labels.                        |
 | `--tabs-item-cursor`             | `pointer`                               | cursor           | Cursor style when hovering over a tab item.               |
 | `--tabs-item-background`         | `transparent`                           | background       | Background of inactive tab items.                         |
+| `--tabs-item-border-radius`      | `0`                                     | border-radius    | Corner rounding of individual tab items.                  |
 | `--tabs-active-color`            | `#1a73e8`                               | color            | Text color of the active tab label.                       |
 | `--tabs-active-font-weight`      | `600`                                   | font-weight      | Font weight of the active tab label.                      |
+| `--tabs-active-background`       | `transparent`                           | background       | Background color of the active tab item.                  |
 | `--tabs-indicator-color`         | `#1a73e8`                               | background-color | Color of the active tab indicator line.                   |
 | `--tabs-indicator-height`        | `2px`                                   | height           | Thickness of the active tab indicator line.               |
 | `--tabs-indicator-border-radius` | `2px 2px 0 0`                           | border-radius    | Corner rounding of the active tab indicator.              |
@@ -55,3 +67,22 @@ Override these custom properties to theme the component.
 | `--tabs-disabled-opacity`        | `0.5`                                   | opacity          | Opacity of the entire tab bar when disabled.              |
 | `--tabs-disabled-cursor`         | `not-allowed`                           | cursor           | Cursor style when the tab bar is disabled.                |
 | `--tabs-transition`              | `color 0.2s ease, background 0.2s ease` | transition       | Transition applied to tab items for smooth state changes. |
+| `--tabs-fade-size`               | `32px`                                  | mask-image       | Size of the fade-out gradient at scrollable edges.        |
+| `--tabs-arrow-size`              | `28px`                                  | width            | Width of the scroll arrow buttons.                        |
+| `--tabs-arrow-padding`           | `0`                                     | padding          | Padding inside the scroll arrow buttons.                  |
+| `--tabs-arrow-border`            | `none`                                  | border           | Border of the scroll arrow buttons.                       |
+| `--tabs-arrow-background`        | `var(--tabs-bar-background, #ffffff)`   | background       | Background color of the scroll arrow buttons.             |
+| `--tabs-arrow-color`             | `var(--tabs-item-color, #666666)`       | color            | Icon color of the scroll arrow buttons.                   |
+| `--tabs-arrow-transition`        | `color 0.2s ease`                       | transition       | Transition applied to scroll arrow buttons.               |
+| `--tabs-arrow-hover-color`       | `var(--tabs-active-color, #1a73e8)`     | color            | Icon color of scroll arrow buttons on hover.              |
+| `--tabs-arrow-hover-background`  | `var(--tabs-arrow-background, ...)`     | background       | Background of scroll arrow buttons on hover.              |
+
+## Web Component
+
+Tag: `<sui-tabs>`
+
+```html
+<sui-tabs active-index="0"></sui-tabs>
+```
+
+> **Note:** The `items` prop is an array — set it via JavaScript property.

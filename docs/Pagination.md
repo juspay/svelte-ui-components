@@ -48,7 +48,7 @@ Override these custom properties to theme the component.
 | `--pagination-button-padding`       | `6px 10px`          | padding       | Inner padding of each page button. |
 | `--pagination-button-font-size`     | `14px`              | font-size     | Font size of page button labels.   |
 | `--pagination-button-font-weight`   | `400`               | font-weight   | Font weight of page button labels. |
-| `--pagination-button-font-family`   | `-`                 | font-family   | Font family of page button labels. |
+| `--pagination-button-font-family`   | `inherit`           | font-family   | Font family of page button labels. |
 | `--pagination-button-color`         | `#3a4550`           | color         | Text color of page buttons.        |
 | `--pagination-button-background`    | `transparent`       | background    | Background color of page buttons.  |
 | `--pagination-button-border`        | `1px solid #d1d5db` | border        | Border style of page buttons.      |
@@ -80,42 +80,6 @@ Override these custom properties to theme the component.
 | `--pagination-disabled-opacity` | `0.5`         | opacity      | Opacity applied to the pagination container when disabled, and to individual disabled buttons. |
 | `--pagination-disabled-cursor`  | `not-allowed` | cursor       | Cursor shown on the pagination container when disabled, and on individual disabled buttons.    |
 
-### Prev Button
-
-| Variable                             | Default                                              | CSS Property  | Description                                                              |
-| ------------------------------------ | ---------------------------------------------------- | ------------- | ------------------------------------------------------------------------ |
-| `--pagination-prev-padding`          | `var(--pagination-button-padding, 6px 10px)`         | padding       | Inner padding of the previous button. Falls back to page button padding. |
-| `--pagination-prev-font-size`        | `var(--pagination-button-font-size, 14px)`           | font-size     | Font size of the previous button.                                        |
-| `--pagination-prev-font-weight`      | `var(--pagination-button-font-weight, 400)`          | font-weight   | Font weight of the previous button.                                      |
-| `--pagination-prev-font-family`      | `var(--pagination-button-font-family)`               | font-family   | Font family of the previous button.                                      |
-| `--pagination-prev-color`            | `var(--pagination-button-color, #3a4550)`            | color         | Text color of the previous button.                                       |
-| `--pagination-prev-background`       | `var(--pagination-button-background, transparent)`   | background    | Background color of the previous button.                                 |
-| `--pagination-prev-border`           | `var(--pagination-button-border, 1px solid #d1d5db)` | border        | Border style of the previous button.                                     |
-| `--pagination-prev-border-radius`    | `var(--pagination-button-border-radius, 4px)`        | border-radius | Corner rounding of the previous button.                                  |
-| `--pagination-prev-cursor`           | `var(--pagination-button-cursor, pointer)`           | cursor        | Cursor style on the previous button.                                     |
-| `--pagination-prev-min-width`        | `var(--pagination-button-min-width, 36px)`           | min-width     | Minimum width of the previous button.                                    |
-| `--pagination-prev-height`           | `var(--pagination-button-height, 36px)`              | height        | Height of the previous button.                                           |
-| `--pagination-prev-hover-color`      | `var(--pagination-button-hover-color, #111827)`      | color         | Text color of the previous button on hover.                              |
-| `--pagination-prev-hover-background` | `var(--pagination-button-hover-background, #f3f4f6)` | background    | Background color of the previous button on hover.                        |
-
-### Next Button
-
-| Variable                             | Default                                              | CSS Property  | Description                                                          |
-| ------------------------------------ | ---------------------------------------------------- | ------------- | -------------------------------------------------------------------- |
-| `--pagination-next-padding`          | `var(--pagination-button-padding, 6px 10px)`         | padding       | Inner padding of the next button. Falls back to page button padding. |
-| `--pagination-next-font-size`        | `var(--pagination-button-font-size, 14px)`           | font-size     | Font size of the next button.                                        |
-| `--pagination-next-font-weight`      | `var(--pagination-button-font-weight, 400)`          | font-weight   | Font weight of the next button.                                      |
-| `--pagination-next-font-family`      | `var(--pagination-button-font-family)`               | font-family   | Font family of the next button.                                      |
-| `--pagination-next-color`            | `var(--pagination-button-color, #3a4550)`            | color         | Text color of the next button.                                       |
-| `--pagination-next-background`       | `var(--pagination-button-background, transparent)`   | background    | Background color of the next button.                                 |
-| `--pagination-next-border`           | `var(--pagination-button-border, 1px solid #d1d5db)` | border        | Border style of the next button.                                     |
-| `--pagination-next-border-radius`    | `var(--pagination-button-border-radius, 4px)`        | border-radius | Corner rounding of the next button.                                  |
-| `--pagination-next-cursor`           | `var(--pagination-button-cursor, pointer)`           | cursor        | Cursor style on the next button.                                     |
-| `--pagination-next-min-width`        | `var(--pagination-button-min-width, 36px)`           | min-width     | Minimum width of the next button.                                    |
-| `--pagination-next-height`           | `var(--pagination-button-height, 36px)`              | height        | Height of the next button.                                           |
-| `--pagination-next-hover-color`      | `var(--pagination-button-hover-color, #111827)`      | color         | Text color of the next button on hover.                              |
-| `--pagination-next-hover-background` | `var(--pagination-button-hover-background, #f3f4f6)` | background    | Background color of the next button on hover.                        |
-
 ### Ellipsis
 
 | Variable                          | Default   | CSS Property | Description                                               |
@@ -128,3 +92,11 @@ Override these custom properties to theme the component.
 | Variable                  | Default                                   | CSS Property | Description                                                        |
 | ------------------------- | ----------------------------------------- | ------------ | ------------------------------------------------------------------ |
 | `--pagination-transition` | `background 0.15s ease, color 0.15s ease` | transition   | Transition applied to page buttons for hover/active state changes. |
+
+## Web Component
+
+Tag: `<sui-pagination>`
+
+```html
+<sui-pagination total-pages="10" current-page="1"></sui-pagination>
+```

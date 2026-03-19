@@ -30,6 +30,15 @@ A page-flip presentation component that displays content in a book-like format w
 | testId            | `string`         | No       | `-`       | Test identifier applied as `data-pw` on the root element.                                                                                                                                                                  |
 | classes           | `string`         | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet      | Type      | Description                                                                                  |
+| ------------ | --------- | -------------------------------------------------------------------------------------------- |
+| previousIcon | `Snippet` | Custom icon rendered inside the previous-page navigation button. Defaults to a built-in SVG. |
+| nextIcon     | `Snippet` | Custom icon rendered inside the next-page navigation button. Defaults to a built-in SVG.     |
+
 ## Events
 
 | Event        | Type                     | Description                                                                   |
@@ -77,3 +86,19 @@ type BookPage = { content: Snippet; title?: string };
 ```typescript
 type BookTransition = 'slide' | 'fade' | 'none';
 ```
+
+## Internal Dependencies
+
+This component uses the following library components internally:
+
+- Button (for navigation controls)
+
+## Web Component
+
+Tag: `<sui-book>`
+
+```html
+<sui-book show-navigation show-page-indicator></sui-book>
+```
+
+> **Note:** The `pages` prop is an array of objects with Snippet content — set it via JavaScript property, not HTML attribute.

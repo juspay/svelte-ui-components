@@ -25,17 +25,31 @@ An image component with automatic fallback. If the primary `src` fails to load (
 
 Override these custom properties to theme the component.
 
-| Variable                   | Default                  | CSS Property  | Description                                                    |
-| -------------------------- | ------------------------ | ------------- | -------------------------------------------------------------- |
-| `--image-object-fit`       | `-`                      | object-fit    | Object-fit of the image (contain, cover, etc.).                |
-| `--image-height`           | `24px`                   | height        | Height of the image.                                           |
-| `--image-width`            | `24px`                   | width         | Width of the image.                                            |
-| `--image-padding`          | `0px`                    | padding       | Padding around the image.                                      |
-| `--image-border-radius`    | `0px`                    | border-radius | Corner rounding of the image.                                  |
-| `--image-margin`           | `0px`                    | margin        | Margin around the image.                                       |
-| `--image-filter`           | `none`                   | filter        | CSS filter applied to the image (e.g., grayscale, brightness). |
-| `--image-background`       | `-`                      | background    | Background behind the image.                                   |
-| `--image-border`           | `-`                      | border        | Border of the image.                                           |
-| `--image-transition`       | `-`                      | transition    | Transition animation for hover effects.                        |
-| `--image-hover-background` | `var(--image-background` | background    | Background on hover.                                           |
-| `--image-hover-border`     | `var(--image-border`     | border        | Border on hover.                                               |
+| Variable                   | Default                   | CSS Property  | Description                                                    |
+| -------------------------- | ------------------------- | ------------- | -------------------------------------------------------------- |
+| `--image-object-fit`       | `-`                       | object-fit    | Object-fit of the image (contain, cover, etc.).                |
+| `--image-height`           | `24px`                    | height        | Height of the image.                                           |
+| `--image-width`            | `24px`                    | width         | Width of the image.                                            |
+| `--image-padding`          | `0px`                     | padding       | Padding around the image.                                      |
+| `--image-border-radius`    | `0px`                     | border-radius | Corner rounding of the image.                                  |
+| `--image-margin`           | `0px`                     | margin        | Margin around the image.                                       |
+| `--image-filter`           | `none`                    | filter        | CSS filter applied to the image (e.g., grayscale, brightness). |
+| `--image-background`       | `-`                       | background    | Background behind the image.                                   |
+| `--image-border`           | `-`                       | border        | Border of the image.                                           |
+| `--image-transition`       | `-`                       | transition    | Transition animation for hover effects.                        |
+| `--image-hover-background` | `var(--image-background)` | background    | Background on hover.                                           |
+| `--image-hover-border`     | `var(--image-border)`     | border        | Border on hover.                                               |
+
+## Events
+
+| Event   | Type         | Description                         |
+| ------- | ------------ | ----------------------------------- |
+| onerror | `() => void` | Fires when the image fails to load. |
+
+## Web Component
+
+Tag: `<sui-img>`
+
+```html
+<sui-img src="/photo.jpg" alt="Description" fallback="/fallback.jpg"></sui-img>
+```

@@ -138,7 +138,7 @@ import {Scroller} from '@juspay/svelte-ui-components';
 
 | Variable                    | Default                       | Description                                                           |
 | --------------------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `--scroller-gradient-size`  | `40px`                        | Width (horizontal) or height (vertical) of the gradient fade overlay. |
+| `--scroller-gradient-size`  | `80px`                        | Width (horizontal) or height (vertical) of the gradient fade overlay. |
 | `--scroller-gradient-start` | White-to-transparent gradient | Custom gradient for the start (left/top) fade edge.                   |
 | `--scroller-gradient-end`   | White-to-transparent gradient | Custom gradient for the end (right/bottom) fade edge.                 |
 
@@ -174,3 +174,21 @@ type ScrollerProperties = OptionalScrollerProperties &
   ScrollerEventProperties &
   MandatoryScrollerProperties;
 ```
+
+## Web Component
+
+Tag: `<sui-scroller>`
+
+```html
+<sui-scroller direction="horizontal" show-arrows>
+  <div>Scrollable content</div>
+</sui-scroller>
+```
+
+### Slots
+
+| Slot Name        | Maps to Snippet | Description                 |
+| ---------------- | --------------- | --------------------------- |
+| _(default)_      | `children`      | Scrollable content.         |
+| `arrow-previous` | `arrowPrevious` | Custom previous/left arrow. |
+| `arrow-next`     | `arrowNext`     | Custom next/right arrow.    |

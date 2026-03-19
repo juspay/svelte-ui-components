@@ -54,43 +54,44 @@ A text input field with built-in validation for email, phone (tel), password, an
 
 Override these custom properties to theme the component.
 
-| Variable                        | Default                 | CSS Property     | Description                                             |
-| ------------------------------- | ----------------------- | ---------------- | ------------------------------------------------------- |
-| `--input-box-sizing`            | `border-box`            | box-sizing       | Box sizing model for the input element.                 |
-| `--input-height`                | `fit-content`           | height           | Height of the input element.                            |
-| `--input-background`            | `white`                 | background-color | Background color of the input.                          |
-| `--input-font-size`             | `16px`                  | font-size        | Font size of the input text.                            |
-| `--input-font-family`           | `Euclid Circular A`     | font-family      | Font family of the input text.                          |
-| `--input-radius`                | `4px`                   | border-radius    | Corner rounding of the input.                           |
-| `--input-padding`               | `16px`                  | padding          | Inner padding of the input.                             |
-| `--input-font-weight`           | `500`                   | font-weight      | Font weight of the input text.                          |
-| `--input-width`                 | `fit-content`           | width            | Width of the input element.                             |
-| `--input-margin`                | `0px 0px 12px 0px`      | margin           | Outer margin of the input element.                      |
-| `--input-box-shadow`            | `0px 1px 8px #2f537733` | box-shadow       | Box shadow around the input.                            |
-| `--input-border`                | `1px solid transparent` | border           | Border of the input in its normal state.                |
-| `--input-visibility`            | `visible`               | visibility       | Controls input visibility (visible/hidden).             |
-| `--input-text-align`            | `left`                  | text-align       | Text alignment inside the input.                        |
-| `--input-text-color`            | `-`                     | color            | Color of the input text.                                |
-| `--input-focus-border`          | `1px solid transparent` | border           | Border of the input when focused.                       |
-| `--input-container-margin`      | `-`                     | margin           | Outer margin of the input container.                    |
-| `--input-container-padding`     | `-`                     | padding          | Inner padding of the input container.                   |
-| `--input-container-width`       | `-`                     | width            | Width of the input container.                           |
-| `--input-label-msg-text-weight` | `400`                   | font-weight      | Font weight of the label text.                          |
-| `--input-label-msg-text-size`   | `12px`                  | font-size        | Font size of the label text.                            |
-| `--input-label-msg-text-color`  | `#637c95`               | color            | Color of the label text.                                |
-| `--input-label-msg-margin`      | `0px 0px 6px 0px`       | margin           | Margin around the label.                                |
-| `--input-label-msg-padding`     | `-`                     | padding          | Padding inside the label.                               |
-| `--input-error-msg-text-weight` | `400`                   | font-weight      | Font weight of the error message.                       |
-| `--input-error-msg-text-size`   | `12px`                  | font-size        | Font size of the error message.                         |
-| `--input-error-msg-text-color`  | `#fa1405`               | color            | Color used for the error border and error message text. |
-| `--input-error-msg-margin`      | `-`                     | margin           | Margin around the error message.                        |
-| `--input-error-msg-padding`     | `-`                     | padding          | Padding inside the error message.                       |
-| `--input-info-msg-text-weight`  | `400`                   | font-weight      | Font weight of the info message.                        |
-| `--input-info-msg-text-size`    | `12px`                  | font-size        | Font size of the info message.                          |
-| `--input-info-msg-text-color`   | `#fa1405`               | color            | Color of the info message text.                         |
-| `--input-info-msg-margin`       | `-`                     | margin           | Margin around the info message.                         |
-| `--input-info-msg-padding`      | `-`                     | padding          | Padding inside the info message.                        |
-| `--input-placeholder-color`     | `-`                     | color            | Color of placeholder text.                              |
+| Variable                        | Default                                                | CSS Property     | Description                                             |
+| ------------------------------- | ------------------------------------------------------ | ---------------- | ------------------------------------------------------- |
+| `--input-box-sizing`            | `border-box`                                           | box-sizing       | Box sizing model for the input element.                 |
+| `--input-height`                | `fit-content`                                          | height           | Height of the input element.                            |
+| `--input-background`            | `white`                                                | background-color | Background color of the input.                          |
+| `--input-font-size`             | `16px`                                                 | font-size        | Font size of the input text.                            |
+| `--input-font-family`           | `Euclid Circular A`                                    | font-family      | Font family of the input text.                          |
+| `--input-radius`                | `4px`                                                  | border-radius    | Corner rounding of the input.                           |
+| `--input-padding`               | `16px`                                                 | padding          | Inner padding of the input.                             |
+| `--input-font-weight`           | `500`                                                  | font-weight      | Font weight of the input text.                          |
+| `--input-width`                 | `fit-content`                                          | width            | Width of the input element.                             |
+| `--input-margin`                | `0px 0px 12px 0px`                                     | margin           | Outer margin of the input element.                      |
+| `--input-box-shadow`            | `0px 1px 8px #2f537733`                                | box-shadow       | Box shadow around the input.                            |
+| `--input-border`                | `1px solid transparent`                                | border           | Border of the input in its normal state.                |
+| `--input-visibility`            | `visible`                                              | visibility       | Controls input visibility (visible/hidden).             |
+| `--input-text-align`            | `left`                                                 | text-align       | Text alignment inside the input.                        |
+| `--input-text-color`            | `-`                                                    | color            | Color of the input text.                                |
+| `--input-focus-border`          | `1px solid transparent`                                | border           | Border of the input when focused.                       |
+| `--input-container-margin`      | `-`                                                    | margin           | Outer margin of the input container.                    |
+| `--input-container-padding`     | `-`                                                    | padding          | Inner padding of the input container.                   |
+| `--input-container-width`       | `-`                                                    | width            | Width of the input container.                           |
+| `--input-label-msg-text-weight` | `400`                                                  | font-weight      | Font weight of the label text.                          |
+| `--input-label-msg-text-size`   | `12px`                                                 | font-size        | Font size of the label text.                            |
+| `--input-label-msg-text-color`  | `#637c95`                                              | color            | Color of the label text.                                |
+| `--input-label-msg-margin`      | `0px 0px 6px 0px`                                      | margin           | Margin around the label.                                |
+| `--input-label-msg-padding`     | `-`                                                    | padding          | Padding inside the label.                               |
+| `--input-error-msg-text-weight` | `400`                                                  | font-weight      | Font weight of the error message.                       |
+| `--input-error-msg-text-size`   | `12px`                                                 | font-size        | Font size of the error message.                         |
+| `--input-error-msg-text-color`  | `#fa1405`                                              | color            | Color used for the error border and error message text. |
+| `--input-error-msg-margin`      | `-`                                                    | margin           | Margin around the error message.                        |
+| `--input-error-msg-padding`     | `-`                                                    | padding          | Padding inside the error message.                       |
+| `--input-info-msg-text-weight`  | `400`                                                  | font-weight      | Font weight of the info message.                        |
+| `--input-info-msg-text-size`    | `12px`                                                 | font-size        | Font size of the info message.                          |
+| `--input-info-msg-text-color`   | `#fa1405`                                              | color            | Color of the info message text.                         |
+| `--input-info-msg-margin`       | `-`                                                    | margin           | Margin around the info message.                         |
+| `--input-info-msg-padding`      | `-`                                                    | padding          | Padding inside the info message.                        |
+| `--input-placeholder-color`     | `-`                                                    | color            | Color of placeholder text.                              |
+| `--input-error-border`          | `1px solid var(--input-error-msg-text-color, #fa1405)` | border           | Border of the input when in error state.                |
 
 ## Type Reference
 
@@ -135,4 +136,12 @@ type TextTransformer = (text: string) => string;
 
 ```typescript
 type ValidationState = 'Valid' | 'InProgress' | 'Invalid';
+```
+
+## Web Component
+
+Tag: `<sui-input>`
+
+```html
+<sui-input placeholder="Enter email" data-type="email" label="Email"></sui-input>
 ```

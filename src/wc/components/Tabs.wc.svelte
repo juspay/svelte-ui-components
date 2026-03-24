@@ -27,4 +27,9 @@
   {#snippet scrollRightIcon()}
     <slot name="scroll-right-icon"></slot>
   {/snippet}
+  {#snippet tab({ label, index, active })}
+    <slot name="tab" {label} {index} {active}>
+      {label}
+    </slot>
+  {/snippet}
 </Tabs>

@@ -19,7 +19,7 @@ A full-screen status display with a centered icon image, title text, description
 | statusIcon        | `string`                                                                                                                                                                                                                                                                                    | No       | `'icons/order-success-icon.svg'` | URL of the status icon image displayed at the center (e.g., success checkmark, error cross).                                                                           |
 | statusText        | `string`                                                                                                                                                                                                                                                                                    | No       | `''`                             | Main status title text (e.g., 'Order Successful', 'Payment Failed').                                                                                                   |
 | statusDescription | `string`                                                                                                                                                                                                                                                                                    | No       | `''`                             | Description text below the title. Supports HTML content (rendered via {@html}).                                                                                        |
-| buttonProperties  | `ButtonProperties = { text: string; enable?: boolean; showProgressBar?: boolean; showLoader?: boolean; loaderType?: LoaderType; type?: 'submit' \| 'reset' \| 'button'; testId?: string; icon?: Snippet; onclick?: (event: MouseEvent) => void; onkeyup?: (event: KeyboardEvent) => void }` | No       | `-`                              | Optional ButtonProperties object for an action button below the description (e.g., 'Try Again', 'Go Home').                                                            |
+| buttonProperties  | `ButtonProperties` | No       | `-`                              | Optional ButtonProperties object for an action button below the description (e.g., 'Try Again', 'Go Home').                                                            |
 | classes           | `string`                                                                                                                                                                                                                                                                                    | No       | `-`                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events
@@ -47,14 +47,19 @@ Custom types used by this component's props and events:
 
 ```typescript
 type ButtonProperties = {
-  text: string;
+  text?: string;
   enable?: boolean;
   showProgressBar?: boolean;
   showLoader?: boolean;
-  loaderType?: LoaderType;
+  loaderType?: 'Circular' | 'ProgressBar';
   type?: 'submit' | 'reset' | 'button';
   testId?: string;
   icon?: Snippet;
+  children?: Snippet;
+  ariaLabel?: string;
+  ariaExpanded?: boolean;
+  disabled?: boolean;
+  classes?: string;
   onclick?: (event: MouseEvent) => void;
   onkeyup?: (event: KeyboardEvent) => void;
 };

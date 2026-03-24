@@ -5,8 +5,8 @@
     props: {
       items: { type: 'Object' },
       open: { type: 'Boolean', reflect: true },
-      maxHeight: { type: 'String', reflect: true },
-      testId: { type: 'String' },
+      maxHeight: { type: 'String', reflect: true, attribute: 'max-height' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onopen: { type: 'Object' },

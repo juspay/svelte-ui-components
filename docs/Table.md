@@ -171,7 +171,7 @@ Override these custom properties to theme the component.
 | `--table-row-last-border`    | `none`              | border-bottom | Border on the last data row. Set to match `--table-row-border` if needed.                                  |
 | `--table-padding`            | `12px 16px`         | padding       | Padding inside table cells.                                                                                |
 | `--table-text-align`         | `left`              | text-align    | Text alignment inside table cells.                                                                         |
-| `--table-column-width`       | `-`                 | width         | Default width for all columns (overridden by `columnWidths` prop). Unset lets the table auto-size columns. |
+| `--table-column-width`       | `-`                 | width         | Sets a uniform width for all table columns. Unset lets the table auto-size columns.                        |
 | `--scrollable-column-height` | `20px`              | height        | Height of scrollable cell content (when isContentScrollable).                                              |
 
 ### Header Cells

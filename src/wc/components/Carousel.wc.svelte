@@ -5,9 +5,9 @@
     props: {
       views: { type: 'Object' },
       autoplay: { type: 'Boolean', reflect: true },
-      autoplayInterval: { type: 'Number', reflect: true },
-      showDots: { type: 'Boolean', reflect: true },
-      isScrollableLast: { type: 'Boolean', reflect: true },
+      autoplayInterval: { type: 'Number', reflect: true, attribute: 'autoplay-interval' },
+      showDots: { type: 'Boolean', reflect: true, attribute: 'show-dots' },
+      isScrollableLast: { type: 'Boolean', reflect: true, attribute: 'is-scrollable-last' },
       classes: { type: 'String' },
       onkeydown: { type: 'Object' }
     }

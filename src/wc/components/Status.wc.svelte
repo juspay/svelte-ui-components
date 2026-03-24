@@ -3,9 +3,9 @@
     tag: 'sui-status',
     shadow: 'open',
     props: {
-      statusIcon: { type: 'String', reflect: true },
-      statusText: { type: 'String', reflect: true },
-      statusDescription: { type: 'String', reflect: true },
+      statusIcon: { type: 'String', reflect: true, attribute: 'status-icon' },
+      statusText: { type: 'String', reflect: true, attribute: 'status-text' },
+      statusDescription: { type: 'String', reflect: true, attribute: 'status-description' },
       buttonProperties: { type: 'Object' },
       classes: { type: 'String' },
       onbuttonClick: { type: 'Object' }

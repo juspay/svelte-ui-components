@@ -95,6 +95,7 @@ Override these custom properties to theme the component.
 | `--context-menu-item-shortcut-font-size`            | `12px`                                           | font-size        | Font size of the keyboard shortcut hint.                        |
 | `--context-menu-item-shortcut-font-weight`          | `400`                                            | font-weight      | Font weight of the keyboard shortcut hint.                      |
 | `--context-menu-item-shortcut-margin-left`          | `16px`                                           | margin-left      | Space between the item label and the keyboard shortcut hint.    |
+| `--context-menu-max-height`                         | `240px`                                          | max-height       | Maximum height of the context menu dropdown before scrolling. Also controlled by the `maxHeight` prop via inline style. |
 
 ## Type Reference
 

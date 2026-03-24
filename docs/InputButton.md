@@ -16,7 +16,7 @@ A composite component that combines an Input field with optional left, right, an
 
 | Prop                   | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Required | Default | Description                                                                                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value                  | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | No       | `''`    | Bindable. The current input value. Passed through to the internal Input component.                                                                                     |
+| value                  | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Yes      | `''`    | Bindable. The current input value. Passed through to the internal Input component.                                                                                     |
 | inputProperties        | `OptionalInputProperties = { placeholder?: string \| null; dataType?: InputDataType; label?: string \| null; onErrorMessage?: string \| null; infoMessage?: string \| null; validators?: CustomValidator[]; disable?: boolean; validationPattern?: RegExp \| null; inProgressPattern?: RegExp \| null; addFocusColor?: boolean; maxLength?: number; minLength?: number; actionInput?: boolean; useTextArea?: boolean; autoComplete?: AutoCompleteType; name?: string; textTransformers?: TextTransformer[]; textViewPresentation?: TextTransformer[]; testId?: string }` | Yes      | `-`     | Configuration for the internal Input component. Accepts all optional Input props (placeholder, dataType, label, validators, etc.).                                     |
 | rightButtonProperties  | `OptionalButtonProperties \| null`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | No       | `-`     | Configuration for the right-side Button. Pass text, icon, loaderType, etc. The button is auto-disabled when input validation is not 'Valid'. Set to null to hide.      |
 | leftButtonProperties   | `OptionalButtonProperties \| null`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | No       | `-`     | Configuration for the left-side Button. Pass text, icon, etc. Set to null to hide.                                                                                     |
@@ -153,6 +153,7 @@ type OptionalInputProperties = {
   textTransformers?: TextTransformer[];
   textViewPresentation?: TextTransformer[];
   testId?: string;
+  classes?: string;
 };
 ```
 
@@ -160,14 +161,19 @@ type OptionalInputProperties = {
 
 ```typescript
 type ButtonProperties = {
-  text: string;
+  text?: string;
   enable?: boolean;
   showProgressBar?: boolean;
   showLoader?: boolean;
-  loaderType?: LoaderType;
+  loaderType?: 'Circular' | 'ProgressBar';
   type?: 'submit' | 'reset' | 'button';
   testId?: string;
   icon?: Snippet;
+  children?: Snippet;
+  ariaLabel?: string;
+  ariaExpanded?: boolean;
+  disabled?: boolean;
+  classes?: string;
   onclick?: (event: MouseEvent) => void;
   onkeyup?: (event: KeyboardEvent) => void;
 };

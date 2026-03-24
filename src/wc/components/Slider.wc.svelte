@@ -8,8 +8,8 @@
       max: { type: 'Number', reflect: true },
       step: { type: 'Number', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
-      showValue: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      showValue: { type: 'Boolean', reflect: true, attribute: 'show-value' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       oninput: { type: 'Object' },
       onchange: { type: 'Object' }

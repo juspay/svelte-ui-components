@@ -16,7 +16,7 @@ A range slider input for selecting a numeric value within min/max bounds. The `v
 
 | Prop      | Type      | Required | Default | Description                                                                                                                                                            |
 | --------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value     | `number`  | Yes      | `0`     | Bindable. The current numeric value of the slider. Must be between `min` and `max`. Two-way bound to the underlying range input.                                       |
+| value     | `number`  | No       | `0`     | Bindable. The current numeric value of the slider. Must be between `min` and `max`. Two-way bound to the underlying range input.                                       |
 | min       | `number`  | No       | `0`     | The minimum allowed value. Defines the left edge of the slider track.                                                                                                  |
 | max       | `number`  | No       | `100`   | The maximum allowed value. Defines the right edge of the slider track.                                                                                                 |
 | step      | `number`  | No       | `1`     | The increment between selectable values. The slider snaps to multiples of this value between min and max.                                                              |

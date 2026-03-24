@@ -5,10 +5,10 @@
     props: {
       name: { type: 'String', reflect: true },
       value: { type: 'String', reflect: true },
-      selectedValue: { type: 'String', reflect: true },
+      selectedValue: { type: 'String', reflect: true, attribute: 'selected-value' },
       text: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onchange: { type: 'Object' }
     }

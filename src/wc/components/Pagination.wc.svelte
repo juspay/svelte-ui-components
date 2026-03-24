@@ -3,11 +3,11 @@
     tag: 'sui-pagination',
     shadow: 'open',
     props: {
-      totalPages: { type: 'Number', reflect: true },
-      currentPage: { type: 'Number', reflect: true },
-      siblingCount: { type: 'Number', reflect: true },
+      totalPages: { type: 'Number', reflect: true, attribute: 'total-pages' },
+      currentPage: { type: 'Number', reflect: true, attribute: 'current-page' },
+      siblingCount: { type: 'Number', reflect: true, attribute: 'sibling-count' },
       disabled: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onchange: { type: 'Object' }
     }

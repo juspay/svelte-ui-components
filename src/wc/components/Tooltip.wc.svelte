@@ -6,7 +6,7 @@
       text: { type: 'String', reflect: true },
       position: { type: 'String', reflect: true },
       delay: { type: 'Number', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }
   }}

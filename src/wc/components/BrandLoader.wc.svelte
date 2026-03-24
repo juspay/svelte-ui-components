@@ -3,9 +3,9 @@
     tag: 'sui-brand-loader',
     shadow: 'open',
     props: {
-      brandLogoURL: { type: 'String', reflect: true },
-      brandText: { type: 'String', reflect: true },
-      subText: { type: 'String', reflect: true },
+      brandLogoURL: { type: 'String', reflect: true, attribute: 'brand-logo-url' },
+      brandText: { type: 'String', reflect: true, attribute: 'brand-text' },
+      subText: { type: 'String', reflect: true, attribute: 'sub-text' },
       classes: { type: 'String' }
     }
   }}

@@ -22,7 +22,7 @@ A dialog overlay component that renders on top of the page with configurable siz
 | supportHardwareBackPress | `boolean`                                                                                                                   | No       | `false`                  | When true, pushes a history state on mount so that pressing the device back button triggers onclose instead of navigating away. Cleans up on destroy.                                                        |
 | enableTransition         | `boolean`                                                                                                                   | No       | `true`                   | When true, the modal content animates in/out using fly or fade transitions via ModalAnimation.                                                                                                               |
 | transitionType           | `ModalTransition = 'IN' \| 'ALL'`                                                                                           | No       | `'ALL'`                  | Controls transition behavior. 'ALL' animates both in and out transitions. 'IN' only animates the in-transition (content disappears instantly on close).                                                      |
-| header                   | `{     leftImage?: string;     rightImage?: string;     text?: string;     testId?: string;     buttonTestId?: string;   }` | No       | `{ leftImage: undefined` | Object configuring the modal header bar. leftImage: URL for left icon (e.g., back arrow); rightImage: URL for right icon (e.g., close button); text: header title text; testId/buttonTestId: test selectors. |
+| header                   | `{     leftImage?: string;     rightImage?: string;     text?: string;     testId?: string;     buttonTestId?: string;   }` | No       | `{}` | Object configuring the modal header bar. leftImage: URL for left icon (e.g., back arrow); rightImage: URL for right icon (e.g., close button); text: header title text; testId/buttonTestId: test selectors. |
 | footer                   | `{     primaryButton?: ButtonProperties;     secondaryButton?: ButtonProperties;   }`                                       | No       | `-`                      | Object configuring footer action buttons. primaryButton: ButtonProperties for the main action button; secondaryButton: ButtonProperties for the alternate action button.                                     |
 | debounceTime             | `number`                                                                                                                    | No       | `700`                    | Debounce delay in milliseconds for overlay click handling. Prevents rapid repeated overlay dismissals.                                                                                                       |
 | leftImageTestId          | `string`                                                                                                                    | No       | `-`                      | Value for data-pw on the left header image wrapper.                                                                                                                                                          |
@@ -42,7 +42,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 | Event                   | Type                             | Description                                                                                                                                                       |
 | ----------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onclose                 | `() => void`                     | Fires when the modal should close due to hardware back button press (when supportHardwareBackPress is true).                                                      |
+| onclose                 | `() => void`                     | Fires when the hardware back button is pressed (only when `supportHardwareBackPress` is true). Does NOT fire on overlay click or Escape key — those trigger `onoverlayClick` instead. |
 | onheaderRightImageClick | `(event: MouseEvent) => void`    | Fires when the right image in the header is clicked (e.g., close button).                                                                                         |
 | onheaderLeftImageClick  | `(event: MouseEvent) => void`    | Fires when the left image in the header is clicked (e.g., back arrow).                                                                                            |
 | onprimaryButtonClick    | `(event: MouseEvent) => void`    | Fires when the primary footer button is clicked.                                                                                                                  |
@@ -92,8 +92,8 @@ Override these custom properties to theme the component.
 | `--modal-footer-justify-content`                         | `none`             | justify-content                 | Horizontal alignment of footer content.                            |
 | `--modal-footer-gap`                                     | `0px`              | gap                             | Gap between primary and secondary footer buttons.                  |
 | `--modal-footer-action-buttons-width`                    | `fit-content`      | width                           | Width of the footer action buttons container.                      |
-| `--modal-footer-secondary-button-max-height`             | `-`                | --button-max-height             |                                                                    |
-| `--modal-footer-secondary-button-max-width`              | `-`                | --button-max-width              |                                                                    |
+| `--modal-footer-secondary-button-max-height`             | `-`                | --button-max-height             | Maximum height of the secondary footer button.                     |
+| `--modal-footer-secondary-button-max-width`              | `-`                | --button-max-width              | Maximum width of the secondary footer button.                      |
 | `--modal-footer-secondary-button-font-family`            | `-`                | --button-font-family            | Font family of the secondary footer button.                        |
 | `--modal-footer-secondary-button-font-weight`            | `500`              | --button-font-weight            | Font weight of the secondary footer button.                        |
 | `--modal-footer-secondary-button-font-size`              | `14px`             | --button-font-size              | Font size of the secondary footer button.                          |
@@ -104,18 +104,18 @@ Override these custom properties to theme the component.
 | `--modal-footer-secondary-button-margin`                 | `-`                | --button-margin                 | Margin around the secondary footer button.                         |
 | `--modal-footer-secondary-button-border-radius`          | `0px`              | --button-border-radius          | Corner rounding of the secondary footer button.                    |
 | `--modal-footer-secondary-button-width`                  | `fit-content`      | --button-width                  | Width of the secondary footer button.                              |
-| `--modal-footer-secondary-button-cursor`                 | `pointer`          | --cursor                        |                                                                    |
-| `--modal-footer-secondary-button-opacity`                | `1`                | --opacity                       |                                                                    |
+| `--modal-footer-secondary-button-cursor`                 | `pointer`          | --cursor                        | Cursor style of the secondary footer button.                       |
+| `--modal-footer-secondary-button-opacity`                | `1`                | --opacity                       | Opacity of the secondary footer button.                            |
 | `--modal-footer-secondary-button-border`                 | `none`             | --button-border                 | Border of the secondary footer button.                             |
-| `--modal-footer-secondary-button-justify-content`        | `center`           | --button-justify-content        |                                                                    |
-| `--modal-footer-secondary-button-content-gap`            | `16px`             | --button-content-gap            |                                                                    |
-| `--modal-footer-secondary-button-visibility`             | `visible`          | --button-visibility             |                                                                    |
+| `--modal-footer-secondary-button-justify-content`        | `center`           | --button-justify-content        | Justify content of the secondary footer button.                    |
+| `--modal-footer-secondary-button-content-gap`            | `16px`             | --button-content-gap            | Gap between content elements in the secondary footer button.       |
+| `--modal-footer-secondary-button-visibility`             | `visible`          | --button-visibility             | Visibility of the secondary footer button.                         |
 | `--modal-footer-secondary-button-box-shadow`             | `none`             | --button-box-shadow             | Box shadow of the secondary footer button.                         |
 | `--modal-footer-secondary-button-content-flex-direction` | `row`              | --button-content-flex-direction | Flex direction of the secondary footer button content.             |
 | `--modal-secondary-button-order`                         | `none`             | order                           | Flex order of the secondary footer button.                         |
 | `--modal-footer-secondary-button-flex-value`             | `none`             | flex                            | Flex value of the secondary footer button.                         |
-| `--modal-footer-primary-button-max-height`               | `-`                | --button-max-height             |                                                                    |
-| `--modal-footer-primary-button-max-width`                | `-`                | --button-max-width              |                                                                    |
+| `--modal-footer-primary-button-max-height`               | `-`                | --button-max-height             | Maximum height of the primary footer button.                       |
+| `--modal-footer-primary-button-max-width`                | `-`                | --button-max-width              | Maximum width of the primary footer button.                        |
 | `--modal-footer-primary-button-font-family`              | `-`                | --button-font-family            | Font family of the primary footer button.                          |
 | `--modal-footer-primary-button-font-weight`              | `500`              | --button-font-weight            | Font weight of the primary footer button.                          |
 | `--modal-footer-primary-button-font-size`                | `14px`             | --button-font-size              | Font size of the primary footer button.                            |
@@ -126,13 +126,13 @@ Override these custom properties to theme the component.
 | `--modal-footer-primary-button-margin`                   | `-`                | --button-margin                 | Margin around the primary footer button.                           |
 | `--modal-footer-primary-button-border-radius`            | `0px`              | --button-border-radius          | Corner rounding of the primary footer button.                      |
 | `--modal-footer-primary-button-width`                    | `fit-content`      | --button-width                  | Width of the primary footer button.                                |
-| `--modal-footer-primary-button-cursor`                   | `pointer`          | --cursor                        |                                                                    |
-| `--modal-footer-primary-button-opacity`                  | `1`                | --opacity                       |                                                                    |
+| `--modal-footer-primary-button-cursor`                   | `pointer`          | --cursor                        | Cursor style of the primary footer button.                         |
+| `--modal-footer-primary-button-opacity`                  | `1`                | --opacity                       | Opacity of the primary footer button.                              |
 | `--modal-footer-primary-button-border`                   | `none`             | --button-border                 | Border of the primary footer button.                               |
-| `--modal-footer-primary-button-justify-content`          | `center`           | --button-justify-content        |                                                                    |
-| `--modal-footer-primary-button-content-flex-direction`   | `row`              | --button-content-flex-direction |                                                                    |
-| `--modal-footer-primary-button-content-gap`              | `16px`             | --button-content-gap            |                                                                    |
-| `--modal-footer-primary-button-visibility`               | `visible`          | --button-visibility             |                                                                    |
+| `--modal-footer-primary-button-justify-content`          | `center`           | --button-justify-content        | Justify content of the primary footer button.                      |
+| `--modal-footer-primary-button-content-flex-direction`   | `row`              | --button-content-flex-direction | Flex direction of the primary footer button content.               |
+| `--modal-footer-primary-button-content-gap`              | `16px`             | --button-content-gap            | Gap between content elements in the primary footer button.         |
+| `--modal-footer-primary-button-visibility`               | `visible`          | --button-visibility             | Visibility of the primary footer button.                           |
 | `--modal-footer-primary-button-box-shadow`               | `none`             | --button-box-shadow             | Box shadow of the primary footer button.                           |
 | `--modal-primary-button-order`                           | `none`             | order                           | Flex order of the primary footer button.                           |
 | `--modal-footer-primary-button-flex-value`               | `none`             | flex                            | Flex value of the primary footer button.                           |
@@ -174,14 +174,19 @@ type ModalTransition = 'IN' | 'ALL';
 
 ```typescript
 type ButtonProperties = {
-  text: string;
+  text?: string;
   enable?: boolean;
   showProgressBar?: boolean;
   showLoader?: boolean;
-  loaderType?: LoaderType;
+  loaderType?: 'Circular' | 'ProgressBar';
   type?: 'submit' | 'reset' | 'button';
   testId?: string;
   icon?: Snippet;
+  children?: Snippet;
+  ariaLabel?: string;
+  ariaExpanded?: boolean;
+  disabled?: boolean;
+  classes?: string;
   onclick?: (event: MouseEvent) => void;
   onkeyup?: (event: KeyboardEvent) => void;
 };

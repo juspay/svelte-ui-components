@@ -9,7 +9,7 @@ A full-screen loading screen that displays a brand logo image, main text, option
   import { BrandLoader } from '@juspay/svelte-ui-components';
 </script>
 
-<BrandLoader />
+<BrandLoader brandLogoURL="https://example.com/logo.svg" brandText="Loading..." />
 ```
 
 ## Props

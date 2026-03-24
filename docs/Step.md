@@ -16,8 +16,8 @@ An individual step within a Stepper. Displays either a numbered circle or an ico
 
 | Prop      | Type     | Required | Default | Description                                                                                                                                                            |
 | --------- | -------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stepIndex | `number` | No       | `-`     | The 1-based step number displayed inside the circle (when no icon is provided).                                                                                        |
-| label     | `string` | No       | `-`     | Text label displayed next to the step circle.                                                                                                                          |
+| stepIndex | `number` | Yes      | `-`     | The 1-based step number displayed inside the circle (when no icon is provided).                                                                                        |
+| label     | `string` | Yes      | `-`     | Text label displayed next to the step circle.                                                                                                                          |
 | icon      | `string` | No       | `-`     | Optional URL of an icon image that replaces the step number circle.                                                                                                    |
 | classes   | `string` | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
@@ -48,3 +48,5 @@ Override these custom properties to theme the component.
 | `--step-text-color`                       | `#798fa5cc`         | color            | Color of the step label text.                                          |
 | `--step-index-font-size`                  | `14px`              | font-size        | Font size of the step number inside the circle.                        |
 | `--step-index-color`                      | `white`             | color            | Color of the step number text.                                         |
+| `--separator-background-image`            | `repeating-linear-gradient(...)` | background-image | Background image pattern for the step separator line.           |
+| `--separator-background-image-color`      | `#798fa5cc`         | color (in gradient) | Color of the dashed separator line between steps.              |

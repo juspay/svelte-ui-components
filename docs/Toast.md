@@ -18,7 +18,7 @@ An animated notification that slides in from a configurable direction, stays vis
 | -------------------- | ------------------------------------------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | duration             | `number`                                                                                    | No       | `2000`  | Time in milliseconds the toast stays visible before automatically hiding.                                                                                              |
 | leftIcon             | `string \| null`                                                                            | No       | `-`     | URL of an icon displayed on the left side of the toast (e.g., a status icon).                                                                                          |
-| message              | `string`                                                                                    | Yes      | `''`    | The main toast notification text.                                                                                                                                      |
+| message              | `string`                                                                                    | No       | `''`    | The main toast notification text.                                                                                                                                      |
 | subtext              | `string \| null`                                                                            | No       | `-`     | Optional secondary text displayed below the main message in smaller font.                                                                                              |
 | rightIcon            | `string \| null`                                                                            | No       | `-`     | URL of an icon displayed on the right side. Acts as a close button — clicking it hides the toast immediately.                                                          |
 | type                 | `ToastType \| null`                                                                         | No       | `-`     | Visual variant that sets the background color: 'success' (green), 'error' (red), 'info' (light blue), 'warn' (orange).                                                 |
@@ -99,16 +99,16 @@ Override these custom properties to theme the component.
 | `--toast-close-button-justify-content` | `center`                                | justify-content  |                                                                         |
 | `--toast-close-button-padding`         | `1px`                                   | padding          |                                                                         |
 | `--toast-success-text`                 | `#fff`                                  | color            | Text color for 'success' type toast.                                    |
-| `--toast-success-background-color`     | `var(--toast-background-color, #24aa5a` | background-color | Background color for 'success' type toast.                              |
+| `--toast-success-background-color`     | `var(--toast-background-color, #24aa5a)` | background-color | Background color for 'success' type toast.                              |
 | `--toast-success-border`               | `-`                                     | --toast-border   | Border for 'success' type toast.                                        |
 | `--toast-info-text`                    | `#fff`                                  | color            | Text color for 'info' type toast.                                       |
-| `--toast-info-background-color`        | `var(--toast-background-color, #87ceeb` | background-color | Background color for 'info' type toast.                                 |
+| `--toast-info-background-color`        | `var(--toast-background-color, #87ceeb)` | background-color | Background color for 'info' type toast.                                 |
 | `--toast-info-border`                  | `-`                                     | --toast-border   | Border for 'info' type toast.                                           |
 | `--toast-warn-text`                    | `#fff`                                  | color            | Text color for 'warn' type toast.                                       |
-| `--toast-warn-background-color`        | `var(--toast-background-color, #f3a42d` | background-color | Background color for 'warn' type toast.                                 |
+| `--toast-warn-background-color`        | `var(--toast-background-color, #f3a42d)` | background-color | Background color for 'warn' type toast.                                 |
 | `--toast-warn-border`                  | `-`                                     | --toast-border   | Border for 'warn' type toast.                                           |
 | `--toast-error-text`                   | `#fff`                                  | color            | Text color for 'error' type toast.                                      |
-| `--toast-error-background-color`       | `var(--toast-background-color, #f04438` | background-color | Background color for 'error' type toast.                                |
+| `--toast-error-background-color`       | `var(--toast-background-color, #f04438)` | background-color | Background color for 'error' type toast.                                |
 | `--toast-error-border`                 | `-`                                     | --toast-border   | Border for 'error' type toast.                                          |
 
 ## Type Reference

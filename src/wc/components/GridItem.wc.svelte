@@ -5,8 +5,8 @@
     props: {
       icon: { type: 'String', reflect: true },
       text: { type: 'String', reflect: true },
-      headerIcon: { type: 'String', reflect: true },
-      showLoader: { type: 'Boolean', reflect: true },
+      headerIcon: { type: 'String', reflect: true, attribute: 'header-icon' },
+      showLoader: { type: 'Boolean', reflect: true, attribute: 'show-loader' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       onkeydown: { type: 'Object' }

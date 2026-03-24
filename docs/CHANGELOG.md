@@ -2,29 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.13.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.13.2)
 
-Fix 34 verified documentation issues found by automated review of all 53
-component docs against source code. Key fixes:
-
-- ModalAnimation: fix 3 prop types from `unknown` to actual types, add children snippet
-- OverlayAnimation: add missing children snippet documentation
-- Tabs: remove false bindable claim on activeIndex (no $bindable() in source)
-- Book: remove nonexistent children snippet claim, fix CSS var property mappings
-- Modal: fix ButtonProperties type ref (text optional, 5 missing fields, resolve LoaderType),
-fix header default, clarify onclose behavior, fill 15 empty CSS descriptions
-- InputButton/Status: fix same ButtonProperties type issues, add missing type fields
-- ListItem: fix 10 right-image CSS property mappings to use --image-* intermediate vars,
-fix box-shadow property, clarify bottomContent requires useAccordion
-- Toast: fix 4 CSS var defaults missing closing parenthesis
-- Step: fix stepIndex/label as required, add 2 missing CSS vars
-- GridItem/Slider/Toggle/Toast: fix Required/Optional contradictions
-- Img: fix onerror description (doesn't fire when fallback exists)
-- Browser: fix --browser-lock-color CSS property from fill to color
-- ContextMenu: add missing --context-menu-max-height CSS var
-- BrandLoader: fix usage example to include required props
-- Table: remove stale columnWidths prop reference
-- Accordion: add missing children snippet section
+## [2.13.2](https://github.com/juspay/svelte-ui-components/compare/2.13.2..2.13.1) - 24 March 2026
 
 ## [2.13.1](https://github.com/juspay/svelte-ui-components/compare/2.13.1..2.13.0) - 19 March 2026
 

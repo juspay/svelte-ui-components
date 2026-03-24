@@ -10,6 +10,7 @@
     testId,
     scrollLeftIcon,
     scrollRightIcon,
+    tab,
     classes,
     onchange
   }: TabsProperties = $props();
@@ -44,6 +45,13 @@
     }
     activeIndex = index;
     onchange?.(index, items[index]);
+  }
+
+  function handleKeydown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleTabClick(index);
+    }
   }
 
   function initOverflow(node: HTMLDivElement): { destroy: () => void } {
@@ -83,20 +91,25 @@
     onscroll={updateOverflow}
   >
     {#each items as label, index (index)}
-      <button
+      <div
         class="tabs-item"
         class:active={index === activeIndex}
         role="tab"
         aria-selected={index === activeIndex}
+        aria-disabled={disabled ? true : null}
         tabindex={index === activeIndex ? 0 : -1}
-        {disabled}
         onclick={() => handleTabClick(index)}
+        onkeydown={(e) => handleKeydown(e, index)}
       >
-        {label}
+        {#if tab}
+          {@render tab({ label, index, active: index === activeIndex })}
+        {:else}
+          {label}
+        {/if}
         {#if index === activeIndex}
           <span class="tabs-indicator"></span>
         {/if}
-      </button>
+      </div>
     {/each}
   </div>
   {#if canScrollRight}
@@ -197,6 +210,8 @@
   }
 
   .tabs-item {
+    display: flex;
+    align-items: center;
     position: relative;
     padding: var(--tabs-item-padding, 12px 16px);
     font-size: var(--tabs-item-font-size, 14px);
@@ -210,10 +225,11 @@
     outline: none;
     white-space: nowrap;
     flex-shrink: 0;
+    user-select: none;
     transition: var(--tabs-transition, color 0.2s ease, background 0.2s ease);
   }
 
-  .tabs-item:hover:not(.active):not(:disabled) {
+  .tabs-item:hover:not(.active):not([aria-disabled]) {
     color: var(--tabs-hover-color, #333333);
     background: var(--tabs-hover-background, #f5f5f5);
   }
@@ -224,7 +240,7 @@
     background: var(--tabs-active-background, transparent);
   }
 
-  .tabs-item:disabled {
+  .tabs-item[aria-disabled] {
     cursor: var(--tabs-disabled-cursor, not-allowed);
   }
 

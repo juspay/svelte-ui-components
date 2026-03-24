@@ -12,6 +12,7 @@ export type OptionalTabsProperties = {
   testId?: string;
   scrollLeftIcon?: Snippet;
   scrollRightIcon?: Snippet;
+  tab?: Snippet<[{ label: string; index: number; active: boolean }]>;
   classes?: string;
 };
 

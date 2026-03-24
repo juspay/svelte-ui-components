@@ -1,6 +1,6 @@
 # Tabs
 
-A horizontal tab bar with clickable tab items and an animated active indicator. The `activeIndex` prop controls which tab is selected, and the `onchange` event fires when the user selects a different tab. All visual aspects are customizable via CSS custom properties.
+A horizontal tab bar with clickable tab items and an animated active indicator. The `activeIndex` prop controls which tab is selected, and the `onchange` event fires when the user selects a different tab. For advanced use cases (pills, dirty indicators, close buttons, per-tab menus), pass a `tab` snippet to render custom content inside each tab. All visual aspects are customizable via CSS custom properties.
 
 ## Usage
 
@@ -10,6 +10,24 @@ A horizontal tab bar with clickable tab items and an animated active indicator. 
 </script>
 
 <Tabs items={['Tab 1', 'Tab 2', 'Tab 3']} />
+```
+
+### With Custom Tab Content
+
+```svelte
+<Tabs
+  items={['index.ts', 'App.svelte', 'styles.css']}
+  activeIndex={0}
+  onchange={(index) => (activeIndex = index)}
+>
+  {#snippet tab({ label, index, active })}
+    <span>{label}</span>
+    {#if dirtyFiles.has(index)}
+      <span class="dirty-dot"></span>
+    {/if}
+    <button onclick={(e) => { e.stopPropagation(); closeTab(index); }}>×</button>
+  {/snippet}
+</Tabs>
 ```
 
 ## Props
@@ -26,10 +44,11 @@ A horizontal tab bar with clickable tab items and an animated active indicator. 
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet         | Type      | Description                                                                                    |
-| --------------- | --------- | ---------------------------------------------------------------------------------------------- |
-| scrollLeftIcon  | `Snippet` | Custom icon rendered inside the left scroll arrow button. Defaults to a built-in chevron SVG.  |
-| scrollRightIcon | `Snippet` | Custom icon rendered inside the right scroll arrow button. Defaults to a built-in chevron SVG. |
+| Snippet         | Type                                                                    | Description                                                                                                                                                                        |
+| --------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scrollLeftIcon  | `Snippet`                                                               | Custom icon rendered inside the left scroll arrow button. Defaults to a built-in chevron SVG.                                                                                      |
+| scrollRightIcon | `Snippet`                                                               | Custom icon rendered inside the right scroll arrow button. Defaults to a built-in chevron SVG.                                                                                     |
+| tab             | `Snippet<[{ label: string; index: number; active: boolean }]>` | Custom renderer for each tab item. Receives the tab's label string, zero-based index, and whether it is currently active. When provided, replaces the default text label. Supports interactive children such as close buttons or menus. |
 
 ## Events
 
@@ -87,9 +106,10 @@ Tag: `<sui-tabs>`
 
 ### Slots
 
-| Slot Name           | Maps to Snippet   | Description                             |
-| ------------------- | ----------------- | --------------------------------------- |
-| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.  |
-| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow. |
+| Slot Name           | Maps to Snippet   | Description                                                                                             |
+| ------------------- | ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.                                                                  |
+| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow.                                                                 |
+| `tab`               | `tab`             | Custom tab content. Receives `label`, `index`, and `active` as slot props. Falls back to label text. |
 
 > **Note:** The `items` prop is an array — set it via JavaScript property.

@@ -3,9 +3,9 @@
     tag: 'sui-toolbar',
     shadow: 'open',
     props: {
-      showBackButton: { type: 'Boolean', reflect: true },
+      showBackButton: { type: 'Boolean', reflect: true, attribute: 'show-back-button' },
       text: { type: 'String', reflect: true },
-      backIcon: { type: 'String' },
+      backIcon: { type: 'String', attribute: 'back-icon' },
       classes: { type: 'String' },
       onbackClick: { type: 'Object' },
       onkeydown: { type: 'Object' }

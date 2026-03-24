@@ -4,9 +4,9 @@
     shadow: 'open',
     props: {
       variant: { type: 'String', reflect: true },
-      showStatusBar: { type: 'Boolean', reflect: true },
-      showHomeBar: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      showStatusBar: { type: 'Boolean', reflect: true, attribute: 'show-status-bar' },
+      showHomeBar: { type: 'Boolean', reflect: true, attribute: 'show-home-bar' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }
   }}

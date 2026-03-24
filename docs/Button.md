@@ -62,7 +62,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | Event   | Type                             | Description                                                                                                                     |
 | ------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | onclick | `(event: MouseEvent) => void`    | Fires when the button is clicked. Does NOT fire when `showProgressBar` is active (clicks are silently ignored during progress). |
-| onkeyup | `(event: KeyboardEvent) => void` | Fires when a key is released while the button has focus.                                                                        |
+| onkeyup | `(event: KeyboardEvent) => void` | Fires when a key is released while the button has focus. Defaults to a no-op `() => {}` (always fires, unlike other events which default to undefined). |
 
 ## CSS Variables
 

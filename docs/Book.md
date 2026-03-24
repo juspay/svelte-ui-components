@@ -1,6 +1,6 @@
 # Book
 
-A page-flip presentation component that displays content in a book-like format with page navigation. Pages are provided as an array of `BookPage` objects or as `children` snippet content. Supports previous/next arrow navigation, clickable page indicator dots, keyboard navigation (ArrowLeft/ArrowRight), and optional swipe/drag gestures. The `currentPage` prop is bindable for two-way page tracking. Transitions between pages can be "slide" (default), "fade", or "none".
+A page-flip presentation component that displays content in a book-like format with page navigation. Pages are provided as an array of `BookPage` objects. Supports previous/next arrow navigation, clickable page indicator dots, keyboard navigation (ArrowLeft/ArrowRight), and optional swipe/drag gestures. The `currentPage` prop is bindable for two-way page tracking. Transitions between pages can be "slide" (default), "fade", or "none".
 
 ## Usage
 
@@ -59,9 +59,9 @@ Override these custom properties to theme the component.
 | `--book-overflow`             | `hidden`              | overflow            | Overflow behavior of the page content area.               |
 | `--book-transition-duration`  | `0.3s`                | transition-duration | Duration of the page transition animation.                |
 | `--book-nav-size`             | `36px`                | width/height        | Size of the navigation arrow buttons.                     |
-| `--book-nav-background`       | `rgba(0, 0, 0, 0.05)` | background-color    | Background color of the navigation arrow buttons.         |
-| `--book-nav-hover-background` | `rgba(0, 0, 0, 0.1)`  | background-color    | Background color of the navigation arrows on hover.       |
-| `--book-nav-color`            | `#333333`             | stroke              | Color of the navigation arrow SVG icons.                  |
+| `--book-nav-background`       | `rgba(0, 0, 0, 0.05)` | --button-background | Background of navigation buttons. Maps to `--button-background` which may have no effect in the current Button implementation. |
+| `--book-nav-hover-background` | `rgba(0, 0, 0, 0.1)`  | --button-hover-background | Hover background of navigation buttons. Maps to `--button-hover-background` which may have no effect — Button uses `--button-hover-color` instead. |
+| `--book-nav-color`            | `#333333`             | --button-color      | Maps to Button's `--button-color`, which controls `background-color` of navigation buttons. |
 | `--book-nav-border-radius`    | `50%`                 | border-radius       | Corner rounding of the navigation arrow buttons.          |
 | `--book-nav-disabled-opacity` | `0.3`                 | opacity             | Opacity of navigation arrows when at the first/last page. |
 | `--book-dot-size`             | `8px`                 | width/height        | Size of each page indicator dot.                          |

@@ -42,7 +42,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | leftContent   | `Snippet` | A Svelte 5 Snippet for custom content in the left area (beside or replacing the left image).         |
 | centerContent | `Snippet` | A Svelte 5 Snippet for custom content in the center area (beside or replacing the label).            |
 | rightContent  | `Snippet` | A Svelte 5 Snippet for custom content in the right area (beside the right image).                    |
-| bottomContent | `Snippet` | A Svelte 5 Snippet for content below the main row. Shown inside an Accordion when useAccordion=true. |
+| bottomContent | `Snippet` | A Svelte 5 Snippet for content below the main row. Only renders when `useAccordion` is `true`; displayed inside an Accordion that expands/collapses based on the `expand` prop. |
 
 ## Events
 
@@ -67,7 +67,7 @@ Override these custom properties to theme the component.
 | `--list-item-loader-background-color`            | `#00000030`                               | background              | Background overlay color when showLoader is true.        |
 | `--list-item-background-color`                   | `transparent`                             | background-color        | Background color of the list item.                       |
 | `--list-item-cursor`                             | `pointer`                                 | cursor                  | Cursor style when hovering the list item.                |
-| `--list-item-box-shadow`                         | `none`                                    | -moz-box-shadow         | Box shadow of the list item.                             |
+| `--list-item-box-shadow`                         | `none`                                    | box-shadow              | Box shadow of the list item.                             |
 | `--list-item-box-width`                          | `-`                                       | width                   | Width of the list item.                                  |
 | `--list-item-border-radius`                      | `0px`                                     | border-radius           | Corner rounding of the list item.                        |
 | `--list-item-margin`                             | `-`                                       | margin                  | Outer margin of the list item.                           |
@@ -100,16 +100,16 @@ Override these custom properties to theme the component.
 | `--list-item-center-text-font-family`            | `-`                                       | font-family             | Font family of the center text.                          |
 | `--list-item-right-content-display`              | `flex`                                    | display                 | Display mode of the right content area.                  |
 | `--list-item-right-content-loader-margin`        | `-`                                       | margin                  |                                                          |
-| `--list-item-right-image-height`                 | `18px`                                    | height                  | Height of the right image.                               |
-| `--list-item-right-image-width`                  | `18px`                                    | width                   | Width of the right image.                                |
-| `--list-item-right-image-padding`                | `0px`                                     | padding                 | Padding around the right image.                          |
-| `--list-item-right-image-border-radius`          | `0px`                                     | border-radius           | Corner rounding of the right image.                      |
-| `--list-item-right-image-margin`                 | `0px`                                     | margin                  | Margin around the right image.                           |
-| `--list-item-right-image-filter`                 | `-`                                       | filter                  | CSS filter applied to the right image.                   |
-| `--list-item-right-image-background`             | `-`                                       | background              | Background behind the right image.                       |
-| `--list-item-right-image-border`                 | `-`                                       | border                  | Border of the right image.                               |
-| `--list-item-right-image-hover-background`       | `var(--list-item-right-image-background)` | background              | Background color of right image on hover.                |
-| `--list-item-right-image-hover-border`           | `var(--list-item-right-image-border)`     | border                  |                                                          |
+| `--list-item-right-image-height`                 | `18px`                                    | --image-height          | Height of the right image.                               |
+| `--list-item-right-image-width`                  | `18px`                                    | --image-width           | Width of the right image.                                |
+| `--list-item-right-image-padding`                | `0px`                                     | --image-padding         | Padding around the right image.                          |
+| `--list-item-right-image-border-radius`          | `0px`                                     | --image-border-radius   | Corner rounding of the right image.                      |
+| `--list-item-right-image-margin`                 | `0px`                                     | --image-margin          | Margin around the right image.                           |
+| `--list-item-right-image-filter`                 | `-`                                       | --image-filter          | CSS filter applied to the right image.                   |
+| `--list-item-right-image-background`             | `-`                                       | --image-background      | Background behind the right image.                       |
+| `--list-item-right-image-border`                 | `-`                                       | --image-border          | Border of the right image.                               |
+| `--list-item-right-image-hover-background`       | `var(--list-item-right-image-background)` | --image-hover-background | Background color of right image on hover.               |
+| `--list-item-right-image-hover-border`           | `var(--list-item-right-image-border)`     | --image-hover-border    | Border of right image on hover.                          |
 | `--list-item-right-content-text-color`           | `#2f3841`                                 | color                   | Color of the right side text.                            |
 | `--list-item-right-content-text-font-size`       | `12px`                                    | font-size               | Font size of the right side text.                        |
 | `--list-item-right-content-text-font-weight`     | `300`                                     | font-weight             | Font weight of the right side text.                      |

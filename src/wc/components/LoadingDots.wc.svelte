@@ -5,7 +5,7 @@
     props: {
       dots: { type: 'Number', reflect: true },
       animation: { type: 'String', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }
   }}

@@ -17,7 +17,7 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 | Prop    | Type      | Required | Default | Description                                                                                                                                                            |
 | ------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | checked | `boolean` | No       | `false` | The current on/off state of the toggle switch.                                                                                                                         |
-| text    | `string`  | Yes      | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
+| text    | `string`  | No       | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
 | classes | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events

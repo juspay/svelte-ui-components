@@ -7,7 +7,7 @@
       checked: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       indeterminate: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       checkedIcon: { type: 'Object' },
       indeterminateIcon: { type: 'Object' },
       classes: { type: 'String' },

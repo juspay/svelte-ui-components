@@ -11,3 +11,11 @@ A wrapper that applies a fade-out transition (350ms) to its children when they a
 
 <OverlayAnimation />
 ```
+
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet  | Type      | Description                                |
+| -------- | --------- | ------------------------------------------ |
+| children | `Snippet` | Content to render inside the overlay. |

@@ -1,6 +1,6 @@
 # Tabs
 
-A horizontal tab bar with clickable tab items and an animated active indicator. The `activeIndex` prop (bindable) controls which tab is selected, and the `onchange` event fires when the user selects a different tab. All visual aspects are customizable via CSS custom properties.
+A horizontal tab bar with clickable tab items and an animated active indicator. The `activeIndex` prop controls which tab is selected, and the `onchange` event fires when the user selects a different tab. All visual aspects are customizable via CSS custom properties.
 
 ## Usage
 
@@ -17,7 +17,7 @@ A horizontal tab bar with clickable tab items and an animated active indicator. 
 | Prop        | Type       | Required | Default     | Description                                                                                                                                                            |
 | ----------- | ---------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | items       | `string[]` | Yes      | -           | Array of tab label strings rendered as clickable tabs.                                                                                                                 |
-| activeIndex | `number`   | No       | `0`         | The zero-based index of the currently active tab. Bindable for two-way sync.                                                                                           |
+| activeIndex | `number`   | No       | `0`         | The zero-based index of the currently active tab.                                                                                                                      |
 | disabled    | `boolean`  | No       | `false`     | When true, disables all tab interactions and applies disabled styling.                                                                                                 |
 | testId      | `string`   | No       | `undefined` | Value applied to the `data-pw` attribute on the tab bar container for test selectors.                                                                                  |
 | classes     | `string`   | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |

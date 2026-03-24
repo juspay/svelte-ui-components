@@ -44,7 +44,7 @@ Override these custom properties to theme the component.
 
 | Event   | Type         | Description                         |
 | ------- | ------------ | ----------------------------------- |
-| onerror | `() => void` | Fires when the image fails to load. |
+| onerror | `() => void` | Fires when the image fails to load and no fallback is available, or when the fallback image itself also fails to load. Does not fire when the primary image fails but a valid fallback URL exists — the component silently switches to the fallback instead. |
 
 ## Web Component
 

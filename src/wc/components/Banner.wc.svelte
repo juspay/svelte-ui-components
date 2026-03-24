@@ -4,10 +4,10 @@
     shadow: 'open',
     props: {
       text: { type: 'String', reflect: true },
-      linkText: { type: 'String', reflect: true },
+      linkText: { type: 'String', reflect: true, attribute: 'link-text' },
       dismissible: { type: 'Boolean', reflect: true },
       visible: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       ondismiss: { type: 'Object' }

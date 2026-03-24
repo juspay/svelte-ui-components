@@ -4,7 +4,7 @@
     shadow: 'open',
     props: {
       steps: { type: 'Object' },
-      currentStepIndex: { type: 'Number', reflect: true },
+      currentStepIndex: { type: 'Number', reflect: true, attribute: 'current-step-index' },
       classes: { type: 'String' },
       onhandleStepClick: { type: 'Object' }
     }

@@ -7,7 +7,7 @@
       checked: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       onclick: { type: 'Object' }
     }
   }}

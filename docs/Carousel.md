@@ -37,7 +37,7 @@ Override these custom properties to theme the component.
 
 | Variable                   | Default | CSS Property  | Description                                                                      |
 | -------------------------- | ------- | ------------- | -------------------------------------------------------------------------------- |
-| `--carousel-width`         | `300px` | width         | Width of the carousel container. Read by JS at mount time for slide positioning. |
+| `--carousel-width`         | `300px` | width         | Width of the carousel container. Read by JS at mount time for slide positioning. Note: `.carousel-container` uses this variable without a fallback; inner elements fall back to `300px`. |
 | `--carousel-height`        | `100px` | height        | Height of the carousel slides.                                                   |
 | `--carousel-shadow`        | `-`     | box-shadow    | Box shadow of the carousel container.                                            |
 | `--carousel-border-radius` | `0%`    | border-radius | Corner rounding of the carousel container.                                       |

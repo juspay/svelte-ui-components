@@ -6,7 +6,7 @@
       selected: { type: 'Boolean', reflect: true },
       mode: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclick: { type: 'Object' }
     }

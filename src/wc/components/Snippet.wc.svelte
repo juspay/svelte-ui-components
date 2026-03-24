@@ -5,8 +5,8 @@
     props: {
       text: { type: 'String', reflect: true },
       prompt: { type: 'String', reflect: true },
-      showCopyButton: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      showCopyButton: { type: 'Boolean', reflect: true, attribute: 'show-copy-button' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       oncopy: { type: 'Object' }
     }

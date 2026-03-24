@@ -4,7 +4,7 @@
     shadow: 'open',
     props: {
       classes: { type: 'String' },
-      testId: { type: 'String' }
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

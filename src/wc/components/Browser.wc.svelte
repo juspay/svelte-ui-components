@@ -5,12 +5,12 @@
     props: {
       url: { type: 'String', reflect: true },
       title: { type: 'String', reflect: true },
-      showAddressBar: { type: 'Boolean', reflect: true },
-      showTabBar: { type: 'Boolean', reflect: true },
+      showAddressBar: { type: 'Boolean', reflect: true, attribute: 'show-address-bar' },
+      showTabBar: { type: 'Boolean', reflect: true, attribute: 'show-tab-bar' },
       variant: { type: 'String', reflect: true },
       shadow: { type: 'Boolean', reflect: true },
       rounded: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       lockIcon: { type: 'Object' },
       classes: { type: 'String' }
     }

@@ -4,9 +4,9 @@
     shadow: 'open',
     props: {
       items: { type: 'Object' },
-      activeIndex: { type: 'Number', reflect: true },
+      activeIndex: { type: 'Number', reflect: true, attribute: 'active-index' },
       disabled: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       scrollLeftIcon: { type: 'Object' },
       scrollRightIcon: { type: 'Object' },
       classes: { type: 'String' },

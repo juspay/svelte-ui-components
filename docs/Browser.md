@@ -70,7 +70,7 @@ Override these custom properties to theme the component.
 | `--browser-addressbar-font-family`   | `inherit`                                                | font-family      | Font family of the URL text.                                           |
 | `--browser-addressbar-color`         | `#6b7280`                                                | color            | Text color of the URL in the address bar.                              |
 | `--browser-addressbar-height`        | `32px`                                                   | height           | Height of the address bar input area.                                  |
-| `--browser-lock-color`               | `#6b7280`                                                | fill             | Color of the lock icon in the address bar.                             |
+| `--browser-lock-color`               | `#6b7280`                                                | color            | Color of the lock icon in the address bar (SVG uses `fill="currentColor"`). |
 | `--browser-content-bg`               | `#ffffff`                                                | background-color | Background color of the content viewport area.                         |
 | `--browser-content-min-height`       | `200px`                                                  | min-height       | Minimum height of the content viewport area.                           |
 | `--browser-content-overflow`         | `hidden`                                                 | overflow         | Overflow behavior of the content viewport area.                        |

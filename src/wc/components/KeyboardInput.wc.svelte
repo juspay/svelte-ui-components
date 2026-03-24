@@ -5,7 +5,7 @@
     props: {
       keys: { type: 'Object', reflect: true },
       separator: { type: 'String', reflect: true },
-      testId: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclick: { type: 'Object' }
     }

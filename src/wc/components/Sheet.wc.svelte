@@ -6,9 +6,9 @@
       open: { type: 'Boolean', reflect: true },
       side: { type: 'String', reflect: true },
       title: { type: 'String', reflect: true },
-      showOverlay: { type: 'Boolean', reflect: true },
-      showCloseButton: { type: 'Boolean', reflect: true },
-      testId: { type: 'String' },
+      showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },
+      showCloseButton: { type: 'Boolean', reflect: true, attribute: 'show-close-button' },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclose: { type: 'Object' }
     }

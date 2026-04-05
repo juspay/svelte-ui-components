@@ -33,6 +33,8 @@ import './components/Browser.wc.svelte';
 import './components/Button.wc.svelte';
 import './components/CheckListItem.wc.svelte';
 import './components/Choicebox.wc.svelte';
+import './components/Card.wc.svelte';
+import './components/EmptyState.wc.svelte';
 import './components/ContextMenu.wc.svelte';
 import './components/InputButton.wc.svelte';
 import './components/ListItem.wc.svelte';

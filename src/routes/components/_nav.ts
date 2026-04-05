@@ -12,6 +12,7 @@ export const componentNav: NavGroup[] = [
   {
     category: 'Layout & Containers',
     items: [
+      { name: 'Card', slug: 'card' },
       { name: 'Browser', slug: 'browser' },
       { name: 'Phone', slug: 'phone' },
       { name: 'Book', slug: 'book' }
@@ -62,7 +63,8 @@ export const componentNav: NavGroup[] = [
       { name: 'Status', slug: 'status' },
       { name: 'IconStack', slug: 'icon-stack' },
       { name: 'Snippet', slug: 'snippet' },
-      { name: 'RelativeTime', slug: 'relative-time' }
+      { name: 'RelativeTime', slug: 'relative-time' },
+      { name: 'EmptyState', slug: 'empty-state' }
     ]
   },
   {

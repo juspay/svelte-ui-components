@@ -1,10 +1,8 @@
-export type IconProperties = OptionalIconProperties & IconEventProperties & MandatoryIconProperties;
-
-export type MandatoryIconProperties = {
-  icon: string;
-};
+export type IconProperties = OptionalIconProperties & IconEventProperties;
 
 export type OptionalIconProperties = {
+  icon?: string;
+  svg?: string;
   text?: string | null;
   classes?: string;
 };

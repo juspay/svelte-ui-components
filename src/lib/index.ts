@@ -51,6 +51,8 @@ export { default as ThemeSwitcher } from './ThemeSwitcher/ThemeSwitcher.svelte';
 export { default as Book } from './Book/Book.svelte';
 export { default as Browser } from './Browser/Browser.svelte';
 export { default as Phone } from './Phone/Phone.svelte';
+export { default as Card } from './Card/Card.svelte';
+export { default as EmptyState } from './EmptyState/EmptyState.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -99,5 +101,7 @@ export type * from './Book/properties';
 export type * from './Browser/properties';
 export type * from './Phone/properties';
 export type * from './Loader/properties';
+export type * from './Card/properties';
+export type * from './EmptyState/properties';
 
 export { validateInput } from './utils';

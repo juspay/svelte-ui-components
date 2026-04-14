@@ -28,9 +28,12 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 | Prop    | Type         | Required | Default | Description                                                                                                                                                            |
 | ------- | ------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | items   | `MenuItem[]` | Yes      | `-`     | Array of menu items to display. Each item defines a label, value, and optional icon, disabled, danger, or separator flags. See MenuItem type below.                    |
-| open    | `boolean`    | No       | `false` | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                   |
-| testId  | `string`     | No       | `-`     | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                 |
-| classes | `string`     | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| open      | `boolean`              | No       | `false`  | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                   |
+| testId    | `string`               | No       | `-`      | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                 |
+| classes   | `string`               | No       | `-`      | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| role      | `'menu' \| 'listbox'`  | No       | `'menu'` | ARIA role for the dropdown container. Set to `'listbox'` to use the menu as an autocomplete suggestions list. Items automatically get `role="option"` instead of `role="menuitem"`, and `aria-selected` is managed on the focused item. |
+| ariaLabel | `string`               | No       | `-`      | Sets `aria-label` on the dropdown container for screen reader identification.                                                                                          |
+| id        | `string`               | No       | `-`      | Sets the `id` attribute on the dropdown container. Needed for `aria-controls` references from a parent combobox input.                                                 |
 
 ## Snippets
 
@@ -107,6 +110,7 @@ type MenuItem = {
   disabled?: boolean; // When true, item is dimmed and non-interactive
   danger?: boolean; // When true, item text is styled in a destructive/red color
   separator?: boolean; // When true, renders a horizontal line instead of a clickable item
+  id?: string; // DOM id for the item element, needed for aria-activedescendant references
 };
 ```
 

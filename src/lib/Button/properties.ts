@@ -16,6 +16,8 @@ export type OptionalButtonProperties = {
   children?: Snippet;
   ariaLabel?: string;
   ariaExpanded?: boolean;
+  ariaSelected?: boolean;
+  role?: string;
   disabled?: boolean;
   classes?: string;
 };

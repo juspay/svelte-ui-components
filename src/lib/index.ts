@@ -53,6 +53,9 @@ export { default as Browser } from './Browser/Browser.svelte';
 export { default as Phone } from './Phone/Phone.svelte';
 export { default as Card } from './Card/Card.svelte';
 export { default as EmptyState } from './EmptyState/EmptyState.svelte';
+export { default as Combobox } from './Combobox/Combobox.svelte';
+export { default as ColorPicker } from './ColorPicker/ColorPicker.svelte';
+export { default as SplitInput } from './SplitInput/SplitInput.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -103,5 +106,8 @@ export type * from './Phone/properties';
 export type * from './Loader/properties';
 export type * from './Card/properties';
 export type * from './EmptyState/properties';
+export type * from './Combobox/properties';
+export type * from './ColorPicker/properties';
+export type * from './SplitInput/properties';
 
 export { validateInput } from './utils';

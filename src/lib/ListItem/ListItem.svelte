@@ -30,7 +30,10 @@
     onitemClick,
     ontopSectionClick,
     onkeydown,
-    classes
+    classes,
+    role: itemRole,
+    ariaSelected,
+    id
   }: ListItemProperties = $props();
 
   function handleLeftImageClick(event: MouseEvent): void {
@@ -59,13 +62,16 @@
     {#if showLoader}
       <div class="item-loader"></div>
     {/if}
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
       class="item"
       class:prevent-focus={preventFocus}
       onclick={handleItemClick}
       {onkeydown}
-      role="button"
-      tabindex="0"
+      role={itemRole ?? 'button'}
+      tabindex={itemRole === 'option' ? -1 : 0}
+      aria-selected={ariaSelected}
+      {id}
       data-pw={testId}
     >
       <div

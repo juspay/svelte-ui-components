@@ -44,6 +44,14 @@
     "description": "A styled checkbox input with a custom SVG checkmark. Supports checked state binding, disabled state, and configurable size and colors via CSS variables."
   },
   {
+    "name": "ColorPicker",
+    "description": "A color selection component with a custom popover containing a saturation/brightness panel, hue slider, and editable HEX/RGB/HSL input fields. The trigger shows a color swatch with an optional hex text input. Uses Button, Input, and Slider components internally."
+  },
+  {
+    "name": "Combobox",
+    "description": "A text input with a filtered dropdown list implementing the WAI-ARIA combobox pattern. Supports keyboard navigation, disabled items, custom item rendering, and bindable value/inputValue/open state. Use for autocomplete, search suggestions, and typeahead inputs."
+  },
+  {
     "name": "CheckListItem",
     "description": "A checkbox list item with an HTML-capable text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet and disabled state. The checked state is bindable."
   },
@@ -172,6 +180,10 @@
     "description": "A primary action button paired with a dropdown arrow that opens a Menu component. The dropdown provides full keyboard navigation, typeahead, disabled/danger items, and separator support via the MenuItem API. Click the main button for the primary action or select from the dropdown for alternatives."
   },
   {
+    "name": "SplitInput",
+    "description": "A row of related input fields for segmented values like OTP/PIN codes, RGB/HSL color channels, IP addresses, or time inputs. Supports per-field configuration (dataType, min/max, validation), auto-advance focus, paste distribution, keyboard navigation, and optional separators between fields. Uses the Input component internally."
+  },
+  {
     "name": "Status",
     "description": "A full-screen status display with a centered icon image, title text, description text (supports HTML), and an optional action Button. Uses backdrop-filter blur for visual effect. Ideal for order success/failure screens."
   },
@@ -189,7 +201,7 @@
   },
   {
     "name": "Tabs",
-    "description": "A tabbed interface with a row of tab buttons and a content panel. Supports an active tab indicator that animates between tabs. Each tab has a label and associated content snippet."
+    "description": "A horizontal tab bar with clickable tab items and an animated active indicator. Supports overflow scrolling with arrow buttons, custom tab content via a parameterized Snippet, and keyboard activation (Enter/Space). All visuals customizable via CSS variables."
   },
   {
     "name": "ThemeSwitcher",

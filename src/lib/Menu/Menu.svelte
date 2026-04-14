@@ -12,8 +12,13 @@
     onselect,
     onopen,
     onclose,
-    classes
+    classes,
+    role: menuRole = 'menu',
+    ariaLabel: menuAriaLabel,
+    id: menuId
   }: MenuProperties = $props();
+
+  let itemRole = $derived(menuRole === 'listbox' ? 'option' : 'menuitem');
 
   let menuContainerEl: HTMLDivElement | null = $state(null);
   let menuListEl: HTMLDivElement | null = $state(null);
@@ -70,7 +75,7 @@
       return;
     }
     const focusableItems = menuListEl.querySelectorAll(
-      '[role="menuitem"]:not([aria-disabled="true"])'
+      `[role="${itemRole}"]:not([aria-disabled="true"])`
     );
     const item = focusableItems.item(index);
     if (index >= 0 && index < focusableItems.length && item instanceof HTMLElement) {
@@ -212,7 +217,9 @@
     <div
       class="menu-dropdown"
       bind:this={menuListEl}
-      role="menu"
+      role={menuRole}
+      id={menuId}
+      aria-label={menuAriaLabel}
       tabindex="-1"
       onkeydown={handleMenuKeydown}
     >
@@ -220,14 +227,18 @@
         {#if item.separator === true}
           <div class="menu-separator" role="separator"></div>
         {:else}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
           <div
             class="menu-item"
             class:menu-item-danger={item.danger === true}
             class:menu-item-disabled={item.disabled === true}
-            role="menuitem"
-            tabindex={item.disabled === true ? -1 : 0}
+            role={itemRole}
+            id={item.id}
+            tabindex={item.disabled === true || menuRole === 'listbox' ? -1 : 0}
             aria-disabled={item.disabled === true ? 'true' : null}
+            aria-selected={menuRole === 'listbox' && focusedIndex === getSelectableIndex(item)
+              ? true
+              : null}
             onclick={() => selectItem(item)}
             onfocus={() => {
               if (item.disabled !== true) {

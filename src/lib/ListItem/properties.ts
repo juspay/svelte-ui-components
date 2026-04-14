@@ -21,6 +21,9 @@ export type ListItemProperties = ListItemEventProperties & {
   rightContent?: Snippet;
   bottomContent?: Snippet;
   classes?: string;
+  role?: string;
+  ariaSelected?: boolean;
+  id?: string;
 };
 
 export type ListItemEventProperties = {

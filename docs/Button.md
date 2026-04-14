@@ -46,6 +46,8 @@ An action button that supports two loader modes: a circular spinner overlay or a
 | testId          | `string`                          | No       | `-`        | Value for the `data-pw` attribute, used for end-to-end testing selectors.                                                                                                                                                  |
 | ariaLabel       | `string`                          | No       | `-`        | Accessible label for the button. Used when the button has only an icon and no visible text.                                                                                                                                |
 | ariaExpanded    | `boolean`                         | No       | `-`        | Sets `aria-expanded` on the button element. Use when the button controls an expandable region (dropdown, accordion, etc.).                                                                                                 |
+| ariaSelected    | `boolean`                         | No       | `-`        | Sets `aria-selected` on the button element. Use when the button represents a selectable option (e.g., inside an autocomplete dropdown or tab-like pattern).                                                                |
+| role            | `string`                          | No       | `-`        | Overrides the default ARIA role of the button element. Use `'option'` when the button represents a selectable item in a listbox pattern, or `'tab'` for tab-like navigation.                                               |
 | classes         | `string`                          | No       | `-`        | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
 ## Snippets
@@ -100,6 +102,8 @@ Override these custom properties to theme the component.
 | `--button-hover-color`                      | inherits `--button-color`      | background         | Background color on hover.                                                                                |
 | `--button-hover-text-color`                 | inherits `--button-text-color` | color              | Text color on hover.                                                                                      |
 | `--button-hover-border`                     | inherits `--button-border`     | border             | Border style on hover.                                                                                    |
+| `--button-hover-transform`                  | `-`                            | transform          | CSS transform applied on hover (e.g., `scale(1.05)`). Allows hover scale effects without `:global()`.    |
+| `--button-active-transform`                 | `-`                            | transform          | CSS transform applied on active/pressed state (e.g., `scale(0.95)`). Allows press-down effects without `:global()`. |
 | `--button-progress-loader-background-color` | `#00000030`                    | background         | Background color of the progress bar overlay.                                                             |
 | `--button-progress-loader-duration`         | `8s`                           | animation-duration | Duration of the progress bar fill animation.                                                              |
 

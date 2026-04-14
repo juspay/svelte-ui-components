@@ -37,9 +37,12 @@ export const componentNav: NavGroup[] = [
       { name: 'Radio', slug: 'radio' },
       { name: 'Toggle', slug: 'toggle' },
       { name: 'Select', slug: 'select' },
+      { name: 'Combobox', slug: 'combobox' },
       { name: 'Slider', slug: 'slider' },
       { name: 'Calendar', slug: 'calendar' },
-      { name: 'Choicebox', slug: 'choicebox' }
+      { name: 'Choicebox', slug: 'choicebox' },
+      { name: 'Color Picker', slug: 'color-picker' },
+      { name: 'SplitInput', slug: 'split-input' }
     ]
   },
   {

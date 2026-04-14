@@ -7,6 +7,7 @@ export type MenuItem = {
   disabled?: boolean;
   danger?: boolean;
   separator?: boolean;
+  id?: string;
 };
 
 export type MenuProperties = MandatoryMenuProperties & OptionalMenuProperties & MenuEventProperties;
@@ -20,6 +21,9 @@ export type OptionalMenuProperties = {
   testId?: string;
   trigger?: Snippet;
   classes?: string;
+  role?: 'menu' | 'listbox';
+  ariaLabel?: string;
+  id?: string;
 };
 
 export type MenuEventProperties = {

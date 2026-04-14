@@ -17,6 +17,8 @@
     addFocusColor = false,
     maxLength = 1000,
     minLength = 0,
+    min,
+    max,
     actionInput = false,
     useTextArea = false,
     autoComplete = 'on',
@@ -26,12 +28,18 @@
     textViewPresentation = [],
     onFocus = () => {},
     onFocusout = () => {},
+    onBlur = () => {},
     onInput = () => {},
     onPaste = () => {},
     onStateChange = () => {},
     onClick = () => {},
     onKeyDown = () => {},
-    classes
+    classes,
+    role,
+    ariaExpanded,
+    ariaAutocomplete,
+    ariaControls,
+    ariaActivedescendant
   }: InputProperties = $props();
 
   export function focus() {
@@ -51,6 +59,10 @@
     }
   }
 
+  export function getInputRef(): HTMLInputElement | HTMLTextAreaElement | null {
+    return inputElement;
+  }
+
   let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
 
   let validationState = $derived.by(() => {
@@ -64,7 +76,7 @@
     if (
       valueValidation === 'InProgress' &&
       value.length > 0 &&
-      inputElement &&
+      inputElement !== null &&
       inputElement !== document.activeElement
     ) {
       return 'Invalid';
@@ -171,6 +183,7 @@
       validationState = 'Invalid';
     }
     onFocusout(event);
+    onBlur(event);
   }
 
   let _validationStateForCallback = $derived.by(() => {
@@ -197,6 +210,11 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      {role}
+      aria-expanded={ariaExpanded}
+      aria-autocomplete={ariaAutocomplete}
+      aria-controls={ariaControls}
+      aria-activedescendant={ariaActivedescendant}
       onfocus={onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
@@ -217,6 +235,11 @@
       {placeholder}
       autocomplete={autoComplete}
       {name}
+      {role}
+      aria-expanded={ariaExpanded}
+      aria-autocomplete={ariaAutocomplete}
+      aria-controls={ariaControls}
+      aria-activedescendant={ariaActivedescendant}
       onfocus={onFocus}
       onfocusout={_onFocusOut}
       oninput={handleOnInput}
@@ -229,6 +252,8 @@
       bind:this={inputElement}
       maxlength={dataType === 'tel' ? null : maxLength}
       minlength={minLength}
+      {min}
+      {max}
     />
   {/if}
 
@@ -293,9 +318,9 @@
   .input-container {
     display: flex;
     flex-direction: column;
-    margin: var(--input-container-margin);
-    padding: var(--input-container-padding);
-    width: var(--input-container-width);
+    margin: var(--input-container-margin, 0);
+    padding: var(--input-container-padding, 0);
+    width: var(--input-container-width, fit-content);
   }
 
   .label {

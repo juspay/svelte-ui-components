@@ -70,12 +70,15 @@
     width: 100%;
     height: var(--slider-track-height, 6px);
     border-radius: var(--slider-track-border-radius, 3px);
-    background: linear-gradient(
-      to right,
-      var(--slider-track-active-color, #2196f3) 0%,
-      var(--slider-track-active-color, #2196f3) var(--slider-fill-percent, 0%),
-      var(--slider-track-background, #e0e0e0) var(--slider-fill-percent, 0%),
-      var(--slider-track-background, #e0e0e0) 100%
+    background: var(
+      --slider-track,
+      linear-gradient(
+        to right,
+        var(--slider-track-active-color, #2196f3) 0%,
+        var(--slider-track-active-color, #2196f3) var(--slider-fill-percent, 0%),
+        var(--slider-track-background, #e0e0e0) var(--slider-fill-percent, 0%),
+        var(--slider-track-background, #e0e0e0) 100%
+      )
     );
     outline: none;
     transition: var(--slider-transition, background 0.2s ease);

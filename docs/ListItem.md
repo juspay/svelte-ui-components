@@ -32,6 +32,9 @@ A multi-section list row with left image (with fallback), center label (supports
 | expand                 | `boolean`        | No       | `false` | Bindable. Controls whether the accordion bottom section is expanded or collapsed.                                                                                      |
 | preventFocus           | `boolean`        | No       | `false` | When true, removes the focus outline from interactive elements. Useful when the list item is used in a non-keyboard context.                                           |
 | classes                | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| role                   | `string`         | No       | `'button'` | ARIA role for the outer item container. Set to `'option'` when using ListItem inside a `role="listbox"` container (e.g., autocomplete dropdowns). When `'option'`, tabindex is automatically set to -1 for proper listbox focus management. |
+| ariaSelected           | `boolean`        | No       | `-`     | Sets `aria-selected` on the item container. Use when the ListItem represents a selectable option (e.g., the currently highlighted item in a listbox).                |
+| id                     | `string`         | No       | `-`     | Sets the `id` attribute on the item container. Needed for `aria-activedescendant` references from a parent combobox input.                                           |
 
 ## Snippets
 

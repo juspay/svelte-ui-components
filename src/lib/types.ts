@@ -8,16 +8,6 @@ export type InputDataType = 'text' | 'tel' | 'password' | 'email' | 'number';
 
 export type ModalTransition = 'IN' | 'ALL';
 
-export type AutoCompleteType =
-  | 'tel'
-  | 'name'
-  | 'email'
-  | 'one-time-code'
-  | 'postal-code'
-  | 'street-address'
-  | 'on'
-  | 'address-level1';
-
 /**
  * @name CustomValidator
  * @description Function type for taking input parameter and returning a boolean denoting if the value is valid or not
@@ -46,3 +36,7 @@ export type FlyAnimationConfig = {
   in: FlyParams;
   out: FlyParams;
 };
+
+export type Rgb = { r: number; g: number; b: number };
+export type Hsv = { h: number; s: number; v: number };
+export type Hsl = { h: number; s: number; l: number };

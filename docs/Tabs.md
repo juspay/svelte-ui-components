@@ -37,7 +37,7 @@ A horizontal tab bar with clickable tab items and an animated active indicator. 
 | items       | `string[]` | Yes      | -           | Array of tab label strings rendered as clickable tabs.                                                                                                                 |
 | activeIndex | `number`   | No       | `0`         | The zero-based index of the currently active tab.                                                                                                                      |
 | disabled    | `boolean`  | No       | `false`     | When true, disables all tab interactions and applies disabled styling.                                                                                                 |
-| testId      | `string`   | No       | `undefined` | Value applied to the `data-pw` attribute on the tab bar container for test selectors.                                                                                  |
+| testId      | `string`   | No       | `-`         | Value applied to the `data-pw` attribute on the tab bar container for test selectors.                                                                                  |
 | classes     | `string`   | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets
@@ -112,4 +112,4 @@ Tag: `<sui-tabs>`
 | `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow.                                                                 |
 | `tab`               | `tab`             | Custom tab content. Receives `label`, `index`, and `active` as slot props. Falls back to label text. |
 
-> **Note:** The `items` prop is an array — set it via JavaScript property.
+> **Note:** The `items` prop is an array and `tab` is a parameterized Snippet — set them via JavaScript properties.

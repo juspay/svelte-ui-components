@@ -12,6 +12,8 @@
     testId,
     ariaLabel,
     ariaExpanded,
+    ariaSelected,
+    role,
     onclick,
     onkeyup = () => {},
     showProgressBar = $bindable(false),
@@ -46,6 +48,8 @@
     data-pw={testId}
     aria-label={ariaLabel}
     aria-expanded={ariaExpanded}
+    aria-selected={ariaSelected}
+    {role}
   >
     {#if showLoader && loaderType === 'Circular'}
       <div class="button-loader"><Loader /></div>
@@ -116,6 +120,11 @@
     background: var(--button-hover-color, var(--button-color, #3a4550));
     color: var(--button-hover-text-color, var(--button-text-color, white));
     border: var(--button-hover-border, var(--button-border, none));
+    transform: var(--button-hover-transform);
+  }
+
+  button:active {
+    transform: var(--button-active-transform);
   }
 
   .button-progress-bar {

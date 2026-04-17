@@ -103,6 +103,8 @@
     color: var(--disabled-text-color);
     font-size: var(--disabled-font-size);
     font-weight: var(--disabled-font-weight);
+    border: var(--disabled-border);
+    background: var(--disabled-background-color);
   }
 
   .button-loader {

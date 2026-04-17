@@ -2,10 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.16.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.17.0)
 
-- Added `--disabled-text-color`, `--disabled-font-size`, and `--disabled-font-weight` CSS variables to the Button component to allow deeper customization of the disabled state.
-- Updated `Button.md` documentation to include the newly added variables.
+## [2.17.0](https://github.com/juspay/svelte-ui-components/compare/2.17.0..2.16.0) - 17 April 2026
 
 ## [2.16.0](https://github.com/juspay/svelte-ui-components/compare/2.16.0..2.15.0) - 14 April 2026
 

@@ -97,6 +97,8 @@ Override these custom properties to theme the component.
 | `--disabled-text-color`                     | `-`                            | color              | Text color when the button is disabled.                                                                   |
 | `--disabled-font-size`                      | `-`                            | font-size          | Font size when the button is disabled.                                                                    |
 | `--disabled-font-weight`                    | `-`                            | font-weight        | Font weight when the button is disabled.                                                                  |
+| `--disabled-border`                         | `-`                            | border             | Border when the button is disabled.                                                                       |
+| `--disabled-background-color`               | `-`                            | background         | Background color when the button is disabled.                                                             |
 | `--button-loader-order`                     | `1`                            | order              | Flex order of the circular loader relative to icon/text.                                                  |
 | `--button-icon-order`                       | `2`                            | order              | Flex order of the icon relative to loader/text.                                                           |
 | `--button-icon-display`                     | `-`                            | display            | Display property of the icon container.                                                                   |

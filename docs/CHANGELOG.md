@@ -2,19 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.15.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.16.0)
 
-- Add ColorPicker with saturation/brightness panel, hue Slider, and HEX/RGB/HSL input modes using Button, Input, Slider,
-SplitInput
-- Add SplitInput for segmented inputs (OTP, RGB, IP) with auto-advance, paste, keyboard nav; validation delegated to Input via
-FieldConfig (Pick&lt;OptionalInputProperties&gt;)
-- Add Combobox with filtered dropdown, keyboard navigation, custom item rendering, and WAI-ARIA combobox pattern
-- Add min/max props to Input, --slider-track CSS variable to Slider
-- Replace inputElement bindable prop with getInputRef() method in Input and Combobox
-- Replace AutoCompleteType with HTMLInputAttributes['autocomplete'], remove dead type
-- Move color math (hex/rgb/hsv/hsl) to shared utils.ts and types.ts
-- Fix guideline violations: falsy DOM checks, missing CSS fallbacks, undefined→null for aria props, unused svelte-ignore
-- Add/update docs for ColorPicker, SplitInput, Combobox, Input, Slider, _index.json
+- Added `--disabled-text-color`, `--disabled-font-size`, and `--disabled-font-weight` CSS variables to the Button component to allow deeper customization of the disabled state.
+- Updated `Button.md` documentation to include the newly added variables.
+
+## [2.16.0](https://github.com/juspay/svelte-ui-components/compare/2.16.0..2.15.0) - 14 April 2026
 
 ## [2.15.0](https://github.com/juspay/svelte-ui-components/compare/2.15.0..2.14.1) - 5 April 2026
 

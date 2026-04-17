@@ -100,6 +100,9 @@
   .disabled {
     cursor: var(--disabled-cursor, not-allowed);
     opacity: var(--disabled-opacity, 0.4);
+    color: var(--disabled-text-color);
+    font-size: var(--disabled-font-size);
+    font-weight: var(--disabled-font-weight);
   }
 
   .button-loader {

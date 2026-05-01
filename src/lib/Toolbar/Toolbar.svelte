@@ -109,5 +109,8 @@
   .text {
     font-size: var(--toolbar-text-font-size, 18px);
     font-weight: var(--toolbar-text-font-weight, normal);
+    padding: var(--toolbar-text-padding, 0px);
+    margin: var(--toolbar-text-margin, 0px);
+    color: var(--toolbar-text-color);
   }
 </style>

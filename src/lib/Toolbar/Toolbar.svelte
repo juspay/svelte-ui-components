@@ -91,6 +91,9 @@
     width: var(--toolbar-back-button-width, 20px);
     padding: var(--toolbar-back-button-padding, 20px 14px);
     cursor: var(--toolbar-back-button-cursor, pointer);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .back img {
@@ -105,5 +108,6 @@
 
   .text {
     font-size: var(--toolbar-text-font-size, 18px);
+    font-weight: var(--toolbar-text-font-weight, normal);
   }
 </style>

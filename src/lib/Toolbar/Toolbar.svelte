@@ -39,7 +39,7 @@
       </div>
     {/if}
   </div>
-  <div class="additional-content">
+  <div class="additional-content" class:hidden={!(typeof additionalContent === 'function')}>
     {#if typeof additionalContent === 'function'}
       {@render additionalContent()}
     {/if}
@@ -82,6 +82,10 @@
     visibility: var(--toolbar-additional-content-visibility, visible);
   }
 
+  .hidden {
+    display: none;
+  }
+
   .back {
     height: var(--toolbar-back-button-height, 20px);
     width: var(--toolbar-back-button-width, 20px);
@@ -100,6 +104,6 @@
   }
 
   .text {
-    font-size: 18px;
+    font-size: var(--toolbar-text-font-size, 18px);
   }
 </style>

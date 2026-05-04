@@ -151,6 +151,7 @@
   });
 
   let showArrowControls = $derived(showArrows && !(hideArrowsOnTouch && isTouchDevice));
+  let showGradientOverlay = $derived(showGradient && !(hideArrowsOnTouch && isTouchDevice));
 </script>
 
 <div
@@ -178,7 +179,7 @@
     </div>
   {/if}
 
-  {#if showGradient && canScrollPrev}
+  {#if showGradientOverlay && canScrollPrev}
     <div class="gradient gradient-start"></div>
   {/if}
 
@@ -197,7 +198,7 @@
     {@render children()}
   </div>
 
-  {#if showGradient && canScrollNext}
+  {#if showGradientOverlay && canScrollNext}
     <div class="gradient gradient-end"></div>
   {/if}
 

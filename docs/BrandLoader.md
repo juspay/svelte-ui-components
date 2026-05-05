@@ -40,7 +40,7 @@ Override these custom properties to theme the component.
 | `--loader-text-font-size`             | `22px`                     | font-size                 | Font size of the brand text.                     |
 | `--loader-text-padding`               | `16px 0px`                 | padding                   | Padding around the brand text.                   |
 | `--loader-text-color`                 | `white`                    | color                     | Color of the brand text.                         |
-| `--loader-text-font`                  | `Euclid Circular A`        | font-family               | Font family of the brand text.                   |
+| `--loader-text-font`                  | `inherit`                  | font-family               | Font family of the brand text.                   |
 | `--loader-sub-text-font-size`         | `12px`                     | font-size                 | Font size of the subtext.                        |
 | `--loader-sub-text-margin`            | `16px`                     | margin                    | Margin around the subtext.                       |
 | `--loader-background-color`           | `#ffffff33`                | background-color          | Background color of the frosted-glass overlay.   |

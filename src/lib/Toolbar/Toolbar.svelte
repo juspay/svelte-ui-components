@@ -112,5 +112,6 @@
     padding: var(--toolbar-text-padding, 0px);
     margin: var(--toolbar-text-margin, 0px);
     color: var(--toolbar-text-color);
+    flex: var(--toolbar-text-flex, 1);
   }
 </style>

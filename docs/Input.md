@@ -78,7 +78,7 @@ Override these custom properties to theme the component.
 | `--input-height`                | `fit-content`                                          | height           | Height of the input element.                            |
 | `--input-background`            | `white`                                                | background-color | Background color of the input.                          |
 | `--input-font-size`             | `16px`                                                 | font-size        | Font size of the input text.                            |
-| `--input-font-family`           | `Euclid Circular A`                                    | font-family      | Font family of the input text.                          |
+| `--input-font-family`           | `inherit`                                              | font-family      | Font family of the input text.                          |
 | `--input-radius`                | `4px`                                                  | border-radius    | Corner rounding of the input.                           |
 | `--input-padding`               | `16px`                                                 | padding          | Inner padding of the input.                             |
 | `--input-font-weight`           | `500`                                                  | font-weight      | Font weight of the input text.                          |

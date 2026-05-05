@@ -31,12 +31,12 @@ Override these custom properties to theme the component.
 | `--badge-color`                | `#fff`                  | color            | Text color inside the badge bubble.               |
 | `--badge-background`           | `#727272`               | background-color | Background color of the badge bubble.             |
 | `--badge-font-size`            | `12px`                  | font-size        | Font size of the badge text.                      |
-| `--badge-font-family`          | `Euclid Circular A`     | font-family      | Font family of the badge text.                    |
-| `--badge-padding`              | `2px 7.5px`             | padding          | Padding inside the badge bubble.                  |
+| `--badge-font-family`          | `inherit`               | font-family      | Font family of the badge text.                    |
+| `--badge-padding`              | `3px 8px`               | padding          | Padding inside the badge bubble.                  |
 | `--badge-border-radius`        | `100px`                 | border-radius    | Corner rounding of the badge bubble.              |
-| `--badge-min-width`            | `7px`                   | min-width        | Minimum width of the badge bubble.                |
-| `--badge-min-height`           | `7px`                   | min-height       | Minimum height of the badge bubble.               |
-| `--badge-border`               | `0.6px solid #fff`      | border           | Border of the badge bubble.                       |
+| `--badge-min-width`            | `18px`                  | min-width        | Minimum width of the badge bubble.                |
+| `--badge-min-height`           | `18px`                  | min-height       | Minimum height of the badge bubble.               |
+| `--badge-border`               | `1px solid #fff`        | border           | Border of the badge bubble.                       |
 | `--badge-top`                  | `0`                     | top              | Top position of the badge relative to the icon.   |
 | `--badge-right`                | `0`                     | right            | Right position of the badge relative to the icon. |
 | `--badge-bottom`               | `-`                     | bottom           | Bottom position of the badge.                     |

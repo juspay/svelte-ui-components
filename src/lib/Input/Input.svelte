@@ -276,7 +276,7 @@
     height: var(--input-height, fit-content);
     background-color: var(--input-background, white);
     font-size: var(--input-font-size, 16px) !important;
-    font-family: var(--input-font-family, Euclid Circular A);
+    font-family: var(--input-font-family, inherit);
     border-radius: var(--input-radius, 4px);
     outline: none;
     padding: var(--input-padding, 16px);

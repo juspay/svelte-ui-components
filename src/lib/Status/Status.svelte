@@ -52,7 +52,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    font-family: var(--order-font, 'Euclid Circular A');
+    font-family: var(--order-font, inherit);
     font-size: var(--order-font-size, 14px);
     text-align: center;
   }

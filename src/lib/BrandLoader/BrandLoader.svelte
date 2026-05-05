@@ -46,7 +46,7 @@
     font-size: var(--loader-text-font-size, 22px);
     padding: var(--loader-text-padding, 16px 0px);
     color: var(--loader-text-color, white);
-    font-family: var(--loader-text-font, Euclid Circular A);
+    font-family: var(--loader-text-font, inherit);
   }
 
   .sub-text {

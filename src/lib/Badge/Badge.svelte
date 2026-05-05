@@ -21,19 +21,25 @@
 
   .badge {
     position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    line-height: 1;
     color: var(--badge-color, #fff);
     background-color: var(--badge-background, #727272);
     font-size: var(--badge-font-size, 12px);
-    font-family: var(--badge-font-family, Euclid Circular A);
-    padding: var(--badge-padding, 2px 7.5px);
+    font-family: var(--badge-font-family, inherit);
+    padding: var(--badge-padding, 3px 8px);
     border-radius: var(--badge-border-radius, 100px);
-    min-width: var(--badge-min-width, 7px);
-    min-height: var(--badge-min-height, 7px);
-    border: var(--badge-border, 0.6px solid #fff);
+    min-width: var(--badge-min-width, 18px);
+    min-height: var(--badge-min-height, 18px);
+    border: var(--badge-border, 1px solid #fff);
     top: var(--badge-top, 0);
     right: var(--badge-right, 0);
     bottom: var(--badge-bottom);
     left: var(--badge-left);
+    z-index: 1;
   }
 
   .icon-img {

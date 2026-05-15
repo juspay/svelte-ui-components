@@ -84,7 +84,13 @@
     return valueValidation;
   });
 
-  const showErrorMessage = $derived(validationState === 'Invalid');
+  const validationStateForCallback = $derived.by(() => {
+    const state = validationState;
+    onStateChange(state);
+    return state;
+  });
+
+  const showErrorMessage = $derived(validationStateForCallback === 'Invalid');
 
   function handleOnInput(event: Event) {
     if (inputElement === null) {
@@ -185,18 +191,9 @@
     onFocusout(event);
     onBlur(event);
   }
-
-  let _validationStateForCallback = $derived.by(() => {
-    const state = validationState;
-    onStateChange(state);
-    return state;
-  });
 </script>
 
-<div
-  class="input-container {classes ?? ''}"
-  class:input-error={validationState === 'Invalid' && !actionInput}
->
+<div class="input-container {classes ?? ''}" class:input-error={showErrorMessage && !actionInput}>
   {#if typeof label === 'string' && label !== '' && !actionInput}
     <label class="label" for={name}>
       {label}

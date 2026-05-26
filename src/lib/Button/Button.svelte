@@ -100,11 +100,11 @@
   .disabled {
     cursor: var(--disabled-cursor, not-allowed);
     opacity: var(--disabled-opacity, 0.4);
-    color: var(--disabled-text-color);
+    color: var(--disabled-text-color, var(--button-text-color, white));
     font-size: var(--disabled-font-size);
     font-weight: var(--disabled-font-weight);
     border: var(--disabled-border);
-    background: var(--disabled-background-color);
+    background: var(--disabled-background-color, var(--button-color, #3a4550));
   }
 
   .button-loader {

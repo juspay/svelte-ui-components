@@ -21,6 +21,8 @@
         return { ...base, y: -30 };
       case 'bottom':
         return { ...base, y: 300 };
+      case 'right':
+        return { ...base, x: 300 };
       default:
         return base;
     }
@@ -28,7 +30,7 @@
 
   let fadeAnimationProperties = { duration: 300 };
 
-  let useFlyAnimation = $derived(align === 'top' || align === 'bottom');
+  let useFlyAnimation = $derived(align === 'top' || align === 'bottom' || align === 'right');
   let useOutTransition = $derived(transitionType === 'ALL');
 </script>
 

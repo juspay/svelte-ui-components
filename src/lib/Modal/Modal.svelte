@@ -18,6 +18,8 @@
     transitionType = 'ALL',
     header = {},
     footer,
+    showDivider = false,
+    dialogueConfig,
     debounceTime = 700,
     leftImageTestId,
     testId,
@@ -35,42 +37,53 @@
 
   const debounce = createDebouncer(debounceTime);
 
-  function handlePopstate() {
+  const handlePopstate = () => {
     backPressed = true;
     onclose?.();
-  }
+  };
 
-  function handleRightImageClick(event: MouseEvent): void {
+  const handleRightImageClick = (event: MouseEvent): void => {
     onheaderRightImageClick?.(event);
-  }
+  };
 
-  function handleLeftImageClick(event: MouseEvent): void {
+  const handleLeftImageClick = (event: MouseEvent): void => {
     onheaderLeftImageClick?.(event);
-  }
+  };
 
-  function handlePrimaryButtonClick(event: MouseEvent): void {
+  const handlePrimaryButtonClick = (event: MouseEvent): void => {
     onprimaryButtonClick?.(event);
-  }
+  };
 
-  function handleSecondaryButtonClick(event: MouseEvent): void {
+  const handleSecondaryButtonClick = (event: MouseEvent): void => {
     onsecondaryButtonClick?.(event);
-  }
+  };
 
-  function handleOverlayClick(event: MouseEvent) {
+  const handleOverlayClick = (event: MouseEvent) => {
     if (event.target && event.target === overlayDiv) {
       debounce(() => {
         onoverlayClick?.();
       });
     }
-  }
+  };
 
-  function handleKeyDown(event: KeyboardEvent): void {
+  const handleKeyDown = (event: KeyboardEvent): void => {
     onkeydown?.(event);
-    let key = event?.key;
+    const key = event?.key;
     if (key === 'Escape') {
       onoverlayClick?.();
     }
-  }
+  };
+
+  const hasHeader = $derived(
+    (typeof header?.leftImage === 'string' && header.leftImage.length > 0) ||
+      (typeof header?.text === 'string' && header.text.length > 0) ||
+      (typeof header?.rightImage === 'string' && header.rightImage.length > 0) ||
+      (typeof header?.description === 'string' && header.description.length > 0)
+  );
+
+  const showCloseButton = $derived(header?.showCloseButton !== false);
+
+  const dialogueFooter = $derived(dialogueConfig?.footerConfig);
 
   onMount(() => {
     document.body.style.overflow = 'hidden';
@@ -95,7 +108,7 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-{#if typeof content === 'function'}
+{#if typeof content === 'function' || dialogueConfig}
   <OverlayAnimation>
     <div
       bind:this={overlayDiv}
@@ -107,8 +120,8 @@
       data-pw={testId}
     >
       <ModalAnimation enable={enableTransition} {align} {transitionType}>
-        <div class="modal-content {size}">
-          {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
+        <div class="modal-content {size} {align === 'right' ? 'modal-align-right' : ''}">
+          {#if hasHeader}
             <div class="header">
               {#if header.leftImage}
                 <div
@@ -121,12 +134,19 @@
                   <img class="header-left-img" src={header.leftImage} alt="" />
                 </div>
               {/if}
-              {#if header.text}
-                <div class="header-text" data-pw={header.testId}>
-                  {header.text}
-                </div>
-              {/if}
-              {#if header.rightImage}
+              <div class="header-title-group">
+                {#if header.text}
+                  <div class="header-text" data-pw={header.testId}>
+                    {header.text}
+                  </div>
+                {/if}
+                {#if typeof header.description === 'string' && header.description.length > 0}
+                  <div class="header-description">
+                    {header.description}
+                  </div>
+                {/if}
+              </div>
+              {#if header.rightImage && showCloseButton}
                 <div
                   role="button"
                   tabindex="0"
@@ -138,15 +158,58 @@
                 </div>
               {/if}
             </div>
+            {#if showDivider}
+              <div class="modal-divider" role="separator" aria-hidden="true"></div>
+            {/if}
           {/if}
-          <div class="slot-content">
-            {@render content?.()}
-          </div>
-          {#if typeof footerSnippet === 'function'}
+
+          {#if dialogueConfig}
+            <div class="slot-content dialogue-body">
+              <p class="dialogue-body-text">{dialogueConfig.bodyText}</p>
+            </div>
+          {:else}
+            <div class="slot-content">
+              {@render content?.()}
+            </div>
+          {/if}
+
+          {#if dialogueConfig}
+            {#if typeof dialogueFooter?.primaryButton === 'object' || typeof dialogueFooter?.secondaryButton === 'object'}
+              {#if showDivider}
+                <div class="modal-divider" role="separator" aria-hidden="true"></div>
+              {/if}
+              <div class="footer-content">
+                <div class="footer-action-buttons">
+                  {#if dialogueFooter.secondaryButton}
+                    <div class="footer-secondary-button">
+                      <Button
+                        {...dialogueFooter.secondaryButton}
+                        onclick={handleSecondaryButtonClick}
+                      />
+                    </div>
+                  {/if}
+                  {#if dialogueFooter.primaryButton}
+                    <div class="footer-primary-button">
+                      <Button
+                        {...dialogueFooter.primaryButton}
+                        onclick={handlePrimaryButtonClick}
+                      />
+                    </div>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+          {:else if typeof footerSnippet === 'function'}
+            {#if showDivider}
+              <div class="modal-divider" role="separator" aria-hidden="true"></div>
+            {/if}
             <div class="footer-content">
               {@render footerSnippet?.()}
             </div>
           {:else if typeof footer?.primaryButton === 'object' || typeof footer?.secondaryButton === 'object'}
+            {#if showDivider}
+              <div class="modal-divider" role="separator" aria-hidden="true"></div>
+            {/if}
             <div class="footer-content">
               <div class="footer-action-buttons">
                 {#if footer.secondaryButton}
@@ -204,6 +267,19 @@
     border-top: var(--modal-content-border-top);
   }
 
+  .modal-align-right {
+    height: 100%;
+    width: var(--modal-drawer-width, 420px);
+    max-width: 100%;
+    border-radius: var(--modal-drawer-border-radius, 0px);
+  }
+
+  .right {
+    justify-content: var(--modal-right-justify-content, flex-start);
+    align-items: var(--modal-right-align-items, flex-end);
+    flex-direction: row;
+  }
+
   .slot-content {
     display: var(--modal-display, flex);
     overflow-y: var(--modal-overflow-y, scroll);
@@ -212,6 +288,16 @@
 
   .slot-content::-webkit-scrollbar {
     display: none;
+  }
+
+  .dialogue-body {
+    padding: var(--modal-dialogue-body-padding, 20px);
+    overflow-y: auto;
+  }
+
+  .dialogue-body-text {
+    margin: 0;
+    color: var(--modal-dialogue-body-text-color, inherit);
   }
 
   .center {
@@ -255,6 +341,23 @@
     padding: var(--modal-header-padding, 18px 20px);
     border-radius: var(--modal-header-border-radius, 0px);
     border-bottom: var(--modal-header-border-bottom, none);
+    align-items: var(--modal-header-align-items, center);
+  }
+
+  .header-title-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .header-description {
+    color: var(--modal-header-description-color, #6b7280);
+  }
+
+  .modal-divider {
+    height: 0;
+    border-top: 1px solid var(--modal-divider-color, #e5e7eb);
+    flex-shrink: 0;
   }
 
   .footer-content {

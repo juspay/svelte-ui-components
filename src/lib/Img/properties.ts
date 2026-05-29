@@ -8,6 +8,9 @@ export type MandatoryImgProperties = {
 export type OptionalImgProperties = {
   fallback?: string | null;
   classes?: string;
+  testId?: string;
+  inlineSvg?: boolean;
+  transform?: (svg: string) => string;
 };
 
 export type ImgEventProperties = {

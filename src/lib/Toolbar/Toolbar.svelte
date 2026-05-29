@@ -11,11 +11,15 @@
     additionalContent,
     classes,
     onbackClick,
-    onkeydown
+    onkeydown,
+    testId,
+    headingTestId,
+    subheading,
+    subheadingTestId
   }: ToolbarProperties = $props();
 </script>
 
-<div class="toolbar {classes ?? ''}">
+<div class="toolbar {classes ?? ''}" data-pw={testId}>
   <div class="content">
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
@@ -29,8 +33,15 @@
         {@render centerContent()}
       </div>
     {:else if typeof text === 'string' && text.length > 0}
-      <div class="text">
-        {text}
+      <div class="text-block">
+        <div class="text" data-pw={headingTestId}>
+          {text}
+        </div>
+        {#if typeof subheading === 'string' && subheading.length > 0}
+          <div class="subheading" data-pw={subheadingTestId}>
+            {subheading}
+          </div>
+        {/if}
       </div>
     {/if}
     {#if typeof rightContent === 'function'}
@@ -106,12 +117,24 @@
     flex: 1;
   }
 
+  .text-block {
+    display: flex;
+    flex-direction: column;
+    flex: var(--toolbar-text-flex, 1);
+  }
+
   .text {
     font-size: var(--toolbar-text-font-size, 18px);
     font-weight: var(--toolbar-text-font-weight, normal);
     padding: var(--toolbar-text-padding, 0px);
     margin: var(--toolbar-text-margin, 0px);
     color: var(--toolbar-text-color);
-    flex: var(--toolbar-text-flex, 1);
+  }
+
+  .subheading {
+    color: var(--toolbar-subheading-color, inherit);
+    font-size: var(--toolbar-subheading-font-size, inherit);
+    padding: var(--toolbar-text-padding, 0px);
+    margin: 0px;
   }
 </style>

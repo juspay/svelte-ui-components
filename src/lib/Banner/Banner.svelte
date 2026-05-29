@@ -15,38 +15,59 @@
     dismissIcon,
     onclick,
     ondismiss,
-    classes
+    classes,
+    tone = null,
+    title = null,
+    size = null,
+    flush = false,
+    role = null
   }: BannerProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
 
-  function handleClick(event: MouseEvent): void {
-    onclick?.(event);
-  }
+  let resolvedRole = $derived(
+    role !== null ? role : tone === 'error' ? 'alert' : interactive ? 'button' : null
+  );
 
-  function handleKeydown(event: KeyboardEvent): void {
+  let rootClass = $derived(
+    [
+      'banner',
+      tone !== null ? `banner-tone-${tone}` : '',
+      size === 'sm' ? 'banner-size-sm' : '',
+      flush ? 'banner-flush' : '',
+      classes ?? ''
+    ]
+      .filter(Boolean)
+      .join(' ')
+  );
+
+  const handleClick = (event: MouseEvent): void => {
+    onclick?.(event);
+  };
+
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (event.currentTarget instanceof HTMLElement) {
         event.currentTarget.click();
       }
     }
-  }
+  };
 
-  function handleDismiss(event: MouseEvent): void {
+  const handleDismiss = (event: MouseEvent): void => {
     event.stopPropagation();
     visible = false;
     ondismiss?.();
-  }
+  };
 </script>
 
 {#if visible}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
-    class="banner {classes ?? ''}"
+    class={rootClass}
     onclick={interactive ? handleClick : null}
     onkeydown={interactive ? handleKeydown : null}
-    role={interactive ? 'button' : null}
+    role={resolvedRole}
     tabindex={interactive ? 0 : null}
     data-pw={typeof testId === 'string' ? testId : null}
     transition:slide={{ duration: 300 }}
@@ -56,12 +77,24 @@
         {@render icon()}
       </div>
     {/if}
-    <div class="banner-text">
-      {text}
-      {#if typeof linkText === 'string' && linkText.length > 0}
-        <span class="banner-link-text">{linkText}</span>
-      {/if}
-    </div>
+    {#if title !== null && typeof title === 'string' && title.length > 0}
+      <div class="banner-body">
+        <span class="banner-title">{title}</span>
+        <div class="banner-text">
+          {text}
+          {#if typeof linkText === 'string' && linkText.length > 0}
+            <span class="banner-link-text">{linkText}</span>
+          {/if}
+        </div>
+      </div>
+    {:else}
+      <div class="banner-text">
+        {text}
+        {#if typeof linkText === 'string' && linkText.length > 0}
+          <span class="banner-link-text">{linkText}</span>
+        {/if}
+      </div>
+    {/if}
     {#if typeof rightContent === 'function'}
       <div class="banner-right">
         {@render rightContent()}
@@ -102,11 +135,46 @@
     font-weight: var(--banner-font-weight, 500);
     line-height: var(--banner-line-height, 1.3);
     border-bottom: var(--banner-border-bottom, none);
+    border-radius: var(--banner-border-radius, 0);
     cursor: var(--banner-cursor, pointer);
     position: var(--banner-position, sticky);
     top: var(--banner-top, 0);
     z-index: var(--banner-z-index, 100);
     box-sizing: border-box;
+  }
+
+  .banner-tone-info {
+    background-color: var(--banner-tone-background, var(--banner-background, #f0f4f8));
+    color: var(--banner-tone-color, var(--banner-color, #637c95));
+    border: var(--banner-tone-border);
+  }
+
+  .banner-tone-success {
+    background-color: var(--banner-tone-background, var(--banner-background, #f0f4f8));
+    color: var(--banner-tone-color, var(--banner-color, #637c95));
+    border: var(--banner-tone-border);
+  }
+
+  .banner-tone-warning {
+    background-color: var(--banner-tone-background, var(--banner-background, #f0f4f8));
+    color: var(--banner-tone-color, var(--banner-color, #637c95));
+    border: var(--banner-tone-border);
+  }
+
+  .banner-tone-error {
+    background-color: var(--banner-tone-background, var(--banner-background, #f0f4f8));
+    color: var(--banner-tone-color, var(--banner-color, #637c95));
+    border: var(--banner-tone-border);
+  }
+
+  .banner-size-sm {
+    padding: var(--banner-sm-padding, 6px 12px);
+    border-bottom: none;
+  }
+
+  .banner-flush {
+    border-radius: 0;
+    border: none;
   }
 
   .banner-icon {
@@ -119,6 +187,20 @@
   .banner-icon :global(svg) {
     width: var(--banner-icon-size, 18px);
     height: var(--banner-icon-size, 18px);
+  }
+
+  .banner-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: var(--banner-body-gap, 2px);
+  }
+
+  .banner-title {
+    font-weight: var(--banner-title-font-weight, 600);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .banner-text {

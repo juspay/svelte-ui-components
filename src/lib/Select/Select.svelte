@@ -5,16 +5,25 @@
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
   let {
-    items,
+    items: rawItems,
     value = $bindable([]),
     multiple = false,
+    showSelectAll = false,
     searchable = false,
     placeholder = '',
     disabled = false,
+    hint,
+    subtext,
+    bottomContent,
     testId,
     onchange,
     classes
   }: SelectProperties = $props();
+
+  const normalizeItems = (source: SelectItem[] | string[]): SelectItem[] =>
+    source.map((entry) => (typeof entry === 'string' ? { id: entry, label: entry } : entry));
+
+  let items: SelectItem[] = $derived(normalizeItems(rawItems));
 
   let isOpen = $state(false);
   let query = $state('');
@@ -25,15 +34,19 @@
 
   const listboxId = `select-listbox-${Math.random().toString(36).slice(2, 9)}`;
 
-  function getLabel(id: string): string {
+  const getLabel = (id: string): string => {
     const found = items.find((item) => item.id === id);
     return typeof found === 'object' ? found.label : id;
-  }
+  };
 
   let filteredItems: SelectItem[] = $derived(
     searchable && query.length > 0
       ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
       : items
+  );
+
+  let allSelected: boolean = $derived(
+    filteredItems.length > 0 && filteredItems.every((item) => value.includes(item.id))
   );
 
   let displayText = $derived.by(() => {
@@ -50,7 +63,7 @@
 
   let searchPlaceholder = $derived(isOpen && displayText.length > 0 ? displayText : placeholder);
 
-  async function open(): Promise<void> {
+  const open = async (): Promise<void> => {
     if (disabled || isOpen) {
       return;
     }
@@ -63,15 +76,30 @@
         searchInputEl.focus();
       }
     }
-  }
+  };
 
-  function close(): void {
+  const close = (): void => {
     isOpen = false;
     query = '';
     highlightedIndex = -1;
-  }
+  };
 
-  function selectItem(id: string): void {
+  const toggleSelectAll = (): void => {
+    if (disabled) {
+      return;
+    }
+    if (allSelected) {
+      value = value.filter((id) => !filteredItems.some((item) => item.id === id));
+    } else {
+      const newIds = filteredItems
+        .filter((item) => !value.includes(item.id))
+        .map((item) => item.id);
+      value = [...value, ...newIds];
+    }
+    onchange?.(value);
+  };
+
+  const selectItem = (id: string): void => {
     if (disabled) {
       return;
     }
@@ -82,17 +110,17 @@
       close();
     }
     onchange?.(value);
-  }
+  };
 
-  function removeItem(id: string): void {
+  const removeItem = (id: string): void => {
     if (disabled) {
       return;
     }
     value = value.filter((v) => v !== id);
     onchange?.(value);
-  }
+  };
 
-  function selectHighlighted(): void {
+  const selectHighlighted = (): void => {
     if (highlightedIndex < 0 || highlightedIndex >= filteredItems.length) {
       return;
     }
@@ -100,9 +128,9 @@
     if (typeof item === 'object' && item !== null) {
       selectItem(item.id);
     }
-  }
+  };
 
-  async function moveHighlight(delta: number): Promise<void> {
+  const moveHighlight = async (delta: number): Promise<void> => {
     const next = highlightedIndex + delta;
     if (next < 0 || next >= filteredItems.length) {
       return;
@@ -115,9 +143,9 @@
         el.scrollIntoView({ block: 'nearest' });
       }
     }
-  }
+  };
 
-  function handleTriggerClick(event: MouseEvent): void {
+  const handleTriggerClick = (event: MouseEvent): void => {
     if (event.target instanceof HTMLInputElement) {
       if (!isOpen) {
         open();
@@ -131,9 +159,9 @@
     } else {
       open();
     }
-  }
+  };
 
-  function handleKeydown(event: KeyboardEvent): void {
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (disabled) {
       return;
     }
@@ -190,9 +218,9 @@
         }
         break;
     }
-  }
+  };
 
-  function handleSearchInput(event: Event): void {
+  const handleSearchInput = (event: Event): void => {
     if (!(event.target instanceof HTMLInputElement)) {
       return;
     }
@@ -201,15 +229,15 @@
       isOpen = true;
     }
     highlightedIndex = -1;
-  }
+  };
 
-  function handleSearchFocus(): void {
+  const handleSearchFocus = (): void => {
     if (!isOpen) {
       open();
     }
-  }
+  };
 
-  function handleClickOutside(event: Event): void {
+  const handleClickOutside = (event: Event): void => {
     if (
       event.target instanceof Node &&
       containerEl !== null &&
@@ -217,7 +245,7 @@
     ) {
       close();
     }
-  }
+  };
 
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
@@ -234,6 +262,10 @@
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
 >
+  {#if hint}
+    <span class="select-hint">{hint}</span>
+  {/if}
+
   <div
     class="select-trigger"
     bind:this={triggerEl}
@@ -294,8 +326,26 @@
     <span class="select-arrow">{@html chevronDownSvg}</span>
   </div>
 
+  {#if subtext}
+    <span class="select-subtext">{subtext}</span>
+  {/if}
+
   {#if isOpen && !disabled}
     <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
+      {#if multiple && showSelectAll && filteredItems.length > 0}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div
+          class="select-option select-option-all"
+          class:selected={allSelected}
+          role="option"
+          aria-selected={allSelected}
+          tabindex="-1"
+          onclick={toggleSelectAll}
+        >
+          <span class="select-checkbox" aria-hidden="true">{allSelected ? '☑' : '☐'}</span>
+          <span>Select all</span>
+        </div>
+      {/if}
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
       {:else}
@@ -312,9 +362,19 @@
             onclick={() => selectItem(item.id)}
             onmouseenter={() => (highlightedIndex = index)}
           >
+            {#if multiple}
+              <span class="select-checkbox" aria-hidden="true"
+                >{value.includes(item.id) ? '☑' : '☐'}</span
+              >
+            {/if}
             {item.label}
           </div>
         {/each}
+      {/if}
+      {#if bottomContent}
+        <div class="select-bottom-content">
+          {@render bottomContent()}
+        </div>
       {/if}
     </div>
   {/if}
@@ -333,6 +393,18 @@
     opacity: var(--select-disabled-opacity, 0.5);
     cursor: var(--select-disabled-cursor, not-allowed);
     pointer-events: none;
+  }
+
+  .select-hint {
+    display: block;
+    margin-bottom: var(--select-hint-margin-bottom, 4px);
+    color: var(--select-hint-color, #666666);
+  }
+
+  .select-subtext {
+    display: block;
+    margin-top: var(--select-subtext-margin-top, 4px);
+    color: var(--select-subtext-color, #888888);
   }
 
   .select-trigger {
@@ -429,6 +501,9 @@
   }
 
   .select-option {
+    display: flex;
+    align-items: center;
+    gap: var(--select-option-gap, 6px);
     padding: var(--select-option-padding, 8px 12px);
     color: var(--select-option-color, #333333);
     font-size: var(--select-option-font-size, inherit);
@@ -454,11 +529,27 @@
     );
   }
 
+  .select-option-all {
+    border-bottom: var(--select-option-all-border, 1px solid #eeeeee);
+  }
+
+  .select-checkbox {
+    display: inline-flex;
+    align-items: center;
+    color: var(--select-checkbox-color, #2563eb);
+    flex-shrink: 0;
+  }
+
   .select-empty {
     padding: var(--select-empty-padding, 8px 12px);
     color: var(--select-empty-color, #999999);
     font-style: var(--select-empty-font-style, italic);
     font-size: var(--select-empty-font-size, inherit);
+  }
+
+  .select-bottom-content {
+    border-top: var(--select-bottom-content-border, 1px solid #eeeeee);
+    padding: var(--select-bottom-content-padding, 8px 12px);
   }
 
   .select-trigger :global(.pill) {

@@ -1,3 +1,5 @@
+import type { Snippet } from 'svelte';
+
 export type SelectProperties = MandatorySelectProperties &
   OptionalSelectProperties &
   SelectEventProperties;
@@ -8,15 +10,19 @@ export type SelectItem = {
 };
 
 export type MandatorySelectProperties = {
-  items: SelectItem[];
+  items: SelectItem[] | string[];
 };
 
 export type OptionalSelectProperties = {
   value?: string[];
   multiple?: boolean;
+  showSelectAll?: boolean;
   searchable?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  hint?: string;
+  subtext?: string;
+  bottomContent?: Snippet;
   testId?: string;
   classes?: string;
 };

@@ -8,6 +8,9 @@
     items,
     open = $bindable(false),
     testId,
+    triggerTestId,
+    triggerAriaLabel,
+    portal = false,
     trigger,
     onselect,
     onopen,
@@ -27,6 +30,10 @@
   let typeaheadQuery: string = $state('');
   let typeaheadTimer: ReturnType<typeof setTimeout> | null = $state(null);
 
+  // Portal positioning: computed from trigger's bounding rect when portal=true
+  let portalTop: number = $state(0);
+  let portalLeft: number = $state(0);
+
   let selectableItems: MenuItem[] = $derived(
     items.filter((item) => item.separator !== true && item.disabled !== true)
   );
@@ -34,6 +41,15 @@
   let selectableIndexMap: SvelteMap<MenuItem, number> = $derived(
     new SvelteMap(selectableItems.map((item, i) => [item, i]))
   );
+
+  const computePortalPosition = (): void => {
+    if (!portal || triggerEl === null || typeof window === 'undefined') {
+      return;
+    }
+    const rect = triggerEl.getBoundingClientRect();
+    portalTop = rect.bottom + window.scrollY;
+    portalLeft = rect.left + window.scrollX;
+  };
 
   function toggle() {
     if (open) {
@@ -44,6 +60,7 @@
   }
 
   function openMenu(startIndex: number = 0) {
+    computePortalPosition();
     open = true;
     focusedIndex = startIndex;
     onopen?.();
@@ -176,7 +193,8 @@
       open &&
       event.target instanceof Node &&
       menuContainerEl !== null &&
-      !menuContainerEl.contains(event.target)
+      !menuContainerEl.contains(event.target) &&
+      (menuListEl === null || !menuListEl.contains(event.target))
     ) {
       close();
     }
@@ -207,13 +225,15 @@
     tabindex="0"
     aria-haspopup="menu"
     aria-expanded={open}
+    aria-label={typeof triggerAriaLabel === 'string' ? triggerAriaLabel : null}
+    data-pw={typeof triggerTestId === 'string' ? triggerTestId : null}
   >
     {#if typeof trigger === 'function'}
       {@render trigger()}
     {/if}
   </div>
 
-  {#if open}
+  {#if open && !portal}
     <div
       class="menu-dropdown"
       bind:this={menuListEl}
@@ -260,6 +280,53 @@
   {/if}
 </div>
 
+{#if open && portal}
+  <div
+    class="menu-dropdown menu-dropdown-portal"
+    bind:this={menuListEl}
+    role={menuRole}
+    id={menuId}
+    aria-label={menuAriaLabel}
+    tabindex="-1"
+    onkeydown={handleMenuKeydown}
+    style="top: {portalTop}px; left: {portalLeft}px;"
+  >
+    {#each items as item (item.value)}
+      {#if item.separator === true}
+        <div class="menu-separator" role="separator"></div>
+      {:else}
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <div
+          class="menu-item"
+          class:menu-item-danger={item.danger === true}
+          class:menu-item-disabled={item.disabled === true}
+          role={itemRole}
+          id={item.id}
+          tabindex={item.disabled === true || menuRole === 'listbox' ? -1 : 0}
+          aria-disabled={item.disabled === true ? 'true' : null}
+          aria-selected={menuRole === 'listbox' && focusedIndex === getSelectableIndex(item)
+            ? true
+            : null}
+          onclick={() => selectItem(item)}
+          onfocus={() => {
+            if (item.disabled !== true) {
+              focusedIndex = getSelectableIndex(item);
+            }
+          }}
+          data-pw={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
+        >
+          {#if typeof item.icon === 'string'}
+            <span class="menu-item-icon">
+              <Img src={item.icon} alt="" />
+            </span>
+          {/if}
+          <span class="menu-item-label">{item.label}</span>
+        </div>
+      {/if}
+    {/each}
+  </div>
+{/if}
+
 <style>
   .menu-container {
     position: var(--menu-container-position, relative);
@@ -282,6 +349,8 @@
     z-index: var(--menu-z-index, 10);
     top: var(--menu-dropdown-top, 100%);
     left: var(--menu-dropdown-left, 0);
+    right: var(--menu-dropdown-right, auto);
+    bottom: var(--menu-dropdown-bottom, auto);
     background-color: var(--menu-background-color, #ffffff);
     border: var(--menu-border, 1px solid #e0e0e0);
     border-radius: var(--menu-border-radius, 6px);
@@ -291,6 +360,11 @@
     overflow-y: auto;
     padding: var(--menu-padding, 4px 0);
     margin: var(--menu-margin, 4px 0);
+  }
+
+  .menu-dropdown-portal {
+    position: fixed;
+    margin: 0;
   }
 
   .menu-item {

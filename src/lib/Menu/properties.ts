@@ -19,6 +19,9 @@ export type MandatoryMenuProperties = {
 export type OptionalMenuProperties = {
   open?: boolean;
   testId?: string;
+  triggerTestId?: string;
+  triggerAriaLabel?: string;
+  portal?: boolean;
   trigger?: Snippet;
   classes?: string;
   role?: 'menu' | 'listbox';

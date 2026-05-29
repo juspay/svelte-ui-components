@@ -11,39 +11,43 @@
     dismissIcon,
     onclick,
     ondismiss,
-    classes
+    classes,
+    variant,
+    showDot = false,
+    leadingIcon,
+    size = 'md'
   }: PillProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
 
-  function handleClick(event: MouseEvent): void {
+  const handleClick = (event: MouseEvent): void => {
     if (disabled) {
       return;
     }
     onclick?.(event);
-  }
+  };
 
-  function handleKeydown(event: KeyboardEvent): void {
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (event.currentTarget instanceof HTMLElement) {
         event.currentTarget.click();
       }
     }
-  }
+  };
 
-  function handleDismiss(event: MouseEvent): void {
+  const handleDismiss = (event: MouseEvent): void => {
     event.stopPropagation();
     if (disabled) {
       return;
     }
     ondismiss?.();
-  }
+  };
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
-  class="pill {classes ?? ''}"
+  class="pill pill-size-{size} {variant ? `pill-variant-${variant}` : ''} {classes ?? ''}"
   class:disabled
   onclick={interactive ? handleClick : null}
   onkeydown={interactive ? handleKeydown : null}
@@ -52,6 +56,12 @@
   aria-disabled={interactive && disabled ? true : null}
   data-pw={typeof testId === 'string' ? testId : null}
 >
+  {#if showDot}
+    <span class="pill-dot" aria-hidden="true"></span>
+  {/if}
+  {#if typeof leadingIcon === 'function'}
+    <span class="pill-leading-icon">{@render leadingIcon()}</span>
+  {/if}
   <span class="pill-text">{text}</span>
   {#if dismissible}
     <div class="pill-dismiss">
@@ -100,10 +110,35 @@
     cursor: var(--pill-disabled-cursor, not-allowed);
   }
 
+  /* size='sm' preset — tighter padding and gap */
+  .pill-size-sm {
+    padding: var(--pill-sm-padding, 3px 8px);
+    gap: var(--pill-sm-gap, 3px);
+  }
+
+  /* size='md' is the default; explicit class allows consumer overrides */
+
   .pill-text {
     overflow: hidden;
     text-overflow: var(--pill-text-overflow, ellipsis);
     white-space: nowrap;
+  }
+
+  /* Leading dot rendered when showDot=true */
+  .pill-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--pill-dot-size, 6px);
+    height: var(--pill-dot-size, 6px);
+    border-radius: 50%;
+    background-color: var(--pill-dot-color, currentColor);
+  }
+
+  /* Wrapper for the leadingIcon snippet */
+  .pill-leading-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 
   .pill-dismiss {

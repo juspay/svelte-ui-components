@@ -122,9 +122,9 @@
   }
 
   .banner-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: var(--banner-text-overflow, hidden);
+    text-overflow: var(--banner-text-ellipsis, ellipsis);
+    white-space: var(--banner-white-space, nowrap);
   }
 
   .banner-link-text {

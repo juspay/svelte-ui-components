@@ -1,10 +1,32 @@
 <script lang="ts">
   import type { CardProperties } from './properties';
 
-  let { children, title, description, classes }: CardProperties = $props();
+  let { children, title, description, classes, testId, onclick }: CardProperties = $props();
+
+  const isInteractive = $derived(typeof onclick === 'function');
+
+  function handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      if (event.key === ' ') {
+        event.preventDefault();
+      }
+      if (event.currentTarget instanceof HTMLElement) {
+        event.currentTarget.click();
+      }
+    }
+  }
 </script>
 
-<div class="card {classes ?? ''}">
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div
+  class="card {classes ?? ''}"
+  class:card-interactive={isInteractive}
+  data-pw={typeof testId === 'string' ? testId : null}
+  role={isInteractive ? 'button' : null}
+  tabindex={isInteractive ? 0 : null}
+  onclick={isInteractive ? onclick : null}
+  onkeydown={isInteractive ? handleKeydown : null}
+>
   {#if typeof title === 'string' && title.length > 0}
     <div class="card-header">
       <div class="card-title">{title}</div>
@@ -25,6 +47,16 @@
     border-radius: var(--card-border-radius, 8px);
     overflow: var(--card-overflow, hidden);
     color: inherit;
+    cursor: var(--card-cursor, inherit);
+  }
+
+  .card-interactive {
+    cursor: var(--card-cursor, pointer);
+  }
+
+  .card-interactive:focus-visible {
+    outline: var(--card-focus-outline, 2px solid currentColor);
+    outline-offset: var(--card-focus-outline-offset, 2px);
   }
 
   .card-header {

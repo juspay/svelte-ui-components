@@ -56,6 +56,7 @@ export { default as EmptyState } from './EmptyState/EmptyState.svelte';
 export { default as Combobox } from './Combobox/Combobox.svelte';
 export { default as ColorPicker } from './ColorPicker/ColorPicker.svelte';
 export { default as SplitInput } from './SplitInput/SplitInput.svelte';
+export { default as ErrorCard } from './ErrorCard/ErrorCard.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -109,5 +110,6 @@ export type * from './EmptyState/properties';
 export type * from './Combobox/properties';
 export type * from './ColorPicker/properties';
 export type * from './SplitInput/properties';
+export type * from './ErrorCard/properties';
 
 export { validateInput } from './utils';

@@ -13,7 +13,12 @@
   data-pw={typeof testId === 'string' ? testId : null}
 >
   {#each { length: count } as _, i (i)}
-    <span class="dot" class:pulse={animation === 'pulse'} style="--i: {i}"></span>
+    <span
+      class="dot"
+      class:pulse={animation === 'pulse'}
+      class:typing={animation === 'typing'}
+      style="--i: {i}"
+    ></span>
   {/each}
 </span>
 
@@ -40,6 +45,11 @@
     animation-name: loading-dots-pulse;
   }
 
+  .dot.typing {
+    animation: loading-dots-typing var(--loading-dots-typing-duration, 1.4s) ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.16s);
+  }
+
   @keyframes loading-dots-bounce {
     0%,
     80%,
@@ -59,6 +69,19 @@
     }
     40% {
       opacity: 1;
+    }
+  }
+
+  @keyframes loading-dots-typing {
+    0%,
+    80%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.85);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 </style>

@@ -1,4 +1,4 @@
-export type LoadingDotsAnimation = 'bounce' | 'pulse';
+export type LoadingDotsAnimation = 'bounce' | 'pulse' | 'typing';
 
 export type LoadingDotsProperties = OptionalLoadingDotsProperties;
 

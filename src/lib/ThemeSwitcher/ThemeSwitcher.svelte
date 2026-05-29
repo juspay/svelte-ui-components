@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import type { ThemeSwitcherOption, ThemeSwitcherProperties } from './properties';
   import { getStorageItem, setStorageItem } from '$lib/utils';
   import sunSvg from '$lib/assets/sun.svg?raw';
@@ -19,9 +19,9 @@
     system: monitorSvg
   };
 
-  function getDefaultIcon(value: string): string {
-    return KNOWN_ICONS[value] ?? paletteSvg;
-  }
+  const getDefaultIcon = (iconValue: string): string => {
+    return KNOWN_ICONS[iconValue] ?? paletteSvg;
+  };
 
   let {
     options = DEFAULT_OPTIONS,
@@ -30,29 +30,51 @@
     storageKey = 'theme-preference',
     testId,
     classes,
+    collapsible = false,
+    autoHideDelay = 3000,
     onchange
   }: ThemeSwitcherProperties = $props();
 
   let currentValue: string = $state(value ?? 'system');
   let systemPreference: string = $state('light');
+  let expanded: boolean = $state(false);
+  let autoHideTimer: ReturnType<typeof setTimeout> | null = null;
 
-  let hasSystemOption = $derived(options.some((o) => o.value === 'system'));
+  let hasSystemOption = $derived(options.some((option) => option.value === 'system'));
   let effectiveMode = $derived(mode ?? (options.length <= 2 ? 'toggle' : 'segment'));
-  let currentIndex = $derived(options.findIndex((o) => o.value === currentValue));
+  let currentIndex = $derived(options.findIndex((option) => option.value === currentValue));
 
   let segmentButtons: HTMLButtonElement[] = $state([]);
   let indicatorLeft: number = $state(0);
   let indicatorWidth: number = $state(0);
 
-  function updateIndicator(): void {
+  const clearAutoHideTimer = (): void => {
+    if (autoHideTimer !== null) {
+      clearTimeout(autoHideTimer);
+      autoHideTimer = null;
+    }
+  };
+
+  const scheduleAutoHide = (): void => {
+    if (!collapsible || autoHideDelay <= 0) {
+      return;
+    }
+    clearAutoHideTimer();
+    autoHideTimer = setTimeout(() => {
+      expanded = false;
+      autoHideTimer = null;
+    }, autoHideDelay);
+  };
+
+  const updateIndicator = (): void => {
     const btn = segmentButtons.at(currentIndex);
     if (btn instanceof HTMLButtonElement) {
       indicatorLeft = btn.offsetLeft;
       indicatorWidth = btn.offsetWidth;
     }
-  }
+  };
 
-  function applyValue(newValue: string): void {
+  const applyValue = (newValue: string): void => {
     currentValue = newValue;
     if (typeof storageKey === 'string' && storageKey.length > 0) {
       setStorageItem(storageKey, newValue);
@@ -60,15 +82,34 @@
     const resolved = newValue === 'system' ? systemPreference : newValue;
     onchange?.(newValue, resolved);
     tick().then(updateIndicator);
-  }
+    if (collapsible) {
+      scheduleAutoHide();
+    }
+  };
 
-  function handleToggle(): void {
+  const handleToggle = (): void => {
     const nextIndex = (currentIndex + 1) % options.length;
     const nextOption = options.at(nextIndex);
     if (typeof nextOption === 'object' && nextOption !== null) {
       applyValue(nextOption.value);
     }
-  }
+  };
+
+  const handleCollapsibleToggle = (): void => {
+    expanded = !expanded;
+    if (expanded) {
+      scheduleAutoHide();
+      tick().then(updateIndicator);
+    } else {
+      clearAutoHideTimer();
+    }
+  };
+
+  const resetAutoHide = (): void => {
+    if (collapsible && expanded) {
+      scheduleAutoHide();
+    }
+  };
 
   onMount(() => {
     systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -78,7 +119,7 @@
       if (
         typeof stored === 'string' &&
         stored.length > 0 &&
-        options.some((o) => o.value === stored)
+        options.some((option) => option.value === stored)
       ) {
         currentValue = stored;
       }
@@ -93,8 +134,8 @@
 
     if (hasSystemOption) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = (e: MediaQueryListEvent) => {
-        systemPreference = e.matches ? 'dark' : 'light';
+      const handler = (mediaQueryEvent: MediaQueryListEvent) => {
+        systemPreference = mediaQueryEvent.matches ? 'dark' : 'light';
         if (currentValue === 'system') {
           onchange?.(currentValue, systemPreference);
         }
@@ -105,17 +146,100 @@
       };
     }
   });
+
+  onDestroy(() => {
+    clearAutoHideTimer();
+  });
 </script>
 
-{#if effectiveMode === 'toggle'}
+{#if collapsible}
+  <div
+    class="collapsible-switcher {classes ?? ''}"
+    data-pw={typeof testId === 'string' ? testId : null}
+    role="group"
+    aria-label="Theme switcher"
+  >
+    <button
+      class="collapsible-trigger"
+      onclick={handleCollapsibleToggle}
+      aria-label={expanded ? 'Collapse theme options' : 'Expand theme options'}
+      aria-expanded={expanded}
+    >
+      {#each options as option, optionIndex (option.value)}
+        <span class="icon" class:active={optionIndex === currentIndex}>
+          {#if typeof option.icon === 'function'}
+            {@render option.icon()}
+          {:else}
+            <!-- eslint-disable svelte/no-at-html-tags -->
+            {@html getDefaultIcon(option.value)}
+          {/if}
+        </span>
+      {/each}
+    </button>
+
+    {#if expanded}
+      {#if effectiveMode === 'toggle'}
+        <button
+          class="collapsible-option-button"
+          onclick={() => {
+            handleToggle();
+            resetAutoHide();
+          }}
+          aria-label="Switch theme"
+        >
+          {#each options as option, optionIndex (option.value)}
+            <span class="icon" class:active={optionIndex === currentIndex}>
+              {#if typeof option.icon === 'function'}
+                {@render option.icon()}
+              {:else}
+                <!-- eslint-disable svelte/no-at-html-tags -->
+                {@html getDefaultIcon(option.value)}
+              {/if}
+            </span>
+          {/each}
+        </button>
+      {:else}
+        <div
+          class="segment-control collapsible-segment"
+          role="none"
+          onmouseenter={resetAutoHide}
+          onfocus={resetAutoHide}
+        >
+          <div
+            class="segment-indicator"
+            style="left: {indicatorLeft}px; width: {indicatorWidth}px;"
+          ></div>
+          {#each options as option, optionIndex (option.value)}
+            <button
+              bind:this={segmentButtons[optionIndex]}
+              class="segment-button"
+              class:selected={currentValue === option.value}
+              onclick={() => applyValue(option.value)}
+              aria-label={option.label ?? option.value}
+            >
+              <span class="icon">
+                {#if typeof option.icon === 'function'}
+                  {@render option.icon()}
+                {:else}
+                  <!-- eslint-disable svelte/no-at-html-tags -->
+                  {@html getDefaultIcon(option.value)}
+                {/if}
+              </span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    {/if}
+  </div>
+{:else if effectiveMode === 'toggle'}
   <button
     class="toggle-button {classes ?? ''}"
     onclick={handleToggle}
     aria-label="Switch theme"
     data-pw={typeof testId === 'string' ? testId : null}
   >
-    {#each options as option, i (option.value)}
-      <span class="icon" class:active={i === currentIndex}>
+    {#each options as option, optionIndex (option.value)}
+      <span class="icon" class:active={optionIndex === currentIndex}>
         {#if typeof option.icon === 'function'}
           {@render option.icon()}
         {:else}
@@ -131,9 +255,9 @@
       class="segment-indicator"
       style="left: {indicatorLeft}px; width: {indicatorWidth}px;"
     ></div>
-    {#each options as option, i (option.value)}
+    {#each options as option, optionIndex (option.value)}
       <button
-        bind:this={segmentButtons[i]}
+        bind:this={segmentButtons[optionIndex]}
         class="segment-button"
         class:selected={currentValue === option.value}
         onclick={() => applyValue(option.value)}
@@ -245,5 +369,98 @@
 
   .segment-button.selected {
     color: var(--theme-switcher-icon-color-active, #1f2937);
+  }
+
+  /* Collapsible wrapper */
+  .collapsible-switcher {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--theme-switcher-collapsible-gap, 4px);
+  }
+
+  .collapsible-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--theme-switcher-size, 36px);
+    height: var(--theme-switcher-size, 36px);
+    padding: 0;
+    border: none;
+    border-radius: var(--theme-switcher-border-radius, 8px);
+    background-color: var(--theme-switcher-bg, transparent);
+    cursor: pointer;
+    color: var(--theme-switcher-icon-color, #374151);
+    transition: background-color var(--theme-switcher-transition-duration, 0.3s);
+    font-family: inherit;
+  }
+
+  .collapsible-trigger:hover {
+    background-color: var(--theme-switcher-bg-hover, #f3f4f6);
+  }
+
+  .collapsible-trigger .icon {
+    position: absolute;
+  }
+
+  .collapsible-trigger .icon:not(.active) {
+    opacity: 0;
+    transform: scale(0.5) rotate(90deg);
+  }
+
+  .collapsible-trigger .icon.active {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  .collapsible-option-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--theme-switcher-size, 36px);
+    height: var(--theme-switcher-size, 36px);
+    padding: 0;
+    border: none;
+    border-radius: var(--theme-switcher-border-radius, 8px);
+    background-color: var(--theme-switcher-bg, transparent);
+    cursor: pointer;
+    color: var(--theme-switcher-icon-color, #374151);
+    transition: background-color var(--theme-switcher-transition-duration, 0.3s);
+    font-family: inherit;
+  }
+
+  .collapsible-option-button:hover {
+    background-color: var(--theme-switcher-bg-hover, #f3f4f6);
+  }
+
+  .collapsible-option-button .icon {
+    position: absolute;
+  }
+
+  .collapsible-option-button .icon:not(.active) {
+    opacity: 0;
+    transform: scale(0.5) rotate(90deg);
+  }
+
+  .collapsible-option-button .icon.active {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  .collapsible-segment {
+    animation: collapsible-expand-in var(--theme-switcher-transition-duration, 0.3s) ease;
+  }
+
+  @keyframes collapsible-expand-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 </style>

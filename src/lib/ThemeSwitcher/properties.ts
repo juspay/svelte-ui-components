@@ -18,6 +18,10 @@ export type OptionalThemeSwitcherProperties = {
   storageKey?: string;
   testId?: string;
   classes?: string;
+  /** When true, renders a compact icon-button that expands to the full theme options on click/focus. */
+  collapsible?: boolean;
+  /** When collapsible and expanded, auto-collapse after this many milliseconds (default 3000). */
+  autoHideDelay?: number;
 };
 
 export type ThemeSwitcherEventProperties = {

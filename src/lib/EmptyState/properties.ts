@@ -11,4 +11,5 @@ export type OptionalEmptyStateProperties = {
   icon?: Snippet;
   children?: Snippet;
   classes?: string;
+  testId?: string;
 };

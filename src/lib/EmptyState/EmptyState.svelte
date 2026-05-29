@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { EmptyStateProperties } from './properties';
 
-  let { title, description, icon, children, classes }: EmptyStateProperties = $props();
+  let { title, description, icon, children, classes, testId }: EmptyStateProperties = $props();
 </script>
 
-<div class="empty-state {classes ?? ''}">
+<div class="empty-state {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
   {#if typeof icon === 'function'}
     <div class="empty-state-icon">
       {@render icon()}

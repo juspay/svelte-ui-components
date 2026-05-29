@@ -8,10 +8,18 @@
     disabled = false,
     testId,
     onchange,
-    classes
+    classes,
+    totalItems = null,
+    pageSize = null,
+    pageSizes = null,
+    hasMore = false,
+    prevButtonTestId = null,
+    nextButtonTestId = null,
+    selectedItemLabel = 'items',
+    onPageSizeChange
   }: PaginationProperties = $props();
 
-  function generatePages(total: number, current: number, siblings: number): (number | '...')[] {
+  const generatePages = (total: number, current: number, siblings: number): (number | '...')[] => {
     const pages: (number | '...')[] = [];
     pages.push(1);
 
@@ -22,8 +30,8 @@
       pages.push('...');
     }
 
-    for (let i = leftSibling; i <= rightSibling; i++) {
-      pages.push(i);
+    for (let pageIndex = leftSibling; pageIndex <= rightSibling; pageIndex++) {
+      pages.push(pageIndex);
     }
 
     if (rightSibling < total - 1) {
@@ -35,61 +43,145 @@
     }
 
     return pages;
-  }
+  };
 
   let pages = $derived(generatePages(totalPages, currentPage, siblingCount));
 
-  function goToPage(page: number): void {
-    if (disabled || page < 1 || page > totalPages || page === currentPage) {
+  const goToPage = (page: number): void => {
+    const isNextAllowed = hasMore || page <= totalPages;
+    if (disabled || page < 1 || !isNextAllowed || page === currentPage) {
       return;
     }
     currentPage = page;
     onchange?.(page);
-  }
+  };
+
+  const computedRangeStart = $derived(
+    totalItems !== null && pageSize !== null
+      ? Math.min((currentPage - 1) * pageSize + 1, totalItems)
+      : null
+  );
+
+  const computedRangeEnd = $derived(
+    totalItems !== null && pageSize !== null ? Math.min(currentPage * pageSize, totalItems) : null
+  );
+
+  const isNextDisabled = $derived(disabled || (hasMore ? false : currentPage >= totalPages));
+
+  const handlePageSizeChange = (event: Event): void => {
+    if (!(event.currentTarget instanceof HTMLSelectElement)) {
+      return;
+    }
+    const newSize = parseInt(event.currentTarget.value, 10);
+    if (!isNaN(newSize)) {
+      onPageSizeChange?.(newSize);
+    }
+  };
 </script>
 
-<nav
-  class="pagination {classes ?? ''}"
-  class:disabled
-  data-pw={typeof testId === 'string' ? testId : null}
->
-  <button
-    class="page-button prev-button"
-    disabled={disabled || currentPage <= 1}
-    onclick={() => goToPage(currentPage - 1)}
-    aria-label="Previous page"
-  >
-    &#8249;
-  </button>
+<div class="pagination-wrapper {classes ?? ''}">
+  {#if totalItems !== null && computedRangeStart !== null && computedRangeEnd !== null}
+    <span class="pagination-summary" aria-live="polite">
+      Showing {computedRangeStart}–{computedRangeEnd} of {totalItems}
+      {selectedItemLabel}
+    </span>
+  {/if}
 
-  {#each pages as page, i (i)}
-    {#if page === '...'}
-      <span class="ellipsis">&#8230;</span>
-    {:else}
-      <button
-        class="page-button"
-        class:active={page === currentPage}
+  {#if pageSizes !== null && pageSizes.length > 0}
+    <label class="page-size-label">
+      Rows per page:
+      <select
+        class="page-size-select"
+        value={pageSize}
+        onchange={handlePageSizeChange}
         {disabled}
-        onclick={() => goToPage(page)}
-        aria-label="Page {page}"
-        aria-current={page === currentPage ? 'page' : null}
+        aria-label="Rows per page"
       >
-        {page}
-      </button>
-    {/if}
-  {/each}
+        {#each pageSizes as sizeOption (sizeOption)}
+          <option value={sizeOption} selected={sizeOption === pageSize}>{sizeOption}</option>
+        {/each}
+      </select>
+    </label>
+  {/if}
 
-  <button
-    class="page-button next-button"
-    disabled={disabled || currentPage >= totalPages}
-    onclick={() => goToPage(currentPage + 1)}
-    aria-label="Next page"
+  <nav
+    class="pagination"
+    class:disabled
+    data-pw={typeof testId === 'string' ? testId : null}
+    aria-label="Pagination"
   >
-    &#8250;
-  </button>
-</nav>
+    <button
+      class="page-button prev-button"
+      disabled={disabled || currentPage <= 1}
+      onclick={() => goToPage(currentPage - 1)}
+      aria-label="Previous page"
+      data-pw={typeof prevButtonTestId === 'string' ? prevButtonTestId : null}
+    >
+      &#8249;
+    </button>
+
+    {#each pages as page, pageIdx (pageIdx)}
+      {#if page === '...'}
+        <span class="ellipsis">&#8230;</span>
+      {:else}
+        <button
+          class="page-button"
+          class:active={page === currentPage}
+          {disabled}
+          onclick={() => goToPage(page)}
+          aria-label="Page {page}"
+          aria-current={page === currentPage ? 'page' : null}
+        >
+          {page}
+        </button>
+      {/if}
+    {/each}
+
+    <button
+      class="page-button next-button"
+      disabled={isNextDisabled}
+      onclick={() => goToPage(currentPage + 1)}
+      aria-label="Next page"
+      data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
+    >
+      &#8250;
+    </button>
+  </nav>
+</div>
 
 <style>
+  .pagination-wrapper {
+    display: var(--pagination-wrapper-display, flex);
+    flex-wrap: var(--pagination-wrapper-flex-wrap, wrap);
+    gap: var(--pagination-wrapper-gap, 12px);
+    align-items: var(--pagination-wrapper-align-items, center);
+  }
+
+  .pagination-summary {
+    color: var(--pagination-summary-color, #6b7280);
+  }
+
+  .page-size-label {
+    display: var(--pagination-page-size-label-display, inline-flex);
+    align-items: var(--pagination-page-size-label-align-items, center);
+    gap: var(--pagination-page-size-label-gap, 6px);
+    color: var(--pagination-page-size-label-color, #6b7280);
+  }
+
+  .page-size-select {
+    padding: var(--pagination-page-size-select-padding, 4px 8px);
+    color: var(--pagination-page-size-select-color, #3a4550);
+    background: var(--pagination-page-size-select-background, #ffffff);
+    border: var(--pagination-page-size-select-border, 1px solid #d1d5db);
+    border-radius: var(--pagination-page-size-select-border-radius, 4px);
+    cursor: var(--pagination-page-size-select-cursor, pointer);
+  }
+
+  .page-size-select:disabled {
+    opacity: var(--pagination-disabled-opacity, 0.5);
+    cursor: var(--pagination-disabled-cursor, not-allowed);
+  }
+
   .pagination {
     display: var(--pagination-display, flex);
     gap: var(--pagination-gap, 4px);

@@ -1,19 +1,44 @@
 <script lang="ts">
-  import type { TabsProperties } from './properties';
+  import type { TabItem, TabsProperties } from './properties';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
 
   let {
     items,
-    activeIndex = 0,
+    activeIndex = $bindable(0),
+    activeKey,
     disabled = false,
     testId,
     scrollLeftIcon,
     scrollRightIcon,
     tab,
     classes,
-    onchange
+    onchange,
+    onkeychange
   }: TabsProperties = $props();
+
+  const isObjectMode = $derived(items.length > 0 && typeof items.at(0) === 'object');
+
+  function toTabItem(item: string | TabItem): TabItem | null {
+    return typeof item === 'object' ? item : null;
+  }
+
+  function toStringLabel(item: string | TabItem): string {
+    return typeof item === 'string' ? item : item.label;
+  }
+
+  const resolvedActiveIndex = $derived(
+    isObjectMode
+      ? items.findIndex((item) => {
+          const tabItem = toTabItem(item);
+          return tabItem !== null && tabItem.key === activeKey;
+        })
+      : activeIndex
+  );
+
+  function isActiveItem(index: number): boolean {
+    return index === resolvedActiveIndex;
+  }
 
   let scrollContainer: HTMLDivElement | null = null;
   let canScrollLeft = $state(false);
@@ -40,11 +65,30 @@
   }
 
   function handleTabClick(index: number): void {
-    if (disabled || index === activeIndex) {
+    if (disabled) {
       return;
     }
-    activeIndex = index;
-    onchange?.(index, items[index]);
+    if (isObjectMode) {
+      const rawItem = items.at(index);
+      if (typeof rawItem !== 'object') {
+        return;
+      }
+      const tabItem = toTabItem(rawItem)!;
+      if (tabItem.key === activeKey) {
+        return;
+      }
+      onkeychange?.(tabItem.key);
+    } else {
+      if (index === activeIndex) {
+        return;
+      }
+      const rawLabel = items.at(index);
+      if (typeof rawLabel !== 'string') {
+        return;
+      }
+      activeIndex = index;
+      onchange?.(index, rawLabel);
+    }
   }
 
   function handleKeydown(event: KeyboardEvent, index: number): void {
@@ -90,23 +134,26 @@
     use:initOverflow
     onscroll={updateOverflow}
   >
-    {#each items as label, index (index)}
+    {#each items as item, index (isObjectMode ? (toTabItem(item)?.key ?? index) : index)}
+      {@const tabItem = toTabItem(item)}
+      {@const label = toStringLabel(item)}
       <div
         class="tabs-item"
-        class:active={index === activeIndex}
+        class:active={isActiveItem(index)}
         role="tab"
-        aria-selected={index === activeIndex}
+        aria-selected={isActiveItem(index)}
         aria-disabled={disabled ? true : null}
-        tabindex={index === activeIndex ? 0 : -1}
+        tabindex={isActiveItem(index) ? 0 : -1}
+        data-pw={tabItem?.testId}
         onclick={() => handleTabClick(index)}
-        onkeydown={(e) => handleKeydown(e, index)}
+        onkeydown={(event) => handleKeydown(event, index)}
       >
-        {#if tab}
-          {@render tab({ label, index, active: index === activeIndex })}
+        {#if typeof tab === 'function'}
+          {@render tab({ label, index, active: isActiveItem(index), subtitle: tabItem?.subtitle })}
         {:else}
           {label}
         {/if}
-        {#if index === activeIndex}
+        {#if isActiveItem(index)}
           <span class="tabs-indicator"></span>
         {/if}
       </div>

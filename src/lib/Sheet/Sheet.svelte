@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SheetProperties } from './properties';
-  import { fly, fade } from 'svelte/transition';
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
 
@@ -19,23 +18,37 @@
 
   let overlayDiv: HTMLDivElement | null = $state(null);
   let sheetPanel: HTMLDivElement | null = $state(null);
+  let internalShouldRender: boolean = $state(open);
+  let panelState: 'open' | 'closing' = $state('open');
 
-  let flyParams = $derived.by(() => {
-    switch (side) {
-      case 'left':
-        return { x: -400, y: 0, duration: 300 };
-      case 'right':
-        return { x: 400, y: 0, duration: 300 };
-      case 'top':
-        return { x: 0, y: -400, duration: 300 };
-      case 'bottom':
-        return { x: 0, y: 400, duration: 300 };
-    }
-  });
+  function trackOpen(_node: Window, currentOpen: boolean) {
+    let prev = currentOpen;
+    return {
+      update(nextOpen: boolean) {
+        if (nextOpen === prev) {
+          return;
+        }
+        if (nextOpen) {
+          internalShouldRender = true;
+          panelState = 'open';
+        } else if (internalShouldRender && panelState === 'open') {
+          panelState = 'closing';
+        }
+        prev = nextOpen;
+      }
+    };
+  }
 
   function close() {
     open = false;
-    onclose?.();
+  }
+
+  function handlePanelAnimationEnd(event: AnimationEvent) {
+    if (panelState === 'closing' && event.target === sheetPanel) {
+      internalShouldRender = false;
+      panelState = 'open';
+      onclose?.();
+    }
   }
 
   function handleOverlayClick(event: MouseEvent) {
@@ -78,6 +91,7 @@
   }
 
   function scrollLockAction(_node: HTMLElement) {
+    panelState = 'open';
     lockScroll();
     tick().then(() => {
       if (sheetPanel !== null) {
@@ -92,7 +106,9 @@
   }
 </script>
 
-{#if open}
+<svelte:window use:trackOpen={open} />
+
+{#if internalShouldRender}
   <div
     bind:this={overlayDiv}
     use:scrollLockAction
@@ -102,7 +118,7 @@
     role="button"
     tabindex="-1"
     data-pw={typeof testId === 'string' ? testId : null}
-    transition:fade={{ duration: 200 }}
+    data-state={panelState}
   >
     <div
       bind:this={sheetPanel}
@@ -111,7 +127,8 @@
       aria-modal="true"
       aria-label={title ?? 'Sheet'}
       tabindex="-1"
-      transition:fly|global={flyParams}
+      data-state={panelState}
+      onanimationend={handlePanelAnimationEnd}
     >
       {#if typeof title === 'string' || showCloseButton}
         <div class="sheet-header">
@@ -152,6 +169,35 @@
     bottom: 0;
     z-index: var(--sheet-overlay-z-index, 15);
     -webkit-tap-highlight-color: transparent;
+    animation-name: var(--sheet-overlay-animation-name, sheet-overlay-fade-in);
+    animation-duration: var(--sheet-overlay-animation-duration, 200ms);
+    animation-timing-function: var(--sheet-overlay-animation-easing, ease);
+    animation-fill-mode: var(--sheet-overlay-animation-fill-mode, both);
+  }
+
+  .sheet-overlay[data-state='closing'] {
+    animation-name: var(--sheet-overlay-exit-animation-name, sheet-overlay-fade-out);
+    animation-duration: var(--sheet-overlay-exit-animation-duration, 200ms);
+    animation-timing-function: var(--sheet-overlay-exit-animation-easing, ease);
+    animation-fill-mode: var(--sheet-overlay-exit-animation-fill-mode, both);
+  }
+
+  @keyframes sheet-overlay-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheet-overlay-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
 
   .overlay-active {
@@ -172,6 +218,17 @@
     z-index: var(--sheet-z-index, 16);
     pointer-events: auto;
     outline: none;
+    animation-name: var(--sheet-panel-animation-name, sheet-panel-fly-right);
+    animation-duration: var(--sheet-panel-animation-duration, 300ms);
+    animation-timing-function: var(--sheet-panel-animation-easing, ease);
+    animation-fill-mode: var(--sheet-panel-animation-fill-mode, both);
+  }
+
+  .sheet-panel[data-state='closing'] {
+    animation-name: var(--sheet-panel-exit-animation-name, sheet-panel-fly-out-right);
+    animation-duration: var(--sheet-panel-exit-animation-duration, 300ms);
+    animation-timing-function: var(--sheet-panel-exit-animation-easing, ease);
+    animation-fill-mode: var(--sheet-panel-exit-animation-fill-mode, both);
   }
 
   .sheet-panel.left,
@@ -185,11 +242,21 @@
   .sheet-panel.left {
     left: 0;
     border-right: var(--sheet-border, none);
+    animation-name: var(--sheet-panel-animation-name, sheet-panel-fly-left);
+  }
+
+  .sheet-panel.left[data-state='closing'] {
+    animation-name: var(--sheet-panel-exit-animation-name, sheet-panel-fly-out-left);
   }
 
   .sheet-panel.right {
     right: 0;
     border-left: var(--sheet-border, none);
+    animation-name: var(--sheet-panel-animation-name, sheet-panel-fly-right);
+  }
+
+  .sheet-panel.right[data-state='closing'] {
+    animation-name: var(--sheet-panel-exit-animation-name, sheet-panel-fly-out-right);
   }
 
   .sheet-panel.top,
@@ -203,11 +270,93 @@
   .sheet-panel.top {
     top: 0;
     border-bottom: var(--sheet-border, none);
+    animation-name: var(--sheet-panel-animation-name, sheet-panel-fly-top);
+  }
+
+  .sheet-panel.top[data-state='closing'] {
+    animation-name: var(--sheet-panel-exit-animation-name, sheet-panel-fly-out-top);
   }
 
   .sheet-panel.bottom {
     bottom: 0;
     border-top: var(--sheet-border, none);
+    animation-name: var(--sheet-panel-animation-name, sheet-panel-fly-bottom);
+  }
+
+  .sheet-panel.bottom[data-state='closing'] {
+    animation-name: var(--sheet-panel-exit-animation-name, sheet-panel-fly-out-bottom);
+  }
+
+  @keyframes sheet-panel-fly-right {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sheet-panel-fly-left {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sheet-panel-fly-top {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes sheet-panel-fly-bottom {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes sheet-panel-fly-out-right {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes sheet-panel-fly-out-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes sheet-panel-fly-out-top {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-100%);
+    }
+  }
+
+  @keyframes sheet-panel-fly-out-bottom {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
   }
 
   .sheet-header {

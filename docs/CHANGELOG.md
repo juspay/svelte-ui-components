@@ -2,13 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.19.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.0)
 
-Adds --banner-white-space, --banner-text-overflow, and --banner-text-ellipsis so
-callers can opt the banner text out of the default single-line truncation
-(white-space:nowrap; overflow:hidden; text-overflow:ellipsis). Defaults are
-unchanged, so existing banners are unaffected; multi-line/inline banner usages
-(e.g. card-context hints) can now set --banner-white-space: normal.
+- Add default background and text color for disable button state
+
+## [2.20.0](https://github.com/juspay/svelte-ui-components/compare/2.20.0..2.19.2) - 31 May 2026
 
 ## [2.19.2](https://github.com/juspay/svelte-ui-components/compare/2.19.2..2.19.1) - 5 May 2026
 

@@ -2,9 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.1)
 
-- Add default background and text color for disable button state
+- svelte never runs derived if the state is not used
+
+## [2.20.1](https://github.com/juspay/svelte-ui-components/compare/2.20.1..2.20.0) - 2 June 2026
 
 ## [2.20.0](https://github.com/juspay/svelte-ui-components/compare/2.20.0..2.19.2) - 31 May 2026
 

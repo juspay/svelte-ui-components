@@ -2,9 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.2)
 
-- svelte never runs derived if the state is not used
+Exposes an optional testId that renders data-pw on the root .empty-state element,
+matching the convention used by Banner, Divider, and other library components.
+Lets consumers target the empty state in Playwright/automation without wrapping
+it in an extra structural div.
+
+## [2.20.2](https://github.com/juspay/svelte-ui-components/compare/2.20.2..2.20.1) - 3 June 2026
 
 ## [2.20.1](https://github.com/juspay/svelte-ui-components/compare/2.20.1..2.20.0) - 2 June 2026
 

@@ -2,12 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.20.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.21.0)
 
-Exposes an optional testId that renders data-pw on the root .empty-state element,
-matching the convention used by Banner, Divider, and other library components.
-Lets consumers target the empty state in Playwright/automation without wrapping
-it in an extra structural div.
+Adds exactly three additive features and nothing else:
+- testId prop → data-pw on the root for Playwright test selection
+- onclick prop → full interactive-div pattern: role="button", tabindex=0,
+Enter+Space keydown with preventDefault on Space, all interactive
+attributes conditionally null when onclick is omitted (zero behaviour
+change for existing consumers)
+- --card-cursor, --card-focus-outline, --card-focus-outline-offset CSS
+variables with sensible defaults; .card-interactive gates the cursor switch
+
+Header layout props (headerLeading/headerAction/headerSubtext) are
+intentionally excluded per GUIDELINES §9 — variants and layout stay in
+consumer CSS (classes prop + CSS vars).
+
+## [2.21.0](https://github.com/juspay/svelte-ui-components/compare/2.21.0..2.20.2) - 3 June 2026
 
 ## [2.20.2](https://github.com/juspay/svelte-ui-components/compare/2.20.2..2.20.1) - 3 June 2026
 

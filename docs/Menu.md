@@ -28,12 +28,15 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 | Prop    | Type         | Required | Default | Description                                                                                                                                                            |
 | ------- | ------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | items   | `MenuItem[]` | Yes      | `-`     | Array of menu items to display. Each item defines a label, value, and optional icon, disabled, danger, or separator flags. See MenuItem type below.                    |
-| open      | `boolean`              | No       | `false`  | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                   |
-| testId    | `string`               | No       | `-`      | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                 |
-| classes   | `string`               | No       | `-`      | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| role      | `'menu' \| 'listbox'`  | No       | `'menu'` | ARIA role for the dropdown container. Set to `'listbox'` to use the menu as an autocomplete suggestions list. Items automatically get `role="option"` instead of `role="menuitem"`, and `aria-selected` is managed on the focused item. |
-| ariaLabel | `string`               | No       | `-`      | Sets `aria-label` on the dropdown container for screen reader identification.                                                                                          |
-| id        | `string`               | No       | `-`      | Sets the `id` attribute on the dropdown container. Needed for `aria-controls` references from a parent combobox input.                                                 |
+| open             | `boolean`              | No       | `false`  | Bindable. Controls whether the dropdown is visible. Set to true to open programmatically; bind to react to open/close state changes.                                   |
+| testId           | `string`               | No       | `-`      | Value for the data-pw attribute on the container, used for end-to-end testing selectors. Individual items get `{testId}-item-{value}`.                                 |
+| triggerTestId    | `string`               | No       | `-`      | Value for the data-pw attribute on the trigger element. Use this to target the trigger button specifically in end-to-end tests, independently of the container testId. |
+| triggerAriaLabel | `string`               | No       | `-`      | Sets aria-label on the trigger element. Useful when the trigger has no visible text (e.g. an icon-only button) and needs a descriptive label for screen readers.       |
+| portal           | `boolean`              | No       | `false`  | When true, the dropdown is rendered as a sibling of the document body (position: fixed) instead of inside the component container. Use this to escape overflow:hidden or stacking context constraints. The dropdown is positioned to align with the trigger's bounding rect. |
+| classes          | `string`               | No       | `-`      | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| role             | `'menu' \| 'listbox'`  | No       | `'menu'` | ARIA role for the dropdown container. Set to `'listbox'` to use the menu as an autocomplete suggestions list. Items automatically get `role="option"` instead of `role="menuitem"`, and `aria-selected` is managed on the focused item. |
+| ariaLabel        | `string`               | No       | `-`      | Sets `aria-label` on the dropdown container for screen reader identification.                                                                                          |
+| id               | `string`               | No       | `-`      | Sets the `id` attribute on the dropdown container. Needed for `aria-controls` references from a parent combobox input.                                                 |
 
 ## Snippets
 
@@ -71,6 +74,8 @@ Override these custom properties to theme the component.
 | `--menu-max-height`                         | `240px`                                  | max-height       | Maximum height of the dropdown before it scrolls.                      |
 | `--menu-dropdown-top`                       | `100%`                                   | top              | Top position of the dropdown panel relative to its container.          |
 | `--menu-dropdown-left`                      | `0`                                      | left             | Left position of the dropdown panel relative to its container.         |
+| `--menu-dropdown-right`                     | `auto`                                   | right            | Right position of the dropdown panel. Set to `0` to right-align the dropdown to the container edge. |
+| `--menu-dropdown-bottom`                    | `auto`                                   | bottom           | Bottom position of the dropdown panel. Set to `100%` to open the dropdown upward instead of downward. |
 | `--menu-padding`                            | `4px 0`                                  | padding          | Inner padding of the dropdown panel.                                   |
 | `--menu-margin`                             | `4px 0`                                  | margin           | Outer margin of the dropdown panel (gap between trigger and dropdown). |
 | `--menu-item-padding`                       | `8px 12px`                               | padding          | Inner padding of each menu item.                                       |

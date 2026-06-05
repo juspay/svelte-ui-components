@@ -5,8 +5,12 @@
     props: {
       showBackButton: { type: 'Boolean', reflect: true, attribute: 'show-back-button' },
       text: { type: 'String', reflect: true },
+      subheading: { type: 'String', reflect: true },
       backIcon: { type: 'String', attribute: 'back-icon' },
       classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
+      headingTestId: { type: 'String', attribute: 'heading-test-id' },
+      subheadingTestId: { type: 'String', attribute: 'subheading-test-id' },
       onbackClick: { type: 'Object' },
       onkeydown: { type: 'Object' }
     }

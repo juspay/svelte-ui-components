@@ -14,12 +14,16 @@ A fixed-position header bar with a back button (left), center title text, and cu
 
 ## Props
 
-| Prop           | Type             | Required | Default                                          | Description                                                                                                                                                            |
-| -------------- | ---------------- | -------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| showBackButton | `boolean`        | No       | `true`                                           | Whether to show the default back button on the left side. Only shown when leftContent snippet is not provided.                                                         |
-| text           | `string \| null` | No       | `-`                                              | Title text displayed in the center of the toolbar. Only shown when centerContent snippet is not provided.                                                              |
-| backIcon       | `string \| null` | No       | `'https://sdk.breeze.in/gallery/icons/back.svg'` | URL for the back button icon image. Defaults to a back-arrow SVG from sdk.breeze.in.                                                                                   |
-| classes        | `string`         | No       | `-`                                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop             | Type             | Required | Default                                          | Description                                                                                                                                                            |
+| ---------------- | ---------------- | -------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| showBackButton   | `boolean`        | No       | `true`                                           | Whether to show the default back button on the left side. Only shown when leftContent snippet is not provided.                                                         |
+| text             | `string \| null` | No       | `-`                                              | Title text displayed in the center of the toolbar. Only shown when centerContent snippet is not provided.                                                              |
+| subheading       | `string`         | No       | `-`                                              | Optional secondary line of text displayed below the main `text` heading. Only rendered when `text` is also present and this string is non-empty.                      |
+| backIcon         | `string \| null` | No       | `'https://sdk.breeze.in/gallery/icons/back.svg'` | URL for the back button icon image. Defaults to a back-arrow SVG from sdk.breeze.in.                                                                                   |
+| classes          | `string`         | No       | `-`                                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| testId           | `string`         | No       | `-`                                              | Test identifier applied as `data-pw` attribute on the toolbar's root element for Playwright selectors.                                                                 |
+| headingTestId    | `string`         | No       | `-`                                              | Test identifier applied as `data-pw` attribute on the heading text element.                                                                                            |
+| subheadingTestId | `string`         | No       | `-`                                              | Test identifier applied as `data-pw` attribute on the subheading element.                                                                                              |
 
 ## Snippets
 
@@ -69,15 +73,23 @@ Override these custom properties to theme the component.
 | `--toolbar-back-button-cursor`            | `pointer`                | cursor          | Cursor style for the back button.                    |
 | `--toolbar-back-image-height`             | `16px`                   | height          | Height of the back button icon image.                |
 | `--toolbar-back-image-width`              | `16px`                   | width           | Width of the back button icon image.                 |
+| `--toolbar-text-flex`                     | `1`                      | flex            | Flex grow/shrink value of the text block container.  |
+| `--toolbar-subheading-color`              | `inherit`                | color           | Text color of the subheading line.                   |
+| `--toolbar-subheading-font-size`          | `inherit`                | font-size       | Font size of the subheading line.                    |
 
 ## Web Component
 
 Tag: `<sui-toolbar>`
 
 ```html
-<sui-toolbar text="Page Title" show-back-button>
-  <button slot="left-content">Menu</button>
-  <span slot="center-content">Title</span>
+<sui-toolbar
+  text="Order Details"
+  subheading="Placed on 5 Jun 2026"
+  show-back-button
+  test-id="toolbar-root"
+  heading-test-id="toolbar-heading"
+  subheading-test-id="toolbar-subheading"
+>
   <button slot="right-content">Settings</button>
   <div slot="additional-content">Breadcrumbs</div>
 </sui-toolbar>

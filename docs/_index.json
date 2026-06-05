@@ -32,6 +32,10 @@
     "description": "An action button that supports two loader modes (circular spinner or progress bar), HTML text content, icon and children snippets, aria-expanded for dropdown triggers, and a disabled state. The progress bar mode prevents clicks during animation."
   },
   {
+    "name": "CopyButton",
+    "description": "An icon button that copies a string to the clipboard and shows a transient confirmation. Writes textToCopy via the async Clipboard API with an execCommand fallback, swaps the icon to a checkmark for a configurable duration, announces the result via an aria-live region, and fires onCopy(text, success). Default copy/checkmark icons use currentColor and are overridable via the icon/copiedIcon snippets; theme via --copy-button-* CSS variables."
+  },
+  {
     "name": "Calendar",
     "description": "A date picker with single-date and date-range selection modes. Supports month/year navigation, locale-aware day and month names, min/max date constraints, disabled dates, and keyboard navigation. Range mode shows visual start/end pills with highlighted in-between days."
   },

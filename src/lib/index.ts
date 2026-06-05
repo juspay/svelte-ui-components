@@ -1,6 +1,7 @@
 export { default as Modal } from './Modal/Modal.svelte';
 export { default as BrandLoader } from './BrandLoader/BrandLoader.svelte';
 export { default as Button } from './Button/Button.svelte';
+export { default as CopyButton } from './CopyButton/CopyButton.svelte';
 export { default as Input } from './Input/Input.svelte';
 export { default as InputButton } from './InputButton/InputButton.svelte';
 export { default as ListItem } from './ListItem/ListItem.svelte';
@@ -58,6 +59,7 @@ export { default as ColorPicker } from './ColorPicker/ColorPicker.svelte';
 export { default as SplitInput } from './SplitInput/SplitInput.svelte';
 
 export type * from './Button/properties';
+export type * from './CopyButton/properties';
 export type * from './Modal/properties';
 export type * from './Input/properties';
 export type * from './InputButton/properties';

@@ -48,6 +48,12 @@
     overflow: var(--card-overflow, hidden);
     color: inherit;
     cursor: var(--card-cursor, inherit);
+    box-shadow: var(--card-box-shadow, none);
+    width: var(--card-width, auto);
+    min-width: var(--card-min-width, 0);
+    max-width: var(--card-max-width, none);
+    max-height: var(--card-max-height, none);
+    margin: var(--card-margin, 0);
   }
 
   .card-interactive {

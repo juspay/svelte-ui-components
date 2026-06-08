@@ -7,13 +7,20 @@
   let {
     items,
     value = $bindable([]),
+    open = $bindable(false),
+    manageOpenState = true,
     multiple = false,
     searchable = false,
     placeholder = '',
     disabled = false,
     testId,
     onchange,
-    classes
+    onopen,
+    onclose,
+    classes,
+    allowSelectAll = true,
+    showSelectButton = false,
+    bottomContent
   }: SelectProperties = $props();
 
   let isOpen = $state(false);
@@ -23,12 +30,18 @@
   let searchInputEl: HTMLInputElement | null = $state(null);
   let triggerEl: HTMLDivElement | null = $state(null);
 
+  /**
+   * Pending selection used when showSelectButton is true.
+   * We only commit to `value` and fire onchange when Apply is clicked.
+   */
+  let pendingValue: string[] = $state([]);
+
   const listboxId = `select-listbox-${Math.random().toString(36).slice(2, 9)}`;
 
-  function getLabel(id: string): string {
+  const getLabel = (id: string): string => {
     const found = items.find((item) => item.id === id);
     return typeof found === 'object' ? found.label : id;
-  }
+  };
 
   let filteredItems: SelectItem[] = $derived(
     searchable && query.length > 0
@@ -50,118 +63,182 @@
 
   let searchPlaceholder = $derived(isOpen && displayText.length > 0 ? displayText : placeholder);
 
-  async function open(): Promise<void> {
-    if (disabled || isOpen) {
+  /**
+   * The effective selected set shown in the dropdown checkboxes / select-all row.
+   * In deferred mode this is pendingValue so the UI reflects staged choices.
+   */
+  let activeSelection: string[] = $derived(showSelectButton && multiple ? pendingValue : value);
+
+  const allSelected: boolean = $derived(
+    items.length > 0 && items.every((item) => activeSelection.includes(item.id))
+  );
+
+  /** Open the dropdown panel. Respects disabled and manageOpenState. */
+  const openDropdown = async (): Promise<void> => {
+    if (disabled) {
       return;
     }
-    isOpen = true;
+    if (manageOpenState) {
+      isOpen = true;
+    }
+    open = true;
     highlightedIndex = -1;
     query = '';
+    if (multiple && showSelectButton) {
+      pendingValue = [...value];
+    }
+    onopen?.();
     if (searchable) {
       await tick();
       if (searchInputEl !== null) {
         searchInputEl.focus();
       }
     }
-  }
+  };
 
-  function close(): void {
-    isOpen = false;
+  /** Close the dropdown panel. Resets deferred state without committing. */
+  const closeDropdown = (): void => {
+    if (manageOpenState) {
+      isOpen = false;
+    }
+    open = false;
     query = '';
     highlightedIndex = -1;
-  }
+    pendingValue = [];
+    onclose?.();
+  };
 
-  function selectItem(id: string): void {
+  /**
+   * Whether the dropdown panel is currently visible.
+   * When manageOpenState is false the parent's `open` prop drives this.
+   */
+  const panelVisible: boolean = $derived(manageOpenState ? isOpen : open);
+
+  const selectItem = (id: string): void => {
     if (disabled) {
       return;
     }
     if (multiple) {
-      value = value.includes(id) ? value.filter((v) => v !== id) : [...value, id];
+      if (showSelectButton) {
+        pendingValue = pendingValue.includes(id)
+          ? pendingValue.filter((pendingId) => pendingId !== id)
+          : [...pendingValue, id];
+      } else {
+        value = value.includes(id)
+          ? value.filter((existingId) => existingId !== id)
+          : [...value, id];
+        onchange?.(value);
+      }
     } else {
       value = [id];
-      close();
+      onchange?.(value);
+      closeDropdown();
     }
-    onchange?.(value);
-  }
+  };
 
-  function removeItem(id: string): void {
+  const toggleSelectAll = (): void => {
     if (disabled) {
       return;
     }
-    value = value.filter((v) => v !== id);
-    onchange?.(value);
-  }
+    if (showSelectButton) {
+      pendingValue = allSelected ? [] : items.map((item) => item.id);
+    } else {
+      value = allSelected ? [] : items.map((item) => item.id);
+      onchange?.(value);
+    }
+  };
 
-  function selectHighlighted(): void {
-    if (highlightedIndex < 0 || highlightedIndex >= filteredItems.length) {
+  const applySelection = (): void => {
+    value = [...pendingValue];
+    onchange?.(value);
+    closeDropdown();
+  };
+
+  const removeItem = (id: string): void => {
+    if (disabled) {
       return;
     }
-    const item = filteredItems.at(highlightedIndex);
-    if (typeof item === 'object' && item !== null) {
-      selectItem(item.id);
-    }
-  }
+    value = value.filter((existingId) => existingId !== id);
+    onchange?.(value);
+  };
 
-  async function moveHighlight(delta: number): Promise<void> {
+  const selectHighlighted = (): void => {
+    const itemsWithSelectAll =
+      allowSelectAll && multiple ? [null, ...filteredItems] : filteredItems;
+    const highlighted = itemsWithSelectAll.at(highlightedIndex);
+    if (highlighted === null) {
+      toggleSelectAll();
+    } else if (typeof highlighted === 'object' && highlighted !== null) {
+      selectItem(highlighted.id);
+    }
+  };
+
+  const moveHighlight = async (delta: number): Promise<void> => {
+    const rowCount = allowSelectAll && multiple ? filteredItems.length + 1 : filteredItems.length;
     const next = highlightedIndex + delta;
-    if (next < 0 || next >= filteredItems.length) {
+    if (next < 0 || next >= rowCount) {
       return;
     }
     highlightedIndex = next;
     await tick();
     if (containerEl !== null) {
-      const el = containerEl.querySelector('.select-option.highlighted');
-      if (el instanceof HTMLElement) {
-        el.scrollIntoView({ block: 'nearest' });
+      const highlighted = containerEl.querySelector(
+        '.select-option.highlighted, .select-all-option.highlighted'
+      );
+      if (highlighted instanceof HTMLElement) {
+        highlighted.scrollIntoView({ block: 'nearest' });
       }
     }
-  }
+  };
 
-  function handleTriggerClick(event: MouseEvent): void {
+  const handleTriggerClick = (event: MouseEvent): void => {
     if (event.target instanceof HTMLInputElement) {
-      if (!isOpen) {
-        open();
+      if (!panelVisible) {
+        openDropdown();
       }
       return;
     }
-    if (multiple && searchable) {
-      open();
-    } else if (isOpen) {
-      close();
-    } else {
-      open();
+    if (!manageOpenState) {
+      return;
     }
-  }
+    if (multiple && searchable) {
+      openDropdown();
+    } else if (panelVisible) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  };
 
-  function handleKeydown(event: KeyboardEvent): void {
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (disabled) {
       return;
     }
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
-        if (isOpen) {
+        if (panelVisible) {
           selectHighlighted();
         } else {
-          open();
+          openDropdown();
         }
         break;
       case ' ':
         if (!(event.target instanceof HTMLInputElement)) {
           event.preventDefault();
-          if (isOpen) {
+          if (panelVisible) {
             selectHighlighted();
           } else {
-            open();
+            openDropdown();
           }
         }
         break;
       case 'ArrowDown':
         event.preventDefault();
-        if (isOpen) {
+        if (panelVisible) {
           moveHighlight(1);
         } else {
-          open();
+          openDropdown();
         }
         break;
       case 'ArrowUp':
@@ -169,8 +246,8 @@
         moveHighlight(-1);
         break;
       case 'Escape':
-        if (isOpen) {
-          close();
+        if (panelVisible) {
+          closeDropdown();
           if (!searchable && triggerEl !== null) {
             triggerEl.focus();
           }
@@ -185,39 +262,39 @@
         }
         break;
       case 'Tab':
-        if (isOpen) {
-          close();
+        if (panelVisible) {
+          closeDropdown();
         }
         break;
     }
-  }
+  };
 
-  function handleSearchInput(event: Event): void {
+  const handleSearchInput = (event: Event): void => {
     if (!(event.target instanceof HTMLInputElement)) {
       return;
     }
     query = event.target.value;
-    if (!isOpen) {
+    if (!panelVisible) {
       isOpen = true;
     }
     highlightedIndex = -1;
-  }
+  };
 
-  function handleSearchFocus(): void {
-    if (!isOpen) {
-      open();
+  const handleSearchFocus = (): void => {
+    if (!panelVisible) {
+      openDropdown();
     }
-  }
+  };
 
-  function handleClickOutside(event: Event): void {
+  const handleClickOutside = (event: Event): void => {
     if (
       event.target instanceof Node &&
       containerEl !== null &&
       !containerEl.contains(event.target)
     ) {
-      close();
+      closeDropdown();
     }
-  }
+  };
 
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
@@ -229,7 +306,7 @@
 
 <div
   class="select {classes ?? ''}"
-  class:open={isOpen}
+  class:open={panelVisible}
   class:disabled
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
@@ -240,7 +317,7 @@
     onclick={handleTriggerClick}
     onkeydown={handleKeydown}
     role="combobox"
-    aria-expanded={isOpen}
+    aria-expanded={panelVisible}
     aria-haspopup="listbox"
     aria-controls={listboxId}
     {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
@@ -276,7 +353,7 @@
       <input
         class="select-search"
         type="text"
-        value={isOpen ? query : displayText}
+        value={panelVisible ? query : displayText}
         oninput={handleSearchInput}
         onfocus={handleSearchFocus}
         bind:this={searchInputEl}
@@ -294,27 +371,65 @@
     <span class="select-arrow">{@html chevronDownSvg}</span>
   </div>
 
-  {#if isOpen && !disabled}
+  {#if panelVisible && !disabled}
     <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
-      {#if filteredItems.length === 0}
-        <div class="select-empty">No results</div>
-      {:else}
-        {#each filteredItems as item, index (item.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div
-            class="select-option"
-            class:selected={value.includes(item.id)}
-            class:highlighted={index === highlightedIndex}
-            role="option"
-            id={`${listboxId}-option-${index}`}
-            aria-selected={value.includes(item.id)}
-            tabindex="-1"
-            onclick={() => selectItem(item.id)}
-            onmouseenter={() => (highlightedIndex = index)}
+      <div class="select-items">
+        {#if filteredItems.length === 0}
+          <div class="select-empty">No results</div>
+        {:else}
+          {#if multiple && allowSelectAll}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="select-option select-all-option"
+              class:selected={allSelected}
+              class:highlighted={highlightedIndex === 0}
+              role="option"
+              aria-selected={allSelected}
+              tabindex="-1"
+              onclick={toggleSelectAll}
+              onmouseenter={() => (highlightedIndex = 0)}
+            >
+              {allSelected ? 'Deselect All' : 'Select All'}
+            </div>
+          {/if}
+          {#each filteredItems as item, index (item.id)}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div
+              class="select-option"
+              class:selected={activeSelection.includes(item.id)}
+              class:highlighted={index ===
+                (allowSelectAll && multiple ? highlightedIndex - 1 : highlightedIndex)}
+              role="option"
+              id={`${listboxId}-option-${index}`}
+              aria-selected={activeSelection.includes(item.id)}
+              tabindex="-1"
+              onclick={() => selectItem(item.id)}
+              onmouseenter={() =>
+                (highlightedIndex = allowSelectAll && multiple ? index + 1 : index)}
+            >
+              {item.label}
+            </div>
+          {/each}
+        {/if}
+      </div>
+
+      {#if multiple && showSelectButton}
+        <div class="select-apply-bar">
+          <button
+            class="select-apply-btn"
+            type="button"
+            onclick={applySelection}
+            {...typeof testId === 'string' ? { 'data-pw': `${testId}-apply` } : {}}
           >
-            {item.label}
-          </div>
-        {/each}
+            Apply
+          </button>
+        </div>
+      {/if}
+
+      {#if bottomContent}
+        <div class="select-bottom-content">
+          {@render bottomContent()}
+        </div>
       {/if}
     </div>
   {/if}
@@ -423,9 +538,13 @@
     border: var(--select-dropdown-border, 1px solid #cccccc);
     border-radius: var(--select-dropdown-border-radius, 6px);
     box-shadow: var(--select-dropdown-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+    overflow: hidden;
+    z-index: var(--select-dropdown-z-index, 10);
+  }
+
+  .select-items {
     max-height: var(--select-dropdown-max-height, 200px);
     overflow-y: auto;
-    z-index: var(--select-dropdown-z-index, 10);
   }
 
   .select-option {
@@ -454,11 +573,45 @@
     );
   }
 
+  .select-all-option {
+    border-bottom: var(--select-all-option-border, 1px solid #eeeeee);
+    font-size: var(--select-all-option-font-size, inherit);
+  }
+
   .select-empty {
     padding: var(--select-empty-padding, 8px 12px);
     color: var(--select-empty-color, #999999);
     font-style: var(--select-empty-font-style, italic);
     font-size: var(--select-empty-font-size, inherit);
+  }
+
+  .select-apply-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--select-apply-bar-padding, 8px 12px);
+    border-top: var(--select-apply-bar-border, 1px solid #eeeeee);
+    background: var(--select-apply-background, #ffffff);
+  }
+
+  .select-apply-btn {
+    padding: var(--select-apply-btn-padding, 6px 16px);
+    background: var(--select-apply-btn-background, #2563eb);
+    color: var(--select-apply-btn-color, #ffffff);
+    border: none;
+    border-radius: var(--select-apply-btn-border-radius, 4px);
+    font-size: var(--select-apply-btn-font-size, 13px);
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .select-apply-btn:hover {
+    opacity: var(--select-apply-btn-hover-opacity, 0.85);
+  }
+
+  .select-bottom-content {
+    border-top: var(--select-bottom-content-border, 1px solid #eeeeee);
+    background: var(--select-bottom-content-background, #ffffff);
   }
 
   .select-trigger :global(.pill) {

@@ -84,13 +84,12 @@
     return valueValidation;
   });
 
-  const validationStateForCallback = $derived.by(() => {
-    const state = validationState;
-    onStateChange(state);
-    return state;
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    onStateChange(validationState);
   });
 
-  const showErrorMessage = $derived(validationStateForCallback === 'Invalid');
+  const showErrorMessage = $derived(validationState === 'Invalid');
 
   function handleOnInput(event: Event) {
     if (inputElement === null) {

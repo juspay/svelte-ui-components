@@ -2,10 +2,29 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.22.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.22.1)
 
-Per @sinha-sahil review — activeIndex must not advance when items.at(index)
-returns undefined. Guard now runs first, mutation only after.
+Add six missing themeable CSS vars that Lighthouse callsites rely on:
+--card-box-shadow (none), --card-width (auto), --card-min-width (0),
+--card-max-width (none), --card-max-height (none), --card-margin (0).
+All have sensible fallbacks so the card looks correct with zero consumer
+overrides.
+
+The card already had onclick/a11y support (role=button, tabindex=0,
+Enter/Space handlers) — this PR surfaces that in the docs and demo.
+
+Add Card to docs/_index.json so it appears in the MCP registry
+(list_components was omitting it despite the export existing in index.ts).
+Update Card.md with the complete prop/event/CSS-var table including the
+six new vars, testId, and onclick.
+
+Expand the demo page at /components/card with three new sections:
+sized cards (--card-width/--card-box-shadow/--card-margin), clickable
+cards (onclick with tab/keyboard demo), and the existing basic section.
+
+Unblocks Lighthouse BZ-3383 CUSTOM-mode Card migration (27 callsites).
+
+## [2.22.1](https://github.com/juspay/svelte-ui-components/compare/2.22.1..2.22.0) - 4 June 2026
 
 ## [2.22.0](https://github.com/juspay/svelte-ui-components/compare/2.22.0..2.21.0) - 4 June 2026
 

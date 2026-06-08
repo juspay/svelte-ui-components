@@ -35,6 +35,7 @@ export const componentNav: NavGroup[] = [
       { name: 'InputButton', slug: 'input-button' },
       { name: 'Checkbox', slug: 'checkbox' },
       { name: 'Radio', slug: 'radio' },
+      { name: 'RadioGroup', slug: 'radio-group' },
       { name: 'Toggle', slug: 'toggle' },
       { name: 'Select', slug: 'select' },
       { name: 'Combobox', slug: 'combobox' },

@@ -19,6 +19,7 @@ import './components/Pagination.wc.svelte';
 import './components/Pill.wc.svelte';
 import './components/Progress.wc.svelte';
 import './components/Radio.wc.svelte';
+import './components/RadioGroup.wc.svelte';
 import './components/RelativeTime.wc.svelte';
 import './components/Shimmer.wc.svelte';
 import './components/Slider.wc.svelte';

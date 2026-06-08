@@ -5,7 +5,64 @@ on:
     branches: [release]
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      root_changed: ${{ steps.changes.outputs.root_changed }}
+      mcp_changed: ${{ steps.changes.outputs.mcp_changed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect package changes
+        id: changes
+        run: |
+          BEFORE_SHA="${{ github.event.before }}"
+          AFTER_SHA="${{ github.sha }}"
+
+          # On a new branch or force-push the "before" SHA can be all zeros or
+          # missing. Fall back to the previous commit so the diff still works.
+          if [ -z "$BEFORE_SHA" ] \
+            || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ] \
+            || ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            echo "No valid before SHA ($BEFORE_SHA); falling back to HEAD~1"
+            BEFORE_SHA=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)
+          fi
+
+          echo "Comparing $BEFORE_SHA..$AFTER_SHA"
+          CHANGED_FILES=$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA")
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Root package = anything outside mcp/ and .github/
+          ROOT_CHANGES=$(echo "$CHANGED_FILES" | grep -v "^mcp/" | grep -v "^\.github/" || true)
+          if [ -n "$ROOT_CHANGES" ]; then
+            echo "root_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Root package has changes:"
+            echo "$ROOT_CHANGES"
+          else
+            echo "root_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No root package changes detected"
+          fi
+
+          # MCP package = anything under mcp/
+          MCP_CHANGES=$(echo "$CHANGED_FILES" | grep "^mcp/" || true)
+          if [ -n "$MCP_CHANGES" ]; then
+            echo "mcp_changed=true" >> "$GITHUB_OUTPUT"
+            echo "MCP package has changes:"
+            echo "$MCP_CHANGES"
+          else
+            echo "mcp_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No MCP package changes detected"
+          fi
+
   release:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.root_changed == 'true'
     runs-on: ubuntu-latest
     environment: npm
 
@@ -24,7 +81,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
@@ -268,3 +325,188 @@ jobs:
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
           npm publish --access public
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+
+  publish-mcp:
+    needs: [detect-changes, release]
+    # Run when the MCP package changed, after the root job either published or
+    # was skipped (i.e. don't run if the root release job actually failed).
+    if: |
+      always() &&
+      needs.detect-changes.outputs.mcp_changed == 'true' &&
+      (needs.release.result == 'success' || needs.release.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: npm
+
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull latest changes
+        run: |
+          # The root release job may have pushed a release commit + tag.
+          # Rebase onto it so this job's push isn't rejected.
+          git pull origin release --rebase
+
+      - name: Install MCP dependencies
+        working-directory: mcp
+        run: npm ci
+
+      - name: Determine MCP version bump type
+        id: version-type
+        run: |
+          # Use the latest non-release commit so the root job's auto "chore(release):"
+          # commit doesn't drive the MCP version bump.
+          COMMIT_MSG=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%s")
+          COMMIT_BODY=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%b")
+          echo "MCP release driven by commit: $COMMIT_MSG"
+
+          HAS_BREAKING_CHANGE=false
+          if echo "$COMMIT_BODY" | grep -iE "^BREAKING CHANGE:" > /dev/null; then
+            HAS_BREAKING_CHANGE=true
+          fi
+
+          if echo "$COMMIT_MSG" | grep -iE "(^|: )feat(\(.+\))?!?:" > /dev/null; then
+            if echo "$COMMIT_MSG" | grep -E "feat(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=minor" >> $GITHUB_OUTPUT
+              echo "Version bump: MINOR (new feature)"
+            fi
+          elif echo "$COMMIT_MSG" | grep -iE "(^|: )fix(\(.+\))?!?:" > /dev/null; then
+            if echo "$COMMIT_MSG" | grep -E "fix(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change in fix)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (bug fix)"
+            fi
+          elif echo "$COMMIT_MSG" | grep -iE "(^|: )(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!?:" > /dev/null; then
+            if echo "$COMMIT_MSG" | grep -E "(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (maintenance)"
+            fi
+          else
+            if [ "$HAS_BREAKING_CHANGE" = true ]; then
+              echo "version_type=major" >> $GITHUB_OUTPUT
+              echo "Version bump: MAJOR (breaking change)"
+            else
+              echo "version_type=patch" >> $GITHUB_OUTPUT
+              echo "Version bump: PATCH (default)"
+            fi
+          fi
+
+      - name: Bump MCP version
+        id: version-bump
+        working-directory: mcp
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current MCP version: $CURRENT_VERSION"
+
+          if [ "${{ steps.version-type.outputs.version_type }}" = "major" ]; then
+            NEW_VERSION=$(npm version major --no-git-tag-version)
+          elif [ "${{ steps.version-type.outputs.version_type }}" = "minor" ]; then
+            NEW_VERSION=$(npm version minor --no-git-tag-version)
+          else
+            NEW_VERSION=$(npm version patch --no-git-tag-version)
+          fi
+
+          # npm version prints e.g. "v4.0.1"; strip the leading 'v'
+          NEW_VERSION=$(echo $NEW_VERSION | sed 's/^v//')
+          echo "New MCP version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build MCP package
+        working-directory: mcp
+        run: npm run build
+
+      - name: Publish MCP to NPM
+        id: npm-publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: mcp
+        run: |
+          # Create .npmrc file for authentication
+          cat > ~/.npmrc << EOF
+          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+          registry=https://registry.npmjs.org/
+          always-auth=true
+          EOF
+
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Scoped package -> publish publicly
+          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
+          npm publish --access public
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+
+      - name: Commit and tag MCP release
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          TAG_NAME="mcp-${NEW_VERSION}"
+
+          # Only commit if the version bump produced a change
+          if [ -n "$(git status --porcelain mcp/package.json)" ]; then
+            git add mcp/package.json
+            git commit -m "chore(release): mcp ${NEW_VERSION}"
+          else
+            echo "No MCP version change to commit"
+          fi
+
+          # Recreate the mcp-prefixed tag (prefixed to avoid colliding with the
+          # root package's bare version tags).
+          if git tag -l | grep -q "^${TAG_NAME}$"; then
+            git tag -d "$TAG_NAME"
+          fi
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+            git push origin ":refs/tags/$TAG_NAME"
+          fi
+          git tag -a "$TAG_NAME" -m "Release @juspay/svelte-ui-components-mcp $NEW_VERSION"
+
+          # Rebase on any concurrent changes, then push commit + tag
+          git fetch origin release
+          if [ "$(git rev-list --count HEAD..origin/release)" -gt 0 ]; then
+            git rebase origin/release
+          fi
+          git push origin release
+          git push origin "$TAG_NAME"
+
+          echo "Released @juspay/svelte-ui-components-mcp $NEW_VERSION"
+
+      - name: Rollback MCP version on failure
+        if: failure() && steps.npm-publish.conclusion == 'failure'
+        working-directory: mcp
+        run: |
+          echo "MCP publish failed, rolling back version change..."
+          git checkout -- package.json
+          echo "Version rollback completed"

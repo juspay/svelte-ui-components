@@ -4,6 +4,8 @@
   let activeTab = $state(0);
   let activeOverflow = $state(0);
   let activeWorkspace = $state(0);
+  let activeSegmented = $state(0);
+  let activeSegmentedKey = $state('month');
 
   const manyTabs = Array.from({ length: 20 }, (_, i) => `Tab ${i + 1}`);
 
@@ -89,4 +91,34 @@
     onchange={(index) => (activeOverflow = index)}
   />
   <p class="state-display">Active tab: {activeOverflow}</p>
+</div>
+
+<h3 style="margin: 24px 0 12px; font-size: 1.1rem; color: #374151;">
+  Segmented variant (pill group)
+</h3>
+<div class="demo-row" style="flex-direction: column; max-width: 420px;">
+  <Tabs
+    items={['Day', 'Week', 'Month', 'Year']}
+    variant="segmented"
+    activeIndex={activeSegmented}
+    onchange={(index) => (activeSegmented = index)}
+  />
+  <p class="state-display">Active index: {activeSegmented}</p>
+</div>
+
+<h3 style="margin: 24px 0 12px; font-size: 1.1rem; color: #374151;">
+  Segmented variant — key-based items
+</h3>
+<div class="demo-row" style="flex-direction: column; max-width: 420px;">
+  <Tabs
+    items={[
+      { key: 'day', label: 'Today' },
+      { key: 'week', label: 'This Week' },
+      { key: 'month', label: 'This Month' }
+    ]}
+    variant="segmented"
+    activeKey={activeSegmentedKey}
+    onkeychange={(key) => (activeSegmentedKey = key)}
+  />
+  <p class="state-display">Active key: {activeSegmentedKey}</p>
 </div>

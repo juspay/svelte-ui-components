@@ -7,6 +7,8 @@ export type TabItem = {
   subtitle?: string;
 };
 
+export type TabVariant = 'underline' | 'segmented';
+
 export type TabsProperties = MandatoryTabsProperties & OptionalTabsProperties & TabsEventProperties;
 
 export type MandatoryTabsProperties = {
@@ -22,6 +24,11 @@ export type OptionalTabsProperties = {
   scrollRightIcon?: Snippet;
   tab?: Snippet<[{ label: string; index: number; active: boolean; subtitle?: string }]>;
   classes?: string;
+  /** Visual style of the tab strip.
+   * - `"underline"` (default) — bottom-border indicator per active tab.
+   * - `"segmented"` — pill group with a track background; active tab rendered as an elevated chip.
+   */
+  variant?: TabVariant;
 };
 
 export type TabsEventProperties = {

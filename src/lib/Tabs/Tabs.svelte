@@ -13,6 +13,7 @@
     scrollRightIcon,
     tab,
     classes,
+    variant = 'underline',
     onchange,
     onkeychange
   }: TabsProperties = $props();
@@ -111,7 +112,13 @@
   }
 </script>
 
-<div class="tabs-wrapper {classes ?? ''}" class:disabled data-pw={testId}>
+<div
+  class="tabs-wrapper {classes ?? ''}"
+  class:disabled
+  class:tabs-segmented={variant === 'segmented'}
+  data-variant={variant}
+  data-pw={testId}
+>
   {#if canScrollLeft}
     <button
       class="tabs-arrow tabs-arrow-left"
@@ -153,7 +160,7 @@
         {:else}
           {label}
         {/if}
-        {#if isActiveItem(index)}
+        {#if isActiveItem(index) && variant !== 'segmented'}
           <span class="tabs-indicator"></span>
         {/if}
       </div>
@@ -299,5 +306,59 @@
     height: var(--tabs-indicator-height, 2px);
     background-color: var(--tabs-indicator-color, #1a73e8);
     border-radius: var(--tabs-indicator-border-radius, 2px 2px 0 0);
+  }
+
+  /* ─── Segmented variant ─── */
+
+  .tabs-wrapper.tabs-segmented {
+    background: var(--tabs-segmented-track-background, #f1f3f4);
+    border-bottom: none;
+    border-radius: var(--tabs-segmented-track-radius, 10px);
+    padding: var(--tabs-segmented-track-padding, 3px);
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-bar {
+    gap: var(--tabs-segmented-gap, 2px);
+    padding: 0;
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-item {
+    flex: 1;
+    justify-content: center;
+    border-radius: var(--tabs-segmented-item-radius, 8px);
+    padding: var(--tabs-segmented-item-padding, 6px 14px);
+    color: var(--tabs-segmented-item-color, #5f6368);
+    background: transparent;
+    font-weight: var(--tabs-segmented-item-font-weight, 400);
+    transition: var(
+      --tabs-transition,
+      color 0.15s ease,
+      background 0.15s ease,
+      box-shadow 0.15s ease
+    );
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-item:hover:not(.active):not([aria-disabled]) {
+    color: var(--tabs-segmented-hover-color, #1a1a1a);
+    background: var(--tabs-segmented-hover-background, rgba(0, 0, 0, 0.05));
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-item.active {
+    color: var(--tabs-segmented-active-color, #1a1a1a);
+    font-weight: var(--tabs-segmented-active-font-weight, 500);
+    background: var(--tabs-segmented-active-background, #ffffff);
+    box-shadow: var(
+      --tabs-segmented-active-shadow,
+      0 1px 3px rgba(0, 0, 0, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.08)
+    );
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-arrow {
+    background: var(--tabs-segmented-track-background, #f1f3f4);
+  }
+
+  .tabs-wrapper.tabs-segmented .tabs-arrow:hover {
+    background: var(--tabs-segmented-track-background, #f1f3f4);
   }
 </style>

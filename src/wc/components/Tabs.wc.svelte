@@ -10,6 +10,7 @@
       scrollLeftIcon: { type: 'Object' },
       scrollRightIcon: { type: 'Object' },
       classes: { type: 'String' },
+      variant: { type: 'String', reflect: true },
       onchange: { type: 'Object' }
     }
   }}

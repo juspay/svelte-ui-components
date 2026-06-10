@@ -6,7 +6,7 @@ export type ThemeSwitcherOption = {
   icon?: Snippet;
 };
 
-export type ThemeSwitcherMode = 'toggle' | 'segment';
+export type ThemeSwitcherMode = 'toggle' | 'segment' | 'link';
 
 export type ThemeSwitcherProperties = OptionalThemeSwitcherProperties &
   ThemeSwitcherEventProperties;
@@ -18,6 +18,7 @@ export type OptionalThemeSwitcherProperties = {
   storageKey?: string;
   testId?: string;
   classes?: string;
+  showLabel?: boolean;
 };
 
 export type ThemeSwitcherEventProperties = {

@@ -209,7 +209,7 @@
   },
   {
     "name": "ThemeSwitcher",
-    "description": "A segmented control for switching between light, dark, and system theme modes. Displays icons for each mode with an animated sliding indicator. Fires a callback with the selected theme value."
+    "description": "A theme preference switcher with three rendering modes: toggle (single cycling icon button), segment (animated sliding indicator bar), and link (inline chromeless cycle button with no background or border). Cycles through configurable options (default: light/dark/system) and persists the selection to localStorage. In link mode, all styling is controlled via CSS custom properties with neutral inherit defaults."
   },
   {
     "name": "Toast",

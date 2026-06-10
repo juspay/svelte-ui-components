@@ -52,4 +52,27 @@
       </p>
     {/if}
   </div>
+
+  <div>
+    <p style="margin-bottom: 8px;">Link mode (icon only):</p>
+    <ThemeSwitcher mode="link" />
+  </div>
+
+  <div>
+    <p style="margin-bottom: 8px;">Link mode with label:</p>
+    <ThemeSwitcher mode="link" showLabel={true} />
+  </div>
+
+  <div>
+    <p style="margin-bottom: 8px;">Link mode — custom color via CSS vars:</p>
+    <ThemeSwitcher mode="link" showLabel={true} classes="demo-link-themed" />
+  </div>
 </div>
+
+<style>
+  :global(.demo-link-themed) {
+    --theme-switcher-link-color: #6366f1;
+    --theme-switcher-link-color-hover: #4f46e5;
+    --theme-switcher-link-underline: underline;
+  }
+</style>

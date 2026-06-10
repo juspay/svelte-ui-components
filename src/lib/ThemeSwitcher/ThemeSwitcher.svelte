@@ -30,6 +30,7 @@
     storageKey = 'theme-preference',
     testId,
     classes,
+    showLabel = false,
     onchange
   }: ThemeSwitcherProperties = $props();
 
@@ -39,6 +40,8 @@
   let hasSystemOption = $derived(options.some((o) => o.value === 'system'));
   let effectiveMode = $derived(mode ?? (options.length <= 2 ? 'toggle' : 'segment'));
   let currentIndex = $derived(options.findIndex((o) => o.value === currentValue));
+
+  let currentOption = $derived(options.at(currentIndex));
 
   let segmentButtons: HTMLButtonElement[] = $state([]);
   let indicatorLeft: number = $state(0);
@@ -124,6 +127,25 @@
         {/if}
       </span>
     {/each}
+  </button>
+{:else if effectiveMode === 'link'}
+  <button
+    class="link-button {classes ?? ''}"
+    onclick={handleToggle}
+    aria-label={currentOption?.label ?? currentOption?.value ?? 'Switch theme'}
+    data-pw={typeof testId === 'string' ? testId : null}
+  >
+    <span class="icon">
+      {#if typeof currentOption?.icon === 'function'}
+        {@render currentOption.icon()}
+      {:else}
+        <!-- eslint-disable svelte/no-at-html-tags -->
+        {@html getDefaultIcon(currentOption?.value ?? '')}
+      {/if}
+    </span>
+    {#if showLabel}
+      <span class="link-label">{currentOption?.label ?? currentOption?.value}</span>
+    {/if}
   </button>
 {:else}
   <div class="segment-control {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
@@ -245,5 +267,33 @@
 
   .segment-button.selected {
     color: var(--theme-switcher-icon-color-active, #1f2937);
+  }
+
+  .link-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--theme-switcher-link-gap, 4px);
+    padding: var(--theme-switcher-link-padding, 0);
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--theme-switcher-link-color, inherit);
+    text-decoration: var(--theme-switcher-link-underline, none);
+    font-family: inherit;
+    font-size: var(--theme-switcher-link-font-size, inherit);
+  }
+
+  .link-button:hover {
+    color: var(--theme-switcher-link-color-hover, inherit);
+  }
+
+  .link-button .icon {
+    width: var(--theme-switcher-icon-size, 18px);
+    height: var(--theme-switcher-icon-size, 18px);
+    transition: none;
+  }
+
+  .link-label {
+    display: inline;
   }
 </style>

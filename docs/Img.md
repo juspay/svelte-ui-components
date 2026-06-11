@@ -1,6 +1,6 @@
 # Img
 
-An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling for interactive image use cases.
+An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling for interactive image use cases, and opt-in SVG inlining (`inlineSvg` / `transformSvg`) so icons can be recoloured by page CSS or a transform hook.
 
 ## Usage
 
@@ -20,6 +20,31 @@ An image component with automatic fallback. If the primary `src` fails to load (
 | alt      | `string`         | Yes      | `-`     | Alt text for the image.                                                                                                                                                |
 | fallback | `string \| null` | No       | `-`     | Fallback image URL. If the primary src fails to load (onerror), the component switches to this URL.                                                                    |
 | classes  | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| inlineSvg | `boolean`       | No       | `false` | Fetch `.svg` / `data:image/svg+xml` sources and inline their markup into an `<svg>` host so page CSS (`currentColor`, fill/stroke overrides) applies. Non-SVG sources always render the plain `<img>`. If fetching or parsing fails, the component falls back to the plain `<img>` (and from there to the regular `fallback`/`onerror` chain). |
+| transformSvg | `(svg: string) => string` | No | `-` | Hook to rewrite the fetched SVG markup before it is inlined (e.g. recolour hardcoded fills). Providing a transform implies `inlineSvg`. The inlining effect re-runs when the prop identity changes, so a closure over reactive state (e.g. a theme colour) re-renders live. JS-only prop (not exposed as a web-component attribute). |
+
+## SVG inlining
+
+With `inlineSvg` (or any `transformSvg`), SVG sources are fetched and their markup is inlined into an `<svg>` host element instead of an `<img>`. This makes the icon stylable by page CSS — `fill: currentColor`, theme variables, and selector-based recolouring all work, which an external `<img>` cannot do.
+
+```svelte
+<!-- Inline so the icon picks up currentColor from its parent -->
+<Img src={'/icons/refresh.svg'} alt="" inlineSvg />
+
+<!-- Recolour hardcoded fills, live-reactive to a theme store -->
+<Img
+  src={'/icons/wallet.svg'}
+  alt="Wallet"
+  transformSvg={(svg) => svg.replaceAll('#2b2b2b', themeColor)}
+/>
+```
+
+Behaviour notes:
+
+- Non-SVG sources ignore both props and always render the plain `<img>`.
+- A failed fetch/parse for a given URL falls back to the plain `<img>` for that URL (which then drives the normal `fallback`/`onerror` chain); a changed `src` gets a fresh inlining attempt.
+- Accessibility: the `<svg>` host gets `role="img"` + `aria-label` when `alt` is non-empty, and `aria-hidden="true"` when `alt` is empty (decorative).
+- All CSS variables below apply to the inlined `<svg>` host exactly as they do to the `<img>`.
 
 ## CSS Variables
 

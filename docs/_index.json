@@ -89,7 +89,7 @@
   },
   {
     "name": "Img",
-    "description": "An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling."
+    "description": "An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling, and opt-in SVG inlining (`inlineSvg` / `transformSvg`) that injects SVG sources into an `<svg>` host so page CSS or a transform hook can recolour the icon."
   },
   {
     "name": "Input",

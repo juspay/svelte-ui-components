@@ -20,7 +20,7 @@ Page-level navigation with numbered page buttons, prev/next controls, and ellips
 | currentPage  | `number`  | No       | `1`     | Bindable. The currently active page number. Controls which page button is highlighted and determines prev/next button disabled states.                                          |
 | siblingCount | `number`  | No       | `1`     | Number of page buttons to show on each side of the current page. For example, siblingCount=1 with currentPage=5 shows pages 4, 5, 6. Higher values show more surrounding pages. |
 | disabled     | `boolean` | No       | `false` | Whether the entire pagination is disabled. When true, all buttons become non-interactive, the container dims (opacity 0.5), and the cursor changes to not-allowed.              |
-| testId       | `string`  | No       | `-`     | Value for the data-pw attribute on the nav container, used for end-to-end testing selectors.                                                                                    |
+| testId       | `string`  | No       | `-`     | Value for the data-pw attribute on the nav container; the arrow buttons also get `{testId}-prev` / `{testId}-next` so tests can target them directly.                           |
 | classes      | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.          |
 
 ## Events

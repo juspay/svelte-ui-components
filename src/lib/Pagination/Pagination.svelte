@@ -58,6 +58,7 @@
     disabled={disabled || currentPage <= 1}
     onclick={() => goToPage(currentPage - 1)}
     aria-label="Previous page"
+    data-pw={typeof testId === 'string' ? `${testId}-prev` : null}
   >
     &#8249;
   </button>
@@ -84,6 +85,7 @@
     disabled={disabled || currentPage >= totalPages}
     onclick={() => goToPage(currentPage + 1)}
     aria-label="Next page"
+    data-pw={typeof testId === 'string' ? `${testId}-next` : null}
   >
     &#8250;
   </button>

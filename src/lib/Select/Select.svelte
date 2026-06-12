@@ -345,6 +345,7 @@
     background: var(--select-trigger-background, #ffffff);
     border: var(--select-trigger-border, 1px solid #cccccc);
     border-radius: var(--select-trigger-border-radius, 6px);
+    box-shadow: var(--select-trigger-box-shadow, none);
     cursor: pointer;
     outline: none;
     -webkit-tap-highlight-color: transparent;
@@ -363,6 +364,8 @@
 
   .select-value {
     flex: 1;
+    font-size: var(--select-value-font-size, inherit);
+    font-weight: var(--select-value-font-weight, inherit);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -371,6 +374,8 @@
   .select-placeholder {
     flex: 1;
     color: var(--select-placeholder-color, #999999);
+    font-size: var(--select-placeholder-font-size, inherit);
+    font-weight: var(--select-placeholder-font-weight, inherit);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

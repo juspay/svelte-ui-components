@@ -73,16 +73,21 @@ Override these custom properties to theme the component.
 | `--select-trigger-background`         | `#ffffff`                              | background    | Background color of the trigger area.                       |
 | `--select-trigger-border`             | `1px solid #cccccc`                    | border        | Border of the trigger area.                                 |
 | `--select-trigger-border-radius`      | `6px`                                  | border-radius | Corner rounding of the trigger area.                        |
+| `--select-trigger-box-shadow`         | `none`                                 | box-shadow    | Resting box shadow of the trigger area.                     |
 | `--select-trigger-transition`         | `border-color 0.15s, box-shadow 0.15s` | transition    | Transition for trigger hover/focus effects.                 |
 | `--select-trigger-hover-border-color` | `#999999`                              | border-color  | Border color of the trigger on hover.                       |
 | `--select-trigger-focus-border-color` | `#2563eb`                              | border-color  | Border color of the trigger when focused or open.           |
 | `--select-trigger-focus-shadow`       | `0 0 0 2px rgba(37, 99, 235, 0.2)`     | box-shadow    | Box shadow of the trigger when focused or open.             |
 
-### Placeholder
+### Value & Placeholder
 
-| Variable                     | Default   | CSS Property | Description                                                 |
-| ---------------------------- | --------- | ------------ | ----------------------------------------------------------- |
-| `--select-placeholder-color` | `#999999` | color        | Text color of the placeholder and search input placeholder. |
+| Variable                           | Default   | CSS Property | Description                                                 |
+| ---------------------------------- | --------- | ------------ | ----------------------------------------------------------- |
+| `--select-value-font-size`         | `inherit` | font-size    | Font size of the selected-value text.                       |
+| `--select-value-font-weight`       | `inherit` | font-weight  | Font weight of the selected-value text.                     |
+| `--select-placeholder-color`       | `#999999` | color        | Text color of the placeholder and search input placeholder. |
+| `--select-placeholder-font-size`   | `inherit` | font-size    | Font size of the placeholder text.                          |
+| `--select-placeholder-font-weight` | `inherit` | font-weight  | Font weight of the placeholder text.                        |
 
 ### Arrow
 

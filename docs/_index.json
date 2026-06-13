@@ -72,6 +72,10 @@
     "description": "A right-click context menu with nested submenus, separators, disabled items, and keyboard navigation. Positions itself relative to the click point and adjusts to stay within the viewport."
   },
   {
+    "name": "FileInput",
+    "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, and `disabled`."
+  },
+  {
     "name": "Gauge",
     "description": "A semicircular gauge/meter that displays a value between 0 and max on an SVG arc. Supports configurable segments with individual colors, animated value transitions, and a center label. Uses SVG stroke-dasharray for the arc rendering."
   },

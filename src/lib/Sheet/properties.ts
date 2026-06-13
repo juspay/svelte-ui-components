@@ -23,4 +23,8 @@ export type OptionalSheetProperties = {
 
 export type SheetEventProperties = {
   onclose?: () => void;
+  /** Called once after the open transition has fully completed. */
+  onafteropen?: () => void;
+  /** Called once after the close transition has fully completed. */
+  onafterclose?: () => void;
 };

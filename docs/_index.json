@@ -141,7 +141,7 @@
   },
   {
     "name": "Pill",
-    "description": "A compact label/tag element for displaying status, categories, or metadata. Supports a leadingIcon snippet (rendered before the label) and a dismissIcon snippet, click interaction with keyboard accessibility (role=button, Enter/Space), and an optional dismiss button. Optionally clickable when onclick is provided."
+    "description": "A compact label/tag element for displaying status, categories, or metadata. Supports a leadingIcon snippet (rendered before the label) and a dismissIcon snippet, click interaction with keyboard accessibility (role=button, Enter/Space), an optional dismiss button, themed status chips via CSS variables, and a status dot via ::before recipe using --pill-dot-size and --pill-dot-color. Optionally clickable when onclick is provided."
   },
   {
     "name": "Progress",

@@ -15,7 +15,7 @@
     <Pill
       text={item}
       dismissible
-      ondismiss={() => (pillItems = pillItems.filter((p) => p !== item))}
+      ondismiss={() => (pillItems = pillItems.filter((existingItem) => existingItem !== item))}
     />
   {/each}
   {#if pillItems.length === 0}
@@ -84,6 +84,28 @@
   </Pill>
 </div>
 
+<h2>Status dot (consumer recipe via <code>::before</code>)</h2>
+<p>
+  Use the <code>classes</code> prop with a <code>::before</code> pseudo-element to add a leading
+  status dot. Theme with <code>--pill-dot-size</code> and <code>--pill-dot-color</code>. The pill's
+  <code>display: inline-flex; align-items: center; gap: var(--pill-gap)</code> makes the
+  <code>::before</code> slot in as the first flex child automatically.
+</p>
+
+<div class="demo-row">
+  <Pill text="Active" classes="demo-dot-active" />
+  <Pill text="Inactive" classes="demo-dot-inactive" />
+  <Pill text="Custom dot" classes="demo-dot-custom" />
+  <Pill text="No dot (default)" />
+</div>
+
+<h2>Status dot — themed via CSS vars</h2>
+<div class="demo-row">
+  <Pill text="Success" classes="demo-dot-success" />
+  <Pill text="Warning" classes="demo-dot-warning" />
+  <Pill text="Error" classes="demo-dot-error" />
+</div>
+
 <style>
   :global(.pill-info) {
     --pill-background: #d1ecf1;
@@ -95,5 +117,56 @@
     --pill-background: #f8d7da;
     --pill-color: #721c24;
     --pill-hover-background: #f1b0b7;
+  }
+
+  h2 {
+    margin-top: 32px;
+  }
+
+  /* Status dot recipe — reusable ::before pseudo-element */
+  :global(.demo-dot-active::before),
+  :global(.demo-dot-inactive::before),
+  :global(.demo-dot-custom::before),
+  :global(.demo-dot-success::before),
+  :global(.demo-dot-warning::before),
+  :global(.demo-dot-error::before) {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    width: var(--pill-dot-size, 6px);
+    height: var(--pill-dot-size, 6px);
+    border-radius: 50%;
+    background-color: var(--pill-dot-color, currentColor);
+  }
+
+  :global(.demo-dot-active) {
+    --pill-dot-color: #059669;
+  }
+
+  :global(.demo-dot-inactive) {
+    --pill-dot-color: #9ca3af;
+  }
+
+  :global(.demo-dot-custom) {
+    --pill-dot-size: 10px;
+    --pill-dot-color: #8b5cf6;
+  }
+
+  :global(.demo-dot-success) {
+    --pill-background: #d1fae5;
+    --pill-color: #065f46;
+    --pill-dot-color: #059669;
+  }
+
+  :global(.demo-dot-warning) {
+    --pill-background: #fef3c7;
+    --pill-color: #92400e;
+    --pill-dot-color: #d97706;
+  }
+
+  :global(.demo-dot-error) {
+    --pill-background: #fee2e2;
+    --pill-color: #991b1b;
+    --pill-dot-color: #dc2626;
   }
 </style>

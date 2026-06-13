@@ -60,6 +60,36 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 | testId      | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                |
 | classes     | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
+### Status dot (consumer recipe)
+
+A leading status dot does not require a dedicated prop. Because `.pill` is already `display: inline-flex; align-items: center; gap: var(--pill-gap)`, a `::before` pseudo-element on a consumer class slots in as the first flex child automatically. Use `--pill-dot-size` and `--pill-dot-color` to theme it:
+
+```css
+/* app.css */
+.my-status-pill::before {
+  content: '';
+  display: block;
+  flex-shrink: 0;
+  width: var(--pill-dot-size, 6px);
+  height: var(--pill-dot-size, 6px);
+  border-radius: 50%;
+  background-color: var(--pill-dot-color, currentColor);
+}
+
+.pill-active {
+  --pill-dot-color: #059669;
+}
+
+.pill-error {
+  --pill-dot-color: #dc2626;
+}
+```
+
+```svelte
+<Pill text="Active" classes="my-status-pill pill-active" />
+<Pill text="Error" classes="my-status-pill pill-error" />
+```
+
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
@@ -101,6 +131,8 @@ Override these custom properties to theme the component.
 | `--pill-dismiss-size`        | `14px`                                    | width, height    | Size of the dismiss button icon (X).                                      |
 | `--pill-dismiss-color`       | `currentColor`                            | color            | Color of the dismiss button icon.                                         |
 | `--pill-dismiss-hover-color` | `var(--pill-dismiss-color, currentColor)` | color            | Color of the dismiss button icon on hover.                                |
+| `--pill-dot-size`            | `6px`                                     | width, height    | Size of the status dot in the consumer `::before` recipe.                 |
+| `--pill-dot-color`           | `currentColor`                            | background-color | Color of the status dot in the consumer `::before` recipe.                |
 
 ## Internal Dependencies
 

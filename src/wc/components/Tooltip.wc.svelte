@@ -21,4 +21,10 @@
   {#snippet children()}
     <slot></slot>
   {/snippet}
+  {#snippet icon()}
+    <slot name="icon"></slot>
+  {/snippet}
+  {#snippet content()}
+    <slot name="content"></slot>
+  {/snippet}
 </Tooltip>

@@ -15,7 +15,9 @@
       caption: { type: 'String' },
       classes: { type: 'String' },
       onRowClick: { type: 'Object' },
-      onSort: { type: 'Object' }
+      onSort: { type: 'Object' },
+      getRowTestId: { type: 'Object' },
+      getCellTestId: { type: 'Object' }
     }
   }}
 />
@@ -37,5 +39,8 @@
   {/snippet}
   {#snippet sortDefaultIcon()}
     <slot name="sort-default-icon"></slot>
+  {/snippet}
+  {#snippet paginatorSlot()}
+    <slot name="paginator-slot"></slot>
   {/snippet}
 </Table>

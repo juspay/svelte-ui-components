@@ -1,6 +1,6 @@
 # Pagination
 
-Page-level navigation with numbered page buttons, prev/next controls, and ellipsis for large page ranges. The `currentPage` prop is bindable and `siblingCount` controls how many pages are shown around the active page. Ellipsis indicators appear automatically when pages are truncated.
+Page-level navigation with numbered page buttons, prev/next controls, and ellipsis for large page ranges. The `currentPage` prop is bindable and `siblingCount` controls how many pages are shown around the active page. Ellipsis indicators appear automatically when pages are truncated. The `hasMore` prop supports cursor-based APIs where the total page count is unknown — when true, the next button stays enabled even when `currentPage` reaches `totalPages`. Individual prev/next buttons can be targeted in tests via `prevButtonTestId` and `nextButtonTestId`.
 
 ## Usage
 
@@ -14,14 +14,17 @@ Page-level navigation with numbered page buttons, prev/next controls, and ellips
 
 ## Props
 
-| Prop         | Type      | Required | Default | Description                                                                                                                                                                     |
-| ------------ | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| totalPages   | `number`  | Yes      | `-`     | The total number of pages available. Determines the range of page buttons rendered.                                                                                             |
-| currentPage  | `number`  | No       | `1`     | Bindable. The currently active page number. Controls which page button is highlighted and determines prev/next button disabled states.                                          |
-| siblingCount | `number`  | No       | `1`     | Number of page buttons to show on each side of the current page. For example, siblingCount=1 with currentPage=5 shows pages 4, 5, 6. Higher values show more surrounding pages. |
-| disabled     | `boolean` | No       | `false` | Whether the entire pagination is disabled. When true, all buttons become non-interactive, the container dims (opacity 0.5), and the cursor changes to not-allowed.              |
-| testId       | `string`  | No       | `-`     | Value for the data-pw attribute on the nav container, used for end-to-end testing selectors.                                                                                    |
-| classes      | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.          |
+| Prop             | Type      | Required | Default | Description                                                                                                                                                                                                                                                                                                            |
+| ---------------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| totalPages       | `number`  | Yes      | `-`     | The total number of pages available. Determines the range of page buttons rendered.                                                                                                                                                                                                                                    |
+| currentPage      | `number`  | No       | `1`     | Bindable. The currently active page number. Controls which page button is highlighted and determines prev/next button disabled states.                                                                                                                                                                                 |
+| siblingCount     | `number`  | No       | `1`     | Number of page buttons to show on each side of the current page. For example, siblingCount=1 with currentPage=5 shows pages 4, 5, 6. Higher values show more surrounding pages.                                                                                                                                        |
+| disabled         | `boolean` | No       | `false` | Whether the entire pagination is disabled. When true, all buttons become non-interactive, the container dims (opacity 0.5), and the cursor changes to not-allowed.                                                                                                                                                     |
+| testId           | `string`  | No       | `-`     | Value for the `data-pw` attribute on the nav container, used for end-to-end testing selectors.                                                                                                                                                                                                                         |
+| classes          | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                 |
+| hasMore          | `boolean` | No       | `false` | Cursor-pagination hint. When `true`, the next button stays enabled even when `currentPage >= totalPages`. Use this when the total page count is not known ahead of time (e.g. cursor-based APIs). `totalPages` takes precedence: the next button is enabled only if `hasMore` is `true` OR `currentPage < totalPages`. |
+| prevButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the previous-page button, used for end-to-end testing selectors.                                                                                                                                                                                                                  |
+| nextButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the next-page button, used for end-to-end testing selectors.                                                                                                                                                                                                                      |
 
 ## Events
 
@@ -99,4 +102,13 @@ Tag: `<sui-pagination>`
 
 ```html
 <sui-pagination total-pages="10" current-page="1"></sui-pagination>
+
+<!-- cursor-based pagination with test IDs -->
+<sui-pagination
+  total-pages="3"
+  current-page="1"
+  has-more="true"
+  prev-button-test-id="prev-btn"
+  next-button-test-id="next-btn"
+></sui-pagination>
 ```

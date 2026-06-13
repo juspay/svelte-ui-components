@@ -9,6 +9,9 @@
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      hasMore: { type: 'Boolean', reflect: true, attribute: 'has-more' },
+      prevButtonTestId: { type: 'String', attribute: 'prev-button-test-id' },
+      nextButtonTestId: { type: 'String', attribute: 'next-button-test-id' },
       onchange: { type: 'Object' }
     }
   }}

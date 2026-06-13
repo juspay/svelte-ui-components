@@ -8,7 +8,10 @@
     disabled = false,
     testId,
     onchange,
-    classes
+    classes,
+    hasMore = false,
+    prevButtonTestId,
+    nextButtonTestId
   }: PaginationProperties = $props();
 
   function generatePages(total: number, current: number, siblings: number): (number | '...')[] {
@@ -40,12 +43,15 @@
   let pages = $derived(generatePages(totalPages, currentPage, siblingCount));
 
   function goToPage(page: number): void {
-    if (disabled || page < 1 || page > totalPages || page === currentPage) {
+    const isForwardAllowed = hasMore || page <= totalPages;
+    if (disabled || page < 1 || !isForwardAllowed || page === currentPage) {
       return;
     }
     currentPage = page;
     onchange?.(page);
   }
+
+  let isNextDisabled = $derived(disabled || (!hasMore && currentPage >= totalPages));
 </script>
 
 <nav
@@ -58,6 +64,7 @@
     disabled={disabled || currentPage <= 1}
     onclick={() => goToPage(currentPage - 1)}
     aria-label="Previous page"
+    data-pw={typeof prevButtonTestId === 'string' ? prevButtonTestId : null}
   >
     &#8249;
   </button>
@@ -81,9 +88,10 @@
 
   <button
     class="page-button next-button"
-    disabled={disabled || currentPage >= totalPages}
+    disabled={isNextDisabled}
     onclick={() => goToPage(currentPage + 1)}
     aria-label="Next page"
+    data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
   >
     &#8250;
   </button>

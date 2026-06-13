@@ -12,6 +12,18 @@ export type OptionalPaginationProperties = {
   disabled?: boolean;
   testId?: string;
   classes?: string;
+  /**
+   * Cursor-pagination hint. When `true`, the next button stays enabled even
+   * when `currentPage >= totalPages` — use this when the total page count is
+   * not known ahead of time (e.g. cursor-based APIs). `totalPages` takes
+   * precedence when both are provided: the next button is enabled only if
+   * `hasMore` is `true` OR `currentPage < totalPages`.
+   */
+  hasMore?: boolean;
+  /** `data-pw` test-id for the previous-page button. */
+  prevButtonTestId?: string;
+  /** `data-pw` test-id for the next-page button. */
+  nextButtonTestId?: string;
 };
 
 export type PaginationEventProperties = {

@@ -141,7 +141,7 @@
   },
   {
     "name": "Pagination",
-    "description": "A page navigation component with previous/next buttons and numbered page links. Supports configurable visible page range with ellipsis for large page counts, disabled states, cursor-based pagination via `hasMore`, and per-button test IDs via `prevButtonTestId`/`nextButtonTestId`."
+    "description": "A page navigation component with previous/next buttons and numbered page links. Supports configurable visible page range with ellipsis for large page counts, disabled states, cursor / load-more mode via `hasMore` and `onLoadMore`, and per-button test IDs via `prevButtonTestId`/`nextButtonTestId`."
   },
   {
     "name": "Phone",

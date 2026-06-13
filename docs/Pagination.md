@@ -22,15 +22,16 @@ Page-level navigation with numbered page buttons, prev/next controls, and ellips
 | disabled         | `boolean` | No       | `false` | Whether the entire pagination is disabled. When true, all buttons become non-interactive, the container dims (opacity 0.5), and the cursor changes to not-allowed.                                                                                                                                                     |
 | testId           | `string`  | No       | `-`     | Value for the `data-pw` attribute on the nav container, used for end-to-end testing selectors.                                                                                                                                                                                                                         |
 | classes          | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                 |
-| hasMore          | `boolean` | No       | `false` | Cursor-pagination hint. When `true`, the next button stays enabled even when `currentPage >= totalPages`. Use this when the total page count is not known ahead of time (e.g. cursor-based APIs). `totalPages` takes precedence: the next button is enabled only if `hasMore` is `true` OR `currentPage < totalPages`. |
+| hasMore          | `boolean` | No       | `false` | Cursor / load-more mode. When `true`, the next button stays enabled past `currentPage >= totalPages`; on the last known page it becomes a load-more CTA (see `onLoadMore`). `totalPages` precedence: the plain next-button is enabled only if `hasMore` is `true` OR `currentPage < totalPages`. |
 | prevButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the previous-page button, used for end-to-end testing selectors.                                                                                                                                                                                                                  |
-| nextButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the next-page button, used for end-to-end testing selectors.                                                                                                                                                                                                                      |
+| nextButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the next-page button (and the load-more CTA in cursor mode), used for end-to-end testing selectors.                                                                                                                                                                                |
 
 ## Events
 
-| Event    | Type                     | Description                                                                                                                                                                                                                      |
-| -------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onchange | `(page: number) => void` | Fires when a new page is selected via page button or prev/next click. Receives the new page number. Does NOT fire when clicking the already-active page, when disabled, or when clicking prev on page 1 / next on the last page. |
+| Event      | Type                     | Description                                                                                                                                                                                                                      |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onchange   | `(page: number) => void` | Fires when a new page is selected via page button or prev/next click. Receives the new page number. Does NOT fire when clicking the already-active page, when disabled, or when clicking prev on page 1 / next on the last page. |
+| onLoadMore | `() => void`             | Fires when the load-more CTA is clicked (cursor mode). Use this to fetch the next page of data and increment `totalPages`.                                                                                                       |
 
 ## CSS Variables
 
@@ -90,11 +91,95 @@ Override these custom properties to theme the component.
 | `--pagination-ellipsis-color`     | `#6b7280` | color        | Text color of the ellipsis indicator between page ranges. |
 | `--pagination-ellipsis-font-size` | `14px`    | font-size    | Font size of the ellipsis indicator.                      |
 
+### Load-more Button
+
+| Variable                                  | Default       | CSS Property   | Description                                               |
+| ----------------------------------------- | ------------- | -------------- | --------------------------------------------------------- |
+| `--pagination-load-more-width`            | `auto`        | width          | Width of the load-more CTA button.                        |
+| `--pagination-load-more-padding`          | `6px 14px`    | padding        | Padding of the load-more CTA button.                      |
+| `--pagination-load-more-color`            | `#3a4550`     | color          | Text color of the load-more CTA button.                   |
+| `--pagination-load-more-background`       | `transparent` | background     | Background of the load-more CTA button.                   |
+| `--pagination-load-more-border-color`     | `#d1d5db`     | border-color   | Border color of the load-more CTA button.                 |
+| `--pagination-load-more-hover-color`      | `#111827`     | color (hover)  | Text color of the load-more CTA button on hover.          |
+| `--pagination-load-more-hover-background` | `#f3f4f6`     | background (hover) | Background of the load-more CTA button on hover.      |
+
 ### Transition
 
 | Variable                  | Default                                   | CSS Property | Description                                                        |
 | ------------------------- | ----------------------------------------- | ------------ | ------------------------------------------------------------------ |
 | `--pagination-transition` | `background 0.15s ease, color 0.15s ease` | transition   | Transition applied to page buttons for hover/active state changes. |
+
+## Cursor / Load-more mode
+
+Set `hasMore` to `true` when your data source uses cursor-based pagination and you do not yet know the total page count. When the user reaches the last known page, the next-button is replaced by a load-more CTA (styled via `--pagination-load-more-*` CSS variables). Clicking it fires `onLoadMore`; your handler fetches the next batch and increments `totalPages`.
+
+```svelte
+<script>
+  import { Pagination } from '@juspay/svelte-ui-components';
+
+  let currentPage = $state(1);
+  let totalPages = $state(3);
+  let hasMore = $state(true);
+
+  async function handleLoadMore() {
+    const nextBatch = await fetchNextPage();
+    totalPages = totalPages + 1;
+    if (!nextBatch.hasNextPage) {
+      hasMore = false;
+    }
+  }
+</script>
+
+<Pagination
+  {totalPages}
+  bind:currentPage
+  {hasMore}
+  onLoadMore={handleLoadMore}
+/>
+```
+
+## Consumer recipes
+
+Features like a page-size selector and an item-range summary ("Showing X–Y of N") are intentionally not built into this component — they are consumer recipes that sit around `<Pagination>` and do not require library primitives. The following pattern shows a complete data-table paginator with those features:
+
+```svelte
+<script>
+  import { Pagination, Select } from '@juspay/svelte-ui-components';
+
+  let currentPage = $state(1);
+  let pageSize = $state(10);
+  const totalItems = 237;
+  let totalPages = $derived(Math.max(1, Math.ceil(totalItems / pageSize)));
+
+  const pageSizeItems = [5, 10, 25, 50].map((n) => ({ id: String(n), label: String(n) }));
+
+  function handlePageSizeChange(value) {
+    const next = parseInt(value?.[0] ?? '', 10);
+    if (!Number.isNaN(next) && next > 0) {
+      pageSize = next;
+      currentPage = 1;
+    }
+  }
+
+  let rangeStart = $derived((currentPage - 1) * pageSize + 1);
+  let rangeEnd = $derived(Math.min(currentPage * pageSize, totalItems));
+</script>
+
+<div class="paginator-bar">
+  <span class="paginator-summary">
+    Showing
+    <Select items={pageSizeItems} value={[String(pageSize)]} onchange={handlePageSizeChange} />
+    of {totalItems}
+  </span>
+  <Pagination {totalPages} bind:currentPage />
+</div>
+
+<!-- Item-range only (no selector) -->
+<div class="paginator-bar">
+  <span class="paginator-summary">Showing {rangeStart}–{rangeEnd} of {totalItems}</span>
+  <Pagination {totalPages} bind:currentPage />
+</div>
+```
 
 ## Web Component
 
@@ -103,7 +188,7 @@ Tag: `<sui-pagination>`
 ```html
 <sui-pagination total-pages="10" current-page="1"></sui-pagination>
 
-<!-- cursor-based pagination with test IDs -->
+<!-- cursor / load-more mode with test IDs -->
 <sui-pagination
   total-pages="3"
   current-page="1"

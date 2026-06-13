@@ -12,7 +12,8 @@
       hasMore: { type: 'Boolean', reflect: true, attribute: 'has-more' },
       prevButtonTestId: { type: 'String', attribute: 'prev-button-test-id' },
       nextButtonTestId: { type: 'String', attribute: 'next-button-test-id' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      onLoadMore: { type: 'Object' }
     }
   }}
 />

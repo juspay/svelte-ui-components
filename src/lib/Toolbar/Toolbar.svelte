@@ -11,11 +11,13 @@
     additionalContent,
     classes,
     onbackClick,
-    onkeydown
+    onkeydown,
+    testId,
+    headingTestId
   }: ToolbarProperties = $props();
 </script>
 
-<div class="toolbar {classes ?? ''}">
+<div class="toolbar {classes ?? ''}" data-pw={testId}>
   <div class="content">
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
@@ -29,7 +31,7 @@
         {@render centerContent()}
       </div>
     {:else if typeof text === 'string' && text.length > 0}
-      <div class="text">
+      <div class="text" data-pw={headingTestId}>
         {text}
       </div>
     {/if}

@@ -7,6 +7,14 @@
   <h1>Toolbar</h1>
 </div>
 
-<div class="demo-row" style="max-width: 500px;">
+<div class="demo-row" style="max-width: 500px; flex-direction: column; gap: 24px;">
   <Toolbar text="Page Title" showBackButton onbackClick={() => alert('Back clicked')} />
+
+  <Toolbar
+    text="Order Details"
+    testId="toolbar-root"
+    headingTestId="toolbar-heading"
+    showBackButton
+    onbackClick={() => alert('Back clicked')}
+  />
 </div>

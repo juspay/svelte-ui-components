@@ -156,6 +156,10 @@
     "description": "A styled radio button input with a custom circular indicator. Supports checked state binding, disabled state, and configurable size and colors via CSS variables."
   },
   {
+    "name": "RadioGroup",
+    "description": "A managed group of radio buttons with WAI-ARIA radiogroup semantics, arrow-key navigation, mutual exclusion, group-level disable, and bindable value synchronisation."
+  },
+  {
     "name": "RelativeTime",
     "description": "Displays a human-readable relative time string (e.g., '5 minutes ago') that auto-updates at a configurable interval. Uses Intl.RelativeTimeFormat for locale-aware formatting. Renders a semantic <time> element. Optionally wraps in a Tooltip showing the full date."
   },

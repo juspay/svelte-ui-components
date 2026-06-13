@@ -10,9 +10,12 @@ export type MandatoryRadioProperties = {
 export type OptionalRadioProperties = {
   selectedValue?: string;
   text?: string;
+  subtitle?: string;
   disabled?: boolean;
+  tabIndex?: number;
   testId?: string;
   classes?: string;
+  inputRef?: HTMLInputElement | null;
 };
 
 export type RadioEventProperties = {

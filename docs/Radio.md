@@ -18,15 +18,18 @@ A single radio button within a group. Multiple Radio components sharing the same
 
 ## Props
 
-| Prop          | Type      | Required | Default     | Description                                                                                                                                                            |
-| ------------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name          | `string`  | Yes      | —           | The group name shared by all radio buttons in the same group. Maps to the native input's `name` attribute.                                                             |
-| value         | `string`  | Yes      | —           | The value this radio button represents. When selected, `selectedValue` becomes this value.                                                                             |
-| selectedValue | `string`  | No       | `''`        | The currently selected value in the group. Bindable. When this matches `value`, the radio appears selected.                                                            |
-| text          | `string`  | No       | `''`        | Label text displayed next to the radio indicator. Hidden when empty.                                                                                                   |
-| disabled      | `boolean` | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                          |
-| testId        | `string`  | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                         |
-| classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop          | Type                          | Required | Default     | Description                                                                                                                                                            |
+| ------------- | ----------------------------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name          | `string`                      | Yes      | —           | The group name shared by all radio buttons in the same group. Maps to the native input's `name` attribute.                                                             |
+| value         | `string`                      | Yes      | —           | The value this radio button represents. When selected, `selectedValue` becomes this value.                                                                             |
+| selectedValue | `string`                      | No       | `''`        | The currently selected value in the group. Bindable. When this matches `value`, the radio appears selected.                                                            |
+| text          | `string`                      | No       | `''`        | Label text displayed next to the radio indicator. Hidden when empty.                                                                                                   |
+| subtitle      | `string`                      | No       | `undefined` | Optional secondary text rendered below the label. Only shown when non-empty.                                                                                           |
+| disabled      | `boolean`                     | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                          |
+| tabIndex      | `number`                      | No       | `undefined` | Tab index applied to the native input. Use to manage focus order — RadioGroup sets this to implement roving tabindex.                                                  |
+| testId        | `string`                      | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                         |
+| classes       | `string`                      | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| inputRef      | `HTMLInputElement \| null`    | No       | `null`      | Bindable reference to the underlying `<input>` element. RadioGroup binds this to programmatically focus the input during arrow-key navigation.                         |
 
 ## Events
 
@@ -60,10 +63,13 @@ Override these custom properties to theme the component.
 | `--radio-hover-border`          | `2px solid #2196f3`                 | border           | Border of the radio circle on hover (when not disabled).         |
 | `--radio-focus-shadow`          | `0 0 0 3px rgba(33, 150, 243, 0.3)` | box-shadow       | Focus ring shadow shown when the radio receives keyboard focus.  |
 | `--radio-transition`            | `0.2s`                              | transition       | Transition duration for state changes (border, background, dot). |
+| `--radio-label-gap`             | `2px`                               | gap              | Space between the label text and the subtitle.                   |
 | `--radio-text-font-size`        | `14px`                              | font-size        | Font size of the label text.                                     |
 | `--radio-text-font-weight`      | `400`                               | font-weight      | Font weight of the label text.                                   |
 | `--radio-text-color`            | `#333333`                           | color            | Color of the label text.                                         |
 | `--radio-disabled-text-color`   | `#999999`                           | color            | Color of the label text when disabled.                           |
+| `--radio-subtitle-color`        | `#757575`                           | color            | Color of the subtitle text.                                      |
+| `--radio-disabled-subtitle-color` | `#bdbdbd`                         | color            | Color of the subtitle text when disabled.                        |
 
 ## Web Component
 

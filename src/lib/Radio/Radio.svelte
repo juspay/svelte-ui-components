@@ -6,10 +6,13 @@
     value,
     selectedValue = $bindable(''),
     text = '',
+    subtitle,
     disabled = false,
+    tabIndex,
     testId,
     onchange,
-    classes
+    classes,
+    inputRef = $bindable(null)
   }: RadioProperties = $props();
 
   let checked = $derived(selectedValue === value);
@@ -35,13 +38,20 @@
     {value}
     {checked}
     {disabled}
+    tabindex={typeof tabIndex === 'number' ? tabIndex : null}
+    bind:this={inputRef}
     onchange={handleChange}
   />
   <span class="radio-indicator" class:checked class:disabled>
     <span class="radio-dot" class:checked class:disabled></span>
   </span>
   {#if text.length > 0}
-    <span class="radio-text" class:disabled>{text}</span>
+    <div class="radio-label-group">
+      <span class="radio-text" class:disabled>{text}</span>
+      {#if typeof subtitle === 'string' && subtitle.length > 0}
+        <span class="radio-subtitle" class:disabled>{subtitle}</span>
+      {/if}
+    </div>
   {/if}
 </label>
 
@@ -116,6 +126,12 @@
     background-color: var(--radio-disabled-dot-color, #cccccc);
   }
 
+  .radio-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--radio-label-gap, 2px);
+  }
+
   .radio-text {
     font-size: var(--radio-text-font-size, 14px);
     font-weight: var(--radio-text-font-weight, 400);
@@ -124,5 +140,13 @@
 
   .radio-text.disabled {
     color: var(--radio-disabled-text-color, #999999);
+  }
+
+  .radio-subtitle {
+    color: var(--radio-subtitle-color, #757575);
+  }
+
+  .radio-subtitle.disabled {
+    color: var(--radio-disabled-subtitle-color, #bdbdbd);
   }
 </style>

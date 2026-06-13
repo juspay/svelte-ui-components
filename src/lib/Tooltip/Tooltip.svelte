@@ -164,4 +164,8 @@
     border-color: transparent var(--tooltip-arrow-color, var(--tooltip-background, #333333))
       transparent transparent;
   }
+
+  .tooltip-text {
+    color: var(--tooltip-color, #ffffff);
+  }
 </style>

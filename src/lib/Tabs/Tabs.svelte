@@ -44,6 +44,11 @@
   let canScrollLeft = $state(false);
   let canScrollRight = $state(false);
 
+  // Sliding indicator state
+  let indicatorLeft = $state(0);
+  let indicatorWidth = $state(0);
+  let indicatorReady = $state(false);
+
   function updateOverflow(): void {
     if (scrollContainer === null) {
       return;
@@ -51,6 +56,22 @@
     const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
     canScrollLeft = scrollLeft > 1;
     canScrollRight = scrollLeft + clientWidth < scrollWidth - 1;
+  }
+
+  function updateIndicator(): void {
+    if (scrollContainer === null) {
+      return;
+    }
+    const activeEl = scrollContainer.querySelector<HTMLElement>('.tabs-item.active');
+    if (activeEl === null) {
+      indicatorReady = false;
+      indicatorLeft = 0;
+      indicatorWidth = 0;
+      return;
+    }
+    indicatorLeft = activeEl.offsetLeft;
+    indicatorWidth = activeEl.offsetWidth;
+    indicatorReady = true;
   }
 
   function scroll(direction: 'left' | 'right'): void {
@@ -73,7 +94,10 @@
       if (typeof rawItem !== 'object') {
         return;
       }
-      const tabItem = toTabItem(rawItem)!;
+      const tabItem = toTabItem(rawItem);
+      if (tabItem === null) {
+        return;
+      }
       if (tabItem.key === activeKey) {
         return;
       }
@@ -101,8 +125,17 @@
   function initOverflow(node: HTMLDivElement): { destroy: () => void } {
     scrollContainer = node;
     updateOverflow();
-    const observer = new MutationObserver(updateOverflow);
-    observer.observe(node, { childList: true, subtree: true });
+    updateIndicator();
+    const observer = new MutationObserver(() => {
+      updateOverflow();
+      updateIndicator();
+    });
+    observer.observe(node, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
     return {
       destroy() {
         observer.disconnect();
@@ -153,11 +186,15 @@
         {:else}
           {label}
         {/if}
-        {#if isActiveItem(index)}
-          <span class="tabs-indicator"></span>
-        {/if}
       </div>
     {/each}
+    {#if indicatorReady}
+      <span
+        class="tabs-indicator"
+        aria-hidden="true"
+        style="left: {indicatorLeft}px; width: {indicatorWidth}px;"
+      ></span>
+    {/if}
   </div>
   {#if canScrollRight}
     <button
@@ -199,6 +236,7 @@
     gap: var(--tabs-bar-gap, 0px);
     overflow-x: auto;
     scrollbar-width: none;
+    position: relative;
   }
 
   .tabs-bar::-webkit-scrollbar {
@@ -294,10 +332,16 @@
   .tabs-indicator {
     position: absolute;
     bottom: 0;
-    left: 0;
-    right: 0;
     height: var(--tabs-indicator-height, 2px);
     background-color: var(--tabs-indicator-color, #1a73e8);
     border-radius: var(--tabs-indicator-border-radius, 2px 2px 0 0);
+    transition: var(--tabs-indicator-transition, left 0.3s ease, width 0.3s ease);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tabs-indicator {
+      transition: none;
+    }
   }
 </style>

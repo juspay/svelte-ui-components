@@ -13,6 +13,7 @@ export const componentNav: NavGroup[] = [
     category: 'Layout & Containers',
     items: [
       { name: 'Card', slug: 'card' },
+      { name: 'Divider', slug: 'divider' },
       { name: 'Browser', slug: 'browser' },
       { name: 'Phone', slug: 'phone' },
       { name: 'Book', slug: 'book' }

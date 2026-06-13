@@ -6,6 +6,7 @@ import './components/Calendar.wc.svelte';
 import './components/Carousel.wc.svelte';
 import './components/Checkbox.wc.svelte';
 import './components/CommandMenu.wc.svelte';
+import './components/Divider.wc.svelte';
 import './components/Gauge.wc.svelte';
 import './components/GridItem.wc.svelte';
 import './components/Icon.wc.svelte';

@@ -58,6 +58,7 @@ export { default as ColorPicker } from './ColorPicker/ColorPicker.svelte';
 export { default as SplitInput } from './SplitInput/SplitInput.svelte';
 export { default as FileInput } from './FileInput/FileInput.svelte';
 export { default as DateRangePicker } from './DateRangePicker/DateRangePicker.svelte';
+export { default as Breadcrumb } from './Breadcrumb/Breadcrumb.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -113,5 +114,6 @@ export type * from './ColorPicker/properties';
 export type * from './SplitInput/properties';
 export type * from './FileInput/properties';
 export type * from './DateRangePicker/properties';
+export type * from './Breadcrumb/properties';
 
 export { validateInput } from './utils';

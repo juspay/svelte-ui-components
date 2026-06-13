@@ -1,5 +1,6 @@
 import './components/Avatar.wc.svelte';
 import './components/Badge.wc.svelte';
+import './components/Breadcrumb.wc.svelte';
 import './components/Book.wc.svelte';
 import './components/BrandLoader.wc.svelte';
 import './components/Calendar.wc.svelte';

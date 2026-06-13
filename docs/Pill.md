@@ -64,9 +64,10 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet     | Type      | Description                               |
-| ----------- | --------- | ----------------------------------------- |
-| dismissIcon | `Snippet` | Custom icon for the dismiss/close button. |
+| Snippet     | Type      | Description                                                                                                                                                                                                                                                             |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| leadingIcon | `Snippet` | Content rendered immediately before the text label inside a `<span class="pill-leading-icon">` wrapper. Compose with an icon or small image. Leave accessibility attributes (e.g. `aria-hidden`, `aria-label`) on the icon itself — the wrapper is presentational only. |
+| dismissIcon | `Snippet` | Custom icon for the dismiss/close button.                                                                                                                                                                                                                               |
 
 ## Events
 
@@ -117,6 +118,7 @@ Tag: `<sui-pill>`
 
 ### Slots
 
-| Slot Name      | Maps to Snippet | Description                               |
-| -------------- | --------------- | ----------------------------------------- |
-| `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button. |
+| Slot Name      | Maps to Snippet | Description                                                              |
+| -------------- | --------------- | ------------------------------------------------------------------------ |
+| `leading-icon` | `leadingIcon`   | Content rendered before the text label (icon, image, or inline element). |
+| `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button.                                |

@@ -141,7 +141,7 @@
   },
   {
     "name": "Pill",
-    "description": "A compact label/tag element for displaying status, categories, or metadata. Supports an optional icon snippet and click interaction with keyboard accessibility (role=button, Enter/Space). Optionally clickable when onclick is provided."
+    "description": "A compact label/tag element for displaying status, categories, or metadata. Supports a leadingIcon snippet (rendered before the label) and a dismissIcon snippet, click interaction with keyboard accessibility (role=button, Enter/Space), and an optional dismiss button. Optionally clickable when onclick is provided."
   },
   {
     "name": "Progress",

@@ -4,10 +4,10 @@ export type EmptyStateProperties = MandatoryEmptyStateProperties & OptionalEmpty
 
 export type MandatoryEmptyStateProperties = {
   title: string;
-  description: string;
 };
 
 export type OptionalEmptyStateProperties = {
+  description?: string;
   icon?: Snippet;
   children?: Snippet;
   classes?: string;

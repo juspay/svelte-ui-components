@@ -76,6 +76,10 @@
     "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, and `disabled`."
   },
   {
+    "name": "EmptyState",
+    "description": "A centered placeholder component for empty lists, search results, or views. Renders an optional icon snippet above a required title, an optional description (omitted entirely when absent), and an optional action area (e.g. buttons) below; all colors inherit from the parent for seamless light/dark theme support."
+  },
+  {
     "name": "Gauge",
     "description": "A semicircular gauge/meter that displays a value between 0 and max on an SVG arc. Supports configurable segments with individual colors, animated value transitions, and a center label. Uses SVG stroke-dasharray for the arc rendering."
   },

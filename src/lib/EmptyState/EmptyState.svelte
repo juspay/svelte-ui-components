@@ -11,7 +11,9 @@
     </div>
   {/if}
   <div class="empty-state-title">{title}</div>
-  <div class="empty-state-description">{description}</div>
+  {#if typeof description === 'string' && description.length > 0}
+    <div class="empty-state-description">{description}</div>
+  {/if}
   {#if typeof children === 'function'}
     <div class="empty-state-actions">
       {@render children()}

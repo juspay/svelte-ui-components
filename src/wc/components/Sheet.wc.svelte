@@ -10,7 +10,9 @@
       showCloseButton: { type: 'Boolean', reflect: true, attribute: 'show-close-button' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onclose: { type: 'Object' }
+      onclose: { type: 'Object' },
+      onafteropen: { type: 'Object' },
+      onafterclose: { type: 'Object' }
     }
   }}
 />

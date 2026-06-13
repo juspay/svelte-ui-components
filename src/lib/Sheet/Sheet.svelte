@@ -14,6 +14,8 @@
     content,
     footer,
     onclose,
+    onafteropen,
+    onafterclose,
     classes
   }: SheetProperties = $props();
 
@@ -90,6 +92,18 @@
       }
     };
   }
+
+  function handleIntroEnd() {
+    if (typeof onafteropen === 'function') {
+      onafteropen();
+    }
+  }
+
+  function handleOutroEnd() {
+    if (typeof onafterclose === 'function') {
+      onafterclose();
+    }
+  }
 </script>
 
 {#if open}
@@ -112,6 +126,8 @@
       aria-label={title ?? 'Sheet'}
       tabindex="-1"
       transition:fly|global={flyParams}
+      onintroend={handleIntroEnd}
+      onoutroend={handleOutroEnd}
     >
       {#if typeof title === 'string' || showCloseButton}
         <div class="sheet-header">

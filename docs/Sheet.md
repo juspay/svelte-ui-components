@@ -47,9 +47,11 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event   | Type         | Description                                                                                                                                                                                            |
-| ------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| onclose | `() => void` | Fires when the sheet is dismissed by clicking the overlay backdrop, pressing the Escape key, or clicking the close button. The `open` prop is automatically set to `false` before this callback fires. |
+| Event        | Type         | Description                                                                                                                                                                                            |
+| ------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| onclose      | `() => void` | Fires when the sheet is dismissed by clicking the overlay backdrop, pressing the Escape key, or clicking the close button. The `open` prop is automatically set to `false` before this callback fires. |
+| onafteropen  | `() => void` | Fires once after the open (intro) transition has fully completed. Useful for triggering animations or focusing elements that should only activate once the sheet is fully visible.                      |
+| onafterclose | `() => void` | Fires once after the close (outro) transition has fully completed. Useful for cleanup tasks that should only run after the sheet has fully left the screen.                                             |
 
 ## CSS Variables
 

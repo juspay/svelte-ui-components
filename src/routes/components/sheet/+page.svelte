@@ -8,6 +8,8 @@
   let showBottom = $state(false);
   let showRaw = $state(false);
   let showFooter = $state(false);
+  let showLifecycle = $state(false);
+  let lifecycleLog = $state<string[]>([]);
 </script>
 
 <div class="page-header">
@@ -83,3 +85,28 @@
     {/snippet}
   </Sheet>
 </div>
+
+<h3>Lifecycle callbacks (onafteropen / onafterclose)</h3>
+<div class="demo-row">
+  <Button
+    text="Open with lifecycle"
+    onclick={() => {
+      lifecycleLog = [];
+      showLifecycle = true;
+    }}
+  />
+  <Sheet
+    bind:open={showLifecycle}
+    side="right"
+    title="Lifecycle demo"
+    onafteropen={() => (lifecycleLog = [...lifecycleLog, 'onafteropen fired'])}
+    onafterclose={() => (lifecycleLog = [...lifecycleLog, 'onafterclose fired'])}
+  >
+    {#snippet content()}
+      <p>Open and close this sheet to observe the transition-end callbacks in the log below.</p>
+    {/snippet}
+  </Sheet>
+</div>
+{#if lifecycleLog.length > 0}
+  <p class="state-display">{lifecycleLog.join(' → ')}</p>
+{/if}

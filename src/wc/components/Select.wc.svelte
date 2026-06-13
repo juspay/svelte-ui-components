@@ -11,6 +11,7 @@
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      open: { type: 'Boolean', reflect: true },
       onchange: { type: 'Object' }
     }
   }}
@@ -21,4 +22,8 @@
   let props = $props();
 </script>
 
-<Select {...props} />
+<Select {...props}>
+  {#snippet bottomContent()}
+    <slot name="bottom-content"></slot>
+  {/snippet}
+</Select>

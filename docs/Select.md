@@ -1,6 +1,6 @@
 # Select
 
-A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. Supports keyboard navigation (Arrow keys, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` prop is bindable.
+A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. The `items` prop accepts either `SelectItem[]` objects or a plain `string[]` (each string is used as both the id and the label). Custom snippets let you replace the per-option checkbox indicator and add arbitrary content pinned to the bottom of the dropdown. Supports keyboard navigation (Arrow keys, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` prop is bindable.
 
 ## Usage
 
@@ -18,24 +18,66 @@ A dropdown selector that supports single and multi-select modes with optional se
 <Select {items} placeholder="Pick a fruit" onchange={(val) => console.log(val)} />
 ```
 
+### String Array Shorthand
+
+Pass a plain `string[]` — each string becomes both the `id` and the `label`:
+
+```svelte
+<Select items={['Active', 'Inactive', 'Pending']} placeholder="Select status" />
+```
+
 ### Multi-Select with Search
 
 ```svelte
 <Select {items} multiple searchable placeholder="Search fruits..." bind:value={selectedIds} />
 ```
 
+### With bottomContent Snippet
+
+Pin arbitrary content (e.g. a "Manage…" link) to the bottom of the dropdown:
+
+```svelte
+<Select {items} placeholder="Choose">
+  {#snippet bottomContent()}
+    <a href="/manage">+ Manage options</a>
+  {/snippet}
+</Select>
+```
+
+### With Custom optionIndicator Snippet (Multi-Select)
+
+Replace the default ☐/☑ glyphs with a custom indicator:
+
+```svelte
+<Select {items} multiple placeholder="Pick items">
+  {#snippet optionIndicator({ checked })}
+    <span>{checked ? '✔' : '○'}</span>
+  {/snippet}
+</Select>
+```
+
 ## Props
 
-| Prop        | Type           | Required | Default | Description                                                                                                                                                            |
-| ----------- | -------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `SelectItem[]` | Yes      | -       | Array of selectable options. Each item has an `id` and a `label`.                                                                                                      |
-| value       | `string[]`     | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                             |
-| multiple    | `boolean`      | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                            |
-| searchable  | `boolean`      | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                    |
-| placeholder | `string`       | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                               |
-| disabled    | `boolean`      | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                        |
-| testId      | `string`       | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                     |
-| classes     | `string`       | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop        | Type                        | Required | Default | Description                                                                                                                                                            |
+| ----------- | --------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items       | `SelectItem[] \| string[]`  | Yes      | -       | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.       |
+| value       | `string[]`                  | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                             |
+| open        | `boolean`                   | No       | `false` | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state. |
+| multiple    | `boolean`                   | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                            |
+| searchable  | `boolean`                   | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                    |
+| placeholder | `string`                    | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                               |
+| disabled    | `boolean`                   | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                        |
+| testId      | `string`                    | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                     |
+| classes     | `string`                    | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+
+## Snippets
+
+Svelte 5 Snippet props — pass content blocks to the component.
+
+| Snippet          | Type                              | Description                                                                                                                                          |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| bottomContent    | `Snippet`                         | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.                |
+| optionIndicator  | `Snippet<[{ checked: boolean }]>` | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided.  |
 
 ## Events
 
@@ -105,16 +147,25 @@ Override these custom properties to theme the component.
 
 ### Options
 
-| Variable                                    | Default                                        | CSS Property | Description                                           |
-| ------------------------------------------- | ---------------------------------------------- | ------------ | ----------------------------------------------------- |
-| `--select-option-padding`                   | `8px 12px`                                     | padding      | Padding inside each dropdown option.                  |
-| `--select-option-color`                     | `#333333`                                      | color        | Text color of dropdown options.                       |
-| `--select-option-font-size`                 | `inherit`                                      | font-size    | Font size of dropdown options.                        |
-| `--select-option-hover-background`          | `#f0f0f0`                                      | background   | Background of options on hover or keyboard highlight. |
-| `--select-option-hover-color`               | inherits `--select-option-color`               | color        | Text color of options on hover or keyboard highlight. |
-| `--select-option-selected-background`       | `#e8f0fe`                                      | background   | Background of selected options.                       |
-| `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                       |
-| `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.              |
+| Variable                                    | Default                                        | CSS Property | Description                                                                                    |
+| ------------------------------------------- | ---------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| `--select-option-padding`                   | `8px 12px`                                     | padding      | Padding inside each dropdown option.                                                           |
+| `--select-option-color`                     | `#333333`                                      | color        | Text color of dropdown options.                                                                |
+| `--select-option-font-size`                 | `inherit`                                      | font-size    | Font size of dropdown options.                                                                 |
+| `--select-option-gap`                       | `0`                                            | gap          | Gap between the option indicator and the label text in multi-select mode.                      |
+| `--select-option-hover-background`          | `#f0f0f0`                                      | background   | Background of options on hover or keyboard highlight.                                          |
+| `--select-option-hover-color`               | inherits `--select-option-color`               | color        | Text color of options on hover or keyboard highlight.                                          |
+| `--select-option-selected-background`       | `#e8f0fe`                                      | background   | Background of selected options.                                                                |
+| `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                                                                |
+| `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.                                                       |
+| `--select-option-indicator-color`           | `currentColor`                                 | color        | Color of the default ☐/☑ indicator shown per option in multi-select mode.                     |
+
+### Bottom Content
+
+| Variable                             | Default                | CSS Property | Description                                                     |
+| ------------------------------------ | ---------------------- | ------------ | --------------------------------------------------------------- |
+| `--select-bottom-content-border`     | `none`                 | border-top   | Separator line between the option list and the bottom content. Set to `1px solid #eeeeee` (or any color) in your own CSS when a visible divider is desired. |
+| `--select-bottom-content-padding`    | `8px 12px`             | padding      | Inner padding of the bottom content area.                       |
 
 ### Empty State
 
@@ -174,4 +225,21 @@ Tag: `<sui-select>`
 </script>
 ```
 
+### With Slots
+
+```html
+<sui-select placeholder="Pick items">
+  <!-- Bottom content -->
+  <a slot="bottom-content" href="/manage">+ Manage options</a>
+</sui-select>
+```
+
+### Slots
+
+| Slot Name        | Maps to Snippet | Description                                                  |
+| ---------------- | --------------- | ------------------------------------------------------------ |
+| `bottom-content` | `bottomContent` | Arbitrary content pinned to the bottom of the open dropdown. |
+
 > **Note:** The `items` and `value` props are arrays — set them via JavaScript properties, not HTML attributes.
+
+> **Svelte-only:** The `optionIndicator` snippet is not available in Web Component mode. The `option-indicator` slot was removed because Web Component `<slot>` elements do not forward Svelte snippet parameters as HTML attributes, causing the `checked` state to be silently dropped. Use the Svelte component directly when a custom option indicator is needed.

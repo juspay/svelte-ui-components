@@ -34,10 +34,16 @@
     { id: 'mum', label: 'Mumbai' }
   ];
 
+  // String array shorthand (PR #232: items now accepts string[] directly)
+  const statusOptions: string[] = ['Active', 'Inactive', 'Pending', 'Archived'];
+
   let singleValue: string[] = $state([]);
   let searchValue: string[] = $state([]);
   let multiValue: string[] = $state([]);
   let multiSearchValue: string[] = $state([]);
+  let stringItemsValue: string[] = $state([]);
+  let bottomContentValue: string[] = $state([]);
+  let customIndicatorValue: string[] = $state([]);
 </script>
 
 <div class="page-header">
@@ -88,10 +94,76 @@
   <Select items={fruits} disabled placeholder="Can't touch this" />
 </div>
 
+<h3>String array shorthand</h3>
+<p>
+  Pass a plain <code>string[]</code> — each string becomes both the <code>id</code> and
+  <code>label</code>.
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={statusOptions} bind:value={stringItemsValue} placeholder="Select status" />
+  {#if stringItemsValue.length > 0}
+    <p class="demo-info">Selected: {stringItemsValue.at(0)}</p>
+  {/if}
+</div>
+
+<h3>bottomContent snippet</h3>
+<p>
+  Render arbitrary content pinned to the bottom of the dropdown (e.g. a "Manage…" link or a bulk
+  action).
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} bind:value={bottomContentValue} placeholder="Choose a fruit">
+    {#snippet bottomContent()}
+      <button class="manage-link" onclick={() => console.log('Manage options clicked')}>
+        + Manage options
+      </button>
+    {/snippet}
+  </Select>
+  {#if bottomContentValue.length > 0}
+    <p class="demo-info">Selected: {bottomContentValue.at(0)}</p>
+  {/if}
+</div>
+
+<h3>optionIndicator snippet (multi-select)</h3>
+<p>Replace the default ☐/☑ glyphs with a custom indicator rendered per option.</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Select items={languages} multiple bind:value={customIndicatorValue} placeholder="Pick languages">
+    {#snippet optionIndicator({ checked })}
+      <span class="custom-indicator" class:checked>{checked ? '✔' : '○'}</span>
+    {/snippet}
+  </Select>
+  {#if customIndicatorValue.length > 0}
+    <p class="demo-info">Selected: {customIndicatorValue.join(', ')}</p>
+  {/if}
+</div>
+
 <style>
   .demo-info {
     margin: 8px 0 0;
     font-size: 13px;
     color: #666;
+  }
+
+  .manage-link {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--doc-accent, #4f46e5);
+    text-align: left;
+  }
+
+  .custom-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: #aaa;
+  }
+
+  .custom-indicator.checked {
+    color: #2563eb;
   }
 </style>

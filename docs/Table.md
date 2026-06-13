@@ -1,6 +1,6 @@
 # Table
 
-A sortable data table with clean, modern defaults. Supports column sorting (ascending/descending) for string, number, and boolean values. Features sticky headers, custom cell rendering via Svelte 5 snippets, row click interaction, and customizable sort icons. Table data is an array of arrays (rows x columns).
+A sortable data table with clean, modern defaults. Supports column sorting (ascending/descending) for string, number, and boolean values. Features sticky headers, custom cell rendering via Svelte 5 snippets, row click interaction, customizable sort icons, a footer paginator slot, and per-row/cell `data-pw` test ID callbacks for end-to-end testing. Table data is an array of arrays (rows x columns).
 
 ## Usage
 
@@ -108,6 +108,40 @@ Show a placeholder when `tableData` is empty:
 </Table>
 ```
 
+### Paginator Slot
+
+Render a pagination control in a footer region below the table using the `paginatorSlot` snippet:
+
+```svelte
+<script>
+  import { Table } from '@juspay/svelte-ui-components';
+  let page = $state(1);
+</script>
+
+<Table tableHeaders={['Name', 'Role']} tableData={rows}>
+  {#snippet paginatorSlot()}
+    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+      <button onclick={() => page--} disabled={page === 1}>Prev</button>
+      <span>Page {page}</span>
+      <button onclick={() => page++}>Next</button>
+    </div>
+  {/snippet}
+</Table>
+```
+
+### Row & Cell Test IDs
+
+Use `getRowTestId` and `getCellTestId` to apply `data-pw` attributes for Playwright/E2E selectors:
+
+```svelte
+<Table
+  tableHeaders={['Name', 'Status']}
+  tableData={rows}
+  getRowTestId={(row, rowIndex) => `user-row-${rowIndex}`}
+  getCellTestId={(row, cell, rowIndex) => `user-cell-${rowIndex}-${String(row[0])}`}
+/>
+```
+
 ## Props
 
 | Prop                | Type                                   | Required | Default          | Description                                                                                                                                                            |
@@ -128,6 +162,20 @@ Show a placeholder when `tableData` is empty:
 | cell                | `Snippet<[JSONValue, number, number]>` | No       | `-`              | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                   |
 | empty               | `Snippet`                              | No       | `-`              | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                     |
 | classes             | `string`                               | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| paginatorSlot       | `Snippet`                              | No       | `-`              | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI. |
+| getRowTestId        | `(row: JSONValue[], rowIndex: number) => string` | No | `-`   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors. |
+| getCellTestId       | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No | `-` | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index. |
+
+## Snippets
+
+| Snippet         | Parameters                              | Description                                                                                        |
+| --------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `sortAscIcon`   | none                                    | Custom ascending sort icon, replaces the default SVG chevron.                                      |
+| `sortDescIcon`  | none                                    | Custom descending sort icon, replaces the default SVG chevron.                                     |
+| `sortDefaultIcon` | none                                  | Custom default (unsorted) sort icon, replaces the dimmed up/down chevron pair.                     |
+| `cell`          | `(value: JSONValue, rowIndex: number, colIndex: number)` | Custom cell renderer. When not provided, cells render the raw value as text.    |
+| `empty`         | none                                    | Content shown when `tableData` is empty. Rendered inside a full-width table row.                   |
+| `paginatorSlot` | none                                    | Content rendered in a footer region below the table (e.g. pagination controls, row count).        |
 
 ## Events
 
@@ -223,6 +271,14 @@ Override these custom properties to theme the component.
 | `--table-empty-padding` | `32px 24px` | padding      | Padding around the empty state content. |
 | `--table-empty-color`   | `#9ca3af`   | color        | Text color of the empty state content.  |
 
+### Footer
+
+| Variable                    | Default             | CSS Property     | Description                                                  |
+| --------------------------- | ------------------- | ---------------- | ------------------------------------------------------------ |
+| `--table-footer-border`     | `1px solid #e5e7eb` | border-top       | Top border of the footer region rendered by `paginatorSlot`. |
+| `--table-footer-padding`    | `8px 16px`          | padding          | Padding inside the footer region.                            |
+| `--table-footer-background` | `transparent`       | background-color | Background color of the footer region.                       |
+
 ## Type Reference
 
 ```typescript
@@ -239,16 +295,22 @@ Tag: `<sui-table>`
 ```html
 <sui-table table-title="Users" sortable sticky-header>
   <div slot="empty">No data found</div>
+  <div slot="paginator-slot">
+    <button>Prev</button>
+    <span>Page 1</span>
+    <button>Next</button>
+  </div>
 </sui-table>
 ```
 
 ### Slots
 
-| Slot Name           | Maps to Snippet   | Description                               |
-| ------------------- | ----------------- | ----------------------------------------- |
-| `empty`             | `empty`           | Content shown when the table has no data. |
-| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon.               |
-| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon.              |
-| `sort-default-icon` | `sortDefaultIcon` | Custom default (unsorted) sort icon.      |
+| Slot Name           | Maps to Snippet   | Description                                                             |
+| ------------------- | ----------------- | ----------------------------------------------------------------------- |
+| `empty`             | `empty`           | Content shown when the table has no data.                               |
+| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon.                                             |
+| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon.                                            |
+| `sort-default-icon` | `sortDefaultIcon` | Custom default (unsorted) sort icon.                                    |
+| `paginator-slot`    | `paginatorSlot`   | Footer content below the table, typically pagination controls.          |
 
-> **Note:** `tableHeaders`, `tableData`, and `sortableColumns` are arrays — set them via JavaScript properties. The `cell` snippet is parameterized and only available via JavaScript.
+> **Note:** `tableHeaders`, `tableData`, and `sortableColumns` are arrays — set them via JavaScript properties. The `cell`, `getRowTestId`, and `getCellTestId` props are function-typed and only available via JavaScript.

@@ -201,7 +201,7 @@
   },
   {
     "name": "Table",
-    "description": "A sortable data table with clickable column headers for sort toggling (ascending/descending). Supports string, number, and boolean sorting. Enables vertical scrolling with sticky headers and per-cell content scrolling."
+    "description": "A sortable data table with clickable column headers for sort toggling (ascending/descending). Supports string, number, and boolean sorting, sticky headers, custom cell rendering, a paginator footer slot, and per-row/cell data-pw test ID callbacks for E2E testing."
   },
   {
     "name": "Tabs",

@@ -22,6 +22,12 @@ export type OptionalTableProperties = {
   cell?: Snippet<[JSONValue, number, number]>;
   empty?: Snippet;
   classes?: string;
+  /** Snippet rendered in a footer region below the table (e.g. a paginator). */
+  paginatorSlot?: Snippet;
+  /** Return a data-pw value for the given row. */
+  getRowTestId?: (row: JSONValue[], rowIndex: number) => string;
+  /** Return a data-pw value for the given cell. */
+  getCellTestId?: (row: JSONValue[], column: JSONValue, rowIndex: number) => string;
 };
 
 export type TableEventProperties = {

@@ -1,11 +1,23 @@
 <script lang="ts">
   import Table from '$lib/Table/Table.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
+  import type { JSONValue } from 'type-decoder';
 
   let clickedRow = $state<string | null>(null);
+  let currentPage = $state(1);
+  const totalPages = 3;
+  let lastCellTestId = $state<string | null>(null);
 
   function handleRowClick(rowIndex: number, rowData: unknown[]) {
     clickedRow = `Row ${rowIndex}: ${rowData[0]}`;
+  }
+
+  function getRowTestId(row: JSONValue[], rowIndex: number): string {
+    return `row-${rowIndex}`;
+  }
+
+  function getCellTestId(row: JSONValue[], _cell: JSONValue, rowIndex: number): string {
+    return `cell-${rowIndex}-${String(row[0]).toLowerCase().replace(/\s+/g, '-')}`;
   }
 
   const statusClasses: Record<string, string> = {
@@ -139,6 +151,58 @@
       </div>
     {/snippet}
   </Table>
+</div>
+
+<!-- Paginator Slot -->
+<h3>Paginator Slot</h3>
+<div class="demo-row" style="max-width: 600px;">
+  <Table
+    tableHeaders={['Name', 'Department', 'Role']}
+    tableData={[
+      ['Alice Johnson', 'Engineering', 'Staff Engineer'],
+      ['Bob Smith', 'Design', 'Product Designer'],
+      ['Carol White', 'Marketing', 'Growth Lead']
+    ]}
+    --table-footer-background="#f9fafb"
+  >
+    {#snippet paginatorSlot()}
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+        <button
+          onclick={() => { if (currentPage > 1) currentPage -= 1; }}
+          disabled={currentPage === 1}
+          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
+        >‹ Prev</button>
+        <span style="color: #6b7280;">Page {currentPage} of {totalPages}</span>
+        <button
+          onclick={() => { if (currentPage < totalPages) currentPage += 1; }}
+          disabled={currentPage === totalPages}
+          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
+        >Next ›</button>
+      </div>
+    {/snippet}
+  </Table>
+</div>
+
+<!-- Row & Cell Test IDs -->
+<h3>Row & Cell Test IDs</h3>
+<div class="demo-row" style="max-width: 600px; flex-direction: column; gap: 8px;">
+  <Table
+    tableHeaders={['Name', 'Score', 'Status']}
+    tableData={[
+      ['Alice Johnson', 94, 'Active'],
+      ['Bob Smith', 78, 'Pending'],
+      ['Carol White', 65, 'Inactive']
+    ]}
+    {getRowTestId}
+    {getCellTestId}
+    onRowClick={(rowIndex, rowData) => {
+      lastCellTestId = getCellTestId(rowData, rowData[0], rowIndex);
+    }}
+    --table-row-hover-background="#f0f9ff"
+  />
+  {#if lastCellTestId}
+    <p class="state-display">Last clicked row data-pw prefix: {lastCellTestId}</p>
+  {/if}
 </div>
 
 <style>

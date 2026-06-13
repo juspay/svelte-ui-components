@@ -24,7 +24,10 @@
     empty,
     onRowClick,
     onSort,
-    classes
+    classes,
+    paginatorSlot,
+    getRowTestId,
+    getCellTestId
   }: TableProperties = $props();
 
   let sortColumn = $state<number | null>(null);
@@ -48,9 +51,9 @@
     const colIndex = sortColumn;
     const direction = sortDirection;
 
-    return [...tableData].sort((a, b) => {
-      const valueA = a[colIndex];
-      const valueB = b[colIndex];
+    return [...tableData].sort((rowA, rowB) => {
+      const valueA = rowA[colIndex];
+      const valueB = rowB[colIndex];
 
       if (typeof valueA === 'number' && typeof valueB === 'number') {
         return direction === 'asc' ? valueA - valueB : valueB - valueA;
@@ -171,12 +174,20 @@
             <tr
               class="table-row"
               class:table-row-clickable={isRowClickable}
+              data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
               onclick={isRowClickable ? () => handleRowClick(rowIndex, row) : null}
-              onkeydown={isRowClickable ? (e) => handleRowKeydown(e, rowIndex, row) : null}
+              onkeydown={isRowClickable
+                ? (keyboardEvent) => handleRowKeydown(keyboardEvent, rowIndex, row)
+                : null}
               tabindex={isRowClickable ? 0 : null}
             >
               {#each row as cellValue, colIndex (colIndex)}
-                <td class="table-content">
+                <td
+                  class="table-content"
+                  data-pw={typeof getCellTestId === 'function'
+                    ? getCellTestId(row, cellValue, rowIndex)
+                    : null}
+                >
                   <div class={isContentScrollable ? 'scrollable-content' : ''}>
                     {#if typeof cell === 'function'}
                       {@render cell(cellValue, rowIndex, colIndex)}
@@ -191,6 +202,11 @@
         {/if}
       </tbody>
     </table>
+    {#if typeof paginatorSlot === 'function'}
+      <div class="table-footer">
+        {@render paginatorSlot()}
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -339,6 +355,12 @@
     padding: var(--table-empty-padding, 32px 24px);
     text-align: center;
     color: var(--table-empty-color, #9ca3af);
+  }
+
+  .table-footer {
+    border-top: var(--table-footer-border, 1px solid #e5e7eb);
+    padding: var(--table-footer-padding, 8px 16px);
+    background-color: var(--table-footer-background, transparent);
   }
 
   .sr-only {

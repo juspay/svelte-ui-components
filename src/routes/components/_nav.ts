@@ -40,6 +40,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Combobox', slug: 'combobox' },
       { name: 'Slider', slug: 'slider' },
       { name: 'Calendar', slug: 'calendar' },
+      { name: 'DateRangePicker', slug: 'date-range-picker' },
       { name: 'Choicebox', slug: 'choicebox' },
       { name: 'Color Picker', slug: 'color-picker' },
       { name: 'SplitInput', slug: 'split-input' },

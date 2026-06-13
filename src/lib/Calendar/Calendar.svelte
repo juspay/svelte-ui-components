@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CalendarProperties } from './properties';
   import { SvelteDate } from 'svelte/reactivity';
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
   import Button from '../Button/Button.svelte';
@@ -22,11 +22,17 @@
     onselect,
     onrangeselect,
     onmonthchange,
-    classes
+    classes,
+    initialMonth = null
   }: CalendarProperties = $props();
 
   const now = new SvelteDate();
-  let displayDate = new SvelteDate(now.getFullYear(), now.getMonth(), 1);
+  // Intentionally read initialMonth once (untracked) — it seeds the display month at mount
+  // and subsequent prop changes should not navigate the calendar (user navigates via the buttons).
+  let displayDate = untrack(() => {
+    const seed = initialMonth !== null ? initialMonth : now;
+    return new SvelteDate(seed.getFullYear(), seed.getMonth(), 1);
+  });
   let focusedDay: number | null = $state(null);
 
   let gridRef: HTMLElement | null = $state(null);
@@ -359,7 +365,7 @@
   }
 
   .header {
-    display: flex;
+    display: var(--calendar-header-display, flex);
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--calendar-header-margin-bottom, 12px);

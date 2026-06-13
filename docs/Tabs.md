@@ -81,6 +81,7 @@ Override these custom properties to theme the component.
 | `--tabs-indicator-color`         | `#1a73e8`                               | background-color | Color of the active tab indicator line.                   |
 | `--tabs-indicator-height`        | `2px`                                   | height           | Thickness of the active tab indicator line.               |
 | `--tabs-indicator-border-radius` | `2px 2px 0 0`                           | border-radius    | Corner rounding of the active tab indicator.              |
+| `--tabs-indicator-transition`    | `left 0.3s ease, width 0.3s ease`       | transition       | CSS transition applied to the sliding indicator when moving between tabs. Set to `none` to disable animation, or supply a custom easing/duration. Automatically overridden to `none` when `prefers-reduced-motion: reduce` is active. |
 | `--tabs-hover-color`             | `#333333`                               | color            | Text color of tab labels on hover.                        |
 | `--tabs-hover-background`        | `#f5f5f5`                               | background       | Background color of tab items on hover.                   |
 | `--tabs-disabled-opacity`        | `0.5`                                   | opacity          | Opacity of the entire tab bar when disabled.              |

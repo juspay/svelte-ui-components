@@ -9,6 +9,8 @@ export type ToolbarProperties = ToolbarEventProperties & {
   rightContent?: Snippet;
   additionalContent?: Snippet;
   classes?: string;
+  testId?: string;
+  headingTestId?: string;
 };
 
 export type ToolbarEventProperties = {

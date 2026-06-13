@@ -7,6 +7,8 @@
       text: { type: 'String', reflect: true },
       backIcon: { type: 'String', attribute: 'back-icon' },
       classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
+      headingTestId: { type: 'String', attribute: 'heading-test-id' },
       onbackClick: { type: 'Object' },
       onkeydown: { type: 'Object' }
     }

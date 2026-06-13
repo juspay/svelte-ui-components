@@ -20,6 +20,8 @@ A fixed-position header bar with a back button (left), center title text, and cu
 | text           | `string \| null` | No       | `-`                                              | Title text displayed in the center of the toolbar. Only shown when centerContent snippet is not provided.                                                              |
 | backIcon       | `string \| null` | No       | `'https://sdk.breeze.in/gallery/icons/back.svg'` | URL for the back button icon image. Defaults to a back-arrow SVG from sdk.breeze.in.                                                                                   |
 | classes        | `string`         | No       | `-`                                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| testId         | `string`         | No       | `-`                                              | `data-pw` attribute on the toolbar's root element for Playwright selectors.                                                                                            |
+| headingTestId  | `string`         | No       | `-`                                              | `data-pw` attribute on the heading text element for Playwright selectors.                                                                                              |
 
 ## Snippets
 
@@ -75,12 +77,30 @@ Override these custom properties to theme the component.
 Tag: `<sui-toolbar>`
 
 ```html
-<sui-toolbar text="Page Title" show-back-button>
-  <button slot="left-content">Menu</button>
-  <span slot="center-content">Title</span>
+<sui-toolbar
+  text="Page Title"
+  show-back-button
+  test-id="toolbar-root"
+  heading-test-id="toolbar-heading"
+>
   <button slot="right-content">Settings</button>
   <div slot="additional-content">Breadcrumbs</div>
 </sui-toolbar>
+```
+
+### Subheading (consumer recipe)
+
+The library Toolbar intentionally does not offer a `subheading` prop — string props that carry presentational structure are rejected in favour of Snippets. To render a secondary line beneath the heading, use `centerContent`:
+
+```svelte
+<Toolbar testId="my-toolbar">
+  {#snippet centerContent()}
+    <div style="display: flex; flex-direction: column; flex: 1;">
+      <span data-pw="toolbar-heading">Order Details</span>
+      <span data-pw="toolbar-subheading">Placed on 5 Jun 2026</span>
+    </div>
+  {/snippet}
+</Toolbar>
 ```
 
 ### Slots

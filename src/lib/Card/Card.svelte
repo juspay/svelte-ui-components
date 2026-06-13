@@ -35,9 +35,11 @@
       {/if}
     </div>
   {/if}
-  <div class="card-content">
-    {@render children()}
-  </div>
+  {#if typeof children === 'function'}
+    <div class="card-content">
+      {@render children()}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -52,6 +54,7 @@
     width: var(--card-width, auto);
     min-width: var(--card-min-width, 0);
     max-width: var(--card-max-width, none);
+    height: var(--card-height, auto);
     max-height: var(--card-max-height, none);
     margin: var(--card-margin, 0);
   }

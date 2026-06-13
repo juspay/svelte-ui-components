@@ -66,9 +66,9 @@ A generic container component with an optional title/description header and a co
 <script>
   import { Card } from '@juspay/svelte-ui-components';
 
-  const handleCardClick = (event: MouseEvent) => {
+  function handleCardClick(event: MouseEvent) {
     console.log('card clicked', event);
-  };
+  }
 </script>
 
 <div class="clickable-card">
@@ -87,11 +87,69 @@ A generic container component with an optional title/description header and a co
 </style>
 ```
 
+### Custom Layout (Consumer Recipe)
+
+The Card component intentionally omits named layout slots to keep its API minimal. For multi-zone flex-row layouts (metric tiles, integration rows, list items), place the layout entirely inside the `children` snippet — the consumer controls the structure and the Card provides the container, shadow, and click semantics.
+
+```svelte
+<script>
+  import { Card } from '@juspay/svelte-ui-components';
+</script>
+
+<!-- Metric tile: icon left, label+value center, badge right -->
+<div class="metric-card">
+  <Card testId="revenue-card">
+    {#snippet children()}
+      <div class="card-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+        <span>📊</span>
+        <div style="flex:1;">
+          <p style="margin:0;">Total Revenue</p>
+          <strong>$48,320</strong>
+        </div>
+        <span class="badge">+12.4%</span>
+      </div>
+    {/snippet}
+  </Card>
+</div>
+
+<!-- Integration row: clickable card with full-card onclick -->
+<div class="integration-card">
+  <Card onclick={handleCardClick} testId="shopify-card">
+    {#snippet children()}
+      <div class="card-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+        <span>🛒</span>
+        <div style="flex:1;">
+          <p style="margin:0;">Shopify</p>
+          <small>Connected</small>
+        </div>
+        <span>›</span>
+      </div>
+    {/snippet}
+  </Card>
+</div>
+
+<style>
+  .metric-card {
+    --card-background: #ffffff;
+    --card-border: 1px solid #e5e7eb;
+    --card-width: 100%;
+  }
+
+  .integration-card {
+    --card-background: #f9fafb;
+    --card-border: 1px solid #e5e7eb;
+    --card-width: 100%;
+  }
+</style>
+```
+
+This pattern gives full layout control to the consumer (any number of zones, any flex/grid arrangement) without baking structural presets into the library.
+
 ## Props
 
 | Prop        | Type                          | Required | Default | Description                                                                                                                                                                  |
 | ----------- | ----------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children    | `Snippet`                     | Yes      | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                |
+| children    | `Snippet`                     | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                |
 | title       | `string`                      | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                        |
 | description | `string`                      | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                       |
 | classes     | `string`                      | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.       |
@@ -118,6 +176,7 @@ Override these custom properties to theme the component.
 | `--card-width`                 | `auto`                   | width         | Width of the card. Set to a fixed value (e.g. `600px`) or leave as `auto` for natural sizing. |
 | `--card-min-width`             | `0`                      | min-width     | Minimum width constraint.                                                                      |
 | `--card-max-width`             | `none`                   | max-width     | Maximum width constraint.                                                                      |
+| `--card-height`                | `auto`                   | height        | Height of the card. Set to `100%` for equal-height/stretch layouts (e.g. cards in a stretched grid row); leave as `auto` for natural sizing. |
 | `--card-max-height`            | `none`                   | max-height    | Maximum height constraint. Use with `overflow: auto` for scrollable card bodies.               |
 | `--card-margin`                | `0`                      | margin        | Outer margin of the card. Useful for stacked card layouts.                                     |
 | `--card-cursor`                | `inherit`                | cursor        | Cursor on the card root. Defaults to `pointer` when `onclick` is provided.                     |

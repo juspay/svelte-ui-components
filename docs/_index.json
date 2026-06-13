@@ -161,7 +161,7 @@
   },
   {
     "name": "Select",
-    "description": "A dropdown selector supporting single-select and multi-select modes. Single-select mode with optional search. Multi-select has checkboxes, Select All toggle, and Apply button. Supports left icon, custom content snippets, and closes on outside click."
+    "description": "A dropdown selector supporting single-select and multi-select modes with optional search. Multi-select shows a 'Select All' toggle (hide it via --select-select-all-display: none). Accepts a bottomContent snippet to render action links inside the dropdown footer. The open and value props are bindable for controlled usage. Closes on outside click with full keyboard navigation."
   },
   {
     "name": "Sheet",

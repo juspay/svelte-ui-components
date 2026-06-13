@@ -1,6 +1,6 @@
 # Select
 
-A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. Supports keyboard navigation (Arrow keys, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` prop is bindable.
+A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. Multi-select mode includes a "Select All / Deselect All" row (visibility controlled via `--select-select-all-display`). Supports keyboard navigation (Arrow keys, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` and `open` props are bindable.
 
 ## Usage
 
@@ -26,22 +26,120 @@ A dropdown selector that supports single and multi-select modes with optional se
 
 ## Props
 
-| Prop        | Type           | Required | Default | Description                                                                                                                                                            |
-| ----------- | -------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `SelectItem[]` | Yes      | -       | Array of selectable options. Each item has an `id` and a `label`.                                                                                                      |
-| value       | `string[]`     | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                             |
-| multiple    | `boolean`      | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                            |
-| searchable  | `boolean`      | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                    |
-| placeholder | `string`       | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                               |
-| disabled    | `boolean`      | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                        |
-| testId      | `string`       | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                     |
-| classes     | `string`       | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop         | Type           | Required | Default | Description                                                                                                                                                            |
+| ------------ | -------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items        | `SelectItem[]` | Yes      | -       | Array of selectable options. Each item has an `id` and a `label`.                                                                                                      |
+| value        | `string[]`     | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                             |
+| multiple     | `boolean`      | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                            |
+| searchable   | `boolean`      | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                    |
+| placeholder  | `string`       | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                               |
+| disabled     | `boolean`      | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                        |
+| testId       | `string`       | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                     |
+| classes      | `string`       | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| open         | `boolean`      | No       | `false` | Bindable. Controls whether the dropdown is open. The component writes back on open/close so parents can use `bind:open` to observe or drive the open state. See the Controlled open state section below. |
 
 ## Events
 
 | Event    | Type                        | Description                                                                                                                       |
 | -------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | onchange | `(value: string[]) => void` | Fires when the selection changes. Receives the full array of selected item IDs. In single-select mode, the array has one element. |
+
+## Snippets
+
+| Snippet        | Parameters | Description                                                                                                                                              |
+| -------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bottomContent` | (none)     | Optional footer rendered inside the dropdown panel, below the options list. Use it for action links or buttons ("Add zone", "Manage rates", etc.). Styled via `--select-bottom-content-*` CSS vars. |
+
+### bottomContent usage
+
+```svelte
+<Select {items} multiple bind:value={selected} placeholder="Select zones">
+  {#snippet bottomContent()}
+    <button onclick={handleAddZone}>+ Add shipping zone</button>
+  {/snippet}
+</Select>
+```
+
+## Controlled open state
+
+Use `bind:open` to let a parent drive when the dropdown is shown. This is useful for accordion-style panels where a separate toggle controls visibility.
+
+```svelte
+<script>
+  let isOpen = $state(false);
+  let selected = $state([]);
+</script>
+
+<button onclick={() => (isOpen = !isOpen)}>
+  {isOpen ? 'Close' : 'Open'} picker
+</button>
+
+<Select {items} bind:open={isOpen} bind:value={selected} placeholder="Controlled externally" />
+```
+
+When `open` is not bound, the component manages its own state — existing behaviour is unchanged.
+
+## Hiding the "Select All" row
+
+In multiple mode a "Select All / Deselect All" row is rendered by default. To hide it, set `--select-select-all-display: none` via the `classes` prop or a wrapper CSS rule — no library prop is needed.
+
+```svelte
+<!-- via the classes prop -->
+<Select {items} multiple classes="no-select-all" placeholder="No Select All" />
+
+<style>
+  :global(.no-select-all) {
+    --select-select-all-display: none;
+  }
+</style>
+```
+
+```svelte
+<!-- via a wrapper element -->
+<div class="my-select-wrapper">
+  <Select {items} multiple placeholder="No Select All" />
+</div>
+
+<style>
+  .my-select-wrapper {
+    --select-select-all-display: none;
+  }
+</style>
+```
+
+## Deferred apply (consumer recipe)
+
+To fire `onchange` only when the user explicitly confirms a selection (rather than on every toggle), maintain a staged value in the consuming component and swap it in on confirm.
+
+```svelte
+<script>
+  import { Select, Button } from '@juspay/svelte-ui-components';
+
+  let committed = $state([]);
+  let staged = $state([]);
+  let isOpen = $state(false);
+
+  function handleApply() {
+    committed = [...staged];
+    isOpen = false;
+  }
+</script>
+
+<Select
+  {items}
+  multiple
+  bind:open={isOpen}
+  value={staged}
+  onchange={(val) => (staged = val)}
+  placeholder="Pick items (apply to confirm)"
+>
+  {#snippet bottomContent()}
+    <Button text="Apply" onclick={handleApply} />
+  {/snippet}
+</Select>
+```
+
+This approach uses `bottomContent` for the Apply button and `bind:open` to close the dropdown after confirm. No library modifications are needed.
 
 ## CSS Variables
 
@@ -116,6 +214,15 @@ Override these custom properties to theme the component.
 | `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                       |
 | `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.              |
 
+### Select All Row (Multi-Select)
+
+| Variable                            | Default              | CSS Property  | Description                                                                                   |
+| ----------------------------------- | -------------------- | ------------- | --------------------------------------------------------------------------------------------- |
+| `--select-select-all-display`       | `flex`               | display       | Set to `none` to hide the "Select All" row without a library prop.                           |
+| `--select-select-all-border-bottom` | `1px solid #eeeeee`  | border-bottom | Separator line below the "Select All" row.                                                    |
+| `--select-select-all-font-weight`   | `inherit`            | font-weight   | Font weight of the "Select All" label.                                                        |
+| `--select-select-all-color`         | `inherit`            | color         | Text color of the "Select All" label. Inherits the component's text color by default.        |
+
 ### Empty State
 
 | Variable                    | Default    | CSS Property | Description                                      |
@@ -124,6 +231,13 @@ Override these custom properties to theme the component.
 | `--select-empty-color`      | `#999999`  | color        | Text color of the empty state message.           |
 | `--select-empty-font-style` | `italic`   | font-style   | Font style of the empty state message.           |
 | `--select-empty-font-size`  | `inherit`  | font-size    | Font size of the empty state message.            |
+
+### Bottom Content Footer
+
+| Variable                           | Default              | CSS Property | Description                                                     |
+| ---------------------------------- | -------------------- | ------------ | --------------------------------------------------------------- |
+| `--select-bottom-content-padding`  | `8px 12px`           | padding      | Padding inside the bottom content footer area.                  |
+| `--select-bottom-content-border-top` | `1px solid #eeeeee` | border-top   | Top border separating the footer from the options list.         |
 
 ### Pills (Multi-Select)
 

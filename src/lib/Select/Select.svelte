@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { tick } from 'svelte';
+  import { onMount } from 'svelte';
   import type { SelectItem, SelectProperties } from './properties';
   import Pill from '$lib/Pill/Pill.svelte';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
@@ -13,10 +14,11 @@
     disabled = false,
     testId,
     onchange,
-    classes
+    classes,
+    bottomContent,
+    open = $bindable(false)
   }: SelectProperties = $props();
 
-  let isOpen = $state(false);
   let query = $state('');
   let highlightedIndex = $state(-1);
   let containerEl: HTMLDivElement | null = $state(null);
@@ -36,6 +38,10 @@
       : items
   );
 
+  let allSelected = $derived(
+    filteredItems.length > 0 && filteredItems.every((item) => value.includes(item.id))
+  );
+
   let displayText = $derived.by(() => {
     const firstId = value.at(0);
     if (typeof firstId !== 'string') {
@@ -48,13 +54,13 @@
     highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : null
   );
 
-  let searchPlaceholder = $derived(isOpen && displayText.length > 0 ? displayText : placeholder);
+  let searchPlaceholder = $derived(open && displayText.length > 0 ? displayText : placeholder);
 
-  async function open(): Promise<void> {
-    if (disabled || isOpen) {
+  async function openDropdown(): Promise<void> {
+    if (disabled || open) {
       return;
     }
-    isOpen = true;
+    open = true;
     highlightedIndex = -1;
     query = '';
     if (searchable) {
@@ -65,8 +71,8 @@
     }
   }
 
-  function close(): void {
-    isOpen = false;
+  function closeDropdown(): void {
+    open = false;
     query = '';
     highlightedIndex = -1;
   }
@@ -76,11 +82,21 @@
       return;
     }
     if (multiple) {
-      value = value.includes(id) ? value.filter((v) => v !== id) : [...value, id];
+      value = value.includes(id) ? value.filter((vid) => vid !== id) : [...value, id];
+      onchange?.(value);
     } else {
       value = [id];
-      close();
+      closeDropdown();
+      onchange?.(value);
     }
+  }
+
+  function selectAll(): void {
+    if (disabled) {
+      return;
+    }
+    const allIds = filteredItems.map((item) => item.id);
+    value = allSelected ? [] : allIds;
     onchange?.(value);
   }
 
@@ -88,7 +104,7 @@
     if (disabled) {
       return;
     }
-    value = value.filter((v) => v !== id);
+    value = value.filter((vid) => vid !== id);
     onchange?.(value);
   }
 
@@ -119,17 +135,17 @@
 
   function handleTriggerClick(event: MouseEvent): void {
     if (event.target instanceof HTMLInputElement) {
-      if (!isOpen) {
-        open();
+      if (!open) {
+        openDropdown();
       }
       return;
     }
     if (multiple && searchable) {
-      open();
-    } else if (isOpen) {
-      close();
+      openDropdown();
+    } else if (open) {
+      closeDropdown();
     } else {
-      open();
+      openDropdown();
     }
   }
 
@@ -140,28 +156,28 @@
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
-        if (isOpen) {
+        if (open) {
           selectHighlighted();
         } else {
-          open();
+          openDropdown();
         }
         break;
       case ' ':
         if (!(event.target instanceof HTMLInputElement)) {
           event.preventDefault();
-          if (isOpen) {
+          if (open) {
             selectHighlighted();
           } else {
-            open();
+            openDropdown();
           }
         }
         break;
       case 'ArrowDown':
         event.preventDefault();
-        if (isOpen) {
+        if (open) {
           moveHighlight(1);
         } else {
-          open();
+          openDropdown();
         }
         break;
       case 'ArrowUp':
@@ -169,8 +185,8 @@
         moveHighlight(-1);
         break;
       case 'Escape':
-        if (isOpen) {
-          close();
+        if (open) {
+          closeDropdown();
           if (!searchable && triggerEl !== null) {
             triggerEl.focus();
           }
@@ -185,8 +201,8 @@
         }
         break;
       case 'Tab':
-        if (isOpen) {
-          close();
+        if (open) {
+          closeDropdown();
         }
         break;
     }
@@ -197,15 +213,15 @@
       return;
     }
     query = event.target.value;
-    if (!isOpen) {
-      isOpen = true;
+    if (!open) {
+      open = true;
     }
     highlightedIndex = -1;
   }
 
   function handleSearchFocus(): void {
-    if (!isOpen) {
-      open();
+    if (!open) {
+      openDropdown();
     }
   }
 
@@ -215,7 +231,7 @@
       containerEl !== null &&
       !containerEl.contains(event.target)
     ) {
-      close();
+      closeDropdown();
     }
   }
 
@@ -229,7 +245,7 @@
 
 <div
   class="select {classes ?? ''}"
-  class:open={isOpen}
+  class:open
   class:disabled
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
@@ -240,7 +256,7 @@
     onclick={handleTriggerClick}
     onkeydown={handleKeydown}
     role="combobox"
-    aria-expanded={isOpen}
+    aria-expanded={open}
     aria-haspopup="listbox"
     aria-controls={listboxId}
     {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
@@ -276,7 +292,7 @@
       <input
         class="select-search"
         type="text"
-        value={isOpen ? query : displayText}
+        value={open ? query : displayText}
         oninput={handleSearchInput}
         onfocus={handleSearchFocus}
         bind:this={searchInputEl}
@@ -294,11 +310,24 @@
     <span class="select-arrow">{@html chevronDownSvg}</span>
   </div>
 
-  {#if isOpen && !disabled}
+  {#if open && !disabled}
     <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
       {:else}
+        {#if multiple}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            class="select-option select-option-all"
+            class:selected={allSelected}
+            role="option"
+            aria-selected={allSelected}
+            tabindex="-1"
+            onclick={selectAll}
+          >
+            {allSelected ? 'Deselect All' : 'Select All'}
+          </div>
+        {/if}
         {#each filteredItems as item, index (item.id)}
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
@@ -315,6 +344,12 @@
             {item.label}
           </div>
         {/each}
+      {/if}
+
+      {#if typeof bottomContent === 'function'}
+        <div class="select-bottom-content">
+          {@render bottomContent()}
+        </div>
       {/if}
     </div>
   {/if}
@@ -454,11 +489,28 @@
     );
   }
 
+  .select-option-all {
+    display: var(--select-select-all-display, flex);
+    border-bottom: var(--select-select-all-border-bottom, 1px solid #eeeeee);
+    font-weight: var(--select-select-all-font-weight, inherit);
+    color: var(--select-select-all-color, inherit);
+  }
+
+  .select-option-all.selected {
+    background: var(--select-option-hover-background, #f0f0f0);
+  }
+
   .select-empty {
     padding: var(--select-empty-padding, 8px 12px);
     color: var(--select-empty-color, #999999);
     font-style: var(--select-empty-font-style, italic);
     font-size: var(--select-empty-font-size, inherit);
+  }
+
+  /* Bottom content footer area */
+  .select-bottom-content {
+    padding: var(--select-bottom-content-padding, 8px 12px);
+    border-top: var(--select-bottom-content-border-top, 1px solid #eeeeee);
   }
 
   .select-trigger :global(.pill) {

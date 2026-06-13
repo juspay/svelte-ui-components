@@ -5,18 +5,25 @@
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
   let {
-    items,
+    items: rawItems,
     value = $bindable([]),
     multiple = false,
     searchable = false,
     placeholder = '',
     disabled = false,
+    bottomContent,
+    optionIndicator,
     testId,
     onchange,
-    classes
+    classes,
+    open = $bindable(false)
   }: SelectProperties = $props();
 
-  let isOpen = $state(false);
+  function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
+    return source.map((entry) => (typeof entry === 'string' ? { id: entry, label: entry } : entry));
+  }
+
+  let items: SelectItem[] = $derived(normalizeItems(rawItems));
   let query = $state('');
   let highlightedIndex = $state(-1);
   let containerEl: HTMLDivElement | null = $state(null);
@@ -48,13 +55,13 @@
     highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : null
   );
 
-  let searchPlaceholder = $derived(isOpen && displayText.length > 0 ? displayText : placeholder);
+  let searchPlaceholder = $derived(open && displayText.length > 0 ? displayText : placeholder);
 
-  async function open(): Promise<void> {
-    if (disabled || isOpen) {
+  async function openDropdown(): Promise<void> {
+    if (disabled || open) {
       return;
     }
-    isOpen = true;
+    open = true;
     highlightedIndex = -1;
     query = '';
     if (searchable) {
@@ -66,7 +73,7 @@
   }
 
   function close(): void {
-    isOpen = false;
+    open = false;
     query = '';
     highlightedIndex = -1;
   }
@@ -119,17 +126,17 @@
 
   function handleTriggerClick(event: MouseEvent): void {
     if (event.target instanceof HTMLInputElement) {
-      if (!isOpen) {
-        open();
+      if (!open) {
+        openDropdown();
       }
       return;
     }
     if (multiple && searchable) {
-      open();
-    } else if (isOpen) {
+      openDropdown();
+    } else if (open) {
       close();
     } else {
-      open();
+      openDropdown();
     }
   }
 
@@ -140,28 +147,28 @@
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
-        if (isOpen) {
+        if (open) {
           selectHighlighted();
         } else {
-          open();
+          openDropdown();
         }
         break;
       case ' ':
         if (!(event.target instanceof HTMLInputElement)) {
           event.preventDefault();
-          if (isOpen) {
+          if (open) {
             selectHighlighted();
           } else {
-            open();
+            openDropdown();
           }
         }
         break;
       case 'ArrowDown':
         event.preventDefault();
-        if (isOpen) {
+        if (open) {
           moveHighlight(1);
         } else {
-          open();
+          openDropdown();
         }
         break;
       case 'ArrowUp':
@@ -169,7 +176,7 @@
         moveHighlight(-1);
         break;
       case 'Escape':
-        if (isOpen) {
+        if (open) {
           close();
           if (!searchable && triggerEl !== null) {
             triggerEl.focus();
@@ -185,7 +192,7 @@
         }
         break;
       case 'Tab':
-        if (isOpen) {
+        if (open) {
           close();
         }
         break;
@@ -197,15 +204,15 @@
       return;
     }
     query = event.target.value;
-    if (!isOpen) {
-      isOpen = true;
+    if (!open) {
+      open = true;
     }
     highlightedIndex = -1;
   }
 
   function handleSearchFocus(): void {
-    if (!isOpen) {
-      open();
+    if (!open) {
+      openDropdown();
     }
   }
 
@@ -229,7 +236,7 @@
 
 <div
   class="select {classes ?? ''}"
-  class:open={isOpen}
+  class:open={open}
   class:disabled
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
@@ -240,7 +247,7 @@
     onclick={handleTriggerClick}
     onkeydown={handleKeydown}
     role="combobox"
-    aria-expanded={isOpen}
+    aria-expanded={open}
     aria-haspopup="listbox"
     aria-controls={listboxId}
     {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
@@ -276,7 +283,7 @@
       <input
         class="select-search"
         type="text"
-        value={isOpen ? query : displayText}
+        value={open ? query : displayText}
         oninput={handleSearchInput}
         onfocus={handleSearchFocus}
         bind:this={searchInputEl}
@@ -294,7 +301,7 @@
     <span class="select-arrow">{@html chevronDownSvg}</span>
   </div>
 
-  {#if isOpen && !disabled}
+  {#if open && !disabled}
     <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
@@ -303,6 +310,7 @@
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="select-option"
+            class:multi={multiple}
             class:selected={value.includes(item.id)}
             class:highlighted={index === highlightedIndex}
             role="option"
@@ -312,9 +320,23 @@
             onclick={() => selectItem(item.id)}
             onmouseenter={() => (highlightedIndex = index)}
           >
+            {#if multiple}
+              {#if typeof optionIndicator === 'function'}
+                {@render optionIndicator({ checked: value.includes(item.id) })}
+              {:else}
+                <span class="select-option-indicator" aria-hidden="true"
+                  >{value.includes(item.id) ? '☑' : '☐'}</span
+                >
+              {/if}
+            {/if}
             {item.label}
           </div>
         {/each}
+      {/if}
+      {#if typeof bottomContent === 'function'}
+        <div class="select-bottom-content">
+          {@render bottomContent()}
+        </div>
       {/if}
     </div>
   {/if}
@@ -436,6 +458,12 @@
     transition: background 0.1s;
   }
 
+  .select-option.multi {
+    display: flex;
+    align-items: center;
+    gap: var(--select-option-gap, 0);
+  }
+
   .select-option:hover,
   .select-option.highlighted {
     background: var(--select-option-hover-background, #f0f0f0);
@@ -454,11 +482,23 @@
     );
   }
 
+  .select-option-indicator {
+    display: inline-flex;
+    align-items: center;
+    color: var(--select-option-indicator-color, currentColor);
+    flex-shrink: 0;
+  }
+
   .select-empty {
     padding: var(--select-empty-padding, 8px 12px);
     color: var(--select-empty-color, #999999);
     font-style: var(--select-empty-font-style, italic);
     font-size: var(--select-empty-font-size, inherit);
+  }
+
+  .select-bottom-content {
+    border-top: var(--select-bottom-content-border, none);
+    padding: var(--select-bottom-content-padding, 8px 12px);
   }
 
   .select-trigger :global(.pill) {

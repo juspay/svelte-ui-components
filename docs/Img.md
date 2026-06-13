@@ -19,6 +19,7 @@ An image component with automatic fallback. If the primary `src` fails to load (
 | src      | `string`         | Yes      | `-`     | The primary image URL to display.                                                                                                                                      |
 | alt      | `string`         | Yes      | `-`     | Alt text for the image.                                                                                                                                                |
 | fallback | `string \| null` | No       | `-`     | Fallback image URL. If the primary src fails to load (onerror), the component switches to this URL.                                                                    |
+| testId   | `string`         | No       | `-`     | Test identifier applied as `data-pw` attribute on the `<img>` element for Playwright test selectors.                                                                  |
 | classes  | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 | inlineSvg | `boolean`       | No       | `false` | Fetch `.svg` / `data:image/svg+xml` sources and inline their markup into an `<svg>` host so page CSS (`currentColor`, fill/stroke overrides) applies. Non-SVG sources always render the plain `<img>`. If fetching or parsing fails, the component falls back to the plain `<img>` (and from there to the regular `fallback`/`onerror` chain). |
 | transformSvg | `(svg: string) => string` | No | `-` | Hook to rewrite the fetched SVG markup before it is inlined (e.g. recolour hardcoded fills). Providing a transform implies `inlineSvg`. The inlining effect re-runs when the prop identity changes, so a closure over reactive state (e.g. a theme colour) re-renders live. JS-only prop (not exposed as a web-component attribute). |
@@ -76,5 +77,5 @@ Override these custom properties to theme the component.
 Tag: `<sui-img>`
 
 ```html
-<sui-img src="/photo.jpg" alt="Description" fallback="/fallback.jpg"></sui-img>
+<sui-img src="/photo.jpg" alt="Description" fallback="/fallback.jpg" test-id="my-img"></sui-img>
 ```

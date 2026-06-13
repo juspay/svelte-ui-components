@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { ImgProperties } from './properties';
 
-  let { src, alt, fallback, onerror, classes, inlineSvg, transformSvg }: ImgProperties = $props();
+  let { src, alt, fallback, onerror, classes, inlineSvg, transformSvg, testId }: ImgProperties =
+    $props();
 
   let currentSrc = $derived(src);
   // Per-source failure marker: when inlining a given URL fails we fall back to
@@ -114,9 +115,10 @@
     role={alt.length > 0 ? 'img' : null}
     aria-label={alt.length > 0 ? alt : null}
     aria-hidden={alt.length === 0 ? 'true' : null}
+    data-pw={testId}
   ></svg>
 {:else}
-  <img class={classes ?? ''} src={currentSrc} {alt} onerror={handleFallback} />
+  <img class={classes ?? ''} src={currentSrc} {alt} onerror={handleFallback} data-pw={testId} />
 {/if}
 
 <style>

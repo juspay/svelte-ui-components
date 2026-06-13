@@ -24,6 +24,7 @@ export type OptionalImgProperties = {
    * state (e.g. a theme colour) to get live re-renders on theme change.
    */
   transformSvg?: (svg: string) => string;
+  testId?: string;
 };
 
 export type ImgEventProperties = {

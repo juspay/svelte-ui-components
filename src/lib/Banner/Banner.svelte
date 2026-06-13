@@ -15,10 +15,14 @@
     dismissIcon,
     onclick,
     ondismiss,
-    classes
+    classes,
+    title,
+    role = null
   }: BannerProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
+
+  let rootClass = $derived(['banner', classes ?? ''].filter((c) => c.length > 0).join(' '));
 
   function handleClick(event: MouseEvent): void {
     onclick?.(event);
@@ -43,10 +47,10 @@
 {#if visible}
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
-    class="banner {classes ?? ''}"
+    class={rootClass}
     onclick={interactive ? handleClick : null}
     onkeydown={interactive ? handleKeydown : null}
-    role={interactive ? 'button' : null}
+    role={role !== null ? role : interactive ? 'button' : null}
     tabindex={interactive ? 0 : null}
     data-pw={typeof testId === 'string' ? testId : null}
     transition:slide={{ duration: 300 }}
@@ -56,11 +60,18 @@
         {@render icon()}
       </div>
     {/if}
-    <div class="banner-text">
-      {text}
-      {#if typeof linkText === 'string' && linkText.length > 0}
-        <span class="banner-link-text">{linkText}</span>
+    <div class="banner-body">
+      {#if typeof title === 'function'}
+        <div class="banner-title">
+          {@render title()}
+        </div>
       {/if}
+      <div class="banner-text">
+        {text}
+        {#if typeof linkText === 'string' && linkText.length > 0}
+          <span class="banner-link-text">{linkText}</span>
+        {/if}
+      </div>
     </div>
     {#if typeof rightContent === 'function'}
       <div class="banner-right">
@@ -102,6 +113,8 @@
     font-weight: var(--banner-font-weight, 500);
     line-height: var(--banner-line-height, 1.3);
     border-bottom: var(--banner-border-bottom, none);
+    border: var(--banner-border);
+    border-radius: var(--banner-border-radius, 0);
     cursor: var(--banner-cursor, pointer);
     position: var(--banner-position, sticky);
     top: var(--banner-top, 0);
@@ -119,6 +132,20 @@
   .banner-icon :global(svg) {
     width: var(--banner-icon-size, 18px);
     height: var(--banner-icon-size, 18px);
+  }
+
+  .banner-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: var(--banner-body-gap, 0);
+  }
+
+  .banner-title {
+    font-weight: var(--banner-title-font-weight, inherit);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .banner-text {

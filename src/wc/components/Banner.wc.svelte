@@ -9,6 +9,7 @@
       visible: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      role: { type: 'String' },
       onclick: { type: 'Object' },
       ondismiss: { type: 'Object' }
     }
@@ -23,6 +24,9 @@
 <Banner {...props}>
   {#snippet icon()}
     <slot name="icon"></slot>
+  {/snippet}
+  {#snippet title()}
+    <slot name="title"></slot>
   {/snippet}
   {#snippet rightContent()}
     <slot name="right-content"></slot>

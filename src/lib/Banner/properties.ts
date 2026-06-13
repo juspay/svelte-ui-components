@@ -10,6 +10,7 @@ export type MandatoryBannerProperties = {
 
 export type OptionalBannerProperties = {
   icon?: Snippet;
+  title?: Snippet;
   linkText?: string;
   dismissible?: boolean;
   visible?: boolean;
@@ -17,6 +18,7 @@ export type OptionalBannerProperties = {
   rightContent?: Snippet;
   dismissIcon?: Snippet;
   classes?: string;
+  role?: string | null;
 };
 
 export type BannerEventProperties = {

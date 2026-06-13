@@ -42,7 +42,8 @@ export const componentNav: NavGroup[] = [
       { name: 'Calendar', slug: 'calendar' },
       { name: 'Choicebox', slug: 'choicebox' },
       { name: 'Color Picker', slug: 'color-picker' },
-      { name: 'SplitInput', slug: 'split-input' }
+      { name: 'SplitInput', slug: 'split-input' },
+      { name: 'FileInput', slug: 'file-input' }
     ]
   },
   {

@@ -7,6 +7,7 @@
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
+      leadingIcon: { type: 'Object' },
       dismissIcon: { type: 'Object' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
@@ -21,6 +22,9 @@
 </script>
 
 <Pill {...props}>
+  {#snippet leadingIcon()}
+    <slot name="leading-icon"></slot>
+  {/snippet}
   {#snippet dismissIcon()}
     <slot name="dismiss-icon"></slot>
   {/snippet}

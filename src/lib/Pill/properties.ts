@@ -11,6 +11,13 @@ export type OptionalPillProperties = {
   disabled?: boolean;
   testId?: string;
   dismissIcon?: Snippet;
+  /**
+   * A Svelte snippet rendered immediately before the text label inside a
+   * `<span class="pill-leading-icon">` wrapper. Use for icons, logos, or any
+   * inline decoration. The wrapper does not receive `aria-hidden` — leave
+   * accessibility attributes on the icon itself.
+   */
+  leadingIcon?: Snippet;
   classes?: string;
 };
 

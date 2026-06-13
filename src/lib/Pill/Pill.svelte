@@ -9,6 +9,7 @@
     disabled = false,
     testId,
     dismissIcon,
+    leadingIcon,
     onclick,
     ondismiss,
     classes
@@ -52,6 +53,9 @@
   aria-disabled={interactive && disabled ? true : null}
   data-pw={typeof testId === 'string' ? testId : null}
 >
+  {#if typeof leadingIcon === 'function'}
+    <span class="pill-leading-icon">{@render leadingIcon()}</span>
+  {/if}
   <span class="pill-text">{text}</span>
   {#if dismissible}
     <div class="pill-dismiss">
@@ -104,6 +108,12 @@
     overflow: hidden;
     text-overflow: var(--pill-text-overflow, ellipsis);
     white-space: nowrap;
+  }
+
+  .pill-leading-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 
   .pill-dismiss {

@@ -1,12 +1,14 @@
 import type { Snippet } from 'svelte';
 
-export type CardProperties = MandatoryCardProperties & OptionalCardProperties;
+export type CardProperties = OptionalCardProperties;
 
-export type MandatoryCardProperties = {
-  children: Snippet;
-};
+export type MandatoryCardProperties = Record<string, never>;
 
 export type OptionalCardProperties = {
+  /**
+   * Main content body of the card. Rendered inside the `.card-content` container.
+   */
+  children?: Snippet;
   title?: string;
   description?: string;
   classes?: string;

@@ -37,7 +37,7 @@
   },
   {
     "name": "Card",
-    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults — no consumer overrides required for basic usage."
+    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults — no consumer overrides required for basic usage. Custom multi-zone layouts (metric tiles, integration rows) are achieved via the children snippet using plain flexbox in the consumer."
   },
   {
     "name": "Carousel",

@@ -111,6 +111,70 @@
   <p class="demo-hint">Tab to the interactive cards and press Enter or Space to activate.</p>
 </div>
 
+<div class="demo-section">
+  <h2 class="demo-section-title">Custom Layout (Consumer Recipe)</h2>
+  <p class="demo-hint" style="margin: 0 0 16px;">
+    Place the layout inside the default content area — the Card provides the container, shadow, and
+    click semantics; flex/grid arrangement is the consumer's responsibility.
+  </p>
+
+  <div class="demo-row" style="flex-direction: column; gap: 12px; max-width: 640px;">
+    <!-- Metric row: icon left, label+value center, badge right -->
+    <div class="card-row-theme">
+      <Card testId="metric-row-card">
+        <div class="card-row">
+          <span class="row-icon">📊</span>
+          <div class="row-label-group">
+            <span class="row-label">Total Revenue</span>
+            <span class="row-value">$48,320</span>
+          </div>
+          <span class="row-badge row-badge-up">+12.4%</span>
+        </div>
+      </Card>
+    </div>
+
+    <!-- Integration row: logo left, name+status center, connect/disconnect right -->
+    <div class="card-row-theme">
+      <Card testId="integration-row-card">
+        <div class="card-row">
+          <span class="row-icon">🛒</span>
+          <div class="row-label-group">
+            <span class="row-label">Shopify</span>
+            <span class="row-status row-status-connected">Connected</span>
+          </div>
+          <div class="disconnect-btn">
+            <Button text="Disconnect" />
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    <!-- Clickable integration row: the entire card is interactive -->
+    <div class="card-row-theme card-row-clickable">
+      <Card onclick={handleCardClick('WooCommerce')} testId="integration-woo-card">
+        <div class="card-row">
+          <span class="row-icon">🧩</span>
+          <div class="row-label-group">
+            <span class="row-label">WooCommerce</span>
+            <span class="row-status row-status-disconnected">Not connected</span>
+          </div>
+          <span class="row-arrow">›</span>
+        </div>
+      </Card>
+    </div>
+
+    <!-- Only two zones (no center) — gap fills the space -->
+    <div class="card-row-theme">
+      <Card testId="two-zone-card">
+        <div class="card-row">
+          <span class="row-label">Plan</span>
+          <span class="row-badge">Pro</span>
+        </div>
+      </Card>
+    </div>
+  </div>
+</div>
+
 <style>
   .demo-section {
     margin-bottom: 40px;
@@ -118,8 +182,6 @@
 
   .demo-section-title {
     margin: 0 0 16px;
-    font-size: 15px;
-    font-weight: 600;
     color: var(--doc-text-secondary, #6b7280);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -174,13 +236,12 @@
   }
 
   .platform-icon {
-    font-size: 28px;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .platform-name {
-    font-size: 13px;
-    font-weight: 600;
     color: var(--doc-text, #111827);
   }
 
@@ -188,20 +249,99 @@
     padding: 4px 10px;
     background: var(--doc-accent-subtle-bg);
     border-radius: 4px;
-    font-size: 13px;
     color: var(--doc-accent-text);
-    font-weight: 600;
   }
 
   .click-status {
     margin: 0 0 12px;
-    font-size: 13px;
     color: var(--doc-text-secondary, #6b7280);
   }
 
   .demo-hint {
     margin: 12px 0 0;
-    font-size: 12px;
     color: var(--doc-text-secondary, #9ca3af);
+  }
+
+  /* ── Custom layout demo ─────────────────────────────── */
+
+  .card-row-theme {
+    --card-background: var(--doc-demo-bg);
+    --card-border: 1px solid var(--doc-border);
+    --card-width: 100%;
+    --card-content-padding: 0;
+  }
+
+  .card-row-clickable {
+    --card-border-radius: 10px;
+    --card-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .row-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .row-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .row-label {
+    color: var(--doc-text, #111827);
+  }
+
+  .row-value {
+    color: var(--doc-text, #111827);
+  }
+
+  .row-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--doc-accent-subtle-bg, #eff6ff);
+    color: var(--doc-accent-text, #3b82f6);
+  }
+
+  .row-badge-up {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  .row-status {
+    display: block;
+  }
+
+  .row-status-connected {
+    color: #059669;
+  }
+
+  .row-status-disconnected {
+    color: var(--doc-text-secondary, #6b7280);
+  }
+
+  .row-arrow {
+    color: var(--doc-text-secondary, #9ca3af);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .disconnect-btn {
+    --button-padding: 4px 12px;
+    --button-border-radius: 6px;
+    --button-color: transparent;
+    --button-border: 1px solid var(--doc-border, #e5e7eb);
+    --button-text-color: var(--doc-text, #374151);
+    --button-hover-color: var(--doc-demo-bg, #f9fafb);
   }
 </style>

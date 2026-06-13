@@ -21,6 +21,7 @@ export const componentNav: NavGroup[] = [
   {
     category: 'Navigation',
     items: [
+      { name: 'Breadcrumb', slug: 'breadcrumb' },
       { name: 'Tabs', slug: 'tabs' },
       { name: 'Stepper', slug: 'stepper' },
       { name: 'Pagination', slug: 'pagination' },

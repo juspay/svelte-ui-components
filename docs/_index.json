@@ -16,6 +16,10 @@
     "description": "A notification banner with optional icon snippet, text content, inline link text, right content slot, and a dismissible close button. Supports click interaction with keyboard accessibility. The `visible` prop is bindable for dismiss state control. Uses slide transition for show/hide."
   },
   {
+    "name": "Breadcrumb",
+    "description": "A navigation trail component that enforces nav/ol/li semantics and aria-label. Delegates visual rendering of each crumb to a required item snippet (receives href, label, isLast, index), enabling icons, dropdown crumbs, and overflow menus. An optional separator snippet replaces the default '/' text node between items."
+  },
+  {
     "name": "Book",
     "description": "A 3D book display component with animated page turning. Renders multiple pages with content snippets and supports swipe/click navigation. Includes page indicator dots and configurable perspective and rotation."
   },

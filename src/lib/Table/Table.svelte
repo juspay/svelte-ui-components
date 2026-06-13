@@ -328,11 +328,11 @@
   }
 
   .sort-button :global(.sort-icon-idle) {
-    opacity: var(--table-sort-idle-opacity, 0.3);
+    opacity: var(--table-sort-idle-opacity, 0.5);
   }
 
   .sort-button:hover :global(.sort-icon-idle) {
-    opacity: 0.6;
+    opacity: var(--table-sort-idle-hover-opacity, 0.85);
   }
 
   .table-empty {

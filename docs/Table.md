@@ -213,7 +213,8 @@ Override these custom properties to theme the component.
 | `--table-sort-button-hover-color`      | `-`                | color            | Color of the sort button icon on hover.           |
 | `--table-sort-button-hover-background` | `rgba(0,0,0,0.05)` | background-color | Background of the sort button on hover.           |
 | `--table-sort-icon-size`               | `14px`             | width, height    | Size of the sort indicator SVG icons.             |
-| `--table-sort-idle-opacity`            | `0.3`              | opacity          | Opacity of the default (unsorted) sort indicator. |
+| `--table-sort-idle-opacity`            | `0.5`              | opacity          | Opacity of the default (unsorted) sort indicator. |
+| `--table-sort-idle-hover-opacity`      | `0.85`             | opacity          | Opacity of the default sort indicator on hover (before a column is sorted). |
 
 ### Empty State
 

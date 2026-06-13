@@ -6,6 +6,7 @@
       src: { type: 'String', reflect: true },
       alt: { type: 'String', reflect: true },
       fallback: { type: 'String', reflect: true },
+      testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onerror: { type: 'Object' }
     }

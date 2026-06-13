@@ -16,6 +16,8 @@ export type OptionalCalendarProperties = {
   previousMonthIcon?: Snippet;
   nextMonthIcon?: Snippet;
   classes?: string;
+  /** The month to display initially (only year+month are used). Defaults to the current month. */
+  initialMonth?: Date | null;
 };
 
 export type CalendarEventProperties = {

@@ -11,7 +11,8 @@
     classes,
     hasMore = false,
     prevButtonTestId,
-    nextButtonTestId
+    nextButtonTestId,
+    onLoadMore
   }: PaginationProperties = $props();
 
   function generatePages(total: number, current: number, siblings: number): (number | '...')[] {
@@ -52,12 +53,23 @@
   }
 
   let isNextDisabled = $derived(disabled || (!hasMore && currentPage >= totalPages));
+  // Cursor mode: on the last known page with more to load, swap the next-button
+  // for a load-more CTA.
+  let isLoadMore = $derived(hasMore && currentPage >= totalPages);
+
+  function loadMore(): void {
+    if (disabled) {
+      return;
+    }
+    currentPage = currentPage + 1;
+    onLoadMore?.();
+  }
 </script>
 
 <nav
   class="pagination {classes ?? ''}"
   class:disabled
-  data-pw={typeof testId === 'string' ? testId : null}
+  data-pw={typeof testId === 'string' && testId.length > 0 ? testId : null}
 >
   <button
     class="page-button prev-button"
@@ -86,15 +98,27 @@
     {/if}
   {/each}
 
-  <button
-    class="page-button next-button"
-    disabled={isNextDisabled}
-    onclick={() => goToPage(currentPage + 1)}
-    aria-label="Next page"
-    data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
-  >
-    &#8250;
-  </button>
+  {#if isLoadMore}
+    <button
+      class="page-button load-more-button"
+      {disabled}
+      onclick={loadMore}
+      aria-label="Load more"
+      data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
+    >
+      &#8250;
+    </button>
+  {:else}
+    <button
+      class="page-button next-button"
+      disabled={isNextDisabled}
+      onclick={() => goToPage(currentPage + 1)}
+      aria-label="Next page"
+      data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
+    >
+      &#8250;
+    </button>
+  {/if}
 </nav>
 
 <style>
@@ -137,6 +161,19 @@
     background: var(--pagination-active-background, #3a4550);
     border: var(--pagination-active-border, 1px solid #3a4550);
     font-weight: var(--pagination-active-font-weight, 600);
+  }
+
+  .load-more-button {
+    width: var(--pagination-load-more-width, auto);
+    padding: var(--pagination-load-more-padding, 6px 14px);
+    color: var(--pagination-load-more-color, #3a4550);
+    background: var(--pagination-load-more-background, transparent);
+    border-color: var(--pagination-load-more-border-color, #d1d5db);
+  }
+
+  .load-more-button:hover:not(:disabled) {
+    color: var(--pagination-load-more-hover-color, #111827);
+    background: var(--pagination-load-more-hover-background, #f3f4f6);
   }
 
   .page-button:disabled {

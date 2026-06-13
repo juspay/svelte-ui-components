@@ -7,7 +7,9 @@
     delay = 0,
     testId,
     classes,
-    children
+    children,
+    icon,
+    content
   }: TooltipProperties = $props();
 
   let visible = $state(false);
@@ -41,11 +43,18 @@
   onfocusout={hideTooltip}
   data-pw={testId}
 >
+  {#if typeof icon === 'function'}
+    <span class="tooltip-icon" aria-hidden="true">{@render icon()}</span>
+  {/if}
   {@render children()}
   {#if visible}
     <div class="tooltip-bubble {position}" role="tooltip">
       <div class="tooltip-arrow"></div>
-      <span class="tooltip-text">{text}</span>
+      {#if typeof content === 'function'}
+        {@render content()}
+      {:else}
+        <span class="tooltip-text">{text}</span>
+      {/if}
     </div>
   {/if}
 </div>
@@ -54,6 +63,11 @@
   .tooltip-container {
     position: relative;
     display: var(--tooltip-container-display, inline-flex);
+  }
+
+  .tooltip-icon {
+    display: contents;
+    color: var(--tooltip-icon-color, currentColor);
   }
 
   .tooltip-bubble {

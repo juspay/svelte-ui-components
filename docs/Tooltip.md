@@ -28,9 +28,11 @@ A floating tooltip that appears on hover or focus of a trigger element. The tool
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet  | Type      | Description                                                                                                |
-| -------- | --------- | ---------------------------------------------------------------------------------------------------------- |
-| children | `Snippet` | The trigger element(s) that the tooltip wraps. The tooltip appears when hovering or focusing this content. |
+| Snippet  | Type      | Description                                                                                                                                               |
+| -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children | `Snippet` | The trigger element(s) that the tooltip wraps. The tooltip appears when hovering or focusing this content.                                                |
+| icon     | `Snippet` | Optional leading icon rendered in the trigger wrapper before `children`. No default glyph is provided — consumers supply their own SVG or icon component. |
+| content  | `Snippet` | Optional bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. Use for rich multi-line or interactive bubble content.   |
 
 ## Events
 
@@ -40,24 +42,25 @@ This component does not emit any events.
 
 Override these custom properties to theme the component.
 
-| Variable                      | Default                              | CSS Property        | Description                                                                 |
-| ----------------------------- | ------------------------------------ | ------------------- | --------------------------------------------------------------------------- |
-| `--tooltip-container-display` | `inline-flex`                        | display             | Display mode of the wrapper element around the trigger and tooltip.         |
-| `--tooltip-z-index`           | `1000`                               | z-index             | Stacking order of the tooltip bubble.                                       |
-| `--tooltip-max-width`         | `200px`                              | max-width           | Maximum width of the tooltip bubble before text wraps.                      |
-| `--tooltip-background`        | `#333333`                            | background          | Background color of the tooltip bubble.                                     |
-| `--tooltip-color`             | `#ffffff`                            | color               | Text color inside the tooltip bubble.                                       |
-| `--tooltip-font-size`         | `12px`                               | font-size           | Font size of the tooltip text.                                              |
-| `--tooltip-font-weight`       | `400`                                | font-weight         | Font weight of the tooltip text.                                            |
-| `--tooltip-font-family`       | `-`                                  | font-family         | Font family of the tooltip text.                                            |
-| `--tooltip-padding`           | `6px 10px`                           | padding             | Inner padding of the tooltip bubble.                                        |
-| `--tooltip-border-radius`     | `4px`                                | border-radius       | Corner rounding of the tooltip bubble.                                      |
-| `--tooltip-border`            | `none`                               | border              | Border of the tooltip bubble.                                               |
-| `--tooltip-box-shadow`        | `0 2px 6px rgba(0, 0, 0, 0.15)`      | box-shadow          | Shadow effect around the tooltip bubble.                                    |
-| `--tooltip-opacity-duration`  | `0.15s`                              | transition duration | Duration of the tooltip opacity fade transition.                            |
-| `--tooltip-offset`            | `8px`                                | calc offset         | Distance between the tooltip bubble and the trigger element.                |
-| `--tooltip-arrow-size`        | `5px`                                | border-width        | Size of the directional arrow pointing from the tooltip toward the trigger. |
-| `--tooltip-arrow-color`       | `var(--tooltip-background, #333333)` | border-color        | Color of the directional arrow. Defaults to match the tooltip background.   |
+| Variable                      | Default                              | CSS Property        | Description                                                                    |
+| ----------------------------- | ------------------------------------ | ------------------- | ------------------------------------------------------------------------------ |
+| `--tooltip-container-display` | `inline-flex`                        | display             | Display mode of the wrapper element around the trigger and tooltip.            |
+| `--tooltip-z-index`           | `1000`                               | z-index             | Stacking order of the tooltip bubble.                                          |
+| `--tooltip-max-width`         | `200px`                              | max-width           | Maximum width of the tooltip bubble before text wraps.                         |
+| `--tooltip-background`        | `#333333`                            | background          | Background color of the tooltip bubble.                                        |
+| `--tooltip-color`             | `#ffffff`                            | color               | Text color inside the tooltip bubble.                                          |
+| `--tooltip-font-size`         | `12px`                               | font-size           | Font size of the tooltip text.                                                 |
+| `--tooltip-font-weight`       | `400`                                | font-weight         | Font weight of the tooltip text.                                               |
+| `--tooltip-font-family`       | `-`                                  | font-family         | Font family of the tooltip text.                                               |
+| `--tooltip-padding`           | `6px 10px`                           | padding             | Inner padding of the tooltip bubble.                                           |
+| `--tooltip-border-radius`     | `4px`                                | border-radius       | Corner rounding of the tooltip bubble.                                         |
+| `--tooltip-border`            | `none`                               | border              | Border of the tooltip bubble.                                                  |
+| `--tooltip-box-shadow`        | `0 2px 6px rgba(0, 0, 0, 0.15)`      | box-shadow          | Shadow effect around the tooltip bubble.                                       |
+| `--tooltip-opacity-duration`  | `0.15s`                              | transition duration | Duration of the tooltip opacity fade transition.                               |
+| `--tooltip-offset`            | `8px`                                | calc offset         | Distance between the tooltip bubble and the trigger element.                   |
+| `--tooltip-arrow-size`        | `5px`                                | border-width        | Size of the directional arrow pointing from the tooltip toward the trigger.    |
+| `--tooltip-arrow-color`       | `var(--tooltip-background, #333333)` | border-color        | Color of the directional arrow. Defaults to match the tooltip background.      |
+| `--tooltip-icon-color`        | `currentColor`                       | color               | Color of the icon snippet rendered in the trigger wrapper via the `icon` slot. |
 
 ## Type Reference
 
@@ -81,6 +84,8 @@ Tag: `<sui-tooltip>`
 
 ### Slots
 
-| Slot Name   | Maps to Snippet | Description                                          |
-| ----------- | --------------- | ---------------------------------------------------- |
-| _(default)_ | `children`      | The trigger element that shows the tooltip on hover. |
+| Slot Name   | Maps to Snippet | Description                                                                             |
+| ----------- | --------------- | --------------------------------------------------------------------------------------- |
+| _(default)_ | `children`      | The trigger element that shows the tooltip on hover.                                    |
+| `icon`      | `icon`          | Optional leading icon in the trigger wrapper. No default — consumers provide their own. |
+| `content`   | `content`       | Optional rich bubble body. Replaces the plain `text` string when provided.              |

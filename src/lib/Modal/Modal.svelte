@@ -57,7 +57,7 @@
   }
 
   function handleOverlayClick(event: MouseEvent) {
-    if (event.target && event.target === overlayDiv) {
+    if (event.target === overlayDiv) {
       debounce(() => {
         onoverlayClick?.();
       });
@@ -110,7 +110,7 @@
         <div class="modal-content {size}">
           {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
             <div class="header">
-              {#if header.leftImage}
+              {#if typeof header.leftImage === 'string' && header.leftImage.length > 0}
                 <div
                   onclick={handleLeftImageClick}
                   {onkeydown}
@@ -121,12 +121,12 @@
                   <img class="header-left-img" src={header.leftImage} alt="" />
                 </div>
               {/if}
-              {#if header.text}
+              {#if typeof header.text === 'string' && header.text.length > 0}
                 <div class="header-text" data-pw={header.testId}>
                   {header.text}
                 </div>
               {/if}
-              {#if header.rightImage}
+              {#if typeof header.rightImage === 'string' && header.rightImage.length > 0}
                 <div
                   role="button"
                   tabindex="0"
@@ -255,6 +255,7 @@
     padding: var(--modal-header-padding, 18px 20px);
     border-radius: var(--modal-header-border-radius, 0px);
     border-bottom: var(--modal-header-border-bottom, none);
+    align-items: var(--modal-header-align-items, center);
   }
 
   .footer-content {

@@ -85,6 +85,7 @@ Override these custom properties to theme the component.
 | `--modal-header-padding`                                 | `18px 20px`        | padding                         | Padding inside the header bar.                                     |
 | `--modal-header-border-radius`                           | `0px`              | border-radius                   | Corner rounding of the header bar.                                 |
 | `--modal-header-border-bottom`                           | `none`             | border-bottom                   | Bottom border of the header bar.                                   |
+| `--modal-header-align-items`                             | `center`           | align-items                     | Vertical alignment of items inside the header bar.                 |
 | `--modal-footer-background-color`                        | `#f6f7f9`          | background-color                | Background color of the footer area.                               |
 | `--modal-footer-padding`                                 | `18px 20px`        | padding                         | Padding inside the footer area.                                    |
 | `--modal-footer-border-radius`                           | `0px`              | border-radius                   | Corner rounding of the footer area.                                |

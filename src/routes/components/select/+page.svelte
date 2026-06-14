@@ -44,6 +44,7 @@
   let stringItemsValue: string[] = $state([]);
   let bottomContentValue: string[] = $state([]);
   let customIndicatorValue: string[] = $state([]);
+  let alignValue: string[] = $state([]);
 </script>
 
 <div class="page-header">
@@ -135,6 +136,20 @@
   {#if customIndicatorValue.length > 0}
     <p class="demo-info">Selected: {customIndicatorValue.join(', ')}</p>
   {/if}
+</div>
+
+<h3>Right-aligned dropdown</h3>
+<p>
+  Anchor the dropdown panel to the trigger's right edge (so a content-wider panel hangs leftward
+  instead of overflowing).
+</p>
+<div class="demo-row" style="max-width: 200px; margin-left: 220px;">
+  <Select
+    items={cities}
+    bind:value={alignValue}
+    placeholder="Right aligned"
+    dropdownAlign="right"
+  />
 </div>
 
 <style>

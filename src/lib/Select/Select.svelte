@@ -17,7 +17,8 @@
     itemTestId,
     onchange,
     classes,
-    open = $bindable(false)
+    open = $bindable(false),
+    dropdownAlign = 'left'
   }: SelectProperties = $props();
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
@@ -303,7 +304,13 @@
   </div>
 
   {#if open && !disabled}
-    <div class="select-dropdown" role="listbox" id={listboxId} aria-multiselectable={multiple}>
+    <div
+      class="select-dropdown"
+      class:select-dropdown-right={dropdownAlign === 'right'}
+      role="listbox"
+      id={listboxId}
+      aria-multiselectable={multiple}
+    >
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
       {:else}
@@ -455,6 +462,13 @@
     max-height: var(--select-dropdown-max-height, 200px);
     overflow-y: auto;
     z-index: var(--select-dropdown-z-index, 10);
+  }
+
+  .select-dropdown-right {
+    left: auto;
+    right: 0;
+    min-width: 100%;
+    width: max-content;
   }
 
   .select-option {

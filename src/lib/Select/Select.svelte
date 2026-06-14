@@ -236,7 +236,7 @@
 
 <div
   class="select {classes ?? ''}"
-  class:open={open}
+  class:open
   class:disabled
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}

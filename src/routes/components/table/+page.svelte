@@ -168,16 +168,26 @@
     {#snippet paginatorSlot()}
       <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
         <button
-          onclick={() => { if (currentPage > 1) currentPage -= 1; }}
+          onclick={() => {
+            if (currentPage > 1) {
+              currentPage -= 1;
+            }
+          }}
           disabled={currentPage === 1}
           style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
-        >‹ Prev</button>
+          >‹ Prev</button
+        >
         <span style="color: #6b7280;">Page {currentPage} of {totalPages}</span>
         <button
-          onclick={() => { if (currentPage < totalPages) currentPage += 1; }}
+          onclick={() => {
+            if (currentPage < totalPages) {
+              currentPage += 1;
+            }
+          }}
           disabled={currentPage === totalPages}
           style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
-        >Next ›</button>
+          >Next ›</button
+        >
       </div>
     {/snippet}
   </Table>

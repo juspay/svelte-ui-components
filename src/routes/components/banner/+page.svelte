@@ -56,10 +56,7 @@
   <div
     style="--banner-background: #fff0f0; --banner-color: #c0392b; --banner-border: 1px solid #e74c3c; --banner-border-radius: 6px; --banner-position: static; width: 100%;"
   >
-    <Banner
-      text="Payment failed. Please check your card details and try again."
-      role="alert"
-    />
+    <Banner text="Payment failed. Please check your card details and try again." role="alert" />
   </div>
 
   <div

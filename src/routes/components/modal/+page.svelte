@@ -53,7 +53,10 @@
       >
         {#snippet content()}
           <div style="padding: 16px;">
-            <p>The header uses <code>--modal-header-align-items: flex-start</code> so multi-line header content aligns to the top instead of the default center.</p>
+            <p>
+              The header uses <code>--modal-header-align-items: flex-start</code> so multi-line header
+              content aligns to the top instead of the default center.
+            </p>
           </div>
         {/snippet}
       </Modal>

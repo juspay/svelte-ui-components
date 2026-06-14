@@ -12,6 +12,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       open: { type: 'Boolean', reflect: true },
+      dropdownAlign: { type: 'String', attribute: 'dropdown-align' },
       onchange: { type: 'Object' }
     }
   }}

@@ -29,6 +29,8 @@ export type OptionalSelectProperties = {
   classes?: string;
   /** Bindable. Controls whether the dropdown is open; the component writes back on open/close so parents can `bind:open` to observe or drive it. Unbound, the component manages its own state. */
   open?: boolean;
+  /** Horizontal anchor of the dropdown panel. `'left'` (default) anchors to the trigger's left edge; `'right'` anchors to the right edge so a content-wider panel hangs leftward instead of overflowing. */
+  dropdownAlign?: 'left' | 'right';
 };
 
 export type SelectEventProperties = {

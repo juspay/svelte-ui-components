@@ -177,7 +177,7 @@
   },
   {
     "name": "Select",
-    "description": "A dropdown selector supporting single-select and multi-select modes with optional search filtering. Accepts items as SelectItem objects or a plain string array. Multi-select shows selected items as dismissible pills with a built-in or custom per-option indicator. Supports a bottomContent snippet for pinning arbitrary content at the bottom of the dropdown. Fully keyboard-navigable and closes on outside click."
+    "description": "A dropdown selector supporting single-select and multi-select modes with optional search filtering. Accepts items as SelectItem objects or a plain string array. Multi-select shows selected items as dismissible pills with a built-in or custom per-option indicator. Supports a bottomContent snippet for pinning arbitrary content at the bottom of the dropdown, and a dropdownAlign prop ('left' | 'right') to anchor the panel to either edge of the trigger. Fully keyboard-navigable and closes on outside click."
   },
   {
     "name": "Sheet",

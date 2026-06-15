@@ -93,7 +93,7 @@
   },
   {
     "name": "DateRangePicker",
-    "description": "A compound date-range picker built on top of Calendar. Provides a trigger button, optional preset sidebar, dual-month or single-month calendar layout, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming."
+    "description": "A compound date-range picker built on top of Calendar. Provides a trigger button, optional preset sidebar, dual-month or single-month calendar layout, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming. Opt-in: clearable (Clear button in single mode), initialPresetLabel (seed active preset label on mount without firing onapply), and preset groups with dividers via the group field on DateRangePreset."
   },
   {
     "name": "Gauge",

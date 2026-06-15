@@ -3,6 +3,13 @@ import type { Snippet } from 'svelte';
 export type DateRangePreset = {
   label: string;
   getValue: () => { start: Date; end: Date };
+  /**
+   * Optional group key. Consecutive presets sharing the same group key are
+   * visually grouped together. A thin divider (and optional group label) is
+   * rendered whenever the group key changes between two consecutive presets.
+   * Presets without a group field render exactly as before.
+   */
+  group?: string;
 };
 
 export type DateRangePickerMode = 'range' | 'single';
@@ -50,6 +57,19 @@ export type OptionalDateRangePickerProperties = {
   triggerSnippet?: Snippet<[string]>;
   /** Custom icon snippet for the trigger button. */
   triggerIcon?: Snippet;
+  /**
+   * When true (and mode='single'), shows a Clear button in the footer whenever a
+   * date is committed. Clicking Clear resets value to null and fires onclear.
+   * Has no effect in range mode. Default: false.
+   */
+  clearable?: boolean;
+  /**
+   * Label of the preset that should appear active on mount, without firing onapply.
+   * The matching preset's date range is seeded into the draft and the trigger shows
+   * the preset label. If no preset matches the string exactly, the prop is ignored.
+   * Only takes effect once on mount; subsequent prop changes are not tracked.
+   */
+  initialPresetLabel?: string;
 };
 
 export type DateRangePickerEventProperties = {
@@ -67,6 +87,11 @@ export type DateRangePickerEventProperties = {
   oncancel?: () => void;
   /** Fired whenever the picker opens or closes. */
   onopentoggle?: (event: { open: boolean }) => void;
+  /**
+   * Fired when the user clicks the Clear button in single mode (requires clearable=true).
+   * value is reset to null before this callback is invoked.
+   */
+  onclear?: () => void;
 };
 
 export type DateRangePickerProperties = OptionalDateRangePickerProperties &

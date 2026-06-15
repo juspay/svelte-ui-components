@@ -147,6 +147,116 @@
     }
   ];
 
+  // Grouped preset definitions for the preset-groups demo
+  const groupedPresets: DateRangePreset[] = [
+    {
+      label: 'Today',
+      group: 'Days',
+      getValue: () => {
+        const start = new SvelteDate();
+        start.setHours(0, 0, 0, 0);
+        const end = new SvelteDate(start);
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Yesterday',
+      group: 'Days',
+      getValue: () => {
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new SvelteDate(start);
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Last 7 days',
+      group: 'Weeks',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 6);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Last 14 days',
+      group: 'Weeks',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 13);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Last 30 days',
+      group: 'Months',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 29);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Last 90 days',
+      group: 'Months',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 89);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    }
+  ];
+
+  // Preset with initialPresetLabel demo
+  const presetsWithAllTime: DateRangePreset[] = [
+    {
+      label: 'All time',
+      getValue: () => {
+        const start = new SvelteDate(2020, 0, 1);
+        return { start, end: new SvelteDate() };
+      }
+    },
+    {
+      label: 'Last 7 days',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 6);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Last 30 days',
+      getValue: () => {
+        const end = new SvelteDate();
+        end.setHours(23, 59, 59, 999);
+        const start = new SvelteDate();
+        start.setDate(start.getDate() - 29);
+        start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }
+    }
+  ];
+
+  let clearableDate = $state<Date | null>(null);
+
   const today = new SvelteDate();
   const maxDate = new SvelteDate(today.getFullYear(), today.getMonth(), today.getDate());
 </script>
@@ -337,6 +447,72 @@
       presets={commonPresets}
       placeholder="Historical range only"
       testId="drp-constrained-demo"
+    />
+  </div>
+</section>
+
+<!-- ── 7. Single mode with Clear button (clearable) ── -->
+<section class="demo-section">
+  <h2>Single mode — with Clear button (clearable)</h2>
+  <p class="section-note">
+    When <code>clearable</code> is true and a date is committed, a Clear button appears in the
+    footer that resets <code>value</code> to <code>null</code> and fires <code>onclear</code>.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="single"
+      clearable
+      bind:value={clearableDate}
+      placeholder="Pick a date (clearable)"
+      testId="drp-clearable-demo"
+      onapplysingle={(e) => {
+        clearableDate = e.date;
+      }}
+      onclear={() => {
+        clearableDate = null;
+      }}
+    />
+  </div>
+  <p class="result-label">Selected: <strong>{formatDate(clearableDate)}</strong></p>
+</section>
+
+<!-- ── 8. Initial preset label (display seed, no onapply) ── -->
+<section class="demo-section">
+  <h2>Range mode — initialPresetLabel (active preset seeded on mount)</h2>
+  <p class="section-note">
+    <code>initialPresetLabel="All time"</code> seeds the trigger label and sidebar highlight on
+    mount without firing <code>onapply</code>. The real <code>onapply</code> fires when the user opens
+    and clicks Apply.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={presetsWithAllTime}
+      initialPresetLabel="All time"
+      placeholder="Select range"
+      testId="drp-initial-preset-demo"
+      onapply={(e) => {
+        rangeStart = e.rangeStart;
+        rangeEnd = e.rangeEnd;
+      }}
+    />
+  </div>
+</section>
+
+<!-- ── 9. Preset groups with dividers ── -->
+<section class="demo-section">
+  <h2>Range mode — preset groups with dividers</h2>
+  <p class="section-note">
+    Adding a <code>group</code> key to <code>DateRangePreset</code> renders a thin divider (with
+    group label) between consecutive presets belonging to different groups. Flat arrays without a
+    <code>group</code> field are unaffected.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={groupedPresets}
+      placeholder="Select range (grouped)"
+      testId="drp-groups-demo"
     />
   </div>
 </section>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DateRangePickerProperties, DateRangePreset } from './properties';
+  import { untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
   import Button from '../Button/Button.svelte';
@@ -27,11 +28,14 @@
     classes,
     triggerSnippet,
     triggerIcon,
+    clearable = false,
+    initialPresetLabel,
     onapply,
     onapplysingle,
     onapplycompare,
     oncancel,
-    onopentoggle
+    onopentoggle,
+    onclear
   }: DateRangePickerProperties = $props();
 
   const isDualMonth: boolean = $derived(
@@ -84,6 +88,22 @@
   let panelRef: HTMLDivElement | null = $state(null);
   let triggerRef: HTMLDivElement | null = $state(null);
 
+  // Tracks the active preset label for the trigger display (seeded from initialPresetLabel on mount)
+  const resolvedInitialPresetLabel: string | null = untrack(() => {
+    if (
+      typeof initialPresetLabel === 'string' &&
+      initialPresetLabel !== '' &&
+      presets !== null &&
+      presets.length > 0
+    ) {
+      const matched = presets.find((preset) => preset.label === initialPresetLabel);
+      return matched ? matched.label : null;
+    }
+    return null;
+  });
+
+  let activePresetLabel: string | null = $state(resolvedInitialPresetLabel);
+
   // Dual-month navigation: track the year+month of the left calendar
   let leftYear: number = $state(new SvelteDate().getFullYear());
   let leftMonth: number = $state(new SvelteDate().getMonth());
@@ -109,6 +129,10 @@
   }
 
   const triggerLabel: string = $derived.by(() => {
+    // If an initial preset label is active (seeded on mount, not yet overridden), show it
+    if (activePresetLabel !== null) {
+      return activePresetLabel;
+    }
     if (mode === 'single') {
       return value !== null ? formatDate(value) : placeholder;
     }
@@ -155,6 +179,8 @@
   }
 
   function handleApply(): void {
+    // Once the user explicitly applies, clear the initial-preset display label
+    activePresetLabel = null;
     if (mode === 'range') {
       if (draftStart !== null && draftEnd !== null) {
         rangeStart = draftStart;
@@ -183,12 +209,21 @@
     closePicker();
   }
 
+  function handleClear(): void {
+    value = null;
+    draftValue = null;
+    onclear?.();
+    closePicker();
+  }
+
   function handleCancel(): void {
     oncancel?.();
     closePicker();
   }
 
   function handlePreset(preset: DateRangePreset): void {
+    // User explicitly picked a preset — clear the initial-preset display label
+    activePresetLabel = null;
     const { start, end } = preset.getValue();
     selectedPresetLabel = preset.label;
     if (mode === 'range') {
@@ -246,6 +281,16 @@
   });
 
   function isPresetActive(preset: DateRangePreset): boolean {
+    // When an initial preset label is active and the user hasn't picked anything yet,
+    // highlight the matching preset in the sidebar by label match
+    if (
+      activePresetLabel !== null &&
+      draftStart === null &&
+      draftEnd === null &&
+      draftValue === null
+    ) {
+      return preset.label === activePresetLabel;
+    }
     if (mode === 'single') {
       if (draftValue === null) {
         return false;
@@ -308,7 +353,19 @@
         <!-- Preset sidebar -->
         {#if presets !== null && presets.length > 0}
           <div class="drp-sidebar" role="listbox" aria-label="Date presets">
-            {#each presets as preset (preset.label)}
+            {#each presets as preset, presetIndex (preset.label)}
+              {@const previousPreset = presetIndex > 0 ? presets[presetIndex - 1] : null}
+              {@const groupChanged =
+                presetIndex > 0 &&
+                'group' in preset &&
+                (previousPreset === null || previousPreset.group !== preset.group)}
+              {#if groupChanged}
+                <div class="drp-preset-divider" role="separator" aria-hidden="true">
+                  {#if preset.group !== ''}
+                    <span class="drp-preset-group-label">{preset.group}</span>
+                  {/if}
+                </div>
+              {/if}
               <button
                 type="button"
                 class="drp-preset-item"
@@ -418,6 +475,11 @@
 
       <!-- Footer -->
       <div class="drp-footer">
+        {#if clearable && mode === 'single' && value !== null}
+          <Button onclick={handleClear} ariaLabel="Clear date selection" classes="drp-btn-clear">
+            Clear
+          </Button>
+        {/if}
         <Button onclick={handleCancel} ariaLabel="Cancel date selection" classes="drp-btn-cancel">
           Cancel
         </Button>
@@ -655,12 +717,59 @@
     border-top: var(--drp-footer-border, 1px solid #e8e8e8);
   }
 
+  /* ── Preset group dividers ── */
+  .drp-preset-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--drp-preset-divider-gap, 6px);
+    margin: var(--drp-preset-divider-margin, 4px 0);
+    padding: 0 var(--drp-preset-padding-left, 12px);
+  }
+
+  .drp-preset-divider::before {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: var(--drp-preset-divider-border, 1px solid #e8e8e8);
+  }
+
+  .drp-preset-group-label {
+    color: var(--drp-preset-group-label-color, #999999);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .drp-preset-divider:has(.drp-preset-group-label) {
+    padding-right: var(--drp-preset-padding-right, 12px);
+  }
+
+  .drp-preset-divider:has(.drp-preset-group-label)::before {
+    flex: none;
+    width: var(--drp-preset-divider-leader-width, 8px);
+  }
+
+  .drp-preset-divider:has(.drp-preset-group-label)::after {
+    content: '';
+    flex: 1;
+    height: 0;
+    border-top: var(--drp-preset-divider-border, 1px solid #e8e8e8);
+  }
+
   /* Cancel button variant via Button's CSS vars */
   :global(.drp-btn-cancel) {
     --button-color: transparent;
     --button-border: 1px solid var(--drp-cancel-border-color, #d0d0d0);
     --button-text-color: var(--drp-cancel-color, inherit);
     --button-hover-color: var(--drp-cancel-hover-background, #f5f5f5);
+  }
+
+  /* Clear button variant (single-mode reset) */
+  :global(.drp-btn-clear) {
+    --button-color: transparent;
+    --button-border: 1px solid var(--drp-clear-border-color, #d0d0d0);
+    --button-text-color: var(--drp-clear-color, inherit);
+    --button-hover-color: var(--drp-clear-hover-background, #f5f5f5);
+    margin-right: auto;
   }
 
   /* Apply button variant */

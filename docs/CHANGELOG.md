@@ -2,19 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.32.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.32.1)
 
-Wire the @juspay/yama AI code-review GitHub Action (pinned to v2.7.1) into
-this repo. On PRs targeting release it reads the diff via the hosted GitHub
-MCP server and posts inline review comments plus a verdict.
+Three additive, backward-compatible capabilities (existing consumers unaffected
+when the new props are unset):
 
-- .github/workflows/yama-review.yml: provider-aware review workflow (LiteLLM
-provider, private-large model). Fork PRs and runs with missing secrets are
-skipped cleanly so the check never deadlocks merges.
-- yama.config.yaml: review focus areas and blocking criteria.
+- clearable + onclear: in single mode, render a Clear button that resets value to
+null and fires onclear (new CSS vars --drp-clear-*).
+- initialPresetLabel: highlight a preset and show its label in the trigger on
+mount without firing onapply (resolved once via untrack()).
+- group field on DateRangePreset: render a divider (and optional group label)
+between preset groups; flat arrays render unchanged (new --drp-preset-divider-*).
 
-Requires repo secrets YAMA_GITHUB_TOKEN, LITELLM_BASE_URL and LITELLM_API_KEY
-(added separately); until set, the review is skipped and the check stays green.
+Updates properties.ts, the WC wrapper (clearable, initial-preset-label), the demo
+page, and docs. pnpm check and pnpm build pass.
+
+## [2.32.1](https://github.com/juspay/svelte-ui-components/compare/2.32.1..2.32.0) - 15 June 2026
 
 ## [2.32.0](https://github.com/juspay/svelte-ui-components/compare/2.32.0..2.31.0) - 15 June 2026
 

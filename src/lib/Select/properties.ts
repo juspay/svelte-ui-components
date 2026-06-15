@@ -7,6 +7,8 @@ export type SelectProperties = MandatorySelectProperties &
 export type SelectItem = {
   id: string;
   label: string;
+  /** Optional per-option test id, emitted as `data-pw` on the option element. */
+  testId?: string;
 };
 
 export type MandatorySelectProperties = {
@@ -22,6 +24,8 @@ export type OptionalSelectProperties = {
   bottomContent?: Snippet;
   optionIndicator?: Snippet<[{ checked: boolean }]>;
   testId?: string;
+  /** Fallback per-option test id prefix. Each option emits `data-pw="{itemTestId}-{id}"` when its own `item.testId` is not set. */
+  itemTestId?: string;
   classes?: string;
   /** Bindable. Controls whether the dropdown is open; the component writes back on open/close so parents can `bind:open` to observe or drive it. Unbound, the component manages its own state. */
   open?: boolean;

@@ -31,6 +31,8 @@ export type OptionalSelectProperties = {
   open?: boolean;
   /** Horizontal anchor of the dropdown panel. `'left'` (default) anchors to the trigger's left edge; `'right'` anchors to the right edge so a content-wider panel hangs leftward instead of overflowing. */
   dropdownAlign?: 'left' | 'right';
+  /** Snippet for rendering a compact trigger summary in multiple mode instead of one Pill per selected value. Receives `{ value, items }` so the consumer can compute e.g. "All" / "3 selected". When not provided the default Pill-per-value behaviour is used. */
+  triggerSummary?: import('svelte').Snippet<[{ value: string[]; items: SelectItem[] }]>;
 };
 
 export type SelectEventProperties = {

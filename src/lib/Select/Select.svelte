@@ -13,6 +13,7 @@
     disabled = false,
     bottomContent,
     optionIndicator,
+    triggerSummary,
     testId,
     itemTestId,
     onchange,
@@ -256,30 +257,48 @@
     tabindex={disabled ? -1 : searchable ? -1 : 0}
   >
     {#if multiple}
-      {#each value as id (id)}
-        <Pill
-          text={getLabel(id)}
-          dismissible
-          {disabled}
-          ondismiss={() => removeItem(id)}
-          {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
-        />
-      {/each}
-      {#if searchable}
-        <input
-          class="select-search"
-          type="text"
-          value={query}
-          oninput={handleSearchInput}
-          onfocus={handleSearchFocus}
-          bind:this={searchInputEl}
-          placeholder={value.length === 0 ? placeholder : ''}
-          {disabled}
-          autocomplete="off"
-          tabindex={disabled ? -1 : 0}
-        />
-      {:else if value.length === 0}
-        <span class="select-placeholder">{placeholder}</span>
+      {#if typeof triggerSummary === 'function'}
+        {@render triggerSummary({ value, items })}
+        {#if searchable}
+          <input
+            class="select-search"
+            type="text"
+            value={query}
+            oninput={handleSearchInput}
+            onfocus={handleSearchFocus}
+            bind:this={searchInputEl}
+            placeholder={value.length === 0 ? placeholder : ''}
+            {disabled}
+            autocomplete="off"
+            tabindex={disabled ? -1 : 0}
+          />
+        {/if}
+      {:else}
+        {#each value as id (id)}
+          <Pill
+            text={getLabel(id)}
+            dismissible
+            {disabled}
+            ondismiss={() => removeItem(id)}
+            {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
+          />
+        {/each}
+        {#if searchable}
+          <input
+            class="select-search"
+            type="text"
+            value={query}
+            oninput={handleSearchInput}
+            onfocus={handleSearchFocus}
+            bind:this={searchInputEl}
+            placeholder={value.length === 0 ? placeholder : ''}
+            {disabled}
+            autocomplete="off"
+            tabindex={disabled ? -1 : 0}
+          />
+        {:else if value.length === 0}
+          <span class="select-placeholder">{placeholder}</span>
+        {/if}
       {/if}
     {:else if searchable}
       <input

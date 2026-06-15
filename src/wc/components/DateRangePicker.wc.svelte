@@ -19,11 +19,14 @@
       locale: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      clearable: { type: 'Boolean', reflect: true },
+      initialPresetLabel: { type: 'String', attribute: 'initial-preset-label' },
       onapply: { type: 'Object' },
       onapplysingle: { type: 'Object' },
       onapplycompare: { type: 'Object' },
       oncancel: { type: 'Object' },
-      onopentoggle: { type: 'Object' }
+      onopentoggle: { type: 'Object' },
+      onclear: { type: 'Object' }
     }
   }}
 />

@@ -1,6 +1,6 @@
 # DateRangePicker
 
-A compound date-range picker built on top of Calendar. Provides a trigger button shell, an optional preset sidebar, dual-month or single-month calendar display, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming via custom properties.
+A compound date-range picker built on top of Calendar. Provides a trigger button shell, an optional preset sidebar, dual-month or single-month calendar display, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming via custom properties. Opt-in features include a Clear button for single mode (`clearable`), an initial active-preset display seed (`initialPresetLabel`), and grouped preset sidebars with dividers via the `group` field on `DateRangePreset`.
 
 ## Usage
 
@@ -118,28 +118,118 @@ Pass a `compareCalendar` snippet to render a comparison period section inside th
 </DateRangePicker>
 ```
 
+### Single-mode with Clear button
+
+Pass `clearable` to show a Clear button in the footer whenever a date is committed. Clicking it resets `value` to `null` and fires `onclear`.
+
+```svelte
+<script>
+  import { DateRangePicker } from '@juspay/svelte-ui-components';
+
+  let selectedDate = $state(null);
+</script>
+
+<DateRangePicker
+  mode="single"
+  clearable
+  bind:value={selectedDate}
+  onapplysingle={(e) => {
+    selectedDate = e.date;
+  }}
+  onclear={() => {
+    selectedDate = null;
+  }}
+/>
+```
+
+### Initial active preset (display only, no onapply fired)
+
+Use `initialPresetLabel` to seed a preset as visually active on mount — the trigger shows the preset's label and the sidebar highlights it — without firing `onapply`. When the user opens the picker and clicks Apply, the real `onapply` fires normally.
+
+```svelte
+<script>
+  import { DateRangePicker } from '@juspay/svelte-ui-components';
+
+  const presets = [
+    {
+      label: 'All time',
+      getValue: () => {
+        const s = new Date(2020, 0, 1);
+        return { start: s, end: new Date() };
+      }
+    },
+    {
+      label: 'Last 7 days',
+      getValue: () => {
+        const e = new Date();
+        const s = new Date();
+        s.setDate(s.getDate() - 6);
+        return { start: s, end: e };
+      }
+    }
+  ];
+</script>
+
+<DateRangePicker
+  mode="range"
+  {presets}
+  initialPresetLabel="All time"
+  placeholder="Select range"
+  onapply={(e) => console.log(e.rangeStart, e.rangeEnd)}
+/>
+```
+
+### Preset groups with dividers
+
+Add a `group` key to any `DateRangePreset`. A thin divider (with an optional group label) is rendered between consecutive presets that have different `group` values. Presets without a `group` field render exactly as before.
+
+```svelte
+<script>
+  import { DateRangePicker } from '@juspay/svelte-ui-components';
+
+  const makeRange = (daysBack) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - (daysBack - 1));
+    return { start, end };
+  };
+
+  const presets = [
+    { label: 'Today', group: 'Days', getValue: () => makeRange(1) },
+    { label: 'Yesterday', group: 'Days', getValue: () => makeRange(2) },
+    { label: 'Last 7 days', group: 'Weeks', getValue: () => makeRange(7) },
+    { label: 'Last 30 days', group: 'Months', getValue: () => makeRange(30) },
+    { label: 'Last 90 days', group: 'Months', getValue: () => makeRange(90) }
+  ];
+</script>
+
+<DateRangePicker mode="range" {presets} placeholder="Select range" />
+```
+
 ## Props
 
-| Prop            | Type                                  | Required | Default         | Description                                                                                                                  |
-| --------------- | ------------------------------------- | -------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| rangeStart      | `Date \| null`                        | No       | `null`          | Bindable. Start of the selected range. Only used in range mode.                                                              |
-| rangeEnd        | `Date \| null`                        | No       | `null`          | Bindable. End of the selected range. Only used in range mode.                                                                |
-| value           | `Date \| null`                        | No       | `null`          | Bindable. Selected date in single mode.                                                                                      |
-| mode            | `'range' \| 'single'`                 | No       | `'range'`       | Selection mode.                                                                                                              |
-| minDate         | `Date \| null`                        | No       | `null`          | Earliest selectable date.                                                                                                    |
-| maxDate         | `Date \| null`                        | No       | `null`          | Latest selectable date.                                                                                                      |
-| disabledDates   | `Date[] \| ((date: Date) => boolean)` | No       | `[]`            | Dates that cannot be selected. Pass an array or a predicate function.                                                        |
-| presets         | `DateRangePreset[] \| null`           | No       | `null`          | Preset options shown in the sidebar. Omit or pass null to hide the sidebar.                                                  |
-| placeholder     | `string`                              | No       | `'Select date'` | Text shown on the trigger when no date is selected.                                                                          |
-| dualMonth       | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override.       |
-| timePicker      | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.      |
-| compareStart    | `Date \| null`                        | No       | `null`          | Bindable. Start of the compare range. Meaningful when `compareCalendar` snippet is provided and `onapplycompare` commits it. |
-| compareEnd      | `Date \| null`                        | No       | `null`          | Bindable. End of the compare range.                                                                                          |
-| compareCalendar | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-compare-section` wrapper below the calendars. Consumer owns all compare state and calendar.  |
-| weekStartsOn    | `0 \| 1`                              | No       | `0`             | Which day starts the week. 0 = Sunday, 1 = Monday.                                                                           |
-| locale          | `string`                              | No       | `undefined`     | BCP-47 locale string for date formatting on the trigger label (e.g., `'en-US'`, `'de-DE'`).                                  |
-| testId          | `string`                              | No       | `undefined`     | Value for the `data-pw` attribute on the root wrapper element, used for end-to-end testing selectors.                        |
-| classes         | `string`                              | No       | —               | Extra CSS class string applied to the root wrapper. Use to pass CSS variable overrides.                                      |
+| Prop               | Type                                  | Required | Default         | Description                                                                                                                                                                                                             |
+| ------------------ | ------------------------------------- | -------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| rangeStart         | `Date \| null`                        | No       | `null`          | Bindable. Start of the selected range. Only used in range mode.                                                                                                                                                         |
+| rangeEnd           | `Date \| null`                        | No       | `null`          | Bindable. End of the selected range. Only used in range mode.                                                                                                                                                           |
+| value              | `Date \| null`                        | No       | `null`          | Bindable. Selected date in single mode.                                                                                                                                                                                 |
+| mode               | `'range' \| 'single'`                 | No       | `'range'`       | Selection mode.                                                                                                                                                                                                         |
+| minDate            | `Date \| null`                        | No       | `null`          | Earliest selectable date.                                                                                                                                                                                               |
+| maxDate            | `Date \| null`                        | No       | `null`          | Latest selectable date.                                                                                                                                                                                                 |
+| disabledDates      | `Date[] \| ((date: Date) => boolean)` | No       | `[]`            | Dates that cannot be selected. Pass an array or a predicate function.                                                                                                                                                   |
+| presets            | `DateRangePreset[] \| null`           | No       | `null`          | Preset options shown in the sidebar. Omit or pass null to hide the sidebar.                                                                                                                                             |
+| placeholder        | `string`                              | No       | `'Select date'` | Text shown on the trigger when no date is selected.                                                                                                                                                                     |
+| dualMonth          | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override.                                                                                                  |
+| timePicker         | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.                                                                                                 |
+| compareStart       | `Date \| null`                        | No       | `null`          | Bindable. Start of the compare range. Meaningful when `compareCalendar` snippet is provided and `onapplycompare` commits it.                                                                                            |
+| compareEnd         | `Date \| null`                        | No       | `null`          | Bindable. End of the compare range.                                                                                                                                                                                     |
+| compareCalendar    | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-compare-section` wrapper below the calendars. Consumer owns all compare state and calendar.                                                                                             |
+| weekStartsOn       | `0 \| 1`                              | No       | `0`             | Which day starts the week. 0 = Sunday, 1 = Monday.                                                                                                                                                                      |
+| locale             | `string`                              | No       | `undefined`     | BCP-47 locale string for date formatting on the trigger label (e.g., `'en-US'`, `'de-DE'`).                                                                                                                             |
+| testId             | `string`                              | No       | `undefined`     | Value for the `data-pw` attribute on the root wrapper element, used for end-to-end testing selectors.                                                                                                                   |
+| classes            | `string`                              | No       | —               | Extra CSS class string applied to the root wrapper. Use to pass CSS variable overrides.                                                                                                                                 |
+| clearable          | `boolean`                             | No       | `false`         | When `true` and `mode='single'`, shows a Clear button in the footer whenever a date is committed. Clicking it resets `value` to `null` and fires `onclear`. Has no effect in range mode.                                |
+| initialPresetLabel | `string`                              | No       | `undefined`     | Label of the preset to show as active on mount, without firing `onapply`. The trigger displays the preset label and the sidebar highlights it. Only evaluated once at mount; if no preset matches, the prop is ignored. |
 
 ## Snippets
 
@@ -152,13 +242,14 @@ Pass a `compareCalendar` snippet to render a comparison period section inside th
 
 ## Events
 
-| Event          | Type                                                        | Description                                                               |
-| -------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------- |
-| onapply        | `(event: { rangeStart: Date; rangeEnd: Date }) => void`     | Fired when Apply is clicked in range mode and both dates are set.         |
-| onapplysingle  | `(event: { date: Date }) => void`                           | Fired when Apply is clicked in single mode and a date is set.             |
-| onapplycompare | `(event: { compareStart: Date; compareEnd: Date }) => void` | Fired when Apply is clicked and the `compareCalendar` snippet is present. |
-| oncancel       | `() => void`                                                | Fired when the user dismisses the picker without applying.                |
-| onopentoggle   | `(event: { open: boolean }) => void`                        | Fired whenever the panel opens or closes.                                 |
+| Event          | Type                                                        | Description                                                                                                                     |
+| -------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| onapply        | `(event: { rangeStart: Date; rangeEnd: Date }) => void`     | Fired when Apply is clicked in range mode and both dates are set.                                                               |
+| onapplysingle  | `(event: { date: Date }) => void`                           | Fired when Apply is clicked in single mode and a date is set.                                                                   |
+| onapplycompare | `(event: { compareStart: Date; compareEnd: Date }) => void` | Fired when Apply is clicked and the `compareCalendar` snippet is present.                                                       |
+| oncancel       | `() => void`                                                | Fired when the user dismisses the picker without applying.                                                                      |
+| onopentoggle   | `(event: { open: boolean }) => void`                        | Fired whenever the panel opens or closes.                                                                                       |
+| onclear        | `() => void`                                                | Fired when the Clear button is clicked in single mode (`clearable=true`). `value` is already reset to `null` before this fires. |
 
 ## CSS Variables
 
@@ -221,6 +312,14 @@ Override these custom properties to theme the component.
 | `--drp-apply-hover-background`         | `#333333`                     | Apply button background on hover.                                     |
 | `--drp-apply-disabled-background`      | `#cccccc`                     | Apply button background when disabled.                                |
 | `--drp-apply-disabled-color`           | `#888888`                     | Apply button text color when disabled.                                |
+| `--drp-clear-border-color`             | `#d0d0d0`                     | Clear button border color (single-mode `clearable`).                  |
+| `--drp-clear-color`                    | `inherit`                     | Clear button text color.                                              |
+| `--drp-clear-hover-background`         | `#f5f5f5`                     | Clear button background on hover.                                     |
+| `--drp-preset-divider-border`          | `1px solid #e8e8e8`           | Border style for the preset group divider line.                       |
+| `--drp-preset-divider-gap`             | `6px`                         | Gap between the divider line and the group label.                     |
+| `--drp-preset-divider-margin`          | `4px 0`                       | Vertical margin above and below each preset group divider.            |
+| `--drp-preset-group-label-color`       | `#999999`                     | Text color of the preset group label rendered beside the divider.     |
+| `--drp-preset-divider-leader-width`    | `8px`                         | Width of the leading line segment before the group label.             |
 
 ## Web Component
 
@@ -261,15 +360,17 @@ drp.maxDate = new Date();
 
 String and boolean props map to kebab-case HTML attributes:
 
-| Attribute        | Prop           | Type      |
-| ---------------- | -------------- | --------- |
-| `mode`           | `mode`         | `String`  |
-| `placeholder`    | `placeholder`  | `String`  |
-| `dual-month`     | `dualMonth`    | `Boolean` |
-| `week-starts-on` | `weekStartsOn` | `Number`  |
-| `locale`         | `locale`       | `String`  |
-| `test-id`        | `testId`       | `String`  |
-| `classes`        | `classes`      | `String`  |
+| Attribute              | Prop                 | Type      |
+| ---------------------- | -------------------- | --------- |
+| `mode`                 | `mode`               | `String`  |
+| `placeholder`          | `placeholder`        | `String`  |
+| `dual-month`           | `dualMonth`          | `Boolean` |
+| `week-starts-on`       | `weekStartsOn`       | `Number`  |
+| `locale`               | `locale`             | `String`  |
+| `test-id`              | `testId`             | `String`  |
+| `classes`              | `classes`            | `String`  |
+| `clearable`            | `clearable`          | `Boolean` |
+| `initial-preset-label` | `initialPresetLabel` | `String`  |
 
 Object and function props (`presets`, `minDate`, `maxDate`, `disabledDates`, `rangeStart`, `rangeEnd`, `value`, `compareStart`, `compareEnd`, and all event handlers) must be set via JavaScript property assignment, not HTML attributes.
 

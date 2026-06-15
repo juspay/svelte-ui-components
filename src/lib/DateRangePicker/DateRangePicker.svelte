@@ -13,6 +13,7 @@
     minDate = null,
     maxDate = null,
     disabledDates = [],
+    maxRangeDays = null,
     presets = null,
     placeholder = 'Select date',
     dualMonth,
@@ -43,6 +44,37 @@
   let draftValue: Date | null = $state(null);
   let draftCompareStart: Date | null = $state(null);
   let draftCompareEnd: Date | null = $state(null);
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  function isBaseDisabledDate(date: Date): boolean {
+    if (typeof disabledDates === 'function') {
+      return disabledDates(date);
+    }
+    return disabledDates.some((disabled) => isSameDay(disabled, date));
+  }
+
+  // When maxRangeDays is set, disable any date whose span from the in-progress
+  // start would exceed the limit (inclusive of both ends), until the range is
+  // completed. Falls back to the raw disabledDates otherwise.
+  const rangeConstrainedDisabledDates = $derived.by(() => {
+    const limit = maxRangeDays;
+    if (limit === null || limit === undefined) {
+      return disabledDates;
+    }
+    const anchor = draftStart;
+    const selecting = anchor !== null && draftEnd === null;
+    return (date: Date): boolean => {
+      if (isBaseDisabledDate(date)) {
+        return true;
+      }
+      if (!selecting || anchor === null) {
+        return false;
+      }
+      const diffDays = Math.abs(Math.round((date.getTime() - anchor.getTime()) / MS_PER_DAY));
+      return diffDays > limit - 1;
+    };
+  });
 
   let isOpen: boolean = $state(false);
   let panelRef: HTMLDivElement | null = $state(null);
@@ -313,7 +345,7 @@
                   {locale}
                   {minDate}
                   {maxDate}
-                  {disabledDates}
+                  disabledDates={rangeConstrainedDisabledDates}
                   initialMonth={leftInitialMonth}
                   onrangeselect={handleRangeSelect}
                   classes="drp-calendar-embedded"
@@ -327,7 +359,7 @@
                   {locale}
                   {minDate}
                   {maxDate}
-                  {disabledDates}
+                  disabledDates={rangeConstrainedDisabledDates}
                   initialMonth={rightInitialMonth}
                   onrangeselect={handleRangeSelect}
                   classes="drp-calendar-embedded"

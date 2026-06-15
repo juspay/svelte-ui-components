@@ -1,0 +1,196 @@
+# =============================================================================
+# Yama PR Review configuration
+# =============================================================================
+# Consumed by the @juspay/yama GitHub Action (.github/workflows). Auto-discovered
+# from the repo root (search order: yama.config.yaml → config/yama.config.yaml →
+# .yama/config.yaml) and also passed explicitly via the workflow `config-path`.
+#
+# WHERE THE REVIEW RULES COME FROM
+#   Yama automatically loads, from this repo root, if present:
+#     • CLAUDE.md       — your authoritative engineering rules
+#     • CONTRIBUTING.md — contribution + commit conventions
+#   and injects them into the reviewer as <project-rules>. Keep repo-specific
+#   rules THERE; this file tunes WHAT the reviewer focuses on and WHAT blocks a
+#   merge.
+#
+# PROVIDER / MODEL ARE INTENTIONALLY NOT SET HERE
+#   They are controlled by the workflow inputs (ai-provider / ai-model), exposed
+#   as AI_PROVIDER / AI_MODEL env. Yama merges this file OVER those env values, so
+#   setting ai.provider / ai.model here would silently override the workflow.
+# =============================================================================
+
+version: 2
+configType: "yama"
+
+display:
+  showBanner: false
+  streamingMode: false
+  verboseToolCalls: false
+  showAIThinking: false
+
+ai:
+  # provider/model OMITTED on purpose — controlled by the workflow.
+  temperature: 0.2 # deterministic, review-grade output
+  timeout: "15m"
+  retryAttempts: 3
+
+  # The explore worker reads project rules (CLAUDE.md / CONTRIBUTING.md) and
+  # codebase context. Keep enabled so the reviewer sees your repo's rules.
+  explore:
+    enabled: true
+    timeout: "5m"
+    cacheResults: true
+
+# GitHub MCP only. Jira/Bitbucket off so no extra credentials are needed. Yama's
+# built-in denylist already blocks repo-mutating GitHub tools; this is a
+# read + review-comment workflow.
+mcpServers:
+  github:
+    enabled: true
+    # transport defaults to "http" (hosted GitHub MCP at api.githubcopilot.com).
+  jira:
+    enabled: false
+
+review:
+  enabled: true
+
+  workflowInstructions: |
+    You are reviewing a pull request for @juspay/svelte-ui-components — a PUBLISHED,
+    themeable Svelte 5 (runes mode) UI component library. Components are consumed by
+    external apps via `import { Button, Input, ... } from '@juspay/svelte-ui-components'`
+    (the public barrel is src/lib/index.ts), styled entirely through CSS custom
+    properties, and also built as web components (src/wc). Releases are semver via
+    `chore(release)`, so a component's public surface is a contract with downstream
+    consumers.
+
+    Treat the <project-rules> block (this repo's CLAUDE.md / CONTRIBUTING.md, if
+    present) as the AUTHORITATIVE ruleset and cite the specific rule when you flag a
+    violation.
+
+    Do NOT duplicate mechanical checks already enforced by CI — they run on every PR
+    and are not your job:
+      • Prettier formatting + ESLint (`npm run lint`, incl. eslint-plugin-svelte and
+        unused-imports)
+      • Svelte/TypeScript type checking (`npm run check` via svelte-check, plus
+        `check:wc` for the web-component build)
+      • Package/exports correctness (`publint` during `npm run package`)
+      • Commit message conventions (commitlint / conventional-commits — feat/fix/etc.;
+        `feat`+`fix` cut a minor, `!` denotes a breaking change)
+    Only flag commit/lint/type/exports issues if you have a CORRECTNESS reason CI
+    would miss (e.g. a removed export that silently breaks the public API).
+
+    Focus on what static analysis cannot catch, with a component-library lens:
+      • Public API / backward compatibility: renamed, removed or type-narrowed props,
+        changed prop defaults or event/callback signatures, removed exports from
+        src/lib/index.ts, or changed CSS custom property names that downstream themes
+        depend on — without a major-version bump or migration note.
+      • Accessibility: missing/incorrect ARIA roles & states, keyboard navigation and
+        focus management (focus traps in Modal/Sheet/Menu/CommandMenu/ContextMenu),
+        labels for interactive elements, and visible focus.
+      • Svelte 5 reactivity & lifecycle correctness: misuse of $state/$derived/$effect
+        (effects that should be derived, mutating state inside derivations, missing
+        dependencies, infinite effect loops), $props/$bindable contracts, store
+        subscription leaks, and missing cleanup of timers/listeners in onDestroy.
+      • SSR safety: unguarded `window`/`document`/`localStorage` access at module or
+        component init (this lib ships to SSR consumers and is web-component-built).
+      • Tests & docs: new behaviour covered by Vitest unit / Playwright integration
+        tests, and the matching docs/<Component>.md updated for public changes.
+
+    Be specific and constructive: every comment references the exact file+line,
+    explains the concrete risk, and suggests a fix where useful. Only block per
+    <blocking-criteria>; otherwise leave inline comments and approve.
+
+  focusAreas:
+    - name: "Public component API & backward compatibility"
+      priority: "CRITICAL"
+      description: |
+        - Renamed / removed / reordered or type-narrowed props on exported components
+        - Changed prop defaults, $bindable contracts, or event/callback signatures
+        - Exports removed or renamed in src/lib/index.ts (and the web-component
+          registry in src/wc)
+        - Renamed CSS custom properties that downstream themes rely on
+        - Any of the above without a major-version bump or documented migration note
+    - name: "Accessibility"
+      priority: "MAJOR"
+      description: |
+        - Missing or incorrect ARIA roles / states (aria-expanded, aria-checked, etc.)
+        - Keyboard navigation & focus management, focus traps in overlays
+          (Modal / Sheet / Menu / CommandMenu / ContextMenu)
+        - Interactive elements without accessible names; no visible focus indicator
+    - name: "Svelte 5 reactivity & lifecycle correctness"
+      priority: "MAJOR"
+      description: |
+        - Misuse of $state / $derived / $effect (effects that should be derived,
+          mutating state inside a derivation, missing deps, infinite effect loops)
+        - $props / $bindable correctness; store subscription leaks
+        - Missing cleanup of timers, intervals, and event listeners in onDestroy
+    - name: "SSR safety"
+      priority: "MAJOR"
+      description: |
+        - Unguarded window / document / localStorage / navigator access at module or
+          component init — guard with browser checks or run inside onMount
+    - name: "Tests & docs for components"
+      priority: "MINOR"
+      description: |
+        - New / changed behaviour covered by Vitest unit or Playwright integration tests
+        - Public prop / event / CSS-variable changes reflected in docs/<Component>.md
+    - name: "Security"
+      priority: "MAJOR"
+      description: |
+        - Hardcoded secrets / API keys / tokens / credentials in source
+        - Unsafe HTML injection ({@html} with unsanitized input / XSS), unsafe eval
+
+  blockingCriteria:
+    - condition: "Any hardcoded secret, API key, token, password or credential committed in source (non-test, non-example)"
+      action: "BLOCK"
+      reason: "Security: secrets must never be committed"
+    - condition: "Any CRITICAL severity security vulnerability (XSS / unsafe {@html}, auth bypass, secret or PII exposure)"
+      action: "BLOCK"
+      reason: "Critical security risk"
+    - condition: "A breaking change to a public component's props, exports (src/lib/index.ts), event/callback signatures, or relied-upon CSS custom property names, without a major-version bump or a documented migration note"
+      action: "BLOCK"
+      reason: "Backward compatibility: this is a published library; breaking the public contract without a major bump / migration breaks downstream consumers"
+
+  # Generated / vendored / binary files are skipped.
+  excludePatterns:
+    - "*.lock"
+    - "pnpm-lock.yaml"
+    - "package-lock.json"
+    - "yarn.lock"
+    - "*.min.js"
+    - "*.map"
+    - "*.svg"
+    - "dist/**"
+    - "dist-wc/**"
+    - "build/**"
+    - "coverage/**"
+    - ".svelte-kit/**"
+    - "package/**"
+    - "static/**"
+
+  contextLines: 3
+  maxFilesPerReview: 100
+  fileAnalysisTimeout: "2m"
+
+# Review-only: never rewrite PR descriptions (also forced by the workflow input
+# skip-description-enhance: "true").
+descriptionEnhancement:
+  enabled: false
+
+# Stateless reviewer: no memory-bank dir, no knowledge-base file, no commits back
+# to the repo (needs no write access beyond posting the review).
+memoryBank:
+  enabled: false
+knowledgeBase:
+  enabled: false
+memory:
+  enabled: false
+  autoCommit: false
+
+# Cost / runtime guardrails.
+performance:
+  maxReviewDuration: "15m"
+  tokenBudget:
+    maxTokensPerReview: 800000
+    warningThreshold: 600000
+

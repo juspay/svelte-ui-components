@@ -59,6 +59,11 @@ export { default as SplitInput } from './SplitInput/SplitInput.svelte';
 export { default as FileInput } from './FileInput/FileInput.svelte';
 export { default as DateRangePicker } from './DateRangePicker/DateRangePicker.svelte';
 export { default as Breadcrumb } from './Breadcrumb/Breadcrumb.svelte';
+export { default as LineChart } from './LineChart/LineChart.svelte';
+export { default as AreaChart } from './AreaChart/AreaChart.svelte';
+export { default as BarChart } from './BarChart/BarChart.svelte';
+export { default as PieChart } from './PieChart/PieChart.svelte';
+export { default as SankeyChart } from './SankeyChart/SankeyChart.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -115,5 +120,10 @@ export type * from './SplitInput/properties';
 export type * from './FileInput/properties';
 export type * from './DateRangePicker/properties';
 export type * from './Breadcrumb/properties';
+export type * from './LineChart/properties';
+export type * from './AreaChart/properties';
+export type * from './BarChart/properties';
+export type * from './PieChart/properties';
+export type * from './SankeyChart/properties';
 
 export { validateInput } from './utils';

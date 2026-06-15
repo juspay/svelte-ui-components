@@ -4,6 +4,10 @@
     "description": "An expandable/collapsible container that uses CSS grid row animation for smooth open/close transitions. When `expand` is true, the content is visible (grid-template-rows: 1fr); when false, it collapses to 0fr. Render children content using the default `children` snippet."
   },
   {
+    "name": "AreaChart",
+    "description": "A responsive SVG area chart for visualizing volume under a trend. Supports multiple series with regular stacking, 100% (normalized) stacking, configurable fill opacity, data labels, hover overlay with crosshair, and custom tooltips. Shares the same curve types and axis options as LineChart."
+  },
+  {
     "name": "Avatar",
     "description": "A circular user avatar that displays an image (via the Img component with fallback support) or a text initial. Supports configurable size, border, and status indicator via CSS variables."
   },
@@ -18,6 +22,10 @@
   {
     "name": "Breadcrumb",
     "description": "A navigation trail component that enforces nav/ol/li semantics and aria-label. Delegates visual rendering of each crumb to a required item snippet (receives href, label, isLast, index), enabling icons, dropdown crumbs, and overflow menus. An optional separator snippet replaces the default '/' text node between items."
+  },
+  {
+    "name": "BarChart",
+    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, and click events. Zero external dependencies — built from pure SVG with CSS custom property theming."
   },
   {
     "name": "Book",
@@ -120,6 +128,10 @@
     "description": "A keyboard shortcut display component that renders key combinations in styled key caps. Supports single keys, multi-key combos with a separator, and light/dark variants. Optionally clickable with keyboard accessibility."
   },
   {
+    "name": "LineChart",
+    "description": "A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, four curve interpolations (linear, monotone, step, natural), an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltips."
+  },
+  {
     "name": "ListItem",
     "description": "A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section and per-section click handlers."
   },
@@ -156,6 +168,10 @@
     "description": "A smartphone device frame that renders content inside a realistic phone shell with a notch, status bar, and home indicator. Useful for documentation, app previews, and marketing displays."
   },
   {
+    "name": "PieChart",
+    "description": "A responsive SVG pie/donut chart with slice hover highlighting, custom labels, legend, and donut center content. When `innerRadius` is set, renders as a donut with optional content in the center hole via the `center` snippet."
+  },
+  {
     "name": "Pill",
     "description": "A compact label/tag element for displaying status, categories, or metadata. Supports a leadingIcon snippet (rendered before the label) and a dismissIcon snippet, click interaction with keyboard accessibility (role=button, Enter/Space), and an optional dismiss button. Optionally clickable when onclick is provided."
   },
@@ -170,6 +186,10 @@
   {
     "name": "RelativeTime",
     "description": "Displays a human-readable relative time string (e.g., '5 minutes ago') that auto-updates at a configurable interval. Uses Intl.RelativeTimeFormat for locale-aware formatting. Renders a semantic <time> element. Optionally wraps in a Tooltip showing the full date."
+  },
+  {
+    "name": "SankeyChart",
+    "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones."
   },
   {
     "name": "Scroller",

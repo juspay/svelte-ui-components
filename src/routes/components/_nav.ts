@@ -74,6 +74,16 @@ export const componentNav: NavGroup[] = [
     ]
   },
   {
+    category: 'Data Visualization',
+    items: [
+      { name: 'LineChart', slug: 'line-chart' },
+      { name: 'AreaChart', slug: 'area-chart' },
+      { name: 'BarChart', slug: 'bar-chart' },
+      { name: 'PieChart', slug: 'pie-chart' },
+      { name: 'SankeyChart', slug: 'sankey-chart' }
+    ]
+  },
+  {
     category: 'Feedback & Status',
     items: [
       { name: 'Toast', slug: 'toast' },

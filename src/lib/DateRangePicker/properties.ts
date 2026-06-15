@@ -53,12 +53,16 @@ export type OptionalDateRangePickerProperties = {
 };
 
 export type DateRangePickerEventProperties = {
-  /** Fired when the user clicks Apply in range mode. */
-  onapply?: (event: { rangeStart: Date; rangeEnd: Date }) => void;
-  /** Fired when the user clicks Apply in single mode. */
-  onapplysingle?: (event: { date: Date }) => void;
-  /** Fired when the compare range is applied. */
-  onapplycompare?: (event: { compareStart: Date; compareEnd: Date }) => void;
+  /** Fired when the user clicks Apply in range mode. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
+  onapply?: (event: { rangeStart: Date; rangeEnd: Date; presetLabel: string | null }) => void;
+  /** Fired when the user clicks Apply in single mode. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
+  onapplysingle?: (event: { date: Date; presetLabel: string | null }) => void;
+  /** Fired when the compare range is applied. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
+  onapplycompare?: (event: {
+    compareStart: Date;
+    compareEnd: Date;
+    presetLabel: string | null;
+  }) => void;
   /** Fired when the user dismisses without applying. */
   oncancel?: () => void;
   /** Fired whenever the picker opens or closes. */

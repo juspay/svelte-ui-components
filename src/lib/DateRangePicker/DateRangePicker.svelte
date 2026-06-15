@@ -45,6 +45,10 @@
   let draftCompareStart: Date | null = $state(null);
   let draftCompareEnd: Date | null = $state(null);
 
+  // Tracks the label of the currently active preset, or null when the user
+  // made a custom calendar selection (or before any selection is made).
+  let selectedPresetLabel: string | null = $state(null);
+
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
   function isBaseDisabledDate(date: Date): boolean {
@@ -59,7 +63,7 @@
   // completed. Falls back to the raw disabledDates otherwise.
   const rangeConstrainedDisabledDates = $derived.by(() => {
     const limit = maxRangeDays;
-    if (limit === null || limit === undefined) {
+    if (limit === null) {
       return disabledDates;
     }
     const anchor = draftStart;
@@ -125,6 +129,9 @@
     draftCompareStart = compareStart !== null ? compareStart : null;
     draftCompareEnd = compareEnd !== null ? compareEnd : null;
 
+    // Reset preset tracking so each picker session starts clean.
+    selectedPresetLabel = null;
+
     // Navigate left calendar so it shows the committed start month (or today)
     const anchor = rangeStart !== null ? rangeStart : value !== null ? value : now;
     leftYear = anchor.getFullYear();
@@ -152,7 +159,7 @@
       if (draftStart !== null && draftEnd !== null) {
         rangeStart = draftStart;
         rangeEnd = draftEnd;
-        onapply?.({ rangeStart: draftStart, rangeEnd: draftEnd });
+        onapply?.({ rangeStart: draftStart, rangeEnd: draftEnd, presetLabel: selectedPresetLabel });
       }
       if (
         typeof compareCalendar === 'function' &&
@@ -161,12 +168,16 @@
       ) {
         compareStart = draftCompareStart;
         compareEnd = draftCompareEnd;
-        onapplycompare?.({ compareStart: draftCompareStart, compareEnd: draftCompareEnd });
+        onapplycompare?.({
+          compareStart: draftCompareStart,
+          compareEnd: draftCompareEnd,
+          presetLabel: selectedPresetLabel
+        });
       }
     } else {
       if (draftValue !== null) {
         value = draftValue;
-        onapplysingle?.({ date: draftValue });
+        onapplysingle?.({ date: draftValue, presetLabel: selectedPresetLabel });
       }
     }
     closePicker();
@@ -179,6 +190,7 @@
 
   function handlePreset(preset: DateRangePreset): void {
     const { start, end } = preset.getValue();
+    selectedPresetLabel = preset.label;
     if (mode === 'range') {
       draftStart = start;
       draftEnd = end;
@@ -194,10 +206,14 @@
   function handleRangeSelect(event: { rangeStart: Date; rangeEnd: Date }): void {
     draftStart = event.rangeStart;
     draftEnd = event.rangeEnd;
+    // A direct calendar click is not a preset selection.
+    selectedPresetLabel = null;
   }
 
   function handleSingleSelect(event: { date: Date }): void {
     draftValue = event.date;
+    // A direct calendar click is not a preset selection.
+    selectedPresetLabel = null;
   }
 
   // Close on outside-click

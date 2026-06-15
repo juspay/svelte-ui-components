@@ -7,6 +7,7 @@
   // --- Range mode state ---
   let rangeStart = $state<Date | null>(null);
   let rangeEnd = $state<Date | null>(null);
+  let lastAppliedPreset = $state<string | null>(null);
 
   // --- Single mode state ---
   let singleDate = $state<Date | null>(null);
@@ -176,10 +177,12 @@
       onapply={(e) => {
         rangeStart = e.rangeStart;
         rangeEnd = e.rangeEnd;
+        lastAppliedPreset = e.presetLabel;
       }}
     />
   </div>
   <p class="result-label">Applied range: <strong>{rangeLabel}</strong></p>
+  <p class="result-label">Preset: <strong>{lastAppliedPreset ?? 'custom'}</strong></p>
 </section>
 
 <!-- ── 2. Single-month range (dualMonth=false) ── -->

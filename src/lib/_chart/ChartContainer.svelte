@@ -1,0 +1,81 @@
+<script lang="ts">
+  import type { ChartContainerProperties } from './types';
+  import { onMount } from 'svelte';
+
+  let {
+    width = $bindable(0),
+    height = $bindable(0),
+    aspectRatio = 16 / 9,
+    minHeight = 0,
+    testId,
+    classes,
+    children
+  }: ChartContainerProperties = $props();
+
+  let containerEl: HTMLDivElement | null = $state(null);
+
+  onMount(() => {
+    if (containerEl === null) {
+      return;
+    }
+
+    function measure() {
+      if (containerEl === null) {
+        return;
+      }
+      const rect = containerEl.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      width = w;
+      height = Math.max(minHeight, Math.round(w / aspectRatio));
+    }
+
+    measure();
+
+    // Coalesce bursts of resize events into a single measure per frame, always
+    // using the latest size (a leading-edge debounce would drop the final size).
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
+    observer.observe(containerEl);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  });
+</script>
+
+<div
+  class="chart-container {classes ?? ''}"
+  bind:this={containerEl}
+  data-pw={typeof testId === 'string' ? testId : null}
+>
+  {#if width > 0 && height > 0}
+    <svg
+      viewBox="0 0 {width} {height}"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      {width}
+      {height}
+    >
+      {@render children()}
+    </svg>
+  {/if}
+</div>
+
+<style>
+  .chart-container {
+    width: 100%;
+    background: var(--chart-background, transparent);
+    font-family: var(--chart-font-family, inherit);
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+</style>

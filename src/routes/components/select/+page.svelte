@@ -45,6 +45,7 @@
   let bottomContentValue: string[] = $state([]);
   let customIndicatorValue: string[] = $state([]);
   let alignValue: string[] = $state([]);
+  let summaryValue: string[] = $state([]);
 </script>
 
 <div class="page-header">
@@ -138,6 +139,28 @@
   {/if}
 </div>
 
+<h3>triggerSummary snippet (compact multi-select trigger)</h3>
+<p>
+  Pass a <code>triggerSummary</code> snippet to replace the per-value Pill loop with a compact summary
+  label — useful for fixed-width filter triggers where pills would overflow.
+</p>
+<div class="demo-row" style="max-width: 220px;">
+  <Select items={fruits} multiple bind:value={summaryValue} placeholder="Filter fruits">
+    {#snippet triggerSummary({ value: selected, items: allItems })}
+      <span class="trigger-summary">
+        {selected.length === 0
+          ? 'All'
+          : selected.length === allItems.length
+            ? 'All'
+            : `${selected.length} selected`}
+      </span>
+    {/snippet}
+  </Select>
+  {#if summaryValue.length > 0}
+    <p class="demo-info">Selected IDs: {summaryValue.join(', ')}</p>
+  {/if}
+</div>
+
 <h3>Right-aligned dropdown</h3>
 <p>
   Anchor the dropdown panel to the trigger's right edge (so a content-wider panel hangs leftward
@@ -180,5 +203,12 @@
 
   .custom-indicator.checked {
     color: #2563eb;
+  }
+
+  .trigger-summary {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

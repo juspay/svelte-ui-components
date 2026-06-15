@@ -2,13 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.31.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.32.0)
 
-- AreaChart, BarChart, LineChart, PieChart, and SankeyChart components added to the library
-- Each chart component includes properties for customization and is documented in the docs folder
-- Updated index.ts to export the new chart components
-- Updated the components navigation to include links to the new chart components
-- Updated MCP documentation to include the new chart components and their properties
+Wire the @juspay/yama AI code-review GitHub Action (pinned to v2.7.1) into
+this repo. On PRs targeting release it reads the diff via the hosted GitHub
+MCP server and posts inline review comments plus a verdict.
+
+- .github/workflows/yama-review.yml: provider-aware review workflow (LiteLLM
+provider, private-large model). Fork PRs and runs with missing secrets are
+skipped cleanly so the check never deadlocks merges.
+- yama.config.yaml: review focus areas and blocking criteria.
+
+Requires repo secrets YAMA_GITHUB_TOKEN, LITELLM_BASE_URL and LITELLM_API_KEY
+(added separately); until set, the review is skipped and the check stays green.
+
+## [2.32.0](https://github.com/juspay/svelte-ui-components/compare/2.32.0..2.31.0) - 15 June 2026
 
 ## [2.31.0](https://github.com/juspay/svelte-ui-components/compare/2.31.0..2.30.0) - 15 June 2026
 

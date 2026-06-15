@@ -14,6 +14,7 @@
     bottomContent,
     optionIndicator,
     testId,
+    itemTestId,
     onchange,
     classes,
     open = $bindable(false)
@@ -307,7 +308,6 @@
         <div class="select-empty">No results</div>
       {:else}
         {#each filteredItems as item, index (item.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <div
             class="select-option"
             class:multi={multiple}
@@ -317,6 +317,13 @@
             id={`${listboxId}-option-${index}`}
             aria-selected={value.includes(item.id)}
             tabindex="-1"
+            {...item.testId
+              ? { 'data-pw': item.testId }
+              : typeof itemTestId === 'string'
+                ? { 'data-pw': `${itemTestId}-${item.id}` }
+                : typeof testId === 'string'
+                  ? { 'data-pw': `${testId}-${item.id}` }
+                  : {}}
             onclick={() => selectItem(item.id)}
             onmouseenter={() => (highlightedIndex = index)}
           >

@@ -2,9 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.28.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.29.0)
 
-Adds SelectItem.testId and an itemTestId fallback prop so each option emits a data-pw attribute (item.testId, else itemTestId-{id}, else testId-{id}). This lets consumers target individual options in e2e tests without a downstream patch. Also removes a now-unused svelte-ignore on the option element. Incidental: re-applies prettier/eslint formatting to 3 demo pages (banner/modal/table) that had regressed and were failing the lint publish-gate.
+Add an additive `presetLabel: string | null` field to the onapply,
+onapplysingle, and onapplycompare event payloads so consumers can tell
+which preset was selected (null for a custom calendar pick). Backward
+compatible — existing consumers ignore the new field.
+
+Also fix the release lint failure introduced with maxRangeDays: the
+`limit === undefined` branch in rangeConstrainedDisabledDates tripped the
+no-restricted-syntax `undefined` ban. maxRangeDays is typed `number | null`,
+so the redundant undefined check is removed (`limit === null` suffices).
+
+## [2.29.0](https://github.com/juspay/svelte-ui-components/compare/2.29.0..2.28.3) - 15 June 2026
 
 ## [2.28.3](https://github.com/juspay/svelte-ui-components/compare/2.28.3..2.28.2) - 14 June 2026
 

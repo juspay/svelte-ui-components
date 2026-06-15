@@ -22,6 +22,8 @@ export type OptionalDateRangePickerProperties = {
   maxDate?: Date | null;
   /** Specific dates to disable, or a predicate. */
   disabledDates?: Date[] | ((date: Date) => boolean);
+  /** Maximum number of days a selected range may span, inclusive of both endpoints (range mode only). Once a start date is picked, dates that would exceed this span are disabled until the range is completed. Omit for no limit. */
+  maxRangeDays?: number | null;
   /** Preset options shown in the sidebar. Omit to hide the sidebar. */
   presets?: DateRangePreset[] | null;
   /** Placeholder shown when no range is selected. */

@@ -7,7 +7,7 @@
   import Button from '$lib/Button/Button.svelte';
 
   let overlayDiv: HTMLDivElement | null = $state(null);
-  let backPressed = false;
+  let backPressed = $state(false);
 
   let {
     size = 'fit-content',
@@ -30,47 +30,87 @@
     onsecondaryButtonClick,
     onoverlayClick,
     onkeydown,
-    classes
+    classes,
+    overlayBackdropFilter,
+    usePortal = false
   }: ModalProperties = $props();
 
+  // Fix [major]: plain const so the debouncer closure retains its internal lastCallTime state
+  // across re-renders. $derived would recreate the debouncer on every reactive re-evaluation,
+  // resetting the timer and breaking debounce correctness.
   const debounce = createDebouncer(debounceTime);
 
-  function handlePopstate() {
+  // Fix [minor]: portalAction with null guard + update hook so usePortal toggles work post-mount.
+  const portalAction = (node: HTMLElement, params: { usePortal: boolean }) => {
+    if (!params.usePortal || typeof document === 'undefined' || !document.body) {
+      return;
+    }
+    const target = document.body;
+    target.appendChild(node);
+    return {
+      update(updatedParams: { usePortal: boolean }) {
+        if (updatedParams.usePortal && !node.parentElement?.isSameNode(document.body)) {
+          document.body.appendChild(node);
+        }
+      },
+      destroy() {
+        node.parentNode?.removeChild(node);
+      }
+    };
+  };
+
+  const handlePopstate = (): void => {
     backPressed = true;
     onclose?.();
-  }
+  };
 
-  function handleRightImageClick(event: MouseEvent): void {
+  const handleRightImageClick = (event: MouseEvent): void => {
     onheaderRightImageClick?.(event);
-  }
+  };
 
-  function handleLeftImageClick(event: MouseEvent): void {
+  const handleLeftImageClick = (event: MouseEvent): void => {
     onheaderLeftImageClick?.(event);
-  }
+  };
 
-  function handlePrimaryButtonClick(event: MouseEvent): void {
+  const handlePrimaryButtonClick = (event: MouseEvent): void => {
     onprimaryButtonClick?.(event);
-  }
+  };
 
-  function handleSecondaryButtonClick(event: MouseEvent): void {
+  const handleSecondaryButtonClick = (event: MouseEvent): void => {
     onsecondaryButtonClick?.(event);
-  }
+  };
 
-  function handleOverlayClick(event: MouseEvent) {
+  const handleOverlayClick = (event: MouseEvent): void => {
     if (event.target === overlayDiv) {
       debounce(() => {
         onoverlayClick?.();
       });
     }
-  }
+  };
 
-  function handleKeyDown(event: KeyboardEvent): void {
+  const handleKeyDown = (event: KeyboardEvent): void => {
     onkeydown?.(event);
-    let key = event?.key;
+    const key = event?.key;
     if (key === 'Escape') {
       onoverlayClick?.();
     }
-  }
+  };
+
+  // Fix [major]: role=button image divs need Enter/Space handlers for WCAG 2.1 SC 2.1.1.
+  // Keyboard activation (Enter/Space) invokes the same prop callbacks as click.
+  const handleLeftImageKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onheaderLeftImageClick?.(new MouseEvent('click'));
+    }
+  };
+
+  const handleRightImageKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onheaderRightImageClick?.(new MouseEvent('click'));
+    }
+  };
 
   onMount(() => {
     document.body.style.overflow = 'hidden';
@@ -99,9 +139,13 @@
   <OverlayAnimation>
     <div
       bind:this={overlayDiv}
+      use:portalAction={{ usePortal }}
       class="modal {align} {showOverlay ? 'overlay-active' : 'overlay-inactive'} {classes ?? ''}"
+      style={overlayBackdropFilter != null
+        ? `--modal-overlay-backdrop-filter: ${overlayBackdropFilter};`
+        : null}
       onclick={handleOverlayClick}
-      {onkeydown}
+      onkeydown={handleKeyDown}
       role="button"
       tabindex="0"
       data-pw={testId}
@@ -113,7 +157,7 @@
               {#if typeof header.leftImage === 'string' && header.leftImage.length > 0}
                 <div
                   onclick={handleLeftImageClick}
-                  {onkeydown}
+                  onkeydown={handleLeftImageKeyDown}
                   role="button"
                   tabindex="0"
                   data-pw={leftImageTestId}
@@ -131,7 +175,7 @@
                   role="button"
                   tabindex="0"
                   onclick={handleRightImageClick}
-                  {onkeydown}
+                  onkeydown={handleRightImageKeyDown}
                   data-pw={header.buttonTestId}
                 >
                   <img class="header-right-img" src={header.rightImage} alt="" />
@@ -186,6 +230,8 @@
 
   .overlay-active {
     background-color: var(--background-color, #00000066);
+    backdrop-filter: var(--modal-overlay-backdrop-filter, none);
+    -webkit-backdrop-filter: var(--modal-overlay-backdrop-filter, none);
     pointer-events: auto;
   }
 

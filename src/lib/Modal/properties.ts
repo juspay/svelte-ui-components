@@ -5,7 +5,9 @@ import type { Snippet } from 'svelte';
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';
 export type ModalAlign = 'top' | 'center' | 'bottom';
 
-export type ModalProperties = ModalEventProperties & {
+export type ModalProperties = OptionalModalProperties & ModalEventProperties;
+
+export type OptionalModalProperties = {
   size?: ModalSize;
   align?: ModalAlign;
   showOverlay?: boolean;
@@ -29,6 +31,10 @@ export type ModalProperties = ModalEventProperties & {
   content?: Snippet;
   footerSnippet?: Snippet;
   classes?: string;
+  /** CSS value applied to backdrop-filter on the overlay (e.g. "blur(6px)"). Exposed as --modal-overlay-backdrop-filter CSS var. Default: none (no blur). */
+  overlayBackdropFilter?: string;
+  /** When true, mounts the overlay at document.body to escape clipping/stacking contexts. Default: false. */
+  usePortal?: boolean;
 };
 
 export type ModalEventProperties = {

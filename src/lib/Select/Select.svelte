@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import type { SelectItem, SelectProperties } from './properties';
   import Pill from '$lib/Pill/Pill.svelte';
+  import Img from '$lib/Img/Img.svelte';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
   let {
@@ -22,7 +23,9 @@
     classes,
     open = $bindable(false),
     dropdownAlign = 'left',
-    hierarchy = 'default'
+    hierarchy = 'default',
+    leftIcon,
+    leftIconTestId
   }: SelectProperties = $props();
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
@@ -266,6 +269,14 @@
     {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
     tabindex={disabled ? -1 : searchable ? -1 : 0}
   >
+    {#if typeof leftIcon === 'string' && leftIcon.length > 0}
+      <Img
+        src={leftIcon}
+        alt=""
+        classes="select-left-icon"
+        {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
+      />
+    {/if}
     {#if multiple}
       {#if typeof triggerSummary === 'function'}
         {@render triggerSummary({ value, items })}
@@ -414,6 +425,13 @@
     outline: none;
     -webkit-tap-highlight-color: transparent;
     transition: var(--select-trigger-transition, border-color 0.15s, box-shadow 0.15s);
+  }
+
+  .select-trigger :global(.select-left-icon) {
+    --image-width: var(--select-left-icon-size, 16px);
+    --image-height: var(--select-left-icon-size, 16px);
+    --image-object-fit: contain;
+    flex: none;
   }
 
   .select-trigger:hover:not(.disabled .select-trigger) {

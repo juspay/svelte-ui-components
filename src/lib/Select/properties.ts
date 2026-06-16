@@ -15,6 +15,8 @@ export type MandatorySelectProperties = {
   items: SelectItem[] | string[];
 };
 
+export type SelectHierarchy = 'default' | 'ghost';
+
 export type OptionalSelectProperties = {
   value?: string[];
   multiple?: boolean;
@@ -33,8 +35,12 @@ export type OptionalSelectProperties = {
   dropdownAlign?: 'left' | 'right';
   /** Snippet for rendering a compact trigger summary in multiple mode instead of one Pill per selected value. Receives `{ value, items }` so the consumer can compute e.g. "All" / "3 selected". When not provided the default Pill-per-value behaviour is used. */
   triggerSummary?: import('svelte').Snippet<[{ value: string[]; items: SelectItem[] }]>;
+  /** Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. Defaults to `'default'`. */
+  hierarchy?: SelectHierarchy;
 };
 
 export type SelectEventProperties = {
   onchange?: (value: string[]) => void;
+  onopen?: () => void;
+  onclose?: () => void;
 };

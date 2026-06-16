@@ -17,9 +17,12 @@
     testId,
     itemTestId,
     onchange,
+    onopen,
+    onclose,
     classes,
     open = $bindable(false),
-    dropdownAlign = 'left'
+    dropdownAlign = 'left',
+    hierarchy = 'default'
   }: SelectProperties = $props();
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
@@ -65,6 +68,7 @@
       return;
     }
     open = true;
+    onopen?.();
     highlightedIndex = -1;
     query = '';
     if (searchable) {
@@ -77,6 +81,7 @@
 
   function close(): void {
     open = false;
+    onclose?.();
     query = '';
     highlightedIndex = -1;
   }
@@ -208,7 +213,7 @@
     }
     query = event.target.value;
     if (!open) {
-      open = true;
+      openDropdown();
     }
     highlightedIndex = -1;
   }
@@ -233,6 +238,9 @@
     document.addEventListener('click', handleClickOutside);
     return () => {
       document.removeEventListener('click', handleClickOutside);
+      if (open) {
+        onclose?.();
+      }
     };
   });
 </script>
@@ -241,6 +249,7 @@
   class="select {classes ?? ''}"
   class:open
   class:disabled
+  class:ghost={hierarchy === 'ghost'}
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
 >
@@ -551,5 +560,23 @@
     --pill-border-radius: var(--select-pill-border-radius, 999px);
     --pill-padding: var(--select-pill-padding, 2px 8px);
     --pill-font-size: var(--select-pill-font-size, 13px);
+  }
+
+  /* Ghost hierarchy: transparent, borderless trigger */
+  .select.ghost .select-trigger {
+    background: var(--select-ghost-trigger-background, transparent);
+    border-color: var(--select-ghost-trigger-border-color, transparent);
+    box-shadow: none;
+  }
+
+  .select.ghost .select-trigger:hover:not(.disabled .select-trigger) {
+    border-color: var(--select-ghost-trigger-hover-border-color, transparent);
+    background: var(--select-ghost-trigger-hover-background, rgba(0, 0, 0, 0.04));
+  }
+
+  .select.ghost.open .select-trigger {
+    border-color: var(--select-ghost-trigger-open-border-color, transparent);
+    background: var(--select-ghost-trigger-open-background, rgba(0, 0, 0, 0.06));
+    box-shadow: none;
   }
 </style>

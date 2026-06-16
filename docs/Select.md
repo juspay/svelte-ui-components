@@ -58,17 +58,18 @@ Replace the default ☐/☑ glyphs with a custom indicator:
 
 ## Props
 
-| Prop        | Type                       | Required | Default | Description                                                                                                                                                                  |
-| ----------- | -------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `SelectItem[] \| string[]` | Yes      | -       | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.             |
-| value       | `string[]`                 | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                   |
-| open        | `boolean`                  | No       | `false` | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state. |
-| multiple    | `boolean`                  | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                  |
-| searchable  | `boolean`                  | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                          |
-| placeholder | `string`                   | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                                     |
-| disabled    | `boolean`                  | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                              |
-| testId      | `string`                   | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                           |
-| classes     | `string`                   | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.       |
+| Prop        | Type                       | Required | Default     | Description                                                                                                                                                                                           |
+| ----------- | -------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items       | `SelectItem[] \| string[]` | Yes      | -           | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.                                      |
+| value       | `string[]`                 | No       | `[]`        | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                                            |
+| open        | `boolean`                  | No       | `false`     | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state.                          |
+| multiple    | `boolean`                  | No       | `false`     | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                                           |
+| searchable  | `boolean`                  | No       | `false`     | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                   |
+| placeholder | `string`                   | No       | `''`        | Text shown when no item is selected (or in the search input when empty).                                                                                                                              |
+| disabled    | `boolean`                  | No       | `false`     | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                       |
+| testId      | `string`                   | No       | -           | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                    |
+| classes     | `string`                   | No       | -           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
+| hierarchy   | `SelectHierarchy`          | No       | `'default'` | Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. |
 
 ## Snippets
 
@@ -84,6 +85,8 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | Event    | Type                        | Description                                                                                                                       |
 | -------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | onchange | `(value: string[]) => void` | Fires when the selection changes. Receives the full array of selected item IDs. In single-select mode, the array has one element. |
+| onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                    |
+| onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                   |
 
 ## CSS Variables
 
@@ -171,6 +174,19 @@ Override these custom properties to theme the component.
 | --------------------------------- | ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--select-bottom-content-border`  | `none`     | border-top   | Separator line between the option list and the bottom content. Set to `1px solid #eeeeee` (or any color) in your own CSS when a visible divider is desired. |
 | `--select-bottom-content-padding` | `8px 12px` | padding      | Inner padding of the bottom content area.                                                                                                                   |
+
+### Ghost Trigger
+
+These variables apply when `hierarchy="ghost"`. The trigger starts fully transparent and reveals a subtle background on hover and when open.
+
+| Variable                                    | Default            | CSS Property | Description                                                  |
+| ------------------------------------------- | ------------------ | ------------ | ------------------------------------------------------------ |
+| `--select-ghost-trigger-background`         | `transparent`      | background   | Background of the ghost trigger at rest.                     |
+| `--select-ghost-trigger-border-color`       | `transparent`      | border-color | Border color of the ghost trigger at rest.                   |
+| `--select-ghost-trigger-hover-background`   | `rgba(0,0,0,0.04)` | background   | Background of the ghost trigger on hover.                    |
+| `--select-ghost-trigger-hover-border-color` | `transparent`      | border-color | Border color of the ghost trigger on hover.                  |
+| `--select-ghost-trigger-open-background`    | `rgba(0,0,0,0.06)` | background   | Background of the ghost trigger when the dropdown is open.   |
+| `--select-ghost-trigger-open-border-color`  | `transparent`      | border-color | Border color of the ghost trigger when the dropdown is open. |
 
 ### Empty State
 

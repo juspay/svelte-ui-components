@@ -61,10 +61,16 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event   | Type                             | Description                                                                                                                                             |
-| ------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onclick | `(event: MouseEvent) => void`    | Fires when the button is clicked. Does NOT fire when `showProgressBar` is active (clicks are silently ignored during progress).                         |
-| onkeyup | `(event: KeyboardEvent) => void` | Fires when a key is released while the button has focus. Defaults to a no-op `() => {}` (always fires, unlike other events which default to undefined). |
+| Event        | Type                             | Description                                                                                                                                             |
+| ------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onclick      | `(event: MouseEvent) => void`    | Fires when the button is clicked. Does NOT fire when `showProgressBar` is active (clicks are silently ignored during progress).                         |
+| onkeydown    | `(event: KeyboardEvent) => void` | Fires when a key is pressed down while the button has focus. Use together with `onkeyup` to implement keyboard hold-and-release interactions.           |
+| onkeyup      | `(event: KeyboardEvent) => void` | Fires when a key is released while the button has focus. Defaults to a no-op `() => {}` (always fires, unlike other events which default to undefined). |
+| onmousedown  | `(event: MouseEvent) => void`    | Fires when a mouse button is pressed down on the button. Use together with `onmouseup`/`onmouseleave` to implement hold-and-release interactions.       |
+| onmouseup    | `(event: MouseEvent) => void`    | Fires when a mouse button is released over the button. Use together with `onmousedown` to detect the end of a hold gesture.                             |
+| onmouseleave | `(event: MouseEvent) => void`    | Fires when the pointer leaves the button area. Use together with `onmousedown` to cancel a hold gesture if the pointer drifts off the button.           |
+| ontouchstart | `(event: TouchEvent) => void`    | Fires when a touch point is placed on the button. Use together with `ontouchend` to implement hold-and-release interactions on touch devices.           |
+| ontouchend   | `(event: TouchEvent) => void`    | Fires when a touch point is removed from the button. Use together with `ontouchstart` to detect the end of a touch hold gesture.                        |
 
 ## CSS Variables
 

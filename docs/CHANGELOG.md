@@ -2,18 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.52.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.53.0)
 
-- Add mandatory?: boolean — renders red asterisk next to label; marker uses aria-label="required" for screen-reader accessibility
-- Add size?: InputButtonSize ('sm'|'md'|'lg') — 36/44/54px height presets via CSS vars (--inputbutton-{sm|md|lg}-{height|padding}); all overridable
-- Add error?: string — external error message prop with precedence over internal onErrorMessage; external error &gt; internal validation &gt; info
-- Fix inputRef type: SvelteComponent → ReturnType&lt;typeof Input&gt;
-- Fix null/undefined guards on onErrorMessage and infoMessage
-- Replace invalid/valid class template with class:invalid directive
-- Replace hardcoded font-weight:500 with --input-button-font-weight CSS var
-- Add mandatory, size, error to InputButton.wc.svelte customElement props (web-component consumers can now set them as HTML attributes)
-- Add JSDoc to InputButtonSize type and the three new props in properties.ts
-- Update docs: Props table (mandatory/size/error), CSS Variables table (9 new vars), InputButtonSize type reference, external error precedence note
+## [2.53.0](https://github.com/juspay/svelte-ui-components/compare/2.53.0..2.52.0) - 16 June 2026
 
 ## [2.52.0](https://github.com/juspay/svelte-ui-components/compare/2.52.0..2.51.0) - 16 June 2026
 

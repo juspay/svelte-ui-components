@@ -30,7 +30,15 @@
       onPaste: { type: 'Object' },
       onClick: { type: 'Object' },
       onStateChange: { type: 'Object' },
-      onKeyDown: { type: 'Object' }
+      onKeyDown: { type: 'Object' },
+      leftIcon: { type: 'Object' },
+      rightIcon: { type: 'Object' },
+      onLeftIconClick: { type: 'Object' },
+      onRightIconClick: { type: 'Object' },
+      leftIconLabel: { type: 'String', attribute: 'left-icon-label' },
+      rightIconLabel: { type: 'String', attribute: 'right-icon-label' },
+      mandatory: { type: 'Boolean', reflect: true },
+      forceError: { type: 'Boolean', reflect: true, attribute: 'force-error' }
     }
   }}
 />

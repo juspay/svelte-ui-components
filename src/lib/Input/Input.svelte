@@ -39,7 +39,15 @@
     ariaExpanded,
     ariaAutocomplete,
     ariaControls,
-    ariaActivedescendant
+    ariaActivedescendant,
+    leftIcon,
+    rightIcon,
+    onLeftIconClick,
+    onRightIconClick,
+    leftIconLabel = 'Leading action',
+    rightIconLabel = 'Trailing action',
+    mandatory = false,
+    forceError = false
   }: InputProperties = $props();
 
   export function focus() {
@@ -90,6 +98,11 @@
   });
 
   const showErrorMessage = $derived(validationState === 'Invalid');
+  // forceError lets consumers drive the error border from server/runtime validation,
+  // independent of validationPattern.
+  const showError = $derived(showErrorMessage || forceError);
+  const hasLeftIcon = $derived(typeof leftIcon === 'function');
+  const hasRightIcon = $derived(typeof rightIcon === 'function');
 
   function handleOnInput(event: Event) {
     if (inputElement === null) {
@@ -192,68 +205,113 @@
   }
 </script>
 
-<div class="input-container {classes ?? ''}" class:input-error={showErrorMessage && !actionInput}>
+<div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
   {#if typeof label === 'string' && label !== '' && !actionInput}
     <label class="label" for={name}>
-      {label}
+      {label}{#if mandatory}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
     </label>
   {/if}
 
-  {#if useTextArea}
-    <!-- svelte-ignore element_invalid_self_closing_tag -->
-    <textarea
-      {value}
-      {placeholder}
-      autocomplete={autoComplete}
-      {name}
-      {role}
-      aria-expanded={ariaExpanded}
-      aria-autocomplete={ariaAutocomplete}
-      aria-controls={ariaControls}
-      aria-activedescendant={ariaActivedescendant}
-      onfocus={onFocus}
-      onfocusout={_onFocusOut}
-      oninput={handleOnInput}
-      onpaste={handleOnPaste}
-      onclick={onClick}
-      onkeydown={onKeyDown}
-      class:action-input={actionInput}
-      style="--focus-border: {addFocusColor ? 1 : 0}px;"
-      disabled={disable}
-      bind:this={inputElement}
-      maxlength={dataType === 'tel' ? null : maxLength}
-      minlength={minLength}
-    />
+  {#snippet fieldElement()}
+    {#if useTextArea}
+      <textarea
+        {value}
+        {placeholder}
+        autocomplete={autoComplete}
+        {name}
+        {role}
+        aria-expanded={ariaExpanded}
+        aria-autocomplete={ariaAutocomplete}
+        aria-controls={ariaControls}
+        aria-activedescendant={ariaActivedescendant}
+        aria-required={mandatory || null}
+        required={mandatory || null}
+        onfocus={onFocus}
+        onfocusout={_onFocusOut}
+        oninput={handleOnInput}
+        onpaste={handleOnPaste}
+        onclick={onClick}
+        onkeydown={onKeyDown}
+        class:action-input={actionInput}
+        style="--focus-border: {addFocusColor ? 1 : 0}px;"
+        disabled={disable}
+        bind:this={inputElement}
+        maxlength={dataType === 'tel' ? null : maxLength}
+        minlength={minLength}
+      ></textarea>
+    {:else}
+      <input
+        type={dataType}
+        {value}
+        {placeholder}
+        autocomplete={autoComplete}
+        {name}
+        {role}
+        aria-expanded={ariaExpanded}
+        aria-autocomplete={ariaAutocomplete}
+        aria-controls={ariaControls}
+        aria-activedescendant={ariaActivedescendant}
+        aria-required={mandatory || null}
+        required={mandatory || null}
+        onfocus={onFocus}
+        onfocusout={_onFocusOut}
+        oninput={handleOnInput}
+        onpaste={handleOnPaste}
+        onclick={onClick}
+        onkeydown={onKeyDown}
+        data-pw={testId}
+        class:action-input={actionInput}
+        disabled={disable}
+        bind:this={inputElement}
+        maxlength={dataType === 'tel' ? null : maxLength}
+        minlength={minLength}
+        {min}
+        {max}
+      />
+    {/if}
+  {/snippet}
+
+  {#if hasLeftIcon || hasRightIcon}
+    <div
+      class="input-field-wrap"
+      class:has-left-icon={hasLeftIcon}
+      class:has-right-icon={hasRightIcon}
+    >
+      {#if hasLeftIcon}
+        {#if onLeftIconClick}
+          <button
+            type="button"
+            class="input-icon input-icon-left input-icon-button"
+            aria-label={leftIconLabel}
+            onclick={onLeftIconClick}
+          >
+            {@render leftIcon?.()}
+          </button>
+        {:else}
+          <span class="input-icon input-icon-left">{@render leftIcon?.()}</span>
+        {/if}
+      {/if}
+      {@render fieldElement()}
+      {#if hasRightIcon}
+        {#if onRightIconClick}
+          <button
+            type="button"
+            class="input-icon input-icon-right input-icon-button"
+            aria-label={rightIconLabel}
+            onclick={onRightIconClick}
+          >
+            {@render rightIcon?.()}
+          </button>
+        {:else}
+          <span class="input-icon input-icon-right">{@render rightIcon?.()}</span>
+        {/if}
+      {/if}
+    </div>
   {:else}
-    <input
-      type={dataType}
-      {value}
-      {placeholder}
-      autocomplete={autoComplete}
-      {name}
-      {role}
-      aria-expanded={ariaExpanded}
-      aria-autocomplete={ariaAutocomplete}
-      aria-controls={ariaControls}
-      aria-activedescendant={ariaActivedescendant}
-      onfocus={onFocus}
-      onfocusout={_onFocusOut}
-      oninput={handleOnInput}
-      onpaste={handleOnPaste}
-      onclick={onClick}
-      onkeydown={onKeyDown}
-      data-pw={testId}
-      class:action-input={actionInput}
-      disabled={disable}
-      bind:this={inputElement}
-      maxlength={dataType === 'tel' ? null : maxLength}
-      minlength={minLength}
-      {min}
-      {max}
-    />
+    {@render fieldElement()}
   {/if}
 
-  {#if onErrorMessage !== '' && showErrorMessage && !actionInput}
+  {#if onErrorMessage !== '' && showError && !actionInput}
     <div class="error-message">
       {onErrorMessage}
     </div>
@@ -325,6 +383,71 @@
     color: var(--input-label-msg-text-color, #637c95);
     margin: var(--input-label-msg-margin, 0px 0px 6px 0px);
     padding: var(--input-label-msg-padding);
+  }
+
+  .input-mandatory-asterisk {
+    color: var(--input-mandatory-color, var(--input-error-msg-text-color, #fa1405));
+    margin-left: var(--input-mandatory-gap, 2px);
+  }
+
+  /* Icon wrapper: only rendered when leftIcon/rightIcon is supplied, so non-icon
+     consumers keep the exact prior DOM. The field's bottom margin moves to the
+     wrap so the absolutely-positioned icons centre on the field, not the margin. */
+  .input-field-wrap {
+    position: relative;
+    display: block;
+    margin: var(--input-margin, 0px 0px 12px 0px);
+  }
+
+  .input-field-wrap > :global(textarea),
+  .input-field-wrap > :global(input) {
+    margin: 0 !important;
+    width: var(--input-width, 100%);
+  }
+
+  .input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--input-icon-size, 20px);
+    height: var(--input-icon-size, 20px);
+    color: var(--input-icon-color, inherit);
+    pointer-events: none;
+  }
+
+  .input-icon-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .input-icon-button:focus-visible {
+    outline: var(--input-icon-focus-outline, 2px solid var(--input-focus-border-color, #005fcc));
+    outline-offset: var(--input-icon-focus-outline-offset, 2px);
+    border-radius: var(--input-icon-focus-radius, 2px);
+  }
+
+  .input-icon-left {
+    left: var(--input-icon-gap, 12px);
+  }
+
+  .input-icon-right {
+    right: var(--input-icon-gap, 12px);
+  }
+
+  .input-field-wrap.has-left-icon > :global(textarea),
+  .input-field-wrap.has-left-icon > :global(input) {
+    padding-left: calc(var(--input-icon-size, 20px) + var(--input-icon-gap, 12px) * 2);
+  }
+
+  .input-field-wrap.has-right-icon > :global(textarea),
+  .input-field-wrap.has-right-icon > :global(input) {
+    padding-right: calc(var(--input-icon-size, 20px) + var(--input-icon-gap, 12px) * 2);
   }
 
   .error-message {

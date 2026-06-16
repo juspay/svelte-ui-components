@@ -2,7 +2,15 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.47.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.48.0)
+
+Convert internal `function openFilePicker()` declaration to
+`export const openFilePicker = (): void =&gt; { ... }` so callers can
+invoke it via `bind:this` on the component instance in Svelte 5.
+Logic is unchanged (guard on disabled, then inputEl?.click()).
+Fully backward-compatible — no props added or removed.
+
+## [2.48.0](https://github.com/juspay/svelte-ui-components/compare/2.48.0..2.47.0) - 16 June 2026
 
 ## [2.47.0](https://github.com/juspay/svelte-ui-components/compare/2.47.0..2.46.0) - 16 June 2026
 

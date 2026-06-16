@@ -2,7 +2,35 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.36.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.37.0)
+
+Fixes all blockers/majors from gate review:
+
+- C2-1 (blocker): single-select toggle was broken — capture wasSelected
+before selectedIds.clear() so clicking an already-selected row
+correctly deselects it instead of re-selecting.
+- C2-1+C2-3 (major): selectableRowIds and per-row rowId resolution now
+map over filteredTableData but look up originalIndex via
+sortedTableData.indexOf(row), keeping positional default IDs stable
+across search-filter changes (row '0' stays row '0' even when the
+visible set shrinks).
+- C2-2 (blocker): remove broken JSDoc recipe that showed
+onCellChange?.(…) inside a Snippet body as if Table forwards it.
+Svelte 5 snippets run in consumer scope — Table never calls this
+callback internally. New docs clarify that consumers must close over
+their own handler; onCellChange remains valid as a top-level prop
+for the parent-component API channel. Renamed internal destructured
+binding to _onCellChange to satisfy the unused-var lint rule.
+- C2-3 (minor): add :focus-visible ring to .table-search-input to
+restore keyboard focus visibility stripped by outline:none.
+- C2-1 (minor): make TableCheckboxSelectionConfig.enabled optional
+(defaults to true when config object is present). All internal
+guards updated from checkboxSelection?.enabled to
+!!checkboxSelection && checkboxSelection.enabled !== false, and
+isCheckboxMode derived updated accordingly. Backward-compatible —
+existing consumers passing enabled:true are unaffected.
+
+## [2.37.0](https://github.com/juspay/svelte-ui-components/compare/2.37.0..2.36.0) - 16 June 2026
 
 ## [2.36.0](https://github.com/juspay/svelte-ui-components/compare/2.36.0..2.35.0) - 16 June 2026
 

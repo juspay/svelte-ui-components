@@ -145,6 +145,38 @@ The Card component intentionally omits named layout slots to keep its API minima
 
 This pattern gives full layout control to the consumer (any number of zones, any flex/grid arrangement) without baking structural presets into the library.
 
+### Card with Header Right Slot
+
+```svelte
+<script>
+  import { Card, Button } from '@juspay/svelte-ui-components';
+</script>
+
+<Card title="Recent Orders" description="Last 7 days">
+  {#snippet headerRight()}
+    <Button text="View All" />
+  {/snippet}
+  <p>12 orders placed</p>
+</Card>
+```
+
+### Stretch and Scrollable Card
+
+```svelte
+<div style="height: 300px; display: flex;">
+  <Card title="Activity Log" stretch scrollable>
+    {#snippet children()}
+      {#each events as event}
+        <p>{event.message}</p>
+      {/each}
+    {/snippet}
+    {#snippet footer()}
+      <span>End of log</span>
+    {/snippet}
+  </Card>
+</div>
+```
+
 ## Props
 
 | Prop        | Type                          | Required | Default | Description                                                                                                                                                                  |
@@ -155,6 +187,10 @@ This pattern gives full layout control to the consumer (any number of zones, any
 | classes     | `string`                      | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.       |
 | testId      | `string`                      | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                   |
 | onclick     | `(event: MouseEvent) => void` | No       | `-`     | Click handler. When provided, the card root becomes interactive: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. Omit to keep a plain `<div>`. |
+| headerRight | `Snippet`                     | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                |
+| footer      | `Snippet`                     | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                 |
+| stretch     | `boolean`                     | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.         |
+| scrollable  | `boolean`                     | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility. |
 
 ## Events
 
@@ -191,13 +227,30 @@ Override these custom properties to theme the component.
 | `--card-description-color`     | `inherit`                | color         | Color of the description text. Inherits from parent by default.                                |
 | `--card-description-opacity`   | `0.6`                    | opacity       | Opacity of the description text for visual hierarchy.                                          |
 | `--card-content-padding`       | `16px`                   | padding       | Padding of the content body.                                                                   |
+| `--card-stretch-height`        | `100%`                   | height        | Height of the card root when `stretch=true`. Set to a fixed value or `100%` for full-height layouts. |
+| `--card-content-flex`          | `1`                      | flex          | Flex grow/shrink/basis shorthand for the content area when `stretch=true`, allowing it to fill remaining height. |
+| `--card-header-align-items`    | `flex-start`             | align-items   | Vertical alignment of the header row when `headerRight` is provided (`.card-header-split` flex container). |
+| `--card-header-gap`            | `8px`                    | gap           | Gap between the header main section and the `headerRight` slot when both are present.         |
+| `--card-header-right-align-items` | `center`              | align-items   | Vertical alignment of the `headerRight` slot container.                                        |
+| `--card-content-max-height`    | `400px`                  | max-height    | Maximum height of the scrollable content area when `scrollable=true`.                         |
+| `--card-footer-padding`        | `12px 16px`              | padding       | Padding of the footer element.                                                                 |
+| `--card-footer-border-top`     | `none`                   | border-top    | Optional top border for the footer. Set to a border value (e.g. `1px solid #e5e7eb`) to visually separate the footer. |
+| `--card-footer-background`     | `inherit`                | background    | Background color of the footer element. Inherits from the card by default.                    |
 
 ## Web Component
 
 Tag: `<sui-card>`
 
+Reflected boolean attributes: `stretch`, `scrollable`.
+
 ```html
 <sui-card title="Order Summary" description="Review your items">
   <p>3 items in your cart</p>
+</sui-card>
+
+<!-- stretch + scrollable -->
+<sui-card title="Activity Log" stretch scrollable>
+  <p>Event 1</p>
+  <p>Event 2</p>
 </sui-card>
 ```

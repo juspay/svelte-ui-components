@@ -21,4 +21,27 @@ export type OptionalCardProperties = {
    * so existing consumers see zero behaviour change.
    */
   onclick?: (event: MouseEvent) => void;
+  /**
+   * Snippet rendered at the top-right of the header row, alongside title/description.
+   * When omitted the header row is unchanged (title block takes full width).
+   */
+  headerRight?: Snippet;
+  /**
+   * Snippet rendered in a `<footer class="card-footer">` element below the content area.
+   * When omitted no footer element is rendered.
+   */
+  footer?: Snippet;
+  /**
+   * When true, the root `.card` element gets `height: 100%` and becomes a flex column
+   * so the content area grows to fill the remaining space. Defaults to false.
+   */
+  stretch?: boolean;
+  /**
+   * When true, the `.card-content` area becomes vertically scrollable with a
+   * configurable `max-height` (default 400px via `--card-content-max-height`).
+   * The content div receives `role="region"`, `aria-label="Scrollable card content"`,
+   * and `tabindex="0"` so keyboard users can focus and scroll the overflowing region.
+   * Defaults to false.
+   */
+  scrollable?: boolean;
 };

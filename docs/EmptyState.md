@@ -64,22 +64,28 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                              | Default        | CSS Property  | Description                                                |
-| ------------------------------------- | -------------- | ------------- | ---------------------------------------------------------- |
-| `--empty-state-padding`               | `32px 16px`    | padding       | Padding of the empty state container.                      |
-| `--empty-state-text-align`            | `center`       | text-align    | Text alignment of all content.                             |
-| `--empty-state-gap`                   | `0px`          | gap           | Gap between flex children.                                 |
-| `--empty-state-icon-size`             | `48px`         | width, height | Width and height of the icon container.                    |
-| `--empty-state-icon-color`            | `currentColor` | color         | Color of the icon. Inherits from parent by default.        |
-| `--empty-state-icon-opacity`          | `0.4`          | opacity       | Opacity of the icon for subtle visual treatment.           |
-| `--empty-state-icon-margin-bottom`    | `16px`         | margin-bottom | Space below the icon container.                            |
-| `--empty-state-title-font-size`       | `16px`         | font-size     | Font size of the title.                                    |
-| `--empty-state-title-font-weight`     | `600`          | font-weight   | Font weight of the title.                                  |
-| `--empty-state-title-color`           | `inherit`      | color         | Color of the title. Inherits from parent by default.       |
-| `--empty-state-description-font-size` | `14px`         | font-size     | Font size of the description.                              |
-| `--empty-state-description-color`     | `inherit`      | color         | Color of the description. Inherits from parent by default. |
-| `--empty-state-description-opacity`   | `0.6`          | opacity       | Opacity of the description for visual hierarchy.           |
-| `--empty-state-description-max-width` | `360px`        | max-width     | Maximum width of the description for readability.          |
+| Variable                                | Default        | CSS Property    | Description                                                                                 |
+| --------------------------------------- | -------------- | --------------- | ------------------------------------------------------------------------------------------- |
+| `--empty-state-padding`                 | `32px 16px`    | padding         | Padding of the empty state container.                                                       |
+| `--empty-state-text-align`              | `center`       | text-align      | Text alignment of all content.                                                              |
+| `--empty-state-gap`                     | `0px`          | gap             | Gap between flex children.                                                                  |
+| `--empty-state-icon-size`               | `48px`         | width, height   | Width and height of the icon container.                                                     |
+| `--empty-state-icon-color`              | `currentColor` | color           | Color of the icon. Inherits from parent by default.                                         |
+| `--empty-state-icon-opacity`            | `0.4`          | opacity         | Opacity of the icon for subtle visual treatment.                                            |
+| `--empty-state-icon-margin-bottom`      | `16px`         | margin-bottom   | Space below the icon container.                                                             |
+| `--empty-state-title-font-size`         | `16px`         | font-size       | Font size of the title.                                                                     |
+| `--empty-state-title-font-weight`       | `600`          | font-weight     | Font weight of the title.                                                                   |
+| `--empty-state-title-color`             | `inherit`      | color           | Color of the title. Inherits from parent by default.                                        |
+| `--empty-state-description-font-size`   | `14px`         | font-size       | Font size of the description.                                                               |
+| `--empty-state-description-color`       | `inherit`      | color           | Color of the description. Inherits from parent by default.                                  |
+| `--empty-state-description-opacity`     | `0.6`          | opacity         | Opacity of the description for visual hierarchy.                                            |
+| `--empty-state-description-max-width`   | `360px`        | max-width       | Maximum width of the description for readability.                                           |
+| `--empty-state-actions-display`         | `block`        | display         | Display mode of the actions container. Set to `flex` to lay out actions in a row or column. |
+| `--empty-state-actions-flex-direction`  | `row`          | flex-direction  | Direction of the actions when `display` is `flex` (e.g. `column` to stack buttons).         |
+| `--empty-state-actions-align-items`     | `stretch`      | align-items     | Cross-axis alignment of the actions when `display` is `flex` (e.g. `center`).               |
+| `--empty-state-actions-justify-content` | `normal`       | justify-content | Main-axis alignment of the actions when `display` is `flex`.                                |
+| `--empty-state-actions-gap`             | `0`            | gap             | Gap between action items when `display` is `flex`.                                          |
+| `--empty-state-actions-margin-top`      | `16px`         | margin-top      | Space above the actions container.                                                          |
 
 ## Web Component
 

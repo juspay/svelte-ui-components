@@ -14,13 +14,13 @@ A full-screen status display with a centered icon image, title text, description
 
 ## Props
 
-| Prop              | Type                                                                                                                                                                                                                                                                                        | Required | Default                          | Description                                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| statusIcon        | `string`                                                                                                                                                                                                                                                                                    | No       | `'icons/order-success-icon.svg'` | URL of the status icon image displayed at the center (e.g., success checkmark, error cross).                                                                           |
-| statusText        | `string`                                                                                                                                                                                                                                                                                    | No       | `''`                             | Main status title text (e.g., 'Order Successful', 'Payment Failed').                                                                                                   |
-| statusDescription | `string`                                                                                                                                                                                                                                                                                    | No       | `''`                             | Description text below the title. Supports HTML content (rendered via {@html}).                                                                                        |
+| Prop              | Type               | Required | Default                          | Description                                                                                                                                                            |
+| ----------------- | ------------------ | -------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| statusIcon        | `string`           | No       | `'icons/order-success-icon.svg'` | URL of the status icon image displayed at the center (e.g., success checkmark, error cross).                                                                           |
+| statusText        | `string`           | No       | `''`                             | Main status title text (e.g., 'Order Successful', 'Payment Failed').                                                                                                   |
+| statusDescription | `string`           | No       | `''`                             | Description text below the title. Supports HTML content (rendered via {@html}).                                                                                        |
 | buttonProperties  | `ButtonProperties` | No       | `-`                              | Optional ButtonProperties object for an action button below the description (e.g., 'Try Again', 'Go Home').                                                            |
-| classes           | `string`                                                                                                                                                                                                                                                                                    | No       | `-`                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| classes           | `string`           | No       | `-`                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events
 
@@ -32,12 +32,13 @@ A full-screen status display with a centered icon image, title text, description
 
 Override these custom properties to theme the component.
 
-| Variable                          | Default               | CSS Property | Description                                                                                                                          |
-| --------------------------------- | --------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `--status-font-weight`            | `600`                 | font-weight  | Font weight of the status title text. Used with different fallbacks: `600` on status text and `400` on description.                  |
-| `--status-description-font-color` | `#2f3841`             | color        | Color of the description text. Used with different fallbacks: `#2f3841` on status text and `#436484cc` on the description paragraph. |
-| `--order-font`                    | `inherit`             | font-family  | Font family for the status text.                                                                                                     |
-| `--order-font-size`               | `14px`                | font-size    | Font size for the status text.                                                                                                       |
+| Variable                          | Default   | CSS Property | Description                                                                                                                          |
+| --------------------------------- | --------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `--status-min-height`             | `100vh`   | min-height   | Minimum height of the `.background` container. Controls the overall height of the status screen.                                     |
+| `--status-font-weight`            | `600`     | font-weight  | Font weight of the status title text. Used with different fallbacks: `600` on status text and `400` on description.                  |
+| `--status-description-font-color` | `#2f3841` | color        | Color of the description text. Used with different fallbacks: `#2f3841` on status text and `#436484cc` on the description paragraph. |
+| `--order-font`                    | `inherit` | font-family  | Font family for the status text.                                                                                                     |
+| `--order-font-size`               | `14px`    | font-size    | Font size for the status text.                                                                                                       |
 
 ## Type Reference
 

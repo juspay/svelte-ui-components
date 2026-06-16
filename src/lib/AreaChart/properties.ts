@@ -31,6 +31,7 @@ export type OptionalAreaChartProperties = {
   stacked?: boolean;
   stackNormalize?: boolean;
   fillOpacity?: number;
+  gradientFill?: boolean;
   showDots?: boolean;
   showLine?: boolean;
   showValues?: boolean;

@@ -43,7 +43,7 @@ export type BandScale = {
 
 // ── Enums ─────────────────────────────────────────────────────
 
-export type CurveType = 'linear' | 'monotone' | 'step' | 'natural';
+export type CurveType = 'linear' | 'monotone' | 'spline' | 'step' | 'natural';
 
 export type AxisOrientation = 'top' | 'right' | 'bottom' | 'left';
 

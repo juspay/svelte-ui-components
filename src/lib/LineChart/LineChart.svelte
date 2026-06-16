@@ -1,21 +1,30 @@
 <script lang="ts">
   import type { LineChartProperties, LineChartTooltipContext } from './properties';
+  import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
   import { createLinearScale, niceLinearDomain } from '$lib/_chart/scales';
   import { computeChartDimensions } from '$lib/_chart/geometry';
-  import { linePath } from '$lib/_chart/paths';
+  import { linePath, areaPath } from '$lib/_chart/paths';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import type { LegendItem, Point } from '$lib/_chart/types';
+
+  // Per-instance ID for SVG gradient <linearGradient id> references. Initialised
+  // inside onMount so the value is only ever generated on the client — avoids an
+  // SSR hydration mismatch that would occur if Math.random() ran on both server
+  // and client and produced different strings.
+  let uid = $state('');
 
   // ── Props ──────────────────────────────────────────────────────
 
   let {
     series,
     curve = 'monotone',
+    gradientFill = false,
+    fillOpacity = 0.3,
     showDots = true,
     showValues = false,
     dotRadius = 4,
@@ -47,6 +56,10 @@
   let hovered = $state<{ si: number; pi: number } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+
+  onMount(() => {
+    uid = Math.random().toString(36).slice(2, 9);
+  });
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -82,7 +95,12 @@
     series.map((s, si) => {
       const color = s.color ?? getColor(si);
       const points: Point[] = s.data.map((d) => ({ x: xScale(d.x), y: yScale(d.y) }));
-      return { color, points, path: linePath(points, curve) };
+      return {
+        color,
+        points,
+        path: linePath(points, curve),
+        areaD: areaPath(points, dims.innerHeight, curve)
+      };
     })
   );
 
@@ -123,7 +141,7 @@
       return null;
     }
     return {
-      title: `x: ${formatNumber(tooltipContext.x)}`,
+      title: xTickFormat ? xTickFormat(tooltipContext.x) : `x: ${formatNumber(tooltipContext.x)}`,
       items: tooltipContext.points.map((p) => ({
         label: p.name,
         value: formatNumber(p.y),
@@ -227,6 +245,34 @@
     {/if}
 
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+      {#if gradientFill}
+        <defs>
+          {#each lines as line, si (si)}
+            <linearGradient
+              id="line-grad-{uid}-{si}"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2={dims.innerHeight}
+              gradientUnits="userSpaceOnUse"
+            >
+              <!-- The gradient top stop is fillOpacity + 0.3 (clamped to 1), giving a richer
+                   anchor at the top that fades to transparent at the bottom. This intentionally
+                   exceeds the base fillOpacity so that gradient-fill areas appear more vivid
+                   than a flat solid-fill at fillOpacity alone. -->
+              <stop
+                offset="0%"
+                stop-color={line.color}
+                stop-opacity={Math.min(
+                  (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
+                  1
+                )}
+              />
+              <stop offset="100%" stop-color={line.color} stop-opacity={0} />
+            </linearGradient>
+          {/each}
+        </defs>
+      {/if}
       <g transform="translate({dims.margin.left}, {dims.margin.top})">
         {#if showYAxis}
           <Axis
@@ -245,6 +291,14 @@
         {/if}
 
         {#each lines as line, si (si)}
+          {#if gradientFill}
+            <path
+              class="line-area-fill"
+              class:dimmed={hovered !== null && hovered.si !== si}
+              d={line.areaD}
+              fill="url(#line-grad-{uid}-{si})"
+            />
+          {/if}
           <path
             class="line-path"
             class:dimmed={hovered !== null && hovered.si !== si}
@@ -253,6 +307,16 @@
             stroke-width={strokeWidth}
             fill="none"
           />
+          {#if line.points.length === 1 && !showDots}
+            <circle
+              class="single-point"
+              class:dimmed={hovered !== null && hovered.si !== si}
+              cx={line.points[0].x}
+              cy={line.points[0].y}
+              r={dotRadius * 1.5}
+              fill={line.color}
+            />
+          {/if}
           {#if showDots}
             {#each line.points as point, pi (pi)}
               <circle
@@ -313,6 +377,15 @@
     width: 100%;
     position: relative;
   }
+  .line-area-fill {
+    transition:
+      fill-opacity var(--chart-transition-duration, 0.2s) ease,
+      opacity var(--chart-transition-duration, 0.2s) ease;
+    pointer-events: none;
+  }
+  .line-area-fill.dimmed {
+    opacity: var(--linechart-dimmed-opacity, 0.2);
+  }
   .line-path {
     transition: opacity var(--chart-transition-duration, 0.2s) ease;
     stroke-linecap: round;
@@ -320,6 +393,12 @@
     pointer-events: none;
   }
   .line-path.dimmed {
+    opacity: var(--linechart-dimmed-opacity, 0.2);
+  }
+  .single-point {
+    pointer-events: none;
+  }
+  .single-point.dimmed {
     opacity: var(--linechart-dimmed-opacity, 0.2);
   }
   .dot {

@@ -148,6 +148,7 @@ export function linePath(points: Point[], curve: CurveType = 'linear'): string {
     return points.length === 1 ? `M ${points[0].x} ${points[0].y}` : '';
   }
   switch (curve) {
+    case 'spline':
     case 'monotone':
     case 'natural':
       return monotonePath(points);

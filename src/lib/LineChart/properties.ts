@@ -28,6 +28,8 @@ export type MandatoryLineChartProperties = {
 
 export type OptionalLineChartProperties = {
   curve?: CurveType;
+  gradientFill?: boolean;
+  fillOpacity?: number;
   showDots?: boolean;
   showValues?: boolean;
   dotRadius?: number;

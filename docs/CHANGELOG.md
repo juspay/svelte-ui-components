@@ -2,7 +2,13 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.45.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.45.1)
+
+- Add optional `labelFormatter?: (value: number) =&gt; string` to OptionalSliderProperties; used via $derived displayValue with String(value) fallback — zero breaking change
+- Add `--slider-thumb-opacity` CSS var (default 1) to both ::-webkit-slider-thumb and ::-moz-range-thumb with opacity transition alongside existing transform transition
+- Add `--slider-thumb-hover-opacity` CSS var on hover pseudo-selectors with nested fallback `var(--slider-thumb-hover-opacity, var(--slider-thumb-opacity, 1))` enabling hide-until-hover thumb pattern
+
+## [2.45.1](https://github.com/juspay/svelte-ui-components/compare/2.45.1..2.45.0) - 16 June 2026
 
 ## [2.45.0](https://github.com/juspay/svelte-ui-components/compare/2.45.0..2.44.0) - 16 June 2026
 

@@ -48,6 +48,15 @@
   let summaryValue: string[] = $state([]);
   let ghostValue: string[] = $state([]);
   let openEventLog: string[] = $state([]);
+  let leftIconValue: string[] = $state([]);
+
+  // Inline SVG data URI — a simple globe icon, no external asset needed
+  const globeIconSrc =
+    `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23555' stroke-width='1.5'%3E` +
+    `%3Ccircle cx='8' cy='8' r='6.5'/%3E` +
+    `%3Cellipse cx='8' cy='8' rx='3' ry='6.5'/%3E` +
+    `%3Cline x1='1.5' y1='8' x2='14.5' y2='8'/%3E` +
+    `%3C/svg%3E`;
 </script>
 
 <div class="page-header">
@@ -203,6 +212,24 @@
     placeholder="Right aligned"
     dropdownAlign="right"
   />
+</div>
+
+<h3>leftIcon prop</h3>
+<p>
+  Pass an image URL (or data URI) via <code>leftIcon</code> to render a leading icon at the left of
+  the trigger. Size is controlled by the <code>--select-left-icon-size</code> CSS variable (default 16px).
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={cities}
+    bind:value={leftIconValue}
+    placeholder="Select a city"
+    leftIcon={globeIconSrc}
+    leftIconTestId="select-left-icon"
+  />
+  {#if leftIconValue.length > 0}
+    <p class="demo-info">Selected: {leftIconValue.at(0)}</p>
+  {/if}
 </div>
 
 <style>

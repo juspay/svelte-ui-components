@@ -13,7 +13,9 @@
       classes: { type: 'String' },
       open: { type: 'Boolean', reflect: true },
       dropdownAlign: { type: 'String', attribute: 'dropdown-align' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      leftIcon: { type: 'String', attribute: 'left-icon', reflect: true },
+      leftIconTestId: { type: 'String', attribute: 'left-icon-test-id' }
     }
   }}
 />

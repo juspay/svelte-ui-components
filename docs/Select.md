@@ -56,20 +56,30 @@ Replace the default ☐/☑ glyphs with a custom indicator:
 </Select>
 ```
 
+### With Leading Icon
+
+Pass an image URL (or inline data URI) via `leftIcon` to render a leading icon at the left of the trigger. The icon size defaults to 16×16 px and can be customised with the `--select-left-icon-size` CSS variable.
+
+```svelte
+<Select {items} placeholder="Select a city" leftIcon="/icons/globe.svg" />
+```
+
 ## Props
 
-| Prop        | Type                       | Required | Default     | Description                                                                                                                                                                                           |
-| ----------- | -------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `SelectItem[] \| string[]` | Yes      | -           | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.                                      |
-| value       | `string[]`                 | No       | `[]`        | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                                            |
-| open        | `boolean`                  | No       | `false`     | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state.                          |
-| multiple    | `boolean`                  | No       | `false`     | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                                           |
-| searchable  | `boolean`                  | No       | `false`     | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                   |
-| placeholder | `string`                   | No       | `''`        | Text shown when no item is selected (or in the search input when empty).                                                                                                                              |
-| disabled    | `boolean`                  | No       | `false`     | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                       |
-| testId      | `string`                   | No       | -           | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                    |
-| classes     | `string`                   | No       | -           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
-| hierarchy   | `SelectHierarchy`          | No       | `'default'` | Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. |
+| Prop           | Type                       | Required | Default     | Description                                                                                                                                                                                           |
+| -------------- | -------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items          | `SelectItem[] \| string[]` | Yes      | -           | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.                                      |
+| value          | `string[]`                 | No       | `[]`        | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                                            |
+| open           | `boolean`                  | No       | `false`     | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state.                          |
+| multiple       | `boolean`                  | No       | `false`     | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                                           |
+| searchable     | `boolean`                  | No       | `false`     | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                   |
+| placeholder    | `string`                   | No       | `''`        | Text shown when no item is selected (or in the search input when empty).                                                                                                                              |
+| disabled       | `boolean`                  | No       | `false`     | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                       |
+| testId         | `string`                   | No       | -           | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                    |
+| classes        | `string`                   | No       | -           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
+| hierarchy      | `SelectHierarchy`          | No       | `'default'` | Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. |
+| leftIcon       | `string`                   | No       | -           | Image src (URL or data URI) for an icon rendered at the left of the trigger. Size is controlled by `--select-left-icon-size` (default 16px).                                                          |
+| leftIconTestId | `string`                   | No       | -           | `data-pw` test id forwarded to the leading icon element for end-to-end testing selectors.                                                                                                             |
 
 ## Snippets
 
@@ -122,6 +132,12 @@ Override these custom properties to theme the component.
 | `--select-trigger-hover-border-color` | `#999999`                              | border-color  | Border color of the trigger on hover.                       |
 | `--select-trigger-focus-border-color` | `#2563eb`                              | border-color  | Border color of the trigger when focused or open.           |
 | `--select-trigger-focus-shadow`       | `0 0 0 2px rgba(37, 99, 235, 0.2)`     | box-shadow    | Box shadow of the trigger when focused or open.             |
+
+### Left Icon
+
+| Variable                  | Default | CSS Property  | Description                              |
+| ------------------------- | ------- | ------------- | ---------------------------------------- |
+| `--select-left-icon-size` | `16px`  | width, height | Size of the leading icon in the trigger. |
 
 ### Placeholder
 
@@ -227,6 +243,7 @@ type SelectItem = {
 This component uses the following library components internally:
 
 - Pill (for displaying selected items in multi-select mode)
+- Img (for rendering the optional leading trigger icon via `leftIcon`)
 
 ## Web Component
 

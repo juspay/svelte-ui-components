@@ -37,6 +37,10 @@ export type OptionalSelectProperties = {
   triggerSummary?: import('svelte').Snippet<[{ value: string[]; items: SelectItem[] }]>;
   /** Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. Defaults to `'default'`. */
   hierarchy?: SelectHierarchy;
+  /** Optional image src (URL or data URI) rendered at the left of the trigger. Size is controlled by the `--select-left-icon-size` CSS variable (default 16px). */
+  leftIcon?: string;
+  /** `data-pw` test id forwarded to the leading icon `<Img>` element. */
+  leftIconTestId?: string;
 };
 
 export type SelectEventProperties = {

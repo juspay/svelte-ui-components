@@ -6,6 +6,7 @@
     max = 100,
     showLabel = true,
     labelFormatter,
+    ariaLabel,
     testId,
     classes
   }: GaugeProperties = $props();
@@ -33,7 +34,7 @@
   aria-valuenow={clamped}
   aria-valuemin={0}
   aria-valuemax={100}
-  aria-label="gauge"
+  aria-label={ariaLabel ?? labelText}
 >
   <svg viewBox="0 0 {VIEW_BOX} {VIEW_BOX}">
     <circle class="track" cx={CENTER} cy={CENTER} r={RADIUS} fill="none" />

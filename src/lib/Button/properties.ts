@@ -24,11 +24,18 @@ export type OptionalButtonProperties = {
 
 export type ButtonEventProperties = {
   onclick?: (event: MouseEvent) => void;
+  /** Fires when a key is pressed down while the button has focus. */
   onkeydown?: (event: KeyboardEvent) => void;
+  /** Fires when a key is released while the button has focus. */
   onkeyup?: (event: KeyboardEvent) => void;
+  /** Fires when a mouse button is pressed down on the button. */
   onmousedown?: (event: MouseEvent) => void;
+  /** Fires when a mouse button is released over the button. */
   onmouseup?: (event: MouseEvent) => void;
+  /** Fires when the pointer leaves the button area. */
   onmouseleave?: (event: MouseEvent) => void;
+  /** Fires when a touch point is placed on the button. */
   ontouchstart?: (event: TouchEvent) => void;
+  /** Fires when a touch point is removed from the button. */
   ontouchend?: (event: TouchEvent) => void;
 };

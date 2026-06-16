@@ -272,7 +272,7 @@
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
       <g transform="translate({MARGIN}, {MARGIN})">
         {#if columnLabels != null && columnLabels.length > 0}
-          {#each columnLabels as label, ci (ci)}
+          {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
             <text
               class="sankey-col-label"
               x={ci * colWidth + nodeWidth / 2}

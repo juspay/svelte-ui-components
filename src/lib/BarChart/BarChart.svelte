@@ -413,10 +413,7 @@
       return null;
     }
     const title = isMulti ? `${bar.dataPoint.label} — ${bar.seriesName}` : bar.dataPoint.label;
-    const displayValue =
-      isNormalized && bar.normalizedValue != null
-        ? normalizedFormat(bar.normalizedValue)
-        : format(bar.dataPoint.value);
+    const displayValue = getDisplayValue(bar);
     return {
       title,
       items: [{ label: bar.dataPoint.label, value: displayValue, color: bar.color }]
@@ -574,7 +571,7 @@
                     y2={isHoriz ? entry.bar.y : entry.bar.y + entry.bar.height}
                     gradientUnits="userSpaceOnUse"
                   >
-                    {#each grad.stops as stop (stop.offset)}
+                    {#each grad.stops as stop, stopIndex (`${stopIndex}-${stop.offset}`)}
                       <stop
                         offset="{stop.offset * 100}%"
                         stop-color={stop.color}

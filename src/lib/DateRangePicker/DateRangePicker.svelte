@@ -110,6 +110,32 @@
 
   let activePresetLabel: string | null = $state(resolvedInitialPresetLabel);
 
+  // Seed draft from initialPresetLabel whenever presets become available so
+  // the calendar shows the preset's date selection when the picker is first
+  // opened — even if presets arrive asynchronously after initial render.
+  // The draftStart/draftEnd/draftValue guards prevent re-seeding once the
+  // user has made a custom selection.
+  $effect.pre(() => {
+    if (
+      resolvedInitialPresetLabel !== null &&
+      presets !== null &&
+      draftStart === null &&
+      draftEnd === null &&
+      draftValue === null
+    ) {
+      const matchedPreset = presets.find((p) => p.label === resolvedInitialPresetLabel) ?? null;
+      if (matchedPreset !== null) {
+        const { start, end } = matchedPreset.getValue();
+        if (mode === 'single') {
+          draftValue = start;
+        } else {
+          draftStart = start;
+          draftEnd = end;
+        }
+      }
+    }
+  });
+
   const now = new SvelteDate();
 
   // Dual-month navigation: track the year+month of the left calendar
@@ -160,11 +186,11 @@
 
   function openPicker(): void {
     // Seed draft from current committed values
-    draftStart = rangeStart !== null ? rangeStart : null;
-    draftEnd = rangeEnd !== null ? rangeEnd : null;
-    draftValue = value !== null ? value : null;
-    draftCompareStart = compareStart !== null ? compareStart : null;
-    draftCompareEnd = compareEnd !== null ? compareEnd : null;
+    draftStart = rangeStart;
+    draftEnd = rangeEnd;
+    draftValue = value;
+    draftCompareStart = compareStart;
+    draftCompareEnd = compareEnd;
 
     // Reset preset tracking so each picker session starts clean.
     selectedPresetLabel = null;
@@ -499,9 +525,7 @@
             {#each presets as preset, presetIndex (preset.label)}
               {@const previousPreset = presetIndex > 0 ? presets[presetIndex - 1] : null}
               {@const groupChanged =
-                presetIndex > 0 &&
-                'group' in preset &&
-                (previousPreset === null || previousPreset.group !== preset.group)}
+                presetIndex > 0 && (previousPreset?.group ?? '') !== (preset.group ?? '')}
               {#if groupChanged}
                 <div class="drp-preset-divider" role="separator" aria-hidden="true">
                   {#if preset.group !== ''}

@@ -15,7 +15,7 @@
     ariaSelected,
     role,
     onclick,
-    onkeydown,
+    onkeydown = () => {},
     onkeyup = () => {},
     onmousedown,
     onmouseup,
@@ -117,7 +117,10 @@
     font-weight: var(--disabled-font-weight);
     border: var(--disabled-border);
     background: var(--disabled-background-color, var(--button-color, #3a4550));
-    box-shadow: var(--button-disabled-box-shadow, var(--button-box-shadow, none));
+    box-shadow: var(
+      --button-disabled-box-shadow,
+      var(--disabled-box-shadow, var(--button-box-shadow, none))
+    );
   }
 
   .button-loader {

@@ -364,7 +364,7 @@
             id={`${listboxId}-option-${index}`}
             aria-selected={value.includes(item.id)}
             tabindex="-1"
-            {...item.testId
+            {...typeof item.testId === 'string'
               ? { 'data-pw': item.testId }
               : typeof itemTestId === 'string'
                 ? { 'data-pw': `${itemTestId}-${item.id}` }

@@ -3,7 +3,6 @@
   import Input from '$lib/Input/Input.svelte';
   import type { InputButtonProperties } from './properties';
   import type { ValidationState } from '$lib/types';
-  import type { SvelteComponent } from 'svelte';
 
   let {
     value = $bindable(''),
@@ -17,12 +16,15 @@
     bottomButtonEventProperties,
     leftIcon,
     rightIcon,
-    classes
+    classes,
+    mandatory,
+    size,
+    error
   }: InputButtonProperties = $props();
 
   let validationState = $state<ValidationState>('InProgress');
 
-  let inputRef: SvelteComponent | null = $state(null);
+  let inputRef: ReturnType<typeof Input> | null = $state(null);
 
   // Derive enable state for right button
   const isRightButtonEnabled = $derived(validationState === 'Valid');
@@ -62,12 +64,14 @@
 <div class="container {classes ?? ''}">
   {#if inputProperties.label && inputProperties.label !== ''}
     <label class="label" for={inputProperties.name}>
-      {inputProperties.label}
+      {inputProperties.label}{#if mandatory}<span class="mandatory-marker" aria-label="required">
+          *</span
+        >{/if}
     </label>
   {/if}
 
-  <div class="input-button-container">
-    <div class="input-button {validationState === 'Invalid' ? 'invalid' : 'valid'}">
+  <div class="input-button-container {size ? `size-${size}` : ''}">
+    <div class="input-button" class:invalid={validationState === 'Invalid'}>
       {#if leftButtonProperties != null}
         <div class="left-button">
           <Button {...leftButtonProperties} {...leftButtonEventProperties} icon={leftIcon} />
@@ -101,12 +105,14 @@
       </div>
     {/if}
   </div>
-  {#if inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
+  {#if typeof error === 'string' && error.length > 0}
+    <div class="external-error-message">{error}</div>
+  {:else if typeof inputProperties.onErrorMessage === 'string' && inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
     <div class="error-message">
       {inputProperties.onErrorMessage}
     </div>
   {/if}
-  {#if inputProperties.infoMessage !== ''}
+  {#if typeof inputProperties.infoMessage === 'string' && inputProperties.infoMessage !== ''}
     <div class="info-message">
       {inputProperties.infoMessage}
     </div>
@@ -127,9 +133,8 @@
     --input-box-shadow: none;
     --input-margin: none;
     --input-width: fit-content;
-    height: var(--input-height, fit-content);
     font-size: var(--input-font-size, 16px) !important;
-    font-weight: 500;
+    font-weight: var(--input-button-font-weight, 500);
     margin: var(--input-button-margin);
     border-radius: var(--input-button-radius, 4px);
     border: var(--input-button-container-border);
@@ -191,6 +196,30 @@
     font-size: var(--input-info-msg-text-size, 12px);
     color: var(--input-info-msg-text-color, #fa1405);
     margin: var(--input-btn-info-msg-margin, 12px 0px 0px 0px);
+  }
+
+  .mandatory-marker {
+    color: var(--inputbutton-mandatory-color, #e11900);
+  }
+
+  .size-sm {
+    --input-height: var(--inputbutton-sm-height, 36px);
+    --input-padding: var(--inputbutton-sm-padding, 6px 12px);
+  }
+
+  .size-md {
+    --input-height: var(--inputbutton-md-height, 44px);
+    --input-padding: var(--inputbutton-md-padding, 10px 16px);
+  }
+
+  .size-lg {
+    --input-height: var(--inputbutton-lg-height, 54px);
+    --input-padding: var(--inputbutton-lg-padding, 14px 20px);
+  }
+
+  .external-error-message {
+    color: var(--inputbutton-external-error-color, #fa1405);
+    margin: var(--inputbutton-external-error-margin, 6px 0px 0px 0px);
   }
 
   .left-button {

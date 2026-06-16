@@ -122,7 +122,7 @@
     }
   }
 
-  function initOverflow(node: HTMLDivElement): { destroy: () => void } {
+  function initOverflow(node: HTMLDivElement): () => void {
     scrollContainer = node;
     updateOverflow();
     updateIndicator();
@@ -136,15 +136,24 @@
       attributes: true,
       attributeFilter: ['class']
     });
-    return {
-      destroy() {
-        observer.disconnect();
-      }
+    const resizeObserver = new ResizeObserver(() => {
+      updateOverflow();
+      updateIndicator();
+    });
+    resizeObserver.observe(node);
+    return () => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+      scrollContainer = null;
     };
   }
+
+  let rootClass = $derived(
+    ['tabs-wrapper', classes ?? ''].filter((cls) => cls.length > 0).join(' ')
+  );
 </script>
 
-<div class="tabs-wrapper {classes ?? ''}" class:disabled data-pw={testId}>
+<div class={rootClass} class:disabled data-pw={testId}>
   {#if canScrollLeft}
     <button
       class="tabs-arrow tabs-arrow-left"
@@ -164,7 +173,7 @@
     class:fade-left={canScrollLeft}
     class:fade-right={canScrollRight}
     role="tablist"
-    use:initOverflow
+    {@attach initOverflow}
     onscroll={updateOverflow}
   >
     {#each items as item, index (isObjectMode ? (toTabItem(item)?.key ?? index) : index)}
@@ -305,7 +314,7 @@
     color: var(--tabs-item-color, #666666);
     cursor: var(--tabs-item-cursor, pointer);
     background: var(--tabs-item-background, transparent);
-    border: none;
+    border: var(--tabs-item-border, none);
     border-radius: var(--tabs-item-border-radius, 0);
     outline: none;
     white-space: nowrap;

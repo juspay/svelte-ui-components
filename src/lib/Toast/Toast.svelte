@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { fly } from 'svelte/transition';
   import type { ToastDirection, ToastProperties } from './properties';
   import type { FlyAnimationConfig } from '$lib/types';
-  import { onMount } from 'svelte';
   import Img from '../Img/Img.svelte';
 
   let {
@@ -29,8 +29,11 @@
 
   const animationConfig: FlyAnimationConfig = $derived(getAnimationConfig(overlapPage, direction));
 
-  let showToast = $state(false);
-  let timeoutId = $state<ReturnType<typeof setTimeout> | null>(null);
+  let showToast = $state(true);
+
+  const rootClass = $derived(
+    ['toast', type ?? '', classes ?? ''].filter((cls) => cls.length > 0).join(' ')
+  );
 
   function hideToast() {
     showToast = false;
@@ -83,21 +86,30 @@
     };
   }
 
-  onMount(() => {
-    showToast = true;
-    timeoutId = setTimeout(hideToast, duration);
+  // Track `message` and `duration` as reactive dependencies so the timer
+  // restarts whenever either prop changes. Writing `showToast = true` via
+  // `untrack` prevents the assignment from enrolling `showToast` as a
+  // dependency of this effect, which would create an unwanted reactive cycle.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    void message;
+    void duration;
+
+    untrack(() => {
+      showToast = true;
+    });
+
+    const id = setTimeout(hideToast, duration);
 
     return () => {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
+      clearTimeout(id);
     };
   });
 </script>
 
 {#if showToast}
   <div
-    class="toast {type ?? ''} {classes ?? ''}"
+    class={rootClass}
     class:no-page-overlap={!overlapPage}
     role="alert"
     aria-live="assertive"
@@ -129,9 +141,9 @@
         tabindex="0"
         role="button"
         onclick={hideToast}
-        onkeypress={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
+        onkeydown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
             hideToast();
           }
         }}

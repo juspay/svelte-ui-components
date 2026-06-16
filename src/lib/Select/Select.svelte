@@ -139,9 +139,10 @@
       }
       return;
     }
-    if (multiple && searchable) {
-      openDropdown();
-    } else if (open) {
+    // Clicks on the search input are handled above (kept open while typing), so a click
+    // on the trigger chrome — including the chevron — can toggle even for a multi-select
+    // searchable Select. The previous multiple && searchable branch never closed on click.
+    if (open) {
       close();
     } else {
       openDropdown();

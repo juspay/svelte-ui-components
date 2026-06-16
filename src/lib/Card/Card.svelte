@@ -1,11 +1,22 @@
 <script lang="ts">
   import type { CardProperties } from './properties';
 
-  let { children, title, description, classes, testId, onclick }: CardProperties = $props();
+  let {
+    children,
+    title,
+    description,
+    classes,
+    testId,
+    onclick,
+    headerRight,
+    footer,
+    stretch = false,
+    scrollable = false
+  }: CardProperties = $props();
 
   const isInteractive = $derived(typeof onclick === 'function');
 
-  function handleKeydown(event: KeyboardEvent): void {
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       if (event.key === ' ') {
         event.preventDefault();
@@ -14,31 +25,54 @@
         event.currentTarget.click();
       }
     }
-  }
+  };
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="card {classes ?? ''}"
   class:card-interactive={isInteractive}
+  class:card-stretch={stretch}
+  class:card-has-scroll={scrollable}
   data-pw={typeof testId === 'string' ? testId : null}
   role={isInteractive ? 'button' : null}
   tabindex={isInteractive ? 0 : null}
   onclick={isInteractive ? onclick : null}
   onkeydown={isInteractive ? handleKeydown : null}
 >
-  {#if typeof title === 'string' && title.length > 0}
-    <div class="card-header">
-      <div class="card-title">{title}</div>
-      {#if typeof description === 'string' && description.length > 0}
-        <div class="card-description">{description}</div>
+  {#if (typeof title === 'string' && title.length > 0) || typeof headerRight === 'function'}
+    <div class="card-header" class:card-header-split={typeof headerRight === 'function'}>
+      <div class="card-header-main">
+        {#if typeof title === 'string' && title.length > 0}
+          <div class="card-title">{title}</div>
+        {/if}
+        {#if typeof description === 'string' && description.length > 0}
+          <div class="card-description">{description}</div>
+        {/if}
+      </div>
+      {#if typeof headerRight === 'function'}
+        <div class="card-header-right">
+          {@render headerRight()}
+        </div>
       {/if}
     </div>
   {/if}
   {#if typeof children === 'function'}
-    <div class="card-content">
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <div
+      class="card-content"
+      class:card-content-scrollable={scrollable}
+      role={scrollable ? 'region' : null}
+      aria-label={scrollable ? 'Scrollable card content' : null}
+      tabindex={scrollable ? 0 : null}
+    >
       {@render children()}
     </div>
+  {/if}
+  {#if typeof footer === 'function'}
+    <footer class="card-footer">
+      {@render footer()}
+    </footer>
   {/if}
 </div>
 
@@ -68,9 +102,48 @@
     outline-offset: var(--card-focus-outline-offset, 2px);
   }
 
+  /* stretch: fill parent height */
+  .card-stretch {
+    height: var(--card-stretch-height, 100%);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* when stretch is on, content area should grow to fill remaining space */
+  .card-stretch .card-content {
+    flex: var(--card-content-flex, 1);
+  }
+
+  /* when scrollable=true the child sets overflow-y:auto, so the card must not clip it */
+  .card-has-scroll {
+    overflow: visible;
+  }
+
+  /* header row layout — base block flow; flex only applied when headerRight is present */
   .card-header {
     padding: var(--card-header-padding, 16px 16px 0);
     border-bottom: var(--card-header-border-bottom, none);
+  }
+
+  /* flex layout activated only when headerRight snippet is provided */
+  .card-header-split {
+    display: flex;
+    align-items: var(--card-header-align-items, flex-start);
+    justify-content: space-between;
+    gap: var(--card-header-gap, 8px);
+  }
+
+  .card-header-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-header-right {
+    display: flex;
+    align-items: var(--card-header-right-align-items, center);
+    flex-shrink: 0;
   }
 
   .card-title {
@@ -88,5 +161,19 @@
 
   .card-content {
     padding: var(--card-content-padding, 16px);
+  }
+
+  /* scrollable content area */
+  .card-content-scrollable {
+    overflow-y: auto;
+    max-height: var(--card-content-max-height, 400px);
+    scrollbar-width: thin;
+  }
+
+  /* footer */
+  .card-footer {
+    padding: var(--card-footer-padding, 12px 16px);
+    border-top: var(--card-footer-border-top, none);
+    background: var(--card-footer-background, inherit);
   }
 </style>

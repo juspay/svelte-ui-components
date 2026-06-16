@@ -5,7 +5,9 @@
     props: {
       title: { type: 'String', reflect: true },
       description: { type: 'String', reflect: true },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      stretch: { type: 'Boolean', reflect: true },
+      scrollable: { type: 'Boolean', reflect: true }
     }
   }}
 />

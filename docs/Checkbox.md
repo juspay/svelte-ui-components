@@ -22,6 +22,7 @@ A customizable checkbox control with optional label text. Supports checked, unch
 | indeterminate | `boolean` | No       | `false`     | Bindable. When true, displays an indeterminate (dash) state instead of a checkmark. Typically used for "select all" patterns where only some children are selected.    |
 | testId        | `string`  | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
 | classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| ariaControls  | `string`  | No       | `undefined` | Identifies the element(s) whose contents are controlled by this checkbox. Sets `aria-controls` on the checkbox element for accessibility.                              |
 
 ## Snippets
 

@@ -79,6 +79,7 @@ export type * from './Toolbar/properties';
 export type * from './Carousel/properties';
 export type * from './Badge/properties';
 export type * from './Banner/properties';
+export type * from './Accordion/properties';
 export type * from './Table/properties';
 export type * from './Stepper/properties';
 export type * from './Toast/properties';

@@ -7,7 +7,8 @@
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },
       stretch: { type: 'Boolean', reflect: true },
-      scrollable: { type: 'Boolean', reflect: true }
+      scrollable: { type: 'Boolean', reflect: true },
+      cssVars: { type: 'Object' }
     }
   }}
 />

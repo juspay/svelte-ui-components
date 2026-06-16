@@ -44,4 +44,13 @@ export type OptionalCardProperties = {
    * Defaults to false.
    */
   scrollable?: boolean;
+  /**
+   * Per-instance CSS custom properties applied as inline style on the root `.card`.
+   * Keys must be CSS variable names (e.g. `--bottom-sections-count`); values are
+   * emitted verbatim. This lets a consumer feed a dynamic, per-instance value into a
+   * recipe class whose selectors or media queries read that variable — something a
+   * static `classes` string cannot express. When omitted, no `style` attribute is
+   * rendered, so existing consumers are unchanged.
+   */
+  cssVars?: Record<string, string | number>;
 };

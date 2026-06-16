@@ -11,10 +11,19 @@
     headerRight,
     footer,
     stretch = false,
-    scrollable = false
+    scrollable = false,
+    cssVars
   }: CardProperties = $props();
 
   const isInteractive = $derived(typeof onclick === 'function');
+
+  const styleAttr = $derived(
+    cssVars
+      ? Object.entries(cssVars)
+          .map(([name, value]) => `${name}: ${value}`)
+          .join('; ')
+      : null
+  );
 
   const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -34,6 +43,7 @@
   class:card-interactive={isInteractive}
   class:card-stretch={stretch}
   class:card-has-scroll={scrollable}
+  style={styleAttr}
   data-pw={typeof testId === 'string' ? testId : null}
   role={isInteractive ? 'button' : null}
   tabindex={isInteractive ? 0 : null}

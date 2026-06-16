@@ -10,6 +10,7 @@
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
+      itemTestId: { type: 'String', attribute: 'item-test-id' },
       classes: { type: 'String' },
       open: { type: 'Boolean', reflect: true },
       dropdownAlign: { type: 'String', attribute: 'dropdown-align' },

@@ -56,6 +56,24 @@ Replace the default ☐/☑ glyphs with a custom indicator:
 </Select>
 ```
 
+### With triggerSummary (Compact Multi-Select Trigger)
+
+Replace the default pill-per-value layout with a compact summary label in multi-select mode:
+
+```svelte
+<Select {items} multiple placeholder="Select columns">
+  {#snippet triggerSummary({ value, items })}
+    <span>
+      {value.length === 0
+        ? 'None'
+        : value.length === items.length
+          ? 'All'
+          : `${value.length} selected`}
+    </span>
+  {/snippet}
+</Select>
+```
+
 ### With Leading Icon
 
 Pass an image URL (or inline data URI) via `leftIcon` to render a leading icon at the left of the trigger. The icon size defaults to 16×16 px and can be customised with the `--select-left-icon-size` CSS variable.
@@ -75,8 +93,10 @@ Pass an image URL (or inline data URI) via `leftIcon` to render a leading icon a
 | searchable     | `boolean`                  | No       | `false`     | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                   |
 | placeholder    | `string`                   | No       | `''`        | Text shown when no item is selected (or in the search input when empty).                                                                                                                              |
 | disabled       | `boolean`                  | No       | `false`     | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                       |
-| testId         | `string`                   | No       | -           | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                    |
+| testId         | `string`                   | No       | -           | Value for the `data-pw` attribute on the container element, and the fallback per-option prefix when neither `itemTestId` nor `item.testId` is set (emits `{testId}-{item.id}` per option).            |
+| itemTestId     | `string`                   | No       | -           | Fallback per-option `data-pw` prefix. Each option emits `data-pw="{itemTestId}-{item.id}"` unless the option's own `item.testId` is set. Takes precedence over the `testId`-derived fallback.         |
 | classes        | `string`                   | No       | -           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
+| dropdownAlign  | `'left' \| 'right'`        | No       | `'left'`    | Horizontal anchor of the dropdown panel. `'left'` anchors to the trigger's left edge; `'right'` anchors to the right edge so a wider-than-trigger panel hangs leftward without overflowing.           |
 | hierarchy      | `SelectHierarchy`          | No       | `'default'` | Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. |
 | leftIcon       | `string`                   | No       | -           | Image src (URL or data URI) for an icon rendered at the left of the trigger. Size is controlled by `--select-left-icon-size` (default 16px).                                                          |
 | leftIconTestId | `string`                   | No       | -           | `data-pw` test id forwarded to the leading icon element for end-to-end testing selectors.                                                                                                             |
@@ -85,10 +105,11 @@ Pass an image URL (or inline data URI) via `leftIcon` to render a leading icon a
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet         | Type                              | Description                                                                                                                                        |
-| --------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| bottomContent   | `Snippet`                         | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.              |
-| optionIndicator | `Snippet<[{ checked: boolean }]>` | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided. |
+| Snippet         | Type                                                  | Description                                                                                                                                                                                                              |
+| --------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| bottomContent   | `Snippet`                                             | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.                                                                                    |
+| optionIndicator | `Snippet<[{ checked: boolean }]>`                     | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided.                                                                       |
+| triggerSummary  | `Snippet<[{ value: string[]; items: SelectItem[] }]>` | Compact trigger summary for multi-select mode. Receives `{ value, items }` so the consumer can render e.g. "All" or "3 selected" instead of one Pill per value. When omitted, the default Pill-per-value layout is used. |
 
 ## Events
 
@@ -235,7 +256,15 @@ Custom types used by this component's props and events:
 type SelectItem = {
   id: string;
   label: string;
+  /** Optional per-option test id. When set, emitted as `data-pw` directly on the option element (overrides `itemTestId` and `testId` fallbacks). */
+  testId?: string;
 };
+```
+
+### SelectHierarchy
+
+```typescript
+type SelectHierarchy = 'default' | 'ghost';
 ```
 
 ## Internal Dependencies
@@ -277,6 +306,21 @@ Tag: `<sui-select>`
 | Slot Name        | Maps to Snippet | Description                                                  |
 | ---------------- | --------------- | ------------------------------------------------------------ |
 | `bottom-content` | `bottomContent` | Arbitrary content pinned to the bottom of the open dropdown. |
+
+### Attributes (Web Component)
+
+| Attribute           | Prop             | Type    | Description                                                                                    |
+| ------------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `test-id`           | `testId`         | string  | `data-pw` on the container element and fallback per-option prefix.                             |
+| `item-test-id`      | `itemTestId`     | string  | Fallback per-option `data-pw` prefix (`{itemTestId}-{item.id}`), overrides `test-id` fallback. |
+| `placeholder`       | `placeholder`    | string  | Trigger placeholder text.                                                                      |
+| `disabled`          | `disabled`       | boolean | Disables the select.                                                                           |
+| `multiple`          | `multiple`       | boolean | Enables multi-select mode.                                                                     |
+| `searchable`        | `searchable`     | boolean | Enables search filtering.                                                                      |
+| `open`              | `open`           | boolean | Reflected. Controls dropdown open state.                                                       |
+| `dropdown-align`    | `dropdownAlign`  | string  | `'left'` or `'right'` — anchors the dropdown panel horizontally.                               |
+| `left-icon`         | `leftIcon`       | string  | Image src for the leading trigger icon.                                                        |
+| `left-icon-test-id` | `leftIconTestId` | string  | `data-pw` for the leading icon element.                                                        |
 
 > **Note:** The `items` and `value` props are arrays — set them via JavaScript properties, not HTML attributes.
 

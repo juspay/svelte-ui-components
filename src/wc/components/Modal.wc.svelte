@@ -21,7 +21,9 @@
       onprimaryButtonClick: { type: 'Object' },
       onsecondaryButtonClick: { type: 'Object' },
       onoverlayClick: { type: 'Object' },
-      onkeydown: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      overlayBackdropFilter: { type: 'String', attribute: 'overlay-backdrop-filter' },
+      usePortal: { type: 'Boolean', attribute: 'use-portal' }
     }
   }}
 />

@@ -2,11 +2,24 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.41.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.42.0)
 
-Adds disabled prop with aria-disabled, CSS opacity/pointer-events guard,
-testId wired to data-pw on container, and docs updated with disabled/testId
-prop rows and --toggle-disabled-opacity CSS variable.
+Add compareTrigger snippet prop and openCompare bindable prop that together
+render an independent compare-period trigger button and panel adjacent to the
+main DRP trigger. The standalone panel includes a focus-trap (tab-cycle) for
+a11y parity with the main dialog. When compareTrigger is provided, the
+compareCalendar snippet moves into the standalone panel so the same snippet
+is never rendered in two places simultaneously (Svelte 5 runtime constraint).
+
+Tighten .drp-trigger global selector to .drp-trigger-wrapper .drp-trigger to
+avoid colliding with the new .drp-compare-trigger class on the compare button.
+Document the selector specificity change for consumers who override .drp-trigger.
+
+Review fixes applied:
+- docs: add compareTrigger/openCompare props, snippets, CSS vars, specificity note
+- a11y: add Tab focus-trap on .drp-compare-panel (role=dialog + aria-modal)
+
+## [2.42.0](https://github.com/juspay/svelte-ui-components/compare/2.42.0..2.41.0) - 16 June 2026
 
 ## [2.41.0](https://github.com/juspay/svelte-ui-components/compare/2.41.0..2.40.0) - 16 June 2026
 

@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { GaugeProperties } from './properties';
 
-  let { value, showLabel = true, testId, classes }: GaugeProperties = $props();
+  let {
+    value,
+    max = 100,
+    showLabel = true,
+    labelFormatter,
+    testId,
+    classes
+  }: GaugeProperties = $props();
 
   const VIEW_BOX = 100;
   const CENTER = VIEW_BOX / 2;
@@ -9,11 +16,25 @@
   const RADIUS = (VIEW_BOX - STROKE) / 2;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-  let clamped = $derived(Math.min(100, Math.max(0, value)));
+  // Guard against max=0 (division by zero yields NaN or Infinity).
+  // When max is 0 or negative the gauge renders empty (0%).
+  let clamped = $derived(max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0);
   let offset = $derived(CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE);
+  // labelFormatter receives the raw (value, max) pair so callers have full
+  // context. The built-in fallback shows the computed percentage string
+  // (e.g. value=50, max=200 → "25%").
+  let labelText = $derived(labelFormatter ? labelFormatter(value, max) : `${Math.round(clamped)}%`);
 </script>
 
-<div class="gauge {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="gauge {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  role="progressbar"
+  aria-valuenow={clamped}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-label="gauge"
+>
   <svg viewBox="0 0 {VIEW_BOX} {VIEW_BOX}">
     <circle class="track" cx={CENTER} cy={CENTER} r={RADIUS} fill="none" />
     <circle
@@ -29,7 +50,7 @@
     />
   </svg>
   {#if showLabel}
-    <div class="label">{Math.round(clamped)}%</div>
+    <div class="label">{labelText}</div>
   {/if}
 </div>
 

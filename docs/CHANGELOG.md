@@ -2,7 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.39.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.40.0)
+
+Adds two optional Snippet props — titleSnippet and descriptionSnippet — to
+EmptyState so callers can render arbitrary markup (icons, links, emphasis)
+in place of the plain string title/description props, without breaking
+backward-compatibility.
+
+- titleSnippet takes full rendering priority over title; the mandatory title
+prop is preserved for BC (JSDoc notes it is still required but unused when
+the snippet is provided).
+- descriptionSnippet takes priority over description; JSDoc notes the mutual
+exclusion so consumers are not surprised.
+- Both props land in OptionalEmptyStateProperties — zero mandatory-prop demotions.
+- docs/EmptyState.md updated: new rows in Props table and Snippets table,
+plus a Rich-Markup usage section with two code examples.
+
+## [2.40.0](https://github.com/juspay/svelte-ui-components/compare/2.40.0..2.39.0) - 16 June 2026
 
 ## [2.39.0](https://github.com/juspay/svelte-ui-components/compare/2.39.0..2.38.0) - 16 June 2026
 

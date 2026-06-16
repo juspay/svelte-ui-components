@@ -46,12 +46,16 @@
     margin-bottom: 25px;
   }
 
-  .order-status {
-    flex-direction: column;
+  .background {
+    min-height: var(--status-min-height, 100vh);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+  }
+
+  .order-status {
+    flex-direction: column;
+    display: flex;
     font-family: var(--order-font, inherit);
     font-size: var(--order-font-size, 14px);
     text-align: center;

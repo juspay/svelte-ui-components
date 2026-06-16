@@ -167,3 +167,37 @@ export function areaPath(points: Point[], baseline: number, curve: CurveType = '
   const firstPoint = points[0];
   return topPath + ` L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
 }
+
+/**
+ * Builds an SVG path string for a rectangle with independently-controlled
+ * corner radii. Each radius is clamped to Math.min(r, w/2, h/2) so the
+ * shape never degenerates. Parameters follow the CSS border-radius order:
+ * tl=top-left, tr=top-right, br=bottom-right, bl=bottom-left.
+ */
+export function roundedRectPath(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  tl: number,
+  tr: number,
+  br: number,
+  bl: number
+): string {
+  const clamp = (r: number) => Math.min(r, w / 2, h / 2);
+  const rtl = clamp(tl);
+  const rtr = clamp(tr);
+  const rbr = clamp(br);
+  const rbl = clamp(bl);
+  return (
+    `M ${x + rtl} ${y}` +
+    ` H ${x + w - rtr}` +
+    ` Q ${x + w} ${y} ${x + w} ${y + rtr}` +
+    ` V ${y + h - rbr}` +
+    ` Q ${x + w} ${y + h} ${x + w - rbr} ${y + h}` +
+    ` H ${x + rbl}` +
+    ` Q ${x} ${y + h} ${x} ${y + h - rbl}` +
+    ` V ${y + rtl}` +
+    ` Q ${x} ${y} ${x + rtl} ${y} Z`
+  );
+}

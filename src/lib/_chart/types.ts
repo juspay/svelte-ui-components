@@ -90,11 +90,24 @@ export type BarRect = {
   y: number;
   width: number;
   height: number;
+  /**
+   * Resolved CSS color string used for plain fills and as the fallback when
+   * a defs-based fill (pattern / gradient) is in use.
+   */
   color: string;
+  /**
+   * When non-null, the bar's `fill` attribute should reference `url(#<fillId>)`
+   * instead of the plain `color` string. Set by the BarChart defs resolution
+   * logic for pattern and gradient fills.
+   */
+  fillId: string | null;
   si: number;
   pi: number;
   dataPoint: BarChartDataPoint;
   seriesName: string;
+  normalizedValue?: number | null;
+  /** True when this bar was produced from a [low, high] range tuple (A1-1). */
+  isFloating?: boolean;
 };
 
 export type StackedPoint = {

@@ -5,6 +5,7 @@
     props: {
       checked: { type: 'Boolean', reflect: true },
       text: { type: 'String', reflect: true },
+      disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
       onclick: { type: 'Object' }
     }

@@ -2,20 +2,28 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.32.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.33.0)
 
-Three additive, backward-compatible capabilities (existing consumers unaffected
-when the new props are unset):
+Expose --select-dropdown-left, --select-dropdown-right,
+--select-dropdown-min-width, --select-dropdown-max-width and
+--select-dropdown-width so consumers can theme the dropdown panel's
+horizontal placement and width via the classes prop, without reaching
+the internal .select-dropdown class through :global().
 
-- clearable + onclear: in single mode, render a Clear button that resets value to
-null and fires onclear (new CSS vars --drp-clear-*).
-- initialPresetLabel: highlight a preset and show its label in the trigger on
-mount without firing onapply (resolved once via untrack()).
-- group field on DateRangePreset: render a divider (and optional group label)
-between preset groups; flat arrays render unchanged (new --drp-preset-divider-*).
+Every other dropdown property (gap, background, border, radius,
+shadow, max-height, z-index) already had a CSS-var hook, but the
+horizontal sizing was hardcoded to left:0/right:0 — pinning the panel
+to the trigger width and clipping long option labels. Both alignment
+branches now consume the variables: the default left-aligned rule and
+the dropdownAlign="right" preset, so right-anchored menus are themable
+through the public path too.
 
-Updates properties.ts, the WC wrapper (clearable, initial-preset-label), the demo
-page, and docs. pnpm check and pnpm build pass.
+Defaults reproduce the current rendering exactly (left-aligned:
+left:0; right:0; min-width:auto; max-width:none; width:auto —
+right-aligned preset: right:0; min-width:100%; max-width:none;
+width:max-content), so this is fully backward-compatible.
+
+## [2.33.0](https://github.com/juspay/svelte-ui-components/compare/2.33.0..2.32.1) - 15 June 2026
 
 ## [2.32.1](https://github.com/juspay/svelte-ui-components/compare/2.32.1..2.32.0) - 15 June 2026
 

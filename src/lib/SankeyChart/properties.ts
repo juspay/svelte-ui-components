@@ -13,9 +13,26 @@ export type SankeyLink = {
   color?: string;
 };
 
+/**
+ * Context passed to the `tooltipSnippet` prop on each hover event.
+ *
+ * The `'link'` branch gained three new optional fields (`sourceLabel`, `targetLabel`,
+ * `percentage`) in this release. They are always populated by the chart — the fields are
+ * typed optional so that existing consumer code that typed a variable explicitly as
+ * `{ type: 'link'; link: SankeyLink }` continues to compile without changes.
+ */
 export type SankeyTooltipContext =
   | { type: 'node'; node: SankeyNode; value: number }
-  | { type: 'link'; link: SankeyLink };
+  | {
+      type: 'link';
+      link: SankeyLink;
+      /** Human-readable label of the source node (falls back to node id when label is undefined). Always present at runtime. */
+      sourceLabel?: string;
+      /** Human-readable label of the target node (falls back to node id when label is undefined). Always present at runtime. */
+      targetLabel?: string;
+      /** link.value as a percentage of the source node's total outgoing value (0–100, rounded to 2 dp). Always present at runtime. */
+      percentage?: number;
+    };
 
 export type SankeyChartProperties = MandatorySankeyChartProperties &
   OptionalSankeyChartProperties &
@@ -38,6 +55,14 @@ export type OptionalSankeyChartProperties = {
   empty?: Snippet;
   testId?: string;
   classes?: string;
+  /** Labels rendered above each column, indexed by column position (0-based). */
+  columnLabels?: string[];
+  /**
+   * Called for each node and also for link strokes (links inherit the resolved source-node
+   * colour). Return a CSS colour string to override the default palette, or `null` to fall
+   * through to the default palette colour.
+   */
+  nodeColorResolver?: (id: string, label: string | null) => string | null;
 };
 
 export type SankeyChartEventProperties = {

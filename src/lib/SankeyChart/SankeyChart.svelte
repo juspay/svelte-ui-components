@@ -5,7 +5,7 @@
   import { computeSankeyLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
-  import { SvelteSet } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -26,7 +26,9 @@
     onnodehover,
     onlinkhover,
     testId,
-    classes
+    classes,
+    columnLabels,
+    nodeColorResolver
   }: SankeyChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -56,6 +58,45 @@
     )
   );
 
+  /**
+   * Pre-computed colour map for all nodes. Keyed by node id. Computed once per layout
+   * change rather than re-running find() + indexOf() for every link on every render.
+   *
+   * Note: nodeColorResolver also controls link stroke colours (links inherit source-node
+   * colour), not just node fill colours. See Props docs for full description.
+   */
+  let nodeColorMap = $derived.by(() => {
+    const map = new SvelteMap<string, string>();
+    for (let ni = 0; ni < layout.nodes.length; ni++) {
+      const node = layout.nodes[ni];
+      const color = node.color ?? nodeColorResolver?.(node.id, node.label ?? null) ?? getColor(ni);
+      map.set(node.id, color);
+    }
+    return map;
+  });
+
+  // Column count and width — used by columnLabels rendering
+  let columnCount = $derived(
+    layout.nodes.length > 0 ? Math.max(...layout.nodes.map((n) => n.column)) + 1 : 0
+  );
+  let colWidth = $derived(
+    columnCount <= 1
+      ? Math.max(0, chartWidth - MARGIN * 2)
+      : (Math.max(0, chartWidth - MARGIN * 2) - nodeWidth) / (columnCount - 1)
+  );
+
+  // ── Helpers ────────────────────────────────────────────────────
+
+  /** Percentage of source node's total value carried by a link (0–100, 2 dp). */
+  const computeLinkPct = (sourceId: string, linkValue: number): number => {
+    const sourceNode = layout.nodes.find((nd) => nd.id === sourceId);
+    if (!sourceNode) {
+      return 0;
+    }
+    const sourceTotal = sourceNode.value;
+    return sourceTotal > 0 ? Math.round((linkValue / sourceTotal) * 10000) / 100 : 0;
+  };
+
   let connectedNodes = $derived.by(() => {
     if (hoveredNode !== null) {
       const connected = new SvelteSet<string>([hoveredNode]);
@@ -75,6 +116,27 @@
 
   // ── Tooltip ────────────────────────────────────────────────────
 
+  /**
+   * Pre-computed link tooltip data for the currently hovered link. Computed once and shared
+   * by both `tooltipData` and `tooltipContext` to avoid running the O(n) percentage lookup
+   * twice on every hover state change.
+   */
+  let hoveredLinkCache = $derived.by(() => {
+    if (hoveredLink === null) {
+      return null;
+    }
+    const l = links.find(
+      (lk) => lk.source === hoveredLink!.source && lk.target === hoveredLink!.target
+    );
+    if (!l) {
+      return null;
+    }
+    const sourceLabelText = nodes.find((nd) => nd.id === l.source)?.label ?? l.source;
+    const targetLabelText = nodes.find((nd) => nd.id === l.target)?.label ?? l.target;
+    const pct = computeLinkPct(l.source, l.value);
+    return { link: l, sourceLabel: sourceLabelText, targetLabel: targetLabelText, percentage: pct };
+  });
+
   let tooltipData = $derived.by(() => {
     if (hoveredNode !== null) {
       const n = layout.nodes.find((nd) => nd.id === hoveredNode);
@@ -92,16 +154,14 @@
         ]
       };
     }
-    if (hoveredLink !== null) {
-      const l = links.find(
-        (lk) => lk.source === hoveredLink!.source && lk.target === hoveredLink!.target
-      );
-      if (!l) {
-        return null;
-      }
+    if (hoveredLinkCache !== null) {
+      const { link: l, sourceLabel, targetLabel, percentage: pct } = hoveredLinkCache;
       return {
-        title: `${nodes.find((n) => n.id === l.source)?.label ?? l.source} → ${nodes.find((n) => n.id === l.target)?.label ?? l.target}`,
-        items: [{ label: 'Flow', value: format(l.value) }]
+        title: `${sourceLabel} → ${targetLabel}`,
+        items: [
+          { label: 'Flow', value: format(l.value) },
+          { label: 'of source', value: `${pct.toFixed(2)}%` }
+        ]
       };
     }
     return null;
@@ -116,12 +176,15 @@
       }
       return { type: 'node', node: n, value: computed.value };
     }
-    if (hoveredLink !== null) {
-      const l = findLink(hoveredLink.source, hoveredLink.target);
-      if (!l) {
-        return null;
-      }
-      return { type: 'link', link: l };
+    if (hoveredLinkCache !== null) {
+      const { link: l, sourceLabel, targetLabel, percentage: pct } = hoveredLinkCache;
+      return {
+        type: 'link',
+        link: l,
+        sourceLabel,
+        targetLabel,
+        percentage: pct
+      };
     }
     return null;
   });
@@ -208,6 +271,18 @@
   {:else}
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
       <g transform="translate({MARGIN}, {MARGIN})">
+        {#if columnLabels != null && columnLabels.length > 0}
+          {#each columnLabels as label, ci (ci)}
+            <text
+              class="sankey-col-label"
+              x={ci * colWidth + nodeWidth / 2}
+              y={-8}
+              text-anchor="middle"
+              dominant-baseline="auto">{label}</text
+            >
+          {/each}
+        {/if}
+
         {#each layout.links as link, i (i)}
           {@const highlighted = isLinkHighlighted(link.source, link.target)}
           {@const dimmed = (hoveredNode !== null || hoveredLink !== null) && !highlighted}
@@ -217,7 +292,7 @@
             class="sankey-link"
             d={link.path}
             fill="none"
-            stroke={link.color ?? getColor(layout.nodes.findIndex((n) => n.id === link.source))}
+            stroke={link.color ?? nodeColorMap.get(link.source) ?? getColor(0)}
             stroke-width={Math.max(1, link.width)}
             stroke-opacity={highlighted ? 0.7 : dimmed ? 0.08 : 0.4}
             onmouseenter={(e) => handleLinkEnter(e, link.source, link.target)}
@@ -228,7 +303,7 @@
         {/each}
 
         {#each layout.nodes as node, ni (ni)}
-          {@const color = node.color ?? getColor(ni)}
+          {@const color = nodeColorMap.get(node.id) ?? getColor(ni)}
           {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -295,6 +370,12 @@
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
     transition: opacity var(--chart-transition-duration, 0.2s) ease;
+  }
+  .sankey-col-label {
+    fill: var(--sankey-col-label-color, #666);
+    font-size: var(--sankey-col-label-font-size, 11px);
+    font-family: var(--chart-font-family, inherit);
+    pointer-events: none;
   }
   .sankey-label.node-dimmed {
     opacity: var(--sankey-dimmed-opacity, 0.15);

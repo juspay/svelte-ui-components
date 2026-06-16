@@ -3,10 +3,13 @@ import type { Snippet } from 'svelte';
 export type ToastType = 'success' | 'error' | 'info' | 'warn';
 export type ToastDirection = 'left-to-right' | 'right-to-left' | 'top-to-bottom' | 'bottom-to-top';
 
-export type ToastProperties = ToastEventProperties & {
+export type MandatoryToastProperties = {
+  message: string;
+};
+
+export type OptionalToastProperties = {
   duration?: number;
   leftIcon?: string | null;
-  message: string;
   subtext?: string | null;
   rightIcon?: string | null;
   type?: ToastType | null;
@@ -27,3 +30,7 @@ export type ToastProperties = ToastEventProperties & {
 export type ToastEventProperties = {
   onToastHide?: () => void;
 };
+
+export type ToastProperties = MandatoryToastProperties &
+  OptionalToastProperties &
+  ToastEventProperties;

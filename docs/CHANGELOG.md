@@ -2,26 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.33.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.34.0)
 
-Expose --select-dropdown-left, --select-dropdown-right,
---select-dropdown-min-width, --select-dropdown-max-width and
---select-dropdown-width so consumers can theme the dropdown panel's
-horizontal placement and width via the classes prop, without reaching
-the internal .select-dropdown class through :global().
+Expose --empty-state-actions-display, -flex-direction, -align-items,
+-justify-content, -gap and -margin-top so consumers can lay out the
+actions area (e.g. stack buttons vertically and center them) via the
+classes prop, instead of reaching the internal .empty-state-actions
+class through a descendant :global() override.
 
-Every other dropdown property (gap, background, border, radius,
-shadow, max-height, z-index) already had a CSS-var hook, but the
-horizontal sizing was hardcoded to left:0/right:0 — pinning the panel
-to the trigger width and clipping long option labels. Both alignment
-branches now consume the variables: the default left-aligned rule and
-the dropdownAlign="right" preset, so right-anchored menus are themable
-through the public path too.
+The actions container previously had only a hardcoded margin-top:16px,
+so any layout change (a column of centered buttons, a gap between
+actions) required overriding the library-internal class. Defaults
+reproduce the current rendering exactly (display:block with the flex
+properties inert, margin-top:16px), so this is fully backward-compatible.
 
-Defaults reproduce the current rendering exactly (left-aligned:
-left:0; right:0; min-width:auto; max-width:none; width:auto —
-right-aligned preset: right:0; min-width:100%; max-width:none;
-width:max-content), so this is fully backward-compatible.
+## [2.34.0](https://github.com/juspay/svelte-ui-components/compare/2.34.0..2.33.0) - 16 June 2026
 
 ## [2.33.0](https://github.com/juspay/svelte-ui-components/compare/2.33.0..2.32.1) - 15 June 2026
 

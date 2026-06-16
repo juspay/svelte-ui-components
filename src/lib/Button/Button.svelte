@@ -105,6 +105,7 @@
     font-weight: var(--disabled-font-weight);
     border: var(--disabled-border);
     background: var(--disabled-background-color, var(--button-color, #3a4550));
+    box-shadow: var(--button-disabled-box-shadow, var(--button-box-shadow, none));
   }
 
   .button-loader {
@@ -126,10 +127,17 @@
     color: var(--button-hover-text-color, var(--button-text-color, white));
     border: var(--button-hover-border, var(--button-border, none));
     transform: var(--button-hover-transform);
+    box-shadow: var(--button-hover-box-shadow, var(--button-box-shadow, none));
   }
 
   button:active {
     transform: var(--button-active-transform);
+    background: var(--button-active-background, var(--button-color, #3a4550));
+    box-shadow: var(--button-active-box-shadow, var(--button-box-shadow, none));
+  }
+
+  button:focus-visible {
+    box-shadow: var(--button-focus-visible-box-shadow, var(--button-box-shadow, none));
   }
 
   .button-progress-bar {

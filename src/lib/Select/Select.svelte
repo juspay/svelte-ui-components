@@ -471,8 +471,11 @@
   .select-dropdown {
     position: absolute;
     top: 100%;
-    left: 0;
-    right: 0;
+    left: var(--select-dropdown-left, 0);
+    right: var(--select-dropdown-right, 0);
+    min-width: var(--select-dropdown-min-width, auto);
+    max-width: var(--select-dropdown-max-width, none);
+    width: var(--select-dropdown-width, auto);
     margin-top: var(--select-dropdown-gap, 4px);
     background: var(--select-dropdown-background, #ffffff);
     border: var(--select-dropdown-border, 1px solid #cccccc);
@@ -485,9 +488,10 @@
 
   .select-dropdown-right {
     left: auto;
-    right: 0;
-    min-width: 100%;
-    width: max-content;
+    right: var(--select-dropdown-right, 0);
+    min-width: var(--select-dropdown-min-width, 100%);
+    max-width: var(--select-dropdown-max-width, none);
+    width: var(--select-dropdown-width, max-content);
   }
 
   .select-option {

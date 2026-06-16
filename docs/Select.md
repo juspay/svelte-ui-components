@@ -58,26 +58,26 @@ Replace the default ☐/☑ glyphs with a custom indicator:
 
 ## Props
 
-| Prop        | Type                        | Required | Default | Description                                                                                                                                                            |
-| ----------- | --------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `SelectItem[] \| string[]`  | Yes      | -       | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.       |
-| value       | `string[]`                  | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                             |
-| open        | `boolean`                   | No       | `false` | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state. |
-| multiple    | `boolean`                   | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                            |
-| searchable  | `boolean`                   | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                    |
-| placeholder | `string`                    | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                               |
-| disabled    | `boolean`                   | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                        |
-| testId      | `string`                    | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                     |
-| classes     | `string`                    | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop        | Type                       | Required | Default | Description                                                                                                                                                                  |
+| ----------- | -------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items       | `SelectItem[] \| string[]` | Yes      | -       | Array of selectable options. Pass `SelectItem[]` objects (each with `id` and `label`) or a plain `string[]` where each string becomes both the id and the label.             |
+| value       | `string[]`                 | No       | `[]`    | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                   |
+| open        | `boolean`                  | No       | `false` | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state. |
+| multiple    | `boolean`                  | No       | `false` | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                  |
+| searchable  | `boolean`                  | No       | `false` | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                          |
+| placeholder | `string`                   | No       | `''`    | Text shown when no item is selected (or in the search input when empty).                                                                                                     |
+| disabled    | `boolean`                  | No       | `false` | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                              |
+| testId      | `string`                   | No       | -       | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                           |
+| classes     | `string`                   | No       | -       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.       |
 
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet          | Type                              | Description                                                                                                                                          |
-| ---------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| bottomContent    | `Snippet`                         | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.                |
-| optionIndicator  | `Snippet<[{ checked: boolean }]>` | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided.  |
+| Snippet         | Type                              | Description                                                                                                                                        |
+| --------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| bottomContent   | `Snippet`                         | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.              |
+| optionIndicator | `Snippet<[{ checked: boolean }]>` | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided. |
 
 ## Events
 
@@ -135,37 +135,42 @@ Override these custom properties to theme the component.
 
 ### Dropdown
 
-| Variable                          | Default                         | CSS Property  | Description                                      |
-| --------------------------------- | ------------------------------- | ------------- | ------------------------------------------------ |
-| `--select-dropdown-gap`           | `4px`                           | margin-top    | Gap between the trigger and the dropdown panel.  |
-| `--select-dropdown-background`    | `#ffffff`                       | background    | Background color of the dropdown panel.          |
-| `--select-dropdown-border`        | `1px solid #cccccc`             | border        | Border of the dropdown panel.                    |
-| `--select-dropdown-border-radius` | `6px`                           | border-radius | Corner rounding of the dropdown panel.           |
-| `--select-dropdown-shadow`        | `0 4px 12px rgba(0, 0, 0, 0.1)` | box-shadow    | Box shadow of the dropdown panel.                |
-| `--select-dropdown-max-height`    | `200px`                         | max-height    | Maximum height of the dropdown (scrolls beyond). |
-| `--select-dropdown-z-index`       | `10`                            | z-index       | Stack order of the dropdown panel.               |
+| Variable                          | Default                         | CSS Property  | Description                                                                                                           |
+| --------------------------------- | ------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--select-dropdown-gap`           | `4px`                           | margin-top    | Gap between the trigger and the dropdown panel.                                                                       |
+| `--select-dropdown-background`    | `#ffffff`                       | background    | Background color of the dropdown panel.                                                                               |
+| `--select-dropdown-border`        | `1px solid #cccccc`             | border        | Border of the dropdown panel.                                                                                         |
+| `--select-dropdown-border-radius` | `6px`                           | border-radius | Corner rounding of the dropdown panel.                                                                                |
+| `--select-dropdown-shadow`        | `0 4px 12px rgba(0, 0, 0, 0.1)` | box-shadow    | Box shadow of the dropdown panel.                                                                                     |
+| `--select-dropdown-max-height`    | `200px`                         | max-height    | Maximum height of the dropdown (scrolls beyond).                                                                      |
+| `--select-dropdown-z-index`       | `10`                            | z-index       | Stack order of the dropdown panel.                                                                                    |
+| `--select-dropdown-left`          | `0`                             | left          | Left edge of the dropdown relative to the trigger. Set to `auto` to anchor by the right edge instead.                 |
+| `--select-dropdown-right`         | `0`                             | right         | Right edge of the dropdown relative to the trigger. Set to `auto` to let the panel grow rightward from the left edge. |
+| `--select-dropdown-min-width`     | `auto`                          | min-width     | Minimum width of the dropdown panel. Set to `100%` to keep it at least as wide as the trigger.                        |
+| `--select-dropdown-max-width`     | `none`                          | max-width     | Maximum width of the dropdown panel (e.g. `70vw` to cap growth on wide content).                                      |
+| `--select-dropdown-width`         | `auto`                          | width         | Width of the dropdown panel. Set to `max-content` to size to the longest option instead of the trigger width.         |
 
 ### Options
 
-| Variable                                    | Default                                        | CSS Property | Description                                                                                    |
-| ------------------------------------------- | ---------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
-| `--select-option-padding`                   | `8px 12px`                                     | padding      | Padding inside each dropdown option.                                                           |
-| `--select-option-color`                     | `#333333`                                      | color        | Text color of dropdown options.                                                                |
-| `--select-option-font-size`                 | `inherit`                                      | font-size    | Font size of dropdown options.                                                                 |
-| `--select-option-gap`                       | `0`                                            | gap          | Gap between the option indicator and the label text in multi-select mode.                      |
-| `--select-option-hover-background`          | `#f0f0f0`                                      | background   | Background of options on hover or keyboard highlight.                                          |
-| `--select-option-hover-color`               | inherits `--select-option-color`               | color        | Text color of options on hover or keyboard highlight.                                          |
-| `--select-option-selected-background`       | `#e8f0fe`                                      | background   | Background of selected options.                                                                |
-| `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                                                                |
-| `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.                                                       |
-| `--select-option-indicator-color`           | `currentColor`                                 | color        | Color of the default ☐/☑ indicator shown per option in multi-select mode.                     |
+| Variable                                    | Default                                        | CSS Property | Description                                                               |
+| ------------------------------------------- | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------- |
+| `--select-option-padding`                   | `8px 12px`                                     | padding      | Padding inside each dropdown option.                                      |
+| `--select-option-color`                     | `#333333`                                      | color        | Text color of dropdown options.                                           |
+| `--select-option-font-size`                 | `inherit`                                      | font-size    | Font size of dropdown options.                                            |
+| `--select-option-gap`                       | `0`                                            | gap          | Gap between the option indicator and the label text in multi-select mode. |
+| `--select-option-hover-background`          | `#f0f0f0`                                      | background   | Background of options on hover or keyboard highlight.                     |
+| `--select-option-hover-color`               | inherits `--select-option-color`               | color        | Text color of options on hover or keyboard highlight.                     |
+| `--select-option-selected-background`       | `#e8f0fe`                                      | background   | Background of selected options.                                           |
+| `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                                           |
+| `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.                                  |
+| `--select-option-indicator-color`           | `currentColor`                                 | color        | Color of the default ☐/☑ indicator shown per option in multi-select mode. |
 
 ### Bottom Content
 
-| Variable                             | Default                | CSS Property | Description                                                     |
-| ------------------------------------ | ---------------------- | ------------ | --------------------------------------------------------------- |
-| `--select-bottom-content-border`     | `none`                 | border-top   | Separator line between the option list and the bottom content. Set to `1px solid #eeeeee` (or any color) in your own CSS when a visible divider is desired. |
-| `--select-bottom-content-padding`    | `8px 12px`             | padding      | Inner padding of the bottom content area.                       |
+| Variable                          | Default    | CSS Property | Description                                                                                                                                                 |
+| --------------------------------- | ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--select-bottom-content-border`  | `none`     | border-top   | Separator line between the option list and the bottom content. Set to `1px solid #eeeeee` (or any color) in your own CSS when a visible divider is desired. |
+| `--select-bottom-content-padding` | `8px 12px` | padding      | Inner padding of the bottom content area.                                                                                                                   |
 
 ### Empty State
 

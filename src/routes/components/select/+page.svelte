@@ -46,6 +46,8 @@
   let customIndicatorValue: string[] = $state([]);
   let alignValue: string[] = $state([]);
   let summaryValue: string[] = $state([]);
+  let ghostValue: string[] = $state([]);
+  let openEventLog: string[] = $state([]);
 </script>
 
 <div class="page-header">
@@ -158,6 +160,34 @@
   </Select>
   {#if summaryValue.length > 0}
     <p class="demo-info">Selected IDs: {summaryValue.join(', ')}</p>
+  {/if}
+</div>
+
+<h3>Ghost hierarchy</h3>
+<p>
+  Use <code>hierarchy="ghost"</code> for a transparent, borderless trigger — ideal for toolbar or header
+  selects where a full bordered input would be visually heavy.
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} bind:value={ghostValue} placeholder="Ghost trigger" hierarchy="ghost" />
+  {#if ghostValue.length > 0}
+    <p class="demo-info">Selected: {ghostValue.at(0)}</p>
+  {/if}
+</div>
+
+<h3>onopen / onclose callbacks</h3>
+<p>
+  Use <code>onopen</code> and <code>onclose</code> to react to dropdown open/close events.
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruits}
+    placeholder="Watch the log"
+    onopen={() => (openEventLog = [...openEventLog, 'opened'])}
+    onclose={() => (openEventLog = [...openEventLog, 'closed'])}
+  />
+  {#if openEventLog.length > 0}
+    <p class="demo-info">Event log: {openEventLog.slice(-4).join(' → ')}</p>
   {/if}
 </div>
 

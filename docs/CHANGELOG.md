@@ -2,23 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.35.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.36.0)
 
-Expose --button-hover-box-shadow, --button-active-background,
---button-active-box-shadow, --button-focus-visible-box-shadow and
---button-disabled-box-shadow so consumers can theme per-state box-shadow
-and the active/pressed background through the classes prop, instead of
-reaching the inner &lt;button&gt; element via :global(.x button:hover) etc.
-
-Previously only the resting --button-box-shadow was themable; the
-hover/active/focus-visible/disabled states had no box-shadow hook and
-:active had no background hook, so any state shadow or pressed shade
-forced a descendant element selector. This completes the state coverage
-the way --button-hover-color / --button-active-transform already do.
-
-Every new variable falls back to --button-box-shadow (or --button-color
-for the active background) so the resting value carries into each state
-by default — rendering is unchanged unless a consumer opts in.
+## [2.36.0](https://github.com/juspay/svelte-ui-components/compare/2.36.0..2.35.0) - 16 June 2026
 
 ## [2.35.0](https://github.com/juspay/svelte-ui-components/compare/2.35.0..2.34.0) - 16 June 2026
 

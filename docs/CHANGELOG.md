@@ -2,13 +2,29 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.43.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.44.0)
 
-The aria-controls attribute was bound to the native &lt;input type="checkbox"&gt;
-which carries aria-hidden="true". ARIA attributes on aria-hidden elements are
-stripped from the accessibility tree and are never exposed to assistive
-technology. Moved aria-controls to the &lt;span role="checkbox"&gt; element, which
-is the actual interactive node that screen readers interact with.
+- Add headerRight snippet prop: renders at top-right of header row via
+flex split (.card-header-split); base block flow unchanged when omitted
+- Add footer snippet prop: rendered in &lt;footer class="card-footer"&gt; below
+content area; element absent when omitted (semantic HTML)
+- Add stretch boolean prop: card root becomes flex column with
+height: var(--card-stretch-height, 100%) so content fills parent
+- Add scrollable boolean prop: content area gets overflow-y:auto with
+max-height: var(--card-content-max-height, 400px); card root switches
+to overflow:visible to prevent clipping; content div gains
+role="region", aria-label="Scrollable card content", tabindex="0"
+for keyboard accessibility
+- Fix: arrow function for handleKeydown (was function declaration)
+- Fix: scrollbar-width hard-coded to keyword 'thin' (CSS var removed
+since scrollbar-width is keyword-only; pixel values are silently
+ignored by all browsers)
+- Add Card.wc.svelte: reflect stretch and scrollable Boolean props in
+customElement config so &lt;sui-card stretch scrollable&gt; attributes parse
+- Update docs/Card.md: new prop rows, new CSS variable rows, usage
+examples for headerRight+footer and stretch+scrollable patterns
+
+## [2.44.0](https://github.com/juspay/svelte-ui-components/compare/2.44.0..2.43.0) - 16 June 2026
 
 ## [2.43.0](https://github.com/juspay/svelte-ui-components/compare/2.43.0..2.42.0) - 16 June 2026
 

@@ -2,7 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.58.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.59.0)
+
+- Props table: add `itemTestId` (per-option data-pw fallback prefix) and `dropdownAlign`
+('left'|'right' anchor for the dropdown panel) — both were already implemented in
+Select.svelte/properties.ts but were absent from the docs.
+- Snippets table: add `triggerSummary` (compact multi-select trigger summary snippet)
+with an accompanying usage example.
+- Type Reference: extend `SelectItem` to show the optional `testId` field; add
+`SelectHierarchy` union type entry.
+- wc wrapper: expose `itemTestId` as `item-test-id` HTML attribute so Web Component
+consumers get the same per-option data-pw hook that Svelte consumers already have.
+- Complements PR #263 (leftIcon/hierarchy) whose props were already present.
+Enables the Lighthouse DataGrid migration to fold off its project-owned Dropdown
+and use the library Select with full test-id parity.
+
+## [2.59.0](https://github.com/juspay/svelte-ui-components/compare/2.59.0..2.58.0) - 16 June 2026
 
 ## [2.58.0](https://github.com/juspay/svelte-ui-components/compare/2.58.0..2.57.0) - 16 June 2026
 

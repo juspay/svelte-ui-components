@@ -63,6 +63,11 @@
   }
 
   .empty-state-actions {
-    margin-top: 16px;
+    display: var(--empty-state-actions-display, block);
+    flex-direction: var(--empty-state-actions-flex-direction, row);
+    align-items: var(--empty-state-actions-align-items, stretch);
+    justify-content: var(--empty-state-actions-justify-content, normal);
+    gap: var(--empty-state-actions-gap, 0);
+    margin-top: var(--empty-state-actions-margin-top, 16px);
   }
 </style>

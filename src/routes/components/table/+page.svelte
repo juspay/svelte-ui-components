@@ -39,6 +39,58 @@
     ['Ivy Chen', 'Sales', 91, 'Active'],
     ['Jack Taylor', 'Engineering', 76, 'Review']
   ];
+
+  // ── Checkbox selection demos ─────────────────────────────────────────────────
+  let multipleSelectedIds = $state<Set<string>>(new Set());
+  let singleSelectedId = $state<string | null>(null);
+
+  const employeeData: Array<[string, string, string]> = [
+    ['Alice Johnson', 'Engineering', 'Staff Engineer'],
+    ['Bob Smith', 'Design', 'Product Designer'],
+    ['Carol White', 'Marketing', 'Growth Lead'],
+    ['Dan Brown', 'Engineering', 'Senior Engineer'],
+    ['Eve Davis', 'Sales', 'Account Executive']
+  ];
+
+  // ── Search demos ─────────────────────────────────────────────────────────────
+  let serverSearchTerm = $state('');
+
+  // Simulate server-side rows reacting to the search term
+  const allProductRows: Array<[string, string, string]> = [
+    ['MacBook Pro 16"', 'Laptops', '$3,499'],
+    ['MacBook Air M3', 'Laptops', '$1,299'],
+    ['iPhone 15 Pro', 'Phones', '$999'],
+    ['iPhone 15', 'Phones', '$799'],
+    ['iPad Pro 13"', 'Tablets', '$1,099'],
+    ['AirPods Pro 2', 'Audio', '$249'],
+    ['Apple Watch S9', 'Wearables', '$399']
+  ];
+
+  let serverFilteredRows = $derived(
+    serverSearchTerm.trim() === ''
+      ? allProductRows
+      : allProductRows.filter((row) =>
+          row.some((cell) => cell.toLowerCase().includes(serverSearchTerm.trim().toLowerCase()))
+        )
+  );
+
+  // ── onCellChange wiring demo ─────────────────────────────────────────────────
+  let editableRows = $state<Array<[string, string]>>([
+    ['Alice Johnson', 'Engineering'],
+    ['Bob Smith', 'Design'],
+    ['Carol White', 'Marketing']
+  ]);
+
+  const handleCellChange = (rowIndex: number, colIndex: number, newValue: JSONValue): void => {
+    editableRows = editableRows.map((row, idx) => {
+      if (idx !== rowIndex) {
+        return row;
+      }
+      const nextRow: [string, string] = [row[0], row[1]];
+      nextRow[colIndex] = String(newValue ?? '');
+      return nextRow;
+    });
+  };
 </script>
 
 <div class="page-header">
@@ -213,6 +265,130 @@
   {#if lastCellTestId}
     <p class="state-display">Last clicked row data-pw prefix: {lastCellTestId}</p>
   {/if}
+</div>
+
+<!-- Checkbox Selection — Multiple Mode -->
+<h3>Checkbox Selection (multiple)</h3>
+<div class="demo-row" style="max-width: 700px; flex-direction: column; gap: 8px;">
+  <Table
+    tableHeaders={['Name', 'Department', 'Role']}
+    tableData={employeeData}
+    checkboxSelection={{
+      selectionMode: 'multiple',
+      getRowId: (_row, rowIndex) => `emp-${rowIndex}`,
+      disabledRowIds: new Set(['emp-2']),
+      onSelectionChange: (ids) => {
+        multipleSelectedIds = ids;
+      }
+    }}
+    --table-row-selected-background="#eff6ff"
+  />
+  {#if multipleSelectedIds.size > 0}
+    <p class="state-display">
+      Selected IDs: {[...multipleSelectedIds].join(', ')}
+    </p>
+  {/if}
+</div>
+
+<!-- Checkbox Selection — Single Mode -->
+<h3>Checkbox Selection (single)</h3>
+<div class="demo-row" style="max-width: 700px; flex-direction: column; gap: 8px;">
+  <Table
+    tableHeaders={['Name', 'Department', 'Role']}
+    tableData={employeeData}
+    checkboxSelection={{
+      selectionMode: 'single',
+      getRowId: (_row, rowIndex) => `single-emp-${rowIndex}`,
+      onSelectionChange: (ids) => {
+        singleSelectedId = ids.size > 0 ? [...ids][0] : null;
+      }
+    }}
+    --table-row-selected-background="#f0fdf4"
+    --table-checkbox-checked-background="#16a34a"
+    --table-checkbox-checked-border-color="#16a34a"
+  />
+  {#if singleSelectedId}
+    <p class="state-display">Selected: {singleSelectedId}</p>
+  {/if}
+</div>
+
+<!-- Search — Client-Side Filtering -->
+<h3>Search (client-side filtering)</h3>
+<div class="demo-row" style="max-width: 700px;">
+  <Table
+    tableHeaders={['Name', 'Department', 'Score', 'Status']}
+    tableData={[
+      ['Alice Johnson', 'Engineering', 94, 'Active'],
+      ['Bob Smith', 'Design', 78, 'Pending'],
+      ['Carol White', 'Marketing', 65, 'Inactive'],
+      ['Dan Brown', 'Engineering', 88, 'Review'],
+      ['Eve Davis', 'Sales', 92, 'Active'],
+      ['Frank Miller', 'Engineering', 71, 'Pending']
+    ]}
+    searchConfig={{
+      placeholder: 'Search employees…',
+      searchableColumnIndices: [0, 1, 3],
+      testId: 'employee-search'
+    }}
+    --table-row-hover-background="#f9fafb"
+  >
+    {#snippet cell(value, _rowIndex, colIndex)}
+      {#if colIndex === 3 && typeof value === 'string'}
+        <Pill text={value} classes={statusClasses[value] ?? ''} />
+      {:else}
+        {value}
+      {/if}
+    {/snippet}
+  </Table>
+</div>
+
+<!-- Search — Server-Side Delegation -->
+<h3>Search (server-side delegation via onSearchChange)</h3>
+<div class="demo-row" style="max-width: 700px; flex-direction: column; gap: 8px;">
+  <Table
+    tableHeaders={['Product', 'Category', 'Price']}
+    tableData={serverFilteredRows}
+    searchConfig={{ placeholder: 'Search products…', testId: 'product-search' }}
+    onSearchChange={(term) => {
+      serverSearchTerm = term;
+    }}
+    --table-row-hover-background="#f9fafb"
+  />
+  <p class="state-display">
+    Showing {serverFilteredRows.length} of {allProductRows.length} products
+    {serverSearchTerm ? `— filtered by "${serverSearchTerm}"` : ''}
+  </p>
+</div>
+
+<!-- onCellChange Wiring Pattern -->
+<h3>Editable Cells (onCellChange pattern)</h3>
+<p style="color: #6b7280; margin: 0 0 8px 0;">
+  Table does not forward <code>onCellChange</code> internally — wire your handler directly inside
+  the <code>cell</code> snippet, which runs in consumer scope.
+</p>
+<div class="demo-row" style="max-width: 600px; flex-direction: column; gap: 8px;">
+  <Table
+    tableHeaders={['Name', 'Department']}
+    tableData={editableRows}
+    onCellChange={handleCellChange}
+  >
+    {#snippet cell(value, rowIndex, colIndex)}
+      <!-- The snippet runs in consumer scope — handleCellChange is already in closure -->
+      <input
+        type="text"
+        value={String(value ?? '')}
+        oninput={(inputEvent) => {
+          if (inputEvent.target instanceof HTMLInputElement) {
+            handleCellChange(rowIndex, colIndex, inputEvent.target.value);
+          }
+        }}
+        style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px 8px; width: 100%; background: transparent;"
+      />
+    {/snippet}
+  </Table>
+  <div style="margin-top: 4px;">
+    <p class="state-display">Live data: {JSON.stringify(editableRows)}</p>
+  </div>
 </div>
 
 <style>

@@ -4,7 +4,9 @@
     shadow: 'open',
     props: {
       expand: { type: 'Boolean', reflect: true },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      triggerClasses: { type: 'String', attribute: 'trigger-classes' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

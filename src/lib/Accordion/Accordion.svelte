@@ -1,21 +1,60 @@
 <script lang="ts">
   import type { AccordionProperties } from './properties';
 
-  let { expand = false, children, classes }: AccordionProperties = $props();
+  let {
+    expand = $bindable(false),
+    children,
+    trigger,
+    ontoggle,
+    triggerClasses,
+    classes,
+    testId
+  }: AccordionProperties = $props();
+
+  function handleTriggerClick(): void {
+    expand = !expand;
+    ontoggle?.(expand);
+  }
 </script>
 
-<div class="accordion {classes ?? ''}" class:expanded={expand}>
+{#if trigger}
+  <div
+    class="accordion-trigger {triggerClasses ?? ''}"
+    role="button"
+    tabindex="0"
+    aria-expanded={expand}
+    onclick={handleTriggerClick}
+    onkeydown={(event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleTriggerClick();
+      }
+    }}
+  >
+    {@render trigger({ expanded: expand })}
+  </div>
+{/if}
+
+<div
+  class="accordion {classes ?? ''}"
+  class:expanded={expand}
+  data-pw={typeof testId === 'string' ? testId : null}
+>
   <div class="accordion-content">
     {@render children?.()}
   </div>
 </div>
 
 <style>
+  .accordion-trigger {
+    cursor: var(--accordion-trigger-cursor, pointer);
+  }
+
   .accordion {
     display: grid;
     grid-template-rows: 0fr;
     overflow: hidden;
-    transition: grid-template-rows 0.2s ease-out;
+    transition: grid-template-rows var(--accordion-transition, 0.2s ease-out);
   }
 
   .accordion.expanded {

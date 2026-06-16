@@ -21,6 +21,7 @@
       classes: { type: 'String' },
       clearable: { type: 'Boolean', reflect: true },
       initialPresetLabel: { type: 'String', attribute: 'initial-preset-label' },
+      openCompare: { type: 'Boolean', reflect: true, attribute: 'open-compare' },
       onapply: { type: 'Object' },
       onapplysingle: { type: 'Object' },
       onapplycompare: { type: 'Object' },

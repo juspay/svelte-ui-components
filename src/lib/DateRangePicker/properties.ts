@@ -70,6 +70,23 @@ export type OptionalDateRangePickerProperties = {
    * Only takes effect once on mount; subsequent prop changes are not tracked.
    */
   initialPresetLabel?: string;
+  /**
+   * Snippet rendered as the standalone compare-period trigger. When provided,
+   * the component renders this snippet in its own wrapper div
+   * (.drp-compare-trigger-wrapper) adjacent to the main trigger. Clicking the
+   * wrapper toggles openCompare. Receives the current compare trigger label
+   * string as its argument (formatted "start – end" or placeholder).
+   */
+  compareTrigger?: Snippet<[string]>;
+  /**
+   * Bindable. Controls whether the compare-period picker panel is open.
+   * The component writes back on open/close, so `bind:openCompare` lets a
+   * parent open/close it programmatically or observe the state. When
+   * compareTrigger is not provided this prop is still functional — the parent
+   * can drive it without a built-in trigger element.
+   * Default: false.
+   */
+  openCompare?: boolean;
 };
 
 export type DateRangePickerEventProperties = {

@@ -54,3 +54,4 @@ import './components/Toolbar.wc.svelte';
 import './components/Tooltip.wc.svelte';
 import './components/DateRangePicker.wc.svelte';
 import './components/LottiePlayer.wc.svelte';
+import './components/StatCard.wc.svelte';

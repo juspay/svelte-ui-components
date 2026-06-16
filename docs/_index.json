@@ -228,6 +228,10 @@
     "description": "A row of related input fields for segmented values like OTP/PIN codes, RGB/HSL color channels, IP addresses, or time inputs. Supports per-field configuration (dataType, min/max, validation), auto-advance focus, paste distribution, keyboard navigation, and optional separators between fields. Uses the Input component internally."
   },
   {
+    "name": "StatCard",
+    "description": "A compact metric display card for dashboards. Shows a title label, a prominent value, an optional delta badge (with automatic positive/negative colour inference from the leading sign character), an optional subtitle, and a footer snippet. When onclick is provided, the card becomes an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support). All visual properties are CSS-var driven."
+  },
+  {
     "name": "Status",
     "description": "A full-screen status display with a centered icon image, title text, description text (supports HTML), and an optional action Button. Uses backdrop-filter blur for visual effect. Ideal for order success/failure screens."
   },

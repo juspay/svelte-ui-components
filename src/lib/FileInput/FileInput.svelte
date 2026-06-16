@@ -16,11 +16,11 @@
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);
 
-  function openFilePicker(): void {
+  export const openFilePicker = (): void => {
     if (!disabled) {
       inputEl?.click();
     }
-  }
+  };
 
   function isAccepted(file: File): boolean {
     if (typeof accept !== 'string' || accept.length === 0) {

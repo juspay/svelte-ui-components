@@ -15,7 +15,13 @@
       ariaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      onkeyup: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      onkeyup: { type: 'Object' },
+      onmousedown: { type: 'Object' },
+      onmouseup: { type: 'Object' },
+      onmouseleave: { type: 'Object' },
+      ontouchstart: { type: 'Object' },
+      ontouchend: { type: 'Object' }
     }
   }}
 />

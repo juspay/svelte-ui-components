@@ -15,7 +15,13 @@
     ariaSelected,
     role,
     onclick,
+    onkeydown,
     onkeyup = () => {},
+    onmousedown,
+    onmouseup,
+    onmouseleave,
+    ontouchstart,
+    ontouchend,
     showProgressBar = $bindable(false),
     icon,
     children,
@@ -42,7 +48,13 @@
   <button
     class:disabled={isDisabled}
     onclick={handleButtonClick}
+    {onkeydown}
     {onkeyup}
+    {onmousedown}
+    {onmouseup}
+    {onmouseleave}
+    {ontouchstart}
+    {ontouchend}
     disabled={isDisabled}
     {type}
     data-pw={testId}

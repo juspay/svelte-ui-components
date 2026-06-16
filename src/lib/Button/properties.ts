@@ -24,5 +24,11 @@ export type OptionalButtonProperties = {
 
 export type ButtonEventProperties = {
   onclick?: (event: MouseEvent) => void;
+  onkeydown?: (event: KeyboardEvent) => void;
   onkeyup?: (event: KeyboardEvent) => void;
+  onmousedown?: (event: MouseEvent) => void;
+  onmouseup?: (event: MouseEvent) => void;
+  onmouseleave?: (event: MouseEvent) => void;
+  ontouchstart?: (event: TouchEvent) => void;
+  ontouchend?: (event: TouchEvent) => void;
 };

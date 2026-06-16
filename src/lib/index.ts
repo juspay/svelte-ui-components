@@ -128,3 +128,4 @@ export type * from './PieChart/properties';
 export type * from './SankeyChart/properties';
 
 export { validateInput } from './utils';
+export { formatNumberIndian } from './_chart/format';

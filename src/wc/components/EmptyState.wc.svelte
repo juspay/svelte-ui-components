@@ -19,6 +19,12 @@
   {#snippet icon()}
     <slot name="icon"></slot>
   {/snippet}
+  {#snippet titleSnippet()}
+    <slot name="title-snippet"></slot>
+  {/snippet}
+  {#snippet descriptionSnippet()}
+    <slot name="description-snippet"></slot>
+  {/snippet}
   {#snippet children()}
     <slot></slot>
   {/snippet}

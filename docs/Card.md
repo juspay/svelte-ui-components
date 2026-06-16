@@ -100,7 +100,10 @@ The Card component intentionally omits named layout slots to keep its API minima
 <div class="metric-card">
   <Card testId="revenue-card">
     {#snippet children()}
-      <div class="card-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+      <div
+        class="card-row"
+        style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;"
+      >
         <span>📊</span>
         <div style="flex:1;">
           <p style="margin:0;">Total Revenue</p>
@@ -116,7 +119,10 @@ The Card component intentionally omits named layout slots to keep its API minima
 <div class="integration-card">
   <Card onclick={handleCardClick} testId="shopify-card">
     {#snippet children()}
-      <div class="card-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;">
+      <div
+        class="card-row"
+        style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; gap:12px;"
+      >
         <span>🛒</span>
         <div style="flex:1;">
           <p style="margin:0;">Shopify</p>
@@ -179,64 +185,65 @@ This pattern gives full layout control to the consumer (any number of zones, any
 
 ## Props
 
-| Prop        | Type                          | Required | Default | Description                                                                                                                                                                  |
-| ----------- | ----------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children    | `Snippet`                     | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                |
-| title       | `string`                      | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                        |
-| description | `string`                      | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                       |
-| classes     | `string`                      | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.       |
-| testId      | `string`                      | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                   |
-| onclick     | `(event: MouseEvent) => void` | No       | `-`     | Click handler. When provided, the card root becomes interactive: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. Omit to keep a plain `<div>`. |
-| headerRight | `Snippet`                     | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                |
-| footer      | `Snippet`                     | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                 |
-| stretch     | `boolean`                     | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.         |
-| scrollable  | `boolean`                     | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility. |
-| cssVars     | `Record<string, string \| number>` | No  | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute. |
+| Prop        | Type                               | Required | Default | Description                                                                                                                                                                                                                                                                                                    |
+| ----------- | ---------------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children    | `Snippet`                          | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                                                                                                                                                  |
+| title       | `string`                           | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                                                                                                                                                          |
+| description | `string`                           | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                                                                                                                                                         |
+| classes     | `string`                           | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                         |
+| testId      | `string`                           | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                     |
+| onclick     | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided, the card root becomes interactive: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. Omit to keep a plain `<div>`.                                                                                                                                   |
+| headerRight | `Snippet`                          | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                                                                                                                                                  |
+| footer      | `Snippet`                          | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                                                                                                                                                   |
+| stretch     | `boolean`                          | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.                                                                                                                                            |
+| scrollable  | `boolean`                          | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility.                                                                                                    |
+| cssVars     | `Record<string, string \| number>` | No       | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute. |
 
 ## Events
 
-| Event   | Type                          | Description                                                                                                                                        |
-| ------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Event   | Type                          | Description                                                                                                                                          |
+| ------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | onclick | `(event: MouseEvent) => void` | Fires when the card is clicked. When provided, the card gains `role="button"`, `tabindex="0"`, and keyboard support (Enter/Space). No-op if omitted. |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                       | Default                  | CSS Property  | Description                                                                                    |
-| ------------------------------ | ------------------------ | ------------- | ---------------------------------------------------------------------------------------------- |
-| `--card-background`            | `inherit`                | background    | Background color of the card.                                                                  |
-| `--card-border`                | `1px solid currentColor` | border        | Border of the card. Inherits text color by default.                                            |
-| `--card-border-radius`         | `8px`                    | border-radius | Corner radius of the card.                                                                     |
-| `--card-overflow`              | `hidden`                 | overflow      | Overflow behavior of the card content.                                                         |
-| `--card-box-shadow`            | `none`                   | box-shadow    | Box shadow of the card. Set to a shadow value (e.g. `0 2px 8px rgba(0,0,0,0.1)`) or `none`.  |
-| `--card-width`                 | `auto`                   | width         | Width of the card. Set to a fixed value (e.g. `600px`) or leave as `auto` for natural sizing. |
-| `--card-min-width`             | `0`                      | min-width     | Minimum width constraint.                                                                      |
-| `--card-max-width`             | `none`                   | max-width     | Maximum width constraint.                                                                      |
-| `--card-height`                | `auto`                   | height        | Height of the card. Set to `100%` for equal-height/stretch layouts (e.g. cards in a stretched grid row); leave as `auto` for natural sizing. |
-| `--card-max-height`            | `none`                   | max-height    | Maximum height constraint. Use with `overflow: auto` for scrollable card bodies.               |
-| `--card-margin`                | `0`                      | margin        | Outer margin of the card. Useful for stacked card layouts.                                     |
-| `--card-cursor`                | `inherit`                | cursor        | Cursor on the card root. Defaults to `pointer` when `onclick` is provided.                     |
-| `--card-focus-outline`         | `2px solid currentColor` | outline       | Focus ring shown on the card when interactive and focused via keyboard.                        |
-| `--card-focus-outline-offset`  | `2px`                    | outline-offset| Offset of the focus ring from the card edge.                                                   |
-| `--card-header-padding`        | `16px 16px 0`            | padding       | Padding of the header section.                                                                 |
-| `--card-header-border-bottom`  | `none`                   | border-bottom | Optional border below the header.                                                              |
-| `--card-title-font-size`       | `16px`                   | font-size     | Font size of the title text.                                                                   |
-| `--card-title-font-weight`     | `600`                    | font-weight   | Font weight of the title text.                                                                 |
-| `--card-title-color`           | `inherit`                | color         | Color of the title text. Inherits from parent by default.                                      |
-| `--card-description-font-size` | `14px`                   | font-size     | Font size of the description text.                                                             |
-| `--card-description-color`     | `inherit`                | color         | Color of the description text. Inherits from parent by default.                                |
-| `--card-description-opacity`   | `0.6`                    | opacity       | Opacity of the description text for visual hierarchy.                                          |
-| `--card-content-padding`       | `16px`                   | padding       | Padding of the content body.                                                                   |
-| `--card-stretch-height`        | `100%`                   | height        | Height of the card root when `stretch=true`. Set to a fixed value or `100%` for full-height layouts. |
-| `--card-content-flex`          | `1`                      | flex          | Flex grow/shrink/basis shorthand for the content area when `stretch=true`, allowing it to fill remaining height. |
-| `--card-header-align-items`    | `flex-start`             | align-items   | Vertical alignment of the header row when `headerRight` is provided (`.card-header-split` flex container). |
-| `--card-header-gap`            | `8px`                    | gap           | Gap between the header main section and the `headerRight` slot when both are present.         |
-| `--card-header-right-align-items` | `center`              | align-items   | Vertical alignment of the `headerRight` slot container.                                        |
-| `--card-content-max-height`    | `400px`                  | max-height    | Maximum height of the scrollable content area when `scrollable=true`.                         |
-| `--card-footer-padding`        | `12px 16px`              | padding       | Padding of the footer element.                                                                 |
-| `--card-footer-border-top`     | `none`                   | border-top    | Optional top border for the footer. Set to a border value (e.g. `1px solid #e5e7eb`) to visually separate the footer. |
-| `--card-footer-background`     | `inherit`                | background    | Background color of the footer element. Inherits from the card by default.                    |
+| Variable                          | Default                  | CSS Property    | Description                                                                                                                                  |
+| --------------------------------- | ------------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--card-background`               | `inherit`                | background      | Background color of the card.                                                                                                                |
+| `--card-border`                   | `1px solid currentColor` | border          | Border of the card. Inherits text color by default.                                                                                          |
+| `--card-border-radius`            | `8px`                    | border-radius   | Corner radius of the card.                                                                                                                   |
+| `--card-overflow`                 | `hidden`                 | overflow        | Overflow behavior of the card content.                                                                                                       |
+| `--card-box-shadow`               | `none`                   | box-shadow      | Box shadow of the card. Set to a shadow value (e.g. `0 2px 8px rgba(0,0,0,0.1)`) or `none`.                                                  |
+| `--card-width`                    | `auto`                   | width           | Width of the card. Set to a fixed value (e.g. `600px`) or leave as `auto` for natural sizing.                                                |
+| `--card-min-width`                | `0`                      | min-width       | Minimum width constraint.                                                                                                                    |
+| `--card-max-width`                | `none`                   | max-width       | Maximum width constraint.                                                                                                                    |
+| `--card-height`                   | `auto`                   | height          | Height of the card. Set to `100%` for equal-height/stretch layouts (e.g. cards in a stretched grid row); leave as `auto` for natural sizing. |
+| `--card-max-height`               | `none`                   | max-height      | Maximum height constraint. Use with `overflow: auto` for scrollable card bodies.                                                             |
+| `--card-margin`                   | `0`                      | margin          | Outer margin of the card. Useful for stacked card layouts.                                                                                   |
+| `--card-cursor`                   | `inherit`                | cursor          | Cursor on the card root. Defaults to `pointer` when `onclick` is provided.                                                                   |
+| `--card-focus-outline`            | `2px solid currentColor` | outline         | Focus ring shown on the card when interactive and focused via keyboard.                                                                      |
+| `--card-focus-outline-offset`     | `2px`                    | outline-offset  | Offset of the focus ring from the card edge.                                                                                                 |
+| `--card-header-padding`           | `16px 16px 0`            | padding         | Padding of the header section.                                                                                                               |
+| `--card-header-border-bottom`     | `none`                   | border-bottom   | Optional border below the header.                                                                                                            |
+| `--card-title-font-size`          | `16px`                   | font-size       | Font size of the title text.                                                                                                                 |
+| `--card-title-font-weight`        | `600`                    | font-weight     | Font weight of the title text.                                                                                                               |
+| `--card-title-color`              | `inherit`                | color           | Color of the title text. Inherits from parent by default.                                                                                    |
+| `--card-description-font-size`    | `14px`                   | font-size       | Font size of the description text.                                                                                                           |
+| `--card-description-color`        | `inherit`                | color           | Color of the description text. Inherits from parent by default.                                                                              |
+| `--card-description-opacity`      | `0.6`                    | opacity         | Opacity of the description text for visual hierarchy.                                                                                        |
+| `--card-content-padding`          | `16px`                   | padding         | Padding of the content body.                                                                                                                 |
+| `--card-stretch-height`           | `100%`                   | height          | Height of the card root when `stretch=true`. Set to a fixed value or `100%` for full-height layouts.                                         |
+| `--card-content-flex`             | `1`                      | flex            | Flex grow/shrink/basis shorthand for the content area when `stretch=true`, allowing it to fill remaining height.                             |
+| `--card-header-align-items`       | `flex-start`             | align-items     | Vertical alignment of the header row when `headerRight` is provided (`.card-header-split` flex container).                                   |
+| `--card-header-gap`               | `8px`                    | gap             | Gap between the header main section and the `headerRight` slot when both are present.                                                        |
+| `--card-header-right-align-items` | `center`                 | align-items     | Vertical alignment of the `headerRight` slot container.                                                                                      |
+| `--card-content-max-height`       | `400px`                  | max-height      | Maximum height of the scrollable content area when `scrollable=true`.                                                                        |
+| `--card-content-scrollbar-width`  | `thin`                   | scrollbar-width | Scrollbar width for the scrollable content area when `scrollable=true`. Accepts any CSS `scrollbar-width` value (`thin`, `auto`, `none`).    |
+| `--card-footer-padding`           | `12px 16px`              | padding         | Padding of the footer element.                                                                                                               |
+| `--card-footer-border-top`        | `none`                   | border-top      | Optional top border for the footer. Set to a border value (e.g. `1px solid #e5e7eb`) to visually separate the footer.                        |
+| `--card-footer-background`        | `inherit`                | background      | Background color of the footer element. Inherits from the card by default.                                                                   |
 
 ## Web Component
 

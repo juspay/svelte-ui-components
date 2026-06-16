@@ -177,7 +177,7 @@
   .card-content-scrollable {
     overflow-y: auto;
     max-height: var(--card-content-max-height, 400px);
-    scrollbar-width: thin;
+    scrollbar-width: var(--card-content-scrollbar-width, thin);
   }
 
   /* footer */

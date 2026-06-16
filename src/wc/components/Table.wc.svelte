@@ -17,7 +17,11 @@
       onRowClick: { type: 'Object' },
       onSort: { type: 'Object' },
       getRowTestId: { type: 'Object' },
-      getCellTestId: { type: 'Object' }
+      getCellTestId: { type: 'Object' },
+      checkboxSelection: { type: 'Object' },
+      searchConfig: { type: 'Object' },
+      onCellChange: { type: 'Object' },
+      onSearchChange: { type: 'Object' }
     }
   }}
 />

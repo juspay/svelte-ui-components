@@ -189,10 +189,16 @@
    * stable even when the visible set shrinks or expands as the search term
    * changes — so a row that was "row 2" in the full set keeps ID `"2"` even
    * when it becomes the only visible result.
+   *
+   * The Map lookup uses object reference equality, so row objects in
+   * `filteredTableData` must be the same references as those in
+   * `sortedTableData`. When `originalIndex` cannot be found (reference mismatch
+   * after a transform), the fallback positional index is used instead.
    */
   let filteredRowIds = $derived.by((): string[] => {
+    const indexMap = new Map(sortedTableData.map((row, index) => [row, index]));
     return filteredTableData.map((row, fallbackIndex) => {
-      const originalIndex = sortedTableData.indexOf(row);
+      const originalIndex = indexMap.get(row) ?? -1;
       const stableIndex = originalIndex === -1 ? fallbackIndex : originalIndex;
       if (checkboxSelection && checkboxSelection.enabled !== false) {
         return resolveRowId(checkboxSelection, row, stableIndex);
@@ -314,6 +320,7 @@
       oninput={handleSearchInput}
       data-pw={searchConfig?.testId ?? null}
       aria-label={searchConfig?.placeholder ?? 'Search'}
+      autocomplete="off"
     />
     {#if searchTerm.length > 0}
       <button
@@ -353,6 +360,7 @@
                   ? 'mixed'
                   : headerCheckboxState === 'all'}
                 aria-label="Select all rows"
+                aria-controls={selectableRowIds.map((rowId) => `row-checkbox-${rowId}`).join(' ')}
                 onclick={toggleAllSelection}
                 onkeydown={(keyboardEvent) =>
                   handleCheckboxKeydown(keyboardEvent, toggleAllSelection)}
@@ -445,6 +453,7 @@
                     class:checked={rowSelected}
                     class:disabled={rowDisabled}
                     role="checkbox"
+                    id={`row-checkbox-${rowId}`}
                     tabindex={rowDisabled ? -1 : 0}
                     aria-checked={rowSelected}
                     aria-disabled={rowDisabled}

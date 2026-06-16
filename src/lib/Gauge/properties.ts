@@ -13,6 +13,7 @@ export type OptionalGaugeProperties = {
    * @default 100
    */
   max?: number;
+  /** Whether to show the centered percentage label. @default true */
   showLabel?: boolean;
   /**
    * Custom label renderer called with the raw `(value, max)` pair. Return any
@@ -20,6 +21,14 @@ export type OptionalGaugeProperties = {
    * Example: `labelFormatter={(v, m) => \`${v} / ${m}\`}` shows "50 / 200".
    */
   labelFormatter?: (value: number, max: number) => string;
+  /**
+   * Accessible label for the gauge element (`role="progressbar"`). Falls back
+   * to the computed `labelText` (e.g. `"75%"`) when not provided, so assistive
+   * technology announces the current percentage by default.
+   */
+  ariaLabel?: string;
+  /** Value for the `data-pw` attribute on the root element for E2E test selection. */
   testId?: string;
+  /** Extra CSS classes applied to the root element for consumer theming. */
   classes?: string;
 };

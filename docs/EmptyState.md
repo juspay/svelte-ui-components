@@ -137,7 +137,9 @@ Tag: `<sui-empty-state>`
 
 ### Slots
 
-| Slot Name | Maps to Snippet | Description                                                  |
-| --------- | --------------- | ------------------------------------------------------------ |
-| `icon`    | `icon`          | Icon or illustration content displayed above the title.      |
-| (default) | `children`      | Action content (buttons, links) displayed below description. |
+| Slot Name             | Maps to Snippet      | Description                                                  |
+| --------------------- | -------------------- | ------------------------------------------------------------ |
+| `icon`                | `icon`               | Icon or illustration content displayed above the title.      |
+| `title-snippet`       | `titleSnippet`       | Rich-markup override for the title area.                     |
+| `description-snippet` | `descriptionSnippet` | Rich-markup override for the description area.               |
+| (default)             | `children`           | Action content (buttons, links) displayed below description. |

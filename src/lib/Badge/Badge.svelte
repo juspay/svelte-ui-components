@@ -1,15 +1,47 @@
 <script lang="ts">
   import type { BadgeProperties } from './properties';
 
-  let { image, value, classes }: BadgeProperties = $props();
+  let {
+    image,
+    alt = '',
+    value,
+    mode = 'count',
+    hidden = false,
+    ariaLabel,
+    testId,
+    classes
+  }: BadgeProperties = $props();
+
+  let showImage = $derived(typeof image === 'string' && image.length > 0);
+  let showBadge = $derived(!hidden);
+  let isDot = $derived(mode === 'dot');
+
+  let standaloneRole = $derived(isDot ? 'presentation' : 'status');
+  let standaloneAriaLabel = $derived(
+    isDot ? null : (ariaLabel ?? (typeof value === 'string' ? value : null))
+  );
 </script>
 
-<div class="badge-icon {classes ?? ''}">
-  <div class="badge-wrap">
-    <img class="icon-img" src={image} alt="" />
-    <div class="badge">{value}</div>
+{#if showImage}
+  <div class="badge-icon {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+    <div class="badge-wrap">
+      <img class="icon-img" src={image} {alt} />
+      {#if showBadge}
+        <div class="badge" class:badge-dot={isDot}>{isDot ? '' : (value ?? '')}</div>
+      {/if}
+    </div>
   </div>
-</div>
+{:else if showBadge}
+  <div
+    class="badge badge-standalone {classes ?? ''}"
+    class:badge-dot={isDot}
+    role={standaloneRole}
+    aria-label={standaloneAriaLabel}
+    data-pw={typeof testId === 'string' ? testId : null}
+  >
+    {isDot ? '' : (value ?? '')}
+  </div>
+{/if}
 
 <style>
   .badge-wrap {
@@ -40,6 +72,18 @@
     bottom: var(--badge-bottom);
     left: var(--badge-left);
     z-index: 1;
+  }
+
+  .badge-dot {
+    width: var(--badge-dot-size, 10px);
+    height: var(--badge-dot-size, 10px);
+    min-width: unset;
+    min-height: unset;
+    padding: 0;
+  }
+
+  .badge-standalone {
+    position: var(--badge-standalone-position, static);
   }
 
   .icon-img {

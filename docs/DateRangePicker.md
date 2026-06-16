@@ -1,6 +1,6 @@
 # DateRangePicker
 
-A compound date-range picker built on top of Calendar. Provides a trigger button shell, an optional preset sidebar, dual-month or single-month calendar display, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming via custom properties. Opt-in features include a Clear button for single mode (`clearable`), an initial active-preset display seed (`initialPresetLabel`), and grouped preset sidebars with dividers via the `group` field on `DateRangePreset`.
+A compound date-range picker built on top of Calendar. Provides a trigger button shell, an optional preset sidebar, dual-month or single-month calendar display, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming via custom properties. Opt-in features include a Clear button for single mode (`clearable`), an initial active-preset display seed (`initialPresetLabel`), grouped preset sidebars with dividers via the `group` field on `DateRangePreset`, and a standalone compare-period trigger via the `compareTrigger` snippet + `openCompare` bindable prop.
 
 ## Usage
 
@@ -107,6 +107,40 @@ Pass a `compareCalendar` snippet to render a comparison period section inside th
   {/snippet}
 </DateRangePicker>
 ```
+
+### Standalone compare trigger
+
+Pass a `compareTrigger` snippet to render a separate trigger button for the compare-period panel. The panel opens adjacent to its own trigger (not the main DRP panel). Use `bind:openCompare` to observe or programmatically control the compare panel's open state.
+
+```svelte
+<script>
+  import { DateRangePicker, Calendar } from '@juspay/svelte-ui-components';
+
+  let compareStart = $state(null);
+  let compareEnd = $state(null);
+  let isCompareOpen = $state(false);
+</script>
+
+<DateRangePicker
+  mode="range"
+  bind:compareStart
+  bind:compareEnd
+  bind:openCompare={isCompareOpen}
+  onapplycompare={(e) => {
+    compareStart = e.compareStart;
+    compareEnd = e.compareEnd;
+  }}
+>
+  {#snippet compareTrigger(label)}
+    Compare: {label}
+  {/snippet}
+  {#snippet compareCalendar()}
+    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+  {/snippet}
+</DateRangePicker>
+```
+
+When `compareTrigger` is provided the `compareCalendar` snippet is rendered inside the standalone compare panel, not inside the main DRP panel. Passing both to the same instance renders the compare calendar in exactly one place (the Svelte 5 runtime would error if the same snippet were rendered in two locations simultaneously).
 
 ### Custom trigger
 
@@ -230,15 +264,18 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 | classes            | `string`                              | No       | —               | Extra CSS class string applied to the root wrapper. Use to pass CSS variable overrides.                                                                                                                                 |
 | clearable          | `boolean`                             | No       | `false`         | When `true` and `mode='single'`, shows a Clear button in the footer whenever a date is committed. Clicking it resets `value` to `null` and fires `onclear`. Has no effect in range mode.                                |
 | initialPresetLabel | `string`                              | No       | `undefined`     | Label of the preset to show as active on mount, without firing `onapply`. The trigger displays the preset label and the sidebar highlights it. Only evaluated once at mount; if no preset matches, the prop is ignored. |
+| compareTrigger     | `Snippet<[string]>`                   | No       | —               | Snippet rendered as a standalone compare-period trigger button adjacent to the main trigger. Receives the formatted compare label string (`"start – end"` or the placeholder). When provided, the `compareCalendar` snippet moves into the standalone compare panel instead of the main DRP panel. |
+| openCompare        | `boolean`                             | No       | `false`         | Bindable. Whether the standalone compare-period panel is open. The component writes back on open/close; use `bind:openCompare` to observe state or drive it programmatically. Works even without `compareTrigger`. |
 
 ## Snippets
 
-| Snippet         | Argument        | Description                                                                                                                                       |
-| --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| triggerSnippet  | `label: string` | Custom trigger content. Receives the current formatted label string. When provided, the default label+icon layout is replaced entirely.           |
-| triggerIcon     | —               | Custom icon rendered inside the default trigger layout, replacing the default chevron-down SVG.                                                   |
-| timePicker      | —               | Rendered in the time-picker slot (`.drp-time-row`) below the calendars. Use this to add start/end time inputs. Consumer owns all time state.      |
-| compareCalendar | —               | Rendered in the compare slot (`.drp-compare-section`) below the calendars. Use this to add a comparison-period Calendar. Consumer owns all state. |
+| Snippet         | Argument        | Description                                                                                                                                                                                                                                                     |
+| --------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| triggerSnippet  | `label: string` | Custom trigger content. Receives the current formatted label string. When provided, the default label+icon layout is replaced entirely.                                                                                                                         |
+| triggerIcon     | —               | Custom icon rendered inside the default trigger layout, replacing the default chevron-down SVG.                                                                                                                                                                 |
+| timePicker      | —               | Rendered in the time-picker slot (`.drp-time-row`) below the calendars. Use this to add start/end time inputs. Consumer owns all time state.                                                                                                                    |
+| compareCalendar | —               | When `compareTrigger` is **not** provided: rendered in the compare slot (`.drp-compare-section`) below the calendars inside the main panel. When `compareTrigger` **is** provided: rendered inside the standalone compare panel (`.drp-compare-panel-body`). |
+| compareTrigger  | `label: string` | Standalone compare trigger button. Receives the formatted compare label string. When provided, a separate trigger+panel widget is rendered adjacent to the main trigger so the compare period can be picked independently of the main panel.                    |
 
 ## Events
 
@@ -320,6 +357,18 @@ Override these custom properties to theme the component.
 | `--drp-preset-divider-margin`          | `4px 0`                       | Vertical margin above and below each preset group divider.            |
 | `--drp-preset-group-label-color`       | `#999999`                     | Text color of the preset group label rendered beside the divider.     |
 | `--drp-preset-divider-leader-width`    | `8px`                         | Width of the leading line segment before the group label.             |
+| `--drp-compare-trigger-background`     | `inherit`                     | Compare trigger button background.                                    |
+| `--drp-compare-trigger-border`         | `1px solid currentColor`      | Compare trigger button border.                                        |
+| `--drp-compare-trigger-border-radius`  | `6px`                         | Compare trigger button corner rounding.                               |
+| `--drp-compare-trigger-color`          | `inherit`                     | Compare trigger button text color.                                    |
+| `--drp-compare-trigger-padding`        | `8px 12px`                    | Compare trigger button inner padding.                                 |
+| `--drp-compare-trigger-min-width`      | `160px`                       | Compare trigger button minimum width.                                 |
+| `--drp-compare-panel-left`             | `0`                           | Left offset of the standalone compare panel relative to its trigger.  |
+| `--drp-compare-panel-min-width`        | `280px`                       | Minimum width of the standalone compare panel.                        |
+
+### Selector specificity note
+
+The `.drp-trigger` global class selector was tightened to `.drp-trigger-wrapper .drp-trigger` in this version. If you were overriding `.drp-trigger` styles from an outer stylesheet, update your selector to `.drp-trigger-wrapper .drp-trigger` (or add the wrapper class to your existing rule) to maintain the same specificity.
 
 ## Web Component
 
@@ -415,9 +464,9 @@ The `timePicker` snippet gives full control over time input UI and state. A mini
 </DateRangePicker>
 ```
 
-### Compare range
+### Compare range (inline, inside main panel)
 
-The `compareCalendar` snippet lets you embed a second Calendar for period comparison. Wire its selection back through `onapplycompare`:
+The `compareCalendar` snippet lets you embed a second Calendar for period comparison inside the main DRP panel. Wire its selection back through `onapplycompare`:
 
 ```svelte
 <script>
@@ -438,6 +487,36 @@ The `compareCalendar` snippet lets you embed a second Calendar for period compar
 >
   {#snippet compareCalendar()}
     <p>Compare period</p>
+    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+  {/snippet}
+</DateRangePicker>
+```
+
+### Compare range (standalone trigger, separate panel)
+
+Pass both `compareTrigger` and `compareCalendar` for an independent compare picker button. The compare panel renders anchored to its own trigger, leaving the main picker unaffected:
+
+```svelte
+<script>
+  import { DateRangePicker, Calendar } from '@juspay/svelte-ui-components';
+
+  let compareStart = $state(null);
+  let compareEnd = $state(null);
+</script>
+
+<DateRangePicker
+  mode="range"
+  bind:compareStart
+  bind:compareEnd
+  onapplycompare={(e) => {
+    compareStart = e.compareStart;
+    compareEnd = e.compareEnd;
+  }}
+>
+  {#snippet compareTrigger(label)}
+    Compare: {label}
+  {/snippet}
+  {#snippet compareCalendar()}
     <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
   {/snippet}
 </DateRangePicker>

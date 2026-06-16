@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { DateRangePickerProperties, DateRangePreset } from './properties';
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
   import Button from '../Button/Button.svelte';
@@ -30,6 +30,8 @@
     triggerIcon,
     clearable = false,
     initialPresetLabel,
+    compareTrigger,
+    openCompare = $bindable(false),
     onapply,
     onapplysingle,
     onapplycompare,
@@ -87,6 +89,10 @@
   let isOpen: boolean = $state(false);
   let panelRef: HTMLDivElement | null = $state(null);
   let triggerRef: HTMLDivElement | null = $state(null);
+  let comparePanelRef: HTMLDivElement | null = $state(null);
+  let compareTriggerRef: HTMLDivElement | null = $state(null);
+  // Stores the element that opened the compare panel so focus can be restored on close.
+  let compareFocusReturnEl: HTMLElement | null = null;
 
   // Tracks the active preset label for the trigger display (seeded from initialPresetLabel on mount)
   const resolvedInitialPresetLabel: string | null = untrack(() => {
@@ -104,14 +110,14 @@
 
   let activePresetLabel: string | null = $state(resolvedInitialPresetLabel);
 
+  const now = new SvelteDate();
+
   // Dual-month navigation: track the year+month of the left calendar
-  let leftYear: number = $state(new SvelteDate().getFullYear());
-  let leftMonth: number = $state(new SvelteDate().getMonth());
+  let leftYear: number = $state(now.getFullYear());
+  let leftMonth: number = $state(now.getMonth());
 
   // A key counter — incrementing forces Calendar to re-mount with new initialMonth
   let calendarKey: number = $state(0);
-
-  const now = new SvelteDate();
 
   const leftInitialMonth: Date = $derived(new SvelteDate(leftYear, leftMonth, 1));
   const rightInitialMonth: Date = $derived(new SvelteDate(leftYear, leftMonth + 1, 1));
@@ -145,6 +151,13 @@
     return placeholder;
   });
 
+  const compareTriggerLabel: string = $derived.by(() => {
+    if (compareStart !== null && compareEnd !== null) {
+      return `${formatDate(compareStart)} – ${formatDate(compareEnd)}`;
+    }
+    return placeholder;
+  });
+
   function openPicker(): void {
     // Seed draft from current committed values
     draftStart = rangeStart !== null ? rangeStart : null;
@@ -169,6 +182,46 @@
   function closePicker(): void {
     isOpen = false;
     onopentoggle?.({ open: false });
+  }
+
+  function openComparePicker(): void {
+    compareFocusReturnEl =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    draftCompareStart = compareStart ?? null;
+    draftCompareEnd = compareEnd ?? null;
+    openCompare = true;
+    tick().then(() => {
+      const firstFocusable = comparePanelRef?.querySelector<HTMLElement>(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    });
+  }
+
+  function closeComparePicker(): void {
+    openCompare = false;
+    const returnEl = compareFocusReturnEl;
+    compareFocusReturnEl = null;
+    tick().then(() => {
+      returnEl?.focus();
+    });
+  }
+
+  function handleApplyCompare(): void {
+    if (draftCompareStart !== null && draftCompareEnd !== null) {
+      compareStart = draftCompareStart;
+      compareEnd = draftCompareEnd;
+      onapplycompare?.({
+        compareStart: draftCompareStart,
+        compareEnd: draftCompareEnd,
+        presetLabel: selectedPresetLabel
+      });
+    }
+    closeComparePicker();
+  }
+
+  function handleCancelCompare(): void {
+    closeComparePicker();
   }
 
   function navigateDualMonths(delta: number): void {
@@ -253,7 +306,7 @@
 
   // Close on outside-click
   function handleDocumentClick(event: MouseEvent): void {
-    if (!isOpen) {
+    if (!isOpen && !openCompare) {
       return;
     }
     const target = event.target;
@@ -262,14 +315,35 @@
     }
     const clickedInsidePanel = panelRef !== null && panelRef.contains(target);
     const clickedTrigger = triggerRef !== null && triggerRef.contains(target);
-    if (!clickedInsidePanel && !clickedTrigger) {
+    const clickedInsideComparePanel = comparePanelRef !== null && comparePanelRef.contains(target);
+    const clickedCompareTrigger = compareTriggerRef !== null && compareTriggerRef.contains(target);
+    if (
+      isOpen &&
+      !clickedInsidePanel &&
+      !clickedTrigger &&
+      !clickedInsideComparePanel &&
+      !clickedCompareTrigger
+    ) {
       closePicker();
+    }
+    if (
+      openCompare &&
+      !clickedInsideComparePanel &&
+      !clickedCompareTrigger &&
+      !clickedInsidePanel &&
+      !clickedTrigger
+    ) {
+      closeComparePicker();
     }
   }
 
   function handleDocumentKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && isOpen) {
-      handleCancel();
+    if (event.key === 'Escape') {
+      if (openCompare) {
+        handleCancelCompare();
+      } else if (isOpen) {
+        handleCancel();
+      }
     }
   }
 
@@ -339,6 +413,75 @@
       {/if}
     </Button>
   </div>
+
+  <!-- Compare trigger wrapper (standalone): position:relative so the compare panel
+       anchors below this trigger rather than the drp-root corner. -->
+  {#if typeof compareTrigger === 'function'}
+    <div bind:this={compareTriggerRef} class="drp-compare-trigger-wrapper">
+      <Button
+        onclick={openComparePicker}
+        ariaLabel="Open compare period picker"
+        classes="drp-compare-trigger {openCompare ? 'drp-compare-trigger-open' : ''}"
+      >
+        {@render compareTrigger(compareTriggerLabel)}
+      </Button>
+
+      <!-- Compare period picker panel (standalone): nested here so position:absolute
+           resolves against .drp-compare-trigger-wrapper, not .drp-root. -->
+      {#if openCompare}
+        <div
+          bind:this={comparePanelRef}
+          class="drp-compare-panel"
+          role="dialog"
+          aria-label="Compare period picker"
+          aria-modal="true"
+          tabindex="-1"
+          onkeydown={(event) => {
+            if (event.key === 'Tab') {
+              const focusable = comparePanelRef?.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+              );
+              if (!focusable || focusable.length === 0) {
+                return;
+              }
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (event.shiftKey) {
+                if (document.activeElement === first) {
+                  event.preventDefault();
+                  last.focus();
+                }
+              } else {
+                if (document.activeElement === last) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }
+            }
+          }}
+        >
+          {#if typeof compareCalendar === 'function'}
+            <div class="drp-compare-panel-body">
+              {@render compareCalendar()}
+            </div>
+          {/if}
+          <div class="drp-footer">
+            <Button
+              onclick={handleCancelCompare}
+              ariaLabel="Cancel compare selection"
+              classes="drp-btn-cancel">Cancel</Button
+            >
+            <Button
+              onclick={handleApplyCompare}
+              ariaLabel="Apply compare selection"
+              classes="drp-btn-apply"
+              disabled={draftCompareStart === null || draftCompareEnd === null}>Apply</Button
+            >
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 
   <!-- Dropdown panel -->
   {#if isOpen}
@@ -464,8 +607,11 @@
             </div>
           {/if}
 
-          <!-- Compare calendar slot: consumer controls all compare UI -->
-          {#if typeof compareCalendar === 'function'}
+          <!-- Compare calendar slot: only rendered here when there is no standalone
+               compareTrigger. When compareTrigger is provided the consumer uses the
+               separate compare panel; rendering the same Snippet in two places at once
+               causes a Svelte 5 runtime error. -->
+          {#if typeof compareCalendar === 'function' && typeof compareTrigger !== 'function'}
             <div class="drp-compare-section">
               {@render compareCalendar()}
             </div>
@@ -516,20 +662,22 @@
     --button-padding: var(--drp-trigger-padding, 8px 12px);
     --button-min-width: var(--drp-trigger-min-width, 200px);
     --button-gap: var(--drp-trigger-gap, 8px);
-    --button-hover-border-color: var(--drp-trigger-hover-border-color, currentColor);
+    --button-hover-border: var(
+      --drp-trigger-hover-border,
+      var(--drp-trigger-border, 1px solid currentColor)
+    );
   }
 
-  :global(.drp-trigger) {
-    display: inline-flex !important;
+  :global(.drp-trigger-wrapper .drp-trigger) {
+    display: inline-flex;
     align-items: center;
     gap: var(--drp-trigger-gap, 8px);
     white-space: nowrap;
     min-width: var(--drp-trigger-min-width, 200px);
-    font-family: inherit;
   }
 
-  :global(.drp-trigger-open) {
-    border-color: var(--drp-trigger-open-border-color, #000000) !important;
+  :global(.drp-trigger-wrapper .drp-trigger-open) {
+    border-color: var(--drp-trigger-open-border-color, #000000);
     box-shadow: var(--drp-trigger-open-shadow, 0 0 0 2px rgba(0, 0, 0, 0.1));
   }
 
@@ -591,7 +739,6 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.12s ease;
-    font-family: inherit;
   }
 
   .drp-preset-item:hover {
@@ -778,7 +925,44 @@
     --button-border: none;
     --button-text-color: var(--drp-apply-color, #ffffff);
     --button-hover-color: var(--drp-apply-hover-background, #333333);
-    --button-disabled-color: var(--drp-apply-disabled-background, #cccccc);
-    --button-disabled-text-color: var(--drp-apply-disabled-color, #888888);
+    --disabled-background-color: var(--drp-apply-disabled-background, #cccccc);
+    --disabled-text-color: var(--drp-apply-disabled-color, #888888);
+  }
+
+  /* ── Compare standalone trigger ── */
+  .drp-compare-trigger-wrapper {
+    display: inline-block;
+    position: relative;
+    --button-color: var(--drp-compare-trigger-background, inherit);
+    --button-border: var(--drp-compare-trigger-border, 1px solid currentColor);
+    --button-border-radius: var(--drp-compare-trigger-border-radius, 6px);
+    --button-text-color: var(--drp-compare-trigger-color, inherit);
+    --button-padding: var(--drp-compare-trigger-padding, 8px 12px);
+    --button-min-width: var(--drp-compare-trigger-min-width, 160px);
+  }
+
+  :global(.drp-compare-trigger-open) {
+    border-color: var(--drp-trigger-open-border-color, #000000);
+    box-shadow: var(--drp-trigger-open-shadow, 0 0 0 2px rgba(0, 0, 0, 0.1));
+  }
+
+  /* ── Compare standalone panel ── */
+  .drp-compare-panel {
+    position: absolute;
+    top: calc(100% + var(--drp-panel-offset, 6px));
+    left: var(--drp-compare-panel-left, 0);
+    z-index: var(--drp-panel-z-index, 1000);
+    background: var(--drp-panel-background, inherit);
+    border: var(--drp-panel-border, 1px solid #e0e0e0);
+    border-radius: var(--drp-panel-border-radius, 10px);
+    box-shadow: var(--drp-panel-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));
+    display: flex;
+    flex-direction: column;
+    min-width: var(--drp-compare-panel-min-width, 280px);
+    overflow: hidden;
+  }
+
+  .drp-compare-panel-body {
+    padding: var(--drp-calendars-padding, 16px);
   }
 </style>

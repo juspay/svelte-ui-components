@@ -1,7 +1,16 @@
 <script lang="ts">
   import type { EmptyStateProperties } from './properties';
 
-  let { title, description, icon, children, classes, testId }: EmptyStateProperties = $props();
+  let {
+    title,
+    description,
+    icon,
+    children,
+    classes,
+    testId,
+    titleSnippet,
+    descriptionSnippet
+  }: EmptyStateProperties = $props();
 </script>
 
 <div class="empty-state {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
@@ -10,8 +19,18 @@
       {@render icon()}
     </div>
   {/if}
-  <div class="empty-state-title">{title}</div>
-  {#if typeof description === 'string' && description.length > 0}
+  <div class="empty-state-title">
+    {#if typeof titleSnippet === 'function'}
+      {@render titleSnippet()}
+    {:else}
+      {title}
+    {/if}
+  </div>
+  {#if typeof descriptionSnippet === 'function'}
+    <div class="empty-state-description">
+      {@render descriptionSnippet()}
+    </div>
+  {:else if typeof description === 'string' && description.length > 0}
     <div class="empty-state-description">{description}</div>
   {/if}
   {#if typeof children === 'function'}

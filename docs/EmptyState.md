@@ -44,21 +44,55 @@ A centered placeholder component for empty lists, search results, or views. Disp
 
 ## Props
 
-| Prop        | Type     | Required | Default | Description                                                                                                                                                            |
-| ----------- | -------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| title       | `string` | Yes      | `-`     | Primary heading text displayed prominently.                                                                                                                            |
-| description | `string` | No       | `-`     | Supporting text displayed below the title. The description row is omitted entirely when this prop is absent or empty.                                                  |
-| classes     | `string` | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| testId      | `string` | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection.                                                                                       |
+| Prop               | Type      | Required | Default | Description                                                                                                                                                                         |
+| ------------------ | --------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| title              | `string`  | Yes      | `-`     | Primary heading text. When `titleSnippet` is provided this value is not rendered, but the prop is still required for backward-compatibility (pass `""` as the minimal valid value). |
+| description        | `string`  | No       | `-`     | Supporting text displayed below the title. Omitted entirely when absent or empty. Silently discarded when `descriptionSnippet` is provided.                                         |
+| titleSnippet       | `Snippet` | No       | `-`     | Optional snippet that replaces the `title` string at render time. Use for rich markup (e.g. formatted text, inline icons). Takes full rendering priority over `title`.              |
+| descriptionSnippet | `Snippet` | No       | `-`     | Optional snippet that replaces the `description` string at render time. Use for rich markup (e.g. links, emphasis). Takes full rendering priority over `description`.               |
+| classes            | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.              |
+| testId             | `string`  | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection.                                                                                                    |
 
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet  | Type      | Description                                                                                                          |
-| -------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
-| icon     | `Snippet` | Icon or illustration area above the title. Rendered inside a sized container with configurable dimensions and color. |
-| children | `Snippet` | Action area below the description. Typically used for buttons like "Create new", "Clear filters", "Try again", etc.  |
+| Snippet            | Type      | Description                                                                                                                                                       |
+| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| icon               | `Snippet` | Icon or illustration area above the title. Rendered inside a sized container with configurable dimensions and color.                                              |
+| titleSnippet       | `Snippet` | Rich-markup override for the title area. When provided, it takes full rendering priority over the `title` string prop — only the snippet is rendered.             |
+| descriptionSnippet | `Snippet` | Rich-markup override for the description area. When provided, it takes full rendering priority over the `description` string prop — only the snippet is rendered. |
+| children           | `Snippet` | Action area below the description. Typically used for buttons like "Create new", "Clear filters", "Try again", etc.                                               |
+
+### Rich-Markup Title and Description via Snippets
+
+Use `titleSnippet` and `descriptionSnippet` when the plain string props are not enough — for example, to add inline icons, links, or formatted text.
+
+```svelte
+<script>
+  import { EmptyState, Button } from '@juspay/svelte-ui-components';
+</script>
+
+<!-- Rich title with an inline badge -->
+<EmptyState title="No results">
+  {#snippet titleSnippet()}
+    <span>No results <em>yet</em></span>
+  {/snippet}
+  {#snippet descriptionSnippet()}
+    Try a <a href="/help">different search</a> or clear your filters.
+  {/snippet}
+  <Button text="Clear filters" />
+</EmptyState>
+```
+
+```svelte
+<!-- Minimal snippet usage — title only -->
+<EmptyState title="">
+  {#snippet titleSnippet()}
+    <strong>Nothing here</strong> — check back later
+  {/snippet}
+</EmptyState>
+```
 
 ## CSS Variables
 

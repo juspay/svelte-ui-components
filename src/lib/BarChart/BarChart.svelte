@@ -1,5 +1,11 @@
 <script lang="ts">
-  import type { BarChartProperties } from './properties';
+  import type {
+    BarChartProperties,
+    BarChartRenderContext,
+    BarFill,
+    BarFillGradient,
+    BarFillPattern
+  } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
@@ -8,7 +14,28 @@
   import { computeChartDimensions } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
+  import { roundedRectPath } from '$lib/_chart/paths';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
+  import { SvelteMap } from 'svelte/reactivity';
+
+  // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────
+  // Derived at module scope per the library uid pattern (e.g. AreaChart
+  // feat/linechart-gradient line 17) to prevent id collision across multiple
+  // BarChart instances on the same page.
+  const uid = Math.random().toString(36).slice(2, 9);
+
+  /** Returns the plain CSS fallback color for any BarFill (used for legend, aria-label). */
+  function fallbackColor(fill: BarFill, index: number): string {
+    if (typeof fill === 'string') {
+      return fill;
+    }
+    if ('pattern' in fill) {
+      return fill.pattern.color ?? getColor(index);
+    }
+    // gradient: use first stop color as fallback
+    const firstStop = fill.gradient.stops[0];
+    return firstStop?.color ?? getColor(index);
+  }
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -29,8 +56,12 @@
     yAxisLabel,
     yDomain,
     valueFormat,
+    stackNormalize = false,
+    scrollable = false,
+    minBandWidth = 48,
     tooltipSnippet,
     empty,
+    renderOverlay,
     onbarclick,
     onbarhover,
     testId,
@@ -60,17 +91,41 @@
     return first.map((d) => d.label);
   });
 
+  let isNormalized = $derived(stackNormalize && isMulti && groupMode === 'stacked');
+
+  /** When stackNormalize is active and no custom valueFormat is supplied, append % so the
+   *  unitless tick numbers (0, 25, 50, 75, 100) are displayed as percentages consistently
+   *  in tooltips and value labels. A consumer-supplied valueFormat always takes precedence. */
+  let normalizedFormat = $derived(
+    isNormalized && valueFormat == null ? (v: number) => `${formatNumber(v)}%` : format
+  );
+
+  // ── Y-extent: account for floating bars (A1-1) ────────────────
+
   let yExtent = $derived.by<[number, number]>(() => {
     if (yDomain) {
       return yDomain;
     }
     if (isMulti && groupMode === 'stacked') {
-      const totalsPerLabel = labels.map((_, i) =>
-        resolvedSeries.reduce((sum, s) => sum + Math.max(0, s.data[i]?.value ?? 0), 0)
+      if (stackNormalize) {
+        return [0, 100];
+      }
+      const totalsPerLabel = labels.map((_, labelIndex) =>
+        resolvedSeries.reduce((sum, s) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
       );
       return niceLinearDomain(0, Math.max(0, ...totalsPerLabel));
     }
-    const all = resolvedSeries.flatMap((s) => s.data.map((d) => d.value));
+    // Collect all individual values including floating-bar low/high endpoints
+    const all: number[] = [];
+    for (const s of resolvedSeries) {
+      for (const d of s.data) {
+        if (Array.isArray(d.range)) {
+          all.push(d.range[0], d.range[1]);
+        } else {
+          all.push(d.value);
+        }
+      }
+    }
     if (all.length === 0) {
       return [0, 1];
     }
@@ -84,59 +139,109 @@
     createLinearScale(yExtent, isVertical ? [dims.innerHeight, 0] : [0, dims.innerWidth])
   );
 
+  // ── Bar geometry (A1-1 floating bars integrated) ──────────────
+
   let bars = $derived.by<BarRect[]>(() => {
     const zeroPos = valScale(0);
     const result: BarRect[] = [];
+
+    /**
+     * Computes x/y/width/height for a single data point in vertical or
+     * horizontal orientation, handling both normal value bars and floating
+     * [low,high] range bars (A1-1).
+     */
+    const barGeometry = (
+      d: (typeof resolvedSeries)[0]['data'][0],
+      catPos: number,
+      barW: number
+    ): { x: number; y: number; width: number; height: number; isFloating: boolean } => {
+      const hasRange = Array.isArray(d.range);
+      if (isVertical) {
+        if (hasRange) {
+          const lowPos = valScale(d.range![0]);
+          const highPos = valScale(d.range![1]);
+          const top = Math.min(lowPos, highPos);
+          const bottom = Math.max(lowPos, highPos);
+          return {
+            x: catPos,
+            y: top,
+            width: barW,
+            height: Math.max(2, bottom - top),
+            isFloating: true
+          };
+        }
+        const valPos = valScale(d.value);
+        return {
+          x: catPos,
+          y: d.value >= 0 ? valPos : zeroPos,
+          width: barW,
+          height: Math.max(2, Math.abs(valPos - zeroPos)),
+          isFloating: false
+        };
+      } else {
+        if (hasRange) {
+          const lowPos = valScale(d.range![0]);
+          const highPos = valScale(d.range![1]);
+          const left = Math.min(lowPos, highPos);
+          const right = Math.max(lowPos, highPos);
+          return {
+            x: left,
+            y: catPos,
+            width: Math.max(2, right - left),
+            height: barW,
+            isFloating: true
+          };
+        }
+        const valPos = valScale(d.value);
+        return {
+          x: d.value >= 0 ? zeroPos : valPos,
+          y: catPos,
+          width: Math.max(2, Math.abs(valPos - zeroPos)),
+          height: barW,
+          isFloating: false
+        };
+      }
+    };
 
     if (isMulti && groupMode === 'grouped') {
       const subBand = catScale.bandwidth / resolvedSeries.length;
       for (let si = 0; si < resolvedSeries.length; si++) {
         const s = resolvedSeries[si];
-        const seriesColor = s.color ?? getColor(si);
+        const seriesFill: BarFill = s.color ?? getColor(si);
         for (let pi = 0; pi < s.data.length; pi++) {
           const d = s.data[pi];
           const catPos = catScale(d.label) + si * subBand;
-          const valPos = valScale(d.value);
-          const color = d.color ?? seriesColor;
-          result.push(
-            isVertical
-              ? {
-                  x: catPos,
-                  y: d.value >= 0 ? valPos : zeroPos,
-                  width: Math.max(1, subBand * 0.9),
-                  height: Math.max(2, Math.abs(valPos - zeroPos)),
-                  color,
-                  si,
-                  pi,
-                  dataPoint: d,
-                  seriesName: s.name
-                }
-              : {
-                  x: d.value >= 0 ? zeroPos : valPos,
-                  y: catPos,
-                  width: Math.max(2, Math.abs(valPos - zeroPos)),
-                  height: Math.max(1, subBand * 0.9),
-                  color,
-                  si,
-                  pi,
-                  dataPoint: d,
-                  seriesName: s.name
-                }
-          );
+          const barW = Math.max(1, subBand * 0.9);
+          const geom = barGeometry(d, catPos, barW);
+          const effectiveFill: BarFill = d.color ?? seriesFill;
+          const color = fallbackColor(effectiveFill, si);
+          const fillId = resolveFillId(effectiveFill, si, pi, d.color != null);
+          result.push({ ...geom, color, fillId, si, pi, dataPoint: d, seriesName: s.name });
         }
       }
     } else if (isMulti && groupMode === 'stacked') {
+      const categoryTotals = labels.map((_, labelIndex) =>
+        resolvedSeries.reduce((sum, s) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
+      );
       const stackBase = new Array(labels.length).fill(0);
       for (let si = 0; si < resolvedSeries.length; si++) {
         const s = resolvedSeries[si];
-        const seriesColor = s.color ?? getColor(si);
+        const seriesFill: BarFill = s.color ?? getColor(si);
         for (let pi = 0; pi < s.data.length; pi++) {
           const d = s.data[pi];
-          const val = Math.max(0, d.value);
+          const rawVal = Math.max(0, d.value);
+          const normalizedValue = isNormalized
+            ? categoryTotals[pi] > 0
+              ? (rawVal / categoryTotals[pi]) * 100
+              : 0
+            : null;
+          const val = isNormalized ? (normalizedValue ?? 0) : rawVal;
           const y0 = stackBase[pi];
           const y1 = y0 + val;
           stackBase[pi] = y1;
-          const color = d.color ?? seriesColor;
+          const effectiveFill: BarFill = d.color ?? seriesFill;
+          const color = fallbackColor(effectiveFill, si);
+          const fillId = resolveFillId(effectiveFill, si, pi, d.color != null);
           if (isVertical) {
             result.push({
               x: catScale(d.label),
@@ -144,10 +249,13 @@
               width: catScale.bandwidth,
               height: Math.max(0, valScale(y0) - valScale(y1)),
               color,
+              fillId,
               si,
               pi,
               dataPoint: d,
-              seriesName: s.name
+              seriesName: s.name,
+              normalizedValue,
+              isFloating: false
             });
           } else {
             result.push({
@@ -156,10 +264,13 @@
               width: Math.max(0, valScale(y1) - valScale(y0)),
               height: catScale.bandwidth,
               color,
+              fillId,
               si,
               pi,
               dataPoint: d,
-              seriesName: s.name
+              seriesName: s.name,
+              normalizedValue,
+              isFloating: false
             });
           }
         }
@@ -169,43 +280,127 @@
       for (let pi = 0; pi < singleSeries.data.length; pi++) {
         const d = singleSeries.data[pi];
         const catPos = catScale(d.label);
-        const valPos = valScale(d.value);
-        const color = d.color ?? getColor(pi);
-        result.push(
-          isVertical
-            ? {
-                x: catPos,
-                y: d.value >= 0 ? valPos : zeroPos,
-                width: catScale.bandwidth,
-                height: Math.max(2, Math.abs(valPos - zeroPos)),
-                color,
-                si: 0,
-                pi,
-                dataPoint: d,
-                seriesName: singleSeries.name
-              }
-            : {
-                x: d.value >= 0 ? zeroPos : valPos,
-                y: catPos,
-                width: Math.max(2, Math.abs(valPos - zeroPos)),
-                height: catScale.bandwidth,
-                color,
-                si: 0,
-                pi,
-                dataPoint: d,
-                seriesName: singleSeries.name
-              }
-        );
+        const barW = catScale.bandwidth;
+        const geom = barGeometry(d, catPos, barW);
+        const effectiveFill: BarFill = d.color ?? singleSeries.color ?? getColor(pi);
+        const color = fallbackColor(effectiveFill, pi);
+        const fillId = resolveFillId(effectiveFill, 0, pi, d.color != null);
+        result.push({
+          ...geom,
+          color,
+          fillId,
+          si: 0,
+          pi,
+          dataPoint: d,
+          seriesName: singleSeries.name
+        });
       }
     }
     return result;
   });
 
+  // ── Defs: pattern and gradient fill resolution (A1-2 / A1-3) ──
+
+  /**
+   * Computes a stable defs element id for a given bar fill.
+   *
+   * Series-level fills (no per-bar override) share ONE def entry keyed by `si`
+   * only, so N data points in the same series do not produce N duplicate SVG
+   * ids. Per-bar fills (d.color is set) include `pi` so each bar gets its own
+   * def. Returns null for plain CSS color strings (no defs entry needed).
+   */
+  function resolveFillId(fill: BarFill, si: number, pi: number, isPerBar: boolean): string | null {
+    if (typeof fill === 'string') {
+      return null;
+    }
+    const key = isPerBar ? `${si}-${pi}` : `${si}`;
+    if ('pattern' in fill) {
+      return `${uid}-pat-${key}`;
+    }
+    if ('gradient' in fill) {
+      return `${uid}-grad-${key}`;
+    }
+    return null;
+  }
+
+  /**
+   * Collects unique defs entries (pattern or gradient fills) needed by the
+   * current set of bars. Uses a SvelteMap keyed by id to guarantee each SVG id
+   * is emitted exactly once — series-level fills that apply to many bars collapse
+   * to a single shared def, satisfying the SVG uniqueness requirement.
+   */
+  let defsEntries = $derived.by(() => {
+    const seen = new SvelteMap<
+      string,
+      { id: string; bar: BarRect; fill: BarFillPattern | BarFillGradient }
+    >();
+    for (const bar of bars) {
+      if (!bar.fillId) {
+        continue;
+      }
+      if (seen.has(bar.fillId)) {
+        continue;
+      }
+      const rawFill = bar.dataPoint.color ?? resolvedSeries[bar.si]?.color;
+      if (rawFill == null || typeof rawFill === 'string') {
+        continue;
+      }
+      if ('pattern' in rawFill || 'gradient' in rawFill) {
+        seen.set(bar.fillId, { id: bar.fillId, bar, fill: rawFill });
+      }
+    }
+    return [...seen.values()];
+  });
+
+  // ── Legend items ───────────────────────────────────────────────
+
   let legendItems = $derived<LegendItem[]>(
-    isMulti ? resolvedSeries.map((s, i) => ({ label: s.name, color: s.color ?? getColor(i) })) : []
+    isMulti
+      ? resolvedSeries.map((s, i) => ({
+          label: s.name,
+          color: fallbackColor(s.color ?? getColor(i), i)
+        }))
+      : []
   );
 
   let isEmpty = $derived(resolvedSeries.every((s) => s.data.length === 0) || labels.length === 0);
+
+  // ── Scroll geometry ────────────────────────────────────────────
+
+  let minScrollWidth = $derived(
+    labels.length * minBandWidth + dims.margin.left + dims.margin.right
+  );
+
+  // ── Stacked bar path helper ────────────────────────────────────
+
+  let lastSeriesIndex = $derived(resolvedSeries.length - 1);
+
+  function stackedBarPath(bar: BarRect): string {
+    if (barRadius <= 0) {
+      return roundedRectPath(bar.x, bar.y, bar.width, bar.height, 0, 0, 0, 0);
+    }
+    const isFirst = bar.si === 0;
+    const isLast = bar.si === lastSeriesIndex;
+    if (isVertical) {
+      const tl = isLast ? barRadius : 0;
+      const tr = isLast ? barRadius : 0;
+      const br = isFirst ? barRadius : 0;
+      const bl = isFirst ? barRadius : 0;
+      return roundedRectPath(bar.x, bar.y, bar.width, bar.height, tl, tr, br, bl);
+    } else {
+      const tl = isFirst ? barRadius : 0;
+      const bl = isFirst ? barRadius : 0;
+      const tr = isLast ? barRadius : 0;
+      const br = isLast ? barRadius : 0;
+      return roundedRectPath(bar.x, bar.y, bar.width, bar.height, tl, tr, br, bl);
+    }
+  }
+
+  // ── Fill attribute helper ──────────────────────────────────────
+
+  function barFillAttr(bar: BarRect): string {
+    return bar.fillId ? `url(#${bar.fillId})` : bar.color;
+  }
 
   // ── Tooltip ────────────────────────────────────────────────────
 
@@ -218,10 +413,27 @@
       return null;
     }
     const title = isMulti ? `${bar.dataPoint.label} — ${bar.seriesName}` : bar.dataPoint.label;
+    const displayValue =
+      isNormalized && bar.normalizedValue != null
+        ? normalizedFormat(bar.normalizedValue)
+        : format(bar.dataPoint.value);
     return {
       title,
-      items: [{ label: bar.dataPoint.label, value: format(bar.dataPoint.value), color: bar.color }]
+      items: [{ label: bar.dataPoint.label, value: displayValue, color: bar.color }]
     };
+  });
+
+  // ── Render context for overlay snippet (A1-4) ─────────────────
+
+  let overlayContext = $derived<BarChartRenderContext>({
+    innerWidth: dims.innerWidth,
+    innerHeight: dims.innerHeight,
+    margin: {
+      top: dims.margin.top,
+      right: dims.margin.right,
+      bottom: dims.margin.bottom,
+      left: dims.margin.left
+    }
   });
 
   // ── Interactions ───────────────────────────────────────────────
@@ -255,6 +467,18 @@
       ? null
       : (bars.find((b) => b.si === hovered!.si && b.pi === hovered!.pi) ?? null);
   }
+
+  let isStackedMode = $derived(isMulti && groupMode === 'stacked');
+
+  function getDisplayValue(bar: BarRect): string {
+    if (isNormalized && bar.normalizedValue != null) {
+      return normalizedFormat(bar.normalizedValue);
+    }
+    if (bar.isFloating && Array.isArray(bar.dataPoint.range)) {
+      return `${format(bar.dataPoint.range[0])} – ${format(bar.dataPoint.range[1])}`;
+    }
+    return format(bar.dataPoint.value);
+  }
 </script>
 
 <div
@@ -269,61 +493,178 @@
       <Legend items={legendItems} position="top" />
     {/if}
 
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
-      <g transform="translate({dims.margin.left}, {dims.margin.top})">
-        {#if showYAxis}
-          <Axis
-            orientation="left"
-            scale={isVertical ? valScale : catScale}
-            {showGridlines}
-            gridlineLength={dims.innerWidth}
-            label={yAxisLabel}
-          />
-        {/if}
-        {#if showXAxis}
-          <g transform="translate(0, {dims.innerHeight})">
-            <Axis
-              orientation="bottom"
-              scale={isVertical ? catScale : valScale}
-              showGridlines={!isVertical && showGridlines}
-              gridlineLength={dims.innerHeight}
-              label={xAxisLabel}
-            />
-          </g>
-        {/if}
-
-        {#each bars as bar, i (i)}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <rect
-            class="bar"
-            class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
-            class:dimmed={hovered !== null && (hovered.si !== bar.si || hovered.pi !== bar.pi)}
-            x={bar.x}
-            y={bar.y}
-            width={bar.width}
-            height={bar.height}
-            rx={barRadius}
-            ry={barRadius}
-            fill={bar.color}
-            aria-label="{bar.dataPoint.label}: {format(bar.dataPoint.value)}"
-            onmouseenter={(e) => handleEnter(e, bar)}
-            onmousemove={trackMouse}
-            onmouseleave={handleLeave}
-            onclick={() => handleClick(bar)}
-          />
-          {#if showValues && !(isMulti && groupMode === 'stacked')}
-            <text
-              class="bar-value"
-              x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}
-              y={isVertical ? bar.y - 4 : bar.y + bar.height / 2}
-              text-anchor={isVertical ? 'middle' : 'start'}
-              dominant-baseline={isVertical ? 'auto' : 'middle'}>{format(bar.dataPoint.value)}</text
-            >
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <div
+      class="chart-scroll-area"
+      role="region"
+      aria-label={yAxisLabel ? `${yAxisLabel} bar chart` : 'Bar chart'}
+      tabindex={scrollable ? 0 : null}
+      style={scrollable
+        ? `overflow-x: auto; -webkit-overflow-scrolling: touch; height: var(--barchart-scroll-area-height, auto);`
+        : ''}
+    >
+      <div style={scrollable ? `min-width: ${minScrollWidth}px;` : ''}>
+        <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+          <!-- A1-2 / A1-3: SVG <defs> for pattern and gradient fills -->
+          {#if defsEntries.length > 0}
+            <defs>
+              {#each defsEntries as entry (entry.id)}
+                {#if 'pattern' in entry.fill}
+                  {@const pat = entry.fill.pattern}
+                  {@const patSize = pat.size ?? 8}
+                  {@const patColor = pat.color ?? entry.bar.color}
+                  {@const patBg = pat.background ?? 'transparent'}
+                  {@const patStrokeW = pat.strokeWidth ?? 1.5}
+                  <pattern
+                    id={entry.id}
+                    patternUnits="userSpaceOnUse"
+                    width={patSize}
+                    height={patSize}
+                  >
+                    <rect width={patSize} height={patSize} fill={patBg} />
+                    {#if pat.type === 'lines'}
+                      <line
+                        x1="0"
+                        y1={patSize}
+                        x2={patSize}
+                        y2="0"
+                        stroke={patColor}
+                        stroke-width={patStrokeW}
+                      />
+                    {:else if pat.type === 'crosshatch'}
+                      <line
+                        x1="0"
+                        y1={patSize}
+                        x2={patSize}
+                        y2="0"
+                        stroke={patColor}
+                        stroke-width={patStrokeW}
+                      />
+                      <line
+                        x1="0"
+                        y1="0"
+                        x2={patSize}
+                        y2={patSize}
+                        stroke={patColor}
+                        stroke-width={patStrokeW}
+                      />
+                    {:else}
+                      <!-- dots -->
+                      <circle cx={patSize / 2} cy={patSize / 2} r={patStrokeW} fill={patColor} />
+                    {/if}
+                  </pattern>
+                {:else if 'gradient' in entry.fill}
+                  {@const grad = entry.fill.gradient}
+                  {@const isHoriz = grad.direction === 'horizontal'}
+                  <!--
+                    gradientUnits="userSpaceOnUse" is required here.
+                    objectBoundingBox ratios are undefined on degenerate (zero-height)
+                    path bounding boxes (stacked segments, Firefox renders black).
+                    userSpaceOnUse resolves in the coordinate system of the
+                    referencing element — i.e. inner space (inside the <g transform>)
+                    — so bar.y / bar.x / bar.height / bar.width are used directly
+                    without any margin offset. This matches the AreaChart pattern
+                    (feat/linechart-gradient ea5f794, lines 282-284).
+                  -->
+                  <linearGradient
+                    id={entry.id}
+                    x1={entry.bar.x}
+                    y1={entry.bar.y}
+                    x2={isHoriz ? entry.bar.x + entry.bar.width : entry.bar.x}
+                    y2={isHoriz ? entry.bar.y : entry.bar.y + entry.bar.height}
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    {#each grad.stops as stop (stop.offset)}
+                      <stop
+                        offset="{stop.offset * 100}%"
+                        stop-color={stop.color}
+                        stop-opacity={stop.opacity ?? 1}
+                      />
+                    {/each}
+                  </linearGradient>
+                {/if}
+              {/each}
+            </defs>
           {/if}
-        {/each}
-      </g>
-    </ChartContainer>
+
+          <g transform="translate({dims.margin.left}, {dims.margin.top})">
+            {#if showYAxis}
+              <Axis
+                orientation="left"
+                scale={isVertical ? valScale : catScale}
+                {showGridlines}
+                gridlineLength={dims.innerWidth}
+                label={yAxisLabel}
+              />
+            {/if}
+            {#if showXAxis}
+              <g transform="translate(0, {dims.innerHeight})">
+                <Axis
+                  orientation="bottom"
+                  scale={isVertical ? catScale : valScale}
+                  showGridlines={!isVertical && showGridlines}
+                  gridlineLength={dims.innerHeight}
+                  label={xAxisLabel}
+                />
+              </g>
+            {/if}
+
+            {#each bars as bar, i (i)}
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              {#if isStackedMode && barRadius > 0}
+                <path
+                  class="bar"
+                  class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                  class:dimmed={hovered !== null &&
+                    (hovered.si !== bar.si || hovered.pi !== bar.pi)}
+                  d={stackedBarPath(bar)}
+                  fill={barFillAttr(bar)}
+                  aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                  onmouseenter={(e) => handleEnter(e, bar)}
+                  onmousemove={trackMouse}
+                  onmouseleave={handleLeave}
+                  onclick={() => handleClick(bar)}
+                />
+              {:else}
+                <rect
+                  class="bar"
+                  class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                  class:dimmed={hovered !== null &&
+                    (hovered.si !== bar.si || hovered.pi !== bar.pi)}
+                  x={bar.x}
+                  y={bar.y}
+                  width={bar.width}
+                  height={bar.height}
+                  rx={barRadius}
+                  ry={barRadius}
+                  fill={barFillAttr(bar)}
+                  aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                  onmouseenter={(e) => handleEnter(e, bar)}
+                  onmousemove={trackMouse}
+                  onmouseleave={handleLeave}
+                  onclick={() => handleClick(bar)}
+                />
+              {/if}
+              {#if showValues && !isStackedMode}
+                <text
+                  class="bar-value"
+                  x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}
+                  y={isVertical ? bar.y - 4 : bar.y + bar.height / 2}
+                  text-anchor={isVertical ? 'middle' : 'start'}
+                  dominant-baseline={isVertical ? 'auto' : 'middle'}>{getDisplayValue(bar)}</text
+                >
+              {/if}
+            {/each}
+
+            <!-- A1-4: renderOverlay escape hatch — rendered after all bars -->
+            {#if typeof renderOverlay === 'function'}
+              {@render renderOverlay(overlayContext)}
+            {/if}
+          </g>
+        </ChartContainer>
+      </div>
+    </div>
 
     {#if typeof tooltipSnippet === 'function' && hoveredBar()}
       {@const hb = hoveredBar()}
@@ -342,6 +683,9 @@
   .bar-chart {
     width: 100%;
     position: relative;
+  }
+  .chart-scroll-area {
+    width: 100%;
   }
   .bar {
     transition: opacity var(--chart-transition-duration, 0.2s) ease;

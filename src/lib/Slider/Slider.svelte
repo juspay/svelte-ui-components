@@ -8,6 +8,7 @@
     step = 1,
     disabled = false,
     showValue = false,
+    labelFormatter,
     testId,
     onchange,
     oninput,
@@ -15,6 +16,7 @@
   }: SliderProperties = $props();
 
   let percentage = $derived(((value - min) / (max - min)) * 100);
+  let displayValue = $derived(labelFormatter ? labelFormatter(value) : String(value));
 
   function handleInput(e: Event) {
     if (e.target instanceof HTMLInputElement) {
@@ -46,7 +48,7 @@
     style="--slider-fill-percent: {percentage}%"
   />
   {#if showValue}
-    <span class="slider-value">{value}</span>
+    <span class="slider-value">{displayValue}</span>
   {/if}
 </div>
 
@@ -99,8 +101,11 @@
     background: var(--slider-thumb-background, #ffffff);
     border: var(--slider-thumb-border, 2px solid #2196f3);
     box-shadow: var(--slider-thumb-shadow, 0 1px 3px rgba(0, 0, 0, 0.2));
+    opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      opacity 0.15s ease;
   }
 
   .slider-input::-moz-range-thumb {
@@ -110,16 +115,21 @@
     background: var(--slider-thumb-background, #ffffff);
     border: var(--slider-thumb-border, 2px solid #2196f3);
     box-shadow: var(--slider-thumb-shadow, 0 1px 3px rgba(0, 0, 0, 0.2));
+    opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      opacity 0.15s ease;
   }
 
   .slider-input:hover::-webkit-slider-thumb {
     transform: scale(var(--slider-thumb-hover-scale, 1.15));
+    opacity: var(--slider-thumb-hover-opacity, var(--slider-thumb-opacity, 1));
   }
 
   .slider-input:hover::-moz-range-thumb {
     transform: scale(var(--slider-thumb-hover-scale, 1.15));
+    opacity: var(--slider-thumb-hover-opacity, var(--slider-thumb-opacity, 1));
   }
 
   .slider-input:focus-visible::-webkit-slider-thumb {

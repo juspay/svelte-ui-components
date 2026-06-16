@@ -12,6 +12,7 @@ export type OptionalSliderProperties = {
   step?: number;
   disabled?: boolean;
   showValue?: boolean;
+  labelFormatter?: (value: number) => string;
   testId?: string;
   classes?: string;
 };

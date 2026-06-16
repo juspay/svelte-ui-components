@@ -4,6 +4,8 @@ export type BannerProperties = MandatoryBannerProperties &
   OptionalBannerProperties &
   BannerEventProperties;
 
+export type BannerType = 'info' | 'success' | 'warning' | 'error';
+
 export type MandatoryBannerProperties = {
   text: string;
 };
@@ -19,6 +21,7 @@ export type OptionalBannerProperties = {
   dismissIcon?: Snippet;
   classes?: string;
   role?: string | null;
+  type?: BannerType;
 };
 
 export type BannerEventProperties = {

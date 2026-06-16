@@ -17,12 +17,15 @@
     ondismiss,
     classes,
     title,
-    role = null
+    role = null,
+    type
   }: BannerProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
 
-  let rootClass = $derived(['banner', classes ?? ''].filter((c) => c.length > 0).join(' '));
+  let rootClass = $derived(
+    ['banner', type ?? '', classes ?? ''].filter((c) => c.length > 0).join(' ')
+  );
 
   function handleClick(event: MouseEvent): void {
     onclick?.(event);
@@ -181,5 +184,33 @@
   .banner-dismiss :global(svg) {
     width: var(--banner-dismiss-size, 14px);
     height: var(--banner-dismiss-size, 14px);
+  }
+
+  .info {
+    background-color: var(--banner-info-background, var(--banner-background, #e8f4fb));
+    color: var(--banner-info-color, var(--banner-color, #1a6b8a));
+
+    --banner-border: var(--banner-info-border, 1px solid #87ceeb);
+  }
+
+  .success {
+    background-color: var(--banner-success-background, var(--banner-background, #e6f7ed));
+    color: var(--banner-success-color, var(--banner-color, #166534));
+
+    --banner-border: var(--banner-success-border, 1px solid #24aa5a);
+  }
+
+  .warning {
+    background-color: var(--banner-warning-background, var(--banner-background, #fef3e2));
+    color: var(--banner-warning-color, var(--banner-color, #92520a));
+
+    --banner-border: var(--banner-warning-border, 1px solid #f3a42d);
+  }
+
+  .error {
+    background-color: var(--banner-error-background, var(--banner-background, #fde8e8));
+    color: var(--banner-error-color, var(--banner-color, #9b1c1c));
+
+    --banner-border: var(--banner-error-border, 1px solid #f04438);
   }
 </style>

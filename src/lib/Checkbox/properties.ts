@@ -16,6 +16,7 @@ export type OptionalCheckboxProperties = {
   checkedIcon?: Snippet;
   indeterminateIcon?: Snippet;
   classes?: string;
+  ariaControls?: string;
 };
 
 export type CheckboxEventProperties = {

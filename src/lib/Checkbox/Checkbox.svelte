@@ -12,7 +12,8 @@
     checkedIcon,
     indeterminateIcon,
     onclick,
-    classes
+    classes,
+    ariaControls
   }: CheckboxProperties = $props();
 
   function handleClick(): void {
@@ -54,6 +55,7 @@
     tabindex={disabled ? -1 : 0}
     aria-checked={indeterminate ? 'mixed' : checked}
     aria-disabled={disabled}
+    aria-controls={ariaControls ?? null}
     onkeydown={handleKeyDown}
   >
     {#if checked && !indeterminate}

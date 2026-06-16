@@ -2,19 +2,25 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.34.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.35.0)
 
-Expose --empty-state-actions-display, -flex-direction, -align-items,
--justify-content, -gap and -margin-top so consumers can lay out the
-actions area (e.g. stack buttons vertically and center them) via the
-classes prop, instead of reaching the internal .empty-state-actions
-class through a descendant :global() override.
+Expose --button-hover-box-shadow, --button-active-background,
+--button-active-box-shadow, --button-focus-visible-box-shadow and
+--button-disabled-box-shadow so consumers can theme per-state box-shadow
+and the active/pressed background through the classes prop, instead of
+reaching the inner &lt;button&gt; element via :global(.x button:hover) etc.
 
-The actions container previously had only a hardcoded margin-top:16px,
-so any layout change (a column of centered buttons, a gap between
-actions) required overriding the library-internal class. Defaults
-reproduce the current rendering exactly (display:block with the flex
-properties inert, margin-top:16px), so this is fully backward-compatible.
+Previously only the resting --button-box-shadow was themable; the
+hover/active/focus-visible/disabled states had no box-shadow hook and
+:active had no background hook, so any state shadow or pressed shade
+forced a descendant element selector. This completes the state coverage
+the way --button-hover-color / --button-active-transform already do.
+
+Every new variable falls back to --button-box-shadow (or --button-color
+for the active background) so the resting value carries into each state
+by default — rendering is unchanged unless a consumer opts in.
+
+## [2.35.0](https://github.com/juspay/svelte-ui-components/compare/2.35.0..2.34.0) - 16 June 2026
 
 ## [2.34.0](https://github.com/juspay/svelte-ui-components/compare/2.34.0..2.33.0) - 16 June 2026
 

@@ -13,22 +13,36 @@
   }: ChartContainerProperties = $props();
 
   let containerEl: HTMLDivElement | null = $state(null);
+  let isMounted = false;
+
+  function measure() {
+    if (containerEl === null) {
+      return;
+    }
+    const rect = containerEl.getBoundingClientRect();
+    const w = Math.round(rect.width);
+    width = w;
+    height = Math.max(minHeight, Math.round(w / aspectRatio));
+  }
+
+  // Re-measure whenever aspectRatio changes at runtime (e.g. semiCircle toggled).
+  // isMounted guards against running after the onMount cleanup has disconnected
+  // the ResizeObserver and the component is being torn down.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    // Reading aspectRatio here makes this effect re-run whenever it changes.
+    void aspectRatio;
+    if (isMounted) {
+      measure();
+    }
+  });
 
   onMount(() => {
     if (containerEl === null) {
       return;
     }
 
-    function measure() {
-      if (containerEl === null) {
-        return;
-      }
-      const rect = containerEl.getBoundingClientRect();
-      const w = Math.round(rect.width);
-      width = w;
-      height = Math.max(minHeight, Math.round(w / aspectRatio));
-    }
-
+    isMounted = true;
     measure();
 
     // Coalesce bursts of resize events into a single measure per frame, always
@@ -41,6 +55,7 @@
     observer.observe(containerEl);
 
     return () => {
+      isMounted = false;
       cancelAnimationFrame(frame);
       observer.disconnect();
     };

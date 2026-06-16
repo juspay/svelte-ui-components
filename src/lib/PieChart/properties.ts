@@ -29,6 +29,9 @@ export type OptionalPieChartProperties = {
   empty?: Snippet;
   testId?: string;
   classes?: string;
+  semiCircle?: boolean;
+  legendShowValues?: boolean;
+  percentDecimals?: number;
 };
 
 export type PieChartEventProperties = {

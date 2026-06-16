@@ -1,4 +1,5 @@
 # Changelog All notable changes to this project will be documented in this file. The format is
+
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -39,6 +40,17 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this proj
 ## [2.60.0](https://github.com/juspay/svelte-ui-components/compare/2.60.0..2.59.0) - 16 June 2026
 
 ## [2.59.0](https://github.com/juspay/svelte-ui-components/compare/2.59.0..2.58.0) - 16 June 2026
+
+### Added
+
+- AreaChart: new `gradientFill` prop — replaces flat fill-opacity with a vertical gradient fading from `fillOpacity+0.3` at the top to transparent at the bottom
+- LineChart: new `gradientFill` and `fillOpacity` props — renders a gradient fill under each line
+- Both charts: new `'spline'` curve type as an alias for `'monotone'`
+- AreaChart: tooltip now shows percentages in `stackNormalize` mode
+
+### Fixed
+
+- ChartContainer: `aspectRatio` prop changes now immediately recalculate chart height without waiting for a resize event
 
 ## [2.58.0](https://github.com/juspay/svelte-ui-components/compare/2.58.0..2.57.0) - 16 June 2026
 
@@ -296,15 +308,18 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this proj
 ## [1.6.0](https://github.com/juspay/svelte-ui-components/compare/1.6.0..1.5.0) - 8 May 2024
 
 Bumps [vite](https://github.com/vitejs/vite/tree/HEAD/packages/vite) from 4.5.2 to 4.5.3.
+
 - [Release notes](https://github.com/vitejs/vite/releases)
 - [Changelog](https://github.com/vitejs/vite/blob/v4.5.3/packages/vite/CHANGELOG.md)
 - [Commits](https://github.com/vitejs/vite/commits/v4.5.3/packages/vite)
 
 ---
+
 updated-dependencies:
+
 - dependency-name: vite
-dependency-type: direct:development
-...
+  dependency-type: direct:development
+  ...
 
 Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
 
@@ -329,6 +344,7 @@ Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
 - releasing version: 1.1.0
 
 ##
+
 1.0.0 - 17 November 2023
 
 - added publish script for building & pushing the package to npmjs

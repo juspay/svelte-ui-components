@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { LoaderProperties } from './properties';
 
-  let { classes }: LoaderProperties = $props();
+  let { classes, testId }: LoaderProperties = $props();
 </script>
 
-<div class="loader {classes ?? ''}"></div>
+<div class="loader {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}></div>
 
 <style>
   .loader {

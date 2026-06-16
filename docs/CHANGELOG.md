@@ -2,11 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.46.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.47.0)
 
-Move display:flex + justify-content:center + align-items:center from .order-status to .background,
-which now owns the min-height (--status-min-height, 100vh). Without height on the flex container
-the centering directives had no visible effect. Backward-compatible: default 100vh preserved.
+## [2.47.0](https://github.com/juspay/svelte-ui-components/compare/2.47.0..2.46.0) - 16 June 2026
 
 ## [2.46.0](https://github.com/juspay/svelte-ui-components/compare/2.46.0..2.45.1) - 16 June 2026
 

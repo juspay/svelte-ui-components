@@ -1,6 +1,10 @@
-export type ToggleProperties = ToggleEventProperties & {
+export type ToggleProperties = OptionalToggleProperties & ToggleEventProperties;
+
+export type OptionalToggleProperties = {
+  text?: string;
   checked?: boolean;
-  text: string;
+  disabled?: boolean;
+  testId?: string;
   classes?: string;
 };
 

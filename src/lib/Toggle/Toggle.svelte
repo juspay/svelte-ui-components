@@ -1,20 +1,33 @@
 <script lang="ts">
   import type { ToggleProperties } from './properties';
 
-  let { checked = false, text = '', classes, onclick }: ToggleProperties = $props();
+  let {
+    checked = false,
+    text = '',
+    disabled = false,
+    testId,
+    classes,
+    onclick
+  }: ToggleProperties = $props();
 
-  function handleCheckboxClick(e: MouseEvent): void {
+  const handleCheckboxClick = (e: MouseEvent): void => {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
       checked = e.target.checked;
     }
     onclick?.(checked);
-  }
+  };
 </script>
 
-<div class="container {classes ?? ''}">
+<div class="container {classes ?? ''}" class:disabled aria-disabled={disabled} data-pw={testId}>
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
-    <input class="input-checkbox" type="checkbox" {checked} onclick={handleCheckboxClick} />
+    <input
+      class="input-checkbox"
+      type="checkbox"
+      {checked}
+      {disabled}
+      onclick={handleCheckboxClick}
+    />
     <span class="slider round"></span>
   </label>
 </div>
@@ -24,6 +37,12 @@
     display: var(--toggle-container-display, flex);
     align-items: var(--toggle-container-align-items, center);
     gap: var(--toggle-container-gap, 8px);
+  }
+
+  .container.disabled {
+    opacity: var(--toggle-disabled-opacity, 0.4);
+    cursor: not-allowed;
+    pointer-events: none;
   }
 
   .text {

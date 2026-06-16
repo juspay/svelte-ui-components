@@ -14,11 +14,13 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 
 ## Props
 
-| Prop    | Type      | Required | Default | Description                                                                                                                                                            |
-| ------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| checked | `boolean` | No       | `false` | The current on/off state of the toggle switch.                                                                                                                         |
-| text    | `string`  | No       | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
-| classes | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop     | Type      | Required | Default | Description                                                                                                                                                            |
+| -------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| checked  | `boolean` | No       | `false` | The current on/off state of the toggle switch.                                                                                                                         |
+| text     | `string`  | No       | `''`    | Label text displayed next to the toggle switch.                                                                                                                        |
+| disabled | `boolean` | No       | `false` | When true, prevents interaction and applies reduced opacity to indicate the disabled state.                                                                            |
+| testId   | `string`  | No       | `-`     | Value for the `data-pw` attribute on the container element, used for Playwright test targeting.                                                                        |
+| classes  | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Events
 
@@ -35,6 +37,7 @@ Override these custom properties to theme the component.
 | `--toggle-container-display`              | `flex`            | display            | Display mode of the toggle container.                        |
 | `--toggle-container-align-items`          | `center`          | align-items        | Vertical alignment of switch and label.                      |
 | `--toggle-container-gap`                  | `8px`             | gap                | Gap between the switch and label text.                       |
+| `--toggle-disabled-opacity`               | `0.4`             | opacity            | Opacity of the toggle when in the disabled state.            |
 | `--toggle-text-font-size`                 | `14px`            | font-size          | Font size of the label text.                                 |
 | `--toggle-text-font-weight`               | `400`             | font-weight        | Font weight of the label text.                               |
 | `--toggle-text-color`                     | `#4a4a4a`         | color              | Color of the label text.                                     |

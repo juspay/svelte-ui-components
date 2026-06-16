@@ -191,6 +191,7 @@ This pattern gives full layout control to the consumer (any number of zones, any
 | footer      | `Snippet`                     | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                 |
 | stretch     | `boolean`                     | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.         |
 | scrollable  | `boolean`                     | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility. |
+| cssVars     | `Record<string, string \| number>` | No  | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute. |
 
 ## Events
 

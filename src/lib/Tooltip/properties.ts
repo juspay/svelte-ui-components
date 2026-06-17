@@ -16,6 +16,25 @@ export type OptionalTooltipProperties = {
   icon?: Snippet;
   /** Snippet rendered as the bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. */
   content?: Snippet;
+  /**
+   * When true, the tooltip bubble is mounted directly on `document.body` using
+   * `position: fixed` coordinates derived from `getBoundingClientRect`. This prevents
+   * clipping inside overflow-hidden or stacking-context ancestors (e.g. toolbar items).
+   */
+  usePortal?: boolean;
 };
 
 export type TooltipProperties = MandatoryTooltipProperties & OptionalTooltipProperties;
+
+/**
+ * Options accepted by the `tooltip` Svelte action.
+ * All fields mirror the corresponding Tooltip component props.
+ */
+export type TooltipActionOptions = {
+  /** Tooltip text shown in the bubble. */
+  text: string;
+  position?: TooltipPosition;
+  delay?: number;
+  /** Custom CSS classes forwarded to the bubble element. */
+  classes?: string;
+};

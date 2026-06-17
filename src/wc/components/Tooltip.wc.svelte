@@ -7,7 +7,8 @@
       position: { type: 'String', reflect: true },
       delay: { type: 'Number', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      usePortal: { type: 'Boolean', attribute: 'use-portal' }
     }
   }}
 />

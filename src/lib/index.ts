@@ -31,6 +31,7 @@ export { default as Tabs } from './Tabs/Tabs.svelte';
 export { default as Choicebox } from './Choicebox/Choicebox.svelte';
 export { default as Slider } from './Slider/Slider.svelte';
 export { default as Tooltip } from './Tooltip/Tooltip.svelte';
+export { tooltip } from './Tooltip/tooltip-action';
 export { default as Shimmer } from './Shimmer/Shimmer.svelte';
 export { default as Progress } from './Progress/Progress.svelte';
 export { default as Pill } from './Pill/Pill.svelte';

@@ -65,6 +65,7 @@ export { default as AreaChart } from './AreaChart/AreaChart.svelte';
 export { default as BarChart } from './BarChart/BarChart.svelte';
 export { default as PieChart } from './PieChart/PieChart.svelte';
 export { default as SankeyChart } from './SankeyChart/SankeyChart.svelte';
+export { default as LottiePlayer } from './LottiePlayer/LottiePlayer.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -127,6 +128,7 @@ export type * from './AreaChart/properties';
 export type * from './BarChart/properties';
 export type * from './PieChart/properties';
 export type * from './SankeyChart/properties';
+export type * from './LottiePlayer/properties';
 
 export { validateInput } from './utils';
 export { formatNumberIndian } from './_chart/format';

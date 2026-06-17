@@ -25,7 +25,7 @@
   },
   {
     "name": "BarChart",
-    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, and click events. Zero external dependencies — built from pure SVG with CSS custom property theming."
+    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, and click events. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
   },
   {
     "name": "Book",
@@ -49,7 +49,7 @@
   },
   {
     "name": "Card",
-    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults — no consumer overrides required for basic usage. Custom multi-zone layouts (metric tiles, integration rows) are achieved via the children snippet using plain flexbox in the consumer."
+    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults \u2014 no consumer overrides required for basic usage. Custom multi-zone layouts (metric tiles, integration rows) are achieved via the children snippet using plain flexbox in the consumer."
   },
   {
     "name": "Carousel",
@@ -190,6 +190,10 @@
   {
     "name": "SankeyChart",
     "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones."
+  },
+  {
+    "name": "LottiePlayer",
+    "description": "A lightweight Lottie animation player that dynamically loads lottie-web and renders animations from a URL or inline JSON data. Supports SVG, canvas, and HTML renderers, imperative play/pause/stop control via bind:this, configurable loop and autoplay, and optional callbacks for completion and load errors."
   },
   {
     "name": "Scroller",

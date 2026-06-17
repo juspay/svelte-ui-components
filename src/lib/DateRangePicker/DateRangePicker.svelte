@@ -5,6 +5,7 @@
   import Calendar from '../Calendar/Calendar.svelte';
   import Button from '../Button/Button.svelte';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
   let {
     rangeStart = $bindable(null),
@@ -16,6 +17,7 @@
     disabledDates = [],
     maxRangeDays = null,
     presets = null,
+    presetCheckmark = false,
     placeholder = 'Select date',
     dualMonth,
     timePicker,
@@ -545,11 +547,16 @@
                 type="button"
                 class="drp-preset-item"
                 class:drp-preset-active={isPresetActive(preset)}
+                class:drp-preset-checkable={presetCheckmark}
                 role="option"
                 aria-selected={isPresetActive(preset)}
                 onclick={() => handlePreset(preset)}
               >
                 {preset.label}
+                {#if presetCheckmark && isPresetActive(preset)}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <span class="drp-preset-check" aria-hidden="true">{@html checkmarkSvg}</span>
+                {/if}
               </button>
             {/each}
           </div>
@@ -784,6 +791,29 @@
 
   .drp-preset-active:hover {
     background: var(--drp-preset-active-hover-background, #333333);
+  }
+
+  /* Opt-in checkmark layout: reserve a trailing slot so the active preset's tick
+     sits flush-right while the label stays left. A preset with no tick (or a
+     label-only preset) keeps its single flex child at the start, unchanged. */
+  .drp-preset-checkable {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--drp-preset-check-gap, 8px);
+  }
+
+  .drp-preset-check {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: var(--drp-preset-check-size, 16px);
+    height: var(--drp-preset-check-size, 16px);
+    color: var(--drp-preset-check-color, inherit);
+  }
+
+  .drp-preset-check :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 
   /* ── Calendar area ── */

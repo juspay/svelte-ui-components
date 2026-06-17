@@ -21,6 +21,7 @@
     placeholder = 'Select date',
     dualMonth,
     timePicker,
+    align = 'left',
     compareStart = $bindable(null),
     compareEnd = $bindable(null),
     compareCalendar,
@@ -535,6 +536,8 @@
     <div
       bind:this={panelRef}
       class="drp-panel"
+      class:drp-panel-align-left={align === 'left'}
+      class:drp-panel-align-right={align === 'right'}
       role="dialog"
       aria-label="Date range picker"
       aria-modal="true"
@@ -747,7 +750,6 @@
   .drp-panel {
     position: absolute;
     top: calc(100% + var(--drp-panel-offset, 6px));
-    left: 0;
     z-index: var(--drp-panel-z-index, 1000);
     background: var(--drp-panel-background, inherit);
     border: var(--drp-panel-border, 1px solid #e0e0e0);
@@ -758,6 +760,16 @@
     min-width: var(--drp-panel-min-width, 320px);
     max-width: var(--drp-panel-max-width, 760px);
     overflow: hidden;
+  }
+
+  .drp-panel-align-left {
+    left: 0;
+    right: auto;
+  }
+
+  .drp-panel-align-right {
+    right: 0;
+    left: auto;
   }
 
   .drp-panel-inner {

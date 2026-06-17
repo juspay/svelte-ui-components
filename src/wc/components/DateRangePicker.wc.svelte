@@ -13,6 +13,7 @@
       presets: { type: 'Object' },
       placeholder: { type: 'String' },
       dualMonth: { type: 'Boolean', reflect: true, attribute: 'dual-month' },
+      align: { type: 'String', reflect: true },
       compareStart: { type: 'Object' },
       compareEnd: { type: 'Object' },
       weekStartsOn: { type: 'Number', reflect: true, attribute: 'week-starts-on' },

@@ -255,6 +255,41 @@
     }
   ];
 
+  // Several presets that all fall on the *same* calendar day. Picking one must
+  // highlight only that preset — not every preset that shares the day.
+  const sameDayPresets: DateRangePreset[] = [
+    {
+      label: 'Today',
+      getValue: () => {
+        const start = new SvelteDate();
+        start.setHours(0, 0, 0, 0);
+        const end = new SvelteDate(start);
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Today morning',
+      getValue: () => {
+        const start = new SvelteDate();
+        start.setHours(0, 0, 0, 0);
+        const end = new SvelteDate(start);
+        end.setHours(11, 59, 59, 999);
+        return { start, end };
+      }
+    },
+    {
+      label: 'Today evening',
+      getValue: () => {
+        const start = new SvelteDate();
+        start.setHours(12, 0, 0, 0);
+        const end = new SvelteDate(start);
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+      }
+    }
+  ];
+
   let clearableDate = $state<Date | null>(null);
 
   const today = new SvelteDate();
@@ -513,6 +548,23 @@
       presets={groupedPresets}
       placeholder="Select range (grouped)"
       testId="drp-groups-demo"
+    />
+  </div>
+</section>
+
+<!-- ── 10. Same-day presets (regression: only the picked preset highlights) ── -->
+<section class="demo-section">
+  <h2>Range mode — same-day presets (single active highlight)</h2>
+  <p class="section-note">
+    When multiple presets fall on the same calendar day, picking one must highlight only that preset
+    — not every preset that starts on the same day.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={sameDayPresets}
+      placeholder="Select range (same-day presets)"
+      testId="drp-same-day-presets-demo"
     />
   </div>
 </section>

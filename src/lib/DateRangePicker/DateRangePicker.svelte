@@ -391,6 +391,14 @@
     ) {
       return preset.label === activePresetLabel;
     }
+    // A preset was explicitly chosen this session — match it by label, not by date.
+    // Several presets can share a calendar day (e.g. "Today", "Last 30 minutes" and
+    // "Last 12 hours" all start today), so same-day matching would light up all of
+    // them at once. selectedPresetLabel is cleared on a direct calendar click, so the
+    // date-based fallbacks below still drive highlighting for manual selections.
+    if (selectedPresetLabel !== null) {
+      return preset.label === selectedPresetLabel;
+    }
     if (mode === 'single') {
       if (draftValue === null) {
         return false;

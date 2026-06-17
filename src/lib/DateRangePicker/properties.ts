@@ -33,6 +33,12 @@ export type OptionalDateRangePickerProperties = {
   maxRangeDays?: number | null;
   /** Preset options shown in the sidebar. Omit to hide the sidebar. */
   presets?: DateRangePreset[] | null;
+  /**
+   * Show a trailing checkmark on the active preset in the sidebar. Opt-in, so
+   * existing layouts are unchanged; the active preset is always distinguished by
+   * its highlighted background regardless of this flag. Default: false.
+   */
+  presetCheckmark?: boolean;
   /** Placeholder shown when no range is selected. */
   placeholder?: string;
   /** Show two months side by side. Defaults to true for range mode, false for single. */

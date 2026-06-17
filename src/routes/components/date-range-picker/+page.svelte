@@ -569,6 +569,24 @@
   </div>
 </section>
 
+<!-- ── 11. Active-preset checkmark (opt-in via presetCheckmark) ── -->
+<section class="demo-section">
+  <h2>Range mode — active-preset checkmark (presetCheckmark)</h2>
+  <p class="section-note">
+    With <code>presetCheckmark</code>, the active preset shows a trailing checkmark alongside its
+    highlighted background. Opt-in — pickers without the flag are unchanged.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      presetCheckmark
+      placeholder="Select range (with checkmark)"
+      testId="drp-preset-checkmark-demo"
+    />
+  </div>
+</section>
+
 <style>
   .page-description {
     color: #666;

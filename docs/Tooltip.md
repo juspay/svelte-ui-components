@@ -16,13 +16,14 @@ A floating tooltip that appears on hover or focus of a trigger element. The tool
 
 ## Props
 
-| Prop     | Type                                                       | Required | Default | Description                                                                                                                                                            |
-| -------- | ---------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text     | `string`                                                   | Yes      | -       | The text content displayed inside the tooltip bubble.                                                                                                                  |
-| position | `TooltipPosition = 'top' \| 'bottom' \| 'left' \| 'right'` | No       | `'top'` | Where the tooltip bubble appears relative to the trigger element.                                                                                                      |
-| delay    | `number`                                                   | No       | `0`     | Time in milliseconds to wait before showing the tooltip after hover/focus. A value of 0 shows the tooltip immediately.                                                 |
-| testId   | `string \| null`                                           | No       | `-`     | Value for data-pw on the tooltip container element for Playwright testing.                                                                                             |
-| classes  | `string`                                                   | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop      | Type                                                       | Required | Default | Description                                                                                                                                                                                           |
+| --------- | ---------------------------------------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text      | `string`                                                   | Yes      | -       | The text content displayed inside the tooltip bubble.                                                                                                                                                 |
+| position  | `TooltipPosition = 'top' \| 'bottom' \| 'left' \| 'right'` | No       | `'top'` | Where the tooltip bubble appears relative to the trigger element.                                                                                                                                     |
+| delay     | `number`                                                   | No       | `0`     | Time in milliseconds to wait before showing the tooltip after hover/focus. A value of 0 shows the tooltip immediately.                                                                                |
+| testId    | `string \| null`                                           | No       | `-`     | Value for data-pw on the tooltip container element for Playwright testing.                                                                                                                            |
+| classes   | `string`                                                   | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
+| usePortal | `boolean`                                                  | No       | `false` | When true, mounts the tooltip bubble directly on `document.body` using `position: fixed` coordinates. Prevents clipping inside `overflow: hidden` or stacking-context ancestors (e.g. toolbar items). |
 
 ## Snippets
 
@@ -62,6 +63,43 @@ Override these custom properties to theme the component.
 | `--tooltip-arrow-color`       | `var(--tooltip-background, #333333)` | border-color        | Color of the directional arrow. Defaults to match the tooltip background.      |
 | `--tooltip-icon-color`        | `currentColor`                       | color               | Color of the icon snippet rendered in the trigger wrapper via the `icon` slot. |
 
+## Tooltip Action
+
+The `tooltip` Svelte action is a renderless alternative to the `<Tooltip>` component. It attaches hover and focus listeners directly to the host element without injecting a wrapper `<div>`, so it does not affect flex-child sizing inside toolbars and icon rows. The bubble is always mounted on `document.body` with `position: fixed` coordinates, so it is never clipped by `overflow: hidden` ancestors.
+
+```svelte
+<script>
+  import { tooltip } from '@juspay/svelte-ui-components';
+</script>
+
+<button use:tooltip={{ text: 'Save document', position: 'top' }}>💾</button>
+<button use:tooltip={{ text: 'Delete item', position: 'bottom', delay: 300 }}>🗑️</button>
+```
+
+### TooltipActionOptions
+
+| Field    | Type              | Required | Default | Description                                                                         |
+| -------- | ----------------- | -------- | ------- | ----------------------------------------------------------------------------------- |
+| text     | `string`          | Yes      | -       | Tooltip text displayed in the bubble.                                               |
+| position | `TooltipPosition` | No       | `'top'` | Where the bubble appears relative to the host element.                              |
+| delay    | `number`          | No       | `0`     | Milliseconds to wait before showing the tooltip. A value of 0 shows it immediately. |
+| classes  | `string`          | No       | `-`     | CSS class string forwarded to the bubble element for theming.                       |
+
+The action exposes an `update` lifecycle method — when the bound options object changes, the tooltip text (and other options) update reactively without tearing down event listeners:
+
+```svelte
+<script>
+  import { tooltip } from '@juspay/svelte-ui-components';
+  let count = $state(0);
+</script>
+
+<button use:tooltip={{ text: `Clicked ${count} times`, position: 'top' }} onclick={() => count++}>
+  Increment
+</button>
+```
+
+A `destroy` method removes all event listeners and cleans up any open bubble when the host element is removed from the DOM.
+
 ## Type Reference
 
 Custom types used by this component's props and events:
@@ -70,6 +108,17 @@ Custom types used by this component's props and events:
 
 ```typescript
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+```
+
+### TooltipActionOptions
+
+```typescript
+type TooltipActionOptions = {
+  text: string;
+  position?: TooltipPosition;
+  delay?: number;
+  classes?: string;
+};
 ```
 
 ## Web Component
@@ -81,6 +130,17 @@ Tag: `<sui-tooltip>`
   <button>Hover me</button>
 </sui-tooltip>
 ```
+
+### Attributes
+
+| Attribute    | Prop        | Type      | Default | Description                                                                                                                       |
+| ------------ | ----------- | --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `text`       | `text`      | `String`  | -       | Tooltip text shown in the bubble.                                                                                                 |
+| `position`   | `position`  | `String`  | `'top'` | Bubble position relative to the trigger: `top`, `bottom`, `left`, or `right`.                                                     |
+| `delay`      | `delay`     | `Number`  | `0`     | Milliseconds before showing the tooltip.                                                                                          |
+| `test-id`    | `testId`    | `String`  | -       | Value for `data-pw` on the container element.                                                                                     |
+| `classes`    | `classes`   | `String`  | -       | CSS class string applied to the tooltip container.                                                                                |
+| `use-portal` | `usePortal` | `Boolean` | `false` | When present, mounts the bubble on `document.body` with `position: fixed`. Prevents clipping inside `overflow: hidden` ancestors. |
 
 ### Slots
 

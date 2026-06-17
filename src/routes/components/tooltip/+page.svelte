@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import Tooltip from '$lib/Tooltip/Tooltip.svelte';
+  import { tooltip } from '$lib/Tooltip/tooltip-action';
 </script>
 
 <div class="page-header">
@@ -134,4 +135,27 @@
   <Tooltip text="Appears after 500 ms" delay={500}>
     <Button text="Delayed tooltip" />
   </Tooltip>
+</div>
+
+<h3>tooltip action — renderless use:tooltip directive</h3>
+<p>
+  Attaches hover and focus listeners directly to the host element without a wrapper div — useful
+  inside flexbox toolbars where an extra wrapper would break sizing.
+</p>
+<div class="demo-row" style="gap: 32px;">
+  <button data-pw="tooltip-action-top" use:tooltip={{ text: 'Save document', position: 'top' }}>
+    Save
+  </button>
+  <button
+    data-pw="tooltip-action-bottom"
+    use:tooltip={{ text: 'Delete item', position: 'bottom', delay: 300 }}
+  >
+    Delete
+  </button>
+  <button data-pw="tooltip-action-left" use:tooltip={{ text: 'Go back', position: 'left' }}>
+    Back
+  </button>
+  <button data-pw="tooltip-action-right" use:tooltip={{ text: 'Go forward', position: 'right' }}>
+    Forward
+  </button>
 </div>

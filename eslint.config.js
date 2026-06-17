@@ -77,5 +77,12 @@ export default defineConfig(
         svelteConfig
       }
     }
+  },
+  // Test files need to stub complex DOM types that cannot be narrowed without assertions.
+  {
+    files: ['**/*.test.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off'
+    }
   }
 );

@@ -4,6 +4,7 @@
   import Pill from '$lib/Pill/Pill.svelte';
   import Img from '$lib/Img/Img.svelte';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
   let {
     items: rawItems,
@@ -378,9 +379,16 @@
               {#if typeof optionIndicator === 'function'}
                 {@render optionIndicator({ checked: value.includes(item.id) })}
               {:else}
-                <span class="select-option-indicator" aria-hidden="true"
-                  >{value.includes(item.id) ? '☑' : '☐'}</span
+                <span
+                  class="select-option-indicator"
+                  class:checked={value.includes(item.id)}
+                  aria-hidden="true"
                 >
+                  {#if value.includes(item.id)}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    <span class="select-option-check">{@html checkmarkSvg}</span>
+                  {/if}
+                </span>
               {/if}
             {/if}
             {item.label}
@@ -557,8 +565,37 @@
   .select-option-indicator {
     display: inline-flex;
     align-items: center;
-    color: var(--select-option-indicator-color, currentColor);
+    justify-content: center;
     flex-shrink: 0;
+    box-sizing: border-box;
+    width: var(--select-option-indicator-size, 18px);
+    height: var(--select-option-indicator-size, 18px);
+    border: var(--select-option-indicator-border, 2px solid #757575);
+    border-radius: var(--select-option-indicator-border-radius, 3px);
+    background-color: var(--select-option-indicator-background, transparent);
+    color: var(--select-option-indicator-color, currentColor);
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
+  }
+
+  .select-option-indicator.checked {
+    background-color: var(--select-option-indicator-checked-background, #2196f3);
+    border-color: var(--select-option-indicator-checked-border-color, #2196f3);
+  }
+
+  .select-option-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--select-option-indicator-check-size, 12px);
+    height: var(--select-option-indicator-check-size, 12px);
+    color: var(--select-option-indicator-check-color, #ffffff);
+  }
+
+  .select-option-check :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 
   .select-empty {

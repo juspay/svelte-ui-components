@@ -13,6 +13,7 @@ export type DateRangePreset = {
 };
 
 export type DateRangePickerMode = 'range' | 'single';
+export type DateRangePickerAlign = 'left' | 'right';
 
 export type OptionalDateRangePickerProperties = {
   /** Currently selected start of range (bindable). */
@@ -43,6 +44,8 @@ export type OptionalDateRangePickerProperties = {
   placeholder?: string;
   /** Show two months side by side. Defaults to true for range mode, false for single. */
   dualMonth?: boolean;
+  /** Align the dropdown panel to the left or right edge of the trigger. Default: 'left'. */
+  align?: DateRangePickerAlign;
   /** Snippet rendered in the time-picker slot. Consumer controls all time UI. */
   timePicker?: Snippet;
   /** Start of compare range (bindable). Used when compareCalendar snippet is provided. */

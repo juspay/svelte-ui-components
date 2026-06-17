@@ -112,6 +112,13 @@
 
   let activePresetLabel: string | null = $state(resolvedInitialPresetLabel);
 
+  // The preset whose range is currently committed (seeded from initialPresetLabel,
+  // updated on every Apply). Unlike activePresetLabel — which is cleared the moment
+  // the user interacts so the trigger can fall back to a date range — this survives
+  // the open/apply cycle so re-opening the picker re-highlights the committed preset
+  // by label instead of date-matching (which lights up every same-day preset at once).
+  let committedPresetLabel: string | null = $state(resolvedInitialPresetLabel);
+
   // Seed draft from initialPresetLabel whenever presets become available so
   // the calendar shows the preset's date selection when the picker is first
   // opened — even if presets arrive asynchronously after initial render.
@@ -194,8 +201,9 @@
     draftCompareStart = compareStart;
     draftCompareEnd = compareEnd;
 
-    // Reset preset tracking so each picker session starts clean.
-    selectedPresetLabel = null;
+    // Re-seed the session from the committed preset so the sidebar re-highlights it
+    // by label. A direct calendar click later clears this, reverting to date matching.
+    selectedPresetLabel = committedPresetLabel;
 
     // Navigate left calendar so it shows the committed start month (or today)
     const anchor = rangeStart !== null ? rangeStart : value !== null ? value : now;
@@ -266,6 +274,7 @@
       if (draftStart !== null && draftEnd !== null) {
         rangeStart = draftStart;
         rangeEnd = draftEnd;
+        committedPresetLabel = selectedPresetLabel;
         onapply?.({ rangeStart: draftStart, rangeEnd: draftEnd, presetLabel: selectedPresetLabel });
       }
       if (
@@ -284,6 +293,7 @@
     } else {
       if (draftValue !== null) {
         value = draftValue;
+        committedPresetLabel = selectedPresetLabel;
         onapplysingle?.({ date: draftValue, presetLabel: selectedPresetLabel });
       }
     }
@@ -293,6 +303,7 @@
   function handleClear(): void {
     value = null;
     draftValue = null;
+    committedPresetLabel = null;
     onclear?.();
     closePicker();
   }

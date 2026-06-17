@@ -2,14 +2,27 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.63.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.64.0)
 
-Add a presetCheckmark prop (default false). When enabled, the active preset in the
-sidebar shows a trailing checkmark (reusing assets/checkmark.svg, currentColor) in
-addition to its highlighted background — restoring the selection affordance some
-consumers had before migrating to this component. Opt-in so existing layouts are
-unchanged; the tick slot and size/colour/gap are themeable via --drp-preset-check-*.
-Includes a demo section and a Playwright test.
+Completes the same-day fix (#310): that change made an explicit in-session click
+match by label, but openPicker() still reset selectedPresetLabel to null on every
+open and handleApply() cleared activePresetLabel, so re-opening the picker fell back
+to isSameDay() matching and re-highlighted every preset sharing the committed day
+(e.g. Today / Last 30 minutes / Last 12 Hours) at once.
+
+Track a committedPresetLabel (seeded from initialPresetLabel, updated on each Apply,
+cleared on Clear) and re-seed selectedPresetLabel from it when the picker opens. The
+active highlight is now driven by label across the whole open/apply lifecycle instead
+of date matching, so:
+- initialPresetLabel highlights only the seeded preset on first open;
+- re-opening after applying a preset re-highlights only that preset;
+- a direct calendar click still clears it, reverting to date-based matching for
+custom ranges (unchanged).
+
+Adds a Playwright regression test (proven to fail on the prior behaviour) covering
+both the re-open and initialPresetLabel cases.
+
+## [2.64.0](https://github.com/juspay/svelte-ui-components/compare/2.64.0..2.63.1) - 17 June 2026
 
 ## [2.63.1](https://github.com/juspay/svelte-ui-components/compare/2.63.1..2.63.0) - 17 June 2026
 

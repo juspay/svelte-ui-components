@@ -87,6 +87,7 @@
   button {
     max-height: var(--button-max-height);
     max-width: var(--button-max-width);
+    min-width: var(--button-min-width);
     font-family: var(--button-font-family);
     font-weight: var(--button-font-weight, 500);
     font-size: var(--button-font-size, 14px);

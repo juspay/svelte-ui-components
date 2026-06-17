@@ -82,7 +82,13 @@
 
 <h3>Multi select</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <Select items={fruits} multiple bind:value={multiValue} placeholder="Pick fruits" />
+  <Select
+    items={fruits}
+    multiple
+    bind:value={multiValue}
+    placeholder="Pick fruits"
+    testId="select-multi-demo"
+  />
   {#if multiValue.length > 0}
     <p class="demo-info">Selected IDs: {multiValue.join(', ')}</p>
   {/if}
@@ -138,7 +144,7 @@
 </div>
 
 <h3>optionIndicator snippet (multi-select)</h3>
-<p>Replace the default ☐/☑ glyphs with a custom indicator rendered per option.</p>
+<p>Replace the default checkbox indicator with a custom one rendered per option.</p>
 <div class="demo-row" style="max-width: 400px;">
   <Select items={languages} multiple bind:value={customIndicatorValue} placeholder="Pick languages">
     {#snippet optionIndicator({ checked })}

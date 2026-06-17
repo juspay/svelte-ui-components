@@ -46,7 +46,7 @@ Pin arbitrary content (e.g. a "Manage…" link) to the bottom of the dropdown:
 
 ### With Custom optionIndicator Snippet (Multi-Select)
 
-Replace the default ☐/☑ glyphs with a custom indicator:
+Replace the default checkbox indicator with a custom one:
 
 ```svelte
 <Select {items} multiple placeholder="Pick items">
@@ -108,7 +108,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | Snippet         | Type                                                  | Description                                                                                                                                                                                                              |
 | --------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | bottomContent   | `Snippet`                                             | Arbitrary content rendered at the bottom of the open dropdown, separated by a border. Use for "Manage options" links or bulk actions.                                                                                    |
-| optionIndicator | `Snippet<[{ checked: boolean }]>`                     | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default ☐/☑ glyphs when provided.                                                                       |
+| optionIndicator | `Snippet<[{ checked: boolean }]>`                     | Custom indicator rendered before each option label in multi-select mode. Receives `{ checked }` and replaces the default checkbox-box indicator when provided.                                                           |
 | triggerSummary  | `Snippet<[{ value: string[]; items: SelectItem[] }]>` | Compact trigger summary for multi-select mode. Receives `{ value, items }` so the consumer can render e.g. "All" or "3 selected" instead of one Pill per value. When omitted, the default Pill-per-value layout is used. |
 
 ## Events
@@ -192,18 +192,26 @@ Override these custom properties to theme the component.
 
 ### Options
 
-| Variable                                    | Default                                        | CSS Property | Description                                                               |
-| ------------------------------------------- | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------- |
-| `--select-option-padding`                   | `8px 12px`                                     | padding      | Padding inside each dropdown option.                                      |
-| `--select-option-color`                     | `#333333`                                      | color        | Text color of dropdown options.                                           |
-| `--select-option-font-size`                 | `inherit`                                      | font-size    | Font size of dropdown options.                                            |
-| `--select-option-gap`                       | `0`                                            | gap          | Gap between the option indicator and the label text in multi-select mode. |
-| `--select-option-hover-background`          | `#f0f0f0`                                      | background   | Background of options on hover or keyboard highlight.                     |
-| `--select-option-hover-color`               | inherits `--select-option-color`               | color        | Text color of options on hover or keyboard highlight.                     |
-| `--select-option-selected-background`       | `#e8f0fe`                                      | background   | Background of selected options.                                           |
-| `--select-option-selected-color`            | inherits `--select-option-color`               | color        | Text color of selected options.                                           |
-| `--select-option-selected-hover-background` | inherits `--select-option-selected-background` | background   | Background of selected options on hover.                                  |
-| `--select-option-indicator-color`           | `currentColor`                                 | color        | Color of the default ☐/☑ indicator shown per option in multi-select mode. |
+| Variable                                         | Default                                        | CSS Property  | Description                                                                                                                              |
+| ------------------------------------------------ | ---------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--select-option-padding`                        | `8px 12px`                                     | padding       | Padding inside each dropdown option.                                                                                                     |
+| `--select-option-color`                          | `#333333`                                      | color         | Text color of dropdown options.                                                                                                          |
+| `--select-option-font-size`                      | `inherit`                                      | font-size     | Font size of dropdown options.                                                                                                           |
+| `--select-option-gap`                            | `0`                                            | gap           | Gap between the option indicator and the label text in multi-select mode.                                                                |
+| `--select-option-hover-background`               | `#f0f0f0`                                      | background    | Background of options on hover or keyboard highlight.                                                                                    |
+| `--select-option-hover-color`                    | inherits `--select-option-color`               | color         | Text color of options on hover or keyboard highlight.                                                                                    |
+| `--select-option-selected-background`            | `#e8f0fe`                                      | background    | Background of selected options.                                                                                                          |
+| `--select-option-selected-color`                 | inherits `--select-option-color`               | color         | Text color of selected options.                                                                                                          |
+| `--select-option-selected-hover-background`      | inherits `--select-option-selected-background` | background    | Background of selected options on hover.                                                                                                 |
+| `--select-option-indicator-size`                 | `18px`                                         | width, height | Size of the default multi-select checkbox indicator box.                                                                                 |
+| `--select-option-indicator-border`               | `2px solid #757575`                            | border        | Border of the unchecked indicator box.                                                                                                   |
+| `--select-option-indicator-border-radius`        | `3px`                                          | border-radius | Corner rounding of the indicator box.                                                                                                    |
+| `--select-option-indicator-background`           | `transparent`                                  | background    | Background of the unchecked indicator box.                                                                                               |
+| `--select-option-indicator-checked-background`   | `#2196f3`                                      | background    | Background of the checked indicator box.                                                                                                 |
+| `--select-option-indicator-checked-border-color` | `#2196f3`                                      | border-color  | Border color of the checked indicator box.                                                                                               |
+| `--select-option-indicator-check-size`           | `12px`                                         | width, height | Size of the checkmark inside a checked indicator.                                                                                        |
+| `--select-option-indicator-check-color`          | `#ffffff`                                      | color         | Color of the checkmark inside a checked indicator.                                                                                       |
+| `--select-option-indicator-color`                | `currentColor`                                 | color         | Legacy text-color hook on the indicator wrapper. Inert for the default checkbox box; only affects a text-glyph custom `optionIndicator`. |
 
 ### Bottom Content
 

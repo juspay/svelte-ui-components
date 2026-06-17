@@ -24,6 +24,14 @@ export type OptionalSelectProperties = {
   placeholder?: string;
   disabled?: boolean;
   bottomContent?: Snippet;
+  /**
+   * Snippet for rendering a custom multi-select option indicator, receiving `{ checked }`.
+   * When omitted, multiple-mode options render a design-system checkbox box (bordered square
+   * that fills and shows a checkmark when selected), themeable via the `--select-option-indicator-*`
+   * CSS variables: `-size` (18px), `-border`, `-border-radius`, `-background`,
+   * `-checked-background`, `-checked-border-color`, `-check-size`, `-check-color`. Provide this
+   * snippet to fully replace the indicator (e.g. to restore the legacy ☑/☐ glyph).
+   */
   optionIndicator?: Snippet<[{ checked: boolean }]>;
   testId?: string;
   /** Fallback per-option test id prefix. Each option emits `data-pw="{itemTestId}-{id}"` when its own `item.testId` is not set. */

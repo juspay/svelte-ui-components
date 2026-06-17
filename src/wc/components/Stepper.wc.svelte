@@ -5,7 +5,10 @@
     props: {
       steps: { type: 'Object' },
       currentStepIndex: { type: 'Number', reflect: true, attribute: 'current-step-index' },
+      orientation: { type: 'String', reflect: true },
       classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
+      onstepclick: { type: 'Object' },
       onhandleStepClick: { type: 'Object' }
     }
   }}

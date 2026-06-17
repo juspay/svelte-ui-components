@@ -2,13 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.63.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.63.1)
 
-Add a same-day-presets demo (Today / Today morning / Today evening — all on the
-same calendar day) and a Playwright test asserting that picking one preset
-highlights exactly one. Reproduces the regression fixed in this branch: without
-the label-based isPresetActive() match all three presets were aria-selected at
-once (test fails with 'Received: 3'); with the fix only the chosen preset is.
+Add a presetCheckmark prop (default false). When enabled, the active preset in the
+sidebar shows a trailing checkmark (reusing assets/checkmark.svg, currentColor) in
+addition to its highlighted background — restoring the selection affordance some
+consumers had before migrating to this component. Opt-in so existing layouts are
+unchanged; the tick slot and size/colour/gap are themeable via --drp-preset-check-*.
+Includes a demo section and a Playwright test.
+
+## [2.63.1](https://github.com/juspay/svelte-ui-components/compare/2.63.1..2.63.0) - 17 June 2026
 
 ## [2.63.0](https://github.com/juspay/svelte-ui-components/compare/2.63.0..2.62.1) - 17 June 2026
 

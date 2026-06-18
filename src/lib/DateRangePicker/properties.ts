@@ -52,6 +52,13 @@ export type OptionalDateRangePickerProperties = {
    * Opt-in. Default: false.
    */
   showTimeSelection?: boolean;
+  /**
+   * Make presets toggle instead of being one-way: clicking the already-selected
+   * preset deselects it and reverts the draft to the committed selection. Lets a
+   * toggle-style preset such as "No Comparison" be switched back off without having
+   * to pick a calendar date. Opt-in. Default: false.
+   */
+  presetToggle?: boolean;
   /** Placeholder shown when no range is selected. */
   placeholder?: string;
   /** Show two months side by side. Defaults to true for range mode, false for single. */

@@ -609,6 +609,27 @@
   </div>
 </section>
 
+<!-- ── 13. Preset toggle-off (opt-in via presetToggle) ── -->
+<section class="demo-section">
+  <h2>Range mode — preset toggle-off (presetToggle)</h2>
+  <p class="section-note">
+    With <code>presetToggle</code>, clicking the already-selected preset deselects it and reverts to
+    the committed selection — so a toggle-style preset such as "No Comparison" can be switched back
+    off without picking a calendar date. Opt-in.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      presetCheckmark
+      presetToggle
+      initialPresetLabel="Today"
+      placeholder="Select range (toggle)"
+      testId="drp-preset-toggle-demo"
+    />
+  </div>
+</section>
+
 <style>
   .page-description {
     color: #666;

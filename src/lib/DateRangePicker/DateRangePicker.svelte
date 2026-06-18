@@ -30,6 +30,7 @@
     presetCheckmark = false,
     showDateInputs = false,
     showTimeSelection = false,
+    presetToggle = false,
     placeholder = 'Select date',
     dualMonth,
     timePicker,
@@ -388,6 +389,21 @@
   }
 
   function handlePreset(preset: DateRangePreset): void {
+    // presetToggle: clicking the already-selected preset deselects it and reverts the
+    // draft to the committed selection (mirrors openPicker). Lets a toggle-style preset
+    // such as "No Comparison" be switched back off without having to pick a calendar
+    // date, instead of being a one-way radio choice.
+    if (presetToggle && selectedPresetLabel === preset.label) {
+      draftStart = rangeStart;
+      draftEnd = rangeEnd;
+      draftValue = value;
+      selectedPresetLabel = committedPresetLabel;
+      const anchor = rangeStart !== null ? rangeStart : value !== null ? value : now;
+      leftYear = anchor.getFullYear();
+      leftMonth = anchor.getMonth();
+      calendarKey++;
+      return;
+    }
     // User explicitly picked a preset — clear the initial-preset display label
     activePresetLabel = null;
     const { start, end } = preset.getValue();

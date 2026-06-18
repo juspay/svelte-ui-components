@@ -2,15 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.1)
 
-The trigger's onclick only ever opened the panel, so clicking it a second time
-re-ran the open path onto an already-open picker — the second click felt dead and
-the only way to dismiss was to click elsewhere on the page (reported as BZ-3892).
+The day grid used `grid-template-columns: repeat(7, 1fr)` while each cell is a
+fixed 36px. Inside the 280px calendar that makes every column 40px, so the 36px
+cells sat centred with a ~4px gap on each side. The range-start / in-range /
+range-end backgrounds therefore never touched and the selected range rendered as
+a row of disconnected boxes instead of one continuous pill (reported repeatedly,
+most recently BZ-3893 / BZ-3742).
 
-Route the trigger through a togglePicker() that closes when already open and opens
-otherwise. The outside-click handler is unaffected: on the closing click isOpen is
-already false by the time it runs, so it no-ops.
+Size the columns to the cell instead and centre the grid (and the day-name header
+to match) so adjacent day backgrounds are flush and the range reads as a single
+continuous highlight again. Cell size stays configurable via --calendar-cell-size.
+
+## [2.69.1](https://github.com/juspay/svelte-ui-components/compare/2.69.1..2.69.0) - 18 June 2026
 
 ## [2.69.0](https://github.com/juspay/svelte-ui-components/compare/2.69.0..2.68.0) - 18 June 2026
 

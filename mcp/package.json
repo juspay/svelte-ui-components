@@ -1,6 +1,6 @@
 {
   "name": "@juspay/svelte-ui-components-mcp",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "MCP server for @juspay/svelte-ui-components - provides structured access to component props, CSS variables, and usage patterns",
   "type": "module",
   "main": "build/index.js",

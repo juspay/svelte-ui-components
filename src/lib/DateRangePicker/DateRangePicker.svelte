@@ -516,7 +516,7 @@
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
       onclick={togglePicker}
-      ariaLabel="Open date picker"
+      ariaLabel={isOpen ? 'Close date picker' : 'Open date picker'}
       classes="drp-trigger {isOpen ? 'drp-trigger-open' : ''}"
     >
       {#if typeof triggerSnippet === 'function'}

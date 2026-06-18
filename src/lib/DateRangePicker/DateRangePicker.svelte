@@ -221,6 +221,17 @@
     onopentoggle?.({ open: false });
   }
 
+  // Toggle on trigger click so a second click on the trigger closes the picker.
+  // The trigger's onclick fires before the document-level handler, so closing
+  // here makes handleDocumentClick early-return on the next (bubbled) event.
+  function togglePicker(): void {
+    if (isOpen) {
+      closePicker();
+    } else {
+      openPicker();
+    }
+  }
+
   function openComparePicker(): void {
     compareFocusReturnEl =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -442,7 +453,7 @@
   <!-- Trigger wrapper — bind:this here so outside-click detection works -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
-      onclick={openPicker}
+      onclick={togglePicker}
       ariaLabel="Open date picker"
       classes="drp-trigger {isOpen ? 'drp-trigger-open' : ''}"
     >

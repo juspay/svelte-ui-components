@@ -272,6 +272,17 @@
     onopentoggle?.({ open: false });
   }
 
+  // The trigger toggles: clicking it while the panel is already open dismisses
+  // the picker instead of re-opening it onto itself. The open-only handler left
+  // a second click feeling dead — the panel could only be closed by clicking away.
+  function togglePicker(): void {
+    if (isOpen) {
+      closePicker();
+    } else {
+      openPicker();
+    }
+  }
+
   function openComparePicker(): void {
     compareFocusReturnEl =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -504,7 +515,7 @@
   <!-- Trigger wrapper — bind:this here so outside-click detection works -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
-      onclick={openPicker}
+      onclick={togglePicker}
       ariaLabel="Open date picker"
       classes="drp-trigger {isOpen ? 'drp-trigger-open' : ''}"
     >

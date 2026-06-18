@@ -40,6 +40,18 @@ export type OptionalDateRangePickerProperties = {
    * its highlighted background regardless of this flag. Default: false.
    */
   presetCheckmark?: boolean;
+  /**
+   * Show read-only start/end date boxes at the top of the calendar area (range mode),
+   * reflecting the current draft selection. Opt-in. Default: false.
+   */
+  showDateInputs?: boolean;
+  /**
+   * Show built-in time-of-day selection (range mode): a clock toggle in the date-input
+   * row that reveals start/end time inputs ("HH:MM AM/PM"). On Apply the entered times
+   * are folded onto the committed range's start/end. Implies the date-input row.
+   * Opt-in. Default: false.
+   */
+  showTimeSelection?: boolean;
   /** Placeholder shown when no range is selected. */
   placeholder?: string;
   /** Show two months side by side. Defaults to true for range mode, false for single. */

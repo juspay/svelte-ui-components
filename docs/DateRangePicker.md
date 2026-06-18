@@ -80,6 +80,20 @@ The component does not build time input UI. Pass a `timePicker` snippet to rende
 </DateRangePicker>
 ```
 
+### Built-in date inputs + time selection
+
+For a richer panel without owning any time state, opt into `showDateInputs` (read-only start/end date boxes at the top of the calendar) and `showTimeSelection` (a clock toggle revealing start/end time inputs). The entered times are folded onto the committed range on Apply; Apply is blocked while a time is malformed or — when both ends are the same day — the start time is after the end time. Both are range-mode only.
+
+```svelte
+<DateRangePicker
+  mode="range"
+  {presets}
+  showDateInputs
+  showTimeSelection
+  placeholder="Select range + time"
+/>
+```
+
 ### With compare calendar (consumer snippet)
 
 Pass a `compareCalendar` snippet to render a comparison period section inside the panel. The consumer controls all compare state and wires `onapplycompare` to commit it.
@@ -252,6 +266,8 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 | maxDate            | `Date \| null`                        | No       | `null`          | Latest selectable date.                                                                                                                                                                                                                                                                                                         |
 | disabledDates      | `Date[] \| ((date: Date) => boolean)` | No       | `[]`            | Dates that cannot be selected. Pass an array or a predicate function.                                                                                                                                                                                                                                                           |
 | presets            | `DateRangePreset[] \| null`           | No       | `null`          | Preset options shown in the sidebar. Omit or pass null to hide the sidebar.                                                                                                                                                                                                                                                     |
+| showDateInputs     | `boolean`                             | No       | `false`         | Range mode only. Show read-only start/end date boxes at the top of the calendar area, reflecting the current draft selection.                                                                                                                                                                                                   |
+| showTimeSelection  | `boolean`                             | No       | `false`         | Range mode only. Show a clock toggle in the date-input row that reveals start/end time inputs (`HH:MM AM/PM`); the entered times are folded onto the committed range's start/end on Apply. Implies the date-input row, and blocks Apply while a time is malformed or (same day) the start time is after the end time.           |
 | placeholder        | `string`                              | No       | `'Select date'` | Text shown on the trigger when no date is selected.                                                                                                                                                                                                                                                                             |
 | dualMonth          | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override.                                                                                                                                                                                                          |
 | timePicker         | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.                                                                                                                                                                                                         |
@@ -292,79 +308,89 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 
 Override these custom properties to theme the component.
 
-| Variable                               | Default                       | Description                                                           |
-| -------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `--drp-trigger-background`             | `inherit`                     | Trigger button background color.                                      |
-| `--drp-trigger-border`                 | `1px solid currentColor`      | Trigger button border.                                                |
-| `--drp-trigger-border-radius`          | `6px`                         | Trigger button corner rounding.                                       |
-| `--drp-trigger-color`                  | `inherit`                     | Trigger button text color.                                            |
-| `--drp-trigger-padding`                | `8px 12px`                    | Trigger button inner padding.                                         |
-| `--drp-trigger-min-width`              | `200px`                       | Minimum width of the trigger button.                                  |
-| `--drp-trigger-gap`                    | `8px`                         | Gap between label and icon in the trigger.                            |
-| `--drp-trigger-hover-border-color`     | `currentColor`                | Trigger border color on hover.                                        |
-| `--drp-trigger-open-border-color`      | `#000000`                     | Trigger border color when the panel is open.                          |
-| `--drp-trigger-open-shadow`            | `0 0 0 2px rgba(0,0,0,0.1)`   | Trigger box-shadow when the panel is open.                            |
-| `--drp-trigger-icon-color`             | `inherit`                     | Color of the trigger chevron icon.                                    |
-| `--drp-panel-offset`                   | `6px`                         | Vertical gap between the trigger and the panel.                       |
-| `--drp-panel-z-index`                  | `1000`                        | Panel stack order.                                                    |
-| `--drp-panel-background`               | `inherit`                     | Panel background color.                                               |
-| `--drp-panel-border`                   | `1px solid #e0e0e0`           | Panel border.                                                         |
-| `--drp-panel-border-radius`            | `10px`                        | Panel corner rounding.                                                |
-| `--drp-panel-shadow`                   | `0 8px 24px rgba(0,0,0,0.12)` | Panel drop shadow.                                                    |
-| `--drp-panel-min-width`                | `320px`                       | Minimum width of the panel.                                           |
-| `--drp-panel-max-width`                | `760px`                       | Maximum width of the panel.                                           |
-| `--drp-sidebar-padding`                | `12px 8px`                    | Padding inside the presets sidebar.                                   |
-| `--drp-sidebar-border`                 | `1px solid #e8e8e8`           | Right border of the presets sidebar.                                  |
-| `--drp-sidebar-min-width`              | `140px`                       | Minimum width of the presets sidebar.                                 |
-| `--drp-sidebar-max-height`             | `400px`                       | Maximum height of the presets sidebar (scrollable).                   |
-| `--drp-preset-padding`                 | `7px 12px`                    | Padding of each preset button.                                        |
-| `--drp-preset-border-radius`           | `5px`                         | Corner rounding of preset buttons.                                    |
-| `--drp-preset-color`                   | `inherit`                     | Text color of preset buttons.                                         |
-| `--drp-preset-hover-background`        | `#f5f5f5`                     | Background of preset buttons on hover.                                |
-| `--drp-preset-active-background`       | `currentColor`                | Background of the active/selected preset button.                      |
-| `--drp-preset-active-color`            | `#ffffff`                     | Text color of the active/selected preset button.                      |
-| `--drp-preset-active-hover-background` | `#333333`                     | Background of the active preset button on hover.                      |
-| `--drp-calendars-padding`              | `16px`                        | Padding around the calendar area.                                     |
-| `--drp-calendars-gap`                  | `16px`                        | Gap between calendar area sections (header, calendars, footer slots). |
-| `--drp-month-label-color`              | `inherit`                     | Color of the dual-month header labels.                                |
-| `--drp-nav-btn-size`                   | `32px`                        | Size of the dual-month navigation buttons.                            |
-| `--drp-nav-btn-border-radius`          | `4px`                         | Corner rounding of navigation buttons.                                |
-| `--drp-nav-btn-color`                  | `inherit`                     | Color of navigation button chevrons.                                  |
-| `--drp-nav-btn-hover-background`       | `#f0f0f0`                     | Background of navigation buttons on hover.                            |
-| `--drp-nav-chevron-border`             | `2px solid currentColor`      | Chevron border style for navigation arrows.                           |
-| `--drp-months-gap`                     | `24px`                        | Gap between the two calendars in dual-month mode.                     |
-| `--drp-time-row-gap`                   | `16px`                        | Gap between elements in the time-picker row wrapper.                  |
-| `--drp-time-row-padding-top`           | `8px`                         | Top padding of the time-picker row wrapper.                           |
-| `--drp-time-divider`                   | `1px solid #e8e8e8`           | Top border of the time-picker row wrapper.                            |
-| `--drp-compare-padding-top`            | `12px`                        | Top padding of the compare-calendar section wrapper.                  |
-| `--drp-compare-divider`                | `1px solid #e8e8e8`           | Top border of the compare-calendar section wrapper.                   |
-| `--drp-footer-gap`                     | `8px`                         | Gap between footer buttons.                                           |
-| `--drp-footer-padding`                 | `12px 16px`                   | Padding of the footer.                                                |
-| `--drp-footer-border`                  | `1px solid #e8e8e8`           | Top border of the footer.                                             |
-| `--drp-cancel-border-color`            | `#d0d0d0`                     | Cancel button border color.                                           |
-| `--drp-cancel-color`                   | `inherit`                     | Cancel button text color.                                             |
-| `--drp-cancel-hover-background`        | `#f5f5f5`                     | Cancel button background on hover.                                    |
-| `--drp-apply-background`               | `currentColor`                | Apply button background color.                                        |
-| `--drp-apply-color`                    | `#ffffff`                     | Apply button text color.                                              |
-| `--drp-apply-hover-background`         | `#333333`                     | Apply button background on hover.                                     |
-| `--drp-apply-disabled-background`      | `#cccccc`                     | Apply button background when disabled.                                |
-| `--drp-apply-disabled-color`           | `#888888`                     | Apply button text color when disabled.                                |
-| `--drp-clear-border-color`             | `#d0d0d0`                     | Clear button border color (single-mode `clearable`).                  |
-| `--drp-clear-color`                    | `inherit`                     | Clear button text color.                                              |
-| `--drp-clear-hover-background`         | `#f5f5f5`                     | Clear button background on hover.                                     |
-| `--drp-preset-divider-border`          | `1px solid #e8e8e8`           | Border style for the preset group divider line.                       |
-| `--drp-preset-divider-gap`             | `6px`                         | Gap between the divider line and the group label.                     |
-| `--drp-preset-divider-margin`          | `4px 0`                       | Vertical margin above and below each preset group divider.            |
-| `--drp-preset-group-label-color`       | `#999999`                     | Text color of the preset group label rendered beside the divider.     |
-| `--drp-preset-divider-leader-width`    | `8px`                         | Width of the leading line segment before the group label.             |
-| `--drp-compare-trigger-background`     | `inherit`                     | Compare trigger button background.                                    |
-| `--drp-compare-trigger-border`         | `1px solid currentColor`      | Compare trigger button border.                                        |
-| `--drp-compare-trigger-border-radius`  | `6px`                         | Compare trigger button corner rounding.                               |
-| `--drp-compare-trigger-color`          | `inherit`                     | Compare trigger button text color.                                    |
-| `--drp-compare-trigger-padding`        | `8px 12px`                    | Compare trigger button inner padding.                                 |
-| `--drp-compare-trigger-min-width`      | `160px`                       | Compare trigger button minimum width.                                 |
-| `--drp-compare-panel-left`             | `0`                           | Left offset of the standalone compare panel relative to its trigger.  |
-| `--drp-compare-panel-min-width`        | `280px`                       | Minimum width of the standalone compare panel.                        |
+| Variable                               | Default                       | Description                                                                  |
+| -------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `--drp-trigger-background`             | `inherit`                     | Trigger button background color.                                             |
+| `--drp-trigger-border`                 | `1px solid currentColor`      | Trigger button border.                                                       |
+| `--drp-trigger-border-radius`          | `6px`                         | Trigger button corner rounding.                                              |
+| `--drp-trigger-color`                  | `inherit`                     | Trigger button text color.                                                   |
+| `--drp-trigger-padding`                | `8px 12px`                    | Trigger button inner padding.                                                |
+| `--drp-trigger-min-width`              | `200px`                       | Minimum width of the trigger button.                                         |
+| `--drp-trigger-gap`                    | `8px`                         | Gap between label and icon in the trigger.                                   |
+| `--drp-trigger-hover-border-color`     | `currentColor`                | Trigger border color on hover.                                               |
+| `--drp-trigger-open-border-color`      | `#000000`                     | Trigger border color when the panel is open.                                 |
+| `--drp-trigger-open-shadow`            | `0 0 0 2px rgba(0,0,0,0.1)`   | Trigger box-shadow when the panel is open.                                   |
+| `--drp-trigger-icon-color`             | `inherit`                     | Color of the trigger chevron icon.                                           |
+| `--drp-panel-offset`                   | `6px`                         | Vertical gap between the trigger and the panel.                              |
+| `--drp-panel-z-index`                  | `1000`                        | Panel stack order.                                                           |
+| `--drp-panel-background`               | `inherit`                     | Panel background color.                                                      |
+| `--drp-panel-border`                   | `1px solid #e0e0e0`           | Panel border.                                                                |
+| `--drp-panel-border-radius`            | `10px`                        | Panel corner rounding.                                                       |
+| `--drp-panel-shadow`                   | `0 8px 24px rgba(0,0,0,0.12)` | Panel drop shadow.                                                           |
+| `--drp-panel-min-width`                | `320px`                       | Minimum width of the panel.                                                  |
+| `--drp-panel-max-width`                | `760px`                       | Maximum width of the panel.                                                  |
+| `--drp-sidebar-padding`                | `12px 8px`                    | Padding inside the presets sidebar.                                          |
+| `--drp-sidebar-border`                 | `1px solid #e8e8e8`           | Right border of the presets sidebar.                                         |
+| `--drp-sidebar-min-width`              | `140px`                       | Minimum width of the presets sidebar.                                        |
+| `--drp-sidebar-max-height`             | `400px`                       | Maximum height of the presets sidebar (scrollable).                          |
+| `--drp-preset-padding`                 | `7px 12px`                    | Padding of each preset button.                                               |
+| `--drp-preset-border-radius`           | `5px`                         | Corner rounding of preset buttons.                                           |
+| `--drp-preset-color`                   | `inherit`                     | Text color of preset buttons.                                                |
+| `--drp-preset-hover-background`        | `#f5f5f5`                     | Background of preset buttons on hover.                                       |
+| `--drp-preset-active-background`       | `currentColor`                | Background of the active/selected preset button.                             |
+| `--drp-preset-active-color`            | `#ffffff`                     | Text color of the active/selected preset button.                             |
+| `--drp-preset-active-hover-background` | `#333333`                     | Background of the active preset button on hover.                             |
+| `--drp-calendars-padding`              | `16px`                        | Padding around the calendar area.                                            |
+| `--drp-calendars-gap`                  | `16px`                        | Gap between calendar area sections (header, calendars, footer slots).        |
+| `--drp-month-label-color`              | `inherit`                     | Color of the dual-month header labels.                                       |
+| `--drp-nav-btn-size`                   | `32px`                        | Size of the dual-month navigation buttons.                                   |
+| `--drp-nav-btn-border-radius`          | `4px`                         | Corner rounding of navigation buttons.                                       |
+| `--drp-nav-btn-color`                  | `inherit`                     | Color of navigation button chevrons.                                         |
+| `--drp-nav-btn-hover-background`       | `#f0f0f0`                     | Background of navigation buttons on hover.                                   |
+| `--drp-nav-chevron-border`             | `2px solid currentColor`      | Chevron border style for navigation arrows.                                  |
+| `--drp-months-gap`                     | `24px`                        | Gap between the two calendars in dual-month mode.                            |
+| `--drp-time-row-gap`                   | `16px`                        | Gap between elements in the time-picker row wrapper.                         |
+| `--drp-time-row-padding-top`           | `8px`                         | Top padding of the time-picker row wrapper.                                  |
+| `--drp-time-divider`                   | `1px solid #e8e8e8`           | Top border of the time-picker row wrapper.                                   |
+| `--drp-compare-padding-top`            | `12px`                        | Top padding of the compare-calendar section wrapper.                         |
+| `--drp-compare-divider`                | `1px solid #e8e8e8`           | Top border of the compare-calendar section wrapper.                          |
+| `--drp-footer-gap`                     | `8px`                         | Gap between footer buttons.                                                  |
+| `--drp-footer-padding`                 | `12px 16px`                   | Padding of the footer.                                                       |
+| `--drp-footer-border`                  | `1px solid #e8e8e8`           | Top border of the footer.                                                    |
+| `--drp-cancel-border-color`            | `#d0d0d0`                     | Cancel button border color.                                                  |
+| `--drp-cancel-color`                   | `inherit`                     | Cancel button text color.                                                    |
+| `--drp-cancel-hover-background`        | `#f5f5f5`                     | Cancel button background on hover.                                           |
+| `--drp-apply-background`               | `currentColor`                | Apply button background color.                                               |
+| `--drp-apply-color`                    | `#ffffff`                     | Apply button text color.                                                     |
+| `--drp-apply-hover-background`         | `#333333`                     | Apply button background on hover.                                            |
+| `--drp-apply-disabled-background`      | `#cccccc`                     | Apply button background when disabled.                                       |
+| `--drp-apply-disabled-color`           | `#888888`                     | Apply button text color when disabled.                                       |
+| `--drp-clear-border-color`             | `#d0d0d0`                     | Clear button border color (single-mode `clearable`).                         |
+| `--drp-clear-color`                    | `inherit`                     | Clear button text color.                                                     |
+| `--drp-clear-hover-background`         | `#f5f5f5`                     | Clear button background on hover.                                            |
+| `--drp-preset-divider-border`          | `1px solid #e8e8e8`           | Border style for the preset group divider line.                              |
+| `--drp-preset-divider-gap`             | `6px`                         | Gap between the divider line and the group label.                            |
+| `--drp-preset-divider-margin`          | `4px 0`                       | Vertical margin above and below each preset group divider.                   |
+| `--drp-preset-group-label-color`       | `#999999`                     | Text color of the preset group label rendered beside the divider.            |
+| `--drp-preset-divider-leader-width`    | `8px`                         | Width of the leading line segment before the group label.                    |
+| `--drp-compare-trigger-background`     | `inherit`                     | Compare trigger button background.                                           |
+| `--drp-compare-trigger-border`         | `1px solid currentColor`      | Compare trigger button border.                                               |
+| `--drp-compare-trigger-border-radius`  | `6px`                         | Compare trigger button corner rounding.                                      |
+| `--drp-compare-trigger-color`          | `inherit`                     | Compare trigger button text color.                                           |
+| `--drp-compare-trigger-padding`        | `8px 12px`                    | Compare trigger button inner padding.                                        |
+| `--drp-compare-trigger-min-width`      | `160px`                       | Compare trigger button minimum width.                                        |
+| `--drp-compare-panel-left`             | `0`                           | Left offset of the standalone compare panel relative to its trigger.         |
+| `--drp-compare-panel-min-width`        | `280px`                       | Minimum width of the standalone compare panel.                               |
+| `--drp-datetime-divider`               | `1px solid #e8e8e8`           | Divider below the date + time header (`showDateInputs`/`showTimeSelection`). |
+| `--drp-date-input-border`              | `1px solid #d4d4d4`           | Border of the read-only date boxes.                                          |
+| `--drp-date-input-background`          | `#ffffff`                     | Background of the read-only date boxes.                                      |
+| `--drp-date-input-color`               | `#333333`                     | Text color of the read-only date boxes.                                      |
+| `--drp-time-toggle-background`         | `#f6f7f9`                     | Background of the clock toggle button.                                       |
+| `--drp-time-toggle-border`             | `1px solid #d4d4d4`           | Border of the clock toggle button.                                           |
+| `--drp-time-toggle-active-color`       | `#1b85ff`                     | Clock toggle icon/border color when the time row is open.                    |
+| `--drp-time-input-border`              | `1px solid #d4d4d4`           | Border of the time inputs.                                                   |
+| `--drp-time-input-invalid-border`      | `#e5484d`                     | Border of a time input holding an invalid value.                             |
+| `--drp-time-field-color`               | `#333333`                     | Text color of the time inputs.                                               |
 
 ### Selector specificity note
 

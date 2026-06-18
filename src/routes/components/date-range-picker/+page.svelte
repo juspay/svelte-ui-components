@@ -587,6 +587,28 @@
   </div>
 </section>
 
+<!-- ── 12. Built-in date inputs + time selection (showDateInputs / showTimeSelection) ── -->
+<section class="demo-section">
+  <h2>Range mode — built-in date inputs + time selection</h2>
+  <p class="section-note">
+    <code>showDateInputs</code> adds read-only start/end date boxes at the top of the calendar;
+    <code>showTimeSelection</code> adds a clock toggle that reveals start/end time inputs ("HH:MM AM/PM")
+    and folds the entered times onto the committed range on Apply.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      presetCheckmark
+      showDateInputs
+      showTimeSelection
+      initialPresetLabel="Today"
+      placeholder="Select range + time"
+      testId="drp-datetime-demo"
+    />
+  </div>
+</section>
+
 <style>
   .page-description {
     color: #666;

@@ -409,7 +409,10 @@
   .grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    justify-items: center;
+    /* stretch (not center) so each day cell fills its 1fr column; otherwise a
+       fixed-width cell narrower than the column leaves gaps and the in-range
+       background paints as separate boxes instead of a continuous range. */
+    justify-items: stretch;
     row-gap: 2px;
   }
 
@@ -417,7 +420,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--calendar-cell-size, 36px);
+    width: 100%;
     height: var(--calendar-cell-size, 36px);
     font-family: inherit;
     font-size: var(--calendar-cell-font-size, 14px);

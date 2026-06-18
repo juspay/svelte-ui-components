@@ -2,14 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.3)
 
-Since the trigger button became a toggle (it now both opens and closes the
-panel), its static ariaLabel "Open date picker" misled screen-reader users —
-they heard "Open date picker" even when the click would close the panel.
-
-Make the label track the open state: "Close date picker" while open, "Open
-date picker" while closed. Follow-up to the accessibility review on #320.
+## [2.69.3](https://github.com/juspay/svelte-ui-components/compare/2.69.3..2.69.2) - 18 June 2026
 
 ## [2.69.2](https://github.com/juspay/svelte-ui-components/compare/2.69.2..2.69.1) - 18 June 2026
 

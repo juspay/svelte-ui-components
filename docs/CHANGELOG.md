@@ -2,18 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.2)
 
-The day grid used `grid-template-columns: repeat(7, 1fr)` while each cell is a
-fixed 36px. Inside the 280px calendar that makes every column 40px, so the 36px
-cells sat centred with a ~4px gap on each side. The range-start / in-range /
-range-end backgrounds therefore never touched and the selected range rendered as
-a row of disconnected boxes instead of one continuous pill (reported repeatedly,
-most recently BZ-3893 / BZ-3742).
+Since the trigger button became a toggle (it now both opens and closes the
+panel), its static ariaLabel "Open date picker" misled screen-reader users —
+they heard "Open date picker" even when the click would close the panel.
 
-Size the columns to the cell instead and centre the grid (and the day-name header
-to match) so adjacent day backgrounds are flush and the range reads as a single
-continuous highlight again. Cell size stays configurable via --calendar-cell-size.
+Make the label track the open state: "Close date picker" while open, "Open
+date picker" while closed. Follow-up to the accessibility review on #320.
+
+## [2.69.2](https://github.com/juspay/svelte-ui-components/compare/2.69.2..2.69.1) - 18 June 2026
 
 ## [2.69.1](https://github.com/juspay/svelte-ui-components/compare/2.69.1..2.69.0) - 18 June 2026
 

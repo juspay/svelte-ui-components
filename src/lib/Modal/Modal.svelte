@@ -335,6 +335,19 @@
     --cursor: var(--modal-footer-secondary-button-cursor, pointer);
     --opacity: var(--modal-footer-secondary-button-opacity, 1);
     --button-border: var(--modal-footer-secondary-button-border, none);
+    --disabled-background-color: var(
+      --modal-footer-secondary-button-disabled-color,
+      var(--modal-footer-secondary-button-color, #3a4550)
+    );
+    --disabled-text-color: var(
+      --modal-footer-secondary-button-disabled-text-color,
+      var(--modal-footer-secondary-button-text-color, white)
+    );
+    --disabled-border: var(
+      --modal-footer-secondary-button-disabled-border,
+      var(--modal-footer-secondary-button-border, none)
+    );
+    --disabled-opacity: var(--modal-footer-secondary-button-disabled-opacity, 0.4);
     --button-justify-content: var(--modal-footer-secondary-button-justify-content, center);
     --button-content-flex-direction: var(
       --modal-footer-secondary-button-content-flex-direction,
@@ -363,6 +376,19 @@
     --cursor: var(--modal-footer-primary-button-cursor, pointer);
     --opacity: var(--modal-footer-primary-button-opacity, 1);
     --button-border: var(--modal-footer-primary-button-border, none);
+    --disabled-background-color: var(
+      --modal-footer-primary-button-disabled-color,
+      var(--modal-footer-primary-button-color, #3a4550)
+    );
+    --disabled-text-color: var(
+      --modal-footer-primary-button-disabled-text-color,
+      var(--modal-footer-primary-button-text-color, white)
+    );
+    --disabled-border: var(
+      --modal-footer-primary-button-disabled-border,
+      var(--modal-footer-primary-button-border, none)
+    );
+    --disabled-opacity: var(--modal-footer-primary-button-disabled-opacity, 0.4);
     --button-justify-content: var(--modal-footer-primary-button-justify-content, center);
     --button-content-flex-direction: var(--modal-footer-primary-button-content-flex-direction, row);
     --button-content-gap: var(--modal-footer-primary-button-content-gap, 16px);

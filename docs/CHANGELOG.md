@@ -2,19 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.66.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.67.0)
 
-The default multi-select indicator was a unicode glyph that rendered as a
-tiny, unstyled square inconsistent with the design system. Replace it with a
-presentational checkbox box (bordered square that fills accent-blue with a
-checkmark when selected), reusing the bundled checkmark.svg and new themeable
---select-option-indicator-* CSS variables (size, border, border-radius,
-background, checked-background, checked-border-color, check-size, check-color).
+Footer primary/secondary buttons previously had no disabled-state escape hatches, so a disabled footer button fell back to its own --button-color as the disabled background (e.g. a disabled primary action stayed solid blue, only faded by the Button default opacity). Wire the library Button's --disabled-background-color / --disabled-text-color / --disabled-border / --disabled-opacity on .footer-primary-button and .footer-secondary-button to new --modal-footer-{primary,secondary}-button-disabled-* tokens. Defaults preserve current behaviour (button colour bg, button text, 0.4 opacity), so this is purely additive; consumers can now theme a clear disabled state (e.g. a grey bg).
 
-The box is presentational only — the option row owns selection and
-aria-selected — so no focusable role=checkbox is nested inside role=option and
-the click still toggles via the option. The optionIndicator snippet continues
-to fully override the indicator (e.g. to restore the legacy glyph).
+## [2.67.0](https://github.com/juspay/svelte-ui-components/compare/2.67.0..2.66.0) - 18 June 2026
 
 ## [2.66.0](https://github.com/juspay/svelte-ui-components/compare/2.66.0..2.65.0) - 18 June 2026
 

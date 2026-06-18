@@ -2,7 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.68.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.69.0)
+
+The trigger's onclick only ever opened the panel, so clicking it a second time
+re-ran the open path onto an already-open picker — the second click felt dead and
+the only way to dismiss was to click elsewhere on the page (reported as BZ-3892).
+
+Route the trigger through a togglePicker() that closes when already open and opens
+otherwise. The outside-click handler is unaffected: on the closing click isOpen is
+already false by the time it runs, so it no-ops.
+
+## [2.69.0](https://github.com/juspay/svelte-ui-components/compare/2.69.0..2.68.0) - 18 June 2026
 
 ## [2.68.0](https://github.com/juspay/svelte-ui-components/compare/2.68.0..2.67.0) - 18 June 2026
 

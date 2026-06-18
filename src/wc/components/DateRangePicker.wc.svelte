@@ -13,6 +13,8 @@
       presets: { type: 'Object' },
       showDateInputs: { type: 'Boolean', reflect: true, attribute: 'show-date-inputs' },
       showTimeSelection: { type: 'Boolean', reflect: true, attribute: 'show-time-selection' },
+      presetCheckmark: { type: 'Boolean', reflect: true, attribute: 'preset-checkmark' },
+      presetToggle: { type: 'Boolean', reflect: true, attribute: 'preset-toggle' },
       placeholder: { type: 'String' },
       dualMonth: { type: 'Boolean', reflect: true, attribute: 'dual-month' },
       align: { type: 'String', reflect: true },

@@ -393,9 +393,15 @@
     --button-hover-color: var(--calendar-nav-button-hover-background, #f0f0f0);
   }
 
+  /* Size the columns to the cell, not 1fr, and centre the whole grid. With 1fr
+     columns the fixed-width cells sat centred inside wider tracks, leaving
+     horizontal gaps between days — which broke the range highlight into
+     disconnected boxes instead of one continuous pill. The day-name header must
+     use the same track sizing so it stays aligned with the day grid below. */
   .day-names {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, var(--calendar-cell-size, 36px));
+    justify-content: center;
     text-align: center;
   }
 
@@ -408,8 +414,8 @@
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    justify-items: center;
+    grid-template-columns: repeat(7, var(--calendar-cell-size, 36px));
+    justify-content: center;
     row-gap: 2px;
   }
 

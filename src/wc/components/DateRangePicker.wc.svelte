@@ -11,6 +11,8 @@
       maxDate: { type: 'Object' },
       disabledDates: { type: 'Object' },
       presets: { type: 'Object' },
+      showDateInputs: { type: 'Boolean', reflect: true, attribute: 'show-date-inputs' },
+      showTimeSelection: { type: 'Boolean', reflect: true, attribute: 'show-time-selection' },
       placeholder: { type: 'String' },
       dualMonth: { type: 'Boolean', reflect: true, attribute: 'dual-month' },
       align: { type: 'String', reflect: true },

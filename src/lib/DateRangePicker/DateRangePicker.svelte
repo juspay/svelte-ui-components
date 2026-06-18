@@ -6,6 +6,16 @@
   import Button from '../Button/Button.svelte';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
+  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import {
+    TIME_DISPLAY_PATTERN,
+    applyTimeDisplay,
+    formatTimeDisplay,
+    toMinutesOfDay
+  } from './timeUtils';
+
+  const clockSvg =
+    '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.25 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let {
     rangeStart = $bindable(null),
@@ -18,6 +28,8 @@
     maxRangeDays = null,
     presets = null,
     presetCheckmark = false,
+    showDateInputs = false,
+    showTimeSelection = false,
     placeholder = 'Select date',
     dualMonth,
     timePicker,
@@ -57,6 +69,14 @@
   // Tracks the label of the currently active preset, or null when the user
   // made a custom calendar selection (or before any selection is made).
   let selectedPresetLabel: string | null = $state(null);
+
+  // Built-in time-of-day selection (opt-in via showTimeSelection). Display strings
+  // are 12-hour ("02:30 PM"); they seed from the draft dates when the picker opens
+  // and are combined back onto the committed range in handleApply. showTimeRow drives
+  // the collapsible time inputs, toggled by the clock button in the date-input row.
+  let startTimeDisplay: string = $state('12:00 AM');
+  let endTimeDisplay: string = $state('11:59 PM');
+  let showTimeRow: boolean = $state(false);
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -170,6 +190,29 @@
     return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
+  // Read-only date-input box contents (opt-in via showDateInputs), reflecting the draft.
+  const draftStartDateLabel: string = $derived(draftStart !== null ? formatDate(draftStart) : '');
+  const draftEndDateLabel: string = $derived(draftEnd !== null ? formatDate(draftEnd) : '');
+
+  const isStartTimeValid: boolean = $derived(TIME_DISPLAY_PATTERN.test(startTimeDisplay.trim()));
+  const isEndTimeValid: boolean = $derived(TIME_DISPLAY_PATTERN.test(endTimeDisplay.trim()));
+  // Apply is blocked while a time is malformed, or while both ends fall on the same
+  // calendar day and the start time is after the end time. Different days are fine.
+  const isTimeRangeValid: boolean = $derived.by(() => {
+    if (!showTimeSelection) {
+      return true;
+    }
+    if (!isStartTimeValid || !isEndTimeValid) {
+      return false;
+    }
+    if (draftStart === null || draftEnd === null || !isSameDay(draftStart, draftEnd)) {
+      return true;
+    }
+    const startMinutes = toMinutesOfDay(startTimeDisplay);
+    const endMinutes = toMinutesOfDay(endTimeDisplay);
+    return startMinutes === null || endMinutes === null || startMinutes <= endMinutes;
+  });
+
   const triggerLabel: string = $derived.by(() => {
     // If an initial preset label is active (seeded on mount, not yet overridden), show it
     if (activePresetLabel !== null) {
@@ -205,6 +248,14 @@
     // Re-seed the session from the committed preset so the sidebar re-highlights it
     // by label. A direct calendar click later clears this, reverting to date matching.
     selectedPresetLabel = committedPresetLabel;
+
+    // Seed the time inputs from the committed range's time-of-day, and collapse the
+    // time row so each open starts from the date view.
+    if (showTimeSelection) {
+      startTimeDisplay = draftStart !== null ? formatTimeDisplay(draftStart) : '12:00 AM';
+      endTimeDisplay = draftEnd !== null ? formatTimeDisplay(draftEnd) : '11:59 PM';
+      showTimeRow = false;
+    }
 
     // Navigate left calendar so it shows the committed start month (or today)
     const anchor = rangeStart !== null ? rangeStart : value !== null ? value : now;
@@ -273,10 +324,21 @@
     activePresetLabel = null;
     if (mode === 'range') {
       if (draftStart !== null && draftEnd !== null) {
-        rangeStart = draftStart;
-        rangeEnd = draftEnd;
+        // Fold the time-of-day inputs onto the committed dates when time selection is on.
+        const appliedStart = showTimeSelection
+          ? (applyTimeDisplay(draftStart, startTimeDisplay) ?? draftStart)
+          : draftStart;
+        const appliedEnd = showTimeSelection
+          ? (applyTimeDisplay(draftEnd, endTimeDisplay) ?? draftEnd)
+          : draftEnd;
+        rangeStart = appliedStart;
+        rangeEnd = appliedEnd;
         committedPresetLabel = selectedPresetLabel;
-        onapply?.({ rangeStart: draftStart, rangeEnd: draftEnd, presetLabel: selectedPresetLabel });
+        onapply?.({
+          rangeStart: appliedStart,
+          rangeEnd: appliedEnd,
+          presetLabel: selectedPresetLabel
+        });
       }
       if (
         typeof compareCalendar === 'function' &&
@@ -389,7 +451,7 @@
 
   const canApply: boolean = $derived.by(() => {
     if (mode === 'range') {
-      return draftStart !== null && draftEnd !== null;
+      return draftStart !== null && draftEnd !== null && isTimeRangeValid;
     }
     return draftValue !== null;
   });
@@ -578,6 +640,68 @@
 
         <!-- Calendar area -->
         <div class="drp-calendars">
+          {#if (showDateInputs || showTimeSelection) && mode === 'range'}
+            <div class="drp-datetime-header">
+              <div class="drp-date-input-row">
+                <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
+                  <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
+                </div>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
+                <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
+                  <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
+                </div>
+                {#if showTimeSelection}
+                  <button
+                    type="button"
+                    class="drp-time-toggle"
+                    class:drp-time-toggle-active={showTimeRow}
+                    aria-label="Toggle time selection"
+                    aria-pressed={showTimeRow}
+                    data-pw={testId ? `${testId}-time-toggle` : null}
+                    onclick={() => (showTimeRow = !showTimeRow)}
+                  >
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    <span class="drp-time-toggle-icon" aria-hidden="true">{@html clockSvg}</span>
+                  </button>
+                {/if}
+              </div>
+              {#if showTimeSelection && showTimeRow}
+                <div class="drp-time-input-row">
+                  <div class="drp-time-input" class:drp-time-input-invalid={!isStartTimeValid}>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    <span class="drp-time-input-icon" aria-hidden="true">{@html clockSvg}</span>
+                    <input
+                      type="text"
+                      class="drp-time-field"
+                      bind:value={startTimeDisplay}
+                      maxlength="8"
+                      placeholder="12:00 AM"
+                      aria-label="Start time"
+                      aria-invalid={!isStartTimeValid}
+                      data-pw={testId ? `${testId}-start-time` : null}
+                    />
+                  </div>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
+                  <div class="drp-time-input" class:drp-time-input-invalid={!isEndTimeValid}>
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    <span class="drp-time-input-icon" aria-hidden="true">{@html clockSvg}</span>
+                    <input
+                      type="text"
+                      class="drp-time-field"
+                      bind:value={endTimeDisplay}
+                      maxlength="8"
+                      placeholder="11:59 PM"
+                      aria-label="End time"
+                      aria-invalid={!isEndTimeValid}
+                      data-pw={testId ? `${testId}-end-time` : null}
+                    />
+                  </div>
+                </div>
+              {/if}
+            </div>
+          {/if}
           {#if isDualMonth}
             <!-- Dual-month layout with shared nav -->
             <div class="drp-dual-header">
@@ -928,6 +1052,132 @@
     padding-top: var(--drp-time-row-padding-top, 8px);
     border-top: var(--drp-time-divider, 1px solid #e8e8e8);
     flex-wrap: wrap;
+  }
+
+  /* ── Built-in date + time inputs (showDateInputs / showTimeSelection) ── */
+  .drp-datetime-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--drp-datetime-gap, 8px);
+    padding-bottom: var(--drp-datetime-padding-bottom, 12px);
+    margin-bottom: var(--drp-datetime-margin-bottom, 4px);
+    border-bottom: var(--drp-datetime-divider, 1px solid #e8e8e8);
+  }
+
+  .drp-date-input-row,
+  .drp-time-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--drp-datetime-row-gap, 12px);
+  }
+
+  .drp-date-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--drp-date-input-padding, 10px 14px);
+    border: var(--drp-date-input-border, 1px solid #d4d4d4);
+    border-radius: var(--drp-date-input-radius, 8px);
+    background: var(--drp-date-input-background, #ffffff);
+  }
+
+  .drp-date-input-value {
+    display: block;
+    color: var(--drp-date-input-color, #333333);
+    font-size: var(--drp-date-input-font-size, 13px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .drp-datetime-arrow {
+    flex-shrink: 0;
+    display: inline-flex;
+    width: var(--drp-datetime-arrow-size, 16px);
+    height: var(--drp-datetime-arrow-size, 16px);
+    color: var(--drp-datetime-arrow-color, #888888);
+  }
+
+  .drp-datetime-arrow :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .drp-time-toggle {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--drp-time-toggle-size, 40px);
+    height: var(--drp-time-toggle-size, 40px);
+    padding: 0;
+    border: var(--drp-time-toggle-border, 1px solid #d4d4d4);
+    border-radius: var(--drp-time-toggle-radius, 8px);
+    background: var(--drp-time-toggle-background, #f6f7f9);
+    color: var(--drp-time-toggle-color, #555555);
+    cursor: pointer;
+  }
+
+  .drp-time-toggle-active {
+    border-color: var(--drp-time-toggle-active-border, currentColor);
+    color: var(--drp-time-toggle-active-color, #1b85ff);
+  }
+
+  .drp-time-toggle-icon {
+    display: inline-flex;
+    width: var(--drp-time-toggle-icon-size, 16px);
+    height: var(--drp-time-toggle-icon-size, 16px);
+  }
+
+  .drp-time-toggle-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .drp-time-input {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    border: var(--drp-time-input-border, 1px solid #d4d4d4);
+    border-radius: var(--drp-time-input-radius, 8px);
+    background: var(--drp-time-input-background, #ffffff);
+  }
+
+  .drp-time-input-invalid {
+    border-color: var(--drp-time-input-invalid-border, #e5484d);
+  }
+
+  .drp-time-input-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: var(--drp-time-input-icon-size, 16px);
+    height: var(--drp-time-input-icon-size, 16px);
+    margin-left: var(--drp-time-input-icon-gap, 12px);
+    color: var(--drp-time-input-icon-color, #888888);
+    pointer-events: none;
+  }
+
+  .drp-time-input-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .drp-time-field {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: var(--drp-time-field-padding, 10px 14px 10px 8px);
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--drp-time-field-color, #333333);
+    font-size: var(--drp-time-field-font-size, 13px);
+    font-family: inherit;
+  }
+
+  .drp-time-field::placeholder {
+    color: var(--drp-time-field-placeholder-color, #aaaaaa);
   }
 
   /* ── Compare calendar slot ── */

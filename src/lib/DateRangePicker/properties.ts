@@ -14,6 +14,7 @@ export type DateRangePreset = {
 
 export type DateRangePickerMode = 'range' | 'single';
 export type DateRangePickerAlign = 'left' | 'right';
+export type DateRangePickerTimeLayout = 'toggle' | 'inline';
 
 export type OptionalDateRangePickerProperties = {
   /** Currently selected start of range (bindable). */
@@ -52,6 +53,14 @@ export type OptionalDateRangePickerProperties = {
    * Opt-in. Default: false.
    */
   showTimeSelection?: boolean;
+  /**
+   * How the time-of-day inputs are presented when showTimeSelection is on (range mode):
+   * 'toggle' (default) shows a clock button that reveals a collapsible start/end time
+   * row below the dates; 'inline' renders each time input beside its date input on the
+   * same row, always visible, with no toggle. Has no effect unless showTimeSelection is
+   * true. Default: 'toggle'.
+   */
+  timeSelectionLayout?: DateRangePickerTimeLayout;
   /**
    * Make presets toggle instead of being one-way: clicking the already-selected
    * preset deselects it and reverts the draft to the committed selection. Lets a

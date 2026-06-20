@@ -609,6 +609,29 @@
   </div>
 </section>
 
+<!-- ── 12b. Inline time layout (timeSelectionLayout="inline") ── -->
+<section class="demo-section">
+  <h2>Range mode — inline time layout (timeSelectionLayout="inline")</h2>
+  <p class="section-note">
+    With <code>timeSelectionLayout="inline"</code> the start/end time inputs render beside their date
+    inputs on the same row — always visible, with no clock toggle. Seeding, validation, and the
+    Apply-time fold behave exactly as in the default toggle layout.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      presetCheckmark
+      showDateInputs
+      showTimeSelection
+      timeSelectionLayout="inline"
+      initialPresetLabel="Today"
+      placeholder="Select range + time"
+      testId="drp-datetime-inline-demo"
+    />
+  </div>
+</section>
+
 <!-- ── 13. Preset toggle-off (opt-in via presetToggle) ── -->
 <section class="demo-section">
   <h2>Range mode — preset toggle-off (presetToggle)</h2>

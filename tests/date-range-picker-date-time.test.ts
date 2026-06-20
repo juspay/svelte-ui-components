@@ -58,4 +58,44 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
     await endTime.fill('11:30 PM');
     await expect(applyButton).toBeEnabled();
   });
+
+  // timeSelectionLayout="inline" renders the time inputs beside their date inputs on
+  // the same row, always visible (no clock toggle), reusing the same validation.
+  test('inline layout: time inputs sit beside the dates with no toggle, and still gate Apply', async ({
+    page
+  }) => {
+    await page.goto('/components/date-range-picker');
+
+    const picker = page.locator('[data-pw="drp-datetime-inline-demo"]');
+    await expect(picker).toBeVisible();
+    await picker.getByRole('button', { name: 'Open date picker' }).click();
+    await expect(picker.locator('.drp-panel')).toBeVisible();
+
+    // No toggle in inline mode; the time inputs are visible immediately.
+    await expect(page.locator('[data-pw="drp-datetime-inline-demo-time-toggle"]')).toHaveCount(0);
+    const startTime = page.locator('[data-pw="drp-datetime-inline-demo-start-time"]');
+    const endTime = page.locator('[data-pw="drp-datetime-inline-demo-end-time"]');
+    await expect(startTime).toBeVisible();
+    await expect(endTime).toBeVisible();
+
+    // The start time input is on the same row as its date box and to its right.
+    const dateBox = await page.locator('[data-pw="drp-datetime-inline-demo-start-date"]').boundingBox();
+    const timeBox = await startTime.boundingBox();
+    expect(dateBox).not.toBeNull();
+    expect(timeBox).not.toBeNull();
+    if (dateBox && timeBox) {
+      const dateMidY = dateBox.y + dateBox.height / 2;
+      const timeMidY = timeBox.y + timeBox.height / 2;
+      expect(Math.abs(dateMidY - timeMidY)).toBeLessThan(12);
+      expect(timeBox.x).toBeGreaterThan(dateBox.x);
+    }
+
+    // Apply still gates on time validity (shared with the toggle layout).
+    const applyButton = picker.getByRole('button', { name: 'Apply date selection' });
+    await expect(applyButton).toBeEnabled();
+    await startTime.fill('99:99 ZZ');
+    await expect(applyButton).toBeDisabled();
+    await startTime.fill('09:30 AM');
+    await expect(applyButton).toBeEnabled();
+  });
 });

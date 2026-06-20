@@ -30,6 +30,7 @@
     presetCheckmark = false,
     showDateInputs = false,
     showTimeSelection = false,
+    timeSelectionLayout = 'toggle',
     presetToggle = false,
     placeholder = 'Select date',
     dualMonth,
@@ -78,6 +79,14 @@
   let startTimeDisplay: string = $state('12:00 AM');
   let endTimeDisplay: string = $state('11:59 PM');
   let showTimeRow: boolean = $state(false);
+
+  // Inline time layout (timeSelectionLayout="inline"): the start/end time inputs
+  // render beside their date inputs on the same row, always visible — no clock
+  // toggle and no collapsible row. All seeding/validation/fold logic is shared
+  // with the default toggle layout (it keys off showTimeSelection, not the layout).
+  const isInlineTime: boolean = $derived(
+    showTimeSelection && timeSelectionLayout === 'inline' && mode === 'range'
+  );
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -668,32 +677,81 @@
         <!-- Calendar area -->
         <div class="drp-calendars">
           {#if (showDateInputs || showTimeSelection) && mode === 'range'}
-            <div class="drp-datetime-header">
+            <div class="drp-datetime-header" class:drp-datetime-header-inline={isInlineTime}>
               <div class="drp-date-input-row">
-                <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
-                  <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
-                </div>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
-                <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
-                  <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
-                </div>
-                {#if showTimeSelection}
-                  <button
-                    type="button"
-                    class="drp-time-toggle"
-                    class:drp-time-toggle-active={showTimeRow}
-                    aria-label="Toggle time selection"
-                    aria-pressed={showTimeRow}
-                    data-pw={testId ? `${testId}-time-toggle` : null}
-                    onclick={() => (showTimeRow = !showTimeRow)}
-                  >
-                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    <span class="drp-time-toggle-icon" aria-hidden="true">{@html clockSvg}</span>
-                  </button>
+                {#if isInlineTime}
+                  <div class="drp-date-time-group">
+                    <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
+                      <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
+                    </div>
+                    <div
+                      class="drp-time-input drp-time-input-inline"
+                      class:drp-time-input-invalid={!isStartTimeValid}
+                    >
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <span class="drp-time-input-icon" aria-hidden="true">{@html clockSvg}</span>
+                      <input
+                        type="text"
+                        class="drp-time-field"
+                        bind:value={startTimeDisplay}
+                        maxlength="8"
+                        placeholder="12:00 AM"
+                        aria-label="Start time"
+                        aria-invalid={!isStartTimeValid}
+                        data-pw={testId ? `${testId}-start-time` : null}
+                      />
+                    </div>
+                  </div>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
+                  <div class="drp-date-time-group">
+                    <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
+                      <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
+                    </div>
+                    <div
+                      class="drp-time-input drp-time-input-inline"
+                      class:drp-time-input-invalid={!isEndTimeValid}
+                    >
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <span class="drp-time-input-icon" aria-hidden="true">{@html clockSvg}</span>
+                      <input
+                        type="text"
+                        class="drp-time-field"
+                        bind:value={endTimeDisplay}
+                        maxlength="8"
+                        placeholder="11:59 PM"
+                        aria-label="End time"
+                        aria-invalid={!isEndTimeValid}
+                        data-pw={testId ? `${testId}-end-time` : null}
+                      />
+                    </div>
+                  </div>
+                {:else}
+                  <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
+                    <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
+                  </div>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
+                  <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
+                    <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
+                  </div>
+                  {#if showTimeSelection}
+                    <button
+                      type="button"
+                      class="drp-time-toggle"
+                      class:drp-time-toggle-active={showTimeRow}
+                      aria-label="Toggle time selection"
+                      aria-pressed={showTimeRow}
+                      data-pw={testId ? `${testId}-time-toggle` : null}
+                      onclick={() => (showTimeRow = !showTimeRow)}
+                    >
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <span class="drp-time-toggle-icon" aria-hidden="true">{@html clockSvg}</span>
+                    </button>
+                  {/if}
                 {/if}
               </div>
-              {#if showTimeSelection && showTimeRow}
+              {#if showTimeSelection && !isInlineTime && showTimeRow}
                 <div class="drp-time-input-row">
                   <div class="drp-time-input" class:drp-time-input-invalid={!isStartTimeValid}>
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -1205,6 +1263,25 @@
 
   .drp-time-field::placeholder {
     color: var(--drp-time-field-placeholder-color, #aaaaaa);
+  }
+
+  /* ── Inline time layout (timeSelectionLayout="inline") ── */
+  /* Each date input is paired with its time input on the same row: the date box
+     flexes to fill, the time input takes a fixed compact width beside it. */
+  .drp-date-time-group {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: var(--drp-datetime-inline-gap, 8px);
+  }
+
+  .drp-date-time-group .drp-date-input {
+    flex: 1;
+  }
+
+  .drp-time-input.drp-time-input-inline {
+    flex: 0 0 var(--drp-time-inline-width, 116px);
   }
 
   /* ── Compare calendar slot ── */

@@ -682,7 +682,8 @@
                 {#if isInlineTime}
                   <div class="drp-date-time-group">
                     <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
-                      <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
+                      <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span
+                      >
                     </div>
                     <div
                       class="drp-time-input drp-time-input-inline"

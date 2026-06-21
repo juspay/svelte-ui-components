@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.72.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.0)
+
+The inline time-selection commits landed with two prettier --check violations
+(a long-line `&lt;/span&gt;` wrap in DateRangePicker.svelte and a paragraph re-wrap in
+the demo page), which failed the "Release and Publish" CI lint step and blocked
+the 2.74.0 release. Apply `prettier --write`; `pnpm lint` is now clean.
+
+## [2.73.0](https://github.com/juspay/svelte-ui-components/compare/2.73.0..2.72.0) - 18 June 2026
 
 ## [2.72.0](https://github.com/juspay/svelte-ui-components/compare/2.72.0..2.71.0) - 18 June 2026
 

@@ -2,17 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.2)
 
-handlePreset set draftStart/draftEnd from the preset's getValue() (which
-carries the correct time-of-day for intraday presets such as 'Last 30
-minutes' / 'Last 12 Hours') but never updated startTimeDisplay/endTimeDisplay.
-On Apply, applyTimeDisplay folds the stale display strings back onto the draft
-dates, overwriting the preset's time with the previous value (often 12:00 AM),
-so the committed range starts at midnight instead of the preset's window.
+The Modal content area (.slot-content) had no padding and exposed no
+variable to control it, unlike the header (--modal-header-padding) and
+footer (--modal-footer-padding). Consumers had to reach into the internal
+.slot-content class to inset the body.
 
-Reseed startTimeDisplay/endTimeDisplay from the preset's start/end when
-showTimeSelection is active, mirroring openPicker's seeding logic.
+Add padding: var(--modal-content-padding, 0) so the body padding is
+controllable via a token, mirroring header/footer. Defaults to 0, so
+existing modals are unaffected; consumers opt in by setting the variable.
+
+## [2.73.2](https://github.com/juspay/svelte-ui-components/compare/2.73.2..2.73.1) - 22 June 2026
 
 ## [2.73.1](https://github.com/juspay/svelte-ui-components/compare/2.73.1..2.73.0) - 21 June 2026
 

@@ -254,6 +254,7 @@
     display: var(--modal-display, flex);
     overflow-y: var(--modal-overflow-y, scroll);
     scrollbar-width: var(--modal-scrollbar-width, none);
+    padding: var(--modal-content-padding, 0);
   }
 
   .slot-content::-webkit-scrollbar {

@@ -2,12 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.1)
 
-The inline time-selection commits landed with two prettier --check violations
-(a long-line `&lt;/span&gt;` wrap in DateRangePicker.svelte and a paragraph re-wrap in
-the demo page), which failed the "Release and Publish" CI lint step and blocked
-the 2.74.0 release. Apply `prettier --write`; `pnpm lint` is now clean.
+handlePreset set draftStart/draftEnd from the preset's getValue() (which
+carries the correct time-of-day for intraday presets such as 'Last 30
+minutes' / 'Last 12 Hours') but never updated startTimeDisplay/endTimeDisplay.
+On Apply, applyTimeDisplay folds the stale display strings back onto the draft
+dates, overwriting the preset's time with the previous value (often 12:00 AM),
+so the committed range starts at midnight instead of the preset's window.
+
+Reseed startTimeDisplay/endTimeDisplay from the preset's start/end when
+showTimeSelection is active, mirroring openPicker's seeding logic.
+
+## [2.73.1](https://github.com/juspay/svelte-ui-components/compare/2.73.1..2.73.0) - 21 June 2026
 
 ## [2.73.0](https://github.com/juspay/svelte-ui-components/compare/2.73.0..2.72.0) - 18 June 2026
 

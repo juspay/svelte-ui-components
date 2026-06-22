@@ -420,6 +420,15 @@
     if (mode === 'range') {
       draftStart = start;
       draftEnd = end;
+      // Reseed the time-of-day inputs from the preset's own start/end so a
+      // time-bearing preset (e.g. "Last 30 minutes" / "Last 12 Hours") is not
+      // silently overwritten by a stale display string in handleApply's
+      // applyTimeDisplay. Without this, the committed range snaps back to the
+      // previous display time (often 12:00 AM) instead of the preset's window.
+      if (showTimeSelection) {
+        startTimeDisplay = formatTimeDisplay(start);
+        endTimeDisplay = formatTimeDisplay(end);
+      }
       // Navigate left calendar to show the preset's start month
       leftYear = start.getFullYear();
       leftMonth = start.getMonth();

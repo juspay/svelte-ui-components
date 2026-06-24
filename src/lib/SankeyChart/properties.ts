@@ -63,6 +63,25 @@ export type OptionalSankeyChartProperties = {
    * through to the default palette colour.
    */
   nodeColorResolver?: (id: string, label: string | null) => string | null;
+  /**
+   * Minimum rendered thickness (px) for any link or node bar. Tiny flows that would otherwise
+   * collapse to sub-pixel widths remain at this thickness so they stay visually discoverable.
+   * Defaults to `1`. Lighthouse uses `2` for dense payment-flow diagrams.
+   */
+  minLinkWidth?: number;
+  /**
+   * Horizontal offset in pixels applied to every node data-label, relative to the default
+   * position (left of first-column nodes, right of all other nodes). Positive values push
+   * the label further away from the node; negative values pull it closer. Lighthouse uses
+   * `30` to create breathing room between the node bar and its label.
+   */
+  dataLabelOffsetX?: number;
+  /**
+   * When `true`, hovering a node does **not** dim unrelated nodes — all nodes and links
+   * remain at full opacity. Useful for dense diagrams where the dimming effect makes it hard
+   * to read the overall structure. Defaults to `false` (standard dim-on-hover behaviour).
+   */
+  disableDimOnHover?: boolean;
 };
 
 export type SankeyChartEventProperties = {

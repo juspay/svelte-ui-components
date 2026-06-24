@@ -1,6 +1,6 @@
 # BarChart
 
-A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, and click events. Zero external dependencies — built from pure SVG with CSS custom property theming.
+A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, click events, declarative and imperative bar highlighting, first-point normalisation across series, top-N clipping with overflow aggregation, and a graphics-free legend/label-only rendering mode. Zero external dependencies — built from pure SVG with CSS custom property theming.
 
 ## Usage
 
@@ -84,34 +84,100 @@ A responsive SVG bar chart for comparing categorical values. Supports vertical a
 </BarChart>
 ```
 
+### Declarative Highlight
+
+Set `highlightedIndex` to a zero-based category index to emphasise that bar and dim the others. Set to `null` to clear.
+
+```svelte
+<script>
+  let highlighted = $state(2);
+</script>
+
+<BarChart {data} highlightedIndex={highlighted} />
+<button onclick={() => (highlighted = null)}>Clear highlight</button>
+```
+
+### Imperative Highlight via `onChartReady`
+
+Receive a `ChartHighlightAPI` handle on mount to drive highlighting from outside the chart (e.g. synchronised with a voice narrator or a sibling component). The handle's `type` is always `'bar-chart'`.
+
+```svelte
+<script>
+  import type { ChartHighlightAPI } from '@juspay/svelte-ui-components';
+
+  let chartApi: ChartHighlightAPI | null = null;
+
+  const handleReady = (api: ChartHighlightAPI) => {
+    chartApi = api;
+  };
+
+  const highlightSecond = () => chartApi?.highlight(1);
+  const clear = () => chartApi?.highlight(null);
+</script>
+
+<BarChart {data} onChartReady={handleReady} />
+<button onclick={highlightSecond}>Highlight Feb</button>
+<button onclick={clear}>Clear</button>
+```
+
+### Normalise to First Point
+
+Each series' values are expressed as a percentage of its own first data point (baseline = 100). Useful when comparing relative growth across series with very different starting magnitudes.
+
+```svelte
+<BarChart {series} normaliseToFirstPoint groupMode="grouped" showLegend showValues />
+```
+
+### Top-N Clipping
+
+Show only the top `topN` bars individually and aggregate the remainder into a single overflow bar.
+
+```svelte
+<BarChart {data} topN={5} overflowLabel="Everything else" showValues />
+```
+
+### Hide Bar Graphics
+
+Render axes, gridlines, and legend without drawing any bar rectangles — useful for label-only or legend-only companion views.
+
+```svelte
+<BarChart {data} hideBarGraphics showXAxis showYAxis />
+```
+
 ## Props
 
-| Prop           | Type                                   | Required | Default      | Description                                                                                                                                                                                                                                                                   |
-| -------------- | -------------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| data           | `BarChartDataPoint[]`                  | No       | `-`          | Array of `{label, value, range?, color?}` for a single series. Provide either `data` or `series`. Each data point maps to one bar. `range` enables floating/range bars (`[low, high]`). `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`). |
-| series         | `BarChartSeries[]`                     | No       | `-`          | Array of `{name, data, color?}` for multi-series charts. When provided, overrides `data`. `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`).                                                                                               |
-| groupMode      | `'grouped' \| 'stacked'`               | No       | `'grouped'`  | Layout mode for multi-series. `grouped` places bars side-by-side within each category; `stacked` stacks them vertically.                                                                                                                                                      |
-| orientation    | `'vertical' \| 'horizontal'`           | No       | `'vertical'` | Bar orientation.                                                                                                                                                                                                                                                              |
-| showValues     | `boolean`                              | No       | `false`      | Whether to render the numeric value as a text label at the end of each bar. Disabled in stacked mode.                                                                                                                                                                         |
-| showGridlines  | `boolean`                              | No       | `true`       | Whether to show dashed gridlines across the value axis.                                                                                                                                                                                                                       |
-| showXAxis      | `boolean`                              | No       | `true`       | Whether to render the X axis (ticks, labels, axis line).                                                                                                                                                                                                                      |
-| showYAxis      | `boolean`                              | No       | `true`       | Whether to render the Y axis.                                                                                                                                                                                                                                                 |
-| showLegend     | `boolean`                              | No       | `false`      | Whether to render the legend above the chart. Only applies when `series` is provided.                                                                                                                                                                                         |
-| barPadding     | `number`                               | No       | `0.2`        | Space between bars as a fraction of bar width (0 = no gaps, 0.5 = half-width gaps).                                                                                                                                                                                           |
-| barRadius      | `number`                               | No       | `4`          | Corner radius of each bar in pixels.                                                                                                                                                                                                                                          |
-| aspectRatio    | `number`                               | No       | `16/9`       | Width-to-height ratio for the chart. Used when parent height is not constrained.                                                                                                                                                                                              |
-| xAxisLabel     | `string`                               | No       | `-`          | Text label shown below the X axis.                                                                                                                                                                                                                                            |
-| yAxisLabel     | `string`                               | No       | `-`          | Text label shown beside the Y axis (rotated 90°).                                                                                                                                                                                                                             |
-| yDomain        | `[number, number]`                     | No       | auto         | Fixed `[min, max]` for the value axis. When omitted, domain is derived from data with nice rounding.                                                                                                                                                                          |
-| valueFormat    | `(value: number) => string`            | No       | abbreviated  | Formatter for bar values. Default abbreviates with K/M/B suffixes (e.g., 1500 → "1.5K").                                                                                                                                                                                      |
-| stackNormalize | `boolean`                              | No       | `false`      | When `true` and `groupMode="stacked"`, normalises stacked values to 100% so bars represent proportions rather than absolutes. Appends `%` to value labels unless `valueFormat` is provided.                                                                                   |
-| scrollable     | `boolean`                              | No       | `false`      | When `true`, wraps the chart in a horizontally-scrollable container. Use with `minBandWidth` to keep bars readable at small container widths.                                                                                                                                 |
-| minBandWidth   | `number`                               | No       | `48`         | Minimum pixel width per category band when `scrollable` is `true`. The inner chart width expands until each band is at least this wide.                                                                                                                                       |
-| tooltipSnippet | `Snippet<[BarChartDataPoint, number]>` | No       | `-`          | Custom tooltip content. Receives the hovered data point and its index. Replaces the default tooltip.                                                                                                                                                                          |
-| empty          | `Snippet`                              | No       | `-`          | Content rendered when `data` is empty. When omitted, nothing renders for empty data.                                                                                                                                                                                          |
-| renderOverlay  | `Snippet<[BarChartRenderContext]>`     | No       | `-`          | Escape-hatch snippet rendered inside the SVG transform group after all bars. Use for custom overlays, annotations, or drop-off indicators in SVG coordinate space. Receives `{ innerWidth, innerHeight, margin }`.                                                            |
-| testId         | `string`                               | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                                       |
-| classes        | `string`                               | No       | `-`          | CSS class string applied to the top-level element. Useful for theming via class-scoped CSS variable overrides.                                                                                                                                                                |
+| Prop                  | Type                                   | Required | Default       | Description                                                                                                                                                                                                                                                                   |
+| --------------------- | -------------------------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data                  | `BarChartDataPoint[]`                  | No       | `-`           | Array of `{label, value, range?, color?}` for a single series. Provide either `data` or `series`. Each data point maps to one bar. `range` enables floating/range bars (`[low, high]`). `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`). |
+| series                | `BarChartSeries[]`                     | No       | `-`           | Array of `{name, data, color?}` for multi-series charts. When provided, overrides `data`. `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`).                                                                                               |
+| groupMode             | `'grouped' \| 'stacked'`               | No       | `'grouped'`   | Layout mode for multi-series. `grouped` places bars side-by-side; `stacked` stacks them.                                                                                                                                                                                      |
+| orientation           | `'vertical' \| 'horizontal'`           | No       | `'vertical'`  | Bar orientation.                                                                                                                                                                                                                                                              |
+| showValues            | `boolean`                              | No       | `false`       | Whether to render the numeric value as a text label at the end of each bar. Disabled in stacked mode.                                                                                                                                                                         |
+| showGridlines         | `boolean`                              | No       | `true`        | Whether to show dashed gridlines across the value axis.                                                                                                                                                                                                                       |
+| showXAxis             | `boolean`                              | No       | `true`        | Whether to render the X axis (ticks, labels, axis line).                                                                                                                                                                                                                      |
+| showYAxis             | `boolean`                              | No       | `true`        | Whether to render the Y axis.                                                                                                                                                                                                                                                 |
+| showLegend            | `boolean`                              | No       | `false`       | Whether to render the legend above the chart. Only applies when `series` is provided.                                                                                                                                                                                         |
+| barPadding            | `number`                               | No       | `0.2`         | Space between bars as a fraction of bar width (0 = no gaps, 0.5 = half-width gaps).                                                                                                                                                                                          |
+| barRadius             | `number`                               | No       | `4`           | Corner radius of each bar in pixels.                                                                                                                                                                                                                                          |
+| aspectRatio           | `number`                               | No       | `16/9`        | Width-to-height ratio for the chart.                                                                                                                                                                                                                                          |
+| xAxisLabel            | `string`                               | No       | `-`           | Text label shown below the X axis.                                                                                                                                                                                                                                            |
+| yAxisLabel            | `string`                               | No       | `-`           | Text label shown beside the Y axis (rotated 90°).                                                                                                                                                                                                                             |
+| yDomain               | `[number, number]`                     | No       | auto          | Fixed `[min, max]` for the value axis.                                                                                                                                                                                                                                        |
+| valueFormat           | `(value: number) => string`            | No       | abbreviated   | Formatter for bar values. Default abbreviates with K/M/B suffixes.                                                                                                                                                                                                            |
+| stackNormalize        | `boolean`                              | No       | `false`       | Normalises stacked values to 100%. Applies only when `groupMode="stacked"`. Appends `%` to value labels unless `valueFormat` is supplied.                                                                                                                                    |
+| scrollable            | `boolean`                              | No       | `false`       | Wraps the chart in a horizontally-scrollable container. Use with `minBandWidth` to keep bars readable.                                                                                                                                                                        |
+| minBandWidth          | `number`                               | No       | `48`          | Minimum pixel width per category band when `scrollable` is `true`.                                                                                                                                                                                                            |
+| onChartReady          | `(api: ChartHighlightAPI) => void`     | No       | `-`           | Called once on mount with an imperative highlight handle. Use `api.highlight(index)` to emphasise a bar; `api.highlight(null)` clears. `api.getCategories()` returns the ordered label list. `api.type` is always `'bar-chart'`.                                              |
+| highlightedIndex      | `number \| null`                       | No       | `null`        | Declarative highlight: the bar at this zero-based index is shown at full opacity; all others are dimmed. Overrides any index set via `onChartReady`. Set to `null` to show all bars normally.                                                                                 |
+| normaliseToFirstPoint | `boolean`                              | No       | `false`       | When `true`, each series' values are expressed as a percentage of that series' own first data point (baseline = 100). Series whose first point is zero are left unchanged.                                                                                                    |
+| topN                  | `number`                               | No       | `-`           | Keep only the top `topN` bars by value (descending). The remaining bars are summed into one overflow bar labelled by `overflowLabel`. Has no effect when the chart already has `topN` or fewer bars.                                                                          |
+| overflowLabel         | `string`                               | No       | `"Other"`     | Label for the aggregated overflow bar produced by `topN`. Has no effect when `topN` is not set.                                                                                                                                                                               |
+| hideBarGraphics       | `boolean`                              | No       | `false`       | When `true`, bar rectangles are not drawn. Axis labels, gridlines, and the legend remain visible.                                                                                                                                                                             |
+| tooltipSnippet        | `Snippet<[BarChartDataPoint, number]>` | No       | `-`           | Custom tooltip content. Receives the hovered data point and its index. Replaces the default tooltip.                                                                                                                                                                          |
+| empty                 | `Snippet`                              | No       | `-`           | Content rendered when `data` is empty.                                                                                                                                                                                                                                        |
+| renderOverlay         | `Snippet<[BarChartRenderContext]>`     | No       | `-`           | Escape-hatch snippet rendered inside the SVG transform group after all bars. Receives `{ innerWidth, innerHeight, margin }`.                                                                                                                                                  |
+| testId                | `string`                               | No       | `-`           | Value for the `data-pw` attribute on the chart container.                                                                                                                                                                                                                     |
+| classes               | `string`                               | No       | `-`           | CSS class string applied to the top-level element.                                                                                                                                                                                                                            |
 
 ## Events
 
@@ -124,49 +190,86 @@ A responsive SVG bar chart for comparing categorical values. Supports vertical a
 
 Override these custom properties to theme the component.
 
-| Variable                        | Default                     | CSS Property     | Description                                                                                                                           |
-| ------------------------------- | --------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `--chart-background`            | `transparent`               | background       | Background color of the chart container.                                                                                              |
-| `--chart-font-family`           | `inherit`                   | font-family      | Font family for all chart text.                                                                                                       |
-| `--chart-transition-duration`   | `0.2s`                      | transition       | Duration of hover transitions.                                                                                                        |
-| `--chart-axis-color`            | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                                                                                     |
-| `--chart-axis-stroke-width`     | `1`                         | stroke-width     | Width of axis lines and tick marks.                                                                                                   |
-| `--chart-axis-font-size`        | `11px`                      | font-size        | Font size of tick labels.                                                                                                             |
-| `--chart-axis-label-color`      | `#333`                      | fill             | Color of axis labels (xAxisLabel, yAxisLabel).                                                                                        |
-| `--chart-axis-label-font-size`  | `12px`                      | font-size        | Font size of axis labels.                                                                                                             |
-| `--chart-gridline-color`        | `#e0e0e0`                   | stroke           | Color of gridlines.                                                                                                                   |
-| `--chart-gridline-opacity`      | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                                                                                 |
-| `--chart-gridline-dash`         | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                                                                                           |
-| `--chart-tooltip-background`    | `rgba(0,0,0,0.85)`          | background       | Background of default tooltip.                                                                                                        |
-| `--chart-tooltip-color`         | `#fff`                      | color            | Text color of default tooltip.                                                                                                        |
-| `--chart-tooltip-font-size`     | `12px`                      | font-size        | Font size of tooltip content.                                                                                                         |
-| `--chart-tooltip-padding`       | `8px 12px`                  | padding          | Inner padding of tooltip.                                                                                                             |
-| `--chart-tooltip-border-radius` | `4px`                       | border-radius    | Border radius of tooltip.                                                                                                             |
-| `--chart-tooltip-shadow`        | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                                                                                                |
-| `--chart-legend-gap`            | `16px`                      | gap              | Space between legend items.                                                                                                           |
-| `--chart-legend-font-size`      | `12px`                      | font-size        | Font size of legend labels.                                                                                                           |
-| `--chart-legend-swatch-size`    | `12px`                      | width, height    | Size of color swatches in the legend.                                                                                                 |
-| `--chart-legend-color`          | `#333`                      | color            | Color of legend text.                                                                                                                 |
-| `--chart-empty-padding`         | `32px 24px`                 | padding          | Padding around the empty state content.                                                                                               |
-| `--chart-empty-color`           | `#9ca3af`                   | color            | Text color of empty state default.                                                                                                    |
-| `--barchart-bar-hover-opacity`  | `1`                         | opacity          | Opacity of the hovered bar.                                                                                                           |
-| `--barchart-bar-dimmed-opacity` | `0.3`                       | opacity          | Opacity of non-hovered bars when hovering.                                                                                            |
-| `--barchart-value-color`        | `#333`                      | fill             | Color of value labels.                                                                                                                |
-| `--barchart-value-font-size`    | `11px`                      | font-size        | Font size of value labels.                                                                                                            |
-| `--barchart-scroll-area-height` | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`. Useful to constrain tall charts while still allowing horizontal panning. |
+| Variable                           | Default                     | CSS Property     | Description                                                                                                                           |
+| ---------------------------------- | --------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--chart-background`               | `transparent`               | background       | Background color of the chart container.                                                                                              |
+| `--chart-font-family`              | `inherit`                   | font-family      | Font family for all chart text.                                                                                                       |
+| `--chart-transition-duration`      | `0.2s`                      | transition       | Duration of hover transitions.                                                                                                        |
+| `--chart-axis-color`               | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                                                                                     |
+| `--chart-axis-stroke-width`        | `1`                         | stroke-width     | Width of axis lines and tick marks.                                                                                                   |
+| `--chart-axis-font-size`           | `11px`                      | font-size        | Font size of tick labels.                                                                                                             |
+| `--chart-axis-label-color`         | `#333`                      | fill             | Color of axis labels (xAxisLabel, yAxisLabel).                                                                                        |
+| `--chart-axis-label-font-size`     | `12px`                      | font-size        | Font size of axis labels.                                                                                                             |
+| `--chart-gridline-color`           | `#e0e0e0`                   | stroke           | Color of gridlines.                                                                                                                   |
+| `--chart-gridline-opacity`         | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                                                                                 |
+| `--chart-gridline-dash`            | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                                                                                           |
+| `--chart-tooltip-background`       | `rgba(0,0,0,0.85)`          | background       | Background of default tooltip.                                                                                                        |
+| `--chart-tooltip-color`            | `#fff`                      | color            | Text color of default tooltip.                                                                                                        |
+| `--chart-tooltip-font-size`        | `12px`                      | font-size        | Font size of tooltip content.                                                                                                         |
+| `--chart-tooltip-padding`          | `8px 12px`                  | padding          | Inner padding of tooltip.                                                                                                             |
+| `--chart-tooltip-border-radius`    | `4px`                       | border-radius    | Border radius of tooltip.                                                                                                             |
+| `--chart-tooltip-shadow`           | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                                                                                                |
+| `--chart-legend-gap`               | `16px`                      | gap              | Space between legend items.                                                                                                           |
+| `--chart-legend-font-size`         | `12px`                      | font-size        | Font size of legend labels.                                                                                                           |
+| `--chart-legend-swatch-size`       | `12px`                      | width, height    | Size of color swatches in the legend.                                                                                                 |
+| `--chart-legend-color`             | `#333`                      | color            | Color of legend text.                                                                                                                 |
+| `--chart-empty-padding`            | `32px 24px`                 | padding          | Padding around the empty state content.                                                                                               |
+| `--chart-empty-color`              | `#9ca3af`                   | color            | Text color of empty state default.                                                                                                    |
+| `--barchart-bar-hover-opacity`     | `1`                         | opacity          | Opacity of the hovered bar.                                                                                                           |
+| `--barchart-bar-highlighted-opacity` | `1`                       | opacity          | Opacity of a bar emphasised via `highlightedIndex` or `onChartReady`.                                                                |
+| `--barchart-bar-dimmed-opacity`    | `0.3`                       | opacity          | Opacity of non-highlighted / non-hovered bars when a highlight is active.                                                            |
+| `--barchart-value-color`           | `#333`                      | fill             | Color of value labels.                                                                                                                |
+| `--barchart-value-font-size`       | `11px`                      | font-size        | Font size of value labels.                                                                                                            |
+| `--barchart-scroll-area-height`    | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`.                                                                         |
 
 ## Type Reference
 
 ```typescript
+import type { ChartHighlightAPI } from '@juspay/svelte-ui-components';
+
+type ChartHighlightAPI = {
+  highlight: (index: number | null) => void;
+  getCategories: () => string[];
+  type: 'bar-chart' | 'line-chart' | 'donut-chart';
+};
+
 type BarChartDataPoint = {
   label: string;
   value: number;
-  color?: string;
+  range?: [number, number];
+  color?: BarFill;
 };
 
 type BarChartSeries = {
   name: string;
   data: BarChartDataPoint[];
-  color?: string;
+  color?: BarFill;
 };
+```
+
+## Web Component
+
+```html
+<script type="module" src="svelte-ui-components.js"></script>
+
+<sui-bar-chart
+  aspect-ratio="2"
+  show-values
+  top-n="5"
+  overflow-label="Other"
+  test-id="revenue-chart"
+></sui-bar-chart>
+
+<script>
+  const chart = document.querySelector('sui-bar-chart');
+  chart.data = [
+    { label: 'Jan', value: 4200 },
+    { label: 'Feb', value: 3800 },
+    { label: 'Mar', value: 5100 }
+  ];
+  // Imperative highlight via onChartReady
+  chart.onChartReady = (api) => {
+    api.highlight(1); // highlight Feb
+  };
+</script>
 ```

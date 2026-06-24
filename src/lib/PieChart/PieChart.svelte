@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { PieChartProperties } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
+  import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
   import { arcPath } from '$lib/_chart/paths';
   import { computePieLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
@@ -31,7 +33,11 @@
     classes,
     semiCircle = false,
     legendShowValues = false,
-    percentDecimals = 0
+    percentDecimals = 0,
+    onChartReady,
+    highlightedIndex = null,
+    changePercentage,
+    changeInvertColors = false
   }: PieChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -40,30 +46,39 @@
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hoveredIndex = $state<number | null>(null);
+  let programmaticIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
 
-  // Aspect ratio read from --piechart-semi-aspect-ratio CSS variable.
-  // Uses $effect so it re-reads whenever containerEl binds or semiCircle changes
-  // (e.g. media-query theme switch), not just on initial mount.
+  // ── Highlight API ──────────────────────────────────────────────
+
+  // Aspect ratio read from the --piechart-semi-aspect-ratio CSS variable on mount.
   let semiAspectRatioCssVar = $state(2);
 
-  // eslint-disable-next-line no-restricted-syntax
-  $effect(() => {
-    // Track semiCircle and containerEl so the effect re-runs when either changes.
-    void semiCircle;
-    void containerEl;
-    if (typeof window === 'undefined' || containerEl === null) {
-      return;
-    }
-    const rawValue = getComputedStyle(containerEl)
-      .getPropertyValue('--piechart-semi-aspect-ratio')
-      .trim();
-    const parsed = parseFloat(rawValue);
-    if (!Number.isNaN(parsed) && parsed > 0) {
-      semiAspectRatioCssVar = parsed;
+  onMount(() => {
+    onChartReady?.({
+      highlight: (index) => {
+        programmaticIndex = index;
+      },
+      getCategories: () => data.map((d) => d.label),
+      type: 'donut-chart'
+    });
+
+    if (typeof window !== 'undefined' && containerEl !== null) {
+      const rawValue = getComputedStyle(containerEl)
+        .getPropertyValue('--piechart-semi-aspect-ratio')
+        .trim();
+      const parsed = parseFloat(rawValue);
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        semiAspectRatioCssVar = parsed;
+      }
     }
   });
+
+  // ── Active index ───────────────────────────────────────────────
+  // Precedence: mouse hover > declarative highlightedIndex prop > imperative API.
+
+  let activeIndex = $derived<number | null>(hoveredIndex ?? highlightedIndex ?? programmaticIndex);
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -146,6 +161,10 @@
 
   // ── Tooltip ────────────────────────────────────────────────────
 
+  // Tooltip visibility tracks hover only. activeIndex also covers declarative/imperative
+  // highlights, but those arrive without mouse coordinates, so a tooltip driven by them
+  // would render at the top-left (mouseX/mouseY still 0). Highlight styling uses
+  // activeIndex; the tooltip stays gated on hoveredIndex.
   let tooltipData = $derived.by(() => {
     if (hoveredIndex === null || !slices[hoveredIndex]) {
       return null;
@@ -209,8 +228,8 @@
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <path
             class="slice"
-            class:hovered={hoveredIndex === slice.index}
-            class:dimmed={hoveredIndex !== null && hoveredIndex !== slice.index}
+            class:hovered={activeIndex === slice.index}
+            class:dimmed={activeIndex !== null && activeIndex !== slice.index}
             d={slice.path}
             fill={slice.color}
             aria-label="{slice.label}: {format(slice.value)}"
@@ -249,6 +268,12 @@
         {/if}
       </g>
     </ChartContainer>
+
+    {#if typeof changePercentage === 'number'}
+      <div class="pie-delta-badge">
+        <DeltaIndicator value={changePercentage} invertColors={changeInvertColors} />
+      </div>
+    {/if}
 
     {#if showLegend && legendShowValues}
       <ul class="pie-legend-values">
@@ -311,6 +336,13 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+  }
+  .pie-delta-badge {
+    position: absolute;
+    top: var(--piechart-delta-top, 8px);
+    right: var(--piechart-delta-right, 8px);
+    z-index: 2;
+    pointer-events: none;
   }
   .chart-tooltip-slot {
     position: absolute;

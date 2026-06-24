@@ -71,7 +71,8 @@ export const componentNav: NavGroup[] = [
       { name: 'IconStack', slug: 'icon-stack' },
       { name: 'Snippet', slug: 'snippet' },
       { name: 'RelativeTime', slug: 'relative-time' },
-      { name: 'EmptyState', slug: 'empty-state' }
+      { name: 'EmptyState', slug: 'empty-state' },
+      { name: 'DeltaIndicator', slug: 'delta-indicator' }
     ]
   },
   {
@@ -81,7 +82,9 @@ export const componentNav: NavGroup[] = [
       { name: 'AreaChart', slug: 'area-chart' },
       { name: 'BarChart', slug: 'bar-chart' },
       { name: 'PieChart', slug: 'pie-chart' },
-      { name: 'SankeyChart', slug: 'sankey-chart' }
+      { name: 'SankeyChart', slug: 'sankey-chart' },
+      { name: 'DualAxisBarChart', slug: 'dual-axis-bar-chart' },
+      { name: 'FunnelChart', slug: 'funnel-chart' }
     ]
   },
   {

@@ -44,6 +44,28 @@
     { source: 'docs', target: 'signup', value: 15 },
     { source: 'docs', target: 'bounce', value: 10 }
   ];
+
+  // Dense payment flow — tiny values would collapse without minLinkWidth
+  const paymentNodes = [
+    { id: 'card', label: 'Card', color: '#6366f1' },
+    { id: 'upi', label: 'UPI', color: '#22c55e' },
+    { id: 'wallet', label: 'Wallet', color: '#f59e0b' },
+    { id: 'success', label: 'Success', color: '#10b981' },
+    { id: 'pending', label: 'Pending', color: '#f97316' },
+    { id: 'failed', label: 'Failed', color: '#ef4444' }
+  ];
+
+  const paymentLinks = [
+    { source: 'card', target: 'success', value: 820 },
+    { source: 'card', target: 'pending', value: 5 },
+    { source: 'card', target: 'failed', value: 3 },
+    { source: 'upi', target: 'success', value: 940 },
+    { source: 'upi', target: 'pending', value: 2 },
+    { source: 'upi', target: 'failed', value: 1 },
+    { source: 'wallet', target: 'success', value: 310 },
+    { source: 'wallet', target: 'pending', value: 4 },
+    { source: 'wallet', target: 'failed', value: 2 }
+  ];
 </script>
 
 <div class="page-header">
@@ -64,4 +86,34 @@
 <h3>Website Traffic Flow</h3>
 <div class="demo-row">
   <SankeyChart nodes={trafficNodes} links={trafficLinks} />
+</div>
+
+<h3>dataLabelOffsetX — Extra breathing room between nodes and labels (offset: 30px)</h3>
+<div class="demo-row">
+  <SankeyChart nodes={simpleNodes} links={simpleLinks} dataLabelOffsetX={30} />
+</div>
+
+<h3>
+  minLinkWidth — Tiny flows stay visible (minLinkWidth: 3, payment data with near-zero failure
+  rates)
+</h3>
+<div class="demo-row">
+  <SankeyChart nodes={paymentNodes} links={paymentLinks} minLinkWidth={3} showValues />
+</div>
+
+<h3>disableDimOnHover — All nodes stay at full opacity when hovering</h3>
+<div class="demo-row">
+  <SankeyChart nodes={trafficNodes} links={trafficLinks} disableDimOnHover />
+</div>
+
+<h3>Combined — minLinkWidth + dataLabelOffsetX + disableDimOnHover</h3>
+<div class="demo-row">
+  <SankeyChart
+    nodes={paymentNodes}
+    links={paymentLinks}
+    minLinkWidth={3}
+    dataLabelOffsetX={30}
+    disableDimOnHover
+    showValues
+  />
 </div>

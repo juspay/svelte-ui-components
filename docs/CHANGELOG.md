@@ -2,16 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.73.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.74.0)
 
-The Modal content area (.slot-content) had no padding and exposed no
-variable to control it, unlike the header (--modal-header-padding) and
-footer (--modal-footer-padding). Consumers had to reach into the internal
-.slot-content class to inset the body.
-
-Add padding: var(--modal-content-padding, 0) so the body padding is
-controllable via a token, mirroring header/footer. Defaults to 0, so
-existing modals are unaffected; consumers opt in by setting the variable.
+## [2.74.0](https://github.com/juspay/svelte-ui-components/compare/2.74.0..2.73.2) - 22 June 2026
 
 ## [2.73.2](https://github.com/juspay/svelte-ui-components/compare/2.73.2..2.73.1) - 22 June 2026
 

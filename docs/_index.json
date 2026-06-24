@@ -112,6 +112,10 @@
     "description": "A horizontal stack of circular icons/avatars with negative margin layering (each icon overlaps the previous one). Each item can be either an `image` (renders an img) or `text` (renders a text span). Icons are z-indexed so the first icon appears on top."
   },
   {
+    "name": "IframeViewer",
+    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window — an empty list (the default) processes nothing, so it is secure by default. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
+  },
+  {
     "name": "Img",
     "description": "An image component with automatic fallback. If the primary `src` fails to load (onerror), it switches to the `fallback` URL. The fallback only triggers once (won't loop if fallback also fails). Supports hover styling, and opt-in SVG inlining (`inlineSvg` / `transformSvg`) that injects SVG sources into an `<svg>` host so page CSS or a transform hook can recolour the icon."
   },

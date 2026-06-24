@@ -11,6 +11,7 @@ import './components/Gauge.wc.svelte';
 import './components/GridItem.wc.svelte';
 import './components/Icon.wc.svelte';
 import './components/IconStack.wc.svelte';
+import './components/IframeViewer.wc.svelte';
 import './components/Img.wc.svelte';
 import './components/Input.wc.svelte';
 import './components/KeyboardInput.wc.svelte';

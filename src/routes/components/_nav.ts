@@ -15,6 +15,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Card', slug: 'card' },
       { name: 'Browser', slug: 'browser' },
       { name: 'Phone', slug: 'phone' },
+      { name: 'IframeViewer', slug: 'iframe-viewer' },
       { name: 'Book', slug: 'book' }
     ]
   },

@@ -73,7 +73,8 @@ export function computeSankeyLayout(
   height: number,
   nodeWidth: number = 16,
   nodePadding: number = 8,
-  iterations: number = 6
+  iterations: number = 6,
+  minLinkWidth: number = 1
 ): { nodes: ComputedSankeyNode[]; links: ComputedSankeyLink[] } {
   if (nodes.length === 0) {
     return { nodes: [], links: [] };
@@ -144,9 +145,10 @@ export function computeSankeyLayout(
       const val = nodeValues.get(id) ?? 0;
       const h =
         totalValue > 0 ? (val / totalValue) * availableHeight : availableHeight / ids.length;
+      const renderedH = Math.max(minLinkWidth, h);
       nodeY.set(id, y);
-      nodeH.set(id, Math.max(1, h));
-      y += h + nodePadding;
+      nodeH.set(id, renderedH);
+      y += renderedH + nodePadding;
     }
   }
 
@@ -206,7 +208,7 @@ export function computeSankeyLayout(
     const targetNode = nodeById.get(l.target);
     const sVal = nodeValues.get(l.source) ?? 1;
     const sourceH = nodeH.get(l.source) ?? 0;
-    const linkWidth = Math.max(1, (l.value / Math.max(sVal, 1)) * sourceH);
+    const linkWidth = Math.max(minLinkWidth, (l.value / Math.max(sVal, 1)) * sourceH);
 
     const sx = (sourceNode?.x ?? 0) + nodeWidth;
     const sy = (sourceOffsets.get(l.source) ?? 0) + linkWidth / 2;

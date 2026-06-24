@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type {
     BarChartProperties,
     BarChartRenderContext,
@@ -6,6 +7,7 @@
     BarFillGradient,
     BarFillPattern
   } from './properties';
+  import type { ChartHighlightAPI } from '../_chart/highlight';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
@@ -62,6 +64,12 @@
     tooltipSnippet,
     empty,
     renderOverlay,
+    onChartReady,
+    highlightedIndex = null,
+    normaliseToFirstPoint = false,
+    topN,
+    overflowLabel = 'Other',
+    hideBarGraphics = false,
     onbarclick,
     onbarhover,
     testId,
@@ -76,6 +84,24 @@
   let hovered = $state<{ si: number; pi: number } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+  /** Internal tracking for the imperative highlight API (onChartReady). */
+  let apiHighlightedIndex = $state<number | null>(null);
+
+  // ── onMount: emit ChartHighlightAPI via onChartReady ──────────
+
+  onMount(() => {
+    if (typeof onChartReady !== 'function') {
+      return;
+    }
+    const api: ChartHighlightAPI = {
+      highlight: (index) => {
+        apiHighlightedIndex = index;
+      },
+      getCategories: () => labels,
+      type: 'bar-chart'
+    };
+    onChartReady(api);
+  });
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -84,12 +110,90 @@
   let dims = $derived(computeChartDimensions(chartWidth, chartHeight));
 
   let isMulti = $derived(Array.isArray(series) && series.length > 0);
-  let resolvedSeries = $derived(isMulti ? series! : [{ name: '', data: data ?? [] }]);
+
+  // ── Raw resolved series (before transformations) ──────────────
+
+  let rawSeries = $derived(isMulti ? series! : [{ name: '', data: data ?? [] }]);
+
+  // ── normaliseToFirstPoint transformation ──────────────────────
+
+  /**
+   * When normaliseToFirstPoint is true, each value is expressed as a
+   * percentage of the series' first data point's value (baseline = 100).
+   * Series whose first point is zero are left unchanged to avoid division
+   * by zero.
+   */
+  let normalisedSeries = $derived.by(() => {
+    if (!normaliseToFirstPoint) {
+      return rawSeries;
+    }
+    return rawSeries.map((s) => {
+      const baseline = s.data[0]?.value ?? 0;
+      if (baseline === 0) {
+        return s;
+      }
+      return {
+        ...s,
+        data: s.data.map((d) => ({
+          ...d,
+          value: (d.value / baseline) * 100
+        }))
+      };
+    });
+  });
+
+  // ── topN transformation ────────────────────────────────────────
+
+  /**
+   * Clips to the top N bars (by first-series value, descending) and aggregates
+   * the rest into a single overflow bar. Operates on each series in parallel so
+   * the same category ordering is preserved across series.
+   * Only applies in non-multi or single-series mode (groupMode-agnostic:
+   * works by reordering labels, not by touching multi-series stacking).
+   */
+  let resolvedSeries = $derived.by(() => {
+    if (topN == null || normalisedSeries.length === 0) {
+      return normalisedSeries;
+    }
+    const firstSeriesData = normalisedSeries[0]?.data ?? [];
+    if (firstSeriesData.length <= topN) {
+      return normalisedSeries;
+    }
+    // Sort indices by first-series value descending
+    const sortedIndices = firstSeriesData
+      .map((d, i) => ({ value: d.value, i }))
+      .sort((a, b) => b.value - a.value)
+      .map((item) => item.i);
+
+    const topIndices = new Set(sortedIndices.slice(0, topN));
+
+    return normalisedSeries.map((s) => {
+      const topData = s.data.filter((_, idx) => topIndices.has(idx));
+      const overflowValue = s.data
+        .filter((_, idx) => !topIndices.has(idx))
+        .reduce((sum, d) => sum + d.value, 0);
+      return {
+        ...s,
+        data: [...topData, { label: overflowLabel, value: overflowValue }]
+      };
+    });
+  });
 
   let labels = $derived.by(() => {
     const first = resolvedSeries[0]?.data ?? [];
     return first.map((d) => d.label);
   });
+
+  // ── Effective highlighted index: merge declarative + imperative ─
+
+  /**
+   * The declarative `highlightedIndex` prop takes precedence when explicitly
+   * set (non-null). The imperative API writes to `apiHighlightedIndex`.
+   * When both are null the chart renders normally (no dimming).
+   */
+  let effectiveHighlightedIndex = $derived(
+    highlightedIndex != null ? highlightedIndex : apiHighlightedIndex
+  );
 
   let isNormalized = $derived(stackNormalize && isMulti && groupMode === 'stacked');
 
@@ -606,53 +710,61 @@
               </g>
             {/if}
 
-            {#each bars as bar, i (i)}
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              {#if isStackedMode && barRadius > 0}
-                <path
-                  class="bar"
-                  class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
-                  class:dimmed={hovered !== null &&
-                    (hovered.si !== bar.si || hovered.pi !== bar.pi)}
-                  d={stackedBarPath(bar)}
-                  fill={barFillAttr(bar)}
-                  aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
-                  onmouseenter={(e) => handleEnter(e, bar)}
-                  onmousemove={trackMouse}
-                  onmouseleave={handleLeave}
-                  onclick={() => handleClick(bar)}
-                />
-              {:else}
-                <rect
-                  class="bar"
-                  class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
-                  class:dimmed={hovered !== null &&
-                    (hovered.si !== bar.si || hovered.pi !== bar.pi)}
-                  x={bar.x}
-                  y={bar.y}
-                  width={bar.width}
-                  height={bar.height}
-                  rx={barRadius}
-                  ry={barRadius}
-                  fill={barFillAttr(bar)}
-                  aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
-                  onmouseenter={(e) => handleEnter(e, bar)}
-                  onmousemove={trackMouse}
-                  onmouseleave={handleLeave}
-                  onclick={() => handleClick(bar)}
-                />
-              {/if}
-              {#if showValues && !isStackedMode}
-                <text
-                  class="bar-value"
-                  x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}
-                  y={isVertical ? bar.y - 4 : bar.y + bar.height / 2}
-                  text-anchor={isVertical ? 'middle' : 'start'}
-                  dominant-baseline={isVertical ? 'auto' : 'middle'}>{getDisplayValue(bar)}</text
-                >
-              {/if}
-            {/each}
+            {#if !hideBarGraphics}
+              {#each bars as bar, i (i)}
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                {#if isStackedMode && barRadius > 0}
+                  <path
+                    class="bar"
+                    class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                    class:highlighted={effectiveHighlightedIndex !== null &&
+                      effectiveHighlightedIndex === bar.pi}
+                    class:dimmed={(hovered !== null &&
+                      (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                      (effectiveHighlightedIndex !== null && effectiveHighlightedIndex !== bar.pi)}
+                    d={stackedBarPath(bar)}
+                    fill={barFillAttr(bar)}
+                    aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                    onmouseenter={(e) => handleEnter(e, bar)}
+                    onmousemove={trackMouse}
+                    onmouseleave={handleLeave}
+                    onclick={() => handleClick(bar)}
+                  />
+                {:else}
+                  <rect
+                    class="bar"
+                    class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                    class:highlighted={effectiveHighlightedIndex !== null &&
+                      effectiveHighlightedIndex === bar.pi}
+                    class:dimmed={(hovered !== null &&
+                      (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                      (effectiveHighlightedIndex !== null && effectiveHighlightedIndex !== bar.pi)}
+                    x={bar.x}
+                    y={bar.y}
+                    width={bar.width}
+                    height={bar.height}
+                    rx={barRadius}
+                    ry={barRadius}
+                    fill={barFillAttr(bar)}
+                    aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                    onmouseenter={(e) => handleEnter(e, bar)}
+                    onmousemove={trackMouse}
+                    onmouseleave={handleLeave}
+                    onclick={() => handleClick(bar)}
+                  />
+                {/if}
+                {#if showValues && !isStackedMode}
+                  <text
+                    class="bar-value"
+                    x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}
+                    y={isVertical ? bar.y - 4 : bar.y + bar.height / 2}
+                    text-anchor={isVertical ? 'middle' : 'start'}
+                    dominant-baseline={isVertical ? 'auto' : 'middle'}>{getDisplayValue(bar)}</text
+                  >
+                {/if}
+              {/each}
+            {/if}
 
             <!-- A1-4: renderOverlay escape hatch — rendered after all bars -->
             {#if typeof renderOverlay === 'function'}
@@ -690,6 +802,9 @@
   }
   .bar.hovered {
     opacity: var(--barchart-bar-hover-opacity, 1);
+  }
+  .bar.highlighted {
+    opacity: var(--barchart-bar-highlighted-opacity, 1);
   }
   .bar.dimmed {
     opacity: var(--barchart-bar-dimmed-opacity, 0.3);

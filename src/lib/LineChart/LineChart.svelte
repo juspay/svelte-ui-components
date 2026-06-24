@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { LineChartProperties, LineChartTooltipContext } from './properties';
+  import type { ChartHighlightAPI } from '$lib/_chart/highlight';
   import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
@@ -25,6 +26,8 @@
     curve = 'monotone',
     gradientFill = false,
     fillOpacity = 0.3,
+    showArea = false,
+    areaGradient,
     showDots = true,
     showValues = false,
     dotRadius = 4,
@@ -37,11 +40,14 @@
     yDomain,
     xAxisLabel,
     yAxisLabel,
+    xAxisCategories,
     xTickFormat,
     yTickFormat,
     aspectRatio = 16 / 9,
     tooltipSnippet,
     empty,
+    highlightedIndex = null,
+    onChartReady,
     onpointclick,
     onpointhover,
     testId,
@@ -54,11 +60,42 @@
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hovered = $state<{ si: number; pi: number } | null>(null);
+  // internalHighlight holds the index driven by the ChartHighlightAPI.highlight() call.
+  // The effective highlighted index merges this with the prop-driven highlightedIndex.
+  let internalHighlight = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
 
+  // Effective highlighted index: the declarative prop takes precedence when it is a non-null
+  // number; otherwise the imperative API value (internalHighlight) is used. This lets callers
+  // mix both approaches — e.g. default to null so the API drives highlights, then override with
+  // a specific prop value when a controlled index is needed.
+  let effectiveHighlight = $derived(
+    typeof highlightedIndex === 'number' ? highlightedIndex : internalHighlight
+  );
+
   onMount(() => {
     uid = Math.random().toString(36).slice(2, 9);
+
+    const api: ChartHighlightAPI = {
+      type: 'line-chart',
+      highlight: (index) => {
+        internalHighlight = index;
+      },
+      getCategories: () => {
+        if (xAxisCategories && xAxisCategories.length > 0) {
+          return xAxisCategories;
+        }
+        // Fall back to the x-values of the longest series as string labels.
+        const reference = series.reduce(
+          (longest, s) => (s.data.length > longest.data.length ? s : longest),
+          series[0] ?? { data: [] }
+        );
+        return reference.data.map((d) => String(d.x));
+      }
+    };
+
+    onChartReady?.(api);
   });
 
   // ── Layout ─────────────────────────────────────────────────────
@@ -108,6 +145,23 @@
     series.map((s, i) => ({ label: s.name, color: s.color ?? getColor(i) }))
   );
 
+  // ── Category tick formatter ────────────────────────────────────
+
+  // When xAxisCategories is supplied we build a formatter that maps the numeric
+  // x-value (1-based index used in the data) to the corresponding category label.
+  let resolvedXTickFormat = $derived.by(() => {
+    if (xAxisCategories && xAxisCategories.length > 0) {
+      const categories = xAxisCategories;
+      return (value: number | string): string => {
+        const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+        // x values are 1-based indices; category array is 0-based.
+        const categoryIndex = Math.round(numericValue) - 1;
+        return categories[categoryIndex] ?? String(value);
+      };
+    }
+    return xTickFormat;
+  });
+
   // ── Tooltip ────────────────────────────────────────────────────
 
   let hoveredPoint = $derived(
@@ -117,6 +171,24 @@
   let hoverLineX = $derived(
     hovered === null ? null : (lines[hovered.si]?.points[hovered.pi]?.x ?? null)
   );
+
+  // When a highlight index is active (imperative or prop), show the vertical
+  // crosshair at that point even without a mouse hover.
+  let highlightLineX = $derived.by<number | null>(() => {
+    if (effectiveHighlight === null) {
+      return null;
+    }
+    // Use the first series that has a point at this index.
+    for (const line of lines) {
+      const point = line.points[effectiveHighlight];
+      if (point) {
+        return point.x;
+      }
+    }
+    return null;
+  });
+
+  let activeLineX = $derived(hoverLineX ?? highlightLineX);
 
   let tooltipContext = $derived.by<LineChartTooltipContext | null>(() => {
     if (hovered === null || hoveredPoint === null) {
@@ -140,8 +212,11 @@
     if (tooltipContext === null) {
       return null;
     }
+    const xLabel = resolvedXTickFormat
+      ? resolvedXTickFormat(tooltipContext.x)
+      : `x: ${formatNumber(tooltipContext.x)}`;
     return {
-      title: xTickFormat ? xTickFormat(tooltipContext.x) : `x: ${formatNumber(tooltipContext.x)}`,
+      title: xLabel,
       items: tooltipContext.points.map((p) => ({
         label: p.name,
         value: formatNumber(p.y),
@@ -150,18 +225,51 @@
     };
   });
 
+  // ── Highlight dim logic ────────────────────────────────────────
+
+  // A point index is "dimmed" when the highlight system is active (hover or
+  // imperative highlight) and the point is not the active one.
+  const isDotDimmed = (si: number, pi: number): boolean => {
+    // Hover interaction takes precedence over imperative highlight.
+    if (hovered !== null) {
+      return hovered.si !== si || hovered.pi !== pi;
+    }
+    if (effectiveHighlight !== null) {
+      return pi !== effectiveHighlight;
+    }
+    return false;
+  };
+
+  const isLineDimmed = (si: number): boolean => {
+    if (hovered !== null) {
+      return hovered.si !== si;
+    }
+    // When only a point index is highlighted (no series index), dim no lines.
+    return false;
+  };
+
+  const isHighlightedDot = (si: number, pi: number): boolean => {
+    if (hovered !== null) {
+      return hovered.si === si && hovered.pi === pi;
+    }
+    if (effectiveHighlight !== null) {
+      return pi === effectiveHighlight;
+    }
+    return false;
+  };
+
   // ── Interactions ───────────────────────────────────────────────
 
-  function trackMouse(e: MouseEvent) {
+  const trackMouse = (e: MouseEvent): void => {
     if (containerEl === null) {
       return;
     }
     const rect = containerEl.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
-  }
+  };
 
-  function findNearest(plotX: number, plotY: number): { si: number; pi: number } | null {
+  const findNearest = (plotX: number, plotY: number): { si: number; pi: number } | null => {
     if (series.length === 0) {
       return null;
     }
@@ -196,9 +304,9 @@
       }
     }
     return { si: nearestSi, pi: nearestPi };
-  }
+  };
 
-  function handleOverlayMove(e: MouseEvent) {
+  const handleOverlayMove = (e: MouseEvent): void => {
     trackMouse(e);
     const plotX = mouseX - dims.margin.left;
     const plotY = mouseY - dims.margin.top;
@@ -212,16 +320,16 @@
       const point = series[next.si].data[next.pi];
       onpointhover?.({ seriesIndex: next.si, pointIndex: next.pi, point });
     }
-  }
+  };
 
-  function handleLeave() {
+  const handleLeave = (): void => {
     if (hovered !== null) {
       hovered = null;
       onpointhover?.(null);
     }
-  }
+  };
 
-  function handleClick() {
+  const handleClick = (): void => {
     if (hovered === null) {
       return;
     }
@@ -229,7 +337,7 @@
     if (point) {
       onpointclick?.({ seriesIndex: hovered.si, pointIndex: hovered.pi, point });
     }
-  }
+  };
 </script>
 
 <div
@@ -245,31 +353,54 @@
     {/if}
 
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
-      {#if gradientFill}
+      {#if gradientFill || showArea}
         <defs>
           {#each lines as line, si (si)}
-            <linearGradient
-              id="line-grad-{uid}-{si}"
-              x1="0"
-              y1="0"
-              x2="0"
-              y2={dims.innerHeight}
-              gradientUnits="userSpaceOnUse"
-            >
-              <!-- The gradient top stop is fillOpacity + 0.3 (clamped to 1), giving a richer
-                   anchor at the top that fades to transparent at the bottom. This intentionally
-                   exceeds the base fillOpacity so that gradient-fill areas appear more vivid
-                   than a flat solid-fill at fillOpacity alone. -->
-              <stop
-                offset="0%"
-                stop-color={line.color}
-                stop-opacity={Math.min(
-                  (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
-                  1
-                )}
-              />
-              <stop offset="100%" stop-color={line.color} stop-opacity={0} />
-            </linearGradient>
+            {#if gradientFill}
+              <linearGradient
+                id="line-grad-{uid}-{si}"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={dims.innerHeight}
+                gradientUnits="userSpaceOnUse"
+              >
+                <!-- The gradient top stop is fillOpacity + 0.3 (clamped to 1), giving a richer
+                     anchor at the top that fades to transparent at the bottom. This intentionally
+                     exceeds the base fillOpacity so that gradient-fill areas appear more vivid
+                     than a flat solid-fill at fillOpacity alone. -->
+                <stop
+                  offset="0%"
+                  stop-color={line.color}
+                  stop-opacity={Math.min(
+                    (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
+                    1
+                  )}
+                />
+                <stop offset="100%" stop-color={line.color} stop-opacity={0} />
+              </linearGradient>
+            {/if}
+            {#if showArea}
+              <linearGradient
+                id="line-area-{uid}-{si}"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={dims.innerHeight}
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop
+                  offset="0%"
+                  stop-color={areaGradient ? areaGradient.from : line.color}
+                  stop-opacity={areaGradient ? 1 : 0.35}
+                />
+                <stop
+                  offset="100%"
+                  stop-color={areaGradient ? areaGradient.to : line.color}
+                  stop-opacity={areaGradient ? 1 : 0}
+                />
+              </linearGradient>
+            {/if}
           {/each}
         </defs>
       {/if}
@@ -286,12 +417,24 @@
         {/if}
         {#if showXAxis}
           <g transform="translate(0, {dims.innerHeight})">
-            <Axis orientation="bottom" scale={xScale} label={xAxisLabel} tickFormat={xTickFormat} />
+            <Axis
+              orientation="bottom"
+              scale={xScale}
+              label={xAxisLabel}
+              tickFormat={resolvedXTickFormat}
+            />
           </g>
         {/if}
 
         {#each lines as line, si (si)}
-          {#if gradientFill}
+          {#if showArea}
+            <path
+              class="line-area-fill"
+              class:dimmed={isLineDimmed(si)}
+              d={line.areaD}
+              fill="url(#line-area-{uid}-{si})"
+            />
+          {:else if gradientFill}
             <path
               class="line-area-fill"
               class:dimmed={hovered !== null && hovered.si !== si}
@@ -301,7 +444,7 @@
           {/if}
           <path
             class="line-path"
-            class:dimmed={hovered !== null && hovered.si !== si}
+            class:dimmed={isLineDimmed(si)}
             d={line.path}
             stroke={line.color}
             stroke-width={strokeWidth}
@@ -310,7 +453,7 @@
           {#if line.points.length === 1 && !showDots}
             <circle
               class="single-point"
-              class:dimmed={hovered !== null && hovered.si !== si}
+              class:dimmed={isLineDimmed(si)}
               cx={line.points[0].x}
               cy={line.points[0].y}
               r={dotRadius * 1.5}
@@ -321,10 +464,11 @@
             {#each line.points as point, pi (pi)}
               <circle
                 class="dot"
-                class:dimmed={hovered !== null && hovered.si !== si}
+                class:dimmed={isDotDimmed(si, pi)}
+                class:highlighted={isHighlightedDot(si, pi)}
                 cx={point.x}
                 cy={point.y}
-                r={hovered?.si === si && hovered?.pi === pi ? dotRadius * 1.5 : dotRadius}
+                r={isHighlightedDot(si, pi) ? dotRadius * 1.5 : dotRadius}
                 fill={line.color}
               />
             {/each}
@@ -342,8 +486,8 @@
           {/if}
         {/each}
 
-        {#if hoverLineX !== null}
-          <line class="hover-line" x1={hoverLineX} x2={hoverLineX} y1={0} y2={dims.innerHeight} />
+        {#if activeLineX !== null}
+          <line class="hover-line" x1={activeLineX} x2={activeLineX} y1={0} y2={dims.innerHeight} />
         {/if}
 
         <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -411,6 +555,10 @@
   }
   .dot.dimmed {
     opacity: var(--linechart-dimmed-opacity, 0.2);
+  }
+  .dot.highlighted {
+    stroke: var(--linechart-highlight-ring-color, #fff);
+    stroke-width: var(--linechart-highlight-ring-width, 2.5);
   }
   .point-value {
     fill: var(--linechart-value-color, #333);

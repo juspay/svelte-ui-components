@@ -28,7 +28,10 @@
     testId,
     classes,
     columnLabels,
-    nodeColorResolver
+    nodeColorResolver,
+    minLinkWidth = 1,
+    dataLabelOffsetX = 0,
+    disableDimOnHover = false
   }: SankeyChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -54,7 +57,8 @@
       Math.max(0, chartHeight - MARGIN * 2),
       nodeWidth,
       nodePadding,
-      iterations
+      iterations,
+      minLinkWidth
     )
   );
 
@@ -98,6 +102,9 @@
   };
 
   let connectedNodes = $derived.by(() => {
+    if (disableDimOnHover) {
+      return null;
+    }
     if (hoveredNode !== null) {
       const connected = new SvelteSet<string>([hoveredNode]);
       for (const l of links) {
@@ -285,7 +292,8 @@
 
         {#each layout.links as link, i (i)}
           {@const highlighted = isLinkHighlighted(link.source, link.target)}
-          {@const dimmed = (hoveredNode !== null || hoveredLink !== null) && !highlighted}
+          {@const dimmed =
+            !disableDimOnHover && (hoveredNode !== null || hoveredLink !== null) && !highlighted}
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <path
@@ -293,7 +301,7 @@
             d={link.path}
             fill="none"
             stroke={link.color ?? nodeColorMap.get(link.source) ?? getColor(0)}
-            stroke-width={Math.max(1, link.width)}
+            stroke-width={Math.max(minLinkWidth, link.width)}
             stroke-opacity={highlighted ? 0.7 : dimmed ? 0.08 : 0.4}
             onmouseenter={(e) => handleLinkEnter(e, link.source, link.target)}
             onmousemove={trackMouse}
@@ -326,7 +334,9 @@
             <text
               class="sankey-label"
               class:node-dimmed={dimmed}
-              x={node.column === 0 ? node.x - 6 : node.x + node.width + 6}
+              x={node.column === 0
+                ? node.x - 6 - dataLabelOffsetX
+                : node.x + node.width + 6 + dataLabelOffsetX}
               y={node.y + node.height / 2}
               text-anchor={node.column === 0 ? 'end' : 'start'}
               dominant-baseline="middle"

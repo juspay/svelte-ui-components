@@ -25,7 +25,7 @@
   },
   {
     "name": "BarChart",
-    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, and click events. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
+    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, click events, declarative and imperative bar highlighting via highlightedIndex and onChartReady, first-point normalisation for cross-series relative growth comparison, top-N clipping with overflow aggregation into a configurable label, and a graphics-free mode that renders axes and legend without bar rectangles. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
   },
   {
     "name": "Book",
@@ -113,7 +113,7 @@
   },
   {
     "name": "IframeViewer",
-    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window — an empty list (the default) processes nothing, so it is secure by default. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
+    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window \u2014 an empty list (the default) processes nothing, so it is secure by default. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
   },
   {
     "name": "Img",
@@ -133,7 +133,7 @@
   },
   {
     "name": "LineChart",
-    "description": "A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, four curve interpolations (linear, monotone, step, natural), an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltips."
+    "description": "A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, five curve interpolations (linear, monotone, spline, step, natural), gradient fill under the line, a showArea mode that fills the area under each line with a fully-customisable vertical gradient via areaGradient, an xAxisCategories prop that maps string labels to the numeric x indices so callers can use named categories on the axis and in tooltips, an onChartReady callback that hands back a ChartHighlightAPI for imperative point highlighting from external orchestrators (e.g. voice narration sync, step-through animations), a declarative highlightedIndex prop for controlled highlight state, an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltip snippets. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
   },
   {
     "name": "ListItem",
@@ -173,7 +173,7 @@
   },
   {
     "name": "PieChart",
-    "description": "A responsive SVG pie/donut chart with slice hover highlighting, custom labels, legend, and donut center content. When `innerRadius` is set, renders as a donut with optional content in the center hole via the `center` snippet."
+    "description": "A responsive SVG pie/donut chart with slice hover highlighting, programmatic highlight control, an optional delta-change badge, custom labels, legend, and donut center content. When innerRadius is set, renders as a donut with optional content in the center hole via the center snippet. Supports a semi-circle (half-donut) layout via semiCircle, a tabular value legend via legendShowValues, and configurable percentage decimal places via percentDecimals. The onChartReady callback delivers an imperative ChartHighlightAPI (type: 'donut-chart') so external orchestrators can drive slice highlights without touching component state; the highlightedIndex prop provides the same capability declaratively, with mouse hover always taking priority. A changePercentage prop renders a positioned DeltaIndicator badge at the top-right corner of the chart container, with changeInvertColors for lower-is-better metrics like RTO rate or bounce rate."
   },
   {
     "name": "Pill",
@@ -193,7 +193,7 @@
   },
   {
     "name": "SankeyChart",
-    "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones."
+    "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones (opt-out via disableDimOnHover). Supports a configurable minimum link/node thickness (minLinkWidth) so tiny flows remain visible at any scale, and a horizontal label offset (dataLabelOffsetX) for fine-grained spacing between node bars and their text labels."
   },
   {
     "name": "LottiePlayer",
@@ -274,5 +274,17 @@
   {
     "name": "Tooltip",
     "description": "A hover-triggered tooltip that displays text content above, below, left, or right of its trigger element. Supports configurable position, delay, and styling via CSS variables."
+  },
+  {
+    "name": "DeltaIndicator",
+    "description": "A compact inline indicator that conveys change direction and magnitude using a directional arrow and formatted text. Positive values render in green, negative in red, and values within the neutral threshold in muted gray. Supports inverted color semantics for lower-is-better metrics (e.g. bounce rate, RTO), an optional arrow-hide mode for text-only display, a configurable neutral threshold, and a custom format function for full control over the displayed text."
+  },
+  {
+    "name": "DualAxisBarChart",
+    "description": "A pure-SVG dual-axis chart with two completely independent Y-axes \u2014 left (yAxisIndex 0) and right (yAxisIndex 1) \u2014 sharing one categorical X-axis. Each series independently declares its axis and render type (column or line), making it ideal for comparing metrics at very different scales such as absolute revenue versus percentage CTR. Hover highlights the entire category column with a vertical guideline, and the shared tooltip displays all series values formatted by their respective axis formatters. Built from the shared _chart primitives (ChartContainer, Axis, ChartTooltip, Legend, scales, paths) with full CSS custom property theming and zero external dependencies."
+  },
+  {
+    "name": "FunnelChart",
+    "description": "A horizontal funnel chart built entirely from pure SVG, with no external charting library dependency. Renders sequential stages as rectangles whose height is proportional to each stage's value relative to the maximum, joined by trapezoidal connector polygons that visually convey drop-off between steps. Supports per-stage color overrides, a custom value-and-percentage label formatter, configurable slope connector width, hover-expansion animation, click and hover events, an empty-state snippet, and full CSS-variable theming through the shared chart token system."
   }
 ]

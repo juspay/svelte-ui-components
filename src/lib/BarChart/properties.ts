@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { ChartHighlightAPI } from '../_chart/highlight';
 
 // ── Fill types (A1-2 pattern, A1-3 gradient) ──────────────────
 
@@ -124,6 +125,46 @@ export type OptionalBarChartProperties = {
    * live in SVG coordinate space.
    */
   renderOverlay?: Snippet<[BarChartRenderContext]>;
+  /**
+   * Called once on mount with an imperative `ChartHighlightAPI` handle.
+   * Use `api.highlight(index)` to emphasise a specific bar (by its zero-based
+   * position within the category axis) and dim all others. Pass `null` to clear.
+   * The `type` field on the handle is always `'bar-chart'`.
+   */
+  onChartReady?: (api: ChartHighlightAPI) => void;
+  /**
+   * Declarative complement to `onChartReady`. When set to a non-null number the
+   * bar at that zero-based category index is highlighted (full opacity) and the
+   * remaining bars are dimmed. Set to `null` or omit to show all bars normally.
+   */
+  highlightedIndex?: number | null;
+  /**
+   * When `true`, each series' values are expressed as a percentage of that
+   * series' own first data point. A value equal to the baseline renders as 100,
+   * a value twice the baseline as 200, and so on. Useful for comparing relative
+   * growth across series that start at very different absolute levels.
+   * Has no effect on series that have no data or whose first point is zero.
+   */
+  normaliseToFirstPoint?: boolean;
+  /**
+   * When set, only the top `topN` bars (by descending value) are shown
+   * individually. The remaining bars are aggregated into a single bar whose
+   * value is the sum of all omitted bars and whose label is `overflowLabel`
+   * (default `"Other"`). Has no effect when the data has `topN` or fewer bars.
+   * In multi-series mode the ranking is based on the first series.
+   */
+  topN?: number;
+  /**
+   * Label for the aggregated overflow bar produced by `topN`. Defaults to
+   * `"Other"`. Has no effect when `topN` is not set.
+   */
+  overflowLabel?: string;
+  /**
+   * When `true`, bar rectangles are not rendered. Only the axis labels, gridlines,
+   * and legend remain visible. Useful for building legend-only or label-only
+   * thumbnails alongside a full chart.
+   */
+  hideBarGraphics?: boolean;
   testId?: string;
   classes?: string;
 };

@@ -9,7 +9,10 @@
     showDots = false,
     isScrollableLast = false,
     onkeydown,
-    classes
+    classes,
+    testId,
+    dotsWrapperTestId,
+    dotTestId
   }: CarouselProperties = $props();
 
   let slidesDiv: HTMLDivElement | null = $state(null);
@@ -138,7 +141,10 @@
   });
 </script>
 
-<div class="carousel-container {classes ?? ''}">
+<div
+  class="carousel-container {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+>
   {#if views.length > 0}
     <div class="carousel" bind:this={carouselDiv}>
       <div class="slidesDiv" bind:this={slidesDiv}>
@@ -155,7 +161,10 @@
     </div>
   {/if}
   {#if showDots}
-    <div class="dots-wrapper">
+    <div
+      class="dots-wrapper"
+      data-pw={typeof dotsWrapperTestId === 'string' ? dotsWrapperTestId : null}
+    >
       <!-- eslint-disable-next-line -->
       {#each views as _, index}
         <div
@@ -163,6 +172,7 @@
           onclick={() => moveSlideToIndex(index)}
           {onkeydown}
           role="none"
+          data-pw={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
         ></div>
       {/each}
     </div>

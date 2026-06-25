@@ -18,6 +18,9 @@ export type OptionalCarouselProperties = {
   showDots?: boolean;
   isScrollableLast?: boolean;
   classes?: string;
+  testId?: string;
+  dotsWrapperTestId?: string;
+  dotTestId?: string;
 };
 
 export type CarouselEventProperties = {

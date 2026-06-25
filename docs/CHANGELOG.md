@@ -2,7 +2,27 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.74.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.75.0)
+
+New components:
+- DeltaIndicator: directional trend badge (arrow + colored %), invertColors for lower-is-better metrics, custom format, neutral threshold (clamped non-negative)
+- DualAxisBarChart: two independent Y-axes sharing a categorical X-axis; per-series axis (0/1) and render type (column/line)
+- FunnelChart: pure-SVG horizontal funnel with trapezoidal drop-off connectors, hover expansion, value+percentage labels
+
+Chart extensions (all backward-compatible):
+- BarChart/LineChart/PieChart: onChartReady hook + shared ChartHighlightAPI (declarative highlightedIndex + imperative highlight(index|null)), so an external orchestrator (e.g. voice-narration sync) can drive point/slice highlighting without a charting-library instance on the DOM
+- BarChart: normaliseToFirstPoint, topN + overflowLabel, hideBarGraphics
+- LineChart: xAxisCategories (string-category X-axis), showArea + areaGradient
+- PieChart: changePercentage delta badge rendered via DeltaIndicator, changeInvertColors
+- SankeyChart: minLinkWidth, dataLabelOffsetX, disableDimOnHover
+
+Also:
+- Fix GitHub Pages prerender failure: breadcrumb demo links now use the $app/paths base, so adapter-static prerender succeeds under BASE_PATH
+- Address review feedback: advance Sankey node spacing by the clamped (minLinkWidth) height; guard DualAxis data/categories length mismatch in both bar and line geometry; treat all-zero FunnelChart data as empty; gate PieChart tooltip on hover (not programmatic highlight); kebab-case custom-element attributes on DeltaIndicator
+
+Demos added under /components for each; check + lint + build clean.
+
+## [2.75.0](https://github.com/juspay/svelte-ui-components/compare/2.75.0..2.74.0) - 24 June 2026
 
 ## [2.74.0](https://github.com/juspay/svelte-ui-components/compare/2.74.0..2.73.2) - 22 June 2026
 

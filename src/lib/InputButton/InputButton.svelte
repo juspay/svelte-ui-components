@@ -132,7 +132,7 @@
     --input-focus-border: none;
     --input-box-shadow: none;
     --input-margin: none;
-    --input-width: fit-content;
+    --input-width: 100%;
     font-size: var(--input-font-size, 16px) !important;
     font-weight: var(--input-button-font-weight, 500);
     margin: var(--input-button-margin);

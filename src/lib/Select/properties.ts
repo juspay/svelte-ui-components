@@ -25,14 +25,25 @@ export type OptionalSelectProperties = {
   disabled?: boolean;
   bottomContent?: Snippet;
   /**
-   * Snippet for rendering a custom multi-select option indicator, receiving `{ checked }`.
-   * When omitted, multiple-mode options render a design-system checkbox box (bordered square
-   * that fills and shows a checkmark when selected), themeable via the `--select-option-indicator-*`
-   * CSS variables: `-size` (18px), `-border`, `-border-radius`, `-background`,
-   * `-checked-background`, `-checked-border-color`, `-check-size`, `-check-color`. Provide this
-   * snippet to fully replace the indicator (e.g. to restore the legacy ☑/☐ glyph).
+   * Snippet for rendering a custom multi-select option indicator, receiving `{ checked, indeterminate }`.
+   * `indeterminate` is `true` only for the `showSelectAll` row when some — but not all — listed options
+   * are selected; it is always `false` for individual option rows. When omitted, multiple-mode options
+   * render a design-system checkbox box (bordered
+   * square that fills and shows a checkmark when selected, or a centred dash when indeterminate),
+   * themeable via the `--select-option-indicator-*` CSS variables: `-size` (18px), `-border`,
+   * `-border-radius`, `-background`, `-checked-background`, `-checked-border-color`, `-check-size`,
+   * `-check-color`, `-dash-size`, `-dash-thickness`, `-dash-color`. Provide this snippet to fully
+   * replace the indicator (e.g. to restore the legacy ☑/☐ glyph).
    */
-  optionIndicator?: Snippet<[{ checked: boolean }]>;
+  optionIndicator?: Snippet<[{ checked: boolean; indeterminate?: boolean }]>;
+  /**
+   * Multiple mode only. When `true`, renders a "Select all" row at the top of the dropdown that
+   * toggles every currently-listed (search-filtered) option. The row shows an indeterminate
+   * indicator when only some of the listed options are selected. No effect outside `multiple` mode.
+   */
+  showSelectAll?: boolean;
+  /** Label for the `showSelectAll` row. Defaults to `'Select all'`. */
+  selectAllLabel?: string;
   testId?: string;
   /** Fallback per-option test id prefix. Each option emits `data-pw="{itemTestId}-{id}"` when its own `item.testId` is not set. */
   itemTestId?: string;

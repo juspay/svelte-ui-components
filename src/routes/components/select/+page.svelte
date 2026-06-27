@@ -41,6 +41,8 @@
   let searchValue: string[] = $state([]);
   let multiValue: string[] = $state([]);
   let multiSearchValue: string[] = $state([]);
+  let selectAllValue: string[] = $state([]);
+  let selectAllSearchValue: string[] = $state([]);
   let stringItemsValue: string[] = $state([]);
   let bottomContentValue: string[] = $state([]);
   let customIndicatorValue: string[] = $state([]);
@@ -105,6 +107,48 @@
   />
   {#if multiSearchValue.length > 0}
     <p class="demo-info">Selected IDs: {multiSearchValue.join(', ')}</p>
+  {/if}
+</div>
+
+<h3>Multi select + select all</h3>
+<p>
+  Pass <code>showSelectAll</code> in <code>multiple</code> mode to render a "Select all" row at the top
+  of the dropdown. It toggles every listed option and shows an indeterminate (dash) indicator when only
+  some are selected.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Select
+    items={fruits}
+    multiple
+    showSelectAll
+    bind:value={selectAllValue}
+    placeholder="Pick fruits"
+    testId="select-all-demo"
+  />
+  {#if selectAllValue.length > 0}
+    <p class="demo-info">Selected IDs: {selectAllValue.join(', ')}</p>
+  {/if}
+</div>
+
+<h3>Multi select + select all + searchable</h3>
+<p>
+  With <code>searchable</code>, "Select all" toggles only the currently-filtered options, and a
+  custom
+  <code>selectAllLabel</code> can be supplied.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Select
+    items={languages}
+    multiple
+    showSelectAll
+    searchable
+    selectAllLabel="Select all (visible)"
+    bind:value={selectAllSearchValue}
+    placeholder="Search languages..."
+    testId="select-all-search-demo"
+  />
+  {#if selectAllSearchValue.length > 0}
+    <p class="demo-info">Selected IDs: {selectAllSearchValue.join(', ')}</p>
   {/if}
 </div>
 

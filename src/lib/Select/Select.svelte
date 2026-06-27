@@ -15,6 +15,8 @@
     disabled = false,
     bottomContent,
     optionIndicator,
+    showSelectAll = false,
+    selectAllLabel = 'Select all',
     triggerSummary,
     testId,
     itemTestId,
@@ -51,6 +53,31 @@
     searchable && query.length > 0
       ? items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
       : items
+  );
+
+  type SelectRow = { kind: 'select-all' } | { kind: 'item'; item: SelectItem };
+
+  let selectAllVisible: boolean = $derived(multiple && showSelectAll && filteredItems.length > 0);
+
+  let selectedFilteredCount: number = $derived(
+    filteredItems.filter((item) => value.includes(item.id)).length
+  );
+  let allFilteredSelected: boolean = $derived(
+    filteredItems.length > 0 && selectedFilteredCount === filteredItems.length
+  );
+  let selectAllIndeterminate: boolean = $derived(
+    selectedFilteredCount > 0 && selectedFilteredCount < filteredItems.length
+  );
+
+  // Unified, keyboard-navigable row list: the optional "select all" row shares the same
+  // highlightedIndex space as the options, so arrow-key navigation needs no special casing.
+  let optionRows: SelectRow[] = $derived(
+    selectAllVisible
+      ? [
+          { kind: 'select-all' },
+          ...filteredItems.map((item): SelectRow => ({ kind: 'item', item }))
+        ]
+      : filteredItems.map((item): SelectRow => ({ kind: 'item', item }))
   );
 
   let displayText = $derived.by(() => {
@@ -111,19 +138,36 @@
     onchange?.(value);
   }
 
-  function selectHighlighted(): void {
-    if (highlightedIndex < 0 || highlightedIndex >= filteredItems.length) {
+  function toggleSelectAll(): void {
+    if (disabled) {
       return;
     }
-    const item = filteredItems.at(highlightedIndex);
-    if (typeof item === 'object' && item !== null) {
-      selectItem(item.id);
+    if (allFilteredSelected) {
+      value = value.filter((id) => !filteredItems.some((item) => item.id === id));
+    } else {
+      value = [...new Set([...value, ...filteredItems.map((item) => item.id)])];
+    }
+    onchange?.(value);
+  }
+
+  function selectHighlighted(): void {
+    if (highlightedIndex < 0 || highlightedIndex >= optionRows.length) {
+      return;
+    }
+    const row = optionRows.at(highlightedIndex);
+    if (typeof row !== 'object' || row === null) {
+      return;
+    }
+    if (row.kind === 'select-all') {
+      toggleSelectAll();
+    } else {
+      selectItem(row.item.id);
     }
   }
 
   async function moveHighlight(delta: number): Promise<void> {
     const next = highlightedIndex + delta;
-    if (next < 0 || next >= filteredItems.length) {
+    if (next < 0 || next >= optionRows.length) {
       return;
     }
     highlightedIndex = next;
@@ -355,44 +399,88 @@
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
       {:else}
-        {#each filteredItems as item, index (item.id)}
-          <div
-            class="select-option"
-            class:multi={multiple}
-            class:selected={value.includes(item.id)}
-            class:highlighted={index === highlightedIndex}
-            role="option"
-            id={`${listboxId}-option-${index}`}
-            aria-selected={value.includes(item.id)}
-            tabindex="-1"
-            {...typeof item.testId === 'string'
-              ? { 'data-pw': item.testId }
-              : typeof itemTestId === 'string'
-                ? { 'data-pw': `${itemTestId}-${item.id}` }
-                : typeof testId === 'string'
-                  ? { 'data-pw': `${testId}-${item.id}` }
-                  : {}}
-            onclick={() => selectItem(item.id)}
-            onmouseenter={() => (highlightedIndex = index)}
-          >
-            {#if multiple}
+        {#each optionRows as row, index (row.kind === 'select-all' ? 'select-all' : row.item.id)}
+          {#if row.kind === 'select-all'}
+            <div
+              class="select-option select-all"
+              class:multi={multiple}
+              class:selected={allFilteredSelected}
+              class:highlighted={index === highlightedIndex}
+              role="option"
+              id={`${listboxId}-option-${index}`}
+              aria-selected={allFilteredSelected}
+              aria-label={selectAllIndeterminate
+                ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
+                : selectAllLabel}
+              tabindex="-1"
+              {...typeof testId === 'string' ? { 'data-pw': `${testId}-select-all` } : {}}
+              onclick={toggleSelectAll}
+              onmouseenter={() => (highlightedIndex = index)}
+            >
               {#if typeof optionIndicator === 'function'}
-                {@render optionIndicator({ checked: value.includes(item.id) })}
+                {@render optionIndicator({
+                  checked: allFilteredSelected,
+                  indeterminate: selectAllIndeterminate
+                })}
               {:else}
                 <span
                   class="select-option-indicator"
-                  class:checked={value.includes(item.id)}
+                  class:checked={allFilteredSelected}
+                  class:indeterminate={selectAllIndeterminate}
                   aria-hidden="true"
                 >
-                  {#if value.includes(item.id)}
+                  {#if allFilteredSelected}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     <span class="select-option-check">{@html checkmarkSvg}</span>
+                  {:else if selectAllIndeterminate}
+                    <span class="select-option-dash"></span>
                   {/if}
                 </span>
               {/if}
-            {/if}
-            {item.label}
-          </div>
+              {selectAllLabel}
+            </div>
+          {:else}
+            <div
+              class="select-option"
+              class:multi={multiple}
+              class:selected={value.includes(row.item.id)}
+              class:highlighted={index === highlightedIndex}
+              role="option"
+              id={`${listboxId}-option-${index}`}
+              aria-selected={value.includes(row.item.id)}
+              tabindex="-1"
+              {...typeof row.item.testId === 'string'
+                ? { 'data-pw': row.item.testId }
+                : typeof itemTestId === 'string'
+                  ? { 'data-pw': `${itemTestId}-${row.item.id}` }
+                  : typeof testId === 'string'
+                    ? { 'data-pw': `${testId}-${row.item.id}` }
+                    : {}}
+              onclick={() => selectItem(row.item.id)}
+              onmouseenter={() => (highlightedIndex = index)}
+            >
+              {#if multiple}
+                {#if typeof optionIndicator === 'function'}
+                  {@render optionIndicator({
+                    checked: value.includes(row.item.id),
+                    indeterminate: false
+                  })}
+                {:else}
+                  <span
+                    class="select-option-indicator"
+                    class:checked={value.includes(row.item.id)}
+                    aria-hidden="true"
+                  >
+                    {#if value.includes(row.item.id)}
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <span class="select-option-check">{@html checkmarkSvg}</span>
+                    {/if}
+                  </span>
+                {/if}
+              {/if}
+              {row.item.label}
+            </div>
+          {/if}
         {/each}
       {/if}
       {#if typeof bottomContent === 'function'}
@@ -596,6 +684,23 @@
   .select-option-check :global(svg) {
     width: 100%;
     height: 100%;
+  }
+
+  .select-option-indicator.indeterminate {
+    background-color: var(--select-option-indicator-checked-background, #2196f3);
+    border-color: var(--select-option-indicator-checked-border-color, #2196f3);
+  }
+
+  .select-option-dash {
+    width: var(--select-option-indicator-dash-size, 10px);
+    height: var(--select-option-indicator-dash-thickness, 2px);
+    border-radius: 1px;
+    background-color: var(--select-option-indicator-dash-color, #ffffff);
+  }
+
+  .select-option.select-all {
+    border-bottom: var(--select-all-border, none);
+    font-weight: var(--select-all-font-weight, inherit);
   }
 
   .select-empty {

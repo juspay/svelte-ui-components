@@ -13,6 +13,7 @@
     footer,
     valueSnippet,
     rows,
+    rowsDirection = 'column',
     tooltip,
     checkbox,
     headerRight,
@@ -127,7 +128,7 @@
   {/if}
 
   {#if hasRows && rows}
-    <div class="statcard-rows">
+    <div class="statcard-rows" class:statcard-rows-horizontal={rowsDirection === 'row'}>
       {#each rows as row, rowIndex (rowIndex)}
         {#if rowIndex > 0}
           <div class="statcard-row-divider"></div>
@@ -330,6 +331,25 @@
     height: var(--statcard-row-divider-height, 1px);
     background: var(--statcard-row-divider-color, #e5e7eb);
     margin: var(--statcard-row-divider-margin, 8px 0);
+  }
+
+  /* Horizontal layout: lay the metric sections side by side with vertical
+     dividers. Each section flexes to share the available width equally. */
+  .statcard-rows-horizontal {
+    flex-direction: row;
+  }
+
+  .statcard-rows-horizontal .statcard-row {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .statcard-rows-horizontal .statcard-row-divider {
+    align-self: stretch;
+    flex-shrink: 0;
+    width: var(--statcard-row-divider-height, 1px);
+    height: auto;
+    margin: var(--statcard-row-divider-margin-horizontal, 0 16px);
   }
 
   .statcard-row {

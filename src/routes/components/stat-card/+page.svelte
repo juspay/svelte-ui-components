@@ -146,6 +146,16 @@
   <StatCard title="Revenue Overview" rows={checkoutRows} testId="multi-row" />
 </div>
 
+<h3>Horizontal Rows (sections side by side)</h3>
+<div class="demo-row">
+  <StatCard
+    title="Revenue Overview"
+    rows={checkoutRows}
+    rowsDirection="row"
+    testId="horizontal-rows"
+  />
+</div>
+
 <h3>Multi-Row with Breakdown Grid</h3>
 <div class="demo-row">
   <StatCard title="Conversion Metrics" rows={conversionRow} testId="with-breakdown" />

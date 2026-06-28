@@ -22,6 +22,21 @@ test.describe('StatCard', () => {
     await expect(card.locator('.delta-indicator')).toHaveCount(3);
   });
 
+  test('horizontal rows lay the sections side by side', async ({ page }) => {
+    await page.goto('/components/stat-card');
+
+    const rowsContainer = page.locator('[data-pw="horizontal-rows"] .statcard-rows');
+    await expect(rowsContainer).toHaveClass(/statcard-rows-horizontal/);
+    await expect(rowsContainer).toHaveCSS('flex-direction', 'row');
+
+    // Sections sit side by side: every row shares the same vertical top.
+    const tops = await page
+      .locator('[data-pw="horizontal-rows"] .statcard-row')
+      .evaluateAll((rows) => rows.map((row) => Math.round(row.getBoundingClientRect().top)));
+    expect(tops.length).toBe(3);
+    expect(new Set(tops).size).toBe(1);
+  });
+
   test('breakdown grid renders one item per breakdown entry', async ({ page }) => {
     await page.goto('/components/stat-card');
 

@@ -12,6 +12,7 @@
       // boundary, so they are exposed as JS properties only:
       //   document.querySelector('sui-stat-card').rows = [{ heading: 'Revenue', value: '₹1.2Cr', change: 8.2 }];
       rows: { type: 'Object' },
+      rowsDirection: { type: 'String', attribute: 'rows-direction' },
       tooltip: { type: 'Object' },
       checkbox: { type: 'Object' },
       onCheckboxChange: { type: 'Object' },

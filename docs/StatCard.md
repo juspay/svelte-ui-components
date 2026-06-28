@@ -109,6 +109,22 @@ Pass `rows` to render several metrics stacked and divider-separated. Each row ca
 />
 ```
 
+### Horizontal Rows
+
+Set `rowsDirection="row"` to lay the sections side by side with vertical dividers (each section flexes to share the width equally) — useful for dashboard cards that show several related metrics in one row.
+
+```svelte
+<StatCard
+  title="Revenue Overview"
+  rowsDirection="row"
+  rows={[
+    { heading: 'Gross Revenue', value: '₹12.4Cr', change: 8.2 },
+    { heading: 'Net Revenue', value: '₹10.9Cr', change: 5.7 },
+    { heading: 'RTO Rate', value: '12.1%', change: -2.3, invertChangeColors: true }
+  ]}
+/>
+```
+
 ### Breakdown Grid
 
 A row can carry a `breakdown` array, rendered as a labelled grid beneath the row value.
@@ -182,6 +198,7 @@ The header renders even without a title. `onCheckboxChange` fires with the new c
 | footer        | `Snippet`                     | No       | `-`     | Snippet rendered in the card footer area, separated by a border-top line.                                                                             |
 | valueSnippet  | `Snippet`                     | No       | `-`     | Replaces the string `value` with a custom snippet for advanced value rendering.                                                                       |
 | rows          | `StatCardRow[]`               | No       | `-`     | Multiple metric rows. When set, replaces the single value/delta row with a divider-separated column. Each row supports `heading`, `change`, `invertChangeColors`, `tooltip`, `additionalContent`, `breakdownHeading`, and a `breakdown` grid. |
+| rowsDirection | `'column' \| 'row'`           | No       | `'column'` | Layout direction for `rows`. `'column'` stacks rows vertically with horizontal dividers; `'row'` lays the sections side by side with vertical dividers, each section flexing to share the width equally. |
 | tooltip       | `StatCardTooltip`             | No       | `-`     | Tooltip shown on the card title — `{ text, position?, testId? }`.                                                                                     |
 | checkbox      | `{ text: string; checked?: boolean }` | No | `-` | Renders a checkbox next to the title. The header is shown even when `title` is omitted. Pair with `onCheckboxChange` for a controlled checkbox.       |
 | headerRight   | `Snippet`                     | No       | `-`     | Snippet rendered at the right edge of the header row.                                                                                                 |
@@ -248,7 +265,8 @@ Override these custom properties to theme the component.
 | `--statcard-row-gap`              | `4px`                    | gap            | Vertical gap between a row's heading, value line, and breakdown.              |
 | `--statcard-row-divider-height`   | `1px`                    | height         | Thickness of the line between rows.                                           |
 | `--statcard-row-divider-color`    | `#e5e7eb`                | background     | Colour of the row divider line.                                              |
-| `--statcard-row-divider-margin`   | `8px 0`                  | margin         | Spacing around the row divider line.                                          |
+| `--statcard-row-divider-margin`   | `8px 0`                  | margin         | Spacing around the row divider line (vertical/column layout).                 |
+| `--statcard-row-divider-margin-horizontal` | `0 16px`        | margin         | Spacing around the vertical divider when `rowsDirection="row"`.               |
 | `--statcard-row-heading-color`    | `#6b7280`                | color          | Colour of a row heading.                                                      |
 | `--statcard-breakdown-col-min`    | `100px`                  | grid-template  | Minimum column width of the breakdown grid (auto-fill).                       |
 | `--statcard-breakdown-gap`        | `8px`                    | gap            | Gap between breakdown items.                                                  |

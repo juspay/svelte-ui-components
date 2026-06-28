@@ -71,6 +71,12 @@ export type OptionalStatCardProperties = {
    * a column of rows separated by dividers.
    */
   rows?: StatCardRow[];
+  /**
+   * Layout direction for `rows`. `'column'` (default) stacks rows vertically with
+   * horizontal dividers; `'row'` lays the sections side by side with vertical
+   * dividers, each section flexing to share the width equally.
+   */
+  rowsDirection?: 'column' | 'row';
   /** Tooltip shown on the card title. */
   tooltip?: StatCardTooltip;
   /** Checkbox rendered next to the title. */

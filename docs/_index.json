@@ -184,6 +184,10 @@
     "description": "A horizontal progress bar that fills from left to right based on a percentage value. Supports configurable width, height, colors, border radius, and an animated transition on value changes."
   },
   {
+    "name": "ProportionBar",
+    "description": "A horizontal stacked bar that visualizes how a total is distributed across labelled segments. Renders proportional coloured bands in an SVG track with a palette fallback and an optional legend listing each segment's label and formatted value. Negative and non-finite segment values are sanitized to zero so widths stay within 0–100%. When the legend is hidden the SVG exposes the full breakdown as its accessible name. Supports a custom value formatter, configurable track height, and CSS-variable theming."
+  },
+  {
     "name": "Radio",
     "description": "A styled radio button input with a custom circular indicator. Supports checked state binding, disabled state, and configurable size and colors via CSS variables."
   },
@@ -233,7 +237,7 @@
   },
   {
     "name": "StatCard",
-    "description": "A compact metric display card for dashboards. Shows a title label, a prominent value, an optional delta badge (with automatic positive/negative colour inference from the leading sign character), an optional subtitle, and a footer snippet. When onclick is provided, the card becomes an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support). All visual properties are CSS-var driven."
+    "description": "A compact metric display card for dashboards. Shows a title label, a prominent value, an optional delta badge (with automatic positive/negative colour inference from the leading sign character), an optional subtitle, and a footer snippet. Also supports a multi-row layout with per-row deltas, tooltips, and a breakdown grid, plus a header that can carry a title tooltip, a checkbox, and right-aligned content, and a default children slot for embedding content such as a ProportionBar. When onclick is provided, the card becomes an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support). All visual properties are CSS-var driven."
   },
   {
     "name": "Status",

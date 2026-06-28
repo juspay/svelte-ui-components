@@ -71,6 +71,7 @@ export { default as StatCard } from './StatCard/StatCard.svelte';
 export { default as DeltaIndicator } from './DeltaIndicator/DeltaIndicator.svelte';
 export { default as DualAxisBarChart } from './DualAxisBarChart/DualAxisBarChart.svelte';
 export { default as FunnelChart } from './FunnelChart/FunnelChart.svelte';
+export { default as ProportionBar } from './ProportionBar/ProportionBar.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -139,6 +140,7 @@ export type * from './StatCard/properties';
 export type * from './DeltaIndicator/properties';
 export type * from './DualAxisBarChart/properties';
 export type * from './FunnelChart/properties';
+export type * from './ProportionBar/properties';
 export type * from './_chart/highlight';
 
 export { validateInput } from './utils';

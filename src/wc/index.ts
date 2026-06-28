@@ -57,3 +57,4 @@ import './components/DateRangePicker.wc.svelte';
 import './components/LottiePlayer.wc.svelte';
 import './components/StatCard.wc.svelte';
 import './components/DeltaIndicator.wc.svelte';
+import './components/ProportionBar.wc.svelte';

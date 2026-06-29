@@ -141,7 +141,7 @@
     color: var(--pagination-button-color, #3a4550);
     background: var(--pagination-button-background, transparent);
     border: var(--pagination-button-border, 1px solid #d1d5db);
-    border-radius: var(--pagination-button-border-radius, 4px);
+    border-radius: var(--pagination-button-border-radius, var(--radius, 4px));
     cursor: var(--pagination-button-cursor, pointer);
     min-width: var(--pagination-button-min-width, 36px);
     height: var(--pagination-button-height, 36px);

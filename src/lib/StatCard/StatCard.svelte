@@ -221,7 +221,7 @@
     padding: var(--statcard-padding, 16px);
     background: var(--statcard-background, #ffffff);
     border: var(--statcard-border, 1px solid #e5e7eb);
-    border-radius: var(--statcard-border-radius, 8px);
+    border-radius: var(--statcard-border-radius, var(--radius, 4px));
     box-shadow: var(--statcard-box-shadow, none);
     width: var(--statcard-width, auto);
     min-width: var(--statcard-min-width, 0);

@@ -146,7 +146,7 @@
     justify-content: var(--file-input-justify-content, center);
     padding: var(--file-input-padding);
     border: var(--file-input-border);
-    border-radius: var(--file-input-radius);
+    border-radius: var(--file-input-radius, var(--radius, 4px));
     background: var(--file-input-background);
     gap: var(--file-input-gap);
     text-align: var(--file-input-text-align, center);

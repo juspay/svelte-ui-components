@@ -90,7 +90,7 @@
   .card {
     background: var(--card-background, inherit);
     border: var(--card-border, 1px solid currentColor);
-    border-radius: var(--card-border-radius, 8px);
+    border-radius: var(--card-border-radius, var(--radius, 4px));
     overflow: var(--card-overflow, hidden);
     color: inherit;
     cursor: var(--card-cursor, inherit);

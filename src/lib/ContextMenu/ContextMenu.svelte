@@ -227,7 +227,7 @@
     z-index: var(--context-menu-z-index, 1000);
     background-color: var(--context-menu-background-color, #ffffff);
     border: var(--context-menu-border, 1px solid #e0e0e0);
-    border-radius: var(--context-menu-border-radius, 6px);
+    border-radius: var(--context-menu-border-radius, var(--radius, 4px));
     box-shadow: var(--context-menu-box-shadow, 0px 4px 16px rgba(0, 0, 0, 0.12));
     min-width: var(--context-menu-min-width, 160px);
     max-height: var(--context-menu-max-height, 240px);

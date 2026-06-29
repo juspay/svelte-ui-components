@@ -248,7 +248,7 @@
     --button-width: var(--sheet-close-button-size, 32px);
     --button-height: var(--sheet-close-button-size, 32px);
     --button-border: none;
-    --button-border-radius: var(--sheet-close-button-border-radius, 4px);
+    --button-border-radius: var(--sheet-close-button-border-radius, var(--radius, 4px));
     --button-color: var(--sheet-close-button-background, transparent);
     --button-text-color: var(--sheet-close-button-color, #666666);
     --button-font-size: var(--sheet-close-button-font-size, 16px);

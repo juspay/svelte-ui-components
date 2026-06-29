@@ -372,7 +372,7 @@
     display: inline-block;
     width: var(--chart-legend-swatch-size, 12px);
     height: var(--chart-legend-swatch-size, 12px);
-    border-radius: var(--piechart-legend-swatch-radius, 2px);
+    border-radius: var(--piechart-legend-swatch-radius, var(--radius, 4px));
     flex-shrink: 0;
   }
   .pie-legend-label {

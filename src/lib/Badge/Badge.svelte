@@ -87,7 +87,7 @@
   }
 
   .icon-img {
-    border-radius: var(--badge-img-border-radius, 6px);
+    border-radius: var(--badge-img-border-radius, var(--radius, 4px));
     width: var(--badge-img-width, 64px);
     height: var(--badge-img-height, 64px);
     object-fit: var(--badge-object-fit, contain);

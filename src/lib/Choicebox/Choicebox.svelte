@@ -54,7 +54,7 @@
     align-items: var(--choicebox-align-items, center);
     padding: var(--choicebox-padding, 16px);
     border: var(--choicebox-border, 2px solid #d0d0d0);
-    border-radius: var(--choicebox-border-radius, 12px);
+    border-radius: var(--choicebox-border-radius, var(--radius, 4px));
     background: var(--choicebox-background, #ffffff);
     gap: var(--choicebox-gap, 12px);
     cursor: var(--choicebox-cursor, pointer);

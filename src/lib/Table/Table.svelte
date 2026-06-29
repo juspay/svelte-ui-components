@@ -520,7 +520,7 @@
     gap: var(--table-search-gap, 8px);
     padding: var(--table-search-padding, 8px 12px);
     border: var(--table-search-border, 1px solid #e5e7eb);
-    border-radius: var(--table-search-border-radius, 8px);
+    border-radius: var(--table-search-border-radius, var(--radius, 4px));
     background-color: var(--table-search-background, #ffffff);
     margin-bottom: var(--table-search-margin-bottom, 8px);
   }
@@ -550,7 +550,7 @@
   .table-search-input:focus-visible {
     outline: 2px solid var(--table-focus-outline-color, #3b82f6);
     outline-offset: 2px;
-    border-radius: var(--table-search-focus-border-radius, 2px);
+    border-radius: var(--table-search-focus-border-radius, var(--radius, 4px));
   }
 
   .table-search-input::placeholder {
@@ -587,7 +587,7 @@
   /* ── Container ──────────────────────────────────────────────────────────── */
   .table-container {
     border: var(--table-border, 1px solid #e5e7eb);
-    border-radius: var(--table-border-radius, 8px);
+    border-radius: var(--table-border-radius, var(--radius, 4px));
     width: var(--table-container-width, 100%);
     overflow: hidden;
   }
@@ -700,7 +700,7 @@
     width: var(--table-checkbox-size, 18px);
     height: var(--table-checkbox-size, 18px);
     border: var(--table-checkbox-border, 2px solid #9ca3af);
-    border-radius: var(--table-checkbox-border-radius, 3px);
+    border-radius: var(--table-checkbox-border-radius, var(--radius, 4px));
     background-color: var(--table-checkbox-background, transparent);
     cursor: pointer;
     flex-shrink: 0;

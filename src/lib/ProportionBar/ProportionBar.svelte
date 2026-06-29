@@ -159,7 +159,7 @@
   .proportion-bar-track {
     width: 100%;
     height: var(--proportion-bar-track-height, 10px);
-    border-radius: var(--proportion-bar-track-border-radius, 4px);
+    border-radius: var(--proportion-bar-track-border-radius, var(--radius, 4px));
     overflow: hidden;
     background: var(--proportion-bar-track-bg, #f0f0f0);
   }
@@ -189,7 +189,7 @@
     display: inline-block;
     width: var(--proportion-bar-swatch-size, 10px);
     height: var(--proportion-bar-swatch-size, 10px);
-    border-radius: var(--proportion-bar-swatch-border-radius, 2px);
+    border-radius: var(--proportion-bar-swatch-border-radius, var(--radius, 4px));
     flex-shrink: 0;
   }
 

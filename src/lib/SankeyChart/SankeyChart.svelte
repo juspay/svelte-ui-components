@@ -18,6 +18,7 @@
     showValues = false,
     showLabels = true,
     aspectRatio = 16 / 9,
+    maxHeight = Infinity,
     valueFormat,
     tooltipSnippet,
     empty,
@@ -88,6 +89,26 @@
       ? Math.max(0, chartWidth - MARGIN * 2)
       : (Math.max(0, chartWidth - MARGIN * 2) - nodeWidth) / (columnCount - 1)
   );
+
+  // Node labels render alongside their bar; long labels used to overflow into the
+  // next column and collide. Clip each to the horizontal room its column actually
+  // has and append an ellipsis (the full text stays available via the node tooltip).
+  const LABEL_CHAR_PX = 7.2; // ≈ 0.6em at the 12px default label size
+  const truncateLabel = (text: string, column: number): string => {
+    const available =
+      column === 0
+        ? MARGIN + 16
+        : column === columnCount - 1
+          ? Math.max(colWidth, MARGIN + 24)
+          : Math.max(0, colWidth - nodeWidth - 12);
+    const maxChars = Math.floor(available / LABEL_CHAR_PX);
+    // No usable room — hide the label rather than force text that would overflow;
+    // the full text is still reachable via the node's <title> on hover.
+    if (maxChars < 3) {
+      return '';
+    }
+    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+  };
 
   // ── Helpers ────────────────────────────────────────────────────
 
@@ -276,7 +297,7 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio} {maxHeight}>
       <g transform="translate({MARGIN}, {MARGIN})">
         {#if columnLabels != null && columnLabels.length > 0}
           {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
@@ -340,8 +361,11 @@
               y={node.y + node.height / 2}
               text-anchor={node.column === 0 ? 'end' : 'start'}
               dominant-baseline="middle"
-              >{node.label}{#if showValues}
-                ({format(node.value)}){/if}</text
+              >{truncateLabel(
+                showValues ? `${node.label} (${format(node.value)})` : node.label,
+                node.column
+              )}<title>{showValues ? `${node.label} (${format(node.value)})` : node.label}</title
+              ></text
             >
           {/if}
         {/each}

@@ -135,6 +135,7 @@ export type ChartContainerProperties = {
   height?: number;
   aspectRatio?: number;
   minHeight?: number;
+  maxHeight?: number;
   testId?: string;
   classes?: string;
   children: Snippet;

@@ -358,7 +358,7 @@
     padding: var(--calendar-padding, 16px);
     background-color: var(--calendar-background, #ffffff);
     border: var(--calendar-border, 1px solid #e0e0e0);
-    border-radius: var(--calendar-border-radius, 8px);
+    border-radius: var(--calendar-border-radius, var(--radius, 4px));
     box-shadow: var(--calendar-box-shadow, none);
     box-sizing: border-box;
     user-select: none;
@@ -387,7 +387,7 @@
     --button-height: var(--calendar-nav-button-size, 32px);
     --button-border: none;
     --button-color: transparent;
-    --button-border-radius: var(--calendar-nav-button-border-radius, 4px);
+    --button-border-radius: var(--calendar-nav-button-border-radius, var(--radius, 4px));
     --button-text-color: var(--calendar-nav-button-color, #666666);
     --button-padding: 0;
     --button-hover-color: var(--calendar-nav-button-hover-background, #f0f0f0);

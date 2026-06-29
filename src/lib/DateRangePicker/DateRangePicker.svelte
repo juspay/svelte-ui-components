@@ -933,7 +933,7 @@
   .drp-trigger-wrapper {
     --button-color: var(--drp-trigger-background, inherit);
     --button-border: var(--drp-trigger-border, 1px solid currentColor);
-    --button-border-radius: var(--drp-trigger-border-radius, 6px);
+    --button-border-radius: var(--drp-trigger-border-radius, var(--radius, 4px));
     --button-text-color: var(--drp-trigger-color, inherit);
     --button-padding: var(--drp-trigger-padding, 8px 12px);
     --button-min-width: var(--drp-trigger-min-width, 200px);
@@ -976,7 +976,7 @@
     z-index: var(--drp-panel-z-index, 1000);
     background: var(--drp-panel-background, inherit);
     border: var(--drp-panel-border, 1px solid #e0e0e0);
-    border-radius: var(--drp-panel-border-radius, 10px);
+    border-radius: var(--drp-panel-border-radius, var(--radius, 4px));
     box-shadow: var(--drp-panel-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));
     display: flex;
     flex-direction: column;
@@ -1019,7 +1019,7 @@
     padding: var(--drp-preset-padding, 7px 12px);
     background: none;
     border: none;
-    border-radius: var(--drp-preset-border-radius, 5px);
+    border-radius: var(--drp-preset-border-radius, var(--radius, 4px));
     color: var(--drp-preset-color, inherit);
     cursor: pointer;
     white-space: nowrap;
@@ -1098,7 +1098,7 @@
     height: var(--drp-nav-btn-size, 32px);
     background: none;
     border: none;
-    border-radius: var(--drp-nav-btn-border-radius, 4px);
+    border-radius: var(--drp-nav-btn-border-radius, var(--radius, 4px));
     cursor: pointer;
     color: var(--drp-nav-btn-color, inherit);
     transition: background 0.12s ease;
@@ -1175,7 +1175,7 @@
     min-width: 0;
     padding: var(--drp-date-input-padding, 10px 14px);
     border: var(--drp-date-input-border, 1px solid #d4d4d4);
-    border-radius: var(--drp-date-input-radius, 8px);
+    border-radius: var(--drp-date-input-radius, var(--radius, 4px));
     background: var(--drp-date-input-background, #ffffff);
   }
 
@@ -1210,7 +1210,7 @@
     height: var(--drp-time-toggle-size, 40px);
     padding: 0;
     border: var(--drp-time-toggle-border, 1px solid #d4d4d4);
-    border-radius: var(--drp-time-toggle-radius, 8px);
+    border-radius: var(--drp-time-toggle-radius, var(--radius, 4px));
     background: var(--drp-time-toggle-background, #f6f7f9);
     color: var(--drp-time-toggle-color, #555555);
     cursor: pointer;
@@ -1239,7 +1239,7 @@
     display: flex;
     align-items: center;
     border: var(--drp-time-input-border, 1px solid #d4d4d4);
-    border-radius: var(--drp-time-input-radius, 8px);
+    border-radius: var(--drp-time-input-radius, var(--radius, 4px));
     background: var(--drp-time-input-background, #ffffff);
   }
 
@@ -1388,7 +1388,7 @@
     position: relative;
     --button-color: var(--drp-compare-trigger-background, inherit);
     --button-border: var(--drp-compare-trigger-border, 1px solid currentColor);
-    --button-border-radius: var(--drp-compare-trigger-border-radius, 6px);
+    --button-border-radius: var(--drp-compare-trigger-border-radius, var(--radius, 4px));
     --button-text-color: var(--drp-compare-trigger-color, inherit);
     --button-padding: var(--drp-compare-trigger-padding, 8px 12px);
     --button-min-width: var(--drp-compare-trigger-min-width, 160px);
@@ -1407,7 +1407,7 @@
     z-index: var(--drp-panel-z-index, 1000);
     background: var(--drp-panel-background, inherit);
     border: var(--drp-panel-border, 1px solid #e0e0e0);
-    border-radius: var(--drp-panel-border-radius, 10px);
+    border-radius: var(--drp-panel-border-radius, var(--radius, 4px));
     box-shadow: var(--drp-panel-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));
     display: flex;
     flex-direction: column;

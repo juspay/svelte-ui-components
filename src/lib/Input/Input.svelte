@@ -331,12 +331,12 @@
     background-color: var(--input-background, white);
     font-size: var(--input-font-size, 16px) !important;
     font-family: var(--input-font-family, inherit);
-    border-radius: var(--input-radius, 4px);
+    border-radius: var(--input-radius, var(--radius, 4px));
     outline: none;
     padding: var(--input-padding, 16px);
     font-weight: var(--input-font-weight, 500);
     width: var(--input-width, fit-content);
-    margin: var(--input-margin, 0px 0px 12px 0px);
+    margin: var(--input-margin, 0);
     appearance: none !important;
     -webkit-appearance: none !important; /* For Safari MWeb */
     box-shadow: var(--input-box-shadow, 0px 1px 8px #2f537733);
@@ -364,7 +364,7 @@
   }
 
   .action-input {
-    border-radius: var(--input-radius, 4px 0px 0px 4px);
+    border-radius: var(--input-radius, var(--radius, 4px) 0 0 var(--radius, 4px));
     box-shadow: var(--input-box-shadow, 0px 0px 0px #ffffff);
     margin-bottom: 0;
   }
@@ -396,7 +396,7 @@
   .input-field-wrap {
     position: relative;
     display: block;
-    margin: var(--input-margin, 0px 0px 12px 0px);
+    margin: var(--input-margin, 0);
   }
 
   .input-field-wrap > :global(textarea),
@@ -429,7 +429,7 @@
   .input-icon-button:focus-visible {
     outline: var(--input-icon-focus-outline, 2px solid var(--input-focus-border-color, #005fcc));
     outline-offset: var(--input-icon-focus-outline-offset, 2px);
-    border-radius: var(--input-icon-focus-radius, 2px);
+    border-radius: var(--input-icon-focus-radius, var(--radius, 4px));
   }
 
   .input-icon-left {

@@ -161,6 +161,20 @@
   <StatCard title="Conversion Metrics" rows={conversionRow} testId="with-breakdown" />
 </div>
 
+<h3>Multi-Row With Subtitle</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  The subtitle (e.g. a date-comparison label) renders below the metric rows. It must not be
+  suppressed when <code>rows</code> are present.
+</p>
+<div class="demo-row">
+  <StatCard
+    title="Revenue Overview"
+    rows={checkoutRows}
+    subtitle="Today vs Yesterday"
+    testId="rows-with-subtitle"
+  />
+</div>
+
 <h3>With Custom Children (ProportionBar)</h3>
 <div class="demo-row">
   <StatCard title="Payment Methods" value="8,610 orders" testId="with-children">

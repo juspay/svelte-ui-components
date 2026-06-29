@@ -516,7 +516,7 @@
     padding: var(--select-trigger-padding, 8px 12px);
     background: var(--select-trigger-background, #ffffff);
     border: var(--select-trigger-border, 1px solid #cccccc);
-    border-radius: var(--select-trigger-border-radius, 6px);
+    border-radius: var(--select-trigger-border-radius, var(--radius, 4px));
     cursor: pointer;
     outline: none;
     -webkit-tap-highlight-color: transparent;
@@ -603,7 +603,7 @@
     margin-top: var(--select-dropdown-gap, 4px);
     background: var(--select-dropdown-background, #ffffff);
     border: var(--select-dropdown-border, 1px solid #cccccc);
-    border-radius: var(--select-dropdown-border-radius, 6px);
+    border-radius: var(--select-dropdown-border-radius, var(--radius, 4px));
     box-shadow: var(--select-dropdown-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
     max-height: var(--select-dropdown-max-height, 200px);
     overflow-y: auto;
@@ -659,7 +659,7 @@
     width: var(--select-option-indicator-size, 18px);
     height: var(--select-option-indicator-size, 18px);
     border: var(--select-option-indicator-border, 2px solid #757575);
-    border-radius: var(--select-option-indicator-border-radius, 3px);
+    border-radius: var(--select-option-indicator-border-radius, var(--radius, 4px));
     background-color: var(--select-option-indicator-background, transparent);
     color: var(--select-option-indicator-color, currentColor);
     transition:

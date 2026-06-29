@@ -33,14 +33,14 @@
     flex: 1;
     height: var(--progress-track-height, 8px);
     background: var(--progress-track-background, #e0e0e0);
-    border-radius: var(--progress-track-border-radius, 4px);
+    border-radius: var(--progress-track-border-radius, var(--radius, 4px));
     overflow: hidden;
   }
 
   .bar {
     height: 100%;
     background: var(--progress-bar-background, #2196f3);
-    border-radius: var(--progress-bar-border-radius, 4px);
+    border-radius: var(--progress-bar-border-radius, var(--radius, 4px));
     transition: var(--progress-bar-transition, width 0.3s ease);
   }
 

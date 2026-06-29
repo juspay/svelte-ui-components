@@ -65,7 +65,7 @@
   }
 
   .browser.rounded {
-    border-radius: var(--browser-border-radius, 12px);
+    border-radius: var(--browser-border-radius, var(--radius, 4px));
   }
 
   .browser.shadow {
@@ -148,7 +148,7 @@
 
   .tab {
     padding: var(--browser-tab-padding, 6px 16px);
-    border-radius: var(--browser-tab-border-radius, 8px 8px 0 0);
+    border-radius: var(--browser-tab-border-radius, var(--radius, 4px) var(--radius, 4px) 0 0);
     font-size: var(--browser-tab-font-size, 13px);
     font-family: var(--browser-tab-font-family, inherit);
     white-space: nowrap;
@@ -167,7 +167,7 @@
     gap: 8px;
     padding: 0 12px;
     height: var(--browser-addressbar-height, 32px);
-    border-radius: var(--browser-addressbar-border-radius, 6px);
+    border-radius: var(--browser-addressbar-border-radius, var(--radius, 4px));
     font-size: var(--browser-addressbar-font-size, 13px);
     font-family: var(--browser-addressbar-font-family, inherit);
   }

@@ -313,7 +313,7 @@
     align-items: center;
     background: var(--combobox-input-background, #ffffff);
     border: var(--combobox-input-border, 1px solid #cccccc);
-    border-radius: var(--combobox-input-border-radius, 6px);
+    border-radius: var(--combobox-input-border-radius, var(--radius, 4px));
     transition: var(--combobox-input-transition, border-color 0.15s, box-shadow 0.15s);
   }
 
@@ -369,7 +369,7 @@
     margin-top: var(--combobox-dropdown-gap, 4px);
     background: var(--combobox-dropdown-background, #ffffff);
     border: var(--combobox-dropdown-border, 1px solid #cccccc);
-    border-radius: var(--combobox-dropdown-border-radius, 6px);
+    border-radius: var(--combobox-dropdown-border-radius, var(--radius, 4px));
     box-shadow: var(--combobox-dropdown-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
     max-height: var(--combobox-dropdown-max-height, 200px);
     overflow-y: auto;

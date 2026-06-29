@@ -106,7 +106,7 @@
     width: var(--checkbox-size, 20px);
     height: var(--checkbox-size, 20px);
     border: var(--checkbox-border, 2px solid #757575);
-    border-radius: var(--checkbox-border-radius, 3px);
+    border-radius: var(--checkbox-border-radius, var(--radius, 4px));
     background-color: var(--checkbox-background, transparent);
     transition:
       background-color var(--checkbox-transition, 0.2s),

@@ -34,7 +34,7 @@
     font-size: var(--chart-tooltip-font-size, 12px);
     font-family: var(--chart-font-family, inherit);
     padding: var(--chart-tooltip-padding, 8px 12px);
-    border-radius: var(--chart-tooltip-border-radius, 4px);
+    border-radius: var(--chart-tooltip-border-radius, var(--radius, 4px));
     box-shadow: var(--chart-tooltip-shadow, 0 2px 8px rgba(0, 0, 0, 0.2));
     pointer-events: none;
     max-width: var(--chart-tooltip-max-width, 280px);

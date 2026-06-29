@@ -96,7 +96,7 @@
     height: var(--button-height, fit-content);
     padding: var(--button-padding, 16px);
     margin: var(--button-margin);
-    border-radius: var(--button-border-radius, 0px);
+    border-radius: var(--button-border-radius, var(--radius, 4px));
     width: var(--button-width, fit-content);
     cursor: var(--cursor, pointer);
     opacity: var(--opacity, 1);

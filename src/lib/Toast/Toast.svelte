@@ -162,7 +162,7 @@
     font-family: var(--toast-font-family, inherit);
     font-weight: var(--toast-font-weight);
     height: var(--toast-height, fit-content);
-    border-radius: var(--toast-border-radius, 0px);
+    border-radius: var(--toast-border-radius, var(--radius, 4px));
     border: var(--toast-border, none);
     border-style: var(--toast-border-style);
     width: var(--toast-width, fit-content);

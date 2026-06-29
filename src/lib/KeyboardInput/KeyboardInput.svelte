@@ -82,7 +82,7 @@
     color: var(--keyboard-input-key-color, #333333);
     background-color: var(--keyboard-input-key-background, #f5f5f5);
     border: var(--keyboard-input-key-border, 1px solid #d1d1d1);
-    border-radius: var(--keyboard-input-key-border-radius, 4px);
+    border-radius: var(--keyboard-input-key-border-radius, var(--radius, 4px));
     box-shadow: var(--keyboard-input-key-box-shadow, 0 1px 0 #c4c4c4);
     min-width: var(--keyboard-input-key-min-width, 1.6em);
     padding: var(--keyboard-input-key-padding, 2px 6px);

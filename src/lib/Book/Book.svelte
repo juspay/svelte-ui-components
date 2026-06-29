@@ -179,7 +179,7 @@
   .book {
     width: var(--book-width, 100%);
     background-color: var(--book-background, #ffffff);
-    border-radius: var(--book-border-radius, 8px);
+    border-radius: var(--book-border-radius, var(--radius, 4px));
     border: var(--book-border, 1px solid #e0e0e0);
     outline: none;
   }

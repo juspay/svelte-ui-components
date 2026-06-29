@@ -162,7 +162,7 @@
     height: var(--theme-switcher-size, 36px);
     padding: 0;
     border: none;
-    border-radius: var(--theme-switcher-border-radius, 8px);
+    border-radius: var(--theme-switcher-border-radius, var(--radius, 4px));
     background-color: var(--theme-switcher-bg, transparent);
     cursor: pointer;
     color: var(--theme-switcher-icon-color, #374151);
@@ -211,14 +211,14 @@
     gap: var(--theme-switcher-segment-gap, 2px);
     padding: var(--theme-switcher-segment-padding, 4px);
     background-color: var(--theme-switcher-segment-bg, #f3f4f6);
-    border-radius: var(--theme-switcher-border-radius, 8px);
+    border-radius: var(--theme-switcher-border-radius, var(--radius, 4px));
   }
 
   .segment-indicator {
     position: absolute;
     top: var(--theme-switcher-segment-padding, 4px);
     bottom: var(--theme-switcher-segment-padding, 4px);
-    border-radius: var(--theme-switcher-segment-border-radius, 6px);
+    border-radius: var(--theme-switcher-segment-border-radius, var(--radius, 4px));
     background-color: var(--theme-switcher-segment-active-bg, #ffffff);
     box-shadow: var(--theme-switcher-segment-shadow, 0 1px 2px rgba(0, 0, 0, 0.1));
     transition:
@@ -235,7 +235,7 @@
     justify-content: center;
     padding: var(--theme-switcher-segment-button-padding, 6px 10px);
     border: none;
-    border-radius: var(--theme-switcher-segment-border-radius, 6px);
+    border-radius: var(--theme-switcher-segment-border-radius, var(--radius, 4px));
     background: transparent;
     cursor: pointer;
     color: var(--theme-switcher-icon-color, #374151);

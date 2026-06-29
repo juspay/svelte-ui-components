@@ -157,13 +157,17 @@ export function computeSankeyLayout(
     for (const [, ids] of columnGroups) {
       for (const id of ids) {
         const deps = incoming.get(id) ?? [];
-        if (deps.length > 0) {
+        const totalDepValue = deps.reduce((s, d) => s + d.value, 0);
+        // Only re-centre against incoming links when they carry positive volume.
+        // With all-zero weights the division yielded NaN, which propagated to
+        // every node position and collapsed the chart; keep the initial y instead.
+        if (totalDepValue > 0) {
           const weightedY =
             deps.reduce((s, d) => {
               const sy = nodeY.get(d.source) ?? 0;
               const sh = nodeH.get(d.source) ?? 0;
               return s + (sy + sh / 2) * d.value;
-            }, 0) / deps.reduce((s, d) => s + d.value, 0);
+            }, 0) / totalDepValue;
           nodeY.set(id, Math.max(0, weightedY - (nodeH.get(id) ?? 0) / 2));
         }
       }

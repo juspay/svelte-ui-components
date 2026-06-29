@@ -245,7 +245,7 @@
     cursor: auto;
     display: flex;
     flex-direction: column;
-    border-radius: var(--modal-border-radius, 0px);
+    border-radius: var(--modal-border-radius, var(--radius, 4px));
     overflow: var(--modal-content-overflow, auto);
     border-top: var(--modal-content-border-top);
   }
@@ -331,7 +331,7 @@
     --button-height: var(--modal-footer-secondary-button-height, fit-content);
     --button-padding: var(--modal-footer-secondary-button-padding, 16px);
     --button-margin: var(--modal-footer-secondary-button-margin);
-    --button-border-radius: var(--modal-footer-secondary-button-border-radius, 0px);
+    --button-border-radius: var(--modal-footer-secondary-button-border-radius, var(--radius, 4px));
     --button-width: var(--modal-footer-secondary-button-width, fit-content);
     --cursor: var(--modal-footer-secondary-button-cursor, pointer);
     --opacity: var(--modal-footer-secondary-button-opacity, 1);
@@ -372,7 +372,7 @@
     --button-height: var(--modal-footer-primary-button-height, fit-content);
     --button-padding: var(--modal-footer-primary-button-padding, 16px);
     --button-margin: var(--modal-footer-primary-button-margin);
-    --button-border-radius: var(--modal-footer-primary-button-border-radius, 0px);
+    --button-border-radius: var(--modal-footer-primary-button-border-radius, var(--radius, 4px));
     --button-width: var(--modal-footer-primary-button-width, fit-content);
     --cursor: var(--modal-footer-primary-button-cursor, pointer);
     --opacity: var(--modal-footer-primary-button-opacity, 1);

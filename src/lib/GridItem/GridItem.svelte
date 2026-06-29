@@ -65,7 +65,7 @@
     width: var(--grid-item-body-width, 64px);
     background-color: var(--grid-item-background-color, #faf9f9);
     border: var(--grid-item-border, 1px solid #eaeaea);
-    border-radius: var(--grid-item-border-radius, 4px);
+    border-radius: var(--grid-item-border-radius, var(--radius, 4px));
     margin: var(--grid-item-margin, 8px 0 0 0);
     display: flex;
     justify-content: center;
@@ -101,7 +101,7 @@
     position: absolute;
     inset: 0px;
     margin: var(--grid-item-margin, 8px 0 0 0);
-    border-radius: var(--grid-item-border-radius, 4px);
+    border-radius: var(--grid-item-border-radius, var(--radius, 4px));
     border: var(--animation-version, 32px solid #cbcccf66);
     animation: clipperAnimation var(--loader-animation-duration, 3s) infinite linear;
   }

@@ -107,7 +107,7 @@
       `font-weight:var(--tooltip-font-weight,400)`,
       `font-family:var(--tooltip-font-family,inherit)`,
       `padding:var(--tooltip-padding,6px 10px)`,
-      `border-radius:var(--tooltip-border-radius,4px)`,
+      `border-radius: var(--tooltip-border-radius, var(--radius, 4px))`,
       `border:var(--tooltip-border,none)`,
       `box-shadow:var(--tooltip-box-shadow,0 2px 6px rgba(0,0,0,0.15))`,
       `white-space:normal`,
@@ -249,7 +249,7 @@
     font-weight: var(--tooltip-font-weight, 400);
     font-family: var(--tooltip-font-family);
     padding: var(--tooltip-padding, 6px 10px);
-    border-radius: var(--tooltip-border-radius, 4px);
+    border-radius: var(--tooltip-border-radius, var(--radius, 4px));
     border: var(--tooltip-border, none);
     box-shadow: var(--tooltip-box-shadow, 0 2px 6px rgba(0, 0, 0, 0.15));
     white-space: normal;

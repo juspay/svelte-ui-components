@@ -73,7 +73,10 @@
     --button-font-weight: var(--split-button-primary-font-weight, 500);
     --button-font-family: var(--split-button-primary-font-family);
     --button-border: var(--split-button-primary-border, none);
-    --button-border-radius: var(--split-button-primary-border-radius, 4px 0 0 4px);
+    --button-border-radius: var(
+      --split-button-primary-border-radius,
+      var(--radius, 4px) 0 0 var(--radius, 4px)
+    );
     --button-hover-color: var(
       --split-button-primary-hover-background,
       var(--split-button-primary-background, #3a4550)
@@ -97,7 +100,10 @@
     display: flex;
     align-items: stretch;
     background-color: var(--split-button-trigger-background, #3a4550);
-    border-radius: var(--split-button-trigger-border-radius, 0 4px 4px 0);
+    border-radius: var(
+      --split-button-trigger-border-radius,
+      0 var(--radius, 4px) var(--radius, 4px) 0
+    );
     color: var(--split-button-trigger-color, white);
     cursor: pointer;
   }

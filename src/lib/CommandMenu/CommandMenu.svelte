@@ -298,7 +298,7 @@
 
   .command-menu-dialog {
     background-color: var(--command-menu-background, #ffffff);
-    border-radius: var(--command-menu-border-radius, 12px);
+    border-radius: var(--command-menu-border-radius, var(--radius, 4px));
     box-shadow: var(--command-menu-box-shadow, 0 16px 70px rgba(0, 0, 0, 0.2));
     width: var(--command-menu-width, 560px);
     max-width: var(--command-menu-max-width, 90vw);
@@ -380,7 +380,7 @@
     display: flex;
     align-items: center;
     padding: var(--command-menu-item-padding, 10px 12px);
-    border-radius: var(--command-menu-item-border-radius, 8px);
+    border-radius: var(--command-menu-item-border-radius, var(--radius, 4px));
     cursor: pointer;
     gap: var(--command-menu-item-gap, 10px);
     font-size: var(--command-menu-item-font-size, 14px);
@@ -440,7 +440,7 @@
     min-width: var(--command-menu-kbd-min-width, 24px);
     height: var(--command-menu-kbd-height, 22px);
     padding: var(--command-menu-kbd-padding, 0 6px);
-    border-radius: var(--command-menu-kbd-border-radius, 4px);
+    border-radius: var(--command-menu-kbd-border-radius, var(--radius, 4px));
     background-color: var(--command-menu-kbd-background, #f1f5f9);
     border: var(--command-menu-kbd-border, 1px solid #e2e8f0);
     color: var(--command-menu-kbd-color, #64748b);

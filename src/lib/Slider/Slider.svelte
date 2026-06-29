@@ -71,7 +71,7 @@
     appearance: none;
     width: 100%;
     height: var(--slider-track-height, 6px);
-    border-radius: var(--slider-track-border-radius, 3px);
+    border-radius: var(--slider-track-border-radius, var(--radius, 4px));
     background: var(
       --slider-track,
       linear-gradient(
@@ -144,7 +144,7 @@
 
   .slider-input::-moz-range-track {
     height: var(--slider-track-height, 6px);
-    border-radius: var(--slider-track-border-radius, 3px);
+    border-radius: var(--slider-track-border-radius, var(--radius, 4px));
     background: transparent;
   }
 

@@ -284,7 +284,7 @@
     left: var(--menu-dropdown-left, 0);
     background-color: var(--menu-background-color, #ffffff);
     border: var(--menu-border, 1px solid #e0e0e0);
-    border-radius: var(--menu-border-radius, 6px);
+    border-radius: var(--menu-border-radius, var(--radius, 4px));
     box-shadow: var(--menu-box-shadow, 0px 4px 16px rgba(0, 0, 0, 0.12));
     min-width: var(--menu-min-width, 160px);
     max-height: var(--menu-max-height, 240px);

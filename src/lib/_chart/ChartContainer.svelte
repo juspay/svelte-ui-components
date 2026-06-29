@@ -7,6 +7,7 @@
     height = $bindable(0),
     aspectRatio = 16 / 9,
     minHeight = 0,
+    maxHeight = Infinity,
     testId,
     classes,
     children
@@ -22,7 +23,7 @@
     const rect = containerEl.getBoundingClientRect();
     const w = Math.round(rect.width);
     width = w;
-    height = Math.max(minHeight, Math.round(w / aspectRatio));
+    height = Math.min(maxHeight, Math.max(minHeight, Math.round(w / aspectRatio)));
   }
 
   // Re-measure whenever aspectRatio changes at runtime (e.g. semiCircle toggled).
@@ -30,8 +31,10 @@
   // the ResizeObserver and the component is being torn down.
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
-    // Reading aspectRatio here makes this effect re-run whenever it changes.
+    // Reading aspectRatio/maxHeight here makes this effect re-run whenever either
+    // changes, so the computed height stays current without waiting for a resize.
     void aspectRatio;
+    void maxHeight;
     if (isMounted) {
       measure();
     }

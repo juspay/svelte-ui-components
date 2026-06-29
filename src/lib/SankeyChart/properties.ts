@@ -50,6 +50,7 @@ export type OptionalSankeyChartProperties = {
   showValues?: boolean;
   showLabels?: boolean;
   aspectRatio?: number;
+  maxHeight?: number;
   valueFormat?: (value: number) => string;
   tooltipSnippet?: Snippet<[SankeyTooltipContext]>;
   empty?: Snippet;

@@ -10,7 +10,7 @@
   .shimmer {
     width: var(--shimmer-width, 100%);
     height: var(--shimmer-height, 16px);
-    border-radius: var(--shimmer-border-radius, 4px);
+    border-radius: var(--shimmer-border-radius, var(--radius, 4px));
     background-color: var(--shimmer-background, #e0e0e0);
     opacity: var(--shimmer-opacity, 1);
     overflow: hidden;

@@ -78,4 +78,23 @@ test.describe('StatCard', () => {
     await card.locator('.statcard-value').click();
     await expect(clickCount).toHaveText('1');
   });
+
+  test('renders the subtitle below metric rows', async ({ page }) => {
+    await page.goto('/components/stat-card');
+
+    // Regression: the subtitle block previously lived inside the no-rows {:else}
+    // branch, so a card given both `rows` and `subtitle` silently dropped the
+    // subtitle (e.g. the "Today vs Yesterday" comparison label).
+    const card = page.locator('[data-pw="rows-with-subtitle"]');
+    await expect(card.locator('.statcard-row')).toHaveCount(3);
+    await expect(card.locator('.statcard-subtitle')).toHaveText('Today vs Yesterday');
+  });
+
+  test('still renders the subtitle for a single-value card', async ({ page }) => {
+    await page.goto('/components/stat-card');
+
+    const card = page.locator('[data-pw="with-subtitle"]');
+    await expect(card.locator('.statcard-row')).toHaveCount(0);
+    await expect(card.locator('.statcard-subtitle')).toHaveText('vs last 30 days');
+  });
 });

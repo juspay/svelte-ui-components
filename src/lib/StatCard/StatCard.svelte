@@ -198,10 +198,10 @@
         </div>
       {/if}
     </div>
+  {/if}
 
-    {#if typeof subtitle === 'string' && subtitle.length > 0}
-      <div class="statcard-subtitle">{subtitle}</div>
-    {/if}
+  {#if typeof subtitle === 'string' && subtitle.length > 0}
+    <div class="statcard-subtitle">{subtitle}</div>
   {/if}
 
   {#if children}

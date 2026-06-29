@@ -54,8 +54,8 @@
   <h3>Sizes</h3>
   <p>
     Three typography presets — <code>sm</code> (14/12px), <code>md</code> (16/14px, default), and
-    <code>lg</code> (18/16px) — scale the text. The value sits 2px below the label so the key reads
-    as the primary element.
+    <code>lg</code> (18/16px) — scale the text. The value sits 2px below the label so the key reads as
+    the primary element.
   </p>
   <div class="demo-row size-row">
     <div>

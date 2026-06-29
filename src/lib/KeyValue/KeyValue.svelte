@@ -15,9 +15,11 @@
   }: KeyValueProperties = $props();
 
   const isEmptyValue = (value: KeyValueItem['value']): boolean =>
-    value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+    value == null || (typeof value === 'string' && value.trim() === '');
 
-  let visibleItems = $derived(hideEmpty ? items.filter((item) => !isEmptyValue(item.value)) : items);
+  let visibleItems = $derived(
+    hideEmpty ? items.filter((item) => !isEmptyValue(item.value)) : items
+  );
 
   const displayValue = (item: KeyValueItem): string =>
     isEmptyValue(item.value) ? emptyText : String(item.value);

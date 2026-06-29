@@ -443,6 +443,10 @@
     draftEnd = event.rangeEnd;
     // A direct calendar click is not a preset selection.
     selectedPresetLabel = null;
+    if (showTimeSelection) {
+      startTimeDisplay = '12:00 AM';
+      endTimeDisplay = isSameDay(event.rangeEnd, now) ? formatTimeDisplay(now) : '11:59 PM';
+    }
   }
 
   function handleSingleSelect(event: { date: Date }): void {

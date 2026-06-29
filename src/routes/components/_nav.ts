@@ -64,6 +64,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Table', slug: 'table' },
       { name: 'Accordion', slug: 'accordion' },
       { name: 'ListItem', slug: 'list-item' },
+      { name: 'KeyValue', slug: 'key-value' },
       { name: 'GridItem', slug: 'grid-item' },
       { name: 'CheckListItem', slug: 'check-list-item' },
       { name: 'Badge', slug: 'badge' },

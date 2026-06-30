@@ -4,10 +4,20 @@
 
   let {
     text,
+    variant = 'primary',
+    size = 'md',
+    iconOnly = false,
+    fullWidth = false,
+    href,
+    target,
+    rel,
+    loading = false,
+    allowHtml = false,
     enable = true,
     disabled = false,
     showLoader = false,
     loaderType,
+    showProgressBar = $bindable(false),
     type = 'button',
     testId,
     ariaLabel,
@@ -22,16 +32,23 @@
     onmouseleave,
     ontouchstart,
     ontouchend,
-    showProgressBar = $bindable(false),
     icon,
     children,
     classes
   }: ButtonProperties = $props();
 
-  let isDisabled = $derived(!enable || disabled || showLoader);
+  let isLoading = $derived(loading || showLoader);
+  let isDisabled = $derived(disabled || !enable || isLoading);
+  // `loading` and the legacy Circular loaderType both render the spinner.
+  let showCircularLoader = $derived(loading || (showLoader && loaderType === 'Circular'));
+  let resolvedRel = $derived(rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined));
 
   function handleButtonClick(event: MouseEvent): void {
-    if (showProgressBar) {
+    if (isDisabled || showProgressBar) {
+      // Anchors have no native disabled state — block navigation/handler explicitly.
+      if (href) {
+        event.preventDefault();
+      }
       return;
     }
     onclick?.(event);
@@ -41,11 +58,17 @@
   }
 </script>
 
-<div class="button-container {classes ?? ''}">
+<div
+  class="button-container variant-{variant} size-{size} {classes ?? ''}"
+  class:icon-only={iconOnly}
+  class:full-width={fullWidth}
+>
   {#if showProgressBar}
     <div class="button-progress-bar"></div>
   {/if}
-  <button
+  <svelte:element
+    this={href ? 'a' : 'button'}
+    class="button-el"
     class:disabled={isDisabled}
     onclick={handleButtonClick}
     {onkeydown}
@@ -55,28 +78,38 @@
     {onmouseleave}
     {ontouchstart}
     {ontouchend}
-    disabled={isDisabled}
-    {type}
     data-pw={testId}
-    aria-label={ariaLabel}
-    aria-expanded={ariaExpanded}
-    aria-selected={ariaSelected}
-    {role}
+    role={role ?? null}
+    aria-label={ariaLabel ?? null}
+    aria-expanded={ariaExpanded ?? null}
+    aria-selected={ariaSelected ?? null}
+    aria-busy={isLoading || null}
+    type={href ? null : type}
+    disabled={href ? null : isDisabled}
+    href={href ? (isDisabled ? undefined : href) : null}
+    target={href ? target : null}
+    rel={href ? resolvedRel : null}
+    aria-disabled={href && isDisabled ? 'true' : null}
+    tabindex={href && isDisabled ? -1 : null}
   >
-    {#if showLoader && loaderType === 'Circular'}
+    {#if showCircularLoader}
       <div class="button-loader"><Loader /></div>
     {/if}
     {#if typeof icon === 'function'}
       <div class="button-icon">{@render icon()}</div>
     {/if}
     {#if typeof text === 'string' && text.length > 0}
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      <div class="button-text">{@html text}</div>
+      {#if allowHtml}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        <div class="button-text">{@html text}</div>
+      {:else}
+        <div class="button-text">{text}</div>
+      {/if}
     {/if}
     {#if typeof children === 'function'}
       {@render children()}
     {/if}
-  </button>
+  </svelte:element>
 </div>
 
 <style>
@@ -84,23 +117,92 @@
     position: relative;
     width: var(--button-width, fit-content);
   }
-  button {
+
+  /* ---- Variant defaults (set the internal --_btn-* layer; explicit --button-* always wins) ---- */
+  .variant-primary {
+    --_btn-color: #3a4550;
+    --_btn-text-color: #ffffff;
+    --_btn-border: none;
+  }
+
+  .variant-secondary {
+    --_btn-color: transparent;
+    --_btn-text-color: #3a4550;
+    --_btn-border: 1px solid #cbd5e1;
+    --_btn-hover-color: #f1f5f9;
+    --_btn-hover-text-color: #3a4550;
+    --_btn-hover-border: 1px solid #cbd5e1;
+  }
+
+  .variant-ghost {
+    --_btn-color: transparent;
+    --_btn-text-color: #3a4550;
+    --_btn-border: none;
+    --_btn-hover-color: #f1f5f9;
+    --_btn-hover-text-color: #3a4550;
+    --_btn-hover-border: none;
+  }
+
+  .variant-destructive {
+    --_btn-color: #e7000b;
+    --_btn-text-color: #ffffff;
+    --_btn-border: none;
+    --_btn-hover-color: #c10007;
+    --_btn-hover-text-color: #ffffff;
+    --_btn-hover-border: none;
+  }
+
+  /* ---- Size defaults (md reproduces the legacy 16px padding / 14px font) ---- */
+  .size-sm {
+    --_btn-padding: 8px 12px;
+    --_btn-font-size: 13px;
+  }
+
+  .size-md {
+    --_btn-padding: 16px;
+    --_btn-font-size: 14px;
+  }
+
+  .size-lg {
+    --_btn-padding: 20px 28px;
+    --_btn-font-size: 16px;
+  }
+
+  .icon-only {
+    --_btn-padding: 8px;
+  }
+
+  .icon-only.size-sm {
+    --_btn-padding: 6px;
+  }
+
+  .icon-only.size-lg {
+    --_btn-padding: 12px;
+  }
+
+  .full-width {
+    --button-width: 100%;
+  }
+
+  .button-el {
     max-height: var(--button-max-height);
     max-width: var(--button-max-width);
     min-width: var(--button-min-width);
     font-family: var(--button-font-family);
     font-weight: var(--button-font-weight, 500);
-    font-size: var(--button-font-size, 14px);
-    background-color: var(--button-color, #3a4550);
-    color: var(--button-text-color, white);
+    font-size: var(--button-font-size, var(--_btn-font-size, 14px));
+    background-color: var(--button-color, var(--_btn-color, #3a4550));
+    color: var(--button-text-color, var(--_btn-text-color, white));
     height: var(--button-height, fit-content);
-    padding: var(--button-padding, 16px);
+    padding: var(--button-padding, var(--_btn-padding, 16px));
     margin: var(--button-margin);
-    border-radius: var(--button-border-radius, var(--radius, 4px));
+    border-radius: var(--button-border-radius, var(--radius, 6px));
     width: var(--button-width, fit-content);
     cursor: var(--cursor, pointer);
     opacity: var(--opacity, 1);
-    border: var(--button-border, none);
+    border: var(--button-border, var(--_btn-border, none));
+    box-sizing: border-box;
+    text-decoration: none;
     display: flex;
     justify-content: var(--button-justify-content, center);
     align-items: center;
@@ -110,14 +212,16 @@
     box-shadow: var(--button-box-shadow, none);
   }
 
-  .disabled {
+  .button-el.disabled,
+  .button-el:disabled {
     cursor: var(--disabled-cursor, not-allowed);
     opacity: var(--disabled-opacity, 0.4);
-    color: var(--disabled-text-color, var(--button-text-color, white));
+    color: var(--disabled-text-color, var(--button-text-color, var(--_btn-text-color, white)));
     font-size: var(--disabled-font-size);
     font-weight: var(--disabled-font-weight);
-    border: var(--disabled-border);
-    background: var(--disabled-background-color, var(--button-color, #3a4550));
+    /* Preserve the variant border when disabled so secondary (bordered) stays distinct from ghost. */
+    border: var(--disabled-border, var(--button-border, var(--_btn-border, none)));
+    background: var(--disabled-background-color, var(--button-color, var(--_btn-color, #3a4550)));
     box-shadow: var(
       --button-disabled-box-shadow,
       var(--disabled-box-shadow, var(--button-box-shadow, none))
@@ -138,21 +242,30 @@
     display: var(--button-text-display);
   }
 
-  button:hover {
-    background: var(--button-hover-color, var(--button-color, #3a4550));
-    color: var(--button-hover-text-color, var(--button-text-color, white));
-    border: var(--button-hover-border, var(--button-border, none));
+  .button-el:hover:not(.disabled) {
+    background: var(
+      --button-hover-color,
+      var(--_btn-hover-color, var(--button-color, var(--_btn-color, #3a4550)))
+    );
+    color: var(
+      --button-hover-text-color,
+      var(--_btn-hover-text-color, var(--button-text-color, var(--_btn-text-color, white)))
+    );
+    border: var(
+      --button-hover-border,
+      var(--_btn-hover-border, var(--button-border, var(--_btn-border, none)))
+    );
     transform: var(--button-hover-transform);
     box-shadow: var(--button-hover-box-shadow, var(--button-box-shadow, none));
   }
 
-  button:active {
+  .button-el:active:not(.disabled) {
     transform: var(--button-active-transform);
-    background: var(--button-active-background, var(--button-color, #3a4550));
+    background: var(--button-active-background, var(--button-color, var(--_btn-color, #3a4550)));
     box-shadow: var(--button-active-box-shadow, var(--button-box-shadow, none));
   }
 
-  button:focus-visible {
+  .button-el:focus-visible {
     box-shadow: var(--button-focus-visible-box-shadow, var(--button-box-shadow, none));
   }
 

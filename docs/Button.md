@@ -1,6 +1,6 @@
 # Button
 
-An action button that supports two loader modes: a circular spinner overlay or a horizontal progress bar that fills over time. The button text supports HTML content. When `showLoader` is true with `loaderType='ProgressBar'`, clicking the button triggers a progress bar animation and prevents further clicks until complete. Includes icon and children snippet support for rendering custom content.
+An action button with a built-in variant and size system: four visual styles (`primary`, `secondary`, `ghost`, `destructive`), three sizes (`sm`/`md`/`lg`), plus `iconOnly` and `fullWidth` affordances. It can render as a styled link via `href`, exposes a `loading` state (spinner + `aria-busy`), and supports icon/children snippets. Every visual property remains overridable through `--button-*` CSS variables, so an explicit override or a `classes` recipe always wins over the variant default.
 
 ## Usage
 
@@ -10,6 +10,55 @@ An action button that supports two loader modes: a circular spinner overlay or a
 </script>
 
 <Button text="Submit" onclick={(e) => console.log('clicked', e)} />
+```
+
+### Variants
+
+```svelte
+<Button text="Primary" variant="primary" />
+<Button text="Secondary" variant="secondary" />
+<Button text="Ghost" variant="ghost" />
+<Button text="Destructive" variant="destructive" />
+```
+
+### Sizes
+
+```svelte
+<Button text="Small" size="sm" />
+<Button text="Medium" size="md" />
+<Button text="Large" size="lg" />
+```
+
+### Icon only
+
+Pair `iconOnly` with `ariaLabel` so the button has an accessible name.
+
+```svelte
+<Button iconOnly ariaLabel="Add">
+  {#snippet icon()}<PlusIcon />{/snippet}
+</Button>
+```
+
+### Full width
+
+```svelte
+<Button text="Continue" fullWidth />
+```
+
+### Loading
+
+`loading` shows the spinner, sets `aria-busy`, and disables the button (preferred over the legacy `showLoader`/`loaderType` pair).
+
+```svelte
+<Button text={saving ? 'Saving…' : 'Save'} loading={saving} onclick={save} />
+```
+
+### As a link
+
+With `href` the button renders as a styled `<a>`. A disabled link is rendered inert via `aria-disabled` and `tabindex="-1"`.
+
+```svelte
+<Button text="Open docs" href="/docs" target="_blank" variant="secondary" />
 ```
 
 ### With Icon
@@ -36,12 +85,21 @@ An action button that supports two loader modes: a circular spinner overlay or a
 
 | Prop            | Type                              | Required | Default    | Description                                                                                                                                                                                                                |
 | --------------- | --------------------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text            | `string`                          | No       | `-`        | The button label text. Supports HTML content (rendered via `{@html}`).                                                                                                                                                     |
-| enable          | `boolean`                         | No       | `true`     | Whether the button is clickable. When false, the button appears dimmed and ignores clicks. Equivalent to the inverse of `disabled`.                                                                                        |
-| disabled        | `boolean`                         | No       | `false`    | Whether the button is disabled. When true, the button appears dimmed (opacity 0.4) and ignores clicks. Takes effect alongside `enable` — either being falsy disables the button.                                           |
-| showProgressBar | `boolean`                         | No       | `false`    | Bindable. When true, a horizontal progress bar overlay animates across the button. Set automatically when `showLoader=true` and `loaderType='ProgressBar'` after first click.                                              |
-| showLoader      | `boolean`                         | No       | `false`    | Whether to show a loading indicator. Combined with `loaderType` to determine the visual style.                                                                                                                             |
-| loaderType      | `'Circular' \| 'ProgressBar'`     | No       | `-`        | The type of loader to display when `showLoader` is true. `'Circular'` shows a spinning ring inside the button; `'ProgressBar'` shows a horizontal fill animation across the button.                                        |
+| text            | `string`                          | No       | `-`        | The button label text. Rendered as plain text by default; set `allowHtml` to render as HTML.                                                                                                                               |
+| variant         | `'primary' \| 'secondary' \| 'ghost' \| 'destructive'` | No | `'primary'` | Visual style. Maps to the `--button-*` variables; an explicit `--button-color`/`classes` override wins over the variant default.                                                          |
+| size            | `'sm' \| 'md' \| 'lg'`            | No       | `'md'`     | Size preset controlling padding, height, and font size.                                                                                                                                                                    |
+| iconOnly        | `boolean`                         | No       | `false`    | Square padding for an icon-only button. Pair with `ariaLabel`.                                                                                                                                                             |
+| fullWidth       | `boolean`                         | No       | `false`    | Stretch the button to the full width of its container.                                                                                                                                                                     |
+| href            | `string`                          | No       | `-`        | Render the button as a styled `<a>`. `type` is ignored; a disabled link is made inert via `aria-disabled`/`tabindex="-1"`.                                                                                                  |
+| target          | `string`                          | No       | `-`        | Anchor target (only with `href`), e.g. `_blank`.                                                                                                                                                                           |
+| rel             | `string`                          | No       | `-`        | Anchor rel (only with `href`). Defaults to `noopener noreferrer` when `target="_blank"`.                                                                                                                                   |
+| loading         | `boolean`                         | No       | `false`    | Loading state: shows the spinner, sets `aria-busy`, and disables the button. Preferred over `showLoader`/`loaderType`.                                                                                                      |
+| allowHtml       | `boolean`                         | No       | `false`    | Render `text` as raw HTML. Only enable for trusted, non-user-derived markup.                                                                                                                                                |
+| enable          | `boolean`                         | No       | `true`     | **Deprecated** — use `disabled`. When false the button is disabled. Retained for backward compatibility.                                                                                                                    |
+| disabled        | `boolean`                         | No       | `false`    | Whether the button is disabled. When true, the button appears dimmed (opacity 0.4) and ignores clicks.                                                                                                                      |
+| showProgressBar | `boolean`                         | No       | `false`    | **Deprecated.** Bindable. When true, a horizontal progress bar overlay animates across the button. Set automatically when `showLoader=true` and `loaderType='ProgressBar'` after first click.                              |
+| showLoader      | `boolean`                         | No       | `false`    | **Deprecated** — prefer `loading`. Whether to show a loading indicator. Combined with `loaderType` to determine the visual style.                                                                                           |
+| loaderType      | `'Circular' \| 'ProgressBar'`     | No       | `-`        | **Deprecated** — used with `showLoader`. `'Circular'` shows a spinning ring inside the button; `'ProgressBar'` shows a horizontal fill animation across the button.                                                         |
 | type            | `'submit' \| 'reset' \| 'button'` | No       | `'button'` | The HTML button `type` attribute.                                                                                                                                                                                          |
 | testId          | `string`                          | No       | `-`        | Value for the `data-pw` attribute, used for end-to-end testing selectors.                                                                                                                                                  |
 | ariaLabel       | `string`                          | No       | `-`        | Accessible label for the button. Used when the button has only an icon and no visible text.                                                                                                                                |
@@ -90,7 +148,7 @@ Override these custom properties to theme the component.
 | `--button-height`                           | `fit-content`                  | height             | Height of the button.                                                                                                                                             |
 | `--button-padding`                          | `16px`                         | padding            | Inner padding of the button.                                                                                                                                      |
 | `--button-margin`                           | `-`                            | margin             | Outer margin of the button.                                                                                                                                       |
-| `--button-border-radius`                    | `0px`                          | border-radius      | Corner rounding of the button.                                                                                                                                    |
+| `--button-border-radius`                    | `var(--radius, 6px)`           | border-radius      | Corner rounding of the button.                                                                                                                                    |
 | `--cursor`                                  | `pointer`                      | cursor             | Cursor style on hover.                                                                                                                                            |
 | `--opacity`                                 | `1`                            | opacity            | Opacity of the button.                                                                                                                                            |
 | `--button-border`                           | `none`                         | border             | Border style of the button.                                                                                                                                       |
@@ -129,11 +187,25 @@ Override these custom properties to theme the component.
 
 Custom types used by this component's props and events:
 
+### ButtonVariant
+
+```typescript
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+```
+
+### ButtonSize
+
+```typescript
+type ButtonSize = 'sm' | 'md' | 'lg';
+```
+
 ### LoaderType
 
 ```typescript
 type LoaderType = 'Circular' | 'ProgressBar';
 ```
+
+> **Note:** the `variant`/`size` presets only set internal default values — they never override an explicit `--button-*` variable or a `classes` recipe. This is what keeps existing consumers (e.g. apps that already drive `--button-color` through their own utility classes) rendering unchanged.
 
 ## Internal Dependencies
 

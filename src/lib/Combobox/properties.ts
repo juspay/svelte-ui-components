@@ -7,6 +7,14 @@ export type ComboboxItem = {
   disabled?: boolean;
 };
 
+/** A persistent custom action row rendered at the foot of the dropdown. */
+export type ComboboxAction = {
+  label: string;
+  onClick: () => void;
+  /** Keep the dropdown open after the action runs. Defaults to `false`. */
+  keepOpen?: boolean;
+};
+
 export type ComboboxProperties = MandatoryComboboxProperties &
   OptionalComboboxProperties &
   ComboboxEventProperties;
@@ -36,6 +44,31 @@ export type OptionalComboboxProperties = {
   inputSuffix?: Snippet;
   dropdownHeader?: Snippet;
   dropdownFooter?: Snippet;
+
+  // ── Multi-select (pill typeahead) ─────────────────────────────────────────
+  /** Enable multi-select: picked options become removable pills inside the control. */
+  multiple?: boolean;
+  /** Bindable array of selected ids (multi-select mode). */
+  selected?: string[];
+  /** Cap the number of selections (multi-select mode). */
+  maxSelected?: number;
+  /**
+   * Message shown in the dropdown once `maxSelected` is reached (option/create rows are hidden).
+   * Defaults to "You can select up to {maxSelected}.".
+   */
+  maxSelectedText?: string;
+  /** Custom pill renderer; receives `(value, remove, disabled)`. */
+  pillSnippet?: Snippet<[string, () => void, boolean]>;
+
+  // ── Create + custom action rows ───────────────────────────────────────────
+  /** Show a "Create …" row when the query has no exact match. Default `false`. */
+  allowCreate?: boolean;
+  /** Build the create-row label from the current query. */
+  createLabel?: (query: string) => string;
+  /** A persistent custom action row shown at the foot of the dropdown. */
+  action?: ComboboxAction;
+  /** Custom leading icon for the persistent action row. */
+  actionIcon?: Snippet;
 };
 
 export type ComboboxEventProperties = {
@@ -46,4 +79,12 @@ export type ComboboxEventProperties = {
   onkeydown?: (event: KeyboardEvent) => void;
   onfocus?: (event: FocusEvent) => void;
   onblur?: (event: FocusEvent) => void;
+  /** Multi-select: fires whenever the selection changes (add, remove, or create). */
+  onchange?: (selected: string[]) => void;
+  /** Multi-select: fires when a value is added. */
+  onadd?: (value: string) => void;
+  /** Multi-select: fires when a value is removed. */
+  onremove?: (value: string) => void;
+  /** Fires when the create row is chosen, with the trimmed query. */
+  oncreate?: (value: string) => void;
 };

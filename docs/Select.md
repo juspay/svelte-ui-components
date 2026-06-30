@@ -100,6 +100,7 @@ Pass an image URL (or inline data URI) via `leftIcon` to render a leading icon a
 | hierarchy      | `SelectHierarchy`          | No       | `'default'` | Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. |
 | leftIcon       | `string`                   | No       | -           | Image src (URL or data URI) for an icon rendered at the left of the trigger. Size is controlled by `--select-left-icon-size` (default 16px).                                                          |
 | leftIconTestId | `string`                   | No       | -           | `data-pw` test id forwarded to the leading icon element for end-to-end testing selectors.                                                                                                             |
+| showSelectedTick | `boolean`                | No       | `false`     | Single-select only. When `true`, the selected option shows a checkmark at its right edge. No effect in `multiple` mode. Themeable via `--select-option-tick-size` / `--select-option-tick-color`.     |
 
 ## Snippets
 

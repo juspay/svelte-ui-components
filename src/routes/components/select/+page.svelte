@@ -38,6 +38,7 @@
   const statusOptions: string[] = ['Active', 'Inactive', 'Pending', 'Archived'];
 
   let singleValue: string[] = $state([]);
+  let singleTickValue: string[] = $state([]);
   let searchValue: string[] = $state([]);
   let multiValue: string[] = $state([]);
   let multiSearchValue: string[] = $state([]);
@@ -71,6 +72,14 @@
   <Select items={fruits} bind:value={singleValue} placeholder="Choose a fruit" />
   {#if singleValue.length > 0}
     <p class="demo-info">Selected ID: {singleValue.at(0)}</p>
+  {/if}
+</div>
+
+<h3>Single select with selected tick</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} bind:value={singleTickValue} placeholder="Choose a fruit" showSelectedTick />
+  {#if singleTickValue.length > 0}
+    <p class="demo-info">Selected ID: {singleTickValue.at(0)}</p>
   {/if}
 </div>
 

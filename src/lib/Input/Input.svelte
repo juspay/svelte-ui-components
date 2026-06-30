@@ -47,7 +47,13 @@
     leftIconLabel = 'Leading action',
     rightIconLabel = 'Trailing action',
     mandatory = false,
-    forceError = false
+    forceError = false,
+    rows,
+    autoResize = false,
+    minRows,
+    maxRows,
+    resize = 'none',
+    showCount = false
   }: InputProperties = $props();
 
   export function focus() {
@@ -103,6 +109,38 @@
   const showError = $derived(showErrorMessage || forceError);
   const hasLeftIcon = $derived(typeof leftIcon === 'function');
   const hasRightIcon = $derived(typeof rightIcon === 'function');
+
+  const charCount = $derived(value?.length ?? 0);
+  const effectiveResize = $derived(autoResize ? 'none' : resize);
+
+  // Grow the textarea to fit its content between minRows and maxRows.
+  function adjustTextAreaHeight(): void {
+    const el = inputElement;
+    if (!el || !useTextArea || !autoResize) {
+      return;
+    }
+    el.style.height = 'auto';
+    const styles = window.getComputedStyle(el);
+    const lineHeight = parseFloat(styles.lineHeight) || 20;
+    const verticalPadding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+    const border = parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth);
+    const lower = minRows ?? rows ?? 2;
+    const minHeight = lower * lineHeight + verticalPadding + border;
+    const maxHeight =
+      maxRows != null ? maxRows * lineHeight + verticalPadding + border : Number.POSITIVE_INFINITY;
+    const nextHeight = Math.min(Math.max(el.scrollHeight, minHeight), maxHeight);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }
+
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    // Re-run on every value change (and on mount) while auto-resize is enabled.
+    void value;
+    if (useTextArea && autoResize) {
+      adjustTextAreaHeight();
+    }
+  });
 
   function handleOnInput(event: Event) {
     if (inputElement === null) {
@@ -232,8 +270,11 @@
         onpaste={handleOnPaste}
         onclick={onClick}
         onkeydown={onKeyDown}
+        data-pw={testId}
         class:action-input={actionInput}
         style="--focus-border: {addFocusColor ? 1 : 0}px;"
+        style:resize={effectiveResize}
+        rows={rows ?? null}
         disabled={disable}
         bind:this={inputElement}
         maxlength={dataType === 'tel' ? null : maxLength}
@@ -319,6 +360,11 @@
   {#if infoMessage !== '' && !actionInput}
     <div class="info-message">
       {infoMessage}
+    </div>
+  {/if}
+  {#if useTextArea && showCount && !actionInput}
+    <div class="input-char-count" class:at-limit={charCount >= maxLength}>
+      {charCount}/{maxLength}
     </div>
   {/if}
 </div>
@@ -464,6 +510,18 @@
     color: var(--input-info-msg-text-color, #fa1405);
     margin: var(--input-info-msg-margin);
     padding: var(--input-info-msg-padding);
+  }
+
+  .input-char-count {
+    align-self: flex-end;
+    font-size: var(--input-char-count-size, 12px);
+    color: var(--input-char-count-color, #98a2b3);
+    margin: var(--input-char-count-margin, 4px 0 0);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .input-char-count.at-limit {
+    color: var(--input-char-count-limit-color, var(--input-error-msg-text-color, #fa1405));
   }
 
   ::placeholder {

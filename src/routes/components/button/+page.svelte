@@ -112,10 +112,3 @@
     <Button text="Open docs" href="https://svelte.dev" target="_blank" variant="secondary" />
   </div>
 </div>
-
-<style>
-  /* Keep the built-in variant palette readable on the docs dark theme. */
-  :global([data-theme='dark']) .btn-demos {
-    --button-hover-color: var(--doc-btn-hover-bg);
-  }
-</style>

@@ -35,9 +35,16 @@ Pair `iconOnly` with `ariaLabel` so the button has an accessible name.
 
 ```svelte
 <Button iconOnly ariaLabel="Add">
-  {#snippet icon()}<PlusIcon />{/snippet}
+  {#snippet icon()}
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <line x1="8" y1="3" x2="8" y2="13" />
+      <line x1="3" y1="8" x2="13" y2="8" />
+    </svg>
+  {/snippet}
 </Button>
 ```
+
+> Use `stroke="currentColor"` (or `fill="currentColor"`) in the icon so it inherits the button's text color across variants.
 
 ### Full width
 

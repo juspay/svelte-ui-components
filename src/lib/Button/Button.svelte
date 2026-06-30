@@ -37,14 +37,17 @@
     classes
   }: ButtonProperties = $props();
 
-  let isLoading = $derived(loading || showLoader);
-  let isDisabled = $derived(disabled || !enable || isLoading);
-  // `loading` and the legacy Circular loaderType both render the spinner.
+  // `loading` and the legacy Circular loaderType both render the spinner and disable the button.
   let showCircularLoader = $derived(loading || (showLoader && loaderType === 'Circular'));
-  let resolvedRel = $derived(rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined));
+  // The legacy ProgressBar loader stays clickable until the first click starts the bar, then
+  // it disables (the documented flow). So it must NOT count toward "disabled" before it starts.
+  let isProgressBarLoader = $derived(showLoader && loaderType === 'ProgressBar');
+  let isBusy = $derived(showCircularLoader || showProgressBar);
+  let isDisabled = $derived(disabled || !enable || showCircularLoader || showProgressBar);
+  let resolvedRel = $derived(rel ?? (target === '_blank' ? 'noopener noreferrer' : null));
 
   function handleButtonClick(event: MouseEvent): void {
-    if (isDisabled || showProgressBar) {
+    if (isDisabled) {
       // Anchors have no native disabled state — block navigation/handler explicitly.
       if (href) {
         event.preventDefault();
@@ -52,7 +55,7 @@
       return;
     }
     onclick?.(event);
-    if (showLoader && loaderType === 'ProgressBar') {
+    if (isProgressBarLoader) {
       showProgressBar = true;
     }
   }
@@ -83,10 +86,10 @@
     aria-label={ariaLabel ?? null}
     aria-expanded={ariaExpanded ?? null}
     aria-selected={ariaSelected ?? null}
-    aria-busy={isLoading || null}
+    aria-busy={isBusy || null}
     type={href ? null : type}
     disabled={href ? null : isDisabled}
-    href={href ? (isDisabled ? undefined : href) : null}
+    href={href ? (isDisabled ? null : href) : null}
     target={href ? target : null}
     rel={href ? resolvedRel : null}
     aria-disabled={href && isDisabled ? 'true' : null}

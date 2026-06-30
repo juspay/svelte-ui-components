@@ -27,6 +27,24 @@ export type OptionalInputProperties = {
   max?: number;
   actionInput?: boolean;
   useTextArea?: boolean;
+  /** Initial visible rows for the textarea (only applies when `useTextArea`). */
+  rows?: number;
+  /**
+   * Grow/shrink the textarea to fit its content between `minRows` and `maxRows`
+   * (only when `useTextArea`). Disables manual resizing while active.
+   */
+  autoResize?: boolean;
+  /** Lower bound (in rows) when `autoResize` is on. Defaults to `rows`. */
+  minRows?: number;
+  /** Upper bound (in rows) when `autoResize` is on; beyond this the textarea scrolls. */
+  maxRows?: number;
+  /**
+   * Manual resize-handle behaviour for the textarea. Defaults to `'none'` (unchanged from
+   * before); forced to `'none'` when `autoResize` is on.
+   */
+  resize?: 'none' | 'vertical' | 'horizontal' | 'both';
+  /** Show a live `current / maxLength` character counter beneath the field. */
+  showCount?: boolean;
   autoComplete?: HTMLInputAttributes['autocomplete'];
   name?: string;
   textTransformers?: TextTransformer[];

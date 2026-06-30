@@ -1,6 +1,6 @@
 # Input
 
-A text input field with built-in validation for email, phone (tel), password, and text patterns. Validates automatically using `validationPattern` and `inProgressPattern` RegExp props, plus optional custom validator functions. Shows error messages when validation fails and info messages below the input. For `tel` dataType, automatically strips non-digit characters and enforces `maxLength`. Supports text transformers that modify the raw input value and view presentation transformers that format the displayed value (e.g., adding spaces to a card number). The validation state (`Valid` / `InProgress` / `Invalid`) is computed reactively and reported via `onStateChange`. Can render as a `<textarea>` when `useTextArea` is true.
+A text input field with built-in validation for email, phone (tel), password, and text patterns. Validates automatically using `validationPattern` and `inProgressPattern` RegExp props, plus optional custom validator functions. Shows error messages when validation fails and info messages below the input. For `tel` dataType, automatically strips non-digit characters and enforces `maxLength`. Supports text transformers that modify the raw input value and view presentation transformers that format the displayed value (e.g., adding spaces to a card number). The validation state (`Valid` / `InProgress` / `Invalid`) is computed reactively and reported via `onStateChange`. Can render as a `<textarea>` when `useTextArea` is true, with multi-line options: `rows`, auto-resize (`autoResize` / `minRows` / `maxRows`), a `resize` handle, and a `showCount` character counter.
 
 ## Usage
 
@@ -10,6 +10,30 @@ A text input field with built-in validation for email, phone (tel), password, an
 </script>
 
 <Input value={'...'} />
+```
+
+### Multi-line (textarea)
+
+Set `useTextArea` to render a `<textarea>`. It supports the same label/validation/error
+machinery as the single-line input, plus textarea-specific options: `rows`, `autoResize`
+(`minRows`/`maxRows`), a `resize` handle, and a `showCount` character counter.
+
+```svelte
+<script>
+  let notes = $state('');
+</script>
+
+<!-- Fixed height -->
+<Input bind:value={notes} useTextArea label="Notes" rows={4} />
+
+<!-- Auto-grow between 2 and 8 rows -->
+<Input bind:value={notes} useTextArea autoResize minRows={2} maxRows={8} />
+
+<!-- Character counter -->
+<Input bind:value={notes} useTextArea showCount maxLength={140} label="Bio" />
+
+<!-- User-resizable -->
+<Input bind:value={notes} useTextArea resize="vertical" />
 ```
 
 ## Props
@@ -33,6 +57,12 @@ A text input field with built-in validation for email, phone (tel), password, an
 | max                  | `number`                                                               | No       | `-`                 | Maximum value for numeric inputs (HTML max attribute). Only applies to `<input>`, not `<textarea>`.                                                                                                                           |
 | actionInput          | `boolean`                                                              | No       | `false`             | When true, hides the label, error message, and info message, and adjusts border-radius/shadow for seamless integration inside InputButton.                                                                                    |
 | useTextArea          | `boolean`                                                              | No       | `false`             | When true, renders a `<textarea>` instead of an `<input>`. Useful for multi-line text entry.                                                                                                                                  |
+| rows                 | `number`                                                               | No       | `-`                 | Initial visible rows for the textarea (only applies when `useTextArea`).                                                                                                                                                      |
+| autoResize           | `boolean`                                                              | No       | `false`             | When `useTextArea`, grows/shrinks the textarea to fit its content between `minRows` and `maxRows`; disables manual resizing while active.                                                                                      |
+| minRows              | `number`                                                               | No       | `rows`              | Lower bound (in rows) when `autoResize` is on.                                                                                                                                                                                |
+| maxRows              | `number`                                                               | No       | `-`                 | Upper bound (in rows) when `autoResize` is on; beyond this the textarea scrolls.                                                                                                                                              |
+| resize               | `'none' \| 'vertical' \| 'horizontal' \| 'both'`                       | No       | `'none'`            | Manual resize-handle behaviour for the textarea. Forced to `'none'` when `autoResize` is on.                                                                                                                                  |
+| showCount            | `boolean`                                                              | No       | `false`             | When `useTextArea`, shows a live `current / maxLength` character counter beneath the field.                                                                                                                                    |
 | autoComplete         | `HTMLInputAttributes['autocomplete']`                                  | No       | `'on'`              | The HTML autocomplete attribute value. Controls browser autofill behavior. Accepts any string for non-standard values (e.g., `'off'`, `'new-password'`).                                                                      |
 | name                 | `string`                                                               | No       | `''`                | The HTML name attribute for the input. Used for form submission and label association.                                                                                                                                        |
 | textTransformers     | `TextTransformer[]`                                                    | No       | `[]`                | Array of functions applied to the raw input value before digit extraction (tel mode only). Use for stripping country codes or formatting.                                                                                     |
@@ -126,6 +156,10 @@ Override these custom properties to theme the component.
 | `--input-info-msg-padding`          | `-`                                                    | padding          | Padding inside the info message.                                            |
 | `--input-placeholder-color`         | `-`                                                    | color            | Color of placeholder text.                                                  |
 | `--input-error-border`              | `1px solid var(--input-error-msg-text-color, #fa1405)` | border           | Border of the input when in error state.                                    |
+| `--input-char-count-size`           | `12px`                                                 | font-size        | Font size of the textarea character counter.                                |
+| `--input-char-count-color`          | `#98a2b3`                                               | color            | Color of the character counter.                                             |
+| `--input-char-count-limit-color`    | `#fa1405`                                               | color            | Counter color when the value reaches `maxLength`.                           |
+| `--input-char-count-margin`         | `4px 0 0`                                               | margin           | Margin around the character counter.                                        |
 
 ## Type Reference
 

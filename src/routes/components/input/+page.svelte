@@ -6,6 +6,8 @@
   let autoGrow = $state('');
   let bio = $state('');
   let resizable = $state('');
+  let resizableX = $state('');
+  let resizableBoth = $state('');
 </script>
 
 <div class="page-header">
@@ -59,7 +61,24 @@
 </div>
 
 <h3>Manual resize</h3>
-<p>Control the resize handle with <code>resize</code> (default <code>'none'</code>).</p>
+<p>
+  Control the resize handle with <code>resize</code> (default <code>'none'</code>) —
+  <code>'vertical'</code>, <code>'horizontal'</code>, or <code>'both'</code>. Drag the corner/edge
+  of each field below.
+</p>
 <div class="demo-row" style="max-width: 400px;">
-  <Input bind:value={resizable} useTextArea resize="vertical" label="Comment" rows={3} />
+  <Input bind:value={resizable} useTextArea resize="vertical" label="Vertical" rows={3} />
 </div>
+<div class="demo-row resize-narrow">
+  <Input bind:value={resizableX} useTextArea resize="horizontal" label="Horizontal" rows={3} />
+</div>
+<div class="demo-row resize-narrow">
+  <Input bind:value={resizableBoth} useTextArea resize="both" label="Both" rows={3} />
+</div>
+
+<style>
+  /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */
+  .resize-narrow :global(.input-container) {
+    --input-width: 240px;
+  }
+</style>

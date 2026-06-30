@@ -82,7 +82,9 @@
           aria-hidden="true"
         >
           <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          />
         </svg>
       {/snippet}
     </Button>
@@ -94,7 +96,10 @@
   </div>
 
   <h3>Loading</h3>
-  <p>The <code>loading</code> prop shows a spinner, sets <code>aria-busy</code>, and disables the button.</p>
+  <p>
+    The <code>loading</code> prop shows a spinner, sets <code>aria-busy</code>, and disables the
+    button.
+  </p>
   <div class="demo-row">
     <Button text={loadingDemo ? 'Saving…' : 'Save'} loading={loadingDemo} onclick={runLoading} />
   </div>

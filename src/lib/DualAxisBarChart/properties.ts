@@ -111,6 +111,27 @@ export type OptionalDualAxisBarChartProperties = {
   testId?: string;
   /** Extra CSS class string on the root `<div>`. */
   classes?: string;
+  /**
+   * Minimum rendered bar height in pixels. The default `2` keeps very small non-zero
+   * values visible, but it also paints a 2px stub for genuine zeros — set `0` so an
+   * all-zero/dormant series renders nothing (letting the consumer detect it and show
+   * an empty state instead of a row of indistinguishable baseline stubs). Default `2`.
+   */
+  minBarHeight?: number;
+  /**
+   * Override the plot margins (px) reserved for axis titles and tick labels. Merged
+   * over the defaults `{ top: 24, right: 56, bottom: 40, left: 56 }`; widen `left`/`right`
+   * when long currency tick labels (e.g. `₹1,00,000`) would otherwise overlap the
+   * gridlines in a narrow container.
+   */
+  margin?: { top?: number; right?: number; bottom?: number; left?: number };
+  /**
+   * Render the hover tooltip on `document.body` with `position: fixed` viewport
+   * coordinates instead of `position: absolute` inside the chart. Set `true` when the
+   * chart sits in an `overflow:auto`/scrollable container that would otherwise clip the
+   * tooltip. Default `false` (in-chart positioning, unchanged).
+   */
+  tooltipPortal?: boolean;
 };
 
 export type DualAxisBarChartEventProperties = {

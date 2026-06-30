@@ -30,6 +30,9 @@
     barRadius = 3,
     barPadding = 0.25,
     aspectRatio = 16 / 9,
+    minBarHeight = 2,
+    margin,
+    tooltipPortal = false,
     tooltipSnippet,
     onbarclick,
     testId,
@@ -44,6 +47,8 @@
   let hoveredCategoryIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+  let mouseClientX = $state(0);
+  let mouseClientY = $state(0);
 
   // ── Formatters ─────────────────────────────────────────────────
 
@@ -53,7 +58,13 @@
   // ── Layout — wider right margin to accommodate right-axis labels ─
 
   const dims = $derived(
-    computeChartDimensions(chartWidth, chartHeight, { top: 24, right: 56, bottom: 40, left: 56 })
+    computeChartDimensions(chartWidth, chartHeight, {
+      top: 24,
+      right: 56,
+      bottom: 40,
+      left: 56,
+      ...margin
+    })
   );
 
   // ── Scales ─────────────────────────────────────────────────────
@@ -152,7 +163,7 @@
         const barX = bandStart + subIndex * subBandWidth + barGap;
         const valueY = scale(value);
         const barY = value >= 0 ? valueY : zeroY;
-        const barHeight = Math.max(2, Math.abs(valueY - zeroY));
+        const barHeight = Math.max(minBarHeight, Math.abs(valueY - zeroY));
 
         const path = roundedRectPath(barX, barY, barW, barHeight, barRadius, barRadius, 0, 0);
 
@@ -278,6 +289,22 @@
     const rect = containerEl.getBoundingClientRect();
     mouseX = event.clientX - rect.left;
     mouseY = event.clientY - rect.top;
+    mouseClientX = event.clientX;
+    mouseClientY = event.clientY;
+  };
+
+  /**
+   * Svelte action: relocates the tooltip layer to `document.body` so a `position:fixed`
+   * tooltip is never clipped by an `overflow`/scroll ancestor. Used only when
+   * `tooltipPortal` is set; `use:` actions never run during SSR.
+   */
+  const portalToBody = (node: HTMLElement) => {
+    document.body.appendChild(node);
+    return {
+      destroy: () => {
+        node.remove();
+      }
+    };
   };
 
   const handleCategoryEnter = (event: MouseEvent, catIdx: number) => {
@@ -439,12 +466,31 @@
     </ChartContainer>
 
     <!-- Tooltip -->
-    {#if typeof tooltipSnippet === 'function' && hoveredCategoryIndex !== null}
-      <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-        {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
-      </div>
-    {:else}
-      <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+    {#if hoveredCategoryIndex !== null}
+      {#if tooltipPortal}
+        <!-- Portaled to <body> with fixed viewport coords so the tooltip is never
+             clipped by an overflow/scroll ancestor (e.g. a scrollable report sheet).
+             The inner elements keep their own +12/-12 offset relative to this layer. -->
+        <div
+          class="chart-tooltip-portal"
+          style="left: {mouseClientX}px; top: {mouseClientY}px;"
+          use:portalToBody
+        >
+          {#if typeof tooltipSnippet === 'function'}
+            <div class="chart-tooltip-slot" style="left: 12px; top: -12px;">
+              {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
+            </div>
+          {:else}
+            <ChartTooltip data={tooltipData} mouseX={0} mouseY={0} />
+          {/if}
+        </div>
+      {:else if typeof tooltipSnippet === 'function'}
+        <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
+          {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
+        </div>
+      {:else}
+        <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+      {/if}
     {/if}
   {:else}
     <div class="chart-empty">No data available.</div>
@@ -510,6 +556,12 @@
   .chart-tooltip-slot {
     position: absolute;
     z-index: 10;
+    pointer-events: none;
+  }
+
+  .chart-tooltip-portal {
+    position: fixed;
+    z-index: var(--chart-tooltip-z-index, 10);
     pointer-events: none;
   }
 

@@ -44,6 +44,13 @@ export type OptionalSelectProperties = {
   showSelectAll?: boolean;
   /** Label for the `showSelectAll` row. Defaults to `'Select all'`. */
   selectAllLabel?: string;
+  /**
+   * Single-select only: when `true`, the currently selected option shows a
+   * checkmark at its right edge. No effect in `multiple` mode (which already
+   * renders a checkbox indicator). Themeable via `--select-option-tick-size`
+   * and `--select-option-tick-color`. Defaults to `false`.
+   */
+  showSelectedTick?: boolean;
   testId?: string;
   /** Fallback per-option test id prefix. Each option emits `data-pw="{itemTestId}-{id}"` when its own `item.testId` is not set. */
   itemTestId?: string;

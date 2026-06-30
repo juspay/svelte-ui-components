@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import Input from '../Input/Input.svelte';
+  import Pill from '../Pill/Pill.svelte';
   import type { ComboboxItem, ComboboxProperties } from './properties';
 
   function defaultFilter(item: ComboboxItem, query: string): boolean {
@@ -29,13 +30,27 @@
     inputSuffix,
     dropdownHeader,
     dropdownFooter,
+    // multi-select + create/action
+    multiple = false,
+    selected = $bindable([]),
+    maxSelected,
+    maxSelectedText,
+    pillSnippet,
+    allowCreate = false,
+    createLabel = (query: string) => `Create "${query}"`,
+    action,
+    actionIcon,
     onselect,
     oninput,
     onopen,
     onclose,
     onkeydown,
     onfocus,
-    onblur
+    onblur,
+    onchange,
+    onadd,
+    onremove,
+    oncreate
   }: ComboboxProperties = $props();
 
   let containerEl: HTMLDivElement | null = $state(null);
@@ -45,19 +60,62 @@
     return inputRef?.getInputRef() ?? null;
   }
 
+  function focusInput(): void {
+    inputRef?.getInputRef()?.focus();
+  }
+
   const listboxId = `combobox-listbox-${Math.random().toString(36).slice(2, 9)}`;
 
+  let selectedSet = $derived(new Set(selected));
+  let trimmedQuery = $derived(inputValue.trim());
+
   let filteredItems: ComboboxItem[] = $derived(
-    inputValue.length > 0 ? items.filter((item) => filterFn(item, inputValue)) : items
+    items.filter((item) => {
+      if (multiple && selectedSet.has(item.id)) {
+        return false;
+      }
+      return inputValue.length > 0 ? filterFn(item, inputValue) : true;
+    })
   );
 
   let selectableItems: ComboboxItem[] = $derived(
     filteredItems.filter((item) => item.disabled !== true)
   );
 
+  let exactMatch: ComboboxItem | undefined = $derived(
+    items.find((item) => item.label.toLowerCase() === trimmedQuery.toLowerCase())
+  );
+
+  let atLimit = $derived(
+    multiple && typeof maxSelected === 'number' && selected.length >= maxSelected
+  );
+
+  let limitText = $derived(
+    maxSelectedText ??
+      (typeof maxSelected === 'number'
+        ? `You can select up to ${maxSelected}.`
+        : 'Selection limit reached.')
+  );
+
+  let showCreate = $derived(
+    allowCreate &&
+      !atLimit &&
+      trimmedQuery !== '' &&
+      exactMatch === undefined &&
+      !(multiple && selectedSet.has(trimmedQuery))
+  );
+
+  // Navigable rows: selectable options (hidden at the limit) → create → action.
+  let navItemCount = $derived(atLimit ? 0 : selectableItems.length);
+  let createNavIndex = $derived(showCreate ? navItemCount : -1);
+  let actionNavIndex = $derived(action ? navItemCount + (showCreate ? 1 : 0) : -1);
+  let navCount = $derived(navItemCount + (showCreate ? 1 : 0) + (action ? 1 : 0));
+
   let highlightedOptionId: string | null = $derived(
     highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : null
   );
+
+  const labelOf = (id: string): string => items.find((item) => item.id === id)?.label ?? id;
 
   function openDropdown() {
     if (disabled || open) {
@@ -77,14 +135,101 @@
     onclose?.();
   }
 
+  function emitChange(): void {
+    onchange?.([...selected]);
+  }
+
+  function addValue(id: string): void {
+    if (atLimit || selectedSet.has(id)) {
+      return;
+    }
+    selected = [...selected, id];
+    inputValue = '';
+    highlightedIndex = -1;
+    onadd?.(id);
+    emitChange();
+    focusInput();
+  }
+
+  function removeValue(id: string): void {
+    if (!selectedSet.has(id)) {
+      return;
+    }
+    selected = selected.filter((current) => current !== id);
+    onremove?.(id);
+    emitChange();
+  }
+
   function selectItem(item: ComboboxItem) {
     if (item.disabled === true) {
       return;
     }
+    onselect?.(item);
+    if (multiple) {
+      addValue(item.id);
+      return;
+    }
     value = item.id;
     inputValue = item.label;
-    onselect?.(item);
     closeDropdown();
+  }
+
+  function create(): void {
+    const created = trimmedQuery;
+    if (created === '') {
+      return;
+    }
+    oncreate?.(created);
+    if (multiple) {
+      addValue(created);
+      return;
+    }
+    value = created;
+    inputValue = created;
+    closeDropdown();
+  }
+
+  function runAction(): void {
+    action?.onClick();
+    if (!action?.keepOpen) {
+      closeDropdown();
+    }
+  }
+
+  async function moveHighlight(delta: number): Promise<void> {
+    if (navCount === 0) {
+      return;
+    }
+    let next = highlightedIndex + delta;
+    if (next < 0) {
+      next = navCount - 1;
+    } else if (next >= navCount) {
+      next = 0;
+    }
+    highlightedIndex = next;
+    await tick();
+    if (containerEl !== null) {
+      const el = containerEl.querySelector('.combobox-option.highlighted');
+      if (el instanceof HTMLElement && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
+  function selectHighlighted() {
+    if (highlightedIndex < 0 || highlightedIndex >= navCount) {
+      return;
+    }
+    if (highlightedIndex < navItemCount) {
+      const item = selectableItems.at(highlightedIndex);
+      if (item) {
+        selectItem(item);
+      }
+    } else if (highlightedIndex === createNavIndex) {
+      create();
+    } else if (highlightedIndex === actionNavIndex) {
+      runAction();
+    }
   }
 
   function getFilteredSelectableIndex(item: ComboboxItem): number {
@@ -100,40 +245,10 @@
     return -1;
   }
 
-  async function moveHighlight(delta: number): Promise<void> {
-    if (selectableItems.length === 0) {
-      return;
-    }
-    let next = highlightedIndex + delta;
-    if (next < 0) {
-      next = selectableItems.length - 1;
-    } else if (next >= selectableItems.length) {
-      next = 0;
-    }
-    highlightedIndex = next;
-    await tick();
-    if (containerEl !== null) {
-      const el = containerEl.querySelector('.combobox-option.highlighted');
-      if (el instanceof HTMLElement && typeof el.scrollIntoView === 'function') {
-        el.scrollIntoView({ block: 'nearest' });
-      }
-    }
-  }
-
-  function selectHighlighted() {
-    if (highlightedIndex < 0 || highlightedIndex >= selectableItems.length) {
-      return;
-    }
-    const item = selectableItems.at(highlightedIndex);
-    if (typeof item === 'object' && item !== null) {
-      selectItem(item);
-    }
-  }
-
-  function handleInput(val: string, _event: Event) {
+  function handleInput(val: string, event: Event) {
     inputValue = val;
     oninput?.(val);
-    inputEventProperties?.onInput?.(val, _event);
+    inputEventProperties?.onInput?.(val, event);
     if (!open) {
       openDropdown();
     }
@@ -167,6 +282,17 @@
         if (open && highlightedIndex >= 0) {
           event.preventDefault();
           selectHighlighted();
+        } else if (exactMatch && !(multiple && selectedSet.has(exactMatch.id))) {
+          event.preventDefault();
+          selectItem(exactMatch);
+        } else if (showCreate) {
+          event.preventDefault();
+          create();
+        }
+        break;
+      case 'Backspace':
+        if (multiple && inputValue === '' && selected.length > 0) {
+          removeValue(selected[selected.length - 1]);
         }
         break;
       case 'Escape':
@@ -194,6 +320,13 @@
     inputEventProperties?.onBlur?.(event);
   }
 
+  function handleControlClick() {
+    if (multiple && !disabled) {
+      focusInput();
+      openDropdown();
+    }
+  }
+
   function handleClickOutside(event: Event) {
     if (
       event.target instanceof Node &&
@@ -213,16 +346,26 @@
 </script>
 
 <div class="combobox {classes ?? ''}" class:disabled bind:this={containerEl} data-pw={testId}>
-  <div class="combobox-input-wrapper">
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+  <div class="combobox-input-wrapper" class:multiple onclick={handleControlClick}>
     {#if typeof inputPrefix === 'function'}
       <div class="combobox-input-prefix">{@render inputPrefix()}</div>
+    {/if}
+    {#if multiple}
+      {#each selected as id (id)}
+        {#if typeof pillSnippet === 'function'}
+          {@render pillSnippet(id, () => !disabled && removeValue(id), disabled)}
+        {:else}
+          <Pill text={labelOf(id)} dismissible {disabled} ondismiss={() => removeValue(id)} />
+        {/if}
+      {/each}
     {/if}
     <div class="combobox-input">
       <Input
         {...inputProperties}
         bind:value={inputValue}
         bind:this={inputRef}
-        {placeholder}
+        placeholder={multiple && selected.length > 0 ? '' : placeholder}
         {name}
         disable={disabled}
         autoComplete="off"
@@ -249,7 +392,10 @@
       {#if typeof dropdownHeader === 'function'}
         <div class="combobox-dropdown-header">{@render dropdownHeader()}</div>
       {/if}
-      {#if filteredItems.length === 0}
+
+      {#if atLimit}
+        <div class="combobox-limit" role="alert">{limitText}</div>
+      {:else if filteredItems.length === 0 && !showCreate && !action}
         {#if typeof emptySnippet === 'function'}
           {@render emptySnippet()}
         {:else}
@@ -263,11 +409,11 @@
           <div
             class="combobox-option"
             class:highlighted={isHighlighted}
-            class:selected={item.id === value}
+            class:selected={!multiple && item.id === value}
             class:combobox-option-disabled={item.disabled === true}
             role="option"
             id={`${listboxId}-option-${selectableIndex}`}
-            aria-selected={item.id === value}
+            aria-selected={!multiple && item.id === value}
             aria-disabled={item.disabled === true ? 'true' : null}
             tabindex="-1"
             onclick={() => selectItem(item)}
@@ -286,6 +432,56 @@
           </div>
         {/each}
       {/if}
+
+      {#if showCreate}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div
+          class="combobox-option combobox-create"
+          class:highlighted={highlightedIndex === createNavIndex}
+          class:with-divider={navItemCount > 0}
+          role="option"
+          id={`${listboxId}-option-${createNavIndex}`}
+          aria-selected="false"
+          tabindex="-1"
+          onclick={() => create()}
+          onmouseenter={() => (highlightedIndex = createNavIndex)}
+          data-pw={typeof testId === 'string' ? `${testId}-create` : null}
+        >
+          <span class="combobox-create-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" width="14" height="14" fill="none">
+              <path
+                d="M10 4v12M4 10h12"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          {createLabel(trimmedQuery)}
+        </div>
+      {/if}
+
+      {#if action}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div
+          class="combobox-option combobox-action"
+          class:highlighted={highlightedIndex === actionNavIndex}
+          class:with-divider={navItemCount > 0 || showCreate}
+          role="option"
+          id={`${listboxId}-option-${actionNavIndex}`}
+          aria-selected="false"
+          tabindex="-1"
+          onclick={() => runAction()}
+          onmouseenter={() => (highlightedIndex = actionNavIndex)}
+          data-pw={typeof testId === 'string' ? `${testId}-action` : null}
+        >
+          {#if typeof actionIcon === 'function'}
+            <span class="combobox-action-icon" aria-hidden="true">{@render actionIcon()}</span>
+          {/if}
+          {action.label}
+        </div>
+      {/if}
+
       {#if typeof dropdownFooter === 'function'}
         <div class="combobox-dropdown-footer">{@render dropdownFooter()}</div>
       {/if}
@@ -315,6 +511,14 @@
     border: var(--combobox-input-border, 1px solid #cccccc);
     border-radius: var(--combobox-input-border-radius, var(--radius, 4px));
     transition: var(--combobox-input-transition, border-color 0.15s, box-shadow 0.15s);
+  }
+
+  /* Multi-select control: pills wrap above the typeahead input. */
+  .combobox-input-wrapper.multiple {
+    flex-wrap: wrap;
+    gap: var(--combobox-pill-gap, 4px);
+    padding: var(--combobox-multiple-padding, 4px 6px);
+    cursor: text;
   }
 
   .combobox-input-wrapper:hover {
@@ -357,6 +561,12 @@
     --input-radius: 0;
   }
 
+  .combobox-input-wrapper.multiple .combobox-input {
+    flex: 1 1 60px;
+    min-width: 60px;
+    --input-padding: var(--combobox-multiple-input-padding, 2px 4px);
+  }
+
   .combobox-input::placeholder {
     color: var(--combobox-placeholder-color, #999999);
   }
@@ -378,6 +588,9 @@
   }
 
   .combobox-option {
+    display: flex;
+    align-items: center;
+    gap: var(--combobox-option-gap, 8px);
     padding: var(--combobox-option-padding, 8px 12px);
     color: var(--combobox-option-color, #333333);
     font-size: var(--combobox-option-font-size, inherit);
@@ -412,6 +625,41 @@
     opacity: var(--combobox-option-disabled-opacity, 0.4);
     cursor: var(--combobox-option-disabled-cursor, not-allowed);
     pointer-events: none;
+  }
+
+  .combobox-create {
+    color: var(--combobox-create-color, #2563eb);
+  }
+
+  .combobox-action {
+    color: var(--combobox-action-color, #374151);
+  }
+
+  .combobox-option.with-divider {
+    border-top: var(--combobox-divider, 1px solid #e5e7eb);
+  }
+
+  .combobox-create-icon,
+  .combobox-action-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .combobox-action-icon :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+
+  .combobox-limit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--combobox-limit-padding, 8px 12px);
+    font-size: var(--combobox-limit-font-size, 13px);
+    font-weight: 500;
+    color: var(--combobox-limit-color, #b45309);
+    background: var(--combobox-limit-background, #fffbeb);
   }
 
   .combobox-dropdown-header {

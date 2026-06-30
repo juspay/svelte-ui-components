@@ -2,6 +2,8 @@
 
 A text input with an attached dropdown list that filters options as the user types. Built on the library's Input component internally, so it inherits Input's validation, text transformers, and formatting capabilities via the `inputProperties` pass-through. Implements the WAI-ARIA combobox pattern with full keyboard navigation (ArrowUp/Down to highlight, Enter to select, Escape to close, Tab to close and move focus). The dropdown opens on focus or typing and closes on outside click, Escape, or item selection. Supports disabled items, custom item rendering via a Snippet, custom filter logic, a custom empty-state Snippet, input prefix/suffix slots, dropdown header/footer slots, and bindable `value`, `inputValue`, `open`, and `highlightedIndex` state.
 
+It also supports **multi-select** (`multiple`): picks become removable pills inside the control, tracked via a bindable `selected` array, with optional inline **create** (`allowCreate`), a **selection limit** (`maxSelected`), and a persistent custom **action** row.
+
 ## Usage
 
 ```svelte
@@ -18,6 +20,49 @@ A text input with an attached dropdown list that filters options as the user typ
 </script>
 
 <Combobox items={fruits} bind:value={selected} placeholder="Search fruits..." />
+```
+
+### Multi-select (pills)
+
+Set `multiple` and bind a `selected` string array. Picked options render as removable pills; `Backspace` on an empty input removes the last pill.
+
+```svelte
+<script>
+  let picked = $state([]);
+</script>
+
+<Combobox items={fruits} multiple bind:selected={picked} placeholder="Pick fruits…" />
+```
+
+### Multi-select with create
+
+`allowCreate` offers a "Create …" row when the typed value has no match. Use `oncreate` to persist the new option into your own `items` list.
+
+```svelte
+<Combobox
+  items={tagItems}
+  multiple
+  allowCreate
+  bind:selected={tags}
+  oncreate={(value) => (tagItems = [...tagItems, { id: value, label: value }])}
+/>
+```
+
+### Selection limit
+
+```svelte
+<Combobox items={fruits} multiple maxSelected={3} bind:selected={picked} />
+```
+
+### Custom action row
+
+```svelte
+<Combobox
+  items={fruits}
+  multiple
+  bind:selected={picked}
+  action={{ label: 'Manage…', onClick: openManager }}
+/>
 ```
 
 ### With Custom Item Rendering
@@ -212,6 +257,13 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | inputProperties  | `OptionalInputProperties`                                   | No       | `-`              | Pass-through props for the internal Input component. Use for validation (`validators`, `validationPattern`, `inProgressPattern`), text formatting (`textTransformers`, `textViewPresentation`), `dataType`, `maxLength`, `minLength`, `useTextArea`, `label`, `onErrorMessage`, `infoMessage`, etc. See Input component docs for the full list. |
 | inputEventProperties | `InputEventProperties`                                  | No       | `-`              | Pass-through event handlers for the internal Input component. Use for `onPaste`, `onStateChange`, `onClick`, etc. Note: `onInput`, `onFocus`, `onBlur`, and `onKeyDown` are managed by Combobox and forwarded — use Combobox's own events for these. |
 | filterFn         | `(item: ComboboxItem, query: string) => boolean`            | No       | case-insensitive `includes` | Custom filter function called for each item when `inputValue` is non-empty. Return `true` to include the item. Use for startsWith, fuzzy matching, or server-side filtering (always return `true` and update `items` externally). |
+| multiple         | `boolean`                                                   | No       | `false`          | Enable multi-select: picked options become removable pills inside the control, and selection is tracked in `selected` instead of `value`.                             |
+| selected         | `string[]`                                                  | No       | `[]`             | Bindable. Array of selected item `id`s (multi-select mode). Use `bind:selected`.                                                                                       |
+| maxSelected      | `number`                                                    | No       | `-`              | Cap the number of selections (multi-select). At the limit, option/create rows are hidden and a limit message is shown.                                                 |
+| maxSelectedText  | `string`                                                    | No       | `'You can select up to {n}.'` | Message shown in the dropdown once `maxSelected` is reached.                                                                                          |
+| allowCreate      | `boolean`                                                   | No       | `false`          | Show a "Create …" row when the query has no exact match. Fires `oncreate`; in multi-select the value is also added to `selected`.                                      |
+| createLabel      | `(query: string) => string`                                 | No       | `Create "{query}"` | Builds the create-row label from the current query.                                                                                                                 |
+| action           | `ComboboxAction`                                            | No       | `-`              | A persistent custom action row at the foot of the dropdown: `{ label, onClick, keepOpen? }`.                                                                           |
 
 ## Snippets
 
@@ -225,6 +277,8 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | inputSuffix    | `Snippet`                          | Content rendered after the input inside the input wrapper (e.g., a clear button, spinner, or chevron). Sits inside the border/focus ring.                                                   |
 | dropdownHeader | `Snippet`                          | Content rendered at the top of the dropdown, before the options list (e.g., a category label or pinned items).                                                                              |
 | dropdownFooter | `Snippet`                          | Content rendered at the bottom of the dropdown, after the options list (e.g., a "Show all results" link or action buttons).                                                                 |
+| pillSnippet    | `Snippet<[string, () => void, boolean]>` | Multi-select: custom pill renderer; receives `(value, remove, disabled)`. Defaults to the library `Pill`.                                                                             |
+| actionIcon     | `Snippet`                          | Custom leading icon for the persistent `action` row.                                                                                                                                        |
 
 ## Events
 
@@ -237,6 +291,10 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed in the input, before the component's built-in handling. Call `event.preventDefault()` to suppress the default behavior for that key.   |
 | onfocus   | `(event: FocusEvent) => void`    | Fires when the input element gains focus.                                                                                                                          |
 | onblur    | `(event: FocusEvent) => void`    | Fires when the input element loses focus.                                                                                                                          |
+| onchange  | `(selected: string[]) => void`   | Multi-select: fires whenever the selection changes (add, remove, or create).                                                                                       |
+| onadd     | `(value: string) => void`        | Multi-select: fires when a value is added.                                                                                                                          |
+| onremove  | `(value: string) => void`        | Multi-select: fires when a value is removed.                                                                                                                        |
+| oncreate  | `(value: string) => void`        | Fires when the create row is chosen, with the trimmed query.                                                                                                        |
 
 ## CSS Variables
 
@@ -307,6 +365,16 @@ type ComboboxItem = {
 ```
 
 To pass extra data (icons, descriptions, etc.), extend the type: `type MyItem = ComboboxItem & { icon: string }` and cast inside `itemSnippet`.
+
+### ComboboxAction
+
+```typescript
+type ComboboxAction = {
+  label: string;
+  onClick: () => void;
+  keepOpen?: boolean; // keep the dropdown open after the action runs (default false)
+};
+```
 
 ## Internal Dependencies
 

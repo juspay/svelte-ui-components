@@ -17,6 +17,7 @@
     optionIndicator,
     showSelectAll = false,
     selectAllLabel = 'Select all',
+    showSelectedTick = false,
     triggerSummary,
     testId,
     itemTestId,
@@ -443,6 +444,7 @@
             <div
               class="select-option"
               class:multi={multiple}
+              class:tickable={showSelectedTick && !multiple}
               class:selected={value.includes(row.item.id)}
               class:highlighted={index === highlightedIndex}
               role="option"
@@ -478,7 +480,11 @@
                   </span>
                 {/if}
               {/if}
-              {row.item.label}
+              <span class="select-option-label">{row.item.label}</span>
+              {#if showSelectedTick && !multiple && value.includes(row.item.id)}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <span class="select-option-tick" aria-hidden="true">{@html checkmarkSvg}</span>
+              {/if}
             </div>
           {/if}
         {/each}
@@ -739,5 +745,32 @@
     border-color: var(--select-ghost-trigger-open-border-color, transparent);
     background: var(--select-ghost-trigger-open-background, rgba(0, 0, 0, 0.06));
     box-shadow: none;
+  }
+
+  /* Single-select right-edge tick (showSelectedTick) */
+  .select-option.tickable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .select-option.tickable .select-option-label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .select-option-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--select-option-tick-size, 16px);
+    height: var(--select-option-tick-size, 16px);
+    color: var(--select-option-tick-color, #2563eb);
+  }
+
+  .select-option-tick :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 </style>

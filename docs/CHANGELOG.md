@@ -2,11 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.4)
 
-- Combobox.svelte: exactMatch undefined -&gt; null (repo no-restricted-syntax rule was failing the release build)
-- src/routes/components/{combobox,select}/+page.svelte: prettier drift that broke prettier --check src on release
-- ChartTooltip/Legend swatch: border-radius 2px -&gt; var(--chart-swatch-radius, 2px) (overridable, 2px default = no visual change)
+- ChartTooltip: measure the tooltip and its positioned container and flip the tooltip to the left of the cursor (and clamp vertically) when it would overflow, so it is no longer clipped by an overflow:hidden edge — fixes the donut tooltip clipping on narrow/mobile widths (BZ-4294).
+- BarChart: skip the horizontal value label when its sub-band is thinner than the ~11px label, so cramped multi-series charts hide labels instead of overlapping them into an unreadable cluster; consumers restore labels via more chart height / minBandWidth (BZ-4294).
+
+## [2.80.4](https://github.com/juspay/svelte-ui-components/compare/2.80.4..2.80.3) - 1 July 2026
 
 ## [2.80.3](https://github.com/juspay/svelte-ui-components/compare/2.80.3..2.80.2) - 30 June 2026
 

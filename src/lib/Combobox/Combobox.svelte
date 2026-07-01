@@ -82,8 +82,8 @@
     filteredItems.filter((item) => item.disabled !== true)
   );
 
-  let exactMatch: ComboboxItem | undefined = $derived(
-    items.find((item) => item.label.toLowerCase() === trimmedQuery.toLowerCase())
+  let exactMatch: ComboboxItem | null = $derived(
+    items.find((item) => item.label.toLowerCase() === trimmedQuery.toLowerCase()) ?? null
   );
 
   let atLimit = $derived(
@@ -101,7 +101,7 @@
     allowCreate &&
       !atLimit &&
       trimmedQuery !== '' &&
-      exactMatch === undefined &&
+      exactMatch === null &&
       !(multiple && selectedSet.has(trimmedQuery))
   );
 

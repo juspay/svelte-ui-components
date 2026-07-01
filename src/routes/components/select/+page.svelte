@@ -77,7 +77,12 @@
 
 <h3>Single select with selected tick</h3>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={fruits} bind:value={singleTickValue} placeholder="Choose a fruit" showSelectedTick />
+  <Select
+    items={fruits}
+    bind:value={singleTickValue}
+    placeholder="Choose a fruit"
+    showSelectedTick
+  />
   {#if singleTickValue.length > 0}
     <p class="demo-info">Selected ID: {singleTickValue.at(0)}</p>
   {/if}

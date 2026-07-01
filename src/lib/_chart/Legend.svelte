@@ -48,7 +48,7 @@
     display: inline-block;
     width: var(--chart-legend-swatch-size, 12px);
     height: var(--chart-legend-swatch-size, 12px);
-    border-radius: 2px;
+    border-radius: var(--chart-swatch-radius, 2px);
     flex-shrink: 0;
   }
 

@@ -60,7 +60,7 @@
     display: inline-block;
     width: 8px;
     height: 8px;
-    border-radius: 2px;
+    border-radius: var(--chart-swatch-radius, 2px);
     flex-shrink: 0;
   }
 

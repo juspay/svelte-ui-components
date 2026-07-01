@@ -12,6 +12,7 @@ export type OptionalPaginationProperties = {
   disabled?: boolean;
   testId?: string;
   classes?: string;
+  bordered?: boolean;
   /**
    * Cursor-pagination hint. When `true`, the next button stays enabled even
    * when `currentPage >= totalPages` — use this when the total page count is

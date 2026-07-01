@@ -9,6 +9,7 @@
     testId,
     onchange,
     classes,
+    bordered = true,
     hasMore = false,
     prevButtonTestId,
     nextButtonTestId,
@@ -69,6 +70,7 @@
 <nav
   class="pagination {classes ?? ''}"
   class:disabled
+  class:borderless={!bordered}
   data-pw={typeof testId === 'string' && testId.length > 0 ? testId : null}
 >
   <button
@@ -149,6 +151,12 @@
     align-items: center;
     justify-content: center;
     transition: var(--pagination-transition, background 0.15s ease, color 0.15s ease);
+  }
+
+  .pagination.borderless .page-button,
+  .pagination.borderless .page-button.active,
+  .pagination.borderless .load-more-button {
+    border: none;
   }
 
   .page-button:hover:not(:disabled):not(.active) {

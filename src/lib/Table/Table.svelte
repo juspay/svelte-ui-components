@@ -1,8 +1,10 @@
-<script lang="ts">
+<script lang="ts" generics="T extends DataRow = DataRow">
   import type { TableProperties, TableCheckboxSelectionConfig } from './properties';
+  import type { DataRow } from '../DataTable/properties';
   import type { JSONValue } from 'type-decoder';
   import { SvelteSet } from 'svelte/reactivity';
   import Button from '../Button/Button.svelte';
+  import DataTable from '../DataTable/DataTable.svelte';
   import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
@@ -12,6 +14,7 @@
   import minusSvg from '$lib/assets/minus.svg?raw';
 
   let {
+    dataGrid,
     tableTitle = '',
     tableHeaders = [],
     tableData = [],
@@ -37,7 +40,7 @@
     checkboxSelection,
     searchConfig,
     onSearchChange
-  }: TableProperties = $props();
+  }: TableProperties<T> = $props();
 
   // ─── Sort state ──────────────────────────────────────────────────────────────
   let sortColumn = $state<number | null>(null);
@@ -299,7 +302,11 @@
   let isSingleSelect = $derived(checkboxSelection?.selectionMode === 'single');
 </script>
 
-{#if typeof tableTitle === 'string' && tableTitle.length > 0}
+{#if dataGrid}
+  <!-- Advanced data-grid mode: delegate to the column-model engine. -->
+  <DataTable {...dataGrid} />
+{:else}
+  {#if typeof tableTitle === 'string' && tableTitle.length > 0}
   <div class="table-title">
     {tableTitle}
   </div>
@@ -500,6 +507,7 @@
       </div>
     {/if}
   </div>
+  {/if}
 {/if}
 
 <style>

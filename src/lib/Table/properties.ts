@@ -1,5 +1,6 @@
 import type { JSONValue } from 'type-decoder';
 import type { Snippet } from 'svelte';
+import type { DataTableProperties, DataRow } from '../DataTable/properties';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -44,9 +45,18 @@ export type TableSearchConfig = {
   testId?: string;
 };
 
-export type TableProperties = OptionalTableProperties & TableEventProperties;
+export type TableProperties<T extends DataRow = DataRow> = OptionalTableProperties<T> &
+  TableEventProperties;
 
-export type OptionalTableProperties = {
+export type OptionalTableProperties<T extends DataRow = DataRow> = {
+  /**
+   * Opt into the advanced **data-grid** engine. When provided, `Table` renders the
+   * column-model grid (typed columns, pagination, filtering, column manager, loading
+   * skeletons, row selection/expansion/inline-edit, bulk actions) instead of the legacy
+   * positional (`tableHeaders`/`tableData`) table. All legacy props are ignored in this
+   * mode. Pass `{ columns, data, idField, ... }`; see the DataTable property types.
+   */
+  dataGrid?: DataTableProperties<T>;
   tableTitle?: string | null;
   tableHeaders?: string[];
   tableData?: Array<JSONValue[]>;

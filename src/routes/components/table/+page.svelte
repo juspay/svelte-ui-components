@@ -2,6 +2,7 @@
   import Table from '$lib/Table/Table.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
   import type { JSONValue } from 'type-decoder';
+  import type { ColumnDefinition } from '$lib/DataTable/properties';
 
   let clickedRow = $state<string | null>(null);
   let currentPage = $state(1);
@@ -90,6 +91,94 @@
       nextRow[colIndex] = String(newValue ?? '');
       return nextRow;
     });
+  };
+
+  // ── Data-grid mode (advanced) ───────────────────────────────────────────────
+  type Employee = {
+    id: number;
+    name: { label: string; sublabel: string };
+    department: string;
+    role: string;
+    salary: number;
+    status: { text: string; color: 'success' | 'warning' | 'error' };
+    performance: { value: number; showPercentage: boolean };
+    joined: string;
+  };
+
+  const makeRows = (): Employee[] => [
+    { id: 1, name: { label: 'Alice Johnson', sublabel: 'alice@acme.io' }, department: 'Engineering', role: 'Staff Engineer', salary: 185000, status: { text: 'Active', color: 'success' }, performance: { value: 94, showPercentage: true }, joined: '2021-03-12' },
+    { id: 2, name: { label: 'Bob Smith', sublabel: 'bob@acme.io' }, department: 'Design', role: 'Product Designer', salary: 132000, status: { text: 'Pending', color: 'warning' }, performance: { value: 78, showPercentage: true }, joined: '2022-07-01' },
+    { id: 3, name: { label: 'Carol White', sublabel: 'carol@acme.io' }, department: 'Marketing', role: 'Growth Lead', salary: 121000, status: { text: 'Inactive', color: 'error' }, performance: { value: 65, showPercentage: true }, joined: '2020-11-23' },
+    { id: 4, name: { label: 'Dan Brown', sublabel: 'dan@acme.io' }, department: 'Engineering', role: 'Senior Engineer', salary: 158000, status: { text: 'Active', color: 'success' }, performance: { value: 88, showPercentage: true }, joined: '2019-05-30' },
+    { id: 5, name: { label: 'Eve Davis', sublabel: 'eve@acme.io' }, department: 'Sales', role: 'Account Executive', salary: 99000, status: { text: 'Active', color: 'success' }, performance: { value: 92, showPercentage: true }, joined: '2023-01-15' },
+    { id: 6, name: { label: 'Frank Miller', sublabel: 'frank@acme.io' }, department: 'Engineering', role: 'Engineer II', salary: 124000, status: { text: 'Pending', color: 'warning' }, performance: { value: 71, showPercentage: true }, joined: '2022-09-19' },
+    { id: 7, name: { label: 'Grace Lee', sublabel: 'grace@acme.io' }, department: 'Marketing', role: 'Content Strategist', salary: 95000, status: { text: 'Active', color: 'success' }, performance: { value: 85, showPercentage: true }, joined: '2021-12-02' },
+    { id: 8, name: { label: 'Hank Wilson', sublabel: 'hank@acme.io' }, department: 'Design', role: 'UX Researcher', salary: 108000, status: { text: 'Inactive', color: 'error' }, performance: { value: 69, showPercentage: true }, joined: '2020-04-08' },
+    { id: 9, name: { label: 'Ivy Chen', sublabel: 'ivy@acme.io' }, department: 'Sales', role: 'Sales Manager', salary: 142000, status: { text: 'Active', color: 'success' }, performance: { value: 91, showPercentage: true }, joined: '2018-08-14' },
+    { id: 10, name: { label: 'Jack Taylor', sublabel: 'jack@acme.io' }, department: 'Engineering', role: 'Principal Engineer', salary: 205000, status: { text: 'Active', color: 'success' }, performance: { value: 96, showPercentage: true }, joined: '2017-02-27' }
+  ];
+
+  const departmentOptions = ['Engineering', 'Design', 'Marketing', 'Sales'].map((department) => ({
+    id: department,
+    label: department,
+    value: department
+  }));
+
+  // Shared column set (avatar / text / number-currency / tag / progress).
+  const gridColumns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', width: '220px' },
+    { field: 'department', header: 'Department', type: 'text' },
+    { field: 'role', header: 'Role', type: 'text' },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', precision: 0, align: 'right' },
+    { field: 'status', header: 'Status', type: 'tag' },
+    { field: 'performance', header: 'Performance', type: 'progress', width: '160px' }
+  ];
+
+  // Type-aware sorting: a date column sorts chronologically, tag by text,
+  // avatar by label, progress by value — no per-column sort config needed.
+  const sortColumns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', width: '200px' },
+    { field: 'status', header: 'Status', type: 'tag' },
+    { field: 'performance', header: 'Performance', type: 'progress', width: '160px' },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', precision: 0, align: 'right' },
+    { field: 'joined', header: 'Joined', type: 'date', width: '150px' }
+  ];
+
+  const filterColumns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', width: '200px' },
+    { field: 'department', header: 'Department', type: 'text', filterType: 'multiselect', filterOptions: departmentOptions },
+    { field: 'role', header: 'Role', type: 'text', filterType: 'text' },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', precision: 0, align: 'right', filterType: 'number' },
+    { field: 'status', header: 'Status', type: 'tag' }
+  ];
+
+  const freezeColumns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', frozen: true, width: '220px' },
+    { field: 'department', header: 'Department', type: 'text', width: '160px' },
+    { field: 'role', header: 'Role', type: 'text', width: '200px' },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', precision: 0, align: 'right', width: '160px' },
+    { field: 'status', header: 'Status', type: 'tag', width: '140px' },
+    { field: 'performance', header: 'Performance', type: 'progress', width: '200px' },
+    { field: 'joined', header: 'Joined', type: 'date', width: '160px' }
+  ];
+
+  const editColumns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', width: '200px' },
+    { field: 'department', header: 'Department', type: 'text', isEditable: true },
+    { field: 'role', header: 'Role', type: 'text', isEditable: true },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', precision: 0, align: 'right', isEditable: true }
+  ];
+
+  const gridSelectColumns = gridColumns.slice(0, 4);
+
+  let gridSelectedIds = $state<string[]>([]);
+  let gridLoading = $state(true);
+  let gridEditRows = $state(makeRows().slice(0, 4));
+  let gridLastSaved = $state<string | null>(null);
+
+  const handleGridSave = (rowId: string, updated: Employee): void => {
+    gridEditRows = gridEditRows.map((row) => (String(row.id) === rowId ? updated : row));
+    gridLastSaved = `Saved ${updated.name.label}`;
   };
 </script>
 
@@ -391,7 +480,254 @@
   </div>
 </div>
 
+<h2 id="data-grid-mode" style="margin-top: 40px;">Data grid mode</h2>
+<p>
+  Pass a <code>dataGrid</code> config to switch <code>Table</code> from the positional
+  (<code>tableHeaders</code>/<code>tableData</code>) API to the column-model engine. Legacy props are
+  ignored in this mode. Snippet slots (<code>toolbarSlot</code>, <code>cell</code>,
+  <code>empty</code>, <code>bulkActions</code>, <code>renderExpandedRow</code>) are passed by
+  reference inside the config object.
+</p>
+
+<!-- Named snippets referenced by the dataGrid config below -->
+{#snippet gridToolbar()}
+  <button class="demo-toggle" onclick={() => alert('Export clicked')}>Export CSV</button>
+  <button class="demo-toggle demo-toggle-ghost" onclick={() => alert('Add clicked')}>+ Add</button>
+{/snippet}
+
+{#snippet gridBulk({ selectedIds: ids, clear }: { selectedIds: string[]; clear: () => void })}
+  <button
+    class="demo-toggle"
+    onclick={() => {
+      alert(`Exporting ${ids.length}`);
+      clear();
+    }}
+  >
+    Export
+  </button>
+{/snippet}
+
+{#snippet gridExpanded({ row }: { row: Employee; index: number })}
+  <div class="expanded">
+    <strong>{row.name.label}</strong> — {row.role} in {row.department}. Joined {row.joined};
+    performance {row.performance.value}%.
+  </div>
+{/snippet}
+
+<div class="dt-demos">
+  <h3>Basic (typed columns)</h3>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table dataGrid={{ columns: gridColumns, data: makeRows().slice(0, 4), idField: 'id', title: 'Employees' }} />
+  </div>
+
+  <h3>Type-aware &amp; default sorting</h3>
+  <p>
+    Columns sort by their type automatically — the <strong>Joined</strong> date column sorts
+    chronologically, tags by text, avatars by label, progress by value. <code>defaultSort</code>
+    sets the initial order (here newest join date first).
+  </p>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table
+      dataGrid={{
+        columns: sortColumns,
+        data: makeRows(),
+        idField: 'id',
+        defaultSort: { field: 'joined', direction: 'desc' }
+      }}
+    />
+  </div>
+
+  <h3>Search &amp; column filtering</h3>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table
+      dataGrid={{
+        columns: filterColumns,
+        data: makeRows(),
+        idField: 'id',
+        enableSearch: true,
+        searchPlaceholder: 'Search employees…',
+        enableFiltering: true
+      }}
+    />
+  </div>
+
+  <h3>Toolbar actions (toolbarSlot)</h3>
+  <p>The <code>toolbarSlot</code> renders action buttons above the table, to the right of search.</p>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table
+      dataGrid={{
+        columns: gridColumns,
+        data: makeRows().slice(0, 5),
+        idField: 'id',
+        title: 'Employees',
+        enableSearch: true,
+        toolbarSlot: gridToolbar
+      }}
+    />
+  </div>
+
+  <h3>Pagination</h3>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table
+      dataGrid={{
+        columns: gridColumns,
+        data: makeRows(),
+        idField: 'id',
+        pagination: { currentPage: 1, pageSize: 4, totalRows: 10, pageSizeOptions: [4, 8, 10] }
+      }}
+    />
+  </div>
+
+  <h3>Column manager, reorder &amp; freeze</h3>
+  <p class="state-display">
+    Use the columns button (top-right) to show/hide and drag-reorder. The Employee column is frozen —
+    scroll horizontally to see it stick.
+  </p>
+  <div class="demo-row" style="max-width: 860px; flex-direction: column; align-items: stretch;">
+    <Table
+      dataGrid={{
+        columns: freezeColumns,
+        data: makeRows(),
+        idField: 'id',
+        enableColumnManager: true,
+        enableColumnReordering: true
+      }}
+    />
+  </div>
+
+  <h3>Loading / skeleton</h3>
+  <div class="demo-row" style="max-width: 860px; flex-direction: column; align-items: stretch;">
+    <button class="demo-toggle" onclick={() => (gridLoading = !gridLoading)}>
+      {gridLoading ? 'Show data' : 'Show skeleton'}
+    </button>
+    <Table
+      dataGrid={{
+        columns: gridColumns,
+        data: makeRows().slice(0, 4),
+        idField: 'id',
+        isLoading: gridLoading,
+        skeletonRows: 4
+      }}
+    />
+  </div>
+
+  <h3>Row selection &amp; bulk actions</h3>
+  <div class="demo-row" style="max-width: 860px; flex-direction: column; align-items: stretch;">
+    <Table
+      dataGrid={{
+        columns: gridSelectColumns,
+        data: makeRows(),
+        idField: 'id',
+        enableRowSelection: true,
+        showBulkActionBar: true,
+        rowSelectionConfig: { isDisabled: (row) => row.status.text === 'Inactive' },
+        onRowSelectionChange: (ids) => (gridSelectedIds = ids),
+        bulkActions: gridBulk
+      }}
+    />
+    {#if gridSelectedIds.length > 0}
+      <p class="state-display">Selected IDs: {gridSelectedIds.join(', ')}</p>
+    {/if}
+  </div>
+
+  <h3>Row expansion</h3>
+  <div class="demo-row" style="max-width: 860px;">
+    <Table
+      dataGrid={{
+        columns: gridColumns,
+        data: makeRows().slice(0, 4),
+        idField: 'id',
+        enableRowExpansion: true,
+        renderExpandedRow: gridExpanded
+      }}
+    />
+  </div>
+
+  <h3>Inline editing &amp; row actions</h3>
+  <div class="demo-row" style="max-width: 860px; flex-direction: column; align-items: stretch;">
+    <Table
+      dataGrid={{
+        columns: editColumns,
+        data: gridEditRows,
+        idField: 'id',
+        enableInlineEdit: true,
+        rowActions: { showEditAction: true, slot1: { id: 'view', text: 'View', onClick: (row) => alert(row.name.label) } },
+        onRowSave: handleGridSave
+      }}
+    />
+    {#if gridLastSaved}<p class="state-display">{gridLastSaved}</p>{/if}
+  </div>
+</div>
+
 <style>
+  /* Helper buttons used by the data-grid demos. */
+  .demo-toggle {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #2563eb;
+    background: #2563eb;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .demo-toggle-ghost {
+    background: transparent;
+    color: #2563eb;
+  }
+
+  .expanded {
+    font-size: 13px;
+    color: var(--doc-text-secondary, #374151);
+  }
+
+  /* Map the data-grid table and pagination variables to the docs dark theme. */
+  :global([data-theme='dark']) .dt-demos {
+    --table-border: var(--doc-border);
+    --table-content-background: transparent;
+    --table-content-color: var(--doc-text-primary);
+    --table-header-background: var(--doc-table-header-bg);
+    --table-header-color: var(--doc-text-secondary);
+    --table-row-border: 1px solid var(--doc-border-light);
+    --table-row-hover-background: var(--doc-btn-hover-bg);
+    --table-row-selected-background: var(--doc-accent-bg);
+    --table-frozen-background: var(--doc-demo-bg);
+    --table-frozen-header-background: var(--doc-table-header-bg);
+    --table-title-color: var(--doc-text-heading);
+    --table-description-color: var(--doc-text-muted);
+    --table-empty-color: var(--doc-text-muted);
+    --table-search-background: var(--doc-input-bg);
+    --table-search-border: 1px solid var(--doc-border);
+    --table-search-color: var(--doc-text-primary);
+    --table-search-icon-color: var(--doc-text-faint);
+    --table-toolbar-btn-background: var(--doc-btn-bg);
+    --table-toolbar-btn-border: 1px solid var(--doc-border);
+    --table-toolbar-btn-color: var(--doc-text-secondary);
+    --table-footer-border: 1px solid var(--doc-border);
+    --table-footer-background: transparent;
+    --table-pagesize-color: var(--doc-text-muted);
+    --table-rowcount-color: var(--doc-text-faint);
+    --table-expanded-background: var(--doc-demo-bg);
+    --table-edit-input-background: var(--doc-input-bg);
+    --table-edit-input-border: 1px solid var(--doc-border);
+    --table-skeleton-base: var(--doc-border-light);
+    --table-skeleton-highlight: var(--doc-border);
+    --pagination-button-color: var(--doc-text-primary);
+    --pagination-button-hover-color: var(--doc-text-heading);
+    --pagination-button-hover-background: var(--doc-btn-hover-bg);
+    --pagination-active-background: var(--doc-accent);
+    --pagination-active-border: 1px solid var(--doc-accent);
+    --pagination-active-color: #ffffff;
+    --pagination-ellipsis-color: var(--doc-text-muted);
+  }
+
+  :global([data-theme='dark'] .dt-demos .dt-pagesize-select) {
+    background: var(--doc-input-bg);
+    color: var(--doc-text-primary);
+    border-color: var(--doc-border);
+  }
+
   :global(.custom-cell-table th:nth-child(1)),
   :global(.custom-cell-table td:nth-child(1)) {
     width: 180px;

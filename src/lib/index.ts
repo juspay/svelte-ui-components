@@ -18,6 +18,8 @@ export { default as Toggle } from './Toggle/Toggle.svelte';
 export { default as Accordion } from './Accordion/Accordion.svelte';
 export { default as CheckListItem } from './CheckListItem/CheckListItem.svelte';
 export { default as Table } from './Table/Table.svelte';
+// The DataTable engine is now the advanced mode of `Table` (via the `dataGrid` prop);
+// its column-model types remain exported below for building the `dataGrid` config.
 export { default as Stepper } from './Stepper/Stepper.svelte';
 export { default as Step } from './Stepper/Step.svelte';
 export { default as Toast } from './Toast/Toast.svelte';
@@ -89,6 +91,7 @@ export type * from './Badge/properties';
 export type * from './Banner/properties';
 export type * from './Accordion/properties';
 export type * from './Table/properties';
+export type * from './DataTable/properties';
 export type * from './Stepper/properties';
 export type * from './Toast/properties';
 export type * from './IconStack/properties';

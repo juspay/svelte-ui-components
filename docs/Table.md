@@ -2,6 +2,8 @@
 
 A sortable data table with clean, modern defaults. Supports column sorting (ascending/descending) for string, number, and boolean values. Features sticky headers, custom cell rendering via Svelte 5 snippets, row click interaction, customizable sort icons, a footer paginator slot, per-row/cell `data-pw` test ID callbacks, opt-in checkbox row selection (single and multiple mode), and a built-in search bar with client-side filtering or server-side delegation. Table data is an array of arrays (rows × columns).
 
+**Two modes.** The default **legacy** mode above is driven by positional `tableHeaders` (`string[]`) and `tableData` (`JSONValue[][]`). For richer needs, pass a **`dataGrid`** config to switch `Table` into the advanced **data-grid** engine — a typed column model with built-in pagination, per-column filtering, a column manager (show/hide, reorder, freeze), loading skeletons, row selection/expansion, inline editing, row actions, and a bulk-action bar. The two modes are mutually exclusive; the legacy API is unchanged, so existing usage keeps working exactly as before. See [Data grid mode](#data-grid-mode).
+
 ## Usage
 
 ```svelte
@@ -240,11 +242,72 @@ Pass `searchConfig` to show a search input above the table. By default the table
 </Table>
 ```
 
+## Data grid mode
+
+Pass a **`dataGrid`** config object to render the advanced column-model engine instead of the
+legacy positional table. In this mode the legacy props (`tableHeaders`, `tableData`, `cell`, etc.)
+are ignored — the grid is driven entirely by `dataGrid.columns` + `dataGrid.data` + `dataGrid.idField`.
+
+```svelte
+<script>
+  import { Table } from '@juspay/svelte-ui-components';
+  import type { ColumnDefinition } from '@juspay/svelte-ui-components';
+
+  type Employee = {
+    id: number;
+    name: { label: string; sublabel: string };
+    department: string;
+    salary: number;
+    status: { text: string; color: 'success' | 'warning' | 'error' };
+  };
+
+  const columns: ColumnDefinition<Employee>[] = [
+    { field: 'name', header: 'Employee', type: 'avatar', width: '220px' },
+    { field: 'department', header: 'Department', type: 'text', filterType: 'multiselect' },
+    { field: 'salary', header: 'Salary', type: 'number', format: 'currency', align: 'right' },
+    { field: 'status', header: 'Status', type: 'tag' }
+  ];
+
+  const data: Employee[] = [/* … */];
+</script>
+
+<Table
+  dataGrid={{
+    columns,
+    data,
+    idField: 'id',
+    title: 'Employees',
+    enableSearch: true,
+    enableFiltering: true,
+    enableColumnManager: true,
+    defaultSort: { field: 'salary', direction: 'desc' },
+    pagination: { currentPage: 1, pageSize: 10, totalRows: data.length }
+  }}
+/>
+```
+
+The `dataGrid` config accepts the full data-grid property set:
+
+- **Data model**: `columns` (typed `ColumnDefinition<T>[]`), `data: T[]`, `idField`, `title`, `description`.
+- **Column types**: `text`, `number` (with `format`/`precision`), `tag`, `avatar`, `progress`, `date`, `custom` (defers to `dataGrid.cell`).
+- **Sorting**: `sortable`, `defaultSort`, `serverSideSort` + `onSortChange`, per-column `sortValueFormatter`.
+- **Search**: `enableSearch`, `searchFields`, `serverSideSearch` + `onSearchChange`.
+- **Filtering**: `enableFiltering` (per-column `filterType`/`filterOptions`), `serverSideFiltering` + `onFilterChange`.
+- **Pagination**: `pagination` (`{ currentPage, pageSize, totalRows, pageSizeOptions }`), `serverSidePagination` + `onPageChange`/`onPageSizeChange`.
+- **Column manager**: `enableColumnManager`, `enableColumnReordering`, per-column `canHide`/`frozen`/`isVisible`.
+- **Loading**: `isLoading`, `showSkeleton`, `skeletonRows`, `isRowLoading`.
+- **Selection & bulk**: `enableRowSelection`, `rowSelectionConfig`, `showBulkActionBar`, `onRowSelectionChange`, `bulkActions` snippet.
+- **Expansion / inline edit / actions**: `enableRowExpansion` + `renderExpandedRow`, `enableInlineEdit`, `showActionsColumn`, `rowActions`, `onRowSave`/`onRowCancel`/`onFieldChange`.
+- **Snippets**: `cell` (`(column, value, row, index)`), `empty`, `toolbarSlot`.
+
+See the `DataTableProperties` / `ColumnDefinition` types (exported from the package) for the full typed contract.
+
 ## Props
 
 | Prop                | Type                                                                | Required | Default          | Description                                                                                                                                                                             |
 | ------------------- | ------------------------------------------------------------------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| tableTitle          | `string \| null`                                                    | No       | `''`             | Optional title text displayed above the table.                                                                                                                                          |
+| dataGrid            | `DataTableProperties<T>`                                            | No       | `-`              | Opt into the advanced data-grid engine (typed columns, pagination, filtering, column manager, loading, selection/expansion/inline-edit, bulk actions). When set, legacy props are ignored. See [Data grid mode](#data-grid-mode). |
+| tableTitle          | `string \| null`                                                    | No       | `''`             | Optional title text displayed above the table. *(Legacy mode.)*                                                                                                                          |
 | tableHeaders        | `string[]`                                                          | No       | `[]`             | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                   |
 | tableData           | `Array<JSONValue[]>`                                                | No       | `[]`             | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                     |
 | sortable            | `boolean`                                                           | No       | `true`           | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                   |

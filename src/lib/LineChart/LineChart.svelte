@@ -44,6 +44,8 @@
     xTickFormat,
     yTickFormat,
     aspectRatio = 16 / 9,
+    minHeight = 0,
+    maxHeight = Infinity,
     tooltipSnippet,
     empty,
     highlightedIndex = null,
@@ -352,7 +354,13 @@
       <Legend items={legendItems} position="top" />
     {/if}
 
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+    <ChartContainer
+      bind:width={chartWidth}
+      bind:height={chartHeight}
+      {aspectRatio}
+      {minHeight}
+      {maxHeight}
+    >
       {#if gradientFill || showArea}
         <defs>
           {#each lines as line, si (si)}

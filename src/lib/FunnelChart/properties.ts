@@ -32,6 +32,13 @@ export type OptionalFunnelChartProperties = {
    */
   connectorColor?: string;
   /**
+   * Corner radius on each stage bar in pixels. Defaults to
+   * `DEFAULT_CHART_CORNER_RADIUS` (4), mirroring the design system's base
+   * `--radius` token. SVG `rx`/`ry` cannot read CSS `var()`, so pass this
+   * prop explicitly to track a changed `--radius` at runtime.
+   */
+  radius?: number;
+  /**
    * Horizontal width (in SVG user units relative to total inner width) of each
    * trapezoidal slope connector. Larger values produce steeper visual drops between stages.
    * Default is `10`.

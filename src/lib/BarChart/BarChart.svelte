@@ -18,6 +18,7 @@
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath } from '$lib/_chart/paths';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
   import { SvelteMap } from 'svelte/reactivity';
 
   // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────
@@ -52,7 +53,7 @@
     showYAxis = true,
     showLegend = false,
     barPadding = 0.2,
-    barRadius = 4,
+    barRadius = DEFAULT_CHART_CORNER_RADIUS,
     aspectRatio = 16 / 9,
     xAxisLabel,
     yAxisLabel,

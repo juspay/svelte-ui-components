@@ -1,6 +1,19 @@
 import type { Snippet } from 'svelte';
 import type { BarChartDataPoint } from '$lib/BarChart/properties';
 
+// ── Shared constants ──────────────────────────────────────────
+
+/**
+ * Corner radius (px) shared by every chart shape (bar/column rects, funnel
+ * stage bars, sankey nodes). Mirrors Lighthouse's `--radius` design token
+ * (0.25rem = 4px at the 16px root). SVG `rx`/`ry` attributes and the
+ * `roundedRectPath()` curve builder in `_chart/paths.ts` consume plain JS
+ * numbers, so this constant is the chart-layer equivalent of `var(--radius)`
+ * for surfaces CSS cannot reach. Consumers who need runtime sync to a
+ * *changed* `--radius` should pass the corresponding radius prop explicitly.
+ */
+export const DEFAULT_CHART_CORNER_RADIUS = 4;
+
 // ── Primitive shapes ──────────────────────────────────────────
 
 export type Margin = {

@@ -107,7 +107,7 @@
   .pill-text {
     overflow: hidden;
     text-overflow: var(--pill-text-overflow, ellipsis);
-    white-space: nowrap;
+    white-space: var(--pill-text-white-space, nowrap);
   }
 
   .pill-leading-icon {

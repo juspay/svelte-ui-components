@@ -47,6 +47,13 @@ export type OptionalSankeyChartProperties = {
   nodeWidth?: number;
   nodePadding?: number;
   iterations?: number;
+  /**
+   * Corner radius on each node rect in pixels. Defaults to
+   * `DEFAULT_CHART_CORNER_RADIUS` (4), mirroring the design system's base
+   * `--radius` token. SVG `rx`/`ry` cannot read CSS `var()`, so pass this
+   * prop explicitly to track a changed `--radius` at runtime.
+   */
+  radius?: number;
   showValues?: boolean;
   showLabels?: boolean;
   aspectRatio?: number;

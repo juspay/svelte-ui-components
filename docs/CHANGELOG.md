@@ -2,9 +2,13 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.3)
 
-Wraps two over-length lines (an SVG path and a paragraph) flagged by 'prettier --check src'. Formatting only — no behaviour change. Restores a green 'pnpm run lint' on release.
+- Combobox.svelte: exactMatch undefined -&gt; null (repo no-restricted-syntax rule was failing the release build)
+- src/routes/components/{combobox,select}/+page.svelte: prettier drift that broke prettier --check src on release
+- ChartTooltip/Legend swatch: border-radius 2px -&gt; var(--chart-swatch-radius, 2px) (overridable, 2px default = no visual change)
+
+## [2.80.3](https://github.com/juspay/svelte-ui-components/compare/2.80.3..2.80.2) - 30 June 2026
 
 ## [2.80.2](https://github.com/juspay/svelte-ui-components/compare/2.80.2..2.80.1) - 29 June 2026
 

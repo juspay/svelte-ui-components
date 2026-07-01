@@ -50,7 +50,9 @@
 </div>
 
 <h3>Multi select (pills)</h3>
-<p>Set <code>multiple</code> with a bindable <code>selected</code> array. Picks become removable pills.</p>
+<p>
+  Set <code>multiple</code> with a bindable <code>selected</code> array. Picks become removable pills.
+</p>
 <div class="demo-row" style="max-width: 420px;">
   <Combobox items={fruits} multiple bind:selected={picked} placeholder="Pick fruits…" />
   {#if picked.length > 0}
@@ -82,7 +84,9 @@
 </div>
 
 <h3>Multi select + limit</h3>
-<p>Cap selections with <code>maxSelected</code>; the dropdown shows a limit message once reached.</p>
+<p>
+  Cap selections with <code>maxSelected</code>; the dropdown shows a limit message once reached.
+</p>
 <div class="demo-row" style="max-width: 420px;">
   <Combobox
     items={fruits}

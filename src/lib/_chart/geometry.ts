@@ -171,7 +171,7 @@ export function computeSankeyLayout(
           nodeY.set(id, Math.max(0, weightedY - (nodeH.get(id) ?? 0) / 2));
         }
       }
-      // Resolve overlaps
+      // Resolve overlaps: push down from the top.
       ids.sort((a, b) => (nodeY.get(a) ?? 0) - (nodeY.get(b) ?? 0));
       let y = 0;
       for (const id of ids) {
@@ -180,6 +180,39 @@ export function computeSankeyLayout(
           nodeY.set(id, y);
         }
         y = (nodeY.get(id) ?? 0) + (nodeH.get(id) ?? 0) + nodePadding;
+      }
+
+      // Resolve overlaps: pull back up from the bottom. The push-down pass
+      // above only ever grows a column's block downward, so a fan-out whose
+      // members share a weighted target centre drifts past the column's
+      // height budget column-to-column instead of staying level. Sweep from
+      // the last node up, clamping each node's bottom edge to the running
+      // boundary, mirroring d3-sankey's bidirectional resolveCollisions.
+      let bottomBoundary = height;
+      for (let index = ids.length - 1; index >= 0; index--) {
+        const id = ids[index];
+        const nodeBottom = (nodeY.get(id) ?? 0) + (nodeH.get(id) ?? 0);
+        if (nodeBottom > bottomBoundary) {
+          nodeY.set(id, bottomBoundary - (nodeH.get(id) ?? 0));
+        }
+        bottomBoundary = (nodeY.get(id) ?? 0) - nodePadding;
+      }
+
+      // Re-centre the column's node group within [0, height]: once overlaps
+      // are resolved, anchor the block at the midpoint of its remaining
+      // slack rather than leaving it wherever the top-down/bottom-up sweeps
+      // happened to land it, so a cluster sharing a weighted centre reads as
+      // centred on that target instead of stacked toward one edge.
+      const firstId = ids[0];
+      const lastId = ids[ids.length - 1];
+      const groupTop = nodeY.get(firstId) ?? 0;
+      const groupBottom = (nodeY.get(lastId) ?? 0) + (nodeH.get(lastId) ?? 0);
+      const idealGroupTop = Math.max(0, (height - (groupBottom - groupTop)) / 2);
+      const recentreShift = idealGroupTop - groupTop;
+      if (recentreShift !== 0) {
+        for (const id of ids) {
+          nodeY.set(id, (nodeY.get(id) ?? 0) + recentreShift);
+        }
       }
     }
   }

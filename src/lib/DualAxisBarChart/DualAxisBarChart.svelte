@@ -14,6 +14,7 @@
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath, linePath } from '$lib/_chart/paths';
   import type { LegendItem, TooltipData, LinearScale, BandScale, Point } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
 
   // ── Per-instance uid for SVG <defs> ids ────────────────────────
   const uid = Math.random().toString(36).slice(2, 9);
@@ -27,7 +28,7 @@
     rightAxis = {},
     showGridlines = true,
     showLegend = true,
-    barRadius = 3,
+    barRadius = DEFAULT_CHART_CORNER_RADIUS,
     barPadding = 0.25,
     aspectRatio = 16 / 9,
     minBarHeight = 2,

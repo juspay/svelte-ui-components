@@ -114,7 +114,7 @@
     line-height: var(--banner-line-height, 1.3);
     border-bottom: var(--banner-border-bottom, none);
     border: var(--banner-border);
-    border-radius: var(--banner-border-radius, 0);
+    border-radius: var(--banner-border-radius, var(--radius, 4px));
     cursor: var(--banner-cursor, pointer);
     position: var(--banner-position, sticky);
     top: var(--banner-top, 0);

@@ -99,6 +99,10 @@ export type OptionalLineChartProperties = {
   yTickFormat?: (value: number | string) => string;
   /** Width-to-height ratio for the chart. */
   aspectRatio?: number;
+  /** Minimum chart height in pixels, regardless of computed aspect-ratio height. */
+  minHeight?: number;
+  /** Maximum chart height in pixels, regardless of computed aspect-ratio height. */
+  maxHeight?: number;
   /** Custom tooltip. Receives `{x, points: [{name, y, color, label?}]}`. */
   tooltipSnippet?: Snippet<[LineChartTooltipContext]>;
   /** Content rendered when all series are empty. */

@@ -4,6 +4,7 @@
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber, formatPercent } from '$lib/_chart/format';
+  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@
     showValueLabels = true,
     valueFormat,
     aspectRatio = 16 / 9,
+    radius = DEFAULT_CHART_CORNER_RADIUS,
     testId,
     classes,
     empty,
@@ -249,7 +251,7 @@
             width={stageColumnWidth}
             height={bh}
             fill={color}
-            rx={2}
+            rx={radius}
             aria-label="{stage.category}: {formatLabel(stage)}"
             onmouseenter={(event) => handleEnter(event, index)}
             onmousemove={trackMouse}

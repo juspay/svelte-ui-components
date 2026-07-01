@@ -88,6 +88,12 @@ export type OptionalBarChartProperties = {
   showXAxis?: boolean;
   showYAxis?: boolean;
   barPadding?: number;
+  /**
+   * Corner radius on bar/column shapes in pixels. Defaults to
+   * `DEFAULT_CHART_CORNER_RADIUS` (4), mirroring the design system's base
+   * `--radius` token. SVG `rx`/`ry` cannot read CSS `var()`, so pass this
+   * prop explicitly to track a changed `--radius` at runtime.
+   */
   barRadius?: number;
   aspectRatio?: number;
   xAxisLabel?: string;

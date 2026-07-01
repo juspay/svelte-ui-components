@@ -5,6 +5,7 @@
   import { computeSankeyLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
+  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
@@ -18,6 +19,7 @@
     showValues = false,
     showLabels = true,
     aspectRatio = 16 / 9,
+    radius = DEFAULT_CHART_CORNER_RADIUS,
     maxHeight = Infinity,
     valueFormat,
     tooltipSnippet,
@@ -343,8 +345,8 @@
             y={node.y}
             width={node.width}
             height={node.height}
-            rx={2}
-            ry={2}
+            rx={radius}
+            ry={radius}
             fill={color}
             onmouseenter={(e) => handleNodeEnter(e, node.id)}
             onmousemove={trackMouse}

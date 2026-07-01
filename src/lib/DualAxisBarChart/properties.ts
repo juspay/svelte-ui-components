@@ -93,7 +93,12 @@ export type OptionalDualAxisBarChartProperties = {
   showGridlines?: boolean;
   /** Whether to render the shared legend below the chart. Default `true`. */
   showLegend?: boolean;
-  /** Corner radius on column/bar shapes in pixels. Default `3`. */
+  /**
+   * Corner radius on column/bar shapes in pixels. Defaults to
+   * `DEFAULT_CHART_CORNER_RADIUS` (4), mirroring the design system's base
+   * `--radius` token. SVG `rx`/`ry` cannot read CSS `var()`, so pass this
+   * prop explicitly to track a changed `--radius` at runtime.
+   */
   barRadius?: number;
   /** Padding between category bands as a fraction of band width (0–1). Default `0.25`. */
   barPadding?: number;

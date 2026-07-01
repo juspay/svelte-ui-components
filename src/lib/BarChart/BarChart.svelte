@@ -755,7 +755,12 @@
                     onclick={() => handleClick(bar)}
                   />
                 {/if}
-                {#if showValues && !isStackedMode}
+                <!-- Suppress the horizontal value label when its sub-band is thinner
+                     than the ~11px label, so cramped multi-series charts hide labels
+                     instead of overlapping them into an unreadable cluster. Consumers
+                     restore labels by giving the chart more height (aspectRatio /
+                     scrollable / minBandWidth). -->
+                {#if showValues && !isStackedMode && (isVertical || bar.height >= 13)}
                   <text
                     class="bar-value"
                     x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}

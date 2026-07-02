@@ -120,7 +120,7 @@
   >
     {#if typeof leftIcon === 'string' && leftIcon.length > 0}
       <div class="toast-icon-wrapper">
-        <Img src={leftIcon} alt="" />
+        <Img inlineSvg src={leftIcon} alt="" fallback="" />
       </div>
     {/if}
 
@@ -149,7 +149,7 @@
         }}
         data-pw={closeIconTestId}
       >
-        <Img src={rightIcon} alt="Close" />
+        <Img inlineSvg src={rightIcon} alt="Close" fallback="" />
       </div>
     {/if}
   </div>

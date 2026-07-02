@@ -249,7 +249,10 @@
           >
             {#if typeof item.icon === 'string'}
               <span class="menu-item-icon">
-                <Img src={item.icon} alt="" />
+                <!-- Inline the SVG so currentColor strokes/fills inherit the item's
+                     text colour (danger items tint their icon red, dark theme works);
+                     non-SVG URLs fall back to the plain <img> render automatically. -->
+                <Img inlineSvg src={item.icon} alt="" fallback="" />
               </span>
             {/if}
             <span class="menu-item-label">{item.label}</span>
@@ -347,7 +350,8 @@
     flex-shrink: 0;
   }
 
-  .menu-item-icon :global(img) {
+  .menu-item-icon :global(img),
+  .menu-item-icon :global(svg) {
     width: 100%;
     height: 100%;
   }

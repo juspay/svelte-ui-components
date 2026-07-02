@@ -5,6 +5,7 @@
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { createDebouncer } from '../utils';
   import Button from '$lib/Button/Button.svelte';
+  import Img from '$lib/Img/Img.svelte';
 
   let overlayDiv: HTMLDivElement | null = $state(null);
   let backPressed = $state(false);
@@ -162,7 +163,9 @@
                   tabindex="0"
                   data-pw={leftImageTestId}
                 >
-                  <img class="header-left-img" src={header.leftImage} alt="" />
+                  <!-- Inline SVGs so currentColor icons inherit the header text
+                       colour; non-SVG URLs fall back to a plain <img>. -->
+                  <Img inlineSvg src={header.leftImage} alt="" fallback="" classes="header-left-img" />
                 </div>
               {/if}
               {#if typeof header.text === 'string' && header.text.length > 0}
@@ -178,7 +181,7 @@
                   onkeydown={handleRightImageKeyDown}
                   data-pw={header.buttonTestId}
                 >
-                  <img class="header-right-img" src={header.rightImage} alt="" />
+                  <Img inlineSvg src={header.rightImage} alt="" fallback="" classes="header-right-img" />
                 </div>
               {/if}
             </div>
@@ -409,19 +412,22 @@
     letter-spacing: var(--modal-header-text-letter-spacing);
   }
 
-  .header-left-img,
-  .header-right-img {
+  /* The header images render through the Img component (inline svg or img), so
+     these classes ride on Img's element — match them via :global under the
+     scoped .header to keep the sizing contract. */
+  .header :global(.header-left-img),
+  .header :global(.header-right-img) {
     padding-top: var(--header-img-top-padding, 5px);
     cursor: pointer;
   }
 
-  .header-left-img {
+  .header :global(.header-left-img) {
     margin: var(--header-left-image-margin, 0px 18px 0px 0px);
     width: var(--header-left-image-width, 25px);
     height: var(--header-left-image-height, 25px);
   }
 
-  .header-right-img {
+  .header :global(.header-right-img) {
     width: var(--header-right-image-width, 25px);
     height: var(--header-right-image-height, 25px);
     padding: var(--header-right-image-padding);

@@ -121,6 +121,15 @@
       if (typeof valueA === 'number' && typeof valueB === 'number') {
         return direction === 'asc' ? valueA - valueB : valueB - valueA;
       } else if (typeof valueA === 'string' && typeof valueB === 'string') {
+        // Separator-formatted numeric strings (e.g. "1,11,600") must sort by their
+        // numeric value, not lexicographically; anything unparseable falls back to
+        // locale comparison. Empty strings stay in the locale branch so they are not
+        // coerced to 0.
+        const numericA = valueA.trim() === '' ? NaN : Number(valueA.replace(/,/g, ''));
+        const numericB = valueB.trim() === '' ? NaN : Number(valueB.replace(/,/g, ''));
+        if (Number.isFinite(numericA) && Number.isFinite(numericB)) {
+          return direction === 'asc' ? numericA - numericB : numericB - numericA;
+        }
         return direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
       } else if (typeof valueA === 'boolean' && typeof valueB === 'boolean') {
         return direction === 'asc'

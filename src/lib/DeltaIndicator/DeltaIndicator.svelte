@@ -68,6 +68,14 @@
     color: var(--delta-indicator-neutral-color, #8a8a8a);
   }
 
+  /* The tone color is set on the wrapper; the text span must inherit it explicitly.
+     A consumer's global `span { color }` rule (higher weight than inheritance) would
+     otherwise repaint just the number a neutral text color — leaving only the arrow
+     tinted and making up/down deltas read as colorless. */
+  .delta-indicator-text {
+    color: inherit;
+  }
+
   .delta-indicator-arrow {
     display: inline-flex;
     width: var(--delta-indicator-arrow-size, 9px);

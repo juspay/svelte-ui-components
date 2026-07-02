@@ -100,7 +100,16 @@
               position={tooltip.position ?? 'top'}
               testId={tooltip.testId}
             >
-              <div class="statcard-title statcard-title-tooltip">{title}</div>
+              <span class="statcard-title-tooltip-trigger">
+                <span class="statcard-title statcard-title-tooltip">{title}</span>
+                <span class="statcard-tooltip-icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2" />
+                    <rect x="7.25" y="6.9" width="1.5" height="4.1" rx="0.75" fill="currentColor" />
+                    <circle cx="8" cy="4.8" r="0.9" fill="currentColor" />
+                  </svg>
+                </span>
+              </span>
             </Tooltip>
           {:else}
             <div class="statcard-title">{title}</div>
@@ -262,10 +271,15 @@
     flex-shrink: 0;
   }
 
-  /* Transparent wrapper: keeps the checkbox in the event path (to stop bubbling to
-     the card action) without altering the header layout. */
+  /* Wrapper keeps the checkbox in the event path (to stop bubbling to the card
+     action). `margin-left: auto` pushes it to the header's right edge so the title
+     stays left and the checkbox reads as a right-aligned control. (A previous
+     `display: contents` here removed the box, which silently defeated the flex
+     alignment.) */
   .statcard-header-checkbox {
-    display: contents;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
   }
 
   .statcard-title {
@@ -278,10 +292,36 @@
     text-overflow: ellipsis;
   }
 
+  .statcard-title-tooltip-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--statcard-tooltip-icon-gap, 4px);
+    min-width: 0;
+  }
+
   .statcard-title-tooltip {
     cursor: default;
-    text-decoration: underline dotted;
+    /* Default surface (Euler) uses the ⓘ icon as the tooltip affordance, so the
+       title carries no underline. The Shopify theme flips both tokens — dotted
+       underline on, icon off — via its own stylesheet. */
+    text-decoration: var(--statcard-title-tooltip-decoration, none);
     text-underline-offset: 2px;
+  }
+
+  .statcard-tooltip-icon {
+    display: var(--statcard-tooltip-icon-display, inline-flex);
+    align-items: center;
+    justify-content: center;
+    width: var(--statcard-tooltip-icon-size, 14px);
+    height: var(--statcard-tooltip-icon-size, 14px);
+    flex-shrink: 0;
+    color: var(--statcard-tooltip-icon-color, currentColor);
+    cursor: default;
+  }
+
+  .statcard-tooltip-icon svg {
+    width: 100%;
+    height: 100%;
   }
 
   .statcard-value-row {

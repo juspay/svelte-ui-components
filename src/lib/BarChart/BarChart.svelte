@@ -18,7 +18,7 @@
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath } from '$lib/_chart/paths';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
-  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import { SvelteMap } from 'svelte/reactivity';
 
   // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────
@@ -55,6 +55,8 @@
     barPadding = 0.2,
     barRadius = DEFAULT_CHART_CORNER_RADIUS,
     aspectRatio = 16 / 9,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
+    minHeight = 0,
     xAxisLabel,
     yAxisLabel,
     yDomain,
@@ -108,7 +110,17 @@
 
   let format = $derived(valueFormat ?? formatNumber);
   let isVertical = $derived(orientation === 'vertical');
-  let dims = $derived(computeChartDimensions(chartWidth, chartHeight));
+  // When an axis is hidden its gutter (Y = 50px for tick labels, X = 40px) is dead
+  // space that squeezes the plot into the centre. Collapse the tick-label gutter but
+  // keep a symmetric breathing-room inset so the edge bars (and their value labels)
+  // don't sit flush against the container edges.
+  let dims = $derived(
+    computeChartDimensions(chartWidth, chartHeight, {
+      left: showYAxis ? 50 : 28,
+      right: 28,
+      bottom: showXAxis ? 40 : 8
+    })
+  );
 
   let isMulti = $derived(Array.isArray(series) && series.length > 0);
 
@@ -606,7 +618,13 @@
         : ''}
     >
       <div style={scrollable ? `min-width: ${minScrollWidth}px;` : ''}>
-        <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+        <ChartContainer
+          bind:width={chartWidth}
+          bind:height={chartHeight}
+          {aspectRatio}
+          {maxHeight}
+          {minHeight}
+        >
           <!-- A1-2 / A1-3: SVG <defs> for pattern and gradient fills -->
           {#if defsEntries.length > 0}
             <defs>
@@ -817,7 +835,8 @@
   }
   .bar-value {
     fill: var(--barchart-value-color, #333);
-    font-size: var(--barchart-value-font-size, 11px);
+    font-size: var(--barchart-value-font-size, 14px);
+    font-weight: var(--barchart-value-font-weight, 600);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
   }

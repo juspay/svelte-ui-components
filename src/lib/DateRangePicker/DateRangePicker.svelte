@@ -347,10 +347,10 @@
       if (draftStart !== null && draftEnd !== null) {
         // Fold the time-of-day inputs onto the committed dates when time selection is on.
         const appliedStart = showTimeSelection
-          ? (applyTimeDisplay(draftStart, startTimeDisplay) ?? draftStart)
+          ? (applyTimeDisplay(draftStart, startTimeDisplay, 'start') ?? draftStart)
           : draftStart;
         const appliedEnd = showTimeSelection
-          ? (applyTimeDisplay(draftEnd, endTimeDisplay) ?? draftEnd)
+          ? (applyTimeDisplay(draftEnd, endTimeDisplay, 'end') ?? draftEnd)
           : draftEnd;
         rangeStart = appliedStart;
         rangeEnd = appliedEnd;

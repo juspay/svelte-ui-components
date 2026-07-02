@@ -1,4 +1,5 @@
 // Time-of-day helpers for the DateRangePicker's built-in date + time inputs.
+import type { TimeDisplayBoundary } from './properties';
 
 /** Matches a 12-hour clock display such as "2:30 PM" or "02:05 am". */
 export const TIME_DISPLAY_PATTERN = /^(1[0-2]|0?[1-9]):([0-5][0-9])\s?(AM|PM)$/i;
@@ -31,13 +32,21 @@ export const formatTimeDisplay = (date: Date): string => {
 };
 
 /** Return a new Date with the time-of-day from a 12-hour display string applied, or null when invalid. */
-export const applyTimeDisplay = (date: Date, display: string): Date | null => {
+export const applyTimeDisplay = (
+  date: Date,
+  display: string,
+  boundary: TimeDisplayBoundary
+): Date | null => {
   const parsed = parseTimeDisplay(display);
   if (parsed === null) {
     return null;
   }
   const next = new Date(date.getTime());
-  next.setHours(parsed.hours, parsed.minutes, 0, 0);
+  if (boundary === 'end') {
+    next.setHours(parsed.hours, parsed.minutes, 59, 999);
+  } else {
+    next.setHours(parsed.hours, parsed.minutes, 0, 0);
+  }
   return next;
 };
 

@@ -15,6 +15,7 @@ export type DateRangePreset = {
 export type DateRangePickerMode = 'range' | 'single';
 export type DateRangePickerAlign = 'left' | 'right';
 export type DateRangePickerTimeLayout = 'toggle' | 'inline';
+export type TimeDisplayBoundary = 'start' | 'end';
 
 export type OptionalDateRangePickerProperties = {
   /** Currently selected start of range (bindable). */

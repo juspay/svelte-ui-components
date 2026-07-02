@@ -213,6 +213,11 @@
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
     box-shadow: var(--button-box-shadow, none);
+
+    /* A button label should never soft-wrap onto a second line as the label text
+       changes (e.g. "Select" -> "Select (1)") — that jitters the layout around it.
+       Consumers that genuinely want multi-line buttons opt back in via the var. */
+    white-space: var(--button-white-space, nowrap);
   }
 
   .button-el.disabled,

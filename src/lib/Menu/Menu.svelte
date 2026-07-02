@@ -13,6 +13,7 @@
     onopen,
     onclose,
     classes,
+    selectedValue = null,
     role: menuRole = 'menu',
     ariaLabel: menuAriaLabel,
     id: menuId
@@ -43,12 +44,20 @@
     }
   }
 
-  function openMenu(startIndex: number = 0) {
+  function openMenu(startIndex: number | null = null) {
     open = true;
-    focusedIndex = startIndex;
+    // With a known selection, opening focuses the selected option (listbox
+    // convention) instead of always parking the focus highlight on item 0.
+    const selectedItem =
+      selectedValue != null
+        ? (items.find((item) => item.value === selectedValue && item.disabled !== true) ?? null)
+        : null;
+    const initialIndex =
+      startIndex ?? (selectedItem !== null ? getSelectableIndex(selectedItem) : 0);
+    focusedIndex = initialIndex;
     onopen?.();
     tick().then(() => {
-      focusItem(startIndex);
+      focusItem(initialIndex);
     });
   }
 
@@ -232,12 +241,17 @@
             class="menu-item"
             class:menu-item-danger={item.danger === true}
             class:menu-item-disabled={item.disabled === true}
+            class:menu-item-selected={selectedValue != null && item.value === selectedValue}
             role={itemRole}
             id={item.id}
             tabindex={item.disabled === true || menuRole === 'listbox' ? -1 : 0}
             aria-disabled={item.disabled === true ? 'true' : null}
-            aria-selected={menuRole === 'listbox' && focusedIndex === getSelectableIndex(item)
-              ? true
+            aria-selected={menuRole === 'listbox'
+              ? selectedValue != null
+                ? item.value === selectedValue
+                : focusedIndex === getSelectableIndex(item)
+                  ? true
+                  : null
               : null}
             onclick={() => selectItem(item)}
             onfocus={() => {
@@ -316,6 +330,13 @@
   .menu-item:focus {
     background-color: var(--menu-item-focus-background-color, #f0f0f0);
     outline: var(--menu-item-focus-outline, none);
+  }
+
+  /* True selection (selectedValue match) — distinct from transient focus so the
+     highlight follows the chosen option, not wherever keyboard focus landed. */
+  .menu-item-selected {
+    background-color: var(--menu-item-selected-background-color, transparent);
+    color: var(--menu-item-selected-color, inherit);
   }
 
   .menu-item-danger {

@@ -65,6 +65,13 @@ export type OptionalFunnelChartProperties = {
    * Passed directly to `ChartContainer`. Default is `16 / 9`.
    */
   aspectRatio?: number;
+  /**
+   * Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height
+   * can't balloon on wide surfaces. Defaults to `Infinity` (uncapped).
+   */
+  maxHeight?: number;
+  /** Lower bound (px) on the rendered chart height (defaults to `0`). */
+  minHeight?: number;
   /** Value for the `data-pw` attribute on the chart root element. */
   testId?: string;
   /** CSS class string applied to the chart root element. Useful for CSS-variable theming. */

@@ -4,7 +4,7 @@
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber, formatPercent } from '$lib/_chart/format';
-  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -17,6 +17,8 @@
     showValueLabels = true,
     valueFormat,
     aspectRatio = 16 / 9,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
+    minHeight = 0,
     radius = DEFAULT_CHART_CORNER_RADIUS,
     testId,
     classes,
@@ -219,7 +221,13 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+    <ChartContainer
+      bind:width={chartWidth}
+      bind:height={chartHeight}
+      {aspectRatio}
+      {maxHeight}
+      {minHeight}
+    >
       <g transform="translate({MARGIN_LEFT}, {MARGIN_TOP})">
         <!-- Stage bars and category labels -->
         {#each data as stage, index (index)}

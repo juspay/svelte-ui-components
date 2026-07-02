@@ -24,6 +24,13 @@ export type OptionalPieChartProperties = {
   showLegend?: boolean;
   startAngle?: number;
   aspectRatio?: number;
+  /**
+   * Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height
+   * can't balloon on wide surfaces. Defaults to `Infinity` (uncapped).
+   */
+  maxHeight?: number;
+  /** Lower bound (px) on the rendered chart height (defaults to `0`). */
+  minHeight?: number;
   valueFormat?: (value: number) => string;
   tooltipSnippet?: Snippet<[PieChartSlice, number]>;
   center?: Snippet;

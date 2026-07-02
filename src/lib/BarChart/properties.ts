@@ -96,6 +96,14 @@ export type OptionalBarChartProperties = {
    */
   barRadius?: number;
   aspectRatio?: number;
+  /**
+   * Upper bound (px) on the rendered chart height. The chart height is derived from
+   * its width via `aspectRatio`; on wide or scrollable surfaces that can balloon the
+   * chart. Cap it here to keep the chart compact (defaults to `Infinity` = uncapped).
+   */
+  maxHeight?: number;
+  /** Lower bound (px) on the rendered chart height (defaults to `0`). */
+  minHeight?: number;
   xAxisLabel?: string;
   yAxisLabel?: string;
   yDomain?: [number, number];

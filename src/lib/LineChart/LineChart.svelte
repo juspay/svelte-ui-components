@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { LineChartProperties, LineChartTooltipContext } from './properties';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { ChartHighlightAPI } from '$lib/_chart/highlight';
   import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
@@ -45,7 +46,7 @@
     yTickFormat,
     aspectRatio = 16 / 9,
     minHeight = 0,
-    maxHeight = Infinity,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
     tooltipSnippet,
     empty,
     highlightedIndex = null,

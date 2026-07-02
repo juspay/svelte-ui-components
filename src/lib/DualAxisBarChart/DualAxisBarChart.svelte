@@ -14,7 +14,7 @@
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath, linePath } from '$lib/_chart/paths';
   import type { LegendItem, TooltipData, LinearScale, BandScale, Point } from '$lib/_chart/types';
-  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
   // ── Per-instance uid for SVG <defs> ids ────────────────────────
   const uid = Math.random().toString(36).slice(2, 9);
@@ -31,6 +31,8 @@
     barRadius = DEFAULT_CHART_CORNER_RADIUS,
     barPadding = 0.25,
     aspectRatio = 16 / 9,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
+    minHeight = 0,
     minBarHeight = 2,
     margin,
     tooltipPortal = false,
@@ -341,7 +343,13 @@
       <Legend items={legendItems} position="top" />
     {/if}
 
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
+    <ChartContainer
+      bind:width={chartWidth}
+      bind:height={chartHeight}
+      {aspectRatio}
+      {maxHeight}
+      {minHeight}
+    >
       <g transform="translate({dims.margin.left}, {dims.margin.top})">
         <!-- Left Y-axis (index 0) -->
         <Axis

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { PieChartProperties } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
@@ -23,6 +24,8 @@
     showLegend = false,
     startAngle = -Math.PI / 2,
     aspectRatio,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
+    minHeight = 0,
     valueFormat,
     tooltipSnippet,
     center,
@@ -221,6 +224,8 @@
       bind:width={chartWidth}
       bind:height={chartHeight}
       aspectRatio={effectiveAspectRatio}
+      {maxHeight}
+      {minHeight}
     >
       <g transform="translate({cx}, {cy})">
         {#each slices as slice (slice.index)}

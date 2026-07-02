@@ -108,6 +108,13 @@ export type OptionalDualAxisBarChartProperties = {
    */
   aspectRatio?: number;
   /**
+   * Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height
+   * can't balloon on wide surfaces. Defaults to `Infinity` (uncapped).
+   */
+  maxHeight?: number;
+  /** Lower bound (px) on the rendered chart height (defaults to `0`). */
+  minHeight?: number;
+  /**
    * Custom tooltip content. Receives a `DualAxisTooltipContext` and replaces the
    * default multi-series tooltip.
    */

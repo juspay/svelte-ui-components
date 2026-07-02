@@ -14,6 +14,15 @@ import type { BarChartDataPoint } from '$lib/BarChart/properties';
  */
 export const DEFAULT_CHART_CORNER_RADIUS = 4;
 
+/**
+ * Default upper bound (px) on a chart's rendered height. Chart height is derived
+ * from width via `aspectRatio`, so on a wide surface (e.g. a full-width dashboard
+ * panel) a 16/9 chart can balloon past 700px. This default keeps charts from ever
+ * rendering absurdly tall; a call site that genuinely needs a taller chart passes
+ * an explicit `maxHeight` to override it.
+ */
+export const DEFAULT_CHART_MAX_HEIGHT = 420;
+
 // ── Primitive shapes ──────────────────────────────────────────
 
 export type Margin = {

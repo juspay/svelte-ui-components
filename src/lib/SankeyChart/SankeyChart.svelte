@@ -5,7 +5,7 @@
   import { computeSankeyLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
-  import { DEFAULT_CHART_CORNER_RADIUS } from '$lib/_chart/types';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
@@ -20,7 +20,7 @@
     showLabels = true,
     aspectRatio = 16 / 9,
     radius = DEFAULT_CHART_CORNER_RADIUS,
-    maxHeight = Infinity,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
     valueFormat,
     tooltipSnippet,
     empty,

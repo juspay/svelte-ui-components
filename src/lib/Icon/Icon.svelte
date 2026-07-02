@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Img from '../Img/Img.svelte';
   import type { IconProperties } from './properties';
 
   let { icon, svg, text, onclick, onkeydown, classes }: IconProperties = $props();
@@ -9,7 +10,9 @@
     <!-- eslint-disable svelte/no-at-html-tags -->
     <span class="icon-svg">{@html svg}</span>
   {:else if icon}
-    <img src={icon} alt="" />
+    <!-- Inline the SVG so currentColor strokes/fills inherit the surrounding text
+         colour; non-SVG URLs fall back to the plain <img> render automatically. -->
+    <Img inlineSvg src={icon} alt="" fallback="" />
   {/if}
   {#if typeof text === 'string' && text.length > 0}
     <div class="icon-text">{text}</div>
@@ -24,7 +27,10 @@
     align-items: center;
     cursor: pointer;
   }
-  .icon-container img {
+  /* Direct child only: the @html branch's svg lives inside .icon-svg and keeps
+     its own 100% sizing rule below. */
+  .icon-container > :global(img),
+  .icon-container > :global(svg) {
     height: var(--icon-height, 20px);
     width: var(--icon-width, 20px);
     padding: var(--icon-padding, 4px);

@@ -165,7 +165,13 @@
                 >
                   <!-- Inline SVGs so currentColor icons inherit the header text
                        colour; non-SVG URLs fall back to a plain <img>. -->
-                  <Img inlineSvg src={header.leftImage} alt="" fallback="" classes="header-left-img" />
+                  <Img
+                    inlineSvg
+                    src={header.leftImage}
+                    alt=""
+                    fallback=""
+                    classes="header-left-img"
+                  />
                 </div>
               {/if}
               {#if typeof header.text === 'string' && header.text.length > 0}
@@ -181,7 +187,13 @@
                   onkeydown={handleRightImageKeyDown}
                   data-pw={header.buttonTestId}
                 >
-                  <Img inlineSvg src={header.rightImage} alt="" fallback="" classes="header-right-img" />
+                  <Img
+                    inlineSvg
+                    src={header.rightImage}
+                    alt=""
+                    fallback=""
+                    classes="header-right-img"
+                  />
                 </div>
               {/if}
             </div>

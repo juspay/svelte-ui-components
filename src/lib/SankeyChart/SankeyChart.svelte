@@ -52,11 +52,39 @@
   let format = $derived(valueFormat ?? formatNumber);
   let isEmpty = $derived(nodes.length === 0);
   const MARGIN = 40;
+  const LABEL_CHAR_PX = 7.2; // ≈ 0.6em at the 12px default label size
+
+  // Final-column labels render to the RIGHT of their node; the bare 40px margin is
+  // nowhere near enough for real funnel labels ("PARTIALLY_FAILED (1,234)"), so they
+  // used to run past the svg edge and clip. Reserve a capped gutter sized from the
+  // sink-node labels (sinks are what land in the final column) and lay the diagram
+  // out in the remaining width instead.
+  let lastColumnLabelGutter = $derived.by(() => {
+    if (!showLabels || nodes.length === 0 || chartWidth <= 0) {
+      return 0;
+    }
+    const sourceIds = new Set(links.map((link) => link.source));
+    const sinkLabels = nodes
+      .filter((node) => !sourceIds.has(node.id))
+      .map((node) => node.label ?? node.id);
+    if (sinkLabels.length === 0) {
+      return 0;
+    }
+    const longestChars =
+      Math.max(...sinkLabels.map((label) => label.length)) + (showValues ? 9 : 0);
+    const wanted = longestChars * LABEL_CHAR_PX + 10 + dataLabelOffsetX;
+    // Cap the reservation so labels can never squeeze the diagram below 3/4 width,
+    // and floor at 0 — a negative dataLabelOffsetX must not inflate the plot
+    // past the right margin.
+    return Math.max(0, Math.min(chartWidth * 0.25, wanted));
+  });
+
+  let plotWidth = $derived(Math.max(0, chartWidth - MARGIN * 2 - lastColumnLabelGutter));
   let layout = $derived(
     computeSankeyLayout(
       nodes,
       links,
-      Math.max(0, chartWidth - MARGIN * 2),
+      plotWidth,
       Math.max(0, chartHeight - MARGIN * 2),
       nodeWidth,
       nodePadding,
@@ -87,21 +115,31 @@
     layout.nodes.length > 0 ? Math.max(...layout.nodes.map((n) => n.column)) + 1 : 0
   );
   let colWidth = $derived(
-    columnCount <= 1
-      ? Math.max(0, chartWidth - MARGIN * 2)
-      : (Math.max(0, chartWidth - MARGIN * 2) - nodeWidth) / (columnCount - 1)
+    columnCount <= 1 ? plotWidth : (plotWidth - nodeWidth) / (columnCount - 1)
   );
 
   // Node labels render alongside their bar; long labels used to overflow into the
   // next column and collide. Clip each to the horizontal room its column actually
   // has and append an ellipsis (the full text stays available via the node tooltip).
-  const LABEL_CHAR_PX = 7.2; // ≈ 0.6em at the 12px default label size
+  // The final column's room is the reserved right gutter (plus the margin), NOT
+  // colWidth — budgeting it at colWidth is what used to let edge labels clip.
+  // Column headers are centred over columns that narrow as the label gutter and
+  // column count grow; untruncated they collide into one unreadable run. Clip to
+  // the column pitch with an ellipsis — the full text stays on the <title>.
+  const truncateColumnLabel = (text: string): string => {
+    const maxChars = Math.floor(Math.max(0, colWidth - 6) / LABEL_CHAR_PX);
+    if (maxChars < 3) {
+      return '';
+    }
+    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+  };
+
   const truncateLabel = (text: string, column: number): string => {
     const available =
       column === 0
         ? MARGIN + 16
         : column === columnCount - 1
-          ? Math.max(colWidth, MARGIN + 24)
+          ? Math.max(0, lastColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
           : Math.max(0, colWidth - nodeWidth - 12);
     const maxChars = Math.floor(available / LABEL_CHAR_PX);
     // No usable room — hide the label rather than force text that would overflow;
@@ -308,7 +346,7 @@
               x={ci * colWidth + nodeWidth / 2}
               y={-8}
               text-anchor="middle"
-              dominant-baseline="auto">{label}</text
+              dominant-baseline="auto">{truncateColumnLabel(label)}<title>{label}</title></text
             >
           {/each}
         {/if}

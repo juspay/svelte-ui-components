@@ -154,6 +154,12 @@
     return n;
   }
 
+  function endOfDay(d: Date): Date {
+    const newDate = new SvelteDate(d);
+    newDate.setHours(23, 59, 59, 999);
+    return newDate;
+  }
+
   function isSameDay(a: Date, b: Date): boolean {
     return (
       a.getFullYear() === b.getFullYear() &&
@@ -206,6 +212,8 @@
         if (date.getTime() < normalizeDate(start).getTime()) {
           rangeEnd = start;
           rangeStart = date;
+        } else if (isSameDay(date, start)) {
+          rangeEnd = endOfDay(date);
         } else {
           rangeEnd = date;
         }

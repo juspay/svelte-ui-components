@@ -18,9 +18,6 @@
   let visible = $state(false);
   let delayTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Inline (non-portal) bubble element, measured for viewport-edge clamping. */
-  let bubbleEl: HTMLDivElement | null = $state(null);
-
   /**
    * Cross-axis shift (px) applied to the inline bubble so it stays inside the
    * viewport: horizontal for top/bottom tooltips, vertical for left/right ones.
@@ -31,28 +28,66 @@
   /** Minimum gap kept between the bubble and the viewport edge. */
   const VIEWPORT_MARGIN = 8;
 
-  // Once the inline bubble renders, measure its natural position and shift it
-  // back inside the viewport if it overflows — near the right screen edge a
-  // centred bottom-tooltip otherwise gets clipped and its text is unreadable.
-  $effect(() => {
-    if (!visible || usePortal || bubbleEl === null || typeof window === 'undefined') {
-      bubbleShift = 0;
-      return;
+  /** Opposite side per position, used to flip a bubble whose main axis overflows. */
+  const OPPOSITE_POSITION: Record<TooltipPosition, TooltipPosition> = {
+    top: 'bottom',
+    bottom: 'top',
+    left: 'right',
+    right: 'left'
+  };
+
+  /**
+   * Set when the bubble's own side overflows the viewport (e.g. a `right`
+   * tooltip on a trigger near the right screen edge): the bubble renders on
+   * the opposite side instead, where cross-axis shifting alone cannot help.
+   */
+  let flipped = $state(false);
+
+  const displayPosition = $derived(flipped ? OPPOSITE_POSITION[position] : position);
+
+  const mainAxisOverflows = (bubbleRect: DOMRect, pos: TooltipPosition): boolean => {
+    if (pos === 'right') {
+      return bubbleRect.right > window.innerWidth - VIEWPORT_MARGIN;
     }
-    const bubbleRect = bubbleEl.getBoundingClientRect();
-    const alreadyShifted = bubbleShift;
-    if (position === 'top' || position === 'bottom') {
-      const overflowRight =
-        bubbleRect.right - alreadyShifted - (window.innerWidth - VIEWPORT_MARGIN);
-      const overflowLeft = VIEWPORT_MARGIN - (bubbleRect.left - alreadyShifted);
-      bubbleShift = overflowRight > 0 ? -overflowRight : overflowLeft > 0 ? overflowLeft : 0;
-    } else {
-      const overflowBottom =
-        bubbleRect.bottom - alreadyShifted - (window.innerHeight - VIEWPORT_MARGIN);
-      const overflowTop = VIEWPORT_MARGIN - (bubbleRect.top - alreadyShifted);
-      bubbleShift = overflowBottom > 0 ? -overflowBottom : overflowTop > 0 ? overflowTop : 0;
+    if (pos === 'left') {
+      return bubbleRect.left < VIEWPORT_MARGIN;
     }
-  });
+    if (pos === 'top') {
+      return bubbleRect.top < VIEWPORT_MARGIN;
+    }
+    return bubbleRect.bottom > window.innerHeight - VIEWPORT_MARGIN;
+  };
+
+  /**
+   * Action for the inline (non-portal) bubble: on mount it measures the bubble's
+   * natural position (shift is 0 and no flip is applied at that point) and keeps
+   * it inside the viewport — flipping to the opposite side when its own side
+   * overflows, and shifting along the cross axis when the perpendicular edges
+   * clip. Flipping mirrors only the main axis, so the cross-axis measurement
+   * stays valid after a flip. On unmount both reset so the next show starts
+   * from the natural position.
+   */
+  const clampInlineBubble = (node: HTMLElement): { destroy: () => void } => {
+    if (typeof window !== 'undefined') {
+      const bubbleRect = node.getBoundingClientRect();
+      flipped = mainAxisOverflows(bubbleRect, position);
+      if (position === 'top' || position === 'bottom') {
+        const overflowRight = bubbleRect.right - (window.innerWidth - VIEWPORT_MARGIN);
+        const overflowLeft = VIEWPORT_MARGIN - bubbleRect.left;
+        bubbleShift = overflowRight > 0 ? -overflowRight : overflowLeft > 0 ? overflowLeft : 0;
+      } else {
+        const overflowBottom = bubbleRect.bottom - (window.innerHeight - VIEWPORT_MARGIN);
+        const overflowTop = VIEWPORT_MARGIN - bubbleRect.top;
+        bubbleShift = overflowBottom > 0 ? -overflowBottom : overflowTop > 0 ? overflowTop : 0;
+      }
+    }
+    return {
+      destroy: () => {
+        bubbleShift = 0;
+        flipped = false;
+      }
+    };
+  };
 
   /** Reference to the trigger wrapper element, used for `getBoundingClientRect` in portal mode. */
   let containerEl: HTMLDivElement | null = $state(null);
@@ -123,6 +158,35 @@
   };
 
   /**
+   * Flips an appended portal bubble to the opposite side of the trigger when
+   * its own side overflows the viewport, repositioning the bubble and its
+   * arrow. Returns the side the bubble ends up on.
+   */
+  const flipPortalBubbleIfNeeded = (
+    bubble: HTMLDivElement,
+    rect: DOMRect,
+    pos: TooltipPosition
+  ): TooltipPosition => {
+    if (typeof window === 'undefined') {
+      return pos;
+    }
+    const bubbleRect = bubble.getBoundingClientRect();
+    if (!mainAxisOverflows(bubbleRect, pos)) {
+      return pos;
+    }
+    const flippedPos = OPPOSITE_POSITION[pos];
+    const coords = computePortalCoords(rect, flippedPos);
+    bubble.style.top = `${coords.top}px`;
+    bubble.style.left = `${coords.left}px`;
+    bubble.style.transform = coords.transform;
+    const arrowEl = bubble.firstElementChild;
+    if (arrowEl instanceof HTMLElement) {
+      arrowEl.style.cssText = computeArrowStyle(flippedPos);
+    }
+    return flippedPos;
+  };
+
+  /**
    * Shifts an appended portal bubble back inside the viewport (cross-axis only)
    * and moves its arrow the opposite way so it still points at the trigger.
    * Margins are used so the shift composes with the centring transform.
@@ -152,8 +216,8 @@
     }
     bubble.style.marginLeft = `${shiftX}px`;
     bubble.style.marginTop = `${shiftY}px`;
-    const arrowEl = bubble.firstElementChild as HTMLElement | null;
-    if (arrowEl !== null) {
+    const arrowEl = bubble.firstElementChild;
+    if (arrowEl instanceof HTMLElement) {
       if (shiftX !== 0) {
         arrowEl.style.left = `calc(50% - ${shiftX}px)`;
       }
@@ -236,7 +300,8 @@
         portalBubbleEl = createPortalBubble(rect, pos);
         if (portalBubbleEl !== null) {
           document.body.appendChild(portalBubbleEl);
-          clampPortalBubble(portalBubbleEl, pos);
+          const effectivePos = flipPortalBubbleIfNeeded(portalBubbleEl, rect, pos);
+          clampPortalBubble(portalBubbleEl, effectivePos);
         }
       }
     };
@@ -296,8 +361,8 @@
   {@render children()}
   {#if visible && !usePortal}
     <div
-      bind:this={bubbleEl}
-      class="tooltip-bubble {position}"
+      use:clampInlineBubble
+      class="tooltip-bubble {displayPosition}"
       role="tooltip"
       style:--tooltip-shift="{bubbleShift}px"
     >

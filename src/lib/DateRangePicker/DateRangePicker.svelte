@@ -982,6 +982,7 @@
     flex-direction: column;
     min-width: var(--drp-panel-min-width, 320px);
     max-width: var(--drp-panel-max-width, 760px);
+    max-height: var(--drp-panel-max-height, calc(100dvh - 80px));
     overflow: hidden;
   }
 
@@ -998,6 +999,9 @@
   .drp-panel-inner {
     display: flex;
     flex-direction: row;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   /* ── Sidebar ── */
@@ -1139,7 +1143,10 @@
     --calendar-box-shadow: none;
     --calendar-background: transparent;
     --calendar-padding: 0;
-    /* Suppress Calendar's own header in dual-month context via CSS var */
+  }
+
+  /* Suppress Calendar's own header in dual-month mode; single mode keeps it for navigation */
+  :global(.drp-months-row .drp-calendar-embedded) {
     --calendar-header-display: none;
   }
 

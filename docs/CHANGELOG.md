@@ -2,7 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.7)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.8)
+
+The Release and Publish workflow fails lint on release HEAD: the clamp
+added in #354 used $effect (banned by no-restricted-syntax) and a type
+assertion (banned by consistent-type-assertions). Replace the $effect
+with a mount action on the inline bubble and the assertion with
+instanceof narrowing.
+
+Also fix the clamp's blind spot: a left/right tooltip whose own side
+overflows the viewport (e.g. a right-tooltip on a trigger near the right
+screen edge) cannot be rescued by cross-axis shifting — flip it to the
+opposite side instead, in both the inline and portal paths.
+
+## [2.80.8](https://github.com/juspay/svelte-ui-components/compare/2.80.8..2.80.7) - 3 July 2026
 
 ## [2.80.7](https://github.com/juspay/svelte-ui-components/compare/2.80.7..2.80.6) - 3 July 2026
 

@@ -18,6 +18,42 @@
   let visible = $state(false);
   let delayTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
+  /** Inline (non-portal) bubble element, measured for viewport-edge clamping. */
+  let bubbleEl: HTMLDivElement | null = $state(null);
+
+  /**
+   * Cross-axis shift (px) applied to the inline bubble so it stays inside the
+   * viewport: horizontal for top/bottom tooltips, vertical for left/right ones.
+   * The arrow compensates by the same amount, so it keeps pointing at the trigger.
+   */
+  let bubbleShift = $state(0);
+
+  /** Minimum gap kept between the bubble and the viewport edge. */
+  const VIEWPORT_MARGIN = 8;
+
+  // Once the inline bubble renders, measure its natural position and shift it
+  // back inside the viewport if it overflows — near the right screen edge a
+  // centred bottom-tooltip otherwise gets clipped and its text is unreadable.
+  $effect(() => {
+    if (!visible || usePortal || bubbleEl === null || typeof window === 'undefined') {
+      bubbleShift = 0;
+      return;
+    }
+    const bubbleRect = bubbleEl.getBoundingClientRect();
+    const alreadyShifted = bubbleShift;
+    if (position === 'top' || position === 'bottom') {
+      const overflowRight =
+        bubbleRect.right - alreadyShifted - (window.innerWidth - VIEWPORT_MARGIN);
+      const overflowLeft = VIEWPORT_MARGIN - (bubbleRect.left - alreadyShifted);
+      bubbleShift = overflowRight > 0 ? -overflowRight : overflowLeft > 0 ? overflowLeft : 0;
+    } else {
+      const overflowBottom =
+        bubbleRect.bottom - alreadyShifted - (window.innerHeight - VIEWPORT_MARGIN);
+      const overflowTop = VIEWPORT_MARGIN - (bubbleRect.top - alreadyShifted);
+      bubbleShift = overflowBottom > 0 ? -overflowBottom : overflowTop > 0 ? overflowTop : 0;
+    }
+  });
+
   /** Reference to the trigger wrapper element, used for `getBoundingClientRect` in portal mode. */
   let containerEl: HTMLDivElement | null = $state(null);
 
@@ -84,6 +120,47 @@
     }
     // right
     return `${base}top:50%;right:100%;transform:translateY(-50%);border-width:${arrowSize}px ${arrowSize}px ${arrowSize}px 0;border-color:${t} ${bg} ${t} ${t};`;
+  };
+
+  /**
+   * Shifts an appended portal bubble back inside the viewport (cross-axis only)
+   * and moves its arrow the opposite way so it still points at the trigger.
+   * Margins are used so the shift composes with the centring transform.
+   */
+  const clampPortalBubble = (bubble: HTMLDivElement, pos: TooltipPosition): void => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const bubbleRect = bubble.getBoundingClientRect();
+    let shiftX = 0;
+    let shiftY = 0;
+    if (pos === 'top' || pos === 'bottom') {
+      if (bubbleRect.right > window.innerWidth - VIEWPORT_MARGIN) {
+        shiftX = window.innerWidth - VIEWPORT_MARGIN - bubbleRect.right;
+      } else if (bubbleRect.left < VIEWPORT_MARGIN) {
+        shiftX = VIEWPORT_MARGIN - bubbleRect.left;
+      }
+    } else {
+      if (bubbleRect.bottom > window.innerHeight - VIEWPORT_MARGIN) {
+        shiftY = window.innerHeight - VIEWPORT_MARGIN - bubbleRect.bottom;
+      } else if (bubbleRect.top < VIEWPORT_MARGIN) {
+        shiftY = VIEWPORT_MARGIN - bubbleRect.top;
+      }
+    }
+    if (shiftX === 0 && shiftY === 0) {
+      return;
+    }
+    bubble.style.marginLeft = `${shiftX}px`;
+    bubble.style.marginTop = `${shiftY}px`;
+    const arrowEl = bubble.firstElementChild as HTMLElement | null;
+    if (arrowEl !== null) {
+      if (shiftX !== 0) {
+        arrowEl.style.left = `calc(50% - ${shiftX}px)`;
+      }
+      if (shiftY !== 0) {
+        arrowEl.style.top = `calc(50% - ${shiftY}px)`;
+      }
+    }
   };
 
   const createPortalBubble = (rect: DOMRect, pos: TooltipPosition): HTMLDivElement | null => {
@@ -159,6 +236,7 @@
         portalBubbleEl = createPortalBubble(rect, pos);
         if (portalBubbleEl !== null) {
           document.body.appendChild(portalBubbleEl);
+          clampPortalBubble(portalBubbleEl, pos);
         }
       }
     };
@@ -217,7 +295,12 @@
   {/if}
   {@render children()}
   {#if visible && !usePortal}
-    <div class="tooltip-bubble {position}" role="tooltip">
+    <div
+      bind:this={bubbleEl}
+      class="tooltip-bubble {position}"
+      role="tooltip"
+      style:--tooltip-shift="{bubbleShift}px"
+    >
       <div class="tooltip-arrow"></div>
       {#if typeof content === 'function'}
         {@render content()}
@@ -266,16 +349,18 @@
     border-style: solid;
   }
 
-  /* Top position */
+  /* Top position. --tooltip-shift is the viewport-edge clamp: the bubble slides
+     along its cross axis to stay on screen while the arrow compensates the other
+     way so it keeps pointing at the trigger. */
   .top {
     bottom: calc(100% + var(--tooltip-offset, 8px));
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% + var(--tooltip-shift, 0px)));
   }
 
   .top .tooltip-arrow {
     top: 100%;
-    left: 50%;
+    left: calc(50% - var(--tooltip-shift, 0px));
     transform: translateX(-50%);
     border-width: var(--tooltip-arrow-size, 5px) var(--tooltip-arrow-size, 5px) 0
       var(--tooltip-arrow-size, 5px);
@@ -287,12 +372,12 @@
   .bottom {
     top: calc(100% + var(--tooltip-offset, 8px));
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% + var(--tooltip-shift, 0px)));
   }
 
   .bottom .tooltip-arrow {
     bottom: 100%;
-    left: 50%;
+    left: calc(50% - var(--tooltip-shift, 0px));
     transform: translateX(-50%);
     border-width: 0 var(--tooltip-arrow-size, 5px) var(--tooltip-arrow-size, 5px)
       var(--tooltip-arrow-size, 5px);
@@ -304,12 +389,12 @@
   .left {
     right: calc(100% + var(--tooltip-offset, 8px));
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(calc(-50% + var(--tooltip-shift, 0px)));
   }
 
   .left .tooltip-arrow {
     left: 100%;
-    top: 50%;
+    top: calc(50% - var(--tooltip-shift, 0px));
     transform: translateY(-50%);
     border-width: var(--tooltip-arrow-size, 5px) 0 var(--tooltip-arrow-size, 5px)
       var(--tooltip-arrow-size, 5px);
@@ -321,12 +406,12 @@
   .right {
     left: calc(100% + var(--tooltip-offset, 8px));
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(calc(-50% + var(--tooltip-shift, 0px)));
   }
 
   .right .tooltip-arrow {
     right: 100%;
-    top: 50%;
+    top: calc(50% - var(--tooltip-shift, 0px));
     transform: translateY(-50%);
     border-width: var(--tooltip-arrow-size, 5px) var(--tooltip-arrow-size, 5px)
       var(--tooltip-arrow-size, 5px) 0;

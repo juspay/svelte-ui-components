@@ -248,6 +248,12 @@
   .button-text {
     order: var(--button-text-order, 3);
     display: var(--button-text-display);
+
+    /* With nowrap as the default, a label longer than the button's box would
+       otherwise bleed past it — truncate with an ellipsis instead. Full labels
+       stay available via the button's accessible name / title at the call site. */
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .button-el:hover:not(.disabled) {

@@ -2,26 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.6)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.7)
 
-SankeyChart: final-column labels render to the right of their node, but the
-layout spanned the full inner width, leaving only the 40px margin — real
-funnel labels ("PARTIALLY_FAILED (1,234)") ran past the svg edge and
-clipped. Reserve a capped right gutter sized from the sink-node labels, lay
-the diagram out in the remaining width, and budget final-column truncation
-against the actual gutter instead of colWidth.
-
-Button: white-space: var(--button-white-space, nowrap) on .button-el — a
-label growing from "Select" to "Select (1)" used to soft-wrap to two lines
-and jitter the surrounding layout; consumers wanting multi-line buttons opt
-back in via the var.
-
-Menu: new selectedValue prop — opening focuses the selected option instead
-of always parking the focus highlight on item 0 (which made the first
-option look permanently selected in listbox uses), the matching item gets a
-stylable menu-item-selected class (--menu-item-selected-background-color /
--color), and listbox aria-selected reflects the real selection instead of
-transient focus.
+## [2.80.7](https://github.com/juspay/svelte-ui-components/compare/2.80.7..2.80.6) - 3 July 2026
 
 ## [2.80.6](https://github.com/juspay/svelte-ui-components/compare/2.80.6..2.80.5) - 2 July 2026
 

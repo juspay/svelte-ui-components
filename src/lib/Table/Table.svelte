@@ -1,8 +1,15 @@
 <script lang="ts">
-  import type { TableProperties, TableCheckboxSelectionConfig } from './properties';
+  import type { TableProperties, TableCheckboxSelectionConfig, TableRow } from './properties';
+  import { normalizeColumns } from './normalizeColumns';
+  import BuiltinCell from './BuiltinCell.svelte';
   import type { JSONValue } from 'type-decoder';
   import { SvelteSet } from 'svelte/reactivity';
   import Button from '../Button/Button.svelte';
+  import Menu from '../Menu/Menu.svelte';
+  import Tooltip from '../Tooltip/Tooltip.svelte';
+  import Pagination from '../Pagination/Pagination.svelte';
+  import Select from '../Select/Select.svelte';
+  import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
   import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
@@ -15,8 +22,11 @@
     tableTitle = '',
     tableHeaders = [],
     tableData = [],
+    columns,
+    rows,
     sortable = true,
     sortableColumns,
+    sortMode = 'client',
     stickyHeader = false,
     isTableScrollable = false,
     isContentScrollable = false,
@@ -36,8 +46,37 @@
     getCellTestId,
     checkboxSelection,
     searchConfig,
-    onSearchChange
+    onSearchChange,
+    pagination,
+    toolbarSlot,
+    rowNumberColumn = false
   }: TableProperties = $props();
+
+  // ─── Keyed column model → positional projection ─────────────────────────────
+  // When `columns` is provided, the keyed model is normalized once and the
+  // positional engine below runs on the projection; when absent, the positional
+  // props pass through untouched, preserving existing behavior exactly.
+  let normalized = $derived(columns ? normalizeColumns(columns, rows ?? []) : null);
+  let effectiveHeaders = $derived(normalized ? normalized.tableHeaders : tableHeaders);
+  let effectiveData = $derived(normalized ? normalized.tableData : tableData);
+  let effectiveSortableColumns = $derived(
+    normalized ? normalized.sortableColumns : sortableColumns
+  );
+
+  /**
+   * Recovers the original keyed row from a projected positional row so
+   * column-scoped `cell` snippets receive the keyed shape. Sorting and
+   * filtering copy the outer array but keep row references, so reference
+   * identity survives the whole pipeline.
+   */
+  let keyedRowByProjected = $derived.by((): Map<JSONValue[], TableRow> | null => {
+    if (!normalized || !rows) {
+      return null;
+    }
+    return new Map(
+      normalized.tableData.map((projectedRow, rowIndex) => [projectedRow, rows[rowIndex]])
+    );
+  });
 
   // ─── Sort state ──────────────────────────────────────────────────────────────
   let sortColumn = $state<number | null>(null);
@@ -47,8 +86,8 @@
     if (!sortable) {
       return false;
     }
-    if (sortableColumns) {
-      return sortableColumns.includes(colIndex);
+    if (effectiveSortableColumns) {
+      return effectiveSortableColumns.includes(colIndex);
     }
     return true;
   };
@@ -93,6 +132,7 @@
       return;
     }
     searchTerm = searchInputRef.value;
+    pageOverride = 1;
     if (isServerSearch) {
       onSearchChange?.(searchTerm);
     }
@@ -100,6 +140,7 @@
 
   const clearSearch = (): void => {
     searchTerm = '';
+    pageOverride = 1;
     if (isServerSearch) {
       onSearchChange?.('');
     }
@@ -107,14 +148,41 @@
 
   // ─── Sort + Search pipeline ──────────────────────────────────────────────────
   let sortedTableData = $derived.by(() => {
-    if (sortColumn === null) {
-      return [...tableData];
+    if (sortColumn === null || sortMode === 'server') {
+      return [...effectiveData];
     }
 
     const colIndex = sortColumn;
     const direction = sortDirection;
 
-    return [...tableData].sort((rowA, rowB) => {
+    // Keyed-mode per-column sort-value extraction: the consumer's getSortValue
+    // supplies the comparable (currency/date parsing stays app-side), the
+    // built-in scalar comparator below does the ordering.
+    const getSortValue = columns?.[colIndex]?.getSortValue;
+    const keyedLookup = keyedRowByProjected;
+    if (typeof getSortValue === 'function' && keyedLookup) {
+      const emptyRow: TableRow = {};
+      const decorated = effectiveData.map((row, rowIndex) => ({
+        row,
+        sortValue: getSortValue(keyedLookup.get(row) ?? emptyRow, rowIndex)
+      }));
+      decorated.sort((entryA, entryB) => {
+        const valueA = entryA.sortValue;
+        const valueB = entryB.sortValue;
+        let comparison: number;
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          comparison = valueA - valueB;
+        } else if (typeof valueA === 'boolean' && typeof valueB === 'boolean') {
+          comparison = valueA === valueB ? 0 : valueA ? -1 : 1;
+        } else {
+          comparison = String(valueA).localeCompare(String(valueB));
+        }
+        return direction === 'asc' ? comparison : -comparison;
+      });
+      return decorated.map((entry) => entry.row);
+    }
+
+    return [...effectiveData].sort((rowA, rowB) => {
       const valueA = rowA[colIndex];
       const valueB = rowB[colIndex];
 
@@ -170,6 +238,89 @@
     });
   });
 
+  // ─── Built-in pagination ─────────────────────────────────────────────────
+  // Client mode slices the filtered rows internally; server mode leaves the
+  // supplied rows untouched (they ARE the current page) and only drives the
+  // paginator chrome. Search input and page-size changes snap back to page 1.
+  let pageOverride = $state<number | null>(null);
+  let pageSizeOverride = $state<number | null>(null);
+  let paginationMode = $derived(pagination?.mode ?? 'client');
+  let effectivePageSize = $derived(pageSizeOverride ?? pagination?.pageSize ?? 10);
+  let effectivePage = $derived.by(() => {
+    if (!pagination) {
+      return 1;
+    }
+    if (paginationMode === 'server') {
+      return pagination.page ?? 1;
+    }
+    return pageOverride ?? pagination.page ?? 1;
+  });
+  let paginationTotalItems = $derived.by(() => {
+    if (!pagination) {
+      return 0;
+    }
+    if (paginationMode === 'server') {
+      return pagination.totalItems ?? 0;
+    }
+    return filteredTableData.length;
+  });
+  let paginationTotalPages = $derived(
+    Math.max(1, Math.ceil(paginationTotalItems / Math.max(1, effectivePageSize)))
+  );
+  let paginatedTableData = $derived.by(() => {
+    if (!pagination || paginationMode === 'server') {
+      return filteredTableData;
+    }
+    const startIndex = (effectivePage - 1) * effectivePageSize;
+    return filteredTableData.slice(startIndex, startIndex + effectivePageSize);
+  });
+  let paginationRangeText = $derived.by(() => {
+    if (!pagination) {
+      return '';
+    }
+    const total = paginationTotalItems;
+    const from = total === 0 ? 0 : (effectivePage - 1) * effectivePageSize + 1;
+    const to = Math.min(effectivePage * effectivePageSize, total);
+    if (pagination.rangeLabel) {
+      return pagination.rangeLabel(from, to, total);
+    }
+    return total > 0 ? `${from}-${to} of ${total}` : '';
+  });
+  let pageSizeOptions = $derived(pagination?.pageSizeOptions ?? [10, 25, 50, 100]);
+
+  const handlePageChange = (page: number): void => {
+    pageOverride = page;
+    pagination?.onPageChange?.(page);
+  };
+
+  const handlePageSizeChange = (nextSize: number): void => {
+    pageSizeOverride = nextSize;
+    pageOverride = 1;
+    pagination?.onPageSizeChange?.(nextSize);
+  };
+
+  /** 1-based, pagination-aware sequence number for the row-number column. */
+  const rowNumberFor = (rowIndex: number): number => {
+    if (pagination) {
+      return (effectivePage - 1) * effectivePageSize + rowIndex + 1;
+    }
+    return rowIndex + 1;
+  };
+
+  /**
+   * Offset that converts the render loop's page-local index back into an index
+   * into the consumer-supplied rows. Client-mode pagination slices internally,
+   * so page 2+ would otherwise hand handlers (onRowClick, column handlers,
+   * cell snippets, test-id callbacks) an index that mis-addresses the
+   * consumer's full array. Server mode supplies the current page as the whole
+   * array, so no offset applies.
+   */
+  let rowIndexOffset = $derived(
+    pagination && (pagination.mode ?? 'client') === 'client'
+      ? (effectivePage - 1) * effectivePageSize
+      : 0
+  );
+
   // ─── C2-1: Checkbox selection ─────────────────────────────────────────────
   const resolveRowId = (
     cfg: TableCheckboxSelectionConfig,
@@ -179,14 +330,23 @@
     return cfg.getRowId ? cfg.getRowId(row, rowIndex) : String(rowIndex);
   };
 
-  let selectedIds = new SvelteSet<string>();
+  let internalSelectedIds = new SvelteSet<string>();
+
+  // Controlled-selection overlay: when the consumer supplies selectedIds,
+  // Table renders FROM that set and never mutates it — onSelectionChange
+  // reports the would-be next set instead. Absent (every pre-existing
+  // consumer), the internal reactive set behaves exactly as before.
+  let controlledSelectedIds = $derived(checkboxSelection?.selectedIds ?? null);
+  let effectiveSelectedIds = $derived<ReadonlySet<string>>(
+    controlledSelectedIds ?? internalSelectedIds
+  );
 
   const isRowDisabled = (rowId: string): boolean => {
     return checkboxSelection?.disabledRowIds?.has(rowId) ?? false;
   };
 
   const isRowSelected = (rowId: string): boolean => {
-    return selectedIds.has(rowId);
+    return effectiveSelectedIds.has(rowId);
   };
 
   /**
@@ -217,20 +377,30 @@
   });
 
   /**
-   * IDs of all selectable (non-disabled) rows in the currently filtered view.
+   * Row-reference → stable-ID lookup so the paginated view resolves the same
+   * IDs as the full filtered view (slicing preserves row references).
+   */
+  let rowIdByRow = $derived(
+    new Map(filteredTableData.map((row, index) => [row, filteredRowIds[index]]))
+  );
+
+  /**
+   * IDs of all selectable (non-disabled) rows in the CURRENT VIEW — the page
+   * the user is looking at under client pagination, the whole filtered set
+   * otherwise (no pagination, and server mode, where the consumer's rows array
+   * already is the page).
    *
-   * Iterates `filteredTableData` (the post-filter, post-sort visible rows) and
-   * resolves each row's stable ID using `sortedTableData.indexOf(row)` for the
-   * pre-filter positional index. When `getRowId` is absent this keeps the
-   * default numeric ID (`String(originalIndex)`) unchanged regardless of which
-   * rows the current search term hides, preventing ID collisions as the visible
-   * set changes.
+   * The header select-all and its tri-state operate on this set, so checking
+   * the header selects exactly the rows the user can see. Selections made on
+   * other pages are left untouched by a header toggle on this page.
    */
   let selectableRowIds = $derived.by((): string[] => {
     if (!checkboxSelection || checkboxSelection.enabled === false) {
       return [];
     }
-    return filteredRowIds.filter((rowId) => !isRowDisabled(rowId));
+    return paginatedTableData
+      .map((row) => rowIdByRow.get(row))
+      .filter((rowId): rowId is string => rowId !== undefined && !isRowDisabled(rowId));
   });
 
   /**
@@ -247,7 +417,9 @@
     ) {
       return 'none';
     }
-    const selectedCount = selectableRowIds.filter((rowId) => selectedIds.has(rowId)).length;
+    const selectedCount = selectableRowIds.filter((rowId) =>
+      effectiveSelectedIds.has(rowId)
+    ).length;
     if (selectedCount === 0) {
       return 'none';
     }
@@ -262,39 +434,64 @@
       return;
     }
 
+    if (controlledSelectedIds) {
+      const wasSelected = controlledSelectedIds.has(rowId);
+      const nextSelection =
+        checkboxSelection.selectionMode === 'single'
+          ? new Set(wasSelected ? [] : [rowId])
+          : wasSelected
+            ? new Set([...controlledSelectedIds].filter((selectedId) => selectedId !== rowId))
+            : new Set([...controlledSelectedIds, rowId]);
+      checkboxSelection.onSelectionChange?.(nextSelection);
+      return;
+    }
+
     if (checkboxSelection.selectionMode === 'single') {
-      const wasSelected = selectedIds.has(rowId);
-      selectedIds.clear();
+      const wasSelected = internalSelectedIds.has(rowId);
+      internalSelectedIds.clear();
       if (!wasSelected) {
-        selectedIds.add(rowId);
+        internalSelectedIds.add(rowId);
       }
     } else {
-      if (selectedIds.has(rowId)) {
-        selectedIds.delete(rowId);
+      if (internalSelectedIds.has(rowId)) {
+        internalSelectedIds.delete(rowId);
       } else {
-        selectedIds.add(rowId);
+        internalSelectedIds.add(rowId);
       }
     }
-    checkboxSelection.onSelectionChange?.(new Set(selectedIds));
+    checkboxSelection.onSelectionChange?.(new Set(internalSelectedIds));
   };
 
   const toggleAllSelection = (): void => {
     if (!checkboxSelection || checkboxSelection.enabled === false) {
       return;
     }
+
+    if (controlledSelectedIds) {
+      const selectableSet = new Set(selectableRowIds);
+      const nextSelection =
+        headerCheckboxState === 'all'
+          ? new Set(
+              [...controlledSelectedIds].filter((selectedId) => !selectableSet.has(selectedId))
+            )
+          : new Set([...controlledSelectedIds, ...selectableRowIds]);
+      checkboxSelection.onSelectionChange?.(nextSelection);
+      return;
+    }
+
     // selectableRowIds already excludes disabled rows
     if (headerCheckboxState === 'all') {
       // deselect all selectable rows in the current view
       for (const rowId of selectableRowIds) {
-        selectedIds.delete(rowId);
+        internalSelectedIds.delete(rowId);
       }
     } else {
       // select all selectable rows in the current view
       for (const rowId of selectableRowIds) {
-        selectedIds.add(rowId);
+        internalSelectedIds.add(rowId);
       }
     }
-    checkboxSelection.onSelectionChange?.(new Set(selectedIds));
+    checkboxSelection.onSelectionChange?.(new Set(internalSelectedIds));
   };
 
   const handleCheckboxKeydown = (event: KeyboardEvent, action: () => void): void => {
@@ -345,7 +542,13 @@
   </div>
 {/if}
 
-{#if tableHeaders.length !== 0 || tableData.length !== 0}
+{#if typeof toolbarSlot === 'function' && isCheckboxMode && effectiveSelectedIds.size > 0}
+  <div class="table-toolbar">
+    {@render toolbarSlot({ selectedIds: new Set(effectiveSelectedIds) })}
+  </div>
+{/if}
+
+{#if effectiveHeaders.length !== 0 || effectiveData.length !== 0}
   <div
     class="table-container {isTableScrollable ? 'scrollable-table' : ''} {classes ?? ''}"
     data-pw={testId}
@@ -369,6 +572,9 @@
                   ? 'mixed'
                   : headerCheckboxState === 'all'}
                 aria-label="Select all rows"
+                {...checkboxSelection?.getRowAttributes
+                  ? checkboxSelection.getRowAttributes('__header__', -1)
+                  : {}}
                 aria-controls={selectableRowIds.map((rowId) => `row-checkbox-${rowId}`).join(' ')}
                 onclick={toggleAllSelection}
                 onkeydown={(keyboardEvent) =>
@@ -388,10 +594,71 @@
             <th class="table-header table-checkbox-col" class:table-header-sticky={isStickyHeader}>
             </th>
           {/if}
-          {#each tableHeaders as header, colIndex (colIndex)}
-            <th class="table-header" class:table-header-sticky={isStickyHeader}>
-              <span class="table-header-content">
-                {header}
+          {#if rowNumberColumn}
+            <th class="table-header table-row-number-col" class:table-header-sticky={isStickyHeader}
+              >#</th
+            >
+          {/if}
+          {#each effectiveHeaders as header, colIndex (colIndex)}
+            {@const headerColumn = columns?.[colIndex]}
+            <th
+              class="table-header"
+              class:table-header-sticky={isStickyHeader}
+              data-pw={headerColumn?.testId ?? null}
+              style:text-align={headerColumn?.align ?? null}
+              style:max-width={headerColumn?.maxWidth ?? null}
+            >
+              <span
+                class="table-header-content"
+                style:justify-content={headerColumn?.align === 'right'
+                  ? 'flex-end'
+                  : headerColumn?.align === 'center'
+                    ? 'center'
+                    : null}
+              >
+                {#if headerColumn?.tooltip}
+                  <Tooltip text={headerColumn.tooltip}>
+                    <span class="table-header-label">{header}</span>
+                  </Tooltip>
+                {:else}
+                  {header}
+                {/if}
+                {#if headerColumn?.filter}
+                  {@const filter = headerColumn.filter}
+                  <span class="table-header-filter">
+                    <Menu
+                      items={filter.options.map((option) => ({
+                        value: option.value,
+                        label: option.label
+                      }))}
+                      selectedValue={filter.selectedValue ?? null}
+                      role="listbox"
+                      testId={headerColumn.testId && `${headerColumn.testId}-filter`}
+                      onselect={(menuItem) =>
+                        filter.onFilterChange?.(
+                          menuItem.value === filter.selectedValue ? null : menuItem.value
+                        )}
+                    >
+                      {#snippet trigger()}
+                        <span
+                          class="table-header-filter-trigger"
+                          class:table-header-filter-active={typeof filter.selectedValue ===
+                            'string'}
+                        >
+                          <Button
+                            ariaLabel="Filter by {header}"
+                            testId={headerColumn.testId && `${headerColumn.testId}-filter-trigger`}
+                          >
+                            {#snippet icon()}
+                              <!-- eslint-disable svelte/no-at-html-tags -->
+                              <span class="table-header-filter-icon">{@html chevronDownSmSvg}</span>
+                            {/snippet}
+                          </Button>
+                        </span>
+                      {/snippet}
+                    </Menu>
+                  </span>
+                {/if}
                 {#if isColumnSortable(colIndex)}
                   <div class="sort-button">
                     <Button onclick={() => handleSort(colIndex)} ariaLabel="Sort by {header}">
@@ -434,14 +701,17 @@
           <tr>
             <td
               class="table-empty"
-              colspan={isCheckboxMode ? tableHeaders.length + 1 : tableHeaders.length}
+              colspan={effectiveHeaders.length +
+                (isCheckboxMode ? 1 : 0) +
+                (rowNumberColumn ? 1 : 0)}
             >
               {@render empty()}
             </td>
           </tr>
         {:else}
-          {#each filteredTableData as row, rowIndex (filteredRowIds[rowIndex])}
-            {@const rowId = filteredRowIds[rowIndex]}
+          {#each paginatedTableData as row, pageRowIndex (rowIdByRow.get(row) ?? pageRowIndex)}
+            {@const rowIndex = pageRowIndex + rowIndexOffset}
+            {@const rowId = rowIdByRow.get(row) ?? String(rowIndex)}
             {@const rowDisabled = isCheckboxMode && isRowDisabled(rowId)}
             {@const rowSelected = isCheckboxMode && isRowSelected(rowId)}
             <tr
@@ -466,6 +736,10 @@
                     tabindex={rowDisabled ? -1 : 0}
                     aria-checked={rowSelected}
                     aria-disabled={rowDisabled}
+                    aria-label={`Select row ${rowId || 'non-selectable'}`}
+                    {...checkboxSelection?.getRowAttributes
+                      ? checkboxSelection.getRowAttributes(rowId, rowIndex)
+                      : {}}
                     onclick={(mouseEvent) => {
                       mouseEvent.stopPropagation();
                       toggleRowSelection(rowId);
@@ -482,15 +756,34 @@
                   </span>
                 </td>
               {/if}
+              {#if rowNumberColumn}
+                <td class="table-content table-row-number-col">{rowNumberFor(pageRowIndex)}</td>
+              {/if}
               {#each row as cellValue, colIndex (colIndex)}
+                {@const keyedColumn = columns?.[colIndex]}
+                {@const keyedRow = keyedRowByProjected?.get(row)}
+                {@const isScalarCell =
+                  typeof cellValue === 'string' ||
+                  typeof cellValue === 'number' ||
+                  typeof cellValue === 'boolean'}
                 <td
                   class="table-content"
                   data-pw={typeof getCellTestId === 'function'
                     ? getCellTestId(row, cellValue, rowIndex)
                     : null}
+                  style:text-align={keyedColumn?.align ?? null}
+                  style:max-width={keyedColumn?.maxWidth ?? null}
+                  title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
                 >
-                  <div class={isContentScrollable ? 'scrollable-content' : ''}>
-                    {#if typeof cell === 'function'}
+                  <div
+                    class={isContentScrollable ? 'scrollable-content' : ''}
+                    class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
+                  >
+                    {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
+                      {@render keyedColumn.cell(keyedRow, rowIndex)}
+                    {:else if keyedColumn?.type && keyedColumn.type !== 'text' && keyedColumn.type !== 'custom'}
+                      <BuiltinCell column={keyedColumn} value={cellValue} {rowIndex} />
+                    {:else if typeof cell === 'function'}
                       {@render cell(cellValue, rowIndex, colIndex)}
                     {:else}
                       {cellValue}
@@ -506,6 +799,42 @@
     {#if typeof paginatorSlot === 'function'}
       <div class="table-footer">
         {@render paginatorSlot()}
+      </div>
+    {:else if pagination && (paginationTotalPages > 1 || pagination.hasMore)}
+      <!-- DataGrid parity: pagination chrome only renders when the data spans
+           more than one page (or the server reports more chunks); a
+           single-page table shows no footer. -->
+      <div class="table-footer table-paginator" data-pw={pagination.testId ?? null}>
+        <span class="table-paginator-range">{paginationRangeText}</span>
+        <span class="table-paginator-controls">
+          {#if pageSizeOptions.length > 0}
+            <span class="table-paginator-size">
+              <Select
+                items={pageSizeOptions.map((sizeOption) => ({
+                  id: String(sizeOption),
+                  label: String(sizeOption)
+                }))}
+                value={[String(effectivePageSize)]}
+                disabled={pagination.isLoading ?? false}
+                testId={pagination.testId && `${pagination.testId}-page-size`}
+                onchange={(selectedSizes) => {
+                  if (selectedSizes.length > 0) {
+                    handlePageSizeChange(Number(selectedSizes[0]));
+                  }
+                }}
+              />
+            </span>
+          {/if}
+          <Pagination
+            totalPages={paginationTotalPages}
+            currentPage={effectivePage}
+            hasMore={pagination.hasMore ?? false}
+            disabled={pagination.isLoading ?? false}
+            testId={pagination.testId && `${pagination.testId}-pages`}
+            onchange={handlePageChange}
+            onLoadMore={pagination.onLoadMore}
+          />
+        </span>
       </div>
     {/if}
   </div>
@@ -617,7 +946,13 @@
     padding: var(--table-padding, 12px 16px);
     text-align: var(--table-text-align, left);
     width: var(--table-column-width);
-    word-break: break-all;
+    /* Wrap at word boundaries; only a single word wider than the column may
+       split as a last resort. break-word (not anywhere) keeps each column's
+       min-content width at its longest word, so ordinary labels never split
+       mid-word — the old break-all default did. Opt back in per consumer via
+       --table-word-break / --table-overflow-wrap. */
+    word-break: var(--table-word-break, normal);
+    overflow-wrap: var(--table-overflow-wrap, break-word);
   }
 
   .scrollable-content {
@@ -639,6 +974,53 @@
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .table-header-label {
+    text-decoration: var(--table-header-tooltip-underline, underline dotted);
+    text-underline-offset: 2px;
+    cursor: help;
+  }
+
+  .table-header-filter {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .table-header-filter-trigger {
+    --button-color: transparent;
+    --button-border: none;
+    --button-padding: 2px;
+    --button-margin: 0;
+    --button-width: fit-content;
+    --button-height: fit-content;
+    --button-text-color: var(--table-sort-button-color, inherit);
+    --button-border-radius: 4px;
+    --button-hover-color: var(--table-sort-button-hover-background, rgba(0, 0, 0, 0.05));
+    display: inline-flex;
+    align-items: center;
+    opacity: var(--table-sort-idle-opacity, 0.5);
+  }
+
+  .table-header-filter-trigger:hover {
+    opacity: var(--table-sort-idle-hover-opacity, 0.85);
+  }
+
+  .table-header-filter-active {
+    opacity: 1;
+    color: var(--table-filter-active-color, #2563eb);
+  }
+
+  .table-header-filter-icon :global(svg) {
+    width: var(--table-sort-icon-size, 14px);
+    height: var(--table-sort-icon-size, 14px);
+    display: block;
+  }
+
+  .table-cell-clamp {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .table-header-sticky {
@@ -808,6 +1190,50 @@
     border-top: var(--table-footer-border, 1px solid #e5e7eb);
     padding: var(--table-footer-padding, 8px 16px);
     background-color: var(--table-footer-background, transparent);
+  }
+
+  .table-paginator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--table-paginator-gap, 12px);
+    flex-wrap: wrap;
+  }
+
+  .table-paginator-range {
+    font-size: var(--table-paginator-range-font-size, 13px);
+    color: var(--table-paginator-range-color, #6b7280);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .table-paginator-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--table-paginator-gap, 12px);
+  }
+
+  .table-paginator-size {
+    display: inline-flex;
+    min-width: var(--table-paginator-size-width, 72px);
+  }
+
+  /* ── Toolbar (bulk actions) ─────────────────────────────────────────────── */
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--table-toolbar-gap, 12px);
+    padding: var(--table-toolbar-padding, 8px 12px);
+    border: var(--table-toolbar-border, 1px solid #e5e7eb);
+    border-radius: var(--table-toolbar-border-radius, var(--radius, 4px));
+    background-color: var(--table-toolbar-background, #f9fafb);
+    margin-bottom: var(--table-toolbar-margin-bottom, 8px);
+  }
+
+  /* ── Row-number column ──────────────────────────────────────────────────── */
+  .table-row-number-col {
+    width: var(--table-row-number-col-width, 48px);
+    color: var(--table-row-number-color, #6b7280);
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Accessibility ──────────────────────────────────────────────────────── */

@@ -185,7 +185,7 @@
   },
   {
     "name": "ProportionBar",
-    "description": "A horizontal stacked bar that visualizes how a total is distributed across labelled segments. Renders proportional coloured bands in an SVG track with a palette fallback and an optional legend listing each segment's label and formatted value. Negative and non-finite segment values are sanitized to zero so widths stay within 0–100%. When the legend is hidden the SVG exposes the full breakdown as its accessible name. Supports a custom value formatter, configurable track height, and CSS-variable theming."
+    "description": "A horizontal stacked bar that visualizes how a total is distributed across labelled segments. Renders proportional coloured bands in an SVG track with a palette fallback and an optional legend listing each segment's label and formatted value. Negative and non-finite segment values are sanitized to zero so widths stay within 0\u2013100%. When the legend is hidden the SVG exposes the full breakdown as its accessible name. Supports a custom value formatter, configurable track height, and CSS-variable theming."
   },
   {
     "name": "Radio",
@@ -253,7 +253,7 @@
   },
   {
     "name": "Table",
-    "description": "A sortable data table with clickable column headers for sort toggling (ascending/descending). Supports string, number, and boolean sorting, sticky headers, custom cell rendering, a paginator footer slot, and per-row/cell data-pw test ID callbacks for E2E testing."
+    "description": "Data is supplied via the keyed column model (columns/rows, preferred) or positional tableHeaders/tableData. A sortable data table with clickable column headers for sort toggling (ascending/descending). Supports string, number, and boolean sorting, sticky headers, custom cell rendering, a paginator footer slot, and per-row/cell data-pw test ID callbacks for E2E testing."
   },
   {
     "name": "Tabs",

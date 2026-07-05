@@ -91,7 +91,7 @@ This library takes a different approach: **components are unstyled by default** 
 | **ListItem**     | Multi-section list row with images, labels, and accordion expansion.                            | [docs](docs/ListItem.md)     |
 | **Pill**         | Compact label/tag for status or categories, optionally clickable with a11y.                     | [docs](docs/Pill.md)         |
 | **Status**       | Full-screen status display for success/failure screens.                                         | [docs](docs/Status.md)       |
-| **Table**        | Sortable data table with sticky headers and per-cell scrolling.                                 | [docs](docs/Table.md)        |
+| **Table**        | Data table with keyed columns, built-in cell renderers, sorting, pagination and selection.      | [docs](docs/Table.md)        |
 | **RelativeTime** | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip. | [docs](docs/RelativeTime.md) |
 
 ### Feedback & Loading

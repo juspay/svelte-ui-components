@@ -6,6 +6,11 @@
       tableTitle: { type: 'String', reflect: true, attribute: 'table-title' },
       tableHeaders: { type: 'Object' },
       tableData: { type: 'Object' },
+      columns: { type: 'Object' },
+      rows: { type: 'Object' },
+      sortMode: { type: 'String', attribute: 'sort-mode' },
+      pagination: { type: 'Object' },
+      rowNumberColumn: { type: 'Boolean', reflect: true, attribute: 'row-number-column' },
       sortable: { type: 'Boolean', reflect: true },
       sortableColumns: { type: 'Object' },
       stickyHeader: { type: 'Boolean', reflect: true, attribute: 'sticky-header' },
@@ -46,5 +51,8 @@
   {/snippet}
   {#snippet paginatorSlot()}
     <slot name="paginator-slot"></slot>
+  {/snippet}
+  {#snippet toolbarSlot()}
+    <slot name="toolbar-slot"></slot>
   {/snippet}
 </Table>

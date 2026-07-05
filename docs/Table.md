@@ -1,20 +1,157 @@
 # Table
 
-A sortable data table with clean, modern defaults. Supports column sorting (ascending/descending) for string, number, and boolean values. Features sticky headers, custom cell rendering via Svelte 5 snippets, row click interaction, customizable sort icons, a footer paginator slot, per-row/cell `data-pw` test ID callbacks, opt-in checkbox row selection (single and multiple mode), and a built-in search bar with client-side filtering or server-side delegation. Table data is an array of arrays (rows × columns).
+A sortable data table with clean, modern defaults. Supports column sorting (ascending/descending) for string, number, and boolean values. Features sticky headers, custom cell rendering via Svelte 5 snippets, row click interaction, customizable sort icons, a footer paginator slot, per-row/cell `data-pw` test ID callbacks, opt-in checkbox row selection (single and multiple mode), and a built-in search bar with client-side filtering or server-side delegation. Data is supplied either through the keyed column model (`columns`/`rows`, preferred — cells addressed by column id, with per-column `sortable`/`testId`/custom `cell` snippet options) or the positional model (`tableHeaders`/`tableData`, an array of arrays).
 
 ## Usage
 
+Describe columns once and address row values by column id (the keyed column model). Missing keys render as empty cells.
+
 ```svelte
-<script>
-  import { Table } from '@juspay/svelte-ui-components';
+<script lang="ts">
+  import { Table, type TableColumn, type TableRow } from '@juspay/svelte-ui-components';
+
+  const columns: TableColumn[] = [
+    { id: 'name', label: 'Name' },
+    { id: 'email', label: 'Email' },
+    { id: 'role', label: 'Role', sortable: false }
+  ];
+
+  const rows: TableRow[] = [
+    { name: 'Alice', email: 'alice@example.com', role: 'Admin' },
+    { name: 'Bob', email: 'bob@example.com', role: 'Editor' }
+  ];
 </script>
 
+<Table {columns} {rows} />
+```
+
+### Positional Model (legacy)
+
+The original positional API remains fully supported and unchanged — pass parallel `tableHeaders`/`tableData` arrays. The keyed model is normalized internally onto the same engine, so sorting, search, selection, and snippets behave identically across both.
+
+```svelte
 <Table
   tableHeaders={['Name', 'Email', 'Role']}
   tableData={[
     ['Alice', 'alice@example.com', 'Admin'],
     ['Bob', 'bob@example.com', 'Editor']
   ]}
+/>
+```
+
+### Keyed Column Options
+
+Per-column options: `sortable: false` opts a single column out of sorting, `testId` emits a `data-pw` attribute on that column's header cell, and `type: 'custom'` with a `cell` snippet gives the column its own renderer receiving the keyed row:
+
+```svelte
+<script lang="ts">
+  const columns: TableColumn[] = [
+    { id: 'name', label: 'Name' },
+    { id: 'status', label: 'Status', type: 'custom', cell: statusCell }
+  ];
+</script>
+
+{#snippet statusCell(row: TableRow, rowIndex: number)}
+  <Pill
+    text={String(row.status)}
+    classes={row.status === 'Active' ? 'pill-success' : 'pill-error'}
+  />
+{/snippet}
+```
+
+The projection used internally is exported as `normalizeColumns(columns, rows)` so consumers can unit-test their own column/row assembly against the exact shape Table renders.
+
+### Built-in Cell Renderers
+
+Beyond `'text'` and `'custom'`, `column.type` selects a built-in renderer composed purely from library primitives. Each expects its matching cell-data shape as the row value and falls back to plain text for scalar values (so mixed columns are well-defined). All appearance is themeable via `--table-cell-*` / `--table-trend-*` / `--table-link-*` CSS variables.
+
+| `type`                | Cell value shape                                                               | Renders                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `tag`                 | `TableTagCellData` `{ text, classes?, dismissible?, testId? }`                 | a single Pill — the consumer owns tone→class mapping                                          |
+| `text-tag`            | `TableTextTagCellData` `{ text, tag? }`                                        | text with an optional trailing Pill                                                           |
+| `two-line-text`       | `TableTwoLineTextCellData` `{ text1?, text2? }`                                | primary line over secondary line                                                              |
+| `icon-label`          | `TableIconLabelCellData` `{ icons?, label? }`                                  | leading image(s) plus a label                                                                 |
+| `image-two-line-text` | `TableImageTwoLineTextCellData` `{ imageUrl?, text1?, text2? }`                | thumbnail (or placeholder) plus two lines                                                     |
+| `tag-array`           | `TableTagArrayCellItem[]` `{ text, classes? }[]`                               | a wrapping row of Pills                                                                       |
+| `avatar-stack`        | `TableAvatarStackCellData` `{ items: { id, label? }[], max? }`                 | initials chips capped at `max` (default 4) with a `+N` overflow                               |
+| `compare`             | `TableCompareCellData` `{ primary?, comparison?, trendPercent?, trendLabel? }` | value over comparison with a colored trend row (↑ green / ↓ red / label)                      |
+| `toggle`              | `TableToggleCellData` `{ checked?, ariaLabel?, testId? }`                      | a Toggle; `column.onToggle(rowIndex, checked)` receives the **new** state after the flip      |
+| `link`                | `TableLinkCellData` `{ url, label?, copyable? }` (or a bare url string)        | external link with an optional copy-to-clipboard affordance                                   |
+
+```svelte
+const columns: TableColumn[] = [
+  { id: 'plan', label: 'Plan', type: 'two-line-text' },
+  { id: 'state', label: 'State', type: 'tag' },
+  { id: 'revenue', label: 'Revenue', type: 'compare' },
+  { id: 'active', label: 'Active', type: 'toggle', onToggle: (rowIndex, checked) => update(rowIndex, checked) }
+];
+
+const rows: TableRow[] = [
+  {
+    plan: { text1: 'Growth Monthly', text2: 'PLN-0042' },
+    state: { text: 'Active', classes: 'pill-success' },
+    revenue: { primary: '₹4,938.10', comparison: '₹4,100.00', trendPercent: 20 },
+    active: { checked: true }
+  }
+];
+```
+
+### Per-Column Header Metadata
+
+Keyed columns carry their own header behavior: `tooltip` (hover text on the label), `align` (`'left' | 'center' | 'right'`, applied to header and body cells), `maxWidth` (caps the column; overflowing scalar cells ellipsize with the full value on the native title tooltip), and `filter` (a header dropdown — Table renders the Menu mechanics, the consumer owns options/selection/filtering; re-selecting the active option clears to `null`):
+
+```svelte
+const columns: TableColumn[] = [
+  { id: 'id', label: 'Order', maxWidth: '120px' },
+  { id: 'name', label: 'Name', tooltip: 'Customer display name' },
+  { id: 'amount', label: 'Amount', align: 'right' },
+  {
+    id: 'status', label: 'Status',
+    filter: {
+      options: [{ label: 'Active', value: 'active' }],
+      selectedValue: currentFilter,
+      onFilterChange: (value) => (currentFilter = value)
+    }
+  }
+];
+```
+
+### Sorting: getSortValue and server mode
+
+`column.getSortValue(row, rowIndex)` supplies the comparable value for client-side sorting (currency/date parsing stays in the consumer): `{ id: 'amount', getSortValue: (row) => Number(String(row.amount).replace(/[₹,]/g, '')) }`. Setting `sortMode="server"` keeps the header sort UI and `onSort` callback but skips the internal reorder — the consumer re-orders its rows (e.g. via a server query).
+
+The standalone `sortTableRows(rows, columnIndex, direction, options?)` export sorts positional rows type-aware (numeric strings with thousands separators / percent / currency sort numerically; text case-insensitively; `sortType: 'date'` opt-in for dates, using range starts) with optional `hasSummaryRow` pinning and `nestedKey` extraction for object cells — useful for `sortMode="server"` consumers and unit tests.
+
+### Built-in Pagination
+
+`pagination` renders a footer paginator (range label, optional page-size selector, page controls). `'client'` mode slices the rows internally — search and page-size changes snap back to page 1; `'server'` mode leaves the supplied rows untouched (they are the current page) and drives the chrome from `page`/`totalItems`/`hasMore`, with `isLoading` disabling the controls during fetches. A consumer `paginatorSlot` takes precedence.
+
+```svelte
+<Table
+  {columns}
+  {rows}
+  rowNumberColumn
+  pagination={{ pageSize: 10, onPageChange: (page) => {}, testId: 'orders-paginator' }}
+/>
+```
+
+`rowNumberColumn` prepends a 1-based, pagination-aware sequence column.
+
+### Controlled Selection + Bulk Toolbar
+
+`checkboxSelection.selectedIds` switches selection to controlled mode: Table renders from the consumer's set and never mutates it — `onSelectionChange` reports the would-be next set (required for cross-page-persistent selection under server pagination). Omitting it keeps the internal uncontrolled behavior exactly as before. `getRowAttributes(rowId, rowIndex)` spreads arbitrary attributes onto each row checkbox (`rowIndex` is `-1` for the header select-all) — an escape hatch for consumer-specific attributes such as native test IDs. `toolbarSlot` renders a bulk-action bar above the table while the selection is non-empty; the library owns only placement, the content is consumer-rendered:
+
+```svelte
+{#snippet bulkToolbar({ selectedIds })}
+  <span>{selectedIds.size} selected</span>
+  <Button text="Delete" onclick={() => deleteAll(selectedIds)} />
+{/snippet}
+
+<Table
+  {columns}
+  {rows}
+  checkboxSelection={{ selectedIds: selection, onSelectionChange: (next) => (selection = next) }}
+  toolbarSlot={bulkToolbar}
 />
 ```
 

@@ -398,9 +398,10 @@
     if (!checkboxSelection || checkboxSelection.enabled === false) {
       return [];
     }
-    return paginatedTableData
-      .map((row) => rowIdByRow.get(row))
-      .filter((rowId): rowId is string => rowId !== undefined && !isRowDisabled(rowId));
+    return paginatedTableData.flatMap((row) => {
+      const rowId = rowIdByRow.get(row) ?? null;
+      return rowId !== null && !isRowDisabled(rowId) ? [rowId] : [];
+    });
   });
 
   /**

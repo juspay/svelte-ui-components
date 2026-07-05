@@ -424,7 +424,10 @@
   const serverPagedRows = $derived(
     Array.from(
       {
-        length: Math.min(SERVER_PAGE_SIZE, SERVER_TOTAL_RECORDS - (serverPageNumber - 1) * SERVER_PAGE_SIZE)
+        length: Math.min(
+          SERVER_PAGE_SIZE,
+          SERVER_TOTAL_RECORDS - (serverPageNumber - 1) * SERVER_PAGE_SIZE
+        )
       },
       (_, index) => ({
         record: `Record ${String((serverPageNumber - 1) * SERVER_PAGE_SIZE + index + 1).padStart(2, '0')}`

@@ -254,7 +254,8 @@
           { id: 'pro', label: 'Pro' }
         ],
         selectedId: 'pro',
-        testId: 'demo-tier-0'
+        testId: 'demo-tier-0',
+        itemTestId: 'demo-tier-option'
       },
       note: { value: 'renews in June', testId: 'demo-note-0' },
       action: { text: 'Renew', testId: 'demo-renew-0' },

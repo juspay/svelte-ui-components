@@ -25,6 +25,18 @@ test.describe('Table — interactive cell renderers', () => {
     await expect(table.locator('[data-pw="demo-renew-1"]')).toBeDisabled();
   });
 
+  test('select cell forwards itemTestId — options carry data-pw="{prefix}-{id}"', async ({
+    page
+  }) => {
+    await page.goto('/components/table');
+    const table = page.locator('[data-pw="table-interactive-cells"]');
+    const select = table.locator('[data-pw="demo-tier-0"]');
+    await select.getByRole('combobox').click();
+    await expect(select.locator('[data-pw="demo-tier-option-basic"]')).toBeVisible();
+    await expect(select.locator('[data-pw="demo-tier-option-pro"]')).toBeVisible();
+    await page.keyboard.press('Escape');
+  });
+
   test('select cell fires onSelect with the chosen option id, no row click', async ({ page }) => {
     await page.goto('/components/table');
     const table = page.locator('[data-pw="table-interactive-cells"]');

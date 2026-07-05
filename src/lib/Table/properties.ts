@@ -122,6 +122,8 @@ export type TableSelectCellData = {
   placeholder?: string;
   disabled?: boolean;
   testId?: string;
+  /** Per-option test id prefix — each option emits `data-pw="{itemTestId}-{id}"`. */
+  itemTestId?: string;
 };
 
 /** Cell shape for `type: 'input'` — the handler lives on the column. */

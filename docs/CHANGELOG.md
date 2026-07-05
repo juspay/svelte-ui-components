@@ -2,28 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.80.10)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.0)
 
-Release run 28739242928's predecessor (28739242926) for the keyed-column
-train (47204c1) failed at 'pnpm lint', and the prettier failure
-short-circuited two eslint errors that would fail the next run too. All
-three are fixed here with no behavior change:
+The legacy DataGrid select cells passed SelectProperties.itemTestId
+through to the library Select, which stamps every option with
+data-pw="{itemTestId}-{id}" (e.g. pp-PERCENTAGE in Lighthouse's Token
+Advance grid). TableSelectCellData had no itemTestId field, so migrated
+consumers silently lost per-option test ids — masked until the
+downstream spec's earlier assertions were repaired.
 
-- table demo page: prettier-format one over-long line
-- Table.svelte: selectableRowIds narrows via flatMap instead of a type
-predicate ('rowId is string') and an explicit 'undefined' comparison,
-both banned by no-restricted-syntax
-- BuiltinCell.svelte: the input cell's dataType narrows through a new
-asInputDataType helper in cellData.ts instead of an 'as' assertion
-(consistent-type-assertions)
+TableSelectCellData.itemTestId -&gt; asSelectCellData pass-through -&gt;
+BuiltinCell forwards to Select. Demo select cell wires
+itemTestId='demo-tier-option'; regression test asserts both options
+carry the prefixed data-pw. Suite: table-interactive-cells 10/10,
+svelte-check 0 errors, lint clean.
 
-Typed feat deliberately: the release workflow derives the version bump
-from the tip commit alone, and the unreleased content on release is the
-keyed-column feature train — this commit carries its minor bump.
-
-Verified: pnpm lint clean, svelte-check 518 files 0 errors, vitest 51/51,
-Playwright 23/23 on the two affected table suites, build and build:wc
-green.
+## [2.81.0](https://github.com/juspay/svelte-ui-components/compare/2.81.0..2.80.10) - 5 July 2026
 
 ## [2.80.10](https://github.com/juspay/svelte-ui-components/compare/2.80.10..2.80.9) - 4 July 2026
 

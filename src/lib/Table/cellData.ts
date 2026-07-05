@@ -1,4 +1,5 @@
 import type { JSONValue } from 'type-decoder';
+import type { InputDataType } from '$lib/types';
 import type { IconStackItem } from '../IconStack/properties';
 import type {
   TableActionGroupCellData,
@@ -191,6 +192,23 @@ export const asInputCellData = (value: TableCellValue): TableInputCellData | nul
     inputData.onErrorMessage = record.onErrorMessage;
   }
   return inputData;
+};
+
+/**
+ * Narrows a free-form `dataType` string from cell data to the `Input`
+ * component's `InputDataType` union, falling back to `'text'` for any
+ * unrecognised value.
+ */
+export const asInputDataType = (value: string | null): InputDataType => {
+  switch (value) {
+    case 'tel':
+    case 'password':
+    case 'email':
+    case 'number':
+      return value;
+    default:
+      return 'text';
+  }
 };
 
 export const asButtonCellData = (value: TableCellValue): TableButtonCellData | null => {

@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import type { TableCellValue, TableColumn } from './properties';
-  import type { InputDataType } from '$lib/types';
   import {
     asActionGroupCellData,
     asAvatarStackData,
     asButtonCellData,
     asCompareCellData,
     asInputCellData,
+    asInputDataType,
     asJsonObject,
     asLinkCellData,
     asPopupMenuCellData,
@@ -268,7 +268,7 @@
         placeholder={inputData.placeholder ?? ''}
         disable={inputData.disabled ?? false}
         testId={inputData.testId ?? ''}
-        dataType={(inputData.dataType ?? 'text') as InputDataType}
+        dataType={asInputDataType(inputData.dataType ?? null)}
         validationPattern={inputData.validationPattern
           ? new RegExp(inputData.validationPattern)
           : null}

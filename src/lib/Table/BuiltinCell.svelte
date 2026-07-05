@@ -244,6 +244,7 @@
         placeholder={selectData.placeholder ?? ''}
         disabled={selectData.disabled ?? false}
         testId={selectData.testId}
+        itemTestId={selectData.itemTestId}
         onchange={(selectedIds) => {
           if (selectedIds.length > 0) {
             column.onSelect?.(rowIndex, selectedIds[0]);

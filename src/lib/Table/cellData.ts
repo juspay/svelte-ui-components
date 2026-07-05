@@ -161,6 +161,9 @@ export const asSelectCellData = (value: TableCellValue): TableSelectCellData | n
   if (typeof record.testId === 'string') {
     selectData.testId = record.testId;
   }
+  if (typeof record.itemTestId === 'string') {
+    selectData.itemTestId = record.itemTestId;
+  }
   return selectData;
 };
 

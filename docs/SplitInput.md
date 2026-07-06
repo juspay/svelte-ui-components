@@ -113,6 +113,8 @@ type FieldConfig = {
   validationPattern?: RegExp | null;
   validators?: CustomValidator[];
   label?: string | null;
+  autoComplete?: HTMLInputAttributes['autocomplete'];
+  inputMode?: HTMLInputAttributes['inputmode'];
 };
 ```
 
@@ -124,6 +126,8 @@ type FieldConfig = {
 - `validationPattern` -- A `RegExp` used by the underlying Input to validate the field value. Defaults to `null` (no pattern validation).
 - `validators` -- Array of `CustomValidator` functions for custom validation logic. Each receives the input value and current validation state and returns a new `ValidationState`.
 - `label` -- Text label displayed below the field (e.g., `'R'`, `'G'`, `'B'` for color channels).
+- `autoComplete` -- Native `autocomplete` hint for the field. Set to `'one-time-code'` on OTP segments to enable WebOTP / SMS autofill. Defaults to `'on'`.
+- `inputMode` -- Native `inputmode` hint controlling the mobile virtual keyboard (e.g., `'numeric'` for a numeric keypad). Left off by default.
 
 ### CustomValidator
 

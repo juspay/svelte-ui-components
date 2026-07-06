@@ -22,6 +22,7 @@
     actionInput = false,
     useTextArea = false,
     autoComplete = 'on',
+    inputMode,
     name = '',
     testId = '',
     textTransformers = [],
@@ -256,6 +257,7 @@
         {value}
         {placeholder}
         autocomplete={autoComplete}
+        inputmode={inputMode}
         {name}
         {role}
         aria-expanded={ariaExpanded}
@@ -286,6 +288,7 @@
         {value}
         {placeholder}
         autocomplete={autoComplete}
+        inputmode={inputMode}
         {name}
         {role}
         aria-expanded={ariaExpanded}

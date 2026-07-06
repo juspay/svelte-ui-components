@@ -10,6 +10,8 @@ export type FieldConfig = Pick<
   | 'validationPattern'
   | 'validators'
   | 'label'
+  | 'autoComplete'
+  | 'inputMode'
 >;
 
 export type SplitInputProperties = MandatorySplitInputProperties &

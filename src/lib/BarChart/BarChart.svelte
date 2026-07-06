@@ -13,7 +13,11 @@
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
   import { createBandScale, createLinearScale, niceLinearDomain } from '$lib/_chart/scales';
-  import { computeChartDimensions } from '$lib/_chart/geometry';
+  import {
+    computeChartDimensions,
+    computeHorizontalCategoryGutter,
+    measureTextWidth
+  } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath } from '$lib/_chart/paths';
@@ -110,17 +114,6 @@
 
   let format = $derived(valueFormat ?? formatNumber);
   let isVertical = $derived(orientation === 'vertical');
-  // When an axis is hidden its gutter (Y = 50px for tick labels, X = 40px) is dead
-  // space that squeezes the plot into the centre. Collapse the tick-label gutter but
-  // keep a symmetric breathing-room inset so the edge bars (and their value labels)
-  // don't sit flush against the container edges.
-  let dims = $derived(
-    computeChartDimensions(chartWidth, chartHeight, {
-      left: showYAxis ? 50 : 28,
-      right: 28,
-      bottom: showXAxis ? 40 : 8
-    })
-  );
 
   let isMulti = $derived(Array.isArray(series) && series.length > 0);
 
@@ -196,6 +189,58 @@
     const first = resolvedSeries[0]?.data ?? [];
     return first.map((d) => d.label);
   });
+
+  /**
+   * Widest category label in the axis tick font, for the horizontal-orientation
+   * gutter below. Horizontal charts put category text (not short numeric ticks)
+   * on the Y axis, so the gutter must fit real words like "Submitted Address" —
+   * a fixed gutter clips them. Resolved from the mounted container so CSS-var
+   * theming (--chart-axis-font-size / --chart-axis-font-family) is honoured.
+   * Null when unmeasurable (SSR, no canvas) — the gutter then keeps its legacy
+   * fixed width.
+   */
+  let widestCategoryLabelWidth = $derived.by(() => {
+    if (isVertical || !showYAxis || labels.length === 0 || containerEl === null) {
+      return null;
+    }
+    const containerStyle = getComputedStyle(containerEl);
+    const axisFontSize = containerStyle.getPropertyValue('--chart-axis-font-size').trim() || '11px';
+    const axisFontFamilyToken = containerStyle.getPropertyValue('--chart-axis-font-family').trim();
+    const axisFontFamily =
+      axisFontFamilyToken === '' || axisFontFamilyToken === 'inherit'
+        ? containerStyle.fontFamily || 'sans-serif'
+        : axisFontFamilyToken;
+    const axisFont = `${axisFontSize} ${axisFontFamily}`;
+    let widest: number | null = null;
+    for (const label of labels) {
+      const labelWidth = measureTextWidth(label, axisFont);
+      if (labelWidth === null) {
+        return null;
+      }
+      if (widest === null || labelWidth > widest) {
+        widest = labelWidth;
+      }
+    }
+    return widest;
+  });
+
+  // When an axis is hidden its gutter (Y = 50px for tick labels, X = 40px) is dead
+  // space that squeezes the plot into the centre. Collapse the tick-label gutter but
+  // keep a symmetric breathing-room inset so the edge bars (and their value labels)
+  // don't sit flush against the container edges. In horizontal orientation the
+  // visible Y axis carries category text, so its gutter grows to fit the widest
+  // label (never shrinking below the legacy 50px, capped at 45% of the width).
+  let dims = $derived(
+    computeChartDimensions(chartWidth, chartHeight, {
+      left: showYAxis
+        ? isVertical
+          ? 50
+          : computeHorizontalCategoryGutter(widestCategoryLabelWidth, chartWidth)
+        : 28,
+      right: 28,
+      bottom: showXAxis ? 40 : 8
+    })
+  );
 
   // ── Effective highlighted index: merge declarative + imperative ─
 

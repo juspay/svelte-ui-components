@@ -2,20 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.1)
 
-The legacy DataGrid select cells passed SelectProperties.itemTestId
-through to the library Select, which stamps every option with
-data-pw="{itemTestId}-{id}" (e.g. pp-PERCENTAGE in Lighthouse's Token
-Advance grid). TableSelectCellData had no itemTestId field, so migrated
-consumers silently lost per-option test ids — masked until the
-downstream spec's earlier assertions were repaired.
-
-TableSelectCellData.itemTestId -&gt; asSelectCellData pass-through -&gt;
-BuiltinCell forwards to Select. Demo select cell wires
-itemTestId='demo-tier-option'; regression test asserts both options
-carry the prefixed data-pw. Suite: table-interactive-cells 10/10,
-svelte-check 0 errors, lint clean.
+## [2.81.1](https://github.com/juspay/svelte-ui-components/compare/2.81.1..2.81.0) - 5 July 2026
 
 ## [2.81.0](https://github.com/juspay/svelte-ui-components/compare/2.81.0..2.80.10) - 5 July 2026
 

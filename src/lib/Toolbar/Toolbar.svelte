@@ -72,6 +72,15 @@
     padding: var(--toolbar-content-padding, 0px);
     justify-content: var(--toolbar-justify-content, normal);
     visibility: var(--toolbar-content-visibility, visible);
+
+    /* Content-row geometry: lets a fixed-height toolbar keep its row vertically
+       centered (height 100%) and clamp/center the row on wide viewports —
+       previously only reachable by piercing the component's internal DOM. All
+       defaults reproduce the previous rendering exactly. */
+    width: var(--toolbar-content-width, auto);
+    height: var(--toolbar-content-height, auto);
+    max-width: var(--toolbar-content-max-width, none);
+    margin: var(--toolbar-content-margin, 0);
   }
 
   .additional-content {

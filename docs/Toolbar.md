@@ -45,32 +45,36 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                                  | Default                  | CSS Property    | Description                                          |
-| ----------------------------------------- | ------------------------ | --------------- | ---------------------------------------------------- |
-| `--toolbar-padding`                       | `0px`                    | padding         | Inner padding of the toolbar container.              |
-| `--toolbar-height`                        | `fit-content`            | height          | Height of the toolbar.                               |
-| `--toolbar-width`                         | `100vw`                  | width           | Width of the toolbar.                                |
-| `--toolbar-position`                      | `fixed`                  | position        | CSS position (fixed by default, sticks to viewport). |
-| `--toolbar-top`                           | `0`                      | top             | Top position of the toolbar.                         |
-| `--toolbar-left`                          | `0`                      | left            | Left position of the toolbar.                        |
-| `--toolbar-right`                         | `0`                      | right           | Right position of the toolbar.                       |
-| `--toolbar-background`                    | `#ffffff`                | background      | Background color of the toolbar.                     |
-| `--toolbar-box-shadow`                    | `0px 2px 12px #55687c1a` | box-shadow      | Box shadow of the toolbar.                           |
-| `--toolbar-z-index`                       | `10`                     | z-index         | Z-index stacking order of the toolbar.               |
-| `--toolbar-border-radius`                 | `0px`                    | border-radius   | Corner rounding of the toolbar.                      |
-| `--toolbar-content-padding`               | `0px`                    | padding         | Padding inside the main content row.                 |
-| `--toolbar-justify-content`               | `normal`                 | justify-content | Horizontal alignment of toolbar content.             |
-| `--toolbar-content-visibility`            | `visible`                | visibility      | Visibility of the main content row.                  |
-| `--toolbar-additional-content-padding`    | `0px`                    | padding         | Padding inside the additional content row.           |
-| `--toolbar-additional-content-height`     | `fit-content`            | height          | Height of the additional content row.                |
-| `--toolbar-justify-additional-content`    | `normal`                 | justify-content | Horizontal alignment of additional content.          |
-| `--toolbar-additional-content-visibility` | `visible`                | visibility      | Visibility of the additional content row.            |
-| `--toolbar-back-button-height`            | `20px`                   | height          | Height of the back button container.                 |
-| `--toolbar-back-button-width`             | `20px`                   | width           | Width of the back button container.                  |
-| `--toolbar-back-button-padding`           | `20px 14px`              | padding         | Padding around the back button.                      |
-| `--toolbar-back-button-cursor`            | `pointer`                | cursor          | Cursor style for the back button.                    |
-| `--toolbar-back-image-height`             | `16px`                   | height          | Height of the back button icon image.                |
-| `--toolbar-back-image-width`              | `16px`                   | width           | Width of the back button icon image.                 |
+| Variable                                  | Default                  | CSS Property    | Description                                                                                                                           |
+| ----------------------------------------- | ------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--toolbar-padding`                       | `0px`                    | padding         | Inner padding of the toolbar container.                                                                                               |
+| `--toolbar-height`                        | `fit-content`            | height          | Height of the toolbar.                                                                                                                |
+| `--toolbar-width`                         | `100vw`                  | width           | Width of the toolbar.                                                                                                                 |
+| `--toolbar-position`                      | `fixed`                  | position        | CSS position (fixed by default, sticks to viewport).                                                                                  |
+| `--toolbar-top`                           | `0`                      | top             | Top position of the toolbar.                                                                                                          |
+| `--toolbar-left`                          | `0`                      | left            | Left position of the toolbar.                                                                                                         |
+| `--toolbar-right`                         | `0`                      | right           | Right position of the toolbar.                                                                                                        |
+| `--toolbar-background`                    | `#ffffff`                | background      | Background color of the toolbar.                                                                                                      |
+| `--toolbar-box-shadow`                    | `0px 2px 12px #55687c1a` | box-shadow      | Box shadow of the toolbar.                                                                                                            |
+| `--toolbar-z-index`                       | `10`                     | z-index         | Z-index stacking order of the toolbar.                                                                                                |
+| `--toolbar-border-radius`                 | `0px`                    | border-radius   | Corner rounding of the toolbar.                                                                                                       |
+| `--toolbar-content-padding`               | `0px`                    | padding         | Padding inside the main content row.                                                                                                  |
+| `--toolbar-justify-content`               | `normal`                 | justify-content | Horizontal alignment of toolbar content.                                                                                              |
+| `--toolbar-content-visibility`            | `visible`                | visibility      | Visibility of the main content row.                                                                                                   |
+| `--toolbar-content-width`                 | `auto`                   | width           | Width of the main content row.                                                                                                        |
+| `--toolbar-content-height`                | `auto`                   | height          | Height of the main content row. Set to `100%` to vertically fill a fixed-height toolbar.                                              |
+| `--toolbar-content-max-width`             | `none`                   | max-width       | Maximum width of the main content row. Combine with `--toolbar-content-margin: 0 auto` to clamp and center content on wide viewports. |
+| `--toolbar-content-margin`                | `0`                      | margin          | Margin around the main content row.                                                                                                   |
+| `--toolbar-additional-content-padding`    | `0px`                    | padding         | Padding inside the additional content row.                                                                                            |
+| `--toolbar-additional-content-height`     | `fit-content`            | height          | Height of the additional content row.                                                                                                 |
+| `--toolbar-justify-additional-content`    | `normal`                 | justify-content | Horizontal alignment of additional content.                                                                                           |
+| `--toolbar-additional-content-visibility` | `visible`                | visibility      | Visibility of the additional content row.                                                                                             |
+| `--toolbar-back-button-height`            | `20px`                   | height          | Height of the back button container.                                                                                                  |
+| `--toolbar-back-button-width`             | `20px`                   | width           | Width of the back button container.                                                                                                   |
+| `--toolbar-back-button-padding`           | `20px 14px`              | padding         | Padding around the back button.                                                                                                       |
+| `--toolbar-back-button-cursor`            | `pointer`                | cursor          | Cursor style for the back button.                                                                                                     |
+| `--toolbar-back-image-height`             | `16px`                   | height          | Height of the back button icon image.                                                                                                 |
+| `--toolbar-back-image-width`              | `16px`                   | width           | Width of the back button icon image.                                                                                                  |
 
 ## Web Component
 

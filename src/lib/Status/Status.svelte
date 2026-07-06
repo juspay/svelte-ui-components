@@ -9,13 +9,20 @@
     statusDescription = '',
     buttonProperties,
     classes,
-    onbuttonClick
+    onbuttonClick,
+    icon
   }: StatusProperties = $props();
 </script>
 
 <div class="background {classes ?? ''}">
   <div class="order-status">
-    <div class="status-image"><Img src={statusIcon} alt="status" /></div>
+    <div class="status-image">
+      {#if icon}
+        {@render icon()}
+      {:else}
+        <Img src={statusIcon} alt="status" />
+      {/if}
+    </div>
     <div class="status-text">{statusText}</div>
     <div class="status-description">
       <!-- eslint-disable-next-line -->

@@ -197,6 +197,70 @@
   <BarChart data={labelOnlyData} hideBarGraphics showXAxis showYAxis showGridlines />
 </div>
 
+<h3>Labels near the axis max (outside → inside flip)</h3>
+<div class="demo-row">
+  <BarChart
+    data={[
+      { label: 'North', value: 9800 },
+      { label: 'South', value: 4200 },
+      { label: 'East', value: 10000 },
+      { label: 'West', value: 150 }
+    ]}
+    yDomain={[0, 10000]}
+    showValues={true}
+    testId="bar-inside-flip-chart"
+  />
+</div>
+
+<h3>Crowded categories (rotate → thin)</h3>
+<div class="demo-row">
+  <BarChart
+    data={Array.from({ length: 18 }, (_, i) => ({
+      label: `Category name ${i + 1}`,
+      value: 100 + ((i * 37) % 400)
+    }))}
+    testId="bar-crowded-chart"
+  />
+</div>
+
+<h3>Interactive legend (3 series × 4 categories)</h3>
+<div class="demo-row">
+  <BarChart
+    series={[
+      {
+        name: 'Alpha',
+        data: [
+          { label: 'Q1', value: 120 },
+          { label: 'Q2', value: 180 },
+          { label: 'Q3', value: 140 },
+          { label: 'Q4', value: 210 }
+        ]
+      },
+      {
+        name: 'Beta',
+        data: [
+          { label: 'Q1', value: 90 },
+          { label: 'Q2', value: 130 },
+          { label: 'Q3', value: 170 },
+          { label: 'Q4', value: 110 }
+        ]
+      },
+      {
+        name: 'Gamma',
+        data: [
+          { label: 'Q1', value: 60 },
+          { label: 'Q2', value: 80 },
+          { label: 'Q3', value: 100 },
+          { label: 'Q4', value: 95 }
+        ]
+      }
+    ]}
+    showLegend={true}
+    interactiveLegend={true}
+    testId="bar-legend-toggle-chart"
+  />
+</div>
+
 <style>
   .intro {
     max-width: 680px;

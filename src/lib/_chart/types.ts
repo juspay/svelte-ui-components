@@ -51,7 +51,7 @@ export type LinearScale = {
   (value: number): number;
   domain: [number, number];
   range: [number, number];
-  ticks: (count?: number) => number[];
+  ticks: (count?: number, integer?: boolean) => number[];
   invert: (pixel: number) => number;
 };
 
@@ -148,6 +148,15 @@ export type TooltipData = {
 export type LegendItem = {
   label: string;
   color: string;
+  /** True when the series is toggled off via an interactive legend. */
+  hidden?: boolean;
+};
+
+/** Data-space anchor for point/category-anchored tooltips (coords are container px). */
+export type TooltipAnchor = {
+  x: number;
+  y: number;
+  side: 'top' | 'right' | 'bottom' | 'left';
 };
 
 // ── Sub-component props ───────────────────────────────────────
@@ -171,6 +180,14 @@ export type AxisProperties = {
   showGridlines?: boolean;
   gridlineLength?: number;
   label?: string;
+  /** Rotate horizontal-axis tick labels -45° (crowding fallback). */
+  rotateTicks?: boolean;
+  /** Render every Nth tick label (tick marks always render). */
+  tickEvery?: number;
+  /** y-offset of the bottom axis title (grows when tick labels rotate). */
+  labelOffset?: number;
+  /** Clamp linear tick steps to whole numbers (category axes). */
+  integerTicks?: boolean;
   classes?: string;
 };
 
@@ -178,6 +195,16 @@ export type ChartTooltipProperties = {
   data: TooltipData | null;
   mouseX?: number;
   mouseY?: number;
+  /** When set, the tooltip anchors to this point instead of following the cursor. */
+  anchor?: TooltipAnchor | null;
+  /** Render into document.body with position:fixed, clamped to the viewport. */
+  portal?: boolean;
+  /** The positioned chart wrapper; required to convert coords in portal mode. */
+  originEl?: HTMLElement | null;
+  /** Strip the tooltip card chrome (used when `content` supplies its own UI). */
+  unstyled?: boolean;
+  /** Custom content rendered inside the positioned (and clamped) wrapper. */
+  content?: Snippet;
   customSnippet?: Snippet<[TooltipData]>;
   classes?: string;
 };
@@ -185,6 +212,8 @@ export type ChartTooltipProperties = {
 export type LegendProperties = {
   items: LegendItem[];
   position?: 'top' | 'bottom';
+  /** When provided, items render as toggle buttons and call back with their index. */
+  onToggle?: (index: number) => void;
   customSnippet?: Snippet<[LegendItem[]]>;
   classes?: string;
 };

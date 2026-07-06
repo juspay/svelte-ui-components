@@ -107,6 +107,15 @@ export type OptionalLineChartProperties = {
   tooltipSnippet?: Snippet<[LineChartTooltipContext]>;
   /** Content rendered when all series are empty. */
   empty?: Snippet;
+  /** One tooltip listing every series at the hovered x (Highcharts shared tooltip).
+   *  Defaults to true for multi-series charts; single-series behavior is unchanged. */
+  sharedTooltip?: boolean;
+  /** Legend items become click/keyboard toggles for series visibility. */
+  interactiveLegend?: boolean;
+  /** Hide the legend when the measured chart width is below this px value; 0 disables. */
+  hideLegendBelow?: number;
+  /** Render the tooltip into document.body so scroll/overflow ancestors never clip it. */
+  tooltipPortal?: boolean;
   /** Value for the data-pw attribute on the chart container. */
   testId?: string;
   /** CSS class string applied to the top-level element. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeHorizontalCategoryGutter, computeSankeyLayout, measureTextWidth } from './geometry';
+import { computeAutoLayout, computeSankeyLayout } from './geometry';
 
 describe('computeSankeyLayout', () => {
   it('produces finite node positions when every link weight is zero (no NaN collapse)', () => {
@@ -146,43 +146,58 @@ describe('computeSankeyLayout', () => {
   });
 });
 
-describe('computeHorizontalCategoryGutter', () => {
-  it('keeps the legacy fixed gutter when the label width is unmeasurable (SSR / no canvas)', () => {
-    expect(computeHorizontalCategoryGutter(null, 800)).toBe(50);
+describe('computeAutoLayout (heuristic text widths: len * 11 * 0.6 = 6.6px/char)', () => {
+  it('sizes the left margin to the widest y tick label', () => {
+    const layout = computeAutoLayout({
+      width: 600,
+      height: 400,
+      yTickLabels: ['0', '50,000', '1,00,000'],
+      xTickLabels: ['A', 'B']
+    });
+    // '1,00,000' = 8 chars * 6.6 = 52.8 → ceil 53 + tickPad 10 + 6 = 69
+    expect(layout.margin.left).toBe(69);
+    expect(layout.xRotate).toBe(false);
+    expect(layout.xEvery).toBe(1);
   });
 
-  it('never shrinks below the legacy gutter for short labels', () => {
-    // "Jan"-style labels measure ~20px; 20 + 14 inset = 34 < 50 → stay at 50 so
-    // every chart whose labels already fit keeps its exact current layout.
-    expect(computeHorizontalCategoryGutter(20, 800)).toBe(50);
+  it('respects base minimums and reserves title bands', () => {
+    const layout = computeAutoLayout({
+      width: 600,
+      height: 400,
+      yTickLabels: ['0'],
+      xTickLabels: ['A'],
+      hasYAxisLabel: true,
+      base: { left: 50, bottom: 40 }
+    });
+    // tiny label → measured left (1*6.6→7+16+18=41) loses to base 50
+    expect(layout.margin.left).toBe(50);
+    expect(layout.margin.bottom).toBeGreaterThanOrEqual(40);
   });
 
-  it('grows the gutter to fit a long category label plus the tick inset', () => {
-    // The BZ-4372 case: "Submitted Address" measures ~97px at 11px axis font.
-    // Labels right-align 10px left of the axis line, so the gutter must be
-    // label + 10 (tick inset) + 4 (breathing pad) = 111 to avoid clipping.
-    expect(computeHorizontalCategoryGutter(97, 350)).toBe(111);
+  it('rotates and thins crowded x labels and deepens the bottom margin', () => {
+    const labels = Array.from({ length: 30 }, (_, i) => `Category ${i + 1}`);
+    const layout = computeAutoLayout({
+      width: 400,
+      height: 300,
+      yTickLabels: ['0', '100'],
+      xTickLabels: labels
+    });
+    expect(layout.xRotate).toBe(true);
+    expect(layout.xEvery).toBeGreaterThanOrEqual(2);
+    expect(layout.margin.bottom).toBeGreaterThan(40);
   });
 
-  it('caps the gutter at 45% of the chart width so a pathological label cannot crush the plot', () => {
-    expect(computeHorizontalCategoryGutter(300, 350)).toBe(Math.round(350 * 0.45));
-  });
-
-  it('keeps at least the legacy gutter when the chart itself is tiny', () => {
-    // cap = max(50, 100 * 0.45) = 50 → the label still bleeds, but the plot survives.
-    expect(computeHorizontalCategoryGutter(97, 100)).toBe(50);
-  });
-
-  it('respects a custom fallback gutter', () => {
-    expect(computeHorizontalCategoryGutter(null, 800, 28)).toBe(28);
-    expect(computeHorizontalCategoryGutter(10, 800, 28)).toBe(28);
-  });
-});
-
-describe('measureTextWidth', () => {
-  it('returns null in environments without a working canvas (jsdom) instead of a bogus 0', () => {
-    // jsdom's canvas 2D context either does not exist or measures every string
-    // as 0 — both must map to null so the caller falls back to fixed layout.
-    expect(measureTextWidth('Submitted Address', '11px sans-serif')).toBeNull();
+  it('places the bottom axis title baseline inside the reserved title band', () => {
+    const layout = computeAutoLayout({
+      width: 600,
+      height: 400,
+      yTickLabels: ['0'],
+      xTickLabels: ['A'],
+      hasXAxisLabel: true
+    });
+    // tick band depth = TICK_PAD(10) + ceil(11 * 1.2) = 24; title band = 18
+    expect(layout.xLabelOffset).toBe(42);
+    expect(layout.margin.bottom).toBe(48);
+    expect(layout.xLabelOffset).toBeLessThan(layout.margin.bottom);
   });
 });

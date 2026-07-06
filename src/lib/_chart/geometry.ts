@@ -6,6 +6,8 @@ import type {
   ComputedSankeyLink,
   StackedPoint
 } from './types';
+import { measureText, type FontSpec } from './measure';
+import { thinTicks } from './labels';
 
 export function computeChartDimensions(
   width: number,
@@ -27,57 +29,93 @@ export function computeChartDimensions(
   };
 }
 
-// ── Text measurement ────────────────────────────────────────────
+export type AutoLayoutInput = {
+  width: number;
+  height: number;
+  yTickLabels: string[];
+  xTickLabels: string[];
+  y2TickLabels?: string[];
+  font?: FontSpec;
+  hasXAxisLabel?: boolean;
+  hasYAxisLabel?: boolean;
+  hasY2AxisLabel?: boolean;
+  base?: Partial<Margin>;
+};
 
-let textMeasurementContext: CanvasRenderingContext2D | null = null;
+export type AutoLayout = ChartDimensions & {
+  xRotate: boolean;
+  xEvery: number;
+  /**
+   * Baseline y for the bottom-axis title, already inside the reserved title
+   * band — pass straight to Axis.labelOffset, no extra padding needed.
+   */
+  xLabelOffset: number;
+};
+
+// Offset from the axis line to the tick-label text (Axis.svelte TICK_SIZE + 4).
+const TICK_PAD = 10;
+// Vertical space reserved for a rotated/horizontal axis title.
+const TITLE_BAND = 18;
+// Cap on how deep rotated x labels may grow the bottom margin (long labels crop).
+const MAX_ROTATED_DEPTH = 72;
 
 /**
- * Measures rendered text width via a shared offscreen canvas context.
- * Returns null when measurement is unavailable (SSR, or the environment
- * provides no working 2D canvas — e.g. jsdom) so callers can fall back to
- * a fixed layout instead of acting on a bogus 0.
+ * Measured, Highcharts-style margins: gutters grow to fit formatted tick labels
+ * (instead of clipping) and the bottom axis rotates/thins its labels when the
+ * per-category step is too narrow. Order matters to avoid feedback loops:
+ * left/right derive from label text only, then innerWidth decides x rotation,
+ * then bottom derives from the rotation outcome.
  */
-export function measureTextWidth(text: string, font: string): number | null {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-  if (textMeasurementContext === null) {
-    textMeasurementContext = document.createElement('canvas').getContext('2d');
-  }
-  if (textMeasurementContext === null) {
-    return null;
-  }
-  textMeasurementContext.font = font;
-  const width = textMeasurementContext.measureText(text).width;
-  // jsdom's canvas stub reports 0 for any text; treat that as "cannot measure".
-  return width > 0 ? width : null;
-}
+export function computeAutoLayout(input: AutoLayoutInput): AutoLayout {
+  const font = input.font ?? { size: 11 };
+  const labelHeight = font.size * 1.2;
 
-/**
- * Left margin for a horizontal bar chart's category axis, sized to fit the
- * widest category label. Category tick labels render right-aligned 10px left
- * of the axis line (tick mark 6px + 4px gap), so any label wider than
- * `margin.left - 10` bleeds out of the SVG and gets clipped by the page.
- *
- * - Never shrinks below `fallback` (the legacy fixed gutter), so charts whose
- *   labels already fit keep their exact current layout.
- * - Caps at 45% of the chart width so one pathological label cannot crush the
- *   plot area; past the cap the label bleeds as before, but the plot survives.
- * - `widestLabelWidth === null` (SSR / unmeasurable) keeps the legacy gutter.
- */
-export function computeHorizontalCategoryGutter(
-  widestLabelWidth: number | null,
-  chartWidth: number,
-  fallback: number = 50
-): number {
-  if (widestLabelWidth === null) {
-    return fallback;
-  }
-  const tickLabelInset = 10;
-  const breathingPad = 4;
-  const cap = Math.max(fallback, chartWidth * 0.45);
-  const fitted = widestLabelWidth + tickLabelInset + breathingPad;
-  return Math.round(Math.min(Math.max(fallback, fitted), cap));
+  const widthOf = (labels: string[]): number =>
+    labels.reduce((max, t) => Math.max(max, measureText(t, font).width), 0);
+
+  const left = Math.max(
+    input.base?.left ?? 0,
+    input.yTickLabels.length > 0
+      ? Math.ceil(widthOf(input.yTickLabels)) +
+          TICK_PAD +
+          6 +
+          (input.hasYAxisLabel ? TITLE_BAND : 0)
+      : 0
+  );
+
+  const xWidths = input.xTickLabels.map((t) => measureText(t, font).width);
+  const maxXWidth = xWidths.reduce((m, w) => Math.max(m, w), 0);
+  const y2Width =
+    typeof input.y2TickLabels !== 'undefined' && input.y2TickLabels.length > 0
+      ? Math.ceil(widthOf(input.y2TickLabels)) +
+        TICK_PAD +
+        6 +
+        (input.hasY2AxisLabel ? TITLE_BAND : 0)
+      : 0;
+  // Right gutter: the right axis when present, else half the last x label so
+  // edge labels don't clip.
+  const right = Math.max(input.base?.right ?? 0, y2Width, Math.ceil(maxXWidth / 2) + 8);
+
+  const innerWidth = Math.max(0, input.width - left - right);
+  const step = input.xTickLabels.length > 0 ? innerWidth / input.xTickLabels.length : innerWidth;
+  const { rotate, every } =
+    input.xTickLabels.length > 0
+      ? thinTicks({ labelWidths: xWidths, labelHeight, step })
+      : { rotate: false, every: 1 };
+
+  const rotatedDepth = rotate
+    ? Math.min(MAX_ROTATED_DEPTH, Math.ceil(maxXWidth * Math.SQRT1_2))
+    : 0;
+  const xLabelDepth =
+    input.xTickLabels.length > 0 ? TICK_PAD + (rotate ? rotatedDepth : Math.ceil(labelHeight)) : 0;
+  const bottom = Math.max(
+    input.base?.bottom ?? 0,
+    xLabelDepth + 6 + (input.hasXAxisLabel ? TITLE_BAND : 0)
+  );
+  const top = Math.max(input.base?.top ?? 0, Math.ceil(labelHeight / 2) + 8);
+
+  const dims = computeChartDimensions(input.width, input.height, { top, right, bottom, left });
+  return { ...dims, xRotate: rotate, xEvery: every, xLabelOffset: xLabelDepth + TITLE_BAND };
 }
 
 // ── Pie layout ──────────────────────────────────────────────────

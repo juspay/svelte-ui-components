@@ -92,6 +92,9 @@ test.describe('tooltip action — use:tooltip directive', () => {
     // The bottom trigger has delay=300.
     const trigger = page.getByTestId('tooltip-action-bottom');
     await expect(trigger).toBeVisible();
+    // The action section sits below the fold; raw mouse.move cannot reach
+    // coordinates outside the viewport, so bring the trigger on-screen first.
+    await trigger.scrollIntoViewIfNeeded();
     const box = await trigger.boundingBox();
     if (box === null) {
       throw new Error('Trigger element boundingBox is null — element may not be visible');

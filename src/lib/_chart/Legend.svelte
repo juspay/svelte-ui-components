@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { LegendProperties } from './types';
 
-  let { items, position = 'bottom', customSnippet, classes }: LegendProperties = $props();
+  let { items, position = 'bottom', onToggle, customSnippet, classes }: LegendProperties = $props();
 </script>
 
 {#if items.length > 0}
@@ -10,10 +10,23 @@
       {@render customSnippet(items)}
     {:else}
       {#each items as item, i (i)}
-        <div class="legend-item">
-          <span class="legend-swatch" style="background: {item.color}"></span>
-          <span class="legend-label">{item.label}</span>
-        </div>
+        {#if typeof onToggle === 'function'}
+          <button
+            type="button"
+            class="legend-item legend-toggle"
+            class:legend-hidden={item.hidden}
+            aria-pressed={!item.hidden}
+            onclick={() => onToggle(i)}
+          >
+            <span class="legend-swatch" style="background: {item.color}"></span>
+            <span class="legend-label">{item.label}</span>
+          </button>
+        {:else}
+          <div class="legend-item">
+            <span class="legend-swatch" style="background: {item.color}"></span>
+            <span class="legend-label">{item.label}</span>
+          </div>
+        {/if}
       {/each}
     {/if}
   </div>
@@ -54,6 +67,23 @@
 
   .legend-label {
     font-size: var(--chart-legend-font-size, 12px);
-    color: var(--chart-legend-color, #333);
+    color: var(--chart-legend-color, light-dark(#333, #e5e7eb));
+  }
+
+  .legend-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .legend-hidden .legend-swatch {
+    opacity: 0.25;
+  }
+
+  .legend-hidden .legend-label {
+    color: var(--chart-legend-hidden-color, light-dark(#bbb, #555));
   }
 </style>

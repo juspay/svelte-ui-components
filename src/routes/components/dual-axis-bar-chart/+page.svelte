@@ -96,6 +96,27 @@
   const handleBarClick = (event: { categoryIndex: number; context: DualAxisTooltipContext }) => {
     lastClickedCategory = event.context.category;
   };
+
+  // ── Demo 6: Negative values + wide currency ticks ────────────────
+
+  const negativeCategories = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+  const negativeSeries = [
+    {
+      name: 'Net Change (₹)',
+      data: [420, -180, 260, -90],
+      yAxisIndex: 0 as const,
+      type: 'column' as const,
+      color: '#e15759'
+    },
+    {
+      name: 'Index',
+      data: [12, 18, 9, 22],
+      yAxisIndex: 1 as const,
+      type: 'line' as const,
+      color: '#4e79a7'
+    }
+  ];
 </script>
 
 <div class="page-header">
@@ -190,6 +211,17 @@
     showGridlines={false}
     showLegend={false}
     testId="demo-no-gridlines"
+  />
+</div>
+
+<!-- Demo 6: Negative values + wide currency ticks -->
+<h3>Negative Values + Wide Currency Ticks</h3>
+<div class="demo-row">
+  <DualAxisBarChart
+    categories={negativeCategories}
+    series={negativeSeries}
+    leftAxis={{ valueFormat: (v) => '₹' + v.toLocaleString('en-IN') }}
+    testId="dual-axis-negative-chart"
   />
 </div>
 

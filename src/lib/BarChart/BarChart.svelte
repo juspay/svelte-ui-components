@@ -12,18 +12,28 @@
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
-  import { createBandScale, createLinearScale, niceLinearDomain } from '$lib/_chart/scales';
   import {
-    computeChartDimensions,
-    computeHorizontalCategoryGutter,
-    measureTextWidth
-  } from '$lib/_chart/geometry';
-  import { getColor } from '$lib/_chart/colors';
+    createBandScale,
+    createLinearScale,
+    niceLinearDomain,
+    computeLinearTicks
+  } from '$lib/_chart/scales';
+  import { computeAutoLayout } from '$lib/_chart/geometry';
+  import { getColor, getContrastColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath } from '$lib/_chart/paths';
+  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import {
+    resolveEndLabel,
+    resolveInsideLabel,
+    placedLabelRect,
+    dropOverlapping
+  } from '$lib/_chart/labels';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
-  import { SvelteMap } from 'svelte/reactivity';
+  import type { TooltipAnchor } from '$lib/_chart/types';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────
   // Derived at module scope per the library uid pattern (e.g. AreaChart
@@ -77,6 +87,9 @@
     topN,
     overflowLabel = 'Other',
     hideBarGraphics = false,
+    interactiveLegend = false,
+    hideLegendBelow = 360,
+    tooltipPortal = false,
     onbarclick,
     onbarhover,
     testId,
@@ -86,17 +99,22 @@
   // ── State ──────────────────────────────────────────────────────
 
   let containerEl: HTMLDivElement | null = $state(null);
+  let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hovered = $state<{ si: number; pi: number } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+  let anchor = $state<TooltipAnchor | null>(null);
+  let valueFontSize = $state(14);
   /** Internal tracking for the imperative highlight API (onChartReady). */
   let apiHighlightedIndex = $state<number | null>(null);
+  const hiddenSeries = new SvelteSet<number>();
 
   // ── onMount: emit ChartHighlightAPI via onChartReady ──────────
 
   onMount(() => {
+    valueFontSize = readCssVarPx(containerEl, '--barchart-value-font-size', 14);
     if (typeof onChartReady !== 'function') {
       return;
     }
@@ -185,62 +203,25 @@
     });
   });
 
+  // Legend-toggled series are excluded from geometry and scales (Highcharts
+  // rescales on toggle) but stay in legendItems so they can be re-enabled.
+  let visibleEntries = $derived(
+    resolvedSeries.map((s, si) => ({ s, si })).filter((e) => !hiddenSeries.has(e.si))
+  );
+  let visibleOrder = $derived(new Map(visibleEntries.map((e, vi) => [e.si, vi])));
+
+  function toggleSeries(index: number): void {
+    if (hiddenSeries.has(index)) {
+      hiddenSeries.delete(index);
+    } else {
+      hiddenSeries.add(index);
+    }
+  }
+
   let labels = $derived.by(() => {
     const first = resolvedSeries[0]?.data ?? [];
     return first.map((d) => d.label);
   });
-
-  /**
-   * Widest category label in the axis tick font, for the horizontal-orientation
-   * gutter below. Horizontal charts put category text (not short numeric ticks)
-   * on the Y axis, so the gutter must fit real words like "Submitted Address" —
-   * a fixed gutter clips them. Resolved from the mounted container so CSS-var
-   * theming (--chart-axis-font-size / --chart-axis-font-family) is honoured.
-   * Null when unmeasurable (SSR, no canvas) — the gutter then keeps its legacy
-   * fixed width.
-   */
-  let widestCategoryLabelWidth = $derived.by(() => {
-    if (isVertical || !showYAxis || labels.length === 0 || containerEl === null) {
-      return null;
-    }
-    const containerStyle = getComputedStyle(containerEl);
-    const axisFontSize = containerStyle.getPropertyValue('--chart-axis-font-size').trim() || '11px';
-    const axisFontFamilyToken = containerStyle.getPropertyValue('--chart-axis-font-family').trim();
-    const axisFontFamily =
-      axisFontFamilyToken === '' || axisFontFamilyToken === 'inherit'
-        ? containerStyle.fontFamily || 'sans-serif'
-        : axisFontFamilyToken;
-    const axisFont = `${axisFontSize} ${axisFontFamily}`;
-    let widest: number | null = null;
-    for (const label of labels) {
-      const labelWidth = measureTextWidth(label, axisFont);
-      if (labelWidth === null) {
-        return null;
-      }
-      if (widest === null || labelWidth > widest) {
-        widest = labelWidth;
-      }
-    }
-    return widest;
-  });
-
-  // When an axis is hidden its gutter (Y = 50px for tick labels, X = 40px) is dead
-  // space that squeezes the plot into the centre. Collapse the tick-label gutter but
-  // keep a symmetric breathing-room inset so the edge bars (and their value labels)
-  // don't sit flush against the container edges. In horizontal orientation the
-  // visible Y axis carries category text, so its gutter grows to fit the widest
-  // label (never shrinking below the legacy 50px, capped at 45% of the width).
-  let dims = $derived(
-    computeChartDimensions(chartWidth, chartHeight, {
-      left: showYAxis
-        ? isVertical
-          ? 50
-          : computeHorizontalCategoryGutter(widestCategoryLabelWidth, chartWidth)
-        : 28,
-      right: 28,
-      bottom: showXAxis ? 40 : 8
-    })
-  );
 
   // ── Effective highlighted index: merge declarative + imperative ─
 
@@ -262,6 +243,18 @@
     isNormalized && valueFormat == null ? (v: number) => `${formatNumber(v)}%` : format
   );
 
+  let isStackedMode = $derived(isMulti && groupMode === 'stacked');
+
+  function getDisplayValue(bar: BarRect): string {
+    if (isNormalized && bar.normalizedValue != null) {
+      return normalizedFormat(bar.normalizedValue);
+    }
+    if (bar.isFloating && Array.isArray(bar.dataPoint.range)) {
+      return `${format(bar.dataPoint.range[0])} – ${format(bar.dataPoint.range[1])}`;
+    }
+    return format(bar.dataPoint.value);
+  }
+
   // ── Y-extent: account for floating bars (A1-1) ────────────────
 
   let yExtent = $derived.by<[number, number]>(() => {
@@ -273,13 +266,13 @@
         return [0, 100];
       }
       const totalsPerLabel = labels.map((_, labelIndex) =>
-        resolvedSeries.reduce((sum, s) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
+        visibleEntries.reduce((sum, { s }) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
       );
       return niceLinearDomain(0, Math.max(0, ...totalsPerLabel));
     }
     // Collect all individual values including floating-bar low/high endpoints
     const all: number[] = [];
-    for (const s of resolvedSeries) {
+    for (const { s } of visibleEntries) {
       for (const d of s.data) {
         if (Array.isArray(d.range)) {
           all.push(d.range[0], d.range[1]);
@@ -293,6 +286,27 @@
     }
     return niceLinearDomain(Math.min(0, ...all), Math.max(0, ...all));
   });
+
+  let valTickCount = $derived(
+    isVertical
+      ? Math.max(2, Math.min(6, Math.floor(chartHeight / 70)))
+      : Math.max(2, Math.min(8, Math.floor(chartWidth / 90)))
+  );
+
+  let layout = $derived.by(() => {
+    const valFmt = isNormalized ? normalizedFormat : format;
+    const valTicks = computeLinearTicks(yExtent, valTickCount).map((t) => valFmt(t));
+    return computeAutoLayout({
+      width: chartWidth,
+      height: chartHeight,
+      yTickLabels: showYAxis ? (isVertical ? valTicks : labels) : [],
+      xTickLabels: showXAxis ? (isVertical ? labels : valTicks) : [],
+      hasYAxisLabel: Boolean(yAxisLabel) && showYAxis,
+      hasXAxisLabel: Boolean(xAxisLabel) && showXAxis,
+      base: { top: 20, left: showYAxis ? 50 : 28, right: 28, bottom: showXAxis ? 40 : 8 }
+    });
+  });
+  let dims = $derived(layout);
 
   let catScale = $derived(
     createBandScale(labels, isVertical ? [0, dims.innerWidth] : [0, dims.innerHeight], barPadding)
@@ -366,13 +380,13 @@
     };
 
     if (isMulti && groupMode === 'grouped') {
-      const subBand = catScale.bandwidth / resolvedSeries.length;
-      for (let si = 0; si < resolvedSeries.length; si++) {
-        const s = resolvedSeries[si];
+      const subBand = catScale.bandwidth / Math.max(1, visibleEntries.length);
+      for (let vi = 0; vi < visibleEntries.length; vi++) {
+        const { s, si } = visibleEntries[vi];
         const seriesFill: BarFill = s.color ?? getColor(si);
         for (let pi = 0; pi < s.data.length; pi++) {
           const d = s.data[pi];
-          const catPos = catScale(d.label) + si * subBand;
+          const catPos = catScale(d.label) + vi * subBand;
           const barW = Math.max(1, subBand * 0.9);
           const geom = barGeometry(d, catPos, barW);
           const effectiveFill: BarFill = d.color ?? seriesFill;
@@ -383,11 +397,11 @@
       }
     } else if (isMulti && groupMode === 'stacked') {
       const categoryTotals = labels.map((_, labelIndex) =>
-        resolvedSeries.reduce((sum, s) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
+        visibleEntries.reduce((sum, { s }) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
       );
       const stackBase = new Array(labels.length).fill(0);
-      for (let si = 0; si < resolvedSeries.length; si++) {
-        const s = resolvedSeries[si];
+      for (let vi = 0; vi < visibleEntries.length; vi++) {
+        const { s, si } = visibleEntries[vi];
         const seriesFill: BarFill = s.color ?? getColor(si);
         for (let pi = 0; pi < s.data.length; pi++) {
           const d = s.data[pi];
@@ -461,6 +475,41 @@
     return result;
   });
 
+  let valueFont = $derived({ size: valueFontSize, weight: 600 });
+
+  // Highcharts label chain per bar (outside → justify inside → crop), then a
+  // global allowOverlap:false pass so neighbouring labels never collide.
+  let barLabels = $derived.by(() => {
+    if (!showValues) {
+      return [];
+    }
+    const plot = { width: dims.innerWidth, height: dims.innerHeight };
+    const placements = bars.map((bar) => {
+      const text = getDisplayValue(bar);
+      const size = measureText(text, valueFont);
+      const p = isStackedMode
+        ? resolveInsideLabel({ bar, label: size })
+        : resolveEndLabel({
+            bar,
+            plot,
+            label: size,
+            orientation,
+            negative: !bar.isFloating && bar.dataPoint.value < 0
+          });
+      return { bar, text, size, p };
+    });
+    const mask = dropOverlapping(
+      placements.map(({ p, size }) => (p.placement === 'hidden' ? null : placedLabelRect(p, size)))
+    );
+    return placements.map((entry, i) => ({
+      ...entry,
+      visible: mask[i] === true && entry.p.placement !== 'hidden'
+    }));
+  });
+
+  const contrastOutline = (fill: string): string =>
+    getContrastColor(fill) === '#000000' ? '#ffffff' : '#000000';
+
   // ── Defs: pattern and gradient fill resolution (A1-2 / A1-3) ──
 
   /**
@@ -520,7 +569,8 @@
     isMulti
       ? resolvedSeries.map((s, i) => ({
           label: s.name,
-          color: fallbackColor(s.color ?? getColor(i), i)
+          color: fallbackColor(s.color ?? getColor(i), i),
+          hidden: hiddenSeries.has(i)
         }))
       : []
   );
@@ -535,14 +585,13 @@
 
   // ── Stacked bar path helper ────────────────────────────────────
 
-  let lastSeriesIndex = $derived(resolvedSeries.length - 1);
-
   function stackedBarPath(bar: BarRect): string {
     if (barRadius <= 0) {
       return roundedRectPath(bar.x, bar.y, bar.width, bar.height, 0, 0, 0, 0);
     }
-    const isFirst = bar.si === 0;
-    const isLast = bar.si === lastSeriesIndex;
+    const vi = visibleOrder.get(bar.si) ?? 0;
+    const isFirst = vi === 0;
+    const isLast = vi === visibleEntries.length - 1;
     if (isVertical) {
       const tl = isLast ? barRadius : 0;
       const tr = isLast ? barRadius : 0;
@@ -597,25 +646,74 @@
 
   // ── Interactions ───────────────────────────────────────────────
 
-  function trackMouse(e: MouseEvent) {
-    if (containerEl === null) {
-      return;
+  // Narrows an event's currentTarget to Element without an `as` cast (repo
+  // lint bans type assertions outside test files).
+  const targetElement = (e: Event): Element | null =>
+    e.currentTarget instanceof Element ? e.currentTarget : null;
+
+  function trackMouse(e: PointerEvent): void {
+    const position = pointerPositionIn(plotEl, e);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
   }
 
-  function handleEnter(e: MouseEvent, bar: BarRect) {
+  // Anchor from the live element rect (not SVG math) so legend offset and
+  // scrollable-mode scroll position are automatically accounted for.
+  function anchorFromElement(el: Element): TooltipAnchor | null {
+    if (plotEl === null) {
+      return null;
+    }
+    const r = el.getBoundingClientRect();
+    const c = plotEl.getBoundingClientRect();
+    return isVertical
+      ? { x: r.left + r.width / 2 - c.left, y: r.top - c.top, side: 'top' }
+      : { x: r.right - c.left, y: r.top + r.height / 2 - c.top, side: 'right' };
+  }
+
+  function activateBar(target: Element, bar: BarRect): void {
     hovered = { si: bar.si, pi: bar.pi };
-    trackMouse(e);
+    anchor = anchorFromElement(target);
     onbarhover?.({ index: bar.pi, dataPoint: bar.dataPoint });
   }
 
-  function handleLeave() {
+  function handleEnter(e: PointerEvent, bar: BarRect): void {
+    const el = targetElement(e);
+    if (el !== null) {
+      activateBar(el, bar);
+    }
+    trackMouse(e);
+  }
+
+  function handleFocus(e: FocusEvent, bar: BarRect): void {
+    const el = targetElement(e);
+    if (el !== null) {
+      activateBar(el, bar);
+    }
+  }
+
+  function handleLeave(): void {
     hovered = null;
+    anchor = null;
     onbarhover?.(null);
   }
+
+  function handleKeydown(e: KeyboardEvent, bar: BarRect): void {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick(bar);
+    }
+  }
+
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands outside.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hovered === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, handleLeave);
+  });
 
   function handleClick(bar: BarRect) {
     onbarclick?.({ index: bar.pi, dataPoint: bar.dataPoint });
@@ -625,18 +723,6 @@
     return hovered === null
       ? null
       : (bars.find((b) => b.si === hovered!.si && b.pi === hovered!.pi) ?? null);
-  }
-
-  let isStackedMode = $derived(isMulti && groupMode === 'stacked');
-
-  function getDisplayValue(bar: BarRect): string {
-    if (isNormalized && bar.normalizedValue != null) {
-      return normalizedFormat(bar.normalizedValue);
-    }
-    if (bar.isFloating && Array.isArray(bar.dataPoint.range)) {
-      return `${format(bar.dataPoint.range[0])} – ${format(bar.dataPoint.range[1])}`;
-    }
-    return format(bar.dataPoint.value);
   }
 </script>
 
@@ -648,80 +734,85 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
-    {#if isMulti && showLegend}
-      <Legend items={legendItems} position="top" />
+    {#if isMulti && showLegend && (chartWidth === 0 || hideLegendBelow === 0 || chartWidth >= hideLegendBelow)}
+      {#if interactiveLegend}
+        <Legend items={legendItems} position="top" onToggle={toggleSeries} />
+      {:else}
+        <Legend items={legendItems} position="top" />
+      {/if}
     {/if}
 
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div
-      class="chart-scroll-area"
-      role="region"
-      aria-label={yAxisLabel ? `${yAxisLabel} bar chart` : 'Bar chart'}
-      tabindex={scrollable ? 0 : null}
-      style={scrollable
-        ? `overflow-x: auto; -webkit-overflow-scrolling: touch; height: var(--barchart-scroll-area-height, auto);`
-        : ''}
-    >
-      <div style={scrollable ? `min-width: ${minScrollWidth}px;` : ''}>
-        <ChartContainer
-          bind:width={chartWidth}
-          bind:height={chartHeight}
-          {aspectRatio}
-          {maxHeight}
-          {minHeight}
-        >
-          <!-- A1-2 / A1-3: SVG <defs> for pattern and gradient fills -->
-          {#if defsEntries.length > 0}
-            <defs>
-              {#each defsEntries as entry (entry.id)}
-                {#if 'pattern' in entry.fill}
-                  {@const pat = entry.fill.pattern}
-                  {@const patSize = pat.size ?? 8}
-                  {@const patColor = pat.color ?? entry.bar.color}
-                  {@const patBg = pat.background ?? 'transparent'}
-                  {@const patStrokeW = pat.strokeWidth ?? 1.5}
-                  <pattern
-                    id={entry.id}
-                    patternUnits="userSpaceOnUse"
-                    width={patSize}
-                    height={patSize}
-                  >
-                    <rect width={patSize} height={patSize} fill={patBg} />
-                    {#if pat.type === 'lines'}
-                      <line
-                        x1="0"
-                        y1={patSize}
-                        x2={patSize}
-                        y2="0"
-                        stroke={patColor}
-                        stroke-width={patStrokeW}
-                      />
-                    {:else if pat.type === 'crosshatch'}
-                      <line
-                        x1="0"
-                        y1={patSize}
-                        x2={patSize}
-                        y2="0"
-                        stroke={patColor}
-                        stroke-width={patStrokeW}
-                      />
-                      <line
-                        x1="0"
-                        y1="0"
-                        x2={patSize}
-                        y2={patSize}
-                        stroke={patColor}
-                        stroke-width={patStrokeW}
-                      />
-                    {:else}
-                      <!-- dots -->
-                      <circle cx={patSize / 2} cy={patSize / 2} r={patStrokeW} fill={patColor} />
-                    {/if}
-                  </pattern>
-                {:else if 'gradient' in entry.fill}
-                  {@const grad = entry.fill.gradient}
-                  {@const isHoriz = grad.direction === 'horizontal'}
-                  <!--
+    <div class="chart-plot" bind:this={plotEl}>
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <div
+        class="chart-scroll-area"
+        role="region"
+        aria-label={yAxisLabel ? `${yAxisLabel} bar chart` : 'Bar chart'}
+        tabindex={scrollable ? 0 : null}
+        style={scrollable
+          ? `overflow-x: auto; -webkit-overflow-scrolling: touch; height: var(--barchart-scroll-area-height, auto);`
+          : ''}
+      >
+        <div style={scrollable ? `min-width: ${minScrollWidth}px;` : ''}>
+          <ChartContainer
+            bind:width={chartWidth}
+            bind:height={chartHeight}
+            {aspectRatio}
+            {maxHeight}
+            {minHeight}
+          >
+            <!-- A1-2 / A1-3: SVG <defs> for pattern and gradient fills -->
+            {#if defsEntries.length > 0}
+              <defs>
+                {#each defsEntries as entry (entry.id)}
+                  {#if 'pattern' in entry.fill}
+                    {@const pat = entry.fill.pattern}
+                    {@const patSize = pat.size ?? 8}
+                    {@const patColor = pat.color ?? entry.bar.color}
+                    {@const patBg = pat.background ?? 'transparent'}
+                    {@const patStrokeW = pat.strokeWidth ?? 1.5}
+                    <pattern
+                      id={entry.id}
+                      patternUnits="userSpaceOnUse"
+                      width={patSize}
+                      height={patSize}
+                    >
+                      <rect width={patSize} height={patSize} fill={patBg} />
+                      {#if pat.type === 'lines'}
+                        <line
+                          x1="0"
+                          y1={patSize}
+                          x2={patSize}
+                          y2="0"
+                          stroke={patColor}
+                          stroke-width={patStrokeW}
+                        />
+                      {:else if pat.type === 'crosshatch'}
+                        <line
+                          x1="0"
+                          y1={patSize}
+                          x2={patSize}
+                          y2="0"
+                          stroke={patColor}
+                          stroke-width={patStrokeW}
+                        />
+                        <line
+                          x1="0"
+                          y1="0"
+                          x2={patSize}
+                          y2={patSize}
+                          stroke={patColor}
+                          stroke-width={patStrokeW}
+                        />
+                      {:else}
+                        <!-- dots -->
+                        <circle cx={patSize / 2} cy={patSize / 2} r={patStrokeW} fill={patColor} />
+                      {/if}
+                    </pattern>
+                  {:else if 'gradient' in entry.fill}
+                    {@const grad = entry.fill.gradient}
+                    {@const isHoriz = grad.direction === 'horizontal'}
+                    <!--
                     gradientUnits="userSpaceOnUse" is required here.
                     objectBoundingBox ratios are undefined on degenerate (zero-height)
                     path bounding boxes (stacked segments, Firefox renders black).
@@ -731,129 +822,163 @@
                     without any margin offset. This matches the AreaChart pattern
                     (feat/linechart-gradient ea5f794, lines 282-284).
                   -->
-                  <linearGradient
-                    id={entry.id}
-                    x1={entry.bar.x}
-                    y1={entry.bar.y}
-                    x2={isHoriz ? entry.bar.x + entry.bar.width : entry.bar.x}
-                    y2={isHoriz ? entry.bar.y : entry.bar.y + entry.bar.height}
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    {#each grad.stops as stop, stopIndex (`${stopIndex}-${stop.offset}`)}
-                      <stop
-                        offset="{stop.offset * 100}%"
-                        stop-color={stop.color}
-                        stop-opacity={stop.opacity ?? 1}
-                      />
-                    {/each}
-                  </linearGradient>
-                {/if}
-              {/each}
-            </defs>
-          {/if}
-
-          <g transform="translate({dims.margin.left}, {dims.margin.top})">
-            {#if showYAxis}
-              <Axis
-                orientation="left"
-                scale={isVertical ? valScale : catScale}
-                {showGridlines}
-                gridlineLength={dims.innerWidth}
-                label={yAxisLabel}
-              />
+                    <linearGradient
+                      id={entry.id}
+                      x1={entry.bar.x}
+                      y1={entry.bar.y}
+                      x2={isHoriz ? entry.bar.x + entry.bar.width : entry.bar.x}
+                      y2={isHoriz ? entry.bar.y : entry.bar.y + entry.bar.height}
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      {#each grad.stops as stop, stopIndex (`${stopIndex}-${stop.offset}`)}
+                        <stop
+                          offset="{stop.offset * 100}%"
+                          stop-color={stop.color}
+                          stop-opacity={stop.opacity ?? 1}
+                        />
+                      {/each}
+                    </linearGradient>
+                  {/if}
+                {/each}
+              </defs>
             {/if}
-            {#if showXAxis}
-              <g transform="translate(0, {dims.innerHeight})">
+
+            <g transform="translate({dims.margin.left}, {dims.margin.top})">
+              {#if showYAxis}
                 <Axis
-                  orientation="bottom"
-                  scale={isVertical ? catScale : valScale}
-                  showGridlines={!isVertical && showGridlines}
-                  gridlineLength={dims.innerHeight}
-                  label={xAxisLabel}
+                  orientation="left"
+                  scale={isVertical ? valScale : catScale}
+                  tickCount={valTickCount}
+                  {showGridlines}
+                  gridlineLength={dims.innerWidth}
+                  label={yAxisLabel}
                 />
-              </g>
-            {/if}
-
-            {#if !hideBarGraphics}
-              {#each bars as bar, i (i)}
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                {#if isStackedMode && barRadius > 0}
-                  <path
-                    class="bar"
-                    class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
-                    class:highlighted={effectiveHighlightedIndex !== null &&
-                      effectiveHighlightedIndex === bar.pi}
-                    class:dimmed={(hovered !== null &&
-                      (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
-                      (effectiveHighlightedIndex !== null && effectiveHighlightedIndex !== bar.pi)}
-                    d={stackedBarPath(bar)}
-                    fill={barFillAttr(bar)}
-                    aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
-                    onmouseenter={(e) => handleEnter(e, bar)}
-                    onmousemove={trackMouse}
-                    onmouseleave={handleLeave}
-                    onclick={() => handleClick(bar)}
+              {/if}
+              {#if showXAxis}
+                <g transform="translate(0, {dims.innerHeight})">
+                  <Axis
+                    orientation="bottom"
+                    scale={isVertical ? catScale : valScale}
+                    tickCount={valTickCount}
+                    rotateTicks={layout.xRotate}
+                    tickEvery={layout.xEvery}
+                    labelOffset={layout.xLabelOffset}
+                    showGridlines={!isVertical && showGridlines}
+                    gridlineLength={dims.innerHeight}
+                    label={xAxisLabel}
                   />
-                {:else}
-                  <rect
-                    class="bar"
-                    class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
-                    class:highlighted={effectiveHighlightedIndex !== null &&
-                      effectiveHighlightedIndex === bar.pi}
-                    class:dimmed={(hovered !== null &&
-                      (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
-                      (effectiveHighlightedIndex !== null && effectiveHighlightedIndex !== bar.pi)}
-                    x={bar.x}
-                    y={bar.y}
-                    width={bar.width}
-                    height={bar.height}
-                    rx={barRadius}
-                    ry={barRadius}
-                    fill={barFillAttr(bar)}
-                    aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
-                    onmouseenter={(e) => handleEnter(e, bar)}
-                    onmousemove={trackMouse}
-                    onmouseleave={handleLeave}
-                    onclick={() => handleClick(bar)}
-                  />
-                {/if}
-                <!-- Suppress the horizontal value label when its sub-band is thinner
-                     than the ~11px label, so cramped multi-series charts hide labels
-                     instead of overlapping them into an unreadable cluster. Consumers
-                     restore labels by giving the chart more height (aspectRatio /
-                     scrollable / minBandWidth). -->
-                {#if showValues && !isStackedMode && (isVertical || bar.height >= 13)}
-                  <text
-                    class="bar-value"
-                    x={isVertical ? bar.x + bar.width / 2 : bar.x + bar.width + 4}
-                    y={isVertical ? bar.y - 4 : bar.y + bar.height / 2}
-                    text-anchor={isVertical ? 'middle' : 'start'}
-                    dominant-baseline={isVertical ? 'auto' : 'middle'}>{getDisplayValue(bar)}</text
-                  >
-                {/if}
-              {/each}
-            {/if}
+                </g>
+              {/if}
 
-            <!-- A1-4: renderOverlay escape hatch — rendered after all bars -->
-            {#if typeof renderOverlay === 'function'}
-              {@render renderOverlay(overlayContext)}
-            {/if}
-          </g>
-        </ChartContainer>
-      </div>
-    </div>
+              {#if !hideBarGraphics}
+                {#each bars as bar, i (i)}
+                  {#if isStackedMode && barRadius > 0}
+                    <path
+                      class="bar"
+                      class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                      class:highlighted={effectiveHighlightedIndex !== null &&
+                        effectiveHighlightedIndex === bar.pi}
+                      class:dimmed={(hovered !== null &&
+                        (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                        (effectiveHighlightedIndex !== null &&
+                          effectiveHighlightedIndex !== bar.pi)}
+                      d={stackedBarPath(bar)}
+                      fill={barFillAttr(bar)}
+                      tabindex="0"
+                      role="button"
+                      aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                      onpointerenter={(e) => handleEnter(e, bar)}
+                      onpointermove={trackMouse}
+                      onpointerleave={handleLeave}
+                      onfocus={(e) => handleFocus(e, bar)}
+                      onblur={handleLeave}
+                      onkeydown={(e) => handleKeydown(e, bar)}
+                      onclick={() => handleClick(bar)}
+                    />
+                  {:else}
+                    <rect
+                      class="bar"
+                      class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                      class:highlighted={effectiveHighlightedIndex !== null &&
+                        effectiveHighlightedIndex === bar.pi}
+                      class:dimmed={(hovered !== null &&
+                        (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                        (effectiveHighlightedIndex !== null &&
+                          effectiveHighlightedIndex !== bar.pi)}
+                      x={bar.x}
+                      y={bar.y}
+                      width={bar.width}
+                      height={bar.height}
+                      rx={barRadius}
+                      ry={barRadius}
+                      fill={barFillAttr(bar)}
+                      tabindex="0"
+                      role="button"
+                      aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                      onpointerenter={(e) => handleEnter(e, bar)}
+                      onpointermove={trackMouse}
+                      onpointerleave={handleLeave}
+                      onfocus={(e) => handleFocus(e, bar)}
+                      onblur={handleLeave}
+                      onkeydown={(e) => handleKeydown(e, bar)}
+                      onclick={() => handleClick(bar)}
+                    />
+                  {/if}
+                {/each}
+                {#each barLabels as bl, i (i)}
+                  {#if bl.visible}
+                    <text
+                      class="bar-value"
+                      class:bar-value-inside={bl.p.placement === 'inside'}
+                      x={bl.p.x}
+                      y={bl.p.y}
+                      text-anchor={bl.p.textAnchor}
+                      dominant-baseline={bl.p.dominantBaseline}
+                      style={bl.p.placement === 'inside'
+                        ? `fill: ${getContrastColor(bl.bar.color)}; stroke: ${contrastOutline(bl.bar.color)};`
+                        : ''}>{bl.text}</text
+                    >
+                  {/if}
+                {/each}
+              {/if}
 
-    {#if typeof tooltipSnippet === 'function' && hoveredBar()}
-      {@const hb = hoveredBar()}
-      {#if hb}
-        <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-          {@render tooltipSnippet(hb.dataPoint, hb.pi)}
+              <!-- A1-4: renderOverlay escape hatch — rendered after all bars -->
+              {#if typeof renderOverlay === 'function'}
+                {@render renderOverlay(overlayContext)}
+              {/if}
+            </g>
+          </ChartContainer>
         </div>
+      </div>
+
+      {#if typeof tooltipSnippet === 'function'}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={plotEl}
+          unstyled
+        >
+          {#snippet content()}
+            {@const hb = hoveredBar()}
+            {#if hb}
+              {@render tooltipSnippet(hb.dataPoint, hb.pi)}
+            {/if}
+          {/snippet}
+        </ChartTooltip>
+      {:else}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={plotEl}
+        />
       {/if}
-    {:else}
-      <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
-    {/if}
+    </div>
   {/if}
 </div>
 
@@ -864,6 +989,9 @@
   }
   .chart-scroll-area {
     width: 100%;
+  }
+  .chart-plot {
+    position: relative;
   }
   .bar {
     transition: opacity var(--chart-transition-duration, 0.2s) ease;
@@ -878,21 +1006,26 @@
   .bar.dimmed {
     opacity: var(--barchart-bar-dimmed-opacity, 0.3);
   }
+  .bar:focus-visible {
+    outline: 2px solid var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
+    outline-offset: 1px;
+  }
   .bar-value {
-    fill: var(--barchart-value-color, #333);
+    fill: var(--barchart-value-color, light-dark(#333, #e5e7eb));
     font-size: var(--barchart-value-font-size, 14px);
     font-weight: var(--barchart-value-font-weight, 600);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
   }
-  .chart-tooltip-slot {
-    position: absolute;
-    z-index: 10;
-    pointer-events: none;
+  .bar-value-inside {
+    paint-order: stroke;
+    stroke-width: 2px;
+    stroke-opacity: 0.35;
+    stroke-linejoin: round;
   }
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);
-    color: var(--chart-empty-color, #9ca3af);
+    color: var(--chart-empty-color, light-dark(#9ca3af, #6b7280));
     text-align: center;
   }
 </style>

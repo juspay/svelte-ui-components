@@ -121,6 +121,59 @@
       ]
     }
   ];
+
+  // ── sharedTooltip + interactiveLegend demo ─────────────────────
+
+  const sharedTooltipSeries = [
+    {
+      name: 'Desktop',
+      data: [
+        { x: 1, y: 12 },
+        { x: 2, y: 18 },
+        { x: 3, y: 15 },
+        { x: 4, y: 22 },
+        { x: 5, y: 19 },
+        { x: 6, y: 26 },
+        { x: 7, y: 23 },
+        { x: 8, y: 30 }
+      ]
+    },
+    {
+      name: 'Mobile',
+      data: [
+        { x: 1, y: 8 },
+        { x: 2, y: 11 },
+        { x: 3, y: 14 },
+        { x: 4, y: 12 },
+        { x: 5, y: 17 },
+        { x: 6, y: 15 },
+        { x: 7, y: 20 },
+        { x: 8, y: 18 }
+      ]
+    },
+    {
+      name: 'Tablet',
+      data: [
+        { x: 1, y: 3 },
+        { x: 2, y: 4 },
+        { x: 3, y: 6 },
+        { x: 4, y: 5 },
+        { x: 5, y: 7 },
+        { x: 6, y: 8 },
+        { x: 7, y: 6 },
+        { x: 8, y: 9 }
+      ]
+    }
+  ];
+
+  // ── Dense values demo (40 points, showValues + no dots) ─────────
+
+  const denseValuesSeries = [
+    {
+      name: 'Signal',
+      data: Array.from({ length: 40 }, (_, i) => ({ x: i + 1, y: 50 + 40 * Math.sin(i / 3) }))
+    }
+  ];
 </script>
 
 <div class="page-header">
@@ -234,6 +287,34 @@
 <h3>Legacy gradientFill (backward-compatible)</h3>
 <div class="demo-row">
   <LineChart series={singleSeries} gradientFill />
+</div>
+
+<h3>Shared Tooltip + Interactive Legend (3 series × 8 points)</h3>
+<p>
+  Hovering any point shows one shared tooltip listing every series at that x. Legend items are
+  click/keyboard toggles for series visibility.
+</p>
+<div class="demo-row">
+  <LineChart
+    series={sharedTooltipSeries}
+    showLegend
+    interactiveLegend
+    testId="line-shared-tooltip-chart"
+  />
+</div>
+
+<h3>Dense Values (40 points, no dots)</h3>
+<p>
+  A single series with 40 points and value labels shown at every point, with point dots disabled to
+  keep the dense line readable.
+</p>
+<div class="demo-row">
+  <LineChart
+    series={denseValuesSeries}
+    showValues
+    showDots={false}
+    testId="line-dense-values-chart"
+  />
 </div>
 
 <style>

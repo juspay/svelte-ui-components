@@ -12,7 +12,11 @@ export function niceLinearDomain(min: number, max: number): [number, number] {
   return [niceMin, niceMax];
 }
 
-export function computeLinearTicks(domain: [number, number], count: number = 5): number[] {
+export function computeLinearTicks(
+  domain: [number, number],
+  count: number = 5,
+  integer: boolean = false
+): number[] {
   const [min, max] = domain;
   if (min === max) {
     return [min];
@@ -30,6 +34,11 @@ export function computeLinearTicks(domain: [number, number], count: number = 5):
     step = base * 5;
   } else {
     step = base * 10;
+  }
+  // Category axes (Highcharts semantics): ticks sit on whole category
+  // positions, so a fractional step would repeat labels — floor it to 1.
+  if (integer && step < 1) {
+    step = 1;
   }
 
   const ticks: number[] = [];
@@ -52,7 +61,7 @@ export function createLinearScale(domain: [number, number], range: [number, numb
   return Object.assign(fn, {
     domain,
     range,
-    ticks: (count?: number) => computeLinearTicks(domain, count),
+    ticks: (count?: number, integer?: boolean) => computeLinearTicks(domain, count, integer),
     invert: (pixel: number) => d0 + ((pixel - r0) / rSpan) * dSpan
   });
 }

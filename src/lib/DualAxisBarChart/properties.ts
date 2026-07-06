@@ -144,6 +144,10 @@ export type OptionalDualAxisBarChartProperties = {
    * tooltip. Default `false` (in-chart positioning, unchanged).
    */
   tooltipPortal?: boolean;
+  /** Legend items become click/keyboard toggles for series visibility. */
+  interactiveLegend?: boolean;
+  /** Hide the legend when the measured chart width is below this px value; 0 disables. */
+  hideLegendBelow?: number;
 };
 
 export type DualAxisBarChartEventProperties = {

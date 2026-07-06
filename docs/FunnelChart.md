@@ -83,7 +83,7 @@ A horizontal funnel chart built entirely from pure SVG — no external charting 
 | --------------- | ------------------------------------------------- | -------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | data            | `FunnelStage[]`                                   | Yes      | –                                     | Ordered array of `{ category, value }` stage objects. Stages are rendered left-to-right; the tallest bar corresponds to the maximum value.         |
 | stageColors     | `string[]`                                        | No       | chart palette                         | Fill color for each stage bar, index-matched to `data`. Unspecified entries fall back to the shared chart palette.                                 |
-| connectorColor  | `string`                                          | No       | `#BDFFFB`                             | Fill color for the trapezoidal connector shapes between consecutive stages.                                                                        |
+| connectorColor  | `string`                                          | No       | `light-dark(#BDFFFB, #164e4a)`        | Fill color for the trapezoidal connector shapes between consecutive stages. The default resolves per color scheme via CSS `light-dark()`.          |
 | slopeWidth      | `number`                                          | No       | `10`                                  | Horizontal width (SVG units) of each slope connector. Larger values produce steeper visual drops.                                                  |
 | onHoverExpand   | `number`                                          | No       | `10`                                  | Extra vertical pixels added symmetrically to the hovered stage bar. Set to `0` to disable.                                                        |
 | showValueLabels | `boolean`                                         | No       | `true`                                | Whether to render the value and percentage label centred inside each stage bar.                                                                    |
@@ -92,6 +92,7 @@ A horizontal funnel chart built entirely from pure SVG — no external charting 
 | testId          | `string`                                          | No       | –                                     | Value for the `data-pw` attribute on the chart root element.                                                                                      |
 | classes         | `string`                                          | No       | –                                     | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                                     |
 | empty           | `Snippet`                                         | No       | –                                     | Content rendered when `data` is empty or all values are zero.                                                                                     |
+| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
 
 ## Events
 
@@ -117,13 +118,24 @@ Override these custom properties to theme the component.
 | `--chart-tooltip-shadow`               | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                        |
 | `--chart-empty-padding`                | `32px 24px`                 | padding          | Padding around the empty state content.                       |
 | `--chart-empty-color`                  | `#9ca3af`                   | color            | Text color of the empty state.                                |
-| `--funnel-chart-connector-color`       | `#BDFFFB`                   | fill             | Default fill for trapezoidal connector shapes.                |
+| `--funnel-chart-connector-color`       | `light-dark(#BDFFFB, #164e4a)` | fill          | Default fill for trapezoidal connector shapes.                |
 | `--funnel-chart-label-color`           | `#666`                      | fill             | Color of the category labels above each stage bar.            |
 | `--funnel-chart-label-font-size`       | `11px`                      | font-size        | Font size of category labels.                                 |
-| `--funnel-chart-value-color`           | `#fff`                      | fill             | Color of the value/percentage labels inside bars.             |
+| `--funnel-chart-value-color`           | auto (contrast)             | fill             | Overrides the automatic per-stage contrast color of the value/percentage labels inside bars. |
 | `--funnel-chart-value-font-size`       | `11px`                      | font-size        | Font size of in-bar value labels.                             |
 | `--funnel-chart-bar-hover-opacity`     | `1`                         | opacity          | Opacity of the hovered stage bar.                             |
 | `--funnel-chart-bar-dimmed-opacity`    | `0.35`                      | opacity          | Opacity of non-hovered bars when another stage is hovered.    |
+
+## Dark mode
+
+Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
+
+```css
+:root { color-scheme: light; }
+[data-theme='dark'] { color-scheme: dark; }
+```
+
+Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.
 
 ## Type Reference
 

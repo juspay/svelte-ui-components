@@ -25,16 +25,17 @@ Animated dot sequence for inline loading indication. Three dots animate in seque
 
 Override these custom properties to theme the component.
 
-| Variable                           | Default        | CSS Property       | Description                                                                                                                 |
-| ---------------------------------- | -------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `--loading-dots-color`             | `currentColor` | background-color   | Color of the dots. Inherits from the parent text color by default, so it automatically matches surrounding content.         |
-| `--loading-dots-size`              | `6px`          | width, height      | Diameter of each dot.                                                                                                       |
-| `--loading-dots-gap`               | `3px`          | gap                | Horizontal spacing between dots.                                                                                            |
-| `--loading-dots-border-radius`     | `50%`          | border-radius      | Corner rounding of each dot. Default of 50% creates circles; set to 0 for squares.                                          |
-| `--loading-dots-duration`          | `1.4s`         | animation-duration | Total duration of one animation cycle.                                                                                      |
-| `--loading-dots-stagger`           | `0.16s`        | animation-delay    | Delay between each successive dot's animation start, creating the sequential wave effect.                                   |
-| `--loading-dots-bounce-height`     | `-6px`         | translateY         | How far the dots travel upward during the bounce animation. Negative values move up. Only applies when animation is bounce. |
-| `--loading-dots-pulse-min-opacity` | `0.2`          | opacity            | The minimum opacity a dot fades to during the pulse animation. Only applies when animation is pulse.                        |
+| Variable                           | Default        | CSS Property       | Description                                                                                                                                                                                                                     |
+| ---------------------------------- | -------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--loading-dots-color`             | `currentColor` | background-color   | Color of the dots. Inherits from the parent text color by default, so it automatically matches surrounding content.                                                                                                             |
+| `--loading-dots-size`              | `6px`          | width, height      | Diameter of each dot.                                                                                                                                                                                                           |
+| `--loading-dots-gap`               | `3px`          | gap                | Horizontal spacing between dots.                                                                                                                                                                                                |
+| `--loading-dots-border-radius`     | `50%`          | border-radius      | Corner rounding of each dot. Default of 50% creates circles; set to 0 for squares.                                                                                                                                              |
+| `--loading-dots-duration`          | `1.4s`         | animation-duration | Total duration of one animation cycle.                                                                                                                                                                                          |
+| `--loading-dots-stagger`           | `0.16s`        | animation-delay    | Delay between each successive dot's animation start, creating the sequential wave effect.                                                                                                                                       |
+| `--loading-dots-bounce-height`     | `-6px`         | translateY         | How far the dots travel upward during the bounce animation. Negative values move up. Only applies when animation is bounce.                                                                                                     |
+| `--loading-dots-pulse-min-opacity` | `0.2`          | opacity            | The minimum opacity a dot fades to during the pulse animation. Only applies when animation is pulse.                                                                                                                            |
+| `--loading-dots-pulse-min-scale`   | `1`            | transform: scale   | The minimum scale a dot shrinks to during the pulse animation. Values below `1` add a "breathing" size pulse alongside the opacity fade; the default of `1` keeps the pulse opacity-only. Only applies when animation is pulse. |
 
 ## Web Component
 

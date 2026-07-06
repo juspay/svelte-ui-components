@@ -13,4 +13,7 @@
   <div style="--loading-dots-size: 10px;">
     <LoadingDots dots={5} />
   </div>
+  <div style="--loading-dots-pulse-min-scale: 0.5; --loading-dots-pulse-min-opacity: 0.5;">
+    <LoadingDots animation="pulse" testId="loading-dots-breathing" />
+  </div>
 </div>

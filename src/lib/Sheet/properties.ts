@@ -15,6 +15,14 @@ export type OptionalSheetProperties = {
   side?: SheetSide;
   title?: string;
   showOverlay?: boolean;
+  /**
+   * Whether clicking outside the panel dismisses the sheet, independent of
+   * `showOverlay`'s visual tint. Defaults to mirroring `showOverlay`, so
+   * existing behavior is unchanged unless this is set explicitly. Set this to
+   * `true` alongside `showOverlay={false}` for a dismissible sheet with no
+   * dimming backdrop — e.g. an anchored dropdown-style panel.
+   */
+  dismissOnOutsideClick?: boolean;
   showCloseButton?: boolean;
   testId?: string;
   footer?: Snippet;

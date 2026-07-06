@@ -133,28 +133,42 @@ export function computeSankeyLayout(
   }
 
   const colWidth = maxCol === 0 ? 0 : (width - nodeWidth) / maxCol;
+  const columnPadding = new Map<number, number>();
 
   // Initialize y positions
   const nodeY = new Map<string, number>();
   const nodeH = new Map<string, number>();
-  for (const [, ids] of columnGroups) {
+  for (const [col, ids] of columnGroups) {
     const totalValue = ids.reduce((s, id) => s + (nodeValues.get(id) ?? 0), 0);
-    const availableHeight = height - (ids.length - 1) * nodePadding;
-    let y = 0;
-    for (const id of ids) {
+    const gapCount = ids.length - 1;
+    const availableHeight = height - gapCount * nodePadding;
+    const renderedHeights = ids.map((id) => {
       const val = nodeValues.get(id) ?? 0;
       const h =
         totalValue > 0 ? (val / totalValue) * availableHeight : availableHeight / ids.length;
-      const renderedH = Math.max(minLinkWidth, h);
+      return Math.max(minLinkWidth, h);
+    });
+
+    const sumRendered = renderedHeights.reduce((s, h) => s + h, 0);
+    const paddingBudget = gapCount > 0 ? (height - sumRendered) / gapCount : 0;
+    const effectivePadding = Math.max(0, Math.min(nodePadding, paddingBudget));
+    const scale = sumRendered > height && sumRendered > 0 ? height / sumRendered : 1;
+    columnPadding.set(col, effectivePadding);
+
+    let y = 0;
+    for (let index = 0; index < ids.length; index++) {
+      const id = ids[index];
+      const renderedH = renderedHeights[index] * scale;
       nodeY.set(id, y);
       nodeH.set(id, renderedH);
-      y += renderedH + nodePadding;
+      y += renderedH + effectivePadding;
     }
   }
 
   // Iterative relaxation (upstream pass)
   for (let iter = 0; iter < iterations; iter++) {
-    for (const [, ids] of columnGroups) {
+    for (const [col, ids] of columnGroups) {
+      const padding = columnPadding.get(col) ?? nodePadding;
       for (const id of ids) {
         const deps = incoming.get(id) ?? [];
         const totalDepValue = deps.reduce((s, d) => s + d.value, 0);
@@ -171,15 +185,13 @@ export function computeSankeyLayout(
           nodeY.set(id, Math.max(0, weightedY - (nodeH.get(id) ?? 0) / 2));
         }
       }
-      // Resolve overlaps: push down from the top.
-      ids.sort((a, b) => (nodeY.get(a) ?? 0) - (nodeY.get(b) ?? 0));
       let y = 0;
       for (const id of ids) {
         const cy = nodeY.get(id) ?? 0;
         if (cy < y) {
           nodeY.set(id, y);
         }
-        y = (nodeY.get(id) ?? 0) + (nodeH.get(id) ?? 0) + nodePadding;
+        y = (nodeY.get(id) ?? 0) + (nodeH.get(id) ?? 0) + padding;
       }
 
       // Resolve overlaps: pull back up from the bottom. The push-down pass
@@ -195,7 +207,7 @@ export function computeSankeyLayout(
         if (nodeBottom > bottomBoundary) {
           nodeY.set(id, bottomBoundary - (nodeH.get(id) ?? 0));
         }
-        bottomBoundary = (nodeY.get(id) ?? 0) - nodePadding;
+        bottomBoundary = (nodeY.get(id) ?? 0) - padding;
       }
 
       // Re-centre the column's node group within [0, height]: once overlaps
@@ -232,28 +244,56 @@ export function computeSankeyLayout(
 
   const nodeById = new Map(computedNodes.map((n) => [n.id, n]));
 
-  // Build computed links with Bezier paths
-  const sourceOffsets = new Map<string, number>();
-  const targetOffsets = new Map<string, number>();
-  for (const n of nodes) {
-    sourceOffsets.set(n.id, nodeY.get(n.id) ?? 0);
-    targetOffsets.set(n.id, nodeY.get(n.id) ?? 0);
+  const linkKey = (l: { source: string; target: string }): string => `${l.source} ${l.target}`;
+  const linkWidths = new Map<string, number>();
+  for (const l of links) {
+    const sVal = nodeValues.get(l.source) ?? 1;
+    const sourceH = nodeH.get(l.source) ?? 0;
+    linkWidths.set(linkKey(l), Math.max(minLinkWidth, (l.value / Math.max(sVal, 1)) * sourceH));
+  }
+  const linkSy = new Map<string, number>();
+  const linkTy = new Map<string, number>();
+
+  const bySource = new Map<string, typeof links>();
+  const byTarget = new Map<string, typeof links>();
+  for (const l of links) {
+    if (!bySource.has(l.source)) {
+      bySource.set(l.source, []);
+    }
+    bySource.get(l.source)!.push(l);
+    if (!byTarget.has(l.target)) {
+      byTarget.set(l.target, []);
+    }
+    byTarget.get(l.target)!.push(l);
+  }
+  for (const [source, group] of bySource) {
+    group.sort((a, b) => (nodeY.get(a.target) ?? 0) - (nodeY.get(b.target) ?? 0));
+    let offset = nodeY.get(source) ?? 0;
+    for (const l of group) {
+      const w = linkWidths.get(linkKey(l)) ?? 0;
+      linkSy.set(linkKey(l), offset + w / 2);
+      offset += w;
+    }
+  }
+  for (const [target, group] of byTarget) {
+    group.sort((a, b) => (nodeY.get(a.source) ?? 0) - (nodeY.get(b.source) ?? 0));
+    let offset = nodeY.get(target) ?? 0;
+    for (const l of group) {
+      const w = linkWidths.get(linkKey(l)) ?? 0;
+      linkTy.set(linkKey(l), offset + w / 2);
+      offset += w;
+    }
   }
 
   const computedLinks: ComputedSankeyLink[] = links.map((l) => {
     const sourceNode = nodeById.get(l.source);
     const targetNode = nodeById.get(l.target);
-    const sVal = nodeValues.get(l.source) ?? 1;
-    const sourceH = nodeH.get(l.source) ?? 0;
-    const linkWidth = Math.max(minLinkWidth, (l.value / Math.max(sVal, 1)) * sourceH);
+    const linkWidth = linkWidths.get(linkKey(l)) ?? minLinkWidth;
 
     const sx = (sourceNode?.x ?? 0) + nodeWidth;
-    const sy = (sourceOffsets.get(l.source) ?? 0) + linkWidth / 2;
+    const sy = linkSy.get(linkKey(l)) ?? 0;
     const tx = targetNode?.x ?? 0;
-    const ty = (targetOffsets.get(l.target) ?? 0) + linkWidth / 2;
-
-    sourceOffsets.set(l.source, (sourceOffsets.get(l.source) ?? 0) + linkWidth);
-    targetOffsets.set(l.target, (targetOffsets.get(l.target) ?? 0) + linkWidth);
+    const ty = linkTy.get(linkKey(l)) ?? 0;
 
     const midX = (sx + tx) / 2;
     const path = `M ${sx} ${sy} C ${midX} ${sy}, ${midX} ${ty}, ${tx} ${ty}`;

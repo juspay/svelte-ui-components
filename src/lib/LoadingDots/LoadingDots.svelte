@@ -56,9 +56,11 @@
     80%,
     100% {
       opacity: var(--loading-dots-pulse-min-opacity, 0.2);
+      transform: scale(var(--loading-dots-pulse-min-scale, 1));
     }
     40% {
       opacity: 1;
+      transform: scale(1);
     }
   }
 </style>

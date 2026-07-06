@@ -47,8 +47,14 @@ export type OptionalAreaChartProperties = {
   xTickFormat?: (value: number | string) => string;
   yTickFormat?: (value: number | string) => string;
   aspectRatio?: number;
+  /** Minimum rendered height in px (parity with LineChart). */
+  minHeight?: number;
+  /** Maximum rendered height in px; defaults to DEFAULT_CHART_MAX_HEIGHT (420). */
+  maxHeight?: number;
   tooltipSnippet?: Snippet<[AreaChartTooltipContext]>;
   empty?: Snippet;
+  /** Render the tooltip into document.body so scroll/overflow ancestors never clip it. */
+  tooltipPortal?: boolean;
   testId?: string;
   classes?: string;
 };

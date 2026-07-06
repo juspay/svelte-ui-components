@@ -178,6 +178,9 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 | renderOverlay         | `Snippet<[BarChartRenderContext]>`     | No       | `-`           | Escape-hatch snippet rendered inside the SVG transform group after all bars. Receives `{ innerWidth, innerHeight, margin }`.                                                                                                                                                  |
 | testId                | `string`                               | No       | `-`           | Value for the `data-pw` attribute on the chart container.                                                                                                                                                                                                                     |
 | classes               | `string`                               | No       | `-`           | CSS class string applied to the top-level element.                                                                                                                                                                                                                            |
+| interactiveLegend | `boolean` | No | `false` | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data. |
+| hideLegendBelow | `number` | No | `360` | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior. |
+| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
 
 ## Events
 
@@ -221,6 +224,17 @@ Override these custom properties to theme the component.
 | `--barchart-value-color`           | `#333`                      | fill             | Color of value labels.                                                                                                                |
 | `--barchart-value-font-size`       | `11px`                      | font-size        | Font size of value labels.                                                                                                            |
 | `--barchart-scroll-area-height`    | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`.                                                                         |
+
+## Dark mode
+
+Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
+
+```css
+:root { color-scheme: light; }
+[data-theme='dark'] { color-scheme: dark; }
+```
+
+Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.
 
 ## Type Reference
 

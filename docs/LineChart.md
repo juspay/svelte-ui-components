@@ -205,6 +205,10 @@ Hovering anywhere over the plot area finds the nearest point and shows a crossha
 | empty             | `Snippet`                                                    | No       | `-`          | Content rendered when all series are empty.                                                                                                                                                                                         |
 | testId            | `string`                                                     | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                             |
 | classes           | `string`                                                     | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                  |
+| sharedTooltip | `boolean` | No | auto | One anchored tooltip listing every visible series at the hovered x position. Defaults to `true` for multi-series charts, `false` for single-series. |
+| interactiveLegend | `boolean` | No | `false` | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data. |
+| hideLegendBelow | `number` | No | `360` | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior. |
+| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
 
 ## Events
 
@@ -227,6 +231,17 @@ In addition to the shared `--chart-*` variables (see BarChart docs), LineChart e
 | `--linechart-value-font-size`       | `11px`  | font-size        | Font size of point value labels.                                   |
 | `--linechart-highlight-ring-color`  | `#fff`  | stroke           | Ring (outline) stroke colour of an actively highlighted dot.       |
 | `--linechart-highlight-ring-width`  | `2.5`   | stroke-width     | Ring stroke width of an actively highlighted dot.                  |
+
+## Dark mode
+
+Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
+
+```css
+:root { color-scheme: light; }
+[data-theme='dark'] { color-scheme: dark; }
+```
+
+Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.
 
 ## Type Reference
 

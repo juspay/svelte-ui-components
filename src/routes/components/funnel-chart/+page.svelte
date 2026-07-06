@@ -22,6 +22,17 @@
 
   const warmColors = ['#f28e2b', '#e15759', '#b07aa1', '#ff9da7', '#9c755f'];
 
+  const manyStagesFunnel = [
+    { category: 'Impressions on all channels', value: 120000 },
+    { category: 'Qualified marketing leads', value: 64000 },
+    { category: 'Sales accepted leads', value: 30000 },
+    { category: 'Product demos scheduled', value: 14000 },
+    { category: 'Proposals sent out', value: 6400 },
+    { category: 'Contract negotiation', value: 2800 },
+    { category: 'Verbal commitment', value: 900 },
+    { category: 'Closed won', value: 240 }
+  ];
+
   let lastClickedStage = $state<string | null>(null);
   let lastHoveredStage = $state<string | null>(null);
 </script>
@@ -103,6 +114,11 @@
 <h3>Custom Aspect Ratio (4:3)</h3>
 <div class="demo-row">
   <FunnelChart data={conversionFunnel} aspectRatio={4 / 3} />
+</div>
+
+<h3>Many Stages with Long Names</h3>
+<div class="demo-row">
+  <FunnelChart data={manyStagesFunnel} testId="funnel-many-stages-chart" />
 </div>
 
 <style>

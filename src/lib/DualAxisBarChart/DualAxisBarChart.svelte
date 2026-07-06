@@ -8,13 +8,27 @@
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
-  import { createBandScale, createLinearScale, niceLinearDomain } from '$lib/_chart/scales';
-  import { computeChartDimensions } from '$lib/_chart/geometry';
+  import {
+    createBandScale,
+    createLinearScale,
+    niceLinearDomain,
+    computeLinearTicks
+  } from '$lib/_chart/scales';
+  import { computeChartDimensions, computeAutoLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath, linePath } from '$lib/_chart/paths';
-  import type { LegendItem, TooltipData, LinearScale, BandScale, Point } from '$lib/_chart/types';
+  import type {
+    LegendItem,
+    TooltipData,
+    LinearScale,
+    BandScale,
+    Point,
+    TooltipAnchor
+  } from '$lib/_chart/types';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  import { SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid for SVG <defs> ids ────────────────────────
   const uid = Math.random().toString(36).slice(2, 9);
@@ -36,6 +50,8 @@
     minBarHeight = 2,
     margin,
     tooltipPortal = false,
+    interactiveLegend = false,
+    hideLegendBelow = 360,
     tooltipSnippet,
     onbarclick,
     testId,
@@ -45,43 +61,35 @@
   // ── State ──────────────────────────────────────────────────────
 
   let containerEl: HTMLDivElement | null = $state(null);
+  let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hoveredCategoryIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
-  let mouseClientX = $state(0);
-  let mouseClientY = $state(0);
+  const hiddenSeries = new SvelteSet<number>();
+
+  function toggleSeries(index: number): void {
+    if (hiddenSeries.has(index)) {
+      hiddenSeries.delete(index);
+    } else {
+      hiddenSeries.add(index);
+    }
+  }
 
   // ── Formatters ─────────────────────────────────────────────────
 
   const leftFormat = $derived(leftAxis.valueFormat ?? formatNumber);
   const rightFormat = $derived(rightAxis.valueFormat ?? formatNumber);
 
-  // ── Layout — wider right margin to accommodate right-axis labels ─
-
-  const dims = $derived(
-    computeChartDimensions(chartWidth, chartHeight, {
-      top: 24,
-      right: 56,
-      bottom: 40,
-      left: 56,
-      ...margin
-    })
-  );
-
-  // ── Scales ─────────────────────────────────────────────────────
-
-  const catScale: BandScale = $derived(
-    createBandScale(categories, [0, dims.innerWidth], barPadding)
-  );
-
   /**
    * Computes the [min, max] domain for all series mapped to the given axis index,
    * then applies nice rounding. Returns [0, 1] for empty series.
    */
   const axisDomain = (axisIndex: 0 | 1): [number, number] => {
-    const axisSeries = series.filter((s) => s.yAxisIndex === axisIndex);
+    const axisSeries = series.filter(
+      (s, si) => s.yAxisIndex === axisIndex && !hiddenSeries.has(si)
+    );
     if (axisSeries.length === 0) {
       return [0, 1];
     }
@@ -94,6 +102,39 @@
 
   const leftDomain: [number, number] = $derived(axisDomain(0));
   const rightDomain: [number, number] = $derived(axisDomain(1));
+
+  // ── Layout — auto-sized margins from measured tick-label widths ─
+
+  const yTickCount = $derived(Math.max(2, Math.min(6, Math.floor(chartHeight / 70))));
+
+  const layout = $derived.by(() =>
+    computeAutoLayout({
+      width: chartWidth,
+      height: chartHeight,
+      yTickLabels: computeLinearTicks(leftDomain, yTickCount).map((t) => leftFormat(t)),
+      y2TickLabels: computeLinearTicks(rightDomain, yTickCount).map((t) => rightFormat(t)),
+      xTickLabels: categories,
+      hasYAxisLabel: Boolean(leftAxis.title),
+      hasY2AxisLabel: Boolean(rightAxis.title),
+      base: { top: 24, right: 28, bottom: 40, left: 28 }
+    })
+  );
+
+  // The margin prop stays an explicit per-side override on top of auto-sizing.
+  const dims = $derived(
+    computeChartDimensions(chartWidth, chartHeight, {
+      top: margin?.top ?? layout.margin.top,
+      right: margin?.right ?? layout.margin.right,
+      bottom: margin?.bottom ?? layout.margin.bottom,
+      left: margin?.left ?? layout.margin.left
+    })
+  );
+
+  // ── Scales ─────────────────────────────────────────────────────
+
+  const catScale: BandScale = $derived(
+    createBandScale(categories, [0, dims.innerWidth], barPadding)
+  );
 
   const leftScale: LinearScale = $derived(createLinearScale(leftDomain, [dims.innerHeight, 0]));
   const rightScale: LinearScale = $derived(createLinearScale(rightDomain, [dims.innerHeight, 0]));
@@ -113,13 +154,23 @@
   const leftAxisSeries: AxisSeriesEntry[] = $derived(
     series
       .map((s, si) => ({ series: s, seriesIndex: si }))
-      .filter((entry) => entry.series.yAxisIndex === 0 && entry.series.type !== 'line')
+      .filter(
+        (entry) =>
+          entry.series.yAxisIndex === 0 &&
+          entry.series.type !== 'line' &&
+          !hiddenSeries.has(entry.seriesIndex)
+      )
   );
 
   const rightAxisSeries: AxisSeriesEntry[] = $derived(
     series
       .map((s, si) => ({ series: s, seriesIndex: si }))
-      .filter((entry) => entry.series.yAxisIndex === 1 && entry.series.type !== 'line')
+      .filter(
+        (entry) =>
+          entry.series.yAxisIndex === 1 &&
+          entry.series.type !== 'line' &&
+          !hiddenSeries.has(entry.seriesIndex)
+      )
   );
 
   const columnSeriesEntries: AxisSeriesEntry[] = $derived([...leftAxisSeries, ...rightAxisSeries]);
@@ -168,7 +219,10 @@
         const barY = value >= 0 ? valueY : zeroY;
         const barHeight = Math.max(minBarHeight, Math.abs(valueY - zeroY));
 
-        const path = roundedRectPath(barX, barY, barW, barHeight, barRadius, barRadius, 0, 0);
+        const path =
+          value >= 0
+            ? roundedRectPath(barX, barY, barW, barHeight, barRadius, barRadius, 0, 0)
+            : roundedRectPath(barX, barY, barW, barHeight, 0, 0, barRadius, barRadius);
 
         result.push({
           x: barX,
@@ -201,7 +255,7 @@
     }
     return series
       .map((s, si) => ({ series: s, seriesIndex: si }))
-      .filter((entry) => entry.series.type === 'line')
+      .filter((entry) => entry.series.type === 'line' && !hiddenSeries.has(entry.seriesIndex))
       .map((entry) => {
         const scale = entry.series.yAxisIndex === 0 ? leftScale : rightScale;
         const color = resolvedColor(entry.series, entry.seriesIndex);
@@ -223,7 +277,11 @@
   // ── Legend items ───────────────────────────────────────────────
 
   const legendItems: LegendItem[] = $derived(
-    series.map((s, si) => ({ label: s.name, color: resolvedColor(s, si) }))
+    series.map((s, si) => ({
+      label: s.name,
+      color: resolvedColor(s, si),
+      hidden: hiddenSeries.has(si)
+    }))
   );
 
   // ── Tooltip ────────────────────────────────────────────────────
@@ -246,15 +304,45 @@
     }
     const catIdx = hoveredCategoryIndex;
     const category = categories[catIdx];
-    const items = series.map((s, si) => {
-      const fmt = s.yAxisIndex === 0 ? leftFormat : rightFormat;
-      return {
-        label: s.name,
-        value: fmt(s.data[catIdx] ?? 0),
-        color: resolvedColor(s, si)
-      };
-    });
+    const items = series
+      .map((s, si) => ({ s, si }))
+      .filter(({ si }) => !hiddenSeries.has(si))
+      .map(({ s, si }) => {
+        const fmt = s.yAxisIndex === 0 ? leftFormat : rightFormat;
+        return {
+          label: s.name,
+          value: fmt(s.data[catIdx] ?? 0),
+          color: resolvedColor(s, si)
+        };
+      });
     return { title: category, items };
+  });
+
+  // Category-anchored tooltip position: the topmost bar-top or line-dot y
+  // across all visible series at the hovered category, matching the
+  // Highcharts shared-tooltip anchor convention.
+  const anchor = $derived.by<TooltipAnchor | null>(() => {
+    if (hoveredCategoryIndex === null) {
+      return null;
+    }
+    const catIdx = hoveredCategoryIndex;
+    const ys: number[] = [];
+    for (const bar of bars) {
+      if (bar.categoryIndex === catIdx) {
+        ys.push(bar.y);
+      }
+    }
+    for (const ls of lineSeriesData) {
+      const p = ls.points[catIdx];
+      if (p) {
+        ys.push(p.y);
+      }
+    }
+    return {
+      x: dims.margin.left + catScale(categories[catIdx]) + catScale.bandwidth / 2,
+      y: dims.margin.top + (ys.length > 0 ? Math.min(...ys) : 0),
+      side: 'top'
+    };
   });
 
   // ── Axis tick formatters ───────────────────────────────────────
@@ -283,36 +371,34 @@
     }))
   );
 
+  function categoryAriaLabel(catIdx: number): string {
+    const parts = series
+      .map((s, si) => ({ s, si }))
+      .filter(({ si }) => !hiddenSeries.has(si))
+      .map(
+        ({ s }) =>
+          `${s.name} ${(s.yAxisIndex === 0 ? leftFormat : rightFormat)(s.data[catIdx] ?? 0)}`
+      );
+    return `${categories[catIdx]}: ${parts.join(', ')}`;
+  }
+
   // ── Interactions ───────────────────────────────────────────────
 
-  const trackMouse = (event: MouseEvent) => {
-    if (containerEl === null) {
-      return;
+  const trackMouse = (event: PointerEvent) => {
+    const position = pointerPositionIn(plotEl, event);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = event.clientX - rect.left;
-    mouseY = event.clientY - rect.top;
-    mouseClientX = event.clientX;
-    mouseClientY = event.clientY;
   };
 
-  /**
-   * Svelte action: relocates the tooltip layer to `document.body` so a `position:fixed`
-   * tooltip is never clipped by an `overflow`/scroll ancestor. Used only when
-   * `tooltipPortal` is set; `use:` actions never run during SSR.
-   */
-  const portalToBody = (node: HTMLElement) => {
-    document.body.appendChild(node);
-    return {
-      destroy: () => {
-        node.remove();
-      }
-    };
-  };
-
-  const handleCategoryEnter = (event: MouseEvent, catIdx: number) => {
+  const handleCategoryEnter = (event: PointerEvent, catIdx: number) => {
     hoveredCategoryIndex = catIdx;
     trackMouse(event);
+  };
+
+  const handleFocus = (catIdx: number) => {
+    hoveredCategoryIndex = catIdx;
   };
 
   const handleCategoryLeave = () => {
@@ -325,6 +411,24 @@
     }
     onbarclick({ categoryIndex: catIdx, context: buildTooltipContext(catIdx) });
   };
+
+  const handleKeydown = (event: KeyboardEvent, catIdx: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleCategoryClick(catIdx);
+    }
+  };
+
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands outside.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hoveredCategoryIndex === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, () => {
+      hoveredCategoryIndex = null;
+    });
+  });
 
   // ── Empty state ────────────────────────────────────────────────
 
@@ -339,168 +443,184 @@
   data-pw={typeof testId === 'string' ? testId : null}
 >
   {#if !isEmpty}
-    {#if showLegend}
-      <Legend items={legendItems} position="top" />
+    {#if showLegend && (chartWidth === 0 || hideLegendBelow === 0 || chartWidth >= hideLegendBelow)}
+      {#if interactiveLegend}
+        <Legend items={legendItems} position="top" onToggle={toggleSeries} />
+      {:else}
+        <Legend items={legendItems} position="top" />
+      {/if}
     {/if}
 
-    <ChartContainer
-      bind:width={chartWidth}
-      bind:height={chartHeight}
-      {aspectRatio}
-      {maxHeight}
-      {minHeight}
-    >
-      <g transform="translate({dims.margin.left}, {dims.margin.top})">
-        <!-- Left Y-axis (index 0) -->
-        <Axis
-          orientation="left"
-          scale={leftScale}
-          {showGridlines}
-          gridlineLength={dims.innerWidth}
-          tickFormat={leftTickFormat}
-          classes={leftAxis.color ? `axis-left-colored` : ''}
-        />
-
-        <!-- Right Y-axis (index 1) — positioned at innerWidth -->
-        <g transform="translate({dims.innerWidth}, 0)">
+    <div class="chart-plot" bind:this={plotEl}>
+      <ChartContainer
+        bind:width={chartWidth}
+        bind:height={chartHeight}
+        {aspectRatio}
+        {maxHeight}
+        {minHeight}
+      >
+        <g transform="translate({dims.margin.left}, {dims.margin.top})">
+          <!-- Left Y-axis (index 0) -->
           <Axis
-            orientation="right"
-            scale={rightScale}
-            showGridlines={false}
-            tickFormat={rightTickFormat}
-            classes={rightAxis.color ? `axis-right-colored` : ''}
+            orientation="left"
+            scale={leftScale}
+            tickCount={yTickCount}
+            {showGridlines}
+            gridlineLength={dims.innerWidth}
+            tickFormat={leftTickFormat}
+            classes={leftAxis.color ? `axis-left-colored` : ''}
           />
-        </g>
 
-        <!-- X-axis at bottom -->
-        <g transform="translate(0, {dims.innerHeight})">
-          <Axis orientation="bottom" scale={catScale} showGridlines={false} />
-        </g>
-
-        <!-- Axis titles -->
-        {#if leftAxis.title}
-          <text
-            class="axis-title axis-title-left"
-            transform="translate({-dims.margin.left + 12}, {dims.innerHeight / 2}) rotate(-90)"
-            text-anchor="middle"
-            style={leftAxis.color ? `fill: ${leftAxis.color}` : ''}
-          >
-            {leftAxis.title}
-          </text>
-        {/if}
-        {#if rightAxis.title}
-          <text
-            class="axis-title axis-title-right"
-            transform="translate({dims.innerWidth + dims.margin.right - 12}, {dims.innerHeight /
-              2}) rotate(90)"
-            text-anchor="middle"
-            style={rightAxis.color ? `fill: ${rightAxis.color}` : ''}
-          >
-            {rightAxis.title}
-          </text>
-        {/if}
-
-        <!-- Column/bar shapes -->
-        {#each bars as bar, barIdx (barIdx)}
-          <path
-            class="bar-shape"
-            class:bar-hovered={hoveredCategoryIndex === bar.categoryIndex}
-            class:bar-dimmed={hoveredCategoryIndex !== null &&
-              hoveredCategoryIndex !== bar.categoryIndex}
-            d={bar.path}
-            fill={bar.color}
-            aria-label="{categories[bar.categoryIndex]}: {bar.value}"
-            role="img"
-          />
-        {/each}
-
-        <!-- Line series drawn above columns -->
-        {#each lineSeriesData as ls, lsi (lsi)}
-          {#if ls.points.length >= 2}
-            <path
-              class="line-series"
-              d={linePath(ls.points, 'monotone')}
-              stroke={ls.color}
-              fill="none"
+          <!-- Right Y-axis (index 1) — positioned at innerWidth -->
+          <g transform="translate({dims.innerWidth}, 0)">
+            <Axis
+              orientation="right"
+              scale={rightScale}
+              tickCount={yTickCount}
+              showGridlines={false}
+              tickFormat={rightTickFormat}
+              classes={rightAxis.color ? `axis-right-colored` : ''}
             />
+          </g>
+
+          <!-- X-axis at bottom -->
+          <g transform="translate(0, {dims.innerHeight})">
+            <Axis
+              orientation="bottom"
+              scale={catScale}
+              rotateTicks={layout.xRotate}
+              tickEvery={layout.xEvery}
+              showGridlines={false}
+            />
+          </g>
+
+          <!-- Axis titles -->
+          {#if leftAxis.title}
+            <text
+              class="axis-title axis-title-left"
+              transform="translate({-dims.margin.left + 12}, {dims.innerHeight / 2}) rotate(-90)"
+              text-anchor="middle"
+              style={leftAxis.color ? `fill: ${leftAxis.color}` : ''}
+            >
+              {leftAxis.title}
+            </text>
           {/if}
-          <!-- Line dots -->
-          {#each ls.points as pt, ptIdx (ptIdx)}
-            <circle
-              class="line-dot"
-              class:dot-hovered={hoveredCategoryIndex === ptIdx}
-              class:dot-dimmed={hoveredCategoryIndex !== null && hoveredCategoryIndex !== ptIdx}
-              cx={pt.x}
-              cy={pt.y}
-              r={hoveredCategoryIndex === ptIdx ? 6 : 4}
-              fill={ls.color}
-              stroke="var(--dual-axis-dot-stroke, #fff)"
-              stroke-width="var(--dual-axis-dot-stroke-width, 1.5)"
-              aria-label="{categories[ptIdx]}: {series[ls.seriesIndex]?.data[ptIdx] ?? 0}"
+          {#if rightAxis.title}
+            <text
+              class="axis-title axis-title-right"
+              transform="translate({dims.innerWidth + dims.margin.right - 12}, {dims.innerHeight /
+                2}) rotate(90)"
+              text-anchor="middle"
+              style={rightAxis.color ? `fill: ${rightAxis.color}` : ''}
+            >
+              {rightAxis.title}
+            </text>
+          {/if}
+
+          <!-- Column/bar shapes -->
+          {#each bars as bar, barIdx (barIdx)}
+            <path
+              class="bar-shape"
+              class:bar-hovered={hoveredCategoryIndex === bar.categoryIndex}
+              class:bar-dimmed={hoveredCategoryIndex !== null &&
+                hoveredCategoryIndex !== bar.categoryIndex}
+              d={bar.path}
+              fill={bar.color}
+              aria-label="{categories[bar.categoryIndex]}: {bar.value}"
               role="img"
             />
           {/each}
-        {/each}
 
-        <!-- Invisible per-category hover targets (full inner height) -->
-        {#each hoverRects as hr (hr.catIdx)}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <rect
-            class="hover-target"
-            x={hr.x}
-            y={0}
-            width={hr.width}
-            height={dims.innerHeight}
-            fill="transparent"
-            data-category-index={hr.catIdx}
-            onmouseenter={(event) => handleCategoryEnter(event, hr.catIdx)}
-            onmousemove={trackMouse}
-            onmouseleave={handleCategoryLeave}
-            onclick={() => handleCategoryClick(hr.catIdx)}
-          />
-        {/each}
+          <!-- Line series drawn above columns -->
+          {#each lineSeriesData as ls, lsi (lsi)}
+            {#if ls.points.length >= 2}
+              <path
+                class="line-series"
+                d={linePath(ls.points, 'monotone')}
+                stroke={ls.color}
+                fill="none"
+              />
+            {/if}
+            <!-- Line dots -->
+            {#each ls.points as pt, ptIdx (ptIdx)}
+              <circle
+                class="line-dot"
+                class:dot-hovered={hoveredCategoryIndex === ptIdx}
+                class:dot-dimmed={hoveredCategoryIndex !== null && hoveredCategoryIndex !== ptIdx}
+                cx={pt.x}
+                cy={pt.y}
+                r={hoveredCategoryIndex === ptIdx ? 6 : 4}
+                fill={ls.color}
+                style="stroke: var(--dual-axis-dot-stroke, light-dark(#fff, #111827)); stroke-width: var(--dual-axis-dot-stroke-width, 1.5);"
+                aria-label="{categories[ptIdx]}: {series[ls.seriesIndex]?.data[ptIdx] ?? 0}"
+                role="img"
+              />
+            {/each}
+          {/each}
 
-        <!-- Hover vertical guideline -->
-        {#if hoveredCategoryIndex !== null}
-          {@const guideX = catScale(categories[hoveredCategoryIndex]) + catScale.bandwidth / 2}
-          <line class="hover-guideline" x1={guideX} x2={guideX} y1={0} y2={dims.innerHeight} />
-        {/if}
-      </g>
+          <!-- Invisible per-category hover targets (full inner height) -->
+          {#each hoverRects as hr (hr.catIdx)}
+            <rect
+              class="hover-target"
+              x={hr.x}
+              y={0}
+              width={hr.width}
+              height={dims.innerHeight}
+              fill="transparent"
+              data-category-index={hr.catIdx}
+              tabindex="0"
+              role="button"
+              aria-label={categoryAriaLabel(hr.catIdx)}
+              onpointerenter={(event) => handleCategoryEnter(event, hr.catIdx)}
+              onpointermove={trackMouse}
+              onpointerleave={handleCategoryLeave}
+              onfocus={() => handleFocus(hr.catIdx)}
+              onblur={handleCategoryLeave}
+              onkeydown={(event) => handleKeydown(event, hr.catIdx)}
+              onclick={() => handleCategoryClick(hr.catIdx)}
+            />
+          {/each}
 
-      <!-- SVG defs id namespace anchor (keeps uid live in reactive graph) -->
-      <defs>
-        <marker id="{uid}-anchor" />
-      </defs>
-    </ChartContainer>
-
-    <!-- Tooltip -->
-    {#if hoveredCategoryIndex !== null}
-      {#if tooltipPortal}
-        <!-- Portaled to <body> with fixed viewport coords so the tooltip is never
-             clipped by an overflow/scroll ancestor (e.g. a scrollable report sheet).
-             The inner elements keep their own +12/-12 offset relative to this layer. -->
-        <div
-          class="chart-tooltip-portal"
-          style="left: {mouseClientX}px; top: {mouseClientY}px;"
-          use:portalToBody
-        >
-          {#if typeof tooltipSnippet === 'function'}
-            <div class="chart-tooltip-slot" style="left: 12px; top: -12px;">
-              {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
-            </div>
-          {:else}
-            <ChartTooltip data={tooltipData} mouseX={0} mouseY={0} />
+          <!-- Hover vertical guideline -->
+          {#if hoveredCategoryIndex !== null}
+            {@const guideX = catScale(categories[hoveredCategoryIndex]) + catScale.bandwidth / 2}
+            <line class="hover-guideline" x1={guideX} x2={guideX} y1={0} y2={dims.innerHeight} />
           {/if}
-        </div>
-      {:else if typeof tooltipSnippet === 'function'}
-        <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-          {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
-        </div>
+        </g>
+
+        <!-- SVG defs id namespace anchor (keeps uid live in reactive graph) -->
+        <defs>
+          <marker id="{uid}-anchor" />
+        </defs>
+      </ChartContainer>
+
+      {#if typeof tooltipSnippet === 'function'}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={plotEl}
+          unstyled
+        >
+          {#snippet content()}
+            {#if hoveredCategoryIndex !== null}
+              {@render tooltipSnippet(buildTooltipContext(hoveredCategoryIndex))}
+            {/if}
+          {/snippet}
+        </ChartTooltip>
       {:else}
-        <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={plotEl}
+        />
       {/if}
-    {/if}
+    </div>
   {:else}
     <div class="chart-empty">No data available.</div>
   {/if}
@@ -509,6 +629,10 @@
 <style>
   .dual-axis-bar-chart {
     width: 100%;
+    position: relative;
+  }
+
+  .chart-plot {
     position: relative;
   }
 
@@ -547,8 +671,13 @@
     cursor: pointer;
   }
 
+  .hover-target:focus-visible {
+    outline: 2px solid var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
+    outline-offset: -2px;
+  }
+
   .hover-guideline {
-    stroke: var(--dual-axis-guideline-color, #aaa);
+    stroke: var(--dual-axis-guideline-color, light-dark(#aaa, #4b5563));
     stroke-width: var(--dual-axis-guideline-width, 1);
     stroke-dasharray: var(--dual-axis-guideline-dash, 4 3);
     pointer-events: none;
@@ -556,27 +685,15 @@
   }
 
   .axis-title {
-    fill: var(--chart-axis-label-color, #333);
+    fill: var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
     font-size: var(--chart-axis-label-font-size, 11px);
     font-family: var(--chart-font-family, inherit);
     font-weight: 500;
   }
 
-  .chart-tooltip-slot {
-    position: absolute;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .chart-tooltip-portal {
-    position: fixed;
-    z-index: var(--chart-tooltip-z-index, 10);
-    pointer-events: none;
-  }
-
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);
-    color: var(--chart-empty-color, #9ca3af);
+    color: var(--chart-empty-color, light-dark(#9ca3af, #6b7280));
     text-align: center;
   }
 </style>

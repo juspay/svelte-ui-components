@@ -10,6 +10,10 @@
     showGridlines = false,
     gridlineLength = 0,
     label,
+    rotateTicks = false,
+    tickEvery = 1,
+    labelOffset = 36,
+    integerTicks = false,
     classes
   }: AxisProperties = $props();
 
@@ -19,7 +23,7 @@
 
   let tickValues = $derived.by(() => {
     if ('ticks' in scale && typeof scale.ticks === 'function') {
-      return scale.ticks(tickCount);
+      return scale.ticks(tickCount, integerTicks);
     }
     if ('domain' in scale && Array.isArray(scale.domain)) {
       return scale.domain;
@@ -47,14 +51,27 @@
       {@const x = positionTick(tick)}
       <g class="tick" transform="translate({x}, 0)">
         <line class="tick-mark" y2={orientation === 'bottom' ? TICK_SIZE : -TICK_SIZE} />
-        <text
-          class="tick-label"
-          y={orientation === 'bottom' ? TICK_SIZE + 4 : -(TICK_SIZE + 4)}
-          text-anchor="middle"
-          dominant-baseline={orientation === 'bottom' ? 'hanging' : 'auto'}
-        >
-          {format(tick)}
-        </text>
+        {#if i % tickEvery === 0}
+          {#if rotateTicks && orientation === 'bottom'}
+            <text
+              class="tick-label"
+              transform="translate(0, {TICK_SIZE + 4}) rotate(-45)"
+              text-anchor="end"
+              dominant-baseline="auto"
+            >
+              {format(tick)}
+            </text>
+          {:else}
+            <text
+              class="tick-label"
+              y={orientation === 'bottom' ? TICK_SIZE + 4 : -(TICK_SIZE + 4)}
+              text-anchor="middle"
+              dominant-baseline={orientation === 'bottom' ? 'hanging' : 'auto'}
+            >
+              {format(tick)}
+            </text>
+          {/if}
+        {/if}
         {#if showGridlines && gridlineLength > 0}
           <line
             class="gridline"
@@ -68,7 +85,7 @@
       <text
         class="axis-label"
         x={(scale.range[0] + scale.range[1]) / 2}
-        y={orientation === 'bottom' ? 36 : -30}
+        y={orientation === 'bottom' ? labelOffset : -30}
         text-anchor="middle"
       >
         {label}
@@ -113,30 +130,30 @@
 
 <style>
   .axis-line {
-    stroke: var(--chart-axis-color, #666);
+    stroke: var(--chart-axis-color, light-dark(#666, #9ca3af));
     stroke-width: var(--chart-axis-stroke-width, 1);
   }
 
   .tick-mark {
-    stroke: var(--chart-axis-color, #666);
+    stroke: var(--chart-axis-color, light-dark(#666, #9ca3af));
     stroke-width: var(--chart-axis-stroke-width, 1);
   }
 
   .tick-label {
-    fill: var(--chart-axis-color, #666);
+    fill: var(--chart-axis-color, light-dark(#666, #9ca3af));
     font-size: var(--chart-axis-font-size, 11px);
     font-family: var(--chart-axis-font-family, inherit);
   }
 
   .axis-label {
-    fill: var(--chart-axis-label-color, #333);
+    fill: var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
     font-size: var(--chart-axis-label-font-size, 12px);
     font-family: var(--chart-axis-font-family, inherit);
     font-weight: 500;
   }
 
   .gridline {
-    stroke: var(--chart-gridline-color, #e0e0e0);
+    stroke: var(--chart-gridline-color, light-dark(#e0e0e0, #374151));
     stroke-opacity: var(--chart-gridline-opacity, 0.5);
     stroke-dasharray: var(--chart-gridline-dash, 4 4);
   }

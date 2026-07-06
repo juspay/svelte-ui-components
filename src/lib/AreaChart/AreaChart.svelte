@@ -5,12 +5,16 @@
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
-  import { createLinearScale, niceLinearDomain } from '$lib/_chart/scales';
-  import { computeChartDimensions, computeStackedValues } from '$lib/_chart/geometry';
+  import { createLinearScale, niceLinearDomain, computeLinearTicks } from '$lib/_chart/scales';
+  import { computeAutoLayout, computeStackedValues } from '$lib/_chart/geometry';
   import { linePath, areaPath } from '$lib/_chart/paths';
   import { getColor } from '$lib/_chart/colors';
-  import { formatNumber, formatPercent } from '$lib/_chart/format';
+  import { formatNumber, formatPercent, defaultTickFormat } from '$lib/_chart/format';
+  import { measureText } from '$lib/_chart/measure';
+  import { resolvePointLabels } from '$lib/_chart/labels';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import type { LegendItem, Point } from '$lib/_chart/types';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -42,8 +46,11 @@
     xTickFormat,
     yTickFormat,
     aspectRatio = 16 / 9,
+    minHeight = 0,
+    maxHeight = DEFAULT_CHART_MAX_HEIGHT,
     tooltipSnippet,
     empty,
+    tooltipPortal = false,
     onpointhover,
     onpointclick,
     testId,
@@ -53,6 +60,7 @@
   // ── State ──────────────────────────────────────────────────────
 
   let containerEl: HTMLDivElement | null = $state(null);
+  let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hovered = $state<{ si: number; pi: number } | null>(null);
@@ -65,7 +73,6 @@
 
   // ── Layout ─────────────────────────────────────────────────────
 
-  let dims = $derived(computeChartDimensions(chartWidth, chartHeight));
   let isStacked = $derived(stacked || stackNormalize);
   let isEmpty = $derived(series.length === 0 || series.every((s) => s.data.length === 0));
 
@@ -115,6 +122,24 @@
     }
     return niceLinearDomain(Math.min(0, ...allY), Math.max(...allY));
   });
+
+  let yTickCount = $derived(Math.max(2, Math.min(6, Math.floor(chartHeight / 70))));
+  let xTickCount = $derived(Math.max(2, Math.min(8, Math.floor(chartWidth / 90))));
+
+  let layout = $derived.by(() => {
+    const yFmt = yTickFormat ?? defaultTickFormat;
+    const xFmt = xTickFormat ?? defaultTickFormat;
+    return computeAutoLayout({
+      width: chartWidth,
+      height: chartHeight,
+      yTickLabels: showYAxis ? computeLinearTicks(yExtent, yTickCount).map((t) => yFmt(t)) : [],
+      xTickLabels: showXAxis ? computeLinearTicks(xExtent, xTickCount).map((t) => xFmt(t)) : [],
+      hasYAxisLabel: Boolean(yAxisLabel) && showYAxis,
+      hasXAxisLabel: Boolean(xAxisLabel) && showXAxis,
+      base: { top: 20, right: 20, bottom: showXAxis ? 40 : 8, left: showYAxis ? 50 : 20 }
+    });
+  });
+  let dims = $derived(layout);
 
   let xScale = $derived(createLinearScale(xExtent, [0, dims.innerWidth]));
   let yScale = $derived(createLinearScale(yExtent, [dims.innerHeight, 0]));
@@ -206,15 +231,40 @@
     };
   });
 
+  // ── Point labels ───────────────────────────────────────────────
+
+  function pointDisplayValue(si: number, pi: number): string {
+    const y = series[si]?.data[pi]?.y ?? 0;
+    if (stackNormalize) {
+      const columnTotal = series.reduce((sum, s) => sum + Math.max(0, s.data[pi]?.y ?? 0), 0);
+      return formatPercent(Math.max(0, y), columnTotal);
+    }
+    return formatNumber(y);
+  }
+
+  let pointLabelPlacements = $derived.by(() => {
+    if (!showValues) {
+      return [];
+    }
+    const plot = { width: dims.innerWidth, height: dims.innerHeight };
+    const font = { size: 11 };
+    return areas.map((area, si) =>
+      resolvePointLabels({
+        points: area.points,
+        labels: series[si].data.map((d, pi) => measureText(pointDisplayValue(si, pi), font)),
+        plot
+      })
+    );
+  });
+
   // ── Interactions ───────────────────────────────────────────────
 
-  function trackMouse(e: MouseEvent) {
-    if (containerEl === null) {
-      return;
+  function trackMouse(e: PointerEvent) {
+    const position = pointerPositionIn(plotEl, e);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
   }
 
   function findNearest(plotX: number, plotY: number): { si: number; pi: number } | null {
@@ -253,7 +303,7 @@
     return { si: nearestSi, pi: nearestPi };
   }
 
-  function handleOverlayMove(e: MouseEvent) {
+  function handleOverlayMove(e: PointerEvent) {
     trackMouse(e);
     const plotX = mouseX - dims.margin.left;
     const plotY = mouseY - dims.margin.top;
@@ -285,6 +335,15 @@
       onpointclick?.({ seriesIndex: hovered.si, pointIndex: hovered.pi, point });
     }
   }
+
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands outside.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hovered === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, handleLeave);
+  });
 </script>
 
 <div
@@ -299,140 +358,181 @@
       <Legend items={legendItems} position="top" />
     {/if}
 
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio}>
-      {#if gradientFill}
-        <!-- <defs> must be a direct child of <svg> (SVG root), not inside a transformed <g>.
+    <div class="chart-plot" bind:this={plotEl}>
+      <ChartContainer
+        bind:width={chartWidth}
+        bind:height={chartHeight}
+        {aspectRatio}
+        {minHeight}
+        {maxHeight}
+      >
+        {#if gradientFill}
+          <!-- <defs> must be a direct child of <svg> (SVG root), not inside a transformed <g>.
              gradientUnits="userSpaceOnUse" with y1/y2 in the inner coordinate space (0..innerHeight)
              correctly spans the full chart height regardless of how thin each band is. -->
-        <defs>
-          {#each areas as area, si (si)}
-            <linearGradient
-              id="area-grad-{uid}-{si}"
-              x1="0"
-              y1="0"
-              x2="0"
-              y2={dims.innerHeight}
-              gradientUnits="userSpaceOnUse"
-            >
-              <!-- The gradient top stop is fillOpacity + 0.3 (clamped to 1), giving a richer
+          <defs>
+            {#each areas as area, si (si)}
+              <linearGradient
+                id="area-grad-{uid}-{si}"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={dims.innerHeight}
+                gradientUnits="userSpaceOnUse"
+              >
+                <!-- The gradient top stop is fillOpacity + 0.3 (clamped to 1), giving a richer
                    anchor at the top that fades to transparent at the bottom. This intentionally
                    exceeds the base fillOpacity so that gradient-fill areas appear more vivid
                    than their solid-fill counterparts (where fill-opacity equals fillOpacity). -->
-              <stop
-                offset="0%"
-                stop-color={area.color}
-                stop-opacity={Math.min(
-                  (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
-                  1
-                )}
+                <stop
+                  offset="0%"
+                  stop-color={area.color}
+                  stop-opacity={Math.min(
+                    (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
+                    1
+                  )}
+                />
+                <stop offset="100%" stop-color={area.color} stop-opacity={0} />
+              </linearGradient>
+            {/each}
+          </defs>
+        {/if}
+        <g transform="translate({dims.margin.left}, {dims.margin.top})">
+          {#if showYAxis}
+            <Axis
+              orientation="left"
+              scale={yScale}
+              tickCount={yTickCount}
+              {showGridlines}
+              gridlineLength={dims.innerWidth}
+              label={yAxisLabel}
+              tickFormat={yTickFormat}
+            />
+          {/if}
+          {#if showXAxis}
+            <g transform="translate(0, {dims.innerHeight})">
+              <Axis
+                orientation="bottom"
+                scale={xScale}
+                tickCount={xTickCount}
+                rotateTicks={layout.xRotate}
+                tickEvery={layout.xEvery}
+                labelOffset={layout.xLabelOffset}
+                label={xAxisLabel}
+                tickFormat={xTickFormat}
               />
-              <stop offset="100%" stop-color={area.color} stop-opacity={0} />
-            </linearGradient>
-          {/each}
-        </defs>
-      {/if}
-      <g transform="translate({dims.margin.left}, {dims.margin.top})">
-        {#if showYAxis}
-          <Axis
-            orientation="left"
-            scale={yScale}
-            {showGridlines}
-            gridlineLength={dims.innerWidth}
-            label={yAxisLabel}
-            tickFormat={yTickFormat}
-          />
-        {/if}
-        {#if showXAxis}
-          <g transform="translate(0, {dims.innerHeight})">
-            <Axis orientation="bottom" scale={xScale} label={xAxisLabel} tickFormat={xTickFormat} />
-          </g>
-        {/if}
+            </g>
+          {/if}
 
-        {#each areas as area, si (si)}
-          <path
-            class="area-fill"
-            class:dimmed={hovered !== null && hovered.si !== si}
-            d={area.areaD}
-            fill={gradientFill ? `url(#area-grad-${uid}-${si})` : area.color}
-            fill-opacity={gradientFill ? 1 : hovered?.si === si ? fillOpacity + 0.2 : fillOpacity}
-          />
-          {#if showLine}
+          {#each areas as area, si (si)}
             <path
-              class="area-line"
+              class="area-fill"
               class:dimmed={hovered !== null && hovered.si !== si}
-              d={area.lineD}
-              stroke={area.color}
-              stroke-width={strokeWidth}
-              fill="none"
+              d={area.areaD}
+              fill={gradientFill ? `url(#area-grad-${uid}-${si})` : area.color}
+              fill-opacity={gradientFill ? 1 : hovered?.si === si ? fillOpacity + 0.2 : fillOpacity}
             />
-          {/if}
-          {#if area.points.length === 1 && !showDots}
-            <circle
-              class="single-point"
-              class:dimmed={hovered !== null && hovered.si !== si}
-              cx={area.points[0].x}
-              cy={area.points[0].y}
-              r={6}
-              fill={area.color}
-            />
-          {/if}
-          {#if showDots}
-            {#each area.points as point, pi (pi)}
+            {#if showLine}
+              <path
+                class="area-line"
+                class:dimmed={hovered !== null && hovered.si !== si}
+                d={area.lineD}
+                stroke={area.color}
+                stroke-width={strokeWidth}
+                fill="none"
+              />
+            {/if}
+            {#if area.points.length === 1 && !showDots}
               <circle
-                class="dot"
-                cx={point.x}
-                cy={point.y}
-                r={hovered?.si === si && hovered?.pi === pi ? 6 : 3}
+                class="single-point"
+                class:dimmed={hovered !== null && hovered.si !== si}
+                cx={area.points[0].x}
+                cy={area.points[0].y}
+                r={6}
                 fill={area.color}
               />
-            {/each}
-          {/if}
-          {#if showValues}
-            {#each area.points as point, pi (pi)}
-              <text
-                class="point-value"
-                x={point.x}
-                y={point.y - 8}
-                text-anchor="middle"
-                dominant-baseline="auto">{formatNumber(series[si].data[pi].y)}</text
-              >
-            {/each}
-          {/if}
-        {/each}
+            {/if}
+            {#if showDots}
+              {#each area.points as point, pi (pi)}
+                <circle
+                  class="dot"
+                  cx={point.x}
+                  cy={point.y}
+                  r={hovered?.si === si && hovered?.pi === pi ? 6 : 3}
+                  fill={area.color}
+                />
+              {/each}
+            {/if}
+            {#if showValues && pointLabelPlacements[si]}
+              {#each area.points as _point, pi (pi)}
+                {@const pl = pointLabelPlacements[si][pi]}
+                {#if pl?.visible}
+                  <text
+                    class="point-value"
+                    x={pl.x}
+                    y={pl.y}
+                    text-anchor="middle"
+                    dominant-baseline={pl.dominantBaseline}>{pointDisplayValue(si, pi)}</text
+                  >
+                {/if}
+              {/each}
+            {/if}
+          {/each}
 
-        {#if hoverLineX !== null}
-          <line class="hover-line" x1={hoverLineX} x2={hoverLineX} y1={0} y2={dims.innerHeight} />
-        {/if}
+          {#if hoverLineX !== null}
+            <line class="hover-line" x1={hoverLineX} x2={hoverLineX} y1={0} y2={dims.innerHeight} />
+          {/if}
 
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <rect
-          class="hover-overlay"
-          x={0}
-          y={0}
-          width={dims.innerWidth}
-          height={dims.innerHeight}
-          fill="transparent"
-          onmousemove={handleOverlayMove}
-          onmouseleave={handleLeave}
-          onclick={handleClick}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <rect
+            class="hover-overlay"
+            x={0}
+            y={0}
+            width={dims.innerWidth}
+            height={dims.innerHeight}
+            fill="transparent"
+            onpointermove={handleOverlayMove}
+            onpointerleave={handleLeave}
+            onclick={handleClick}
+          />
+        </g>
+      </ChartContainer>
+
+      {#if typeof tooltipSnippet === 'function'}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          portal={tooltipPortal}
+          originEl={plotEl}
+          unstyled
+        >
+          {#snippet content()}
+            {#if tooltipContext !== null}
+              {@render tooltipSnippet(tooltipContext)}
+            {/if}
+          {/snippet}
+        </ChartTooltip>
+      {:else}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          portal={tooltipPortal}
+          originEl={plotEl}
         />
-      </g>
-    </ChartContainer>
-
-    {#if typeof tooltipSnippet === 'function' && tooltipContext !== null}
-      <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-        {@render tooltipSnippet(tooltipContext)}
-      </div>
-    {:else}
-      <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
-    {/if}
+      {/if}
+    </div>
   {/if}
 </div>
 
 <style>
   .area-chart {
     width: 100%;
+    position: relative;
+  }
+  .chart-plot {
     position: relative;
   }
   .area-fill {
@@ -463,18 +563,21 @@
     transition:
       r var(--chart-transition-duration, 0.2s) ease,
       opacity var(--chart-transition-duration, 0.2s) ease;
-    stroke: var(--chart-background, #fff);
+    stroke: var(--chart-dot-stroke, light-dark(#fff, #111827));
     stroke-width: 2;
     pointer-events: none;
   }
   .point-value {
-    fill: var(--areachart-value-color, #333);
+    fill: var(--areachart-value-color, light-dark(#333, #e5e7eb));
     font-size: var(--areachart-value-font-size, 11px);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
   }
   .hover-line {
-    stroke: var(--areachart-hover-line-color, var(--linechart-hover-line-color, #ccc));
+    stroke: var(
+      --areachart-hover-line-color,
+      var(--linechart-hover-line-color, light-dark(#ccc, #4b5563))
+    );
     stroke-width: 1;
     stroke-dasharray: var(--areachart-hover-line-dash, var(--linechart-hover-line-dash, 4 4));
     pointer-events: none;
@@ -482,14 +585,9 @@
   .hover-overlay {
     cursor: crosshair;
   }
-  .chart-tooltip-slot {
-    position: absolute;
-    z-index: 10;
-    pointer-events: none;
-  }
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);
-    color: var(--chart-empty-color, #9ca3af);
+    color: var(--chart-empty-color, light-dark(#9ca3af, #6b7280));
     text-align: center;
   }
 </style>

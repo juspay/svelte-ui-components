@@ -12,7 +12,9 @@ test.describe('DateRangePicker — trigger toggles the panel', () => {
     const picker = page.locator('[data-pw="drp-range-demo"]');
     await expect(picker).toBeVisible();
 
-    const trigger = picker.getByRole('button', { name: 'Open date picker' });
+    // The trigger's accessible name flips to 'Close date picker' while open,
+    // so locate it by its stable class rather than by name.
+    const trigger = picker.locator('.drp-trigger button');
 
     await trigger.click();
     await expect(picker.locator('.drp-panel')).toBeVisible();

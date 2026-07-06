@@ -11,7 +11,7 @@
 
 <h3>Positions</h3>
 <div class="demo-row" style="gap: 32px;">
-  <Tooltip text="This is a top tooltip" position="top">
+  <Tooltip text="This is a top tooltip" position="top" testId="tooltip-container">
     <Button text="Hover (Top)" />
   </Tooltip>
   <Tooltip text="This is a bottom tooltip" position="bottom">

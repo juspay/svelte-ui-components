@@ -72,6 +72,8 @@ export type OptionalFunnelChartProperties = {
   maxHeight?: number;
   /** Lower bound (px) on the rendered chart height (defaults to `0`). */
   minHeight?: number;
+  /** Render the tooltip into document.body (position:fixed) so scroll/overflow ancestors never clip it. */
+  tooltipPortal?: boolean;
   /** Value for the `data-pw` attribute on the chart root element. */
   testId?: string;
   /** CSS class string applied to the chart root element. Useful for CSS-variable theming. */

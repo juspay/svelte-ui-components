@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { FunnelChartProperties, FunnelStage } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import { getColor } from '$lib/_chart/colors';
+  import { getColor, getContrastColor } from '$lib/_chart/colors';
   import { formatNumber, formatPercent } from '$lib/_chart/format';
+  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import { truncateToWidth } from '$lib/_chart/labels';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
   // ── Props ──────────────────────────────────────────────────────
@@ -11,7 +15,7 @@
   let {
     data,
     stageColors,
-    connectorColor = 'var(--funnel-chart-connector-color, #BDFFFB)',
+    connectorColor = 'var(--funnel-chart-connector-color, light-dark(#BDFFFB, #164e4a))',
     slopeWidth = 10,
     onHoverExpand = 10,
     showValueLabels = true,
@@ -20,6 +24,7 @@
     maxHeight = DEFAULT_CHART_MAX_HEIGHT,
     minHeight = 0,
     radius = DEFAULT_CHART_CORNER_RADIUS,
+    tooltipPortal = false,
     testId,
     classes,
     empty,
@@ -30,11 +35,19 @@
   // ── State ──────────────────────────────────────────────────────
 
   let containerEl: HTMLDivElement | null = $state(null);
+  let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hoveredIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+  let labelFontSize = $state(11);
+  let valueFontSize = $state(11);
+
+  onMount(() => {
+    labelFontSize = readCssVarPx(containerEl, '--funnel-chart-label-font-size', 11);
+    valueFontSize = readCssVarPx(containerEl, '--funnel-chart-value-font-size', 11);
+  });
 
   // ── Derived geometry ───────────────────────────────────────────
 
@@ -42,7 +55,6 @@
   const MARGIN_RIGHT = 8;
   const MARGIN_BOTTOM = 8;
   const MARGIN_LEFT = 8;
-  const LABEL_AREA_HEIGHT = 24;
 
   let innerWidth = $derived(Math.max(0, chartWidth - MARGIN_LEFT - MARGIN_RIGHT));
   let innerHeight = $derived(Math.max(0, chartHeight - MARGIN_TOP - MARGIN_BOTTOM));
@@ -79,8 +91,11 @@
     data.length === 0 ? 0 : Math.max(1, (innerWidth - totalSlopeSpace) / data.length)
   );
 
+  /** Vertical band reserved above the bars for the category label, sized to the actual font. */
+  let labelAreaHeight = $derived(Math.ceil(labelFontSize * 1.2) + 10);
+
   /** Available height for the bars themselves (below the category labels). */
-  let barAreaHeight = $derived(Math.max(0, innerHeight - LABEL_AREA_HEIGHT));
+  let barAreaHeight = $derived(Math.max(0, innerHeight - labelAreaHeight));
 
   /**
    * Resolve the fill color for a stage. Uses explicitly-provided `stageColors` array
@@ -117,7 +132,7 @@
    */
   function barY(stageValue: number, expandPixels: number = 0): number {
     const h = barHeight(stageValue, expandPixels);
-    return LABEL_AREA_HEIGHT + (barAreaHeight - h) / 2;
+    return labelAreaHeight + (barAreaHeight - h) / 2;
   }
 
   /**
@@ -158,6 +173,33 @@
     return `${formatNumber(stage.value)}  |  ${pct}`;
   }
 
+  // ── Label fitting ──────────────────────────────────────────────
+
+  let labelFont = $derived({ size: labelFontSize });
+  let valueFont = $derived({ size: valueFontSize });
+
+  function categoryLabel(stage: FunnelStage): string {
+    return truncateToWidth(stage.category, Math.max(0, stageColumnWidth - 4), labelFont);
+  }
+
+  /** Highcharts crop chain for in-bar labels: full "value | pct" → "pct" → hidden. */
+  function valueLabel(stage: FunnelStage, bh: number): string {
+    const full = formatLabel(stage);
+    const fullSize = measureText(full, valueFont);
+    if (bh >= fullSize.height + 4 && stageColumnWidth >= fullSize.width + 8) {
+      return full;
+    }
+    const compact = formatPercent(stage.value, maxValue);
+    const compactSize = measureText(compact, valueFont);
+    if (bh >= compactSize.height + 4 && stageColumnWidth >= compactSize.width + 8) {
+      return compact;
+    }
+    return '';
+  }
+
+  const contrastOutline = (fill: string): string =>
+    getContrastColor(fill) === '#000000' ? '#ffffff' : '#000000';
+
   // ── Tooltip ────────────────────────────────────────────────────
 
   let tooltipData = $derived.by(() => {
@@ -182,18 +224,37 @@
 
   // ── Interaction ────────────────────────────────────────────────
 
-  function trackMouse(event: MouseEvent) {
-    if (containerEl === null) {
-      return;
+  // Narrows an event's currentTarget to Element without an `as` cast (repo
+  // lint bans type assertions outside test files).
+  const targetElement = (e: Event): Element | null =>
+    e.currentTarget instanceof Element ? e.currentTarget : null;
+
+  function trackMouse(event: PointerEvent) {
+    const position = pointerPositionIn(plotEl, event);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = event.clientX - rect.left;
-    mouseY = event.clientY - rect.top;
   }
 
-  function handleEnter(event: MouseEvent, index: number) {
+  function handleEnter(event: PointerEvent, index: number) {
     hoveredIndex = index;
     trackMouse(event);
+    const stage = data[index] ?? null;
+    if (stage !== null) {
+      onstagehover?.({ index, stage });
+    }
+  }
+
+  function handleFocus(e: FocusEvent, index: number) {
+    hoveredIndex = index;
+    const el = targetElement(e);
+    if (plotEl !== null && el !== null) {
+      const r = el.getBoundingClientRect();
+      const c = plotEl.getBoundingClientRect();
+      mouseX = r.left + r.width / 2 - c.left;
+      mouseY = r.top - c.top;
+    }
     const stage = data[index] ?? null;
     if (stage !== null) {
       onstagehover?.({ index, stage });
@@ -204,6 +265,22 @@
     hoveredIndex = null;
     onstagehover?.(null);
   }
+
+  function handleKeydown(e: KeyboardEvent, index: number) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick(index);
+    }
+  }
+
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands outside.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hoveredIndex === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, handleLeave);
+  });
 
   function handleClick(index: number) {
     const stage = data[index] ?? null;
@@ -221,91 +298,105 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
-    <ChartContainer
-      bind:width={chartWidth}
-      bind:height={chartHeight}
-      {aspectRatio}
-      {maxHeight}
-      {minHeight}
-    >
-      <g transform="translate({MARGIN_LEFT}, {MARGIN_TOP})">
-        <!-- Stage bars and category labels -->
-        {#each data as stage, index (index)}
-          {@const expand = hoveredIndex === index ? onHoverExpand : 0}
-          {@const bh = barHeight(stage.value, expand)}
-          {@const by = barY(stage.value, expand)}
-          {@const bx = stageX(index)}
-          {@const color = resolveStageColor(index)}
-          {@const labelX = bx + stageColumnWidth / 2}
+    <div class="chart-plot" bind:this={plotEl}>
+      <ChartContainer
+        bind:width={chartWidth}
+        bind:height={chartHeight}
+        {aspectRatio}
+        {maxHeight}
+        {minHeight}
+      >
+        <g transform="translate({MARGIN_LEFT}, {MARGIN_TOP})">
+          <!-- Stage bars and category labels -->
+          {#each data as stage, index (index)}
+            {@const expand = hoveredIndex === index ? onHoverExpand : 0}
+            {@const bh = barHeight(stage.value, expand)}
+            {@const by = barY(stage.value, expand)}
+            {@const bx = stageX(index)}
+            {@const color = resolveStageColor(index)}
+            {@const labelX = bx + stageColumnWidth / 2}
 
-          <!-- Category label above the bar -->
-          <text
-            class="funnel-category-label"
-            x={labelX}
-            y={LABEL_AREA_HEIGHT - 6}
-            text-anchor="middle"
-            dominant-baseline="auto">{stage.category}</text
-          >
-
-          <!-- Stage bar -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <rect
-            class="funnel-bar"
-            class:funnel-bar-hovered={hoveredIndex === index}
-            class:funnel-bar-dimmed={hoveredIndex !== null && hoveredIndex !== index}
-            x={bx}
-            y={by}
-            width={stageColumnWidth}
-            height={bh}
-            fill={color}
-            rx={radius}
-            aria-label="{stage.category}: {formatLabel(stage)}"
-            onmouseenter={(event) => handleEnter(event, index)}
-            onmousemove={trackMouse}
-            onmouseleave={handleLeave}
-            onclick={() => handleClick(index)}
-          />
-
-          <!-- Value label centred inside the bar -->
-          {#if showValueLabels}
+            <!-- Category label above the bar -->
             <text
-              class="funnel-value-label"
+              class="funnel-category-label"
               x={labelX}
-              y={by + bh / 2}
+              y={labelAreaHeight - 6}
               text-anchor="middle"
-              dominant-baseline="middle"
-              pointer-events="none">{formatLabel(stage)}</text
+              dominant-baseline="auto">{categoryLabel(stage)}</text
             >
-          {/if}
-        {/each}
 
-        <!-- Trapezoidal connectors between stages -->
-        {#each data as _stage, index (index)}
-          {#if index < data.length - 1}
-            <polygon
-              class="funnel-connector"
-              points={connectorPoints(index)}
-              fill={connectorColor}
-              pointer-events="none"
+            <!-- Stage bar -->
+            <rect
+              class="funnel-bar"
+              class:funnel-bar-hovered={hoveredIndex === index}
+              class:funnel-bar-dimmed={hoveredIndex !== null && hoveredIndex !== index}
+              x={bx}
+              y={by}
+              width={stageColumnWidth}
+              height={bh}
+              fill={color}
+              rx={radius}
+              aria-label="{stage.category}: {formatLabel(stage)}"
+              onpointerenter={(event) => handleEnter(event, index)}
+              onpointermove={trackMouse}
+              onpointerleave={handleLeave}
+              onfocus={(e) => handleFocus(e, index)}
+              onblur={handleLeave}
+              onkeydown={(e) => handleKeydown(e, index)}
+              onclick={() => handleClick(index)}
+              tabindex="0"
+              role="button"
             />
-          {/if}
-        {/each}
-      </g>
-    </ChartContainer>
 
-    <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+            <!-- Value label centred inside the bar -->
+            {#if showValueLabels}
+              {@const vl = valueLabel(stage, bh)}
+              {#if vl !== ''}
+                <text
+                  class="funnel-value-label"
+                  x={labelX}
+                  y={by + bh / 2}
+                  text-anchor="middle"
+                  dominant-baseline="middle"
+                  style="fill: var(--funnel-chart-value-color, {getContrastColor(
+                    color
+                  )}); stroke: {contrastOutline(color)};"
+                  pointer-events="none">{vl}</text
+                >
+              {/if}
+            {/if}
+          {/each}
+
+          <!-- Trapezoidal connectors between stages -->
+          {#each data as _stage, index (index)}
+            {#if index < data.length - 1}
+              <polygon
+                class="funnel-connector"
+                points={connectorPoints(index)}
+                style="fill: {connectorColor}"
+                pointer-events="none"
+              />
+            {/if}
+          {/each}
+        </g>
+      </ChartContainer>
+
+      <ChartTooltip data={tooltipData} {mouseX} {mouseY} portal={tooltipPortal} originEl={plotEl} />
+    </div>
   {/if}
 </div>
 
 <style>
   .funnel-chart {
     width: 100%;
+  }
+
+  .chart-plot {
     position: relative;
   }
 
   .funnel-category-label {
-    fill: var(--funnel-chart-label-color, #666);
+    fill: var(--funnel-chart-label-color, light-dark(#666, #9ca3af));
     font-size: var(--funnel-chart-label-font-size, 11px);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
@@ -327,10 +418,18 @@
     opacity: var(--funnel-chart-bar-dimmed-opacity, 0.35);
   }
 
+  .funnel-bar:focus-visible {
+    outline: 2px solid var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
+    outline-offset: 1px;
+  }
+
   .funnel-value-label {
-    fill: var(--funnel-chart-value-color, #fff);
     font-size: var(--funnel-chart-value-font-size, 11px);
     font-family: var(--chart-font-family, inherit);
+    paint-order: stroke;
+    stroke-width: 2px;
+    stroke-opacity: 0.35;
+    stroke-linejoin: round;
   }
 
   .funnel-connector {
@@ -339,7 +438,7 @@
 
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);
-    color: var(--chart-empty-color, #9ca3af);
+    color: var(--chart-empty-color, light-dark(#9ca3af, #6b7280));
     text-align: center;
   }
 </style>

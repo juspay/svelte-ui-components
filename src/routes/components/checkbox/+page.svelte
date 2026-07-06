@@ -11,7 +11,7 @@
 </div>
 
 <div class="demo-row">
-  <Checkbox text="Default checkbox" bind:checked={checkboxChecked} />
+  <Checkbox text="Default checkbox" bind:checked={checkboxChecked} testId="checkbox-default" />
   <Checkbox text="Disabled" disabled />
   <Checkbox text="Indeterminate" bind:indeterminate={checkboxIndeterminate} checked={false} />
   <Checkbox text="Checked disabled" checked disabled />

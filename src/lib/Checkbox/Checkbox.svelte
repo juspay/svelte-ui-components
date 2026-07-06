@@ -37,7 +37,19 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<label class="container {classes ?? ''}" class:disabled onclick={handleClick} data-pw={testId}>
+<!-- preventDefault stops the label's default activation from firing a synthesized
+     click that re-toggles the native input AFTER handleClick has flipped the state,
+     which left input.checked out of sync with the rendered box (and with
+     :checked-based selectors/testing probes). State has one owner: handleClick. -->
+<label
+  class="container {classes ?? ''}"
+  class:disabled
+  onclick={(e: MouseEvent) => {
+    e.preventDefault();
+    handleClick();
+  }}
+  data-pw={testId}
+>
   <input
     type="checkbox"
     class="native-checkbox"

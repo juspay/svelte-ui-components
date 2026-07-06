@@ -27,6 +27,59 @@ export function computeChartDimensions(
   };
 }
 
+// ── Text measurement ────────────────────────────────────────────
+
+let textMeasurementContext: CanvasRenderingContext2D | null = null;
+
+/**
+ * Measures rendered text width via a shared offscreen canvas context.
+ * Returns null when measurement is unavailable (SSR, or the environment
+ * provides no working 2D canvas — e.g. jsdom) so callers can fall back to
+ * a fixed layout instead of acting on a bogus 0.
+ */
+export function measureTextWidth(text: string, font: string): number | null {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  if (textMeasurementContext === null) {
+    textMeasurementContext = document.createElement('canvas').getContext('2d');
+  }
+  if (textMeasurementContext === null) {
+    return null;
+  }
+  textMeasurementContext.font = font;
+  const width = textMeasurementContext.measureText(text).width;
+  // jsdom's canvas stub reports 0 for any text; treat that as "cannot measure".
+  return width > 0 ? width : null;
+}
+
+/**
+ * Left margin for a horizontal bar chart's category axis, sized to fit the
+ * widest category label. Category tick labels render right-aligned 10px left
+ * of the axis line (tick mark 6px + 4px gap), so any label wider than
+ * `margin.left - 10` bleeds out of the SVG and gets clipped by the page.
+ *
+ * - Never shrinks below `fallback` (the legacy fixed gutter), so charts whose
+ *   labels already fit keep their exact current layout.
+ * - Caps at 45% of the chart width so one pathological label cannot crush the
+ *   plot area; past the cap the label bleeds as before, but the plot survives.
+ * - `widestLabelWidth === null` (SSR / unmeasurable) keeps the legacy gutter.
+ */
+export function computeHorizontalCategoryGutter(
+  widestLabelWidth: number | null,
+  chartWidth: number,
+  fallback: number = 50
+): number {
+  if (widestLabelWidth === null) {
+    return fallback;
+  }
+  const tickLabelInset = 10;
+  const breathingPad = 4;
+  const cap = Math.max(fallback, chartWidth * 0.45);
+  const fitted = widestLabelWidth + tickLabelInset + breathingPad;
+  return Math.round(Math.min(Math.max(fallback, fitted), cap));
+}
+
 // ── Pie layout ──────────────────────────────────────────────────
 
 export function computePieLayout(

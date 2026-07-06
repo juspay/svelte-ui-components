@@ -10,6 +10,8 @@
   let showFooter = $state(false);
   let showLifecycle = $state(false);
   let lifecycleLog = $state<string[]>([]);
+  let showAnchored = $state(false);
+  let showBlocking = $state(false);
 </script>
 
 <div class="page-header">
@@ -110,3 +112,55 @@
 {#if lifecycleLog.length > 0}
   <p class="state-display">{lifecycleLog.join(' → ')}</p>
 {/if}
+
+<h3>Anchored corner panel (dismissible, no dimming backdrop)</h3>
+<div class="demo-row" style="position: relative; height: 160px;">
+  <Button text="Open account menu" onclick={() => (showAnchored = true)} />
+  <Sheet
+    bind:open={showAnchored}
+    side="right"
+    title="Account"
+    showOverlay={false}
+    dismissOnOutsideClick={true}
+    testId="sheet-anchored"
+    classes="anchored-sheet"
+  >
+    {#snippet content()}
+      <p>
+        Floats below a fixed header, inset from the edge, sized to its content — not a full-height
+        edge-to-edge slide-in. Still click-outside and Escape dismissible even though there is no
+        dimming backdrop.
+      </p>
+    {/snippet}
+  </Sheet>
+</div>
+
+<h3>Blocking backdrop (dimmed, not click-dismissible)</h3>
+<div class="demo-row">
+  <Button text="Open blocking sheet" onclick={() => (showBlocking = true)} />
+  <Sheet
+    bind:open={showBlocking}
+    side="right"
+    title="Required action"
+    showOverlay={true}
+    dismissOnOutsideClick={false}
+    testId="sheet-blocking"
+  >
+    {#snippet content()}
+      <p>
+        A dimmed backdrop that blocks interaction with the page underneath but does not close when
+        the overlay is clicked — the user must use the close button or an explicit action. Escape
+        still closes.
+      </p>
+    {/snippet}
+  </Sheet>
+</div>
+
+<style>
+  :global(.anchored-sheet) {
+    --sheet-top: 56px;
+    --sheet-right: 16px;
+    --sheet-bottom: auto;
+    --sheet-width: 280px;
+  }
+</style>

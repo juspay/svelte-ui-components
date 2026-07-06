@@ -1,3 +1,24 @@
+<script lang="ts" module>
+  // Reference-counted so two Sheets open at once (or a Sheet nested inside
+  // another scroll-locking surface) don't have the second one's close clobber
+  // the first one's still-needed lock.
+  let scrollLockCount = 0;
+
+  function lockScroll() {
+    if (scrollLockCount === 0) {
+      document.body.style.overflow = 'hidden';
+    }
+    scrollLockCount += 1;
+  }
+
+  function unlockScroll() {
+    scrollLockCount = Math.max(0, scrollLockCount - 1);
+    if (scrollLockCount === 0) {
+      document.body.style.overflow = '';
+    }
+  }
+</script>
+
 <script lang="ts">
   import type { SheetProperties } from './properties';
   import { fly, fade } from 'svelte/transition';
@@ -9,6 +30,7 @@
     side = 'right',
     title,
     showOverlay = true,
+    dismissOnOutsideClick = showOverlay,
     showCloseButton = true,
     testId,
     content,
@@ -41,7 +63,10 @@
   }
 
   function handleOverlayClick(event: MouseEvent) {
-    if (event.target === overlayDiv) {
+    // Gate dismissal on dismissOnOutsideClick explicitly, not on the overlay's
+    // pointer-events alone: a visible-but-non-dismissible overlay still needs to
+    // catch (and swallow) the click to block the page underneath, without closing.
+    if (event.target === overlayDiv && dismissOnOutsideClick) {
       close();
     }
   }
@@ -69,14 +94,6 @@
         (event.shiftKey ? last : first).focus();
       }
     }
-  }
-
-  function lockScroll() {
-    document.body.style.overflow = 'hidden';
-  }
-
-  function unlockScroll() {
-    document.body.style.overflow = '';
   }
 
   function scrollLockAction(_node: HTMLElement) {
@@ -110,7 +127,10 @@
   <div
     bind:this={overlayDiv}
     use:scrollLockAction
-    class="sheet-overlay {showOverlay ? 'overlay-active' : 'overlay-inactive'} {classes ?? ''}"
+    class="sheet-overlay {showOverlay ? 'overlay-visible' : 'overlay-invisible'} {showOverlay ||
+    dismissOnOutsideClick
+      ? 'overlay-interactive'
+      : 'overlay-noninteractive'} {classes ?? ''}"
     onclick={handleOverlayClick}
     onkeydown={handleKeyDown}
     role="button"
@@ -170,12 +190,19 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .overlay-active {
+  .overlay-visible {
     background-color: var(--sheet-overlay-background, #00000066);
+  }
+
+  .overlay-invisible {
+    background-color: transparent;
+  }
+
+  .overlay-interactive {
     pointer-events: auto;
   }
 
-  .overlay-inactive {
+  .overlay-noninteractive {
     pointer-events: none;
   }
 
@@ -190,39 +217,44 @@
     outline: none;
   }
 
+  /* --sheet-top/-right/-bottom/-left all default to the previous hardcoded
+     edge-to-edge values below, so an unconfigured Sheet renders unchanged.
+     Overriding one (e.g. --sheet-top to clear a fixed header, or --sheet-bottom:
+     auto to size to content) turns the panel from an edge-to-edge slide-in into
+     an anchored floating panel, without needing a different component. */
   .sheet-panel.left,
   .sheet-panel.right {
-    top: 0;
-    bottom: 0;
+    top: var(--sheet-top, 0);
+    bottom: var(--sheet-bottom, 0);
     width: var(--sheet-width, 400px);
     max-width: var(--sheet-max-width, 100vw);
   }
 
   .sheet-panel.left {
-    left: 0;
+    left: var(--sheet-left, 0);
     border-right: var(--sheet-border, none);
   }
 
   .sheet-panel.right {
-    right: 0;
+    right: var(--sheet-right, 0);
     border-left: var(--sheet-border, none);
   }
 
   .sheet-panel.top,
   .sheet-panel.bottom {
-    left: 0;
-    right: 0;
+    left: var(--sheet-left, 0);
+    right: var(--sheet-right, 0);
     height: var(--sheet-height, 300px);
     max-height: var(--sheet-max-height, 100vh);
   }
 
   .sheet-panel.top {
-    top: 0;
+    top: var(--sheet-top, 0);
     border-bottom: var(--sheet-border, none);
   }
 
   .sheet-panel.bottom {
-    bottom: 0;
+    bottom: var(--sheet-bottom, 0);
     border-top: var(--sheet-border, none);
   }
 

@@ -159,6 +159,8 @@
         placeholder={config.placeholder}
         validationPattern={config.validationPattern ?? null}
         validators={config.validators ?? []}
+        autoComplete={config.autoComplete ?? 'on'}
+        inputMode={config.inputMode}
         disable={disabled}
         actionInput={true}
         classes="field-group-input"

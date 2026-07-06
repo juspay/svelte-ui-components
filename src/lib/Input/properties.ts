@@ -46,6 +46,11 @@ export type OptionalInputProperties = {
   /** Show a live `current / maxLength` character counter beneath the field. */
   showCount?: boolean;
   autoComplete?: HTMLInputAttributes['autocomplete'];
+  /**
+   * Virtual-keyboard hint rendered as the native `inputmode` attribute
+   * (e.g. `'numeric'` for OTP/PIN fields). Left off by default.
+   */
+  inputMode?: HTMLInputAttributes['inputmode'];
   name?: string;
   textTransformers?: TextTransformer[];
   textViewPresentation?: TextTransformer[];

@@ -19,6 +19,7 @@
       actionInput: { type: 'Boolean', attribute: 'action-input' },
       useTextArea: { type: 'Boolean', reflect: true, attribute: 'use-text-area' },
       autoComplete: { type: 'String', attribute: 'auto-complete' },
+      inputMode: { type: 'String', attribute: 'input-mode' },
       name: { type: 'String', reflect: true },
       textTransformers: { type: 'Object' },
       textViewPresentation: { type: 'Object' },

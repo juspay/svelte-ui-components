@@ -2,6 +2,7 @@
   import SplitInput from '$lib/SplitInput/SplitInput.svelte';
 
   let otpValues = $state(['', '', '', '']);
+  let smsOtpValues = $state(['', '', '', '']);
   let rgbValues = $state(['255', '0', '128']);
   let ipValues = $state(['192', '168', '1', '1']);
 </script>
@@ -15,6 +16,21 @@
   <h3>OTP / PIN (auto-advance)</h3>
   <SplitInput bind:values={otpValues} autoAdvance />
   <p>Value: {otpValues.join('')}</p>
+</div>
+
+<div class="demo-row" style="max-width: 400px;">
+  <h3>SMS OTP (one-time-code autofill + numeric keypad)</h3>
+  <SplitInput
+    bind:values={smsOtpValues}
+    autoAdvance
+    testId="split-input-sms-otp"
+    fields={[
+      { dataType: 'tel', maxLength: 1, autoComplete: 'one-time-code', inputMode: 'numeric' },
+      { dataType: 'tel', maxLength: 1, autoComplete: 'one-time-code', inputMode: 'numeric' },
+      { dataType: 'tel', maxLength: 1, autoComplete: 'one-time-code', inputMode: 'numeric' },
+      { dataType: 'tel', maxLength: 1, autoComplete: 'one-time-code', inputMode: 'numeric' }
+    ]}
+  />
 </div>
 
 <div class="demo-row" style="max-width: 400px;">

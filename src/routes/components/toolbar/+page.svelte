@@ -17,4 +17,21 @@
     showBackButton
     onbackClick={() => alert('Back clicked')}
   />
+
+  <div
+    style="position: relative; width: 100%; background: #eef1f5;
+           --toolbar-position: relative;
+           --toolbar-width: 100%;
+           --toolbar-height: 64px;
+           --toolbar-content-height: 100%;
+           --toolbar-content-max-width: 320px;
+           --toolbar-content-margin: 0 auto;"
+  >
+    <Toolbar
+      text="Centered & Clamped"
+      testId="toolbar-content-tokens"
+      showBackButton
+      onbackClick={() => alert('Back clicked')}
+    />
+  </div>
 </div>

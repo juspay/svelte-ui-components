@@ -2,12 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.82.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.83.0)
 
-The pulse variant animated opacity only, so consumers replacing hand-rolled
-breathing loaders (scale + opacity) had no token to express the size
-component. --loading-dots-pulse-min-scale drives the keyframe's resting
-scale; the default of 1 keeps every existing consumer pixel-identical.
+The .content row only exposed padding/justify-content/visibility, so a
+consumer needing a fixed-height toolbar with a vertically-centered or
+width-clamped content row had no way to do it short of selecting the
+library's internal .content class by name from a theme sheet.
+
+Add --toolbar-content-width/-height/-max-width/-margin, all defaulting
+to the previous implicit values (auto/auto/none/0) so existing toolbars
+render pixel-identical.
+
+## [2.83.0](https://github.com/juspay/svelte-ui-components/compare/2.83.0..2.82.0) - 7 July 2026
 
 ## [2.82.0](https://github.com/juspay/svelte-ui-components/compare/2.82.0..2.81.3) - 7 July 2026
 

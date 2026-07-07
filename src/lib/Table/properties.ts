@@ -202,9 +202,9 @@ export type TableRow = Record<string, TableCellValue>;
  *   `sortable` prop. Equivalent to listing/omitting the column's index in
  *   `sortableColumns`.
  * - `testId` — `data-pw` attribute emitted on this column's header cell.
- * - `cell` — column-scoped renderer snippet receiving the full keyed row and
- *   the row index. Takes precedence over the table-wide `cell` snippet for
- *   this column; required when `type` is `'custom'`.
+ * - `cell` — column-scoped renderer snippet receiving the full keyed row, the
+ *   display row index, and the original (pre-sort) row index. Takes precedence
+ *   over the table-wide `cell` snippet for this column; required when `type` is `'custom'`.
  * - `onToggle`/`onSelect`/`onInput`/`onButtonClick`/`onPrimaryAction`/`onMenuAction`
  *   — change/action handlers for the matching interactive cell types. Behavior
  *   lives on the column so row data stays plain JSON.
@@ -215,7 +215,7 @@ export type TableColumn = {
   type?: TableColumnType;
   sortable?: boolean;
   testId?: string;
-  cell?: Snippet<[TableRow, number]>;
+  cell?: Snippet<[TableRow, number, number]>;
   /** Header tooltip text, shown on hover over the column label. */
   tooltip?: string;
   /**
@@ -237,13 +237,19 @@ export type TableColumn = {
    * the cell value itself.
    */
   getSortValue?: (row: TableRow, rowIndex: number) => string | number | boolean;
-  /** `checked` is the NEW state after the flip, not the pre-click value. */
-  onToggle?: (rowIndex: number, checked: boolean) => void;
-  onSelect?: (rowIndex: number, selectedId: string) => void;
-  onInput?: (rowIndex: number, value: string) => void;
-  onButtonClick?: (rowIndex: number) => void;
-  onPrimaryAction?: (rowIndex: number) => void;
-  onMenuAction?: (rowIndex: number, itemId: string) => void;
+  /**
+   * Row-action handlers. `rowIndex` is the row's position in the CURRENT
+   * (sorted/filtered/paginated) view; `originalIndex` is its position in the
+   * consumer-supplied `rows` array, stable under sort/filter — index your own
+   * source array with `originalIndex` so actions hit the correct row when the
+   * table is sorted. `checked` is the NEW state after the flip, not the pre-click value.
+   */
+  onToggle?: (rowIndex: number, checked: boolean, originalIndex: number) => void;
+  onSelect?: (rowIndex: number, selectedId: string, originalIndex: number) => void;
+  onInput?: (rowIndex: number, value: string, originalIndex: number) => void;
+  onButtonClick?: (rowIndex: number, originalIndex: number) => void;
+  onPrimaryAction?: (rowIndex: number, originalIndex: number) => void;
+  onMenuAction?: (rowIndex: number, itemId: string, originalIndex: number) => void;
 };
 
 /**

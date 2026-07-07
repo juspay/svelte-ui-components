@@ -33,11 +33,13 @@
   let {
     column,
     value,
-    rowIndex
+    rowIndex,
+    originalIndex
   }: {
     column: TableColumn;
     value: TableCellValue;
     rowIndex: number;
+    originalIndex: number;
   } = $props();
 
   let copied = $state(false);
@@ -226,7 +228,7 @@
     <Toggle
       checked={isChecked}
       text=""
-      onclick={(newChecked) => column.onToggle?.(rowIndex, newChecked)}
+      onclick={(newChecked) => column.onToggle?.(rowIndex, newChecked, originalIndex)}
     />
   </span>
 {:else if column.type === 'select'}
@@ -247,7 +249,7 @@
         itemTestId={selectData.itemTestId}
         onchange={(selectedIds) => {
           if (selectedIds.length > 0) {
-            column.onSelect?.(rowIndex, selectedIds[0]);
+            column.onSelect?.(rowIndex, selectedIds[0], originalIndex);
           }
         }}
       />
@@ -275,7 +277,7 @@
           : null}
         onErrorMessage={inputData.onErrorMessage ?? null}
         actionInput={false}
-        onInput={(newValue) => column.onInput?.(rowIndex, newValue)}
+        onInput={(newValue) => column.onInput?.(rowIndex, newValue, originalIndex)}
       />
     </span>
   {:else}
@@ -295,7 +297,7 @@
         disabled={buttonData.disabled ?? false}
         classes={buttonData.classes ?? ''}
         testId={buttonData.testId}
-        onclick={() => column.onButtonClick?.(rowIndex)}
+        onclick={() => column.onButtonClick?.(rowIndex, originalIndex)}
       />
     </span>
   {:else}
@@ -317,7 +319,7 @@
           disabled={primary.disabled ?? false}
           classes={primary.classes ?? ''}
           testId={primary.testId}
-          onclick={() => column.onPrimaryAction?.(rowIndex)}
+          onclick={() => column.onPrimaryAction?.(rowIndex, originalIndex)}
         />
       {/if}
       {#if actionData.menuItems && actionData.menuItems.length > 0}
@@ -329,7 +331,7 @@
             separator: item.separator
           }))}
           testId={column.testId && `${column.testId}-menu-${rowIndex}`}
-          onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value)}
+          onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
         >
           {#snippet trigger()}
             <span class="builtin-icon-button">
@@ -367,7 +369,7 @@
           separator: item.separator
         }))}
         testId={column.testId && `${column.testId}-popup-${rowIndex}`}
-        onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value)}
+        onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
       >
         {#snippet trigger()}
           <span class="builtin-icon-button">

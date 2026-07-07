@@ -2,20 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.3)
 
-In horizontal orientation the Y axis carries category text, but the left
-margin was a fixed 50px — any label wider than 40px (e.g. 'Submitted
-Address' at ~97px in an 11px font) bled past the SVG edge and was clipped
-by the page, unreadable on mobile.
+OTP consumers need autocomplete="one-time-code" (WebOTP / SMS autofill) and
+inputmode="numeric" (numeric keypad on mobile web) on the segmented fields.
+FieldConfig's Pick excluded autoComplete and Input had no inputMode prop at
+all, so exactly the use case SplitInput targets still required hand-rolled
+segmented inputs.
 
-The gutter now measures every category label via an offscreen canvas in
-the axis tick font (CSS-var theming honoured) and grows to fit the widest
-one. It never shrinks below the legacy 50px, so charts whose labels
-already fit keep their exact current layout, and it caps at 45% of the
-chart width so a pathological label cannot crush the plot. SSR and
-canvas-less environments keep the legacy fixed gutter. Vertical
-orientation and hidden-axis (28px) paths are untouched.
+- Input: new optional inputMode prop rendered as the native inputmode
+attribute on both the input and textarea elements (no default — attribute
+omitted when unset).
+- SplitInput: FieldConfig gains autoComplete and inputMode; both pass through
+to the per-field Input (autoComplete keeps the existing 'on' default).
+- Demo: SMS-OTP example on /components/split-input; Playwright tests assert
+the rendered attributes and that unconfigured fields keep prior defaults.
+
+## [2.81.3](https://github.com/juspay/svelte-ui-components/compare/2.81.3..2.81.2) - 7 July 2026
 
 ## [2.81.2](https://github.com/juspay/svelte-ui-components/compare/2.81.2..2.81.1) - 6 July 2026
 

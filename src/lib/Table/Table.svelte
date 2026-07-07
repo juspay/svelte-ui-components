@@ -59,6 +59,10 @@
   let normalized = $derived(columns ? normalizeColumns(columns, rows ?? []) : null);
   let effectiveHeaders = $derived(normalized ? normalized.tableHeaders : tableHeaders);
   let effectiveData = $derived(normalized ? normalized.tableData : tableData);
+  // Maps each row reference back to its index in the consumer-supplied `rows`
+  // (pre-sort/pre-filter). Row refs are preserved through sort/filter/paginate,
+  // so cell callbacks can hand consumers a sort-stable `originalIndex`.
+  let originalIndexByRow = $derived(new Map(effectiveData.map((row, index) => [row, index])));
   let effectiveSortableColumns = $derived(
     normalized ? normalized.sortableColumns : sortableColumns
   );
@@ -712,6 +716,7 @@
         {:else}
           {#each paginatedTableData as row, pageRowIndex (rowIdByRow.get(row) ?? pageRowIndex)}
             {@const rowIndex = pageRowIndex + rowIndexOffset}
+            {@const originalIndex = originalIndexByRow.get(row) ?? rowIndex}
             {@const rowId = rowIdByRow.get(row) ?? String(rowIndex)}
             {@const rowDisabled = isCheckboxMode && isRowDisabled(rowId)}
             {@const rowSelected = isCheckboxMode && isRowSelected(rowId)}
@@ -781,9 +786,9 @@
                     class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
                   >
                     {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
-                      {@render keyedColumn.cell(keyedRow, rowIndex)}
+                      {@render keyedColumn.cell(keyedRow, rowIndex, originalIndex)}
                     {:else if keyedColumn?.type && keyedColumn.type !== 'text' && keyedColumn.type !== 'custom'}
-                      <BuiltinCell column={keyedColumn} value={cellValue} {rowIndex} />
+                      <BuiltinCell column={keyedColumn} value={cellValue} {rowIndex} {originalIndex} />
                     {:else if typeof cell === 'function'}
                       {@render cell(cellValue, rowIndex, colIndex)}
                     {:else}

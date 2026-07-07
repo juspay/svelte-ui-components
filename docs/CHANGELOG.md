@@ -2,21 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.82.0)
 
-OTP consumers need autocomplete="one-time-code" (WebOTP / SMS autofill) and
-inputmode="numeric" (numeric keypad on mobile web) on the segmented fields.
-FieldConfig's Pick excluded autoComplete and Input had no inputMode prop at
-all, so exactly the use case SplitInput targets still required hand-rolled
-segmented inputs.
+The pulse variant animated opacity only, so consumers replacing hand-rolled
+breathing loaders (scale + opacity) had no token to express the size
+component. --loading-dots-pulse-min-scale drives the keyframe's resting
+scale; the default of 1 keeps every existing consumer pixel-identical.
 
-- Input: new optional inputMode prop rendered as the native inputmode
-attribute on both the input and textarea elements (no default — attribute
-omitted when unset).
-- SplitInput: FieldConfig gains autoComplete and inputMode; both pass through
-to the per-field Input (autoComplete keeps the existing 'on' default).
-- Demo: SMS-OTP example on /components/split-input; Playwright tests assert
-the rendered attributes and that unconfigured fields keep prior defaults.
+## [2.82.0](https://github.com/juspay/svelte-ui-components/compare/2.82.0..2.81.3) - 7 July 2026
 
 ## [2.81.3](https://github.com/juspay/svelte-ui-components/compare/2.81.3..2.81.2) - 7 July 2026
 

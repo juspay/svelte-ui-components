@@ -2,17 +2,30 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.84.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.85.0)
 
-statusIcon only accepted an image src, so a consumer needing an
-animated status (e.g. LottiePlayer for success/failure/in-progress)
-had no way to express it — the component always rendered a static
-&lt;Img&gt;.
+Sheet only supported an edge-to-edge slide-in panel (top/bottom always
+0), a coupled overlay (no dimming meant no click-to-dismiss either, since
+pointer-events:none blocks the click that would trigger it), and a naive
+scroll lock that unconditionally clears document.body.style.overflow on
+close — breaking if a second Sheet is still open. All three blocked a
+consumer's floating account-menu panel from being expressed with Sheet
+at all, forcing a hand-rolled backdrop+panel instead.
 
-Add an optional `icon` snippet that, when provided, renders instead of
-the default image. statusIcon is now optional (it already had a
-runtime default; the type just hadn't caught up) since it becomes
-irrelevant once `icon` is supplied.
+- Add --sheet-top/-right/-bottom/-left, all defaulting to the previous
+hardcoded values (0/0/0/0 for left+right, 0/0 left+right for top+bottom)
+so an unconfigured Sheet renders unchanged. Overriding one turns the
+edge-to-edge panel into a floating anchored one (e.g. --sheet-bottom:
+auto sizes the panel to its content instead of stretching to the
+viewport edge).
+- Add `dismissOnOutsideClick`, independent of `showOverlay`'s visual
+tint, defaulting to mirror `showOverlay` (so behavior is unchanged
+unless set explicitly). Set it `true` alongside `showOverlay={false}`
+for a fully transparent but still click-dismissible overlay.
+- Make the scroll lock reference-counted at module scope: only the
+first open sets `overflow: hidden`, only the last close clears it.
+
+## [2.85.0](https://github.com/juspay/svelte-ui-components/compare/2.85.0..2.84.1) - 7 July 2026
 
 ## [2.84.1](https://github.com/juspay/svelte-ui-components/compare/2.84.1..2.84.0) - 7 July 2026
 

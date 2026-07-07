@@ -2,17 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.84.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.84.1)
 
-Clicking the label fired handleClick (flipping the Svelte state) and then the
-label's default activation dispatched a synthesized click that re-toggled the
-hidden native input afterwards — its propagation was stopped but not its
-default. The rendered box then showed checked while input.checked was false,
-breaking form values, :checked-based CSS, and test-state probes.
+statusIcon only accepted an image src, so a consumer needing an
+animated status (e.g. LottiePlayer for success/failure/in-progress)
+had no way to express it — the component always rendered a static
+&lt;Img&gt;.
 
-preventDefault on the label click makes handleClick the single owner of the
-state; the native input's checked property now always follows the rendered
-box. Adds regression tests covering pointer and keyboard toggling.
+Add an optional `icon` snippet that, when provided, renders instead of
+the default image. statusIcon is now optional (it already had a
+runtime default; the type just hadn't caught up) since it becomes
+irrelevant once `icon` is supplied.
+
+## [2.84.1](https://github.com/juspay/svelte-ui-components/compare/2.84.1..2.84.0) - 7 July 2026
 
 ## [2.84.0](https://github.com/juspay/svelte-ui-components/compare/2.84.0..2.83.0) - 7 July 2026
 

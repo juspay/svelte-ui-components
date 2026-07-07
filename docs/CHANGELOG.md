@@ -2,7 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.81.2)
+
+In horizontal orientation the Y axis carries category text, but the left
+margin was a fixed 50px — any label wider than 40px (e.g. 'Submitted
+Address' at ~97px in an 11px font) bled past the SVG edge and was clipped
+by the page, unreadable on mobile.
+
+The gutter now measures every category label via an offscreen canvas in
+the axis tick font (CSS-var theming honoured) and grows to fit the widest
+one. It never shrinks below the legacy 50px, so charts whose labels
+already fit keep their exact current layout, and it caps at 45% of the
+chart width so a pathological label cannot crush the plot. SSR and
+canvas-less environments keep the legacy fixed gutter. Vertical
+orientation and hidden-axis (28px) paths are untouched.
+
+## [2.81.2](https://github.com/juspay/svelte-ui-components/compare/2.81.2..2.81.1) - 6 July 2026
 
 ## [2.81.1](https://github.com/juspay/svelte-ui-components/compare/2.81.1..2.81.0) - 5 July 2026
 

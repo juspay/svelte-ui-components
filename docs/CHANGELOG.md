@@ -2,16 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.83.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.84.0)
 
-The .content row only exposed padding/justify-content/visibility, so a
-consumer needing a fixed-height toolbar with a vertically-centered or
-width-clamped content row had no way to do it short of selecting the
-library's internal .content class by name from a theme sheet.
+Clicking the label fired handleClick (flipping the Svelte state) and then the
+label's default activation dispatched a synthesized click that re-toggled the
+hidden native input afterwards — its propagation was stopped but not its
+default. The rendered box then showed checked while input.checked was false,
+breaking form values, :checked-based CSS, and test-state probes.
 
-Add --toolbar-content-width/-height/-max-width/-margin, all defaulting
-to the previous implicit values (auto/auto/none/0) so existing toolbars
-render pixel-identical.
+preventDefault on the label click makes handleClick the single owner of the
+state; the native input's checked property now always follows the rendered
+box. Adds regression tests covering pointer and keyboard toggling.
+
+## [2.84.0](https://github.com/juspay/svelte-ui-components/compare/2.84.0..2.83.0) - 7 July 2026
 
 ## [2.83.0](https://github.com/juspay/svelte-ui-components/compare/2.83.0..2.82.0) - 7 July 2026
 

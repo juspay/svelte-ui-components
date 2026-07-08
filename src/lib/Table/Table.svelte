@@ -788,7 +788,12 @@
                     {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
                       {@render keyedColumn.cell(keyedRow, rowIndex, originalIndex)}
                     {:else if keyedColumn?.type && keyedColumn.type !== 'text' && keyedColumn.type !== 'custom'}
-                      <BuiltinCell column={keyedColumn} value={cellValue} {rowIndex} {originalIndex} />
+                      <BuiltinCell
+                        column={keyedColumn}
+                        value={cellValue}
+                        {rowIndex}
+                        {originalIndex}
+                      />
                     {:else if typeof cell === 'function'}
                       {@render cell(cellValue, rowIndex, colIndex)}
                     {:else}

@@ -111,14 +111,19 @@
   };
 
   // ─── Row click ───────────────────────────────────────────────────────────────
-  const handleRowClick = (rowIndex: number, rowData: JSONValue[]): void => {
-    onRowClick?.(rowIndex, rowData);
+  const handleRowClick = (rowIndex: number, rowData: JSONValue[], originalIndex: number): void => {
+    onRowClick?.(rowIndex, rowData, originalIndex);
   };
 
-  const handleRowKeydown = (event: KeyboardEvent, rowIndex: number, rowData: JSONValue[]): void => {
+  const handleRowKeydown = (
+    event: KeyboardEvent,
+    rowIndex: number,
+    rowData: JSONValue[],
+    originalIndex: number
+  ): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      onRowClick?.(rowIndex, rowData);
+      onRowClick?.(rowIndex, rowData, originalIndex);
     }
   };
 
@@ -329,9 +334,10 @@
   const resolveRowId = (
     cfg: TableCheckboxSelectionConfig,
     row: JSONValue[],
-    rowIndex: number
+    rowIndex: number,
+    originalIndex: number
   ): string => {
-    return cfg.getRowId ? cfg.getRowId(row, rowIndex) : String(rowIndex);
+    return cfg.getRowId ? cfg.getRowId(row, rowIndex, originalIndex) : String(rowIndex);
   };
 
   let internalSelectedIds = new SvelteSet<string>();
@@ -374,7 +380,12 @@
       const originalIndex = indexMap.get(row) ?? -1;
       const stableIndex = originalIndex === -1 ? fallbackIndex : originalIndex;
       if (checkboxSelection && checkboxSelection.enabled !== false) {
-        return resolveRowId(checkboxSelection, row, stableIndex);
+        return resolveRowId(
+          checkboxSelection,
+          row,
+          stableIndex,
+          originalIndexByRow.get(row) ?? stableIndex
+        );
       }
       return String(stableIndex);
     });
@@ -725,9 +736,9 @@
               class:table-row-clickable={isRowClickable}
               class:table-row-selected={rowSelected}
               data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
-              onclick={isRowClickable ? () => handleRowClick(rowIndex, row) : null}
+              onclick={isRowClickable ? () => handleRowClick(rowIndex, row, originalIndex) : null}
               onkeydown={isRowClickable
-                ? (keyboardEvent) => handleRowKeydown(keyboardEvent, rowIndex, row)
+                ? (keyboardEvent) => handleRowKeydown(keyboardEvent, rowIndex, row, originalIndex)
                 : null}
               tabindex={isRowClickable ? 0 : null}
             >

@@ -275,7 +275,7 @@ export type TableCheckboxSelectionConfig = {
   enabled?: boolean;
   selectionMode?: 'single' | 'multiple';
   onSelectionChange?: (selectedIds: Set<string>) => void;
-  getRowId?: (row: JSONValue[], rowIndex: number) => string;
+  getRowId?: (row: JSONValue[], rowIndex: number, originalIndex: number) => string;
   disabledRowIds?: Set<string>;
   /**
    * Controlled-selection overlay. Omitted: today's uncontrolled behavior via
@@ -401,7 +401,7 @@ export type OptionalTableProperties = {
 };
 
 export type TableEventProperties = {
-  onRowClick?: (rowIndex: number, rowData: JSONValue[]) => void;
+  onRowClick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
   onSort?: (columnIndex: number, direction: SortDirection) => void;
   /**
    * C2-2: Callback invoked when a cell value changes via an editable element

@@ -2,68 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.86.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.87.0)
 
-Brings BarChart, LineChart, AreaChart, FunnelChart, and DualAxisBarChart
-up to Highcharts conventions for label rendering, tooltip positioning,
-and interaction, while preserving current visual designs. All changes
-are additive to the public API.
+Release run 28921069486 for 2d6899e (the originalIndex minor) failed at
+'pnpm lint' — 'prettier --check src' rejected src/lib/Table/Table.svelte
+because appending {originalIndex} pushed the &lt;BuiltinCell&gt; self-closing tag
+past prettier's printWidth. Reflow the attributes onto separate lines. Pure
+formatting, zero behavior change.
 
-Shared _chart primitives:
-- measure.ts: cached text measurement (measureText)
-- labels.ts: Highcharts-style label placement chain (outside -&gt; inside
-with contrast+outline -&gt; hidden), collision detection, truncation
-- geometry.ts: computeAutoLayout for measured margins from tick-label
-widths, plus stacked-value helpers
-- tooltipPosition.ts: anchored tooltip positioning with flip-then-clamp
-behavior at viewport/container edges
-- scales.ts: integer tick mode for category axes (prevents fractional
-tick steps from producing duplicate/misaligned labels)
-- interactions.ts: shared pointer helpers (pointerPositionIn,
-dismissOnOutsidePointerDown) used by all five charts
-- Axis.svelte: auto tick rotation (-45deg) and thinning under crowding
-- ChartTooltip.svelte: v2 with portal-mode support (tooltipPortal prop)
-- Legend.svelte: toggleable legend items with aria-pressed
+Typed feat deliberately: the release workflow derives the version bump from
+the tip commit alone (release.yml: git log -1), and the unreleased content
+on release is the originalIndex feature — this commit carries its minor bump
+(2.87.0 -&gt; 2.88.0). A fix/chore tip would wrongly cut a patch.
 
-Per-chart behavior:
-- BarChart: overlap-safe value labels (outside/inside flip), auto
-layout, interactive legend with rescale, pointer/keyboard/touch
-interactions, tooltip clamping
-- LineChart: shared tooltip mode across series, hover halo, category
-tick formatting via integer ticks, interactive legend (hidden series
-excluded from axis domain calculation so scales rescale)
-- AreaChart: auto layout, point label placement (respects
-stackNormalize so labels don't show raw values next to a
-percent-scaled chart), minHeight/maxHeight clamping
-- FunnelChart: dynamic label-area sizing, fitted category/value labels
-with a full -&gt; compact -&gt; hidden crop chain, theme-aware connector
-color, cursor-follow tooltip (documented exception for extent-type
-charts)
-- DualAxisBarChart: sign-dependent bar rounding, shared tooltip anchor
-computation across dual axes, keyboard-focusable category hit areas
-with aria-labels that include series values (not just category name)
+Verified: pnpm lint clean (prettier + eslint), svelte-check 533 files 0
+errors, vitest 94 passed, Playwright 106 passed, build and build:wc green.
 
-Dark/light mode: all new chart tokens resolve through CSS light-dark()
-with override support; no light-dark()/var() in SVG presentation
-attributes (kept to style= where required).
-
-Deliberate improved-defaults (documented in each component's props
-table): hideLegendBelow defaults to 360 (legend sheds on narrow
-charts); LineChart sharedTooltip defaults on for multi-series;
-AreaChart now clamps height at 420px for LineChart parity.
-
-Also repairs three stale test/demo contracts that pre-dated this
-branch: the tooltip demo page now exposes the tooltip-container test
-hook its spec expects, the delayed-tooltip spec scrolls its
-below-the-fold trigger into view before raw mouse moves, and the
-date-range-picker toggle spec locates the trigger by stable class
-instead of an accessible name that flips while open.
-
-Testing: 92 Vitest unit tests across the shared _chart primitives
-plus a Playwright functional suite (tests/chart-behaviors.spec.ts)
-covering interactive legend rescale, label flip, tooltip clamping,
-axis crowding/thinning, shared-tooltip hover, keyboard activation,
-and touch tap/dismiss. Full suite green: 92/92 functional tests.
+## [2.87.0](https://github.com/juspay/svelte-ui-components/compare/2.87.0..2.86.0) - 7 July 2026
 
 ## [2.86.0](https://github.com/juspay/svelte-ui-components/compare/2.86.0..2.85.0) - 7 July 2026
 

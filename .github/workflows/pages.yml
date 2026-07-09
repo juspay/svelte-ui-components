@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main, release]
+  pull_request:
+    branches: [release]
 
 permissions:
   contents: read
@@ -33,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Run lint and format checks
+        run: pnpm lint
+
       - name: Build static site
         env:
           BASE_PATH: /svelte-ui-components
@@ -47,12 +52,14 @@ jobs:
           cp dist-wc/index.js build/wc/index.js
 
       - name: Upload Pages artifact
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3
         with:
           path: build
 
   deploy:
     needs: build
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

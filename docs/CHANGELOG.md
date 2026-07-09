@@ -2,26 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.88.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.0)
 
-The 2.88.0 originalIndex work covered the cell callbacks (onMenuAction/
-onToggle/onSelect/onInput/onButtonClick/onPrimaryAction + the cell snippet)
-but not the two other row-resolving callbacks: onRowClick and the checkbox
-selection getRowId. Both still handed consumers only the sorted DISPLAY
-index, so a consumer indexing its own pre-sort rows array (or resolving a
-row id positionally) acted on the wrong row once the table was sorted —
-the same class of bug, just on the row-click and selection paths.
-
-Append originalIndex (the row's index in the consumer-supplied rows,
-pre-sort/pre-filter) as a trailing arg to both, resolved via the existing
-reference-keyed originalIndexByRow map. getRowId previously received the
-sorted stableIndex, which mis-addressed the consumer's array under sort;
-it now also gets the true originalIndex. Backward compatible (appended
-arg). The reference-preservation the map relies on is already proven by
-src/lib/Table/original-index.test.ts (both new callbacks use that map).
-
-Verified: pnpm lint clean (prettier + eslint), svelte-check 533 files 0
-errors, vitest 94 passed, build and build:wc green.
+## [2.89.0](https://github.com/juspay/svelte-ui-components/compare/2.89.0..2.88.0) - 8 July 2026
 
 ## [2.88.0](https://github.com/juspay/svelte-ui-components/compare/2.88.0..2.87.0) - 8 July 2026
 

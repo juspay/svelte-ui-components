@@ -642,8 +642,9 @@
                     icon={headerTooltipIcon}
                     iconPosition="trailing"
                   >
-                    <span class="table-header-label" class:table-header-label-plain={headerTooltipIcon}
-                      >{header}</span
+                    <span
+                      class="table-header-label"
+                      class:table-header-label-plain={headerTooltipIcon}>{header}</span
                     >
                   </Tooltip>
                 {:else}

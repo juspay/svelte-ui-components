@@ -12,8 +12,10 @@ export type OptionalTooltipProperties = {
   delay?: number;
   testId?: string | null;
   classes?: string;
-  /** Snippet rendered as a leading icon in the trigger wrapper. No default glyph is provided — consumers supply their own. */
+  /** Snippet rendered as an icon in the trigger wrapper, beside the content. No default glyph is provided — consumers supply their own. Placement is controlled by `iconPosition`. */
   icon?: Snippet;
+  /** Which side of the trigger content the `icon` sits on. Defaults to `'leading'`. */
+  iconPosition?: 'leading' | 'trailing';
   /** Snippet rendered as the bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. */
   content?: Snippet;
   /**

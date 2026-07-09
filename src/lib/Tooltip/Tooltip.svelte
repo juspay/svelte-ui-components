@@ -11,6 +11,7 @@
     classes,
     children,
     icon,
+    iconPosition = 'leading',
     content,
     usePortal = false
   }: TooltipProperties = $props();
@@ -355,10 +356,13 @@
   onfocusout={hideTooltip}
   data-pw={testId}
 >
-  {#if typeof icon === 'function'}
+  {#if typeof icon === 'function' && iconPosition === 'leading'}
     <span class="tooltip-icon" aria-hidden="true">{@render icon()}</span>
   {/if}
   {@render children()}
+  {#if typeof icon === 'function' && iconPosition === 'trailing'}
+    <span class="tooltip-icon" aria-hidden="true">{@render icon()}</span>
+  {/if}
   {#if visible && !usePortal}
     <div
       use:clampInlineBubble

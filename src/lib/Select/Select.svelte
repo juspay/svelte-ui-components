@@ -551,6 +551,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: var(--select-value-align, left);
   }
 
   .select-placeholder {
@@ -559,6 +560,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: var(--select-value-align, left);
   }
 
   .select-search {

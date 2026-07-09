@@ -1,5 +1,6 @@
 import type { JSONValue } from 'type-decoder';
 import type { Snippet } from 'svelte';
+import type { TooltipPosition } from '../Tooltip/properties';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -368,6 +369,16 @@ export type OptionalTableProperties = {
   toolbarSlot?: Snippet<[{ selectedIds: Set<string> }]>;
   /** Prepends a sequential row-number column (1-based, pagination-aware). */
   rowNumberColumn?: boolean;
+  /** Header label for the row-number column. Defaults to `'#'`. */
+  rowNumberLabel?: string;
+  /**
+   * Icon snippet shown after each header label that has a `tooltip` — the
+   * consumer supplies the glyph; the table places it trailing inside the tooltip
+   * trigger. When set, the default underline affordance on those labels is dropped.
+   */
+  headerTooltipIcon?: Snippet;
+  /** Placement of every header tooltip bubble. Defaults to `'top'`. */
+  headerTooltipPosition?: TooltipPosition;
   sortable?: boolean;
   sortableColumns?: number[];
   stickyHeader?: boolean;

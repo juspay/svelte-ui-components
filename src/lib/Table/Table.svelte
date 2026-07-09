@@ -49,7 +49,10 @@
     onSearchChange,
     pagination,
     toolbarSlot,
-    rowNumberColumn = false
+    rowNumberColumn = false,
+    rowNumberLabel = '#',
+    headerTooltipIcon,
+    headerTooltipPosition
   }: TableProperties = $props();
 
   // ─── Keyed column model → positional projection ─────────────────────────────
@@ -612,7 +615,7 @@
           {/if}
           {#if rowNumberColumn}
             <th class="table-header table-row-number-col" class:table-header-sticky={isStickyHeader}
-              >#</th
+              >{rowNumberLabel}</th
             >
           {/if}
           {#each effectiveHeaders as header, colIndex (colIndex)}
@@ -633,8 +636,15 @@
                     : null}
               >
                 {#if headerColumn?.tooltip}
-                  <Tooltip text={headerColumn.tooltip}>
-                    <span class="table-header-label">{header}</span>
+                  <Tooltip
+                    text={headerColumn.tooltip}
+                    position={headerTooltipPosition}
+                    icon={headerTooltipIcon}
+                    iconPosition="trailing"
+                  >
+                    <span class="table-header-label" class:table-header-label-plain={headerTooltipIcon}
+                      >{header}</span
+                    >
                   </Tooltip>
                 {:else}
                   {header}
@@ -990,18 +1000,24 @@
     letter-spacing: var(--table-header-letter-spacing, 0.02em);
     text-transform: var(--table-header-text-transform);
     color: var(--table-header-color, var(--table-header-font-color, #6b7280));
+    border-bottom: var(--table-header-border, var(--table-inner-border, none));
   }
 
   .table-header-content {
     display: flex;
     align-items: center;
     gap: 4px;
+    justify-content: var(--table-header-justify, flex-start);
   }
 
   .table-header-label {
     text-decoration: var(--table-header-tooltip-underline, underline dotted);
     text-underline-offset: 2px;
     cursor: help;
+  }
+
+  .table-header-label-plain {
+    text-decoration: none;
   }
 
   .table-header-filter {
@@ -1256,6 +1272,7 @@
     width: var(--table-row-number-col-width, 48px);
     color: var(--table-row-number-color, #6b7280);
     font-variant-numeric: tabular-nums;
+    text-align: var(--table-row-number-align, var(--table-text-align, left));
   }
 
   /* ── Accessibility ──────────────────────────────────────────────────────── */

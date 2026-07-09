@@ -543,6 +543,7 @@
     display: inline-flex;
     align-items: center;
     min-width: 0;
+    width: var(--table-interactive-width, auto);
   }
 
   .builtin-action-group {

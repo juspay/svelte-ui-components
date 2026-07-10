@@ -31,75 +31,25 @@ export const tooltip = (
   const bubbleId = `sui-tooltip-${++tooltipIdCounter}`;
 
   const OFFSET = 8; // px — matches --tooltip-offset default
+  const EDGE_MARGIN = 8; // px — minimum air between the bubble and the viewport edge
+  const ARROW_INSET = 9; // px — arrow centre never closer than this to a bubble corner
 
-  type PositionCoords = {
-    top: number;
-    left: number;
-    transform: string;
-    arrowTop: string;
-    arrowLeft: string;
-    arrowRight: string;
-    arrowTransform: string;
-    arrowBorderWidth: string;
-    arrowBorderColor: string;
+  const oppositeOf = (side: TooltipPosition): TooltipPosition => {
+    if (side === 'top') {
+      return 'bottom';
+    }
+    if (side === 'bottom') {
+      return 'top';
+    }
+    if (side === 'left') {
+      return 'right';
+    }
+    return 'left';
   };
 
-  const computeCoords = (rect: DOMRect, pos: TooltipPosition): PositionCoords => {
-    const arrowSize = 5; // px — matches --tooltip-arrow-size default
-    const bg = 'var(--tooltip-arrow-color,var(--tooltip-background,#333333))';
-    const t = 'transparent';
-
-    if (pos === 'top') {
-      return {
-        top: rect.top - OFFSET,
-        left: rect.left + rect.width / 2,
-        transform: 'translate(-50%, -100%)',
-        arrowTop: '100%',
-        arrowLeft: '50%',
-        arrowRight: '',
-        arrowTransform: 'translateX(-50%)',
-        arrowBorderWidth: `${arrowSize}px ${arrowSize}px 0 ${arrowSize}px`,
-        arrowBorderColor: `${bg} ${t} ${t} ${t}`
-      };
-    }
-    if (pos === 'bottom') {
-      return {
-        top: rect.bottom + OFFSET,
-        left: rect.left + rect.width / 2,
-        transform: 'translate(-50%, 0)',
-        arrowTop: `-${arrowSize}px`,
-        arrowLeft: '50%',
-        arrowRight: '',
-        arrowTransform: 'translateX(-50%)',
-        arrowBorderWidth: `0 ${arrowSize}px ${arrowSize}px ${arrowSize}px`,
-        arrowBorderColor: `${t} ${t} ${bg} ${t}`
-      };
-    }
-    if (pos === 'left') {
-      return {
-        top: rect.top + rect.height / 2,
-        left: rect.left - OFFSET,
-        transform: 'translate(-100%, -50%)',
-        arrowTop: '50%',
-        arrowLeft: '100%',
-        arrowRight: '',
-        arrowTransform: 'translateY(-50%)',
-        arrowBorderWidth: `${arrowSize}px 0 ${arrowSize}px ${arrowSize}px`,
-        arrowBorderColor: `${t} ${t} ${t} ${bg}`
-      };
-    }
-    // right
-    return {
-      top: rect.top + rect.height / 2,
-      left: rect.right + OFFSET,
-      transform: 'translate(0, -50%)',
-      arrowTop: '50%',
-      arrowLeft: '',
-      arrowRight: `${arrowSize}px`,
-      arrowTransform: 'translateY(-50%)',
-      arrowBorderWidth: `${arrowSize}px ${arrowSize}px ${arrowSize}px 0`,
-      arrowBorderColor: `${t} ${bg} ${t} ${t}`
-    };
+  // min > max (bubble wider/taller than the viewport) degrades to the raw value.
+  const clampValue = (value: number, min: number, max: number): number => {
+    return max < min ? value : Math.min(Math.max(value, min), max);
   };
 
   /**
@@ -154,6 +104,13 @@ export const tooltip = (
   /**
    * Compute and apply `top`/`left` fixed coordinates plus arrow styles based on the
    * current bounding rect of the host element and the active `position` option.
+   *
+   * The bubble is measured after mounting and then (1) FLIPPED to the opposite
+   * side when the preferred side has no room but the opposite side does, and
+   * (2) CLAMPED so it never crosses the viewport edge — a tooltip on a trigger
+   * near the screen edge used to spill off-screen or cover the nav beneath it.
+   * The arrow is positioned in bubble-local pixels anchored to the TRIGGER
+   * centre, so it keeps pointing at the trigger even when the bubble shifts.
    */
   const positionBubble = (): void => {
     if (bubbleEl === null || arrowEl === null) {
@@ -161,21 +118,91 @@ export const tooltip = (
     }
 
     const rect = node.getBoundingClientRect();
-    const pos: TooltipPosition = currentOptions.position ?? 'top';
-    const coords = computeCoords(rect, pos);
+    const preferred: TooltipPosition = currentOptions.position ?? 'top';
+    const arrowSize = 5; // px — matches --tooltip-arrow-size default
+    const bg = 'var(--tooltip-arrow-color,var(--tooltip-background,#333333))';
+    const t = 'transparent';
 
-    bubbleEl.style.top = `${coords.top}px`;
-    bubbleEl.style.left = `${coords.left}px`;
-    bubbleEl.style.transform = coords.transform;
+    // Stubbed DOMs (unit tests) report no dimensions; clamping then no-ops.
+    const bubbleWidth = bubbleEl.offsetWidth || 0;
+    const bubbleHeight = bubbleEl.offsetHeight || 0;
+    const viewportWidth =
+      typeof window !== 'undefined' && window.innerWidth > 0
+        ? window.innerWidth
+        : Number.POSITIVE_INFINITY;
+    const viewportHeight =
+      typeof window !== 'undefined' && window.innerHeight > 0
+        ? window.innerHeight
+        : Number.POSITIVE_INFINITY;
 
-    arrowEl.style.top = coords.arrowTop;
-    arrowEl.style.left = coords.arrowLeft;
-    if (coords.arrowRight !== '') {
-      arrowEl.style.right = coords.arrowRight;
+    const fits = (side: TooltipPosition): boolean => {
+      if (side === 'top') {
+        return rect.top - OFFSET - bubbleHeight >= EDGE_MARGIN;
+      }
+      if (side === 'bottom') {
+        return rect.bottom + OFFSET + bubbleHeight <= viewportHeight - EDGE_MARGIN;
+      }
+      if (side === 'left') {
+        return rect.left - OFFSET - bubbleWidth >= EDGE_MARGIN;
+      }
+      return rect.right + OFFSET + bubbleWidth <= viewportWidth - EDGE_MARGIN;
+    };
+
+    const side: TooltipPosition =
+      !fits(preferred) && fits(oppositeOf(preferred)) ? oppositeOf(preferred) : preferred;
+
+    let top: number;
+    let left: number;
+    if (side === 'top' || side === 'bottom') {
+      top = side === 'top' ? rect.top - OFFSET - bubbleHeight : rect.bottom + OFFSET;
+      left = clampValue(
+        rect.left + rect.width / 2 - bubbleWidth / 2,
+        EDGE_MARGIN,
+        viewportWidth - EDGE_MARGIN - bubbleWidth
+      );
+    } else {
+      left = side === 'left' ? rect.left - OFFSET - bubbleWidth : rect.right + OFFSET;
+      top = clampValue(
+        rect.top + rect.height / 2 - bubbleHeight / 2,
+        EDGE_MARGIN,
+        viewportHeight - EDGE_MARGIN - bubbleHeight
+      );
     }
-    arrowEl.style.transform = coords.arrowTransform;
-    arrowEl.style.borderWidth = coords.arrowBorderWidth;
-    arrowEl.style.borderColor = coords.arrowBorderColor;
+
+    bubbleEl.style.top = `${top}px`;
+    bubbleEl.style.left = `${left}px`;
+    bubbleEl.style.transform = 'none';
+
+    arrowEl.style.right = '';
+    if (side === 'top' || side === 'bottom') {
+      const arrowLeft = clampValue(
+        rect.left + rect.width / 2 - left,
+        ARROW_INSET,
+        Math.max(ARROW_INSET, bubbleWidth - ARROW_INSET)
+      );
+      arrowEl.style.left = `${arrowLeft}px`;
+      arrowEl.style.top = side === 'top' ? '100%' : `-${arrowSize}px`;
+      arrowEl.style.transform = 'translateX(-50%)';
+      arrowEl.style.borderWidth =
+        side === 'top'
+          ? `${arrowSize}px ${arrowSize}px 0 ${arrowSize}px`
+          : `0 ${arrowSize}px ${arrowSize}px ${arrowSize}px`;
+      arrowEl.style.borderColor = side === 'top' ? `${bg} ${t} ${t} ${t}` : `${t} ${t} ${bg} ${t}`;
+    } else {
+      const arrowTop = clampValue(
+        rect.top + rect.height / 2 - top,
+        ARROW_INSET,
+        Math.max(ARROW_INSET, bubbleHeight - ARROW_INSET)
+      );
+      arrowEl.style.top = `${arrowTop}px`;
+      arrowEl.style.left = side === 'left' ? '100%' : `-${arrowSize}px`;
+      arrowEl.style.transform = 'translateY(-50%)';
+      arrowEl.style.borderWidth =
+        side === 'left'
+          ? `${arrowSize}px 0 ${arrowSize}px ${arrowSize}px`
+          : `${arrowSize}px ${arrowSize}px ${arrowSize}px 0`;
+      arrowEl.style.borderColor = side === 'left' ? `${t} ${t} ${t} ${bg}` : `${t} ${bg} ${t} ${t}`;
+    }
   };
 
   const show = (): void => {

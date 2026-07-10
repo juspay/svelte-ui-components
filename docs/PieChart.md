@@ -127,6 +127,17 @@ The `type` field on the returned API is always `'donut-chart'`, regardless of wh
 </PieChart>
 ```
 
+### Label overflow & collisions
+
+Slice labels (`showLabels` / `showValues`) are laid out defensively so a crowded pie never renders
+overlapping text:
+
+- Each label is truncated against its real rendered width (canvas-measured, SSR-safe fallback) to
+  the horizontal room the chart actually has at that label's position.
+- Labels that would collide are dropped, larger slices winning; `labelPosition="inside"` labels are
+  also dropped when their wedge is thinner than one text line.
+- Every dropped or truncated label keeps its full text on the slice tooltip and `aria-label`.
+
 ## Props
 
 | Prop               | Type                               | Required | Default      | Description                                                                                                                                                                              |

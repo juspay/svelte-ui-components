@@ -18,6 +18,42 @@
     { label: 'Entertainment', value: 150, color: '#59a14f' }
   ];
 
+  // Crowded pie — many categories, long labels, a fat head and a long tail of
+  // slivers. This is the shape that used to stack every label into an
+  // unreadable pile around the 3 o'clock / 9 o'clock regions.
+  const crowdedSources = Array.from({ length: 24 }, (_, index) => {
+    const names = [
+      'Organic Search Traffic',
+      'Direct Navigation',
+      'Facebook Paid Campaigns',
+      'Instagram Influencer Posts',
+      'Google Shopping Ads',
+      'Email Newsletter Clicks',
+      'Affiliate Partner Network',
+      'YouTube Product Reviews',
+      'WhatsApp Referral Shares',
+      'Pinterest Boards',
+      'TikTok Organic Mentions',
+      'Reddit Community Threads',
+      'Quora Answer Links',
+      'LinkedIn Company Page',
+      'Twitter / X Promotions',
+      'Snapchat Story Ads',
+      'Telegram Channel Posts',
+      'Push Notification Reopens',
+      'SMS Campaign Clicks',
+      'QR Code Scans In-Store',
+      'Marketplace Cross-Listing',
+      'Price Comparison Engines',
+      'Cashback Portal Referrals',
+      'Browser Extension Deals'
+    ];
+    return {
+      label: names[index],
+      value: index < 3 ? 4000 - index * 900 : Math.max(30, 700 - index * 30)
+    };
+  });
+
   // ── Highlight hook demo ────────────────────────────────────────
   let chartApi: ChartHighlightAPI | null = $state(null);
   let highlightedSlice = $state<number | null>(null);
@@ -54,6 +90,35 @@
 <h3>With Legend</h3>
 <div class="demo-row" style="max-width: 400px;">
   <PieChart data={expenses} innerRadius={0.5} showLegend />
+</div>
+
+<h3>
+  Crowded — 24 sources with long labels and sliver slices (labels measure, truncate, de-collide;
+  every value stays on the hover tooltip)
+</h3>
+<div class="demo-row" style="max-width: 640px;">
+  <PieChart
+    data={crowdedSources}
+    showLabels
+    showValues
+    labelPosition="outside"
+    testId="pie-crowded-chart"
+  />
+</div>
+
+<h3>All-zero values — degrades to the empty state, never NaN geometry</h3>
+<div class="demo-row" style="max-width: 400px;">
+  <PieChart
+    data={[
+      { label: 'A', value: 0 },
+      { label: 'B', value: 0 }
+    ]}
+    testId="pie-all-zero"
+  >
+    {#snippet empty()}
+      <p>No distribution data yet.</p>
+    {/snippet}
+  </PieChart>
 </div>
 
 <h3>Delta Badge — positive change</h3>

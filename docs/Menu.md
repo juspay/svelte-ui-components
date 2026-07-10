@@ -34,6 +34,7 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 | role      | `'menu' \| 'listbox'`  | No       | `'menu'` | ARIA role for the dropdown container. Set to `'listbox'` to use the menu as an autocomplete suggestions list. Items automatically get `role="option"` instead of `role="menuitem"`, and `aria-selected` is managed on the focused item. |
 | ariaLabel | `string`               | No       | `-`      | Sets `aria-label` on the dropdown container for screen reader identification.                                                                                          |
 | id        | `string`               | No       | `-`      | Sets the `id` attribute on the dropdown container. Needed for `aria-controls` references from a parent combobox input.                                                 |
+| placement | `'bottom-left' \| 'bottom-right' \| 'top-left' \| 'top-right' \| 'auto'` | No | `'bottom-left'` | Corner of the trigger the dropdown anchors to. The default preserves the long-standing behavior (including the `--menu-dropdown-top`/`--menu-dropdown-left` tokens). Fixed corners anchor statically — use `'bottom-right'` for row-action menus in a table's trailing column so the panel expands leftwards. `'auto'` measures the panel on every open and picks the corner that keeps it fully inside the viewport: it right-anchors when the panel would overflow the right edge and flips above the trigger when there is not enough room below but enough above. |
 
 ## Snippets
 

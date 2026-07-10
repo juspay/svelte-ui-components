@@ -2,26 +2,28 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.2)
 
-SankeyChart: replace the flat 7.2px/char label estimate with per-character-class
-width estimation, budget middle-column labels for dataLabelOffsetX, de-collide
-labels per column (smaller-value node yields; full text stays on the hover
-title), and render labels in a second pass so bars can never over-paint them.
+The dropdown has always been hard-anchored to the trigger's bottom-left
+corner; consumers whose trigger sits in a table's trailing actions column
+(the row-actions pattern) had to tunnel right-anchoring in from outside,
+and nothing guarded against the panel overflowing the viewport or being
+opened from the last visible row.
 
-Modal: cap .modal-content at the viewport for every size class via the new
---modal-max-height token (calc(100dvh - 32px) default) and let .slot-content
-shrink (min-height: 0, tokened) so internal scroll engages — a size height var
-overridden to fit-content no longer grows past the screen and pushes the
-footer and bottom rounding off.
+placement adds the four fixed corners plus 'auto'. The default stays
+'bottom-left' and keeps flowing through the --menu-dropdown-top /
+--menu-dropdown-left consumer tokens, so existing consumers render
+byte-identically. 'auto' renders the panel hidden for one tick, measures
+it against the viewport, and picks the corner that fits: right-anchored
+when the panel would overflow the right edge, flipped above the trigger
+when there is no room below but enough above (8px viewport margin).
 
-Tabs: hold the edge fade fully transparent for --tabs-fade-solid (8px default)
-before ramping to opaque, so a clipped tab label cannot linger as a faint
-glyph fragment beside the scroll arrows.
+Covered by tests/menu-placement.test.ts against the component demo page:
+default unchanged, bottom-right anchoring, corner-pinned auto flip,
+auto stay-at-default with viewport room, and an omitted-placement
+regression guard for existing consumers.
 
-Each fix ships a demo section and a Playwright spec, verified as a negative
-control against the unfixed components (4 defect tests fail) and green after
-(6/6; full suite 112/112).
+## [2.89.2](https://github.com/juspay/svelte-ui-components/compare/2.89.2..2.89.1) - 10 July 2026
 
 ## [2.89.1](https://github.com/juspay/svelte-ui-components/compare/2.89.1..2.89.0) - 9 July 2026
 

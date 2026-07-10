@@ -10,7 +10,11 @@
   import { computePieLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
+  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import { truncateToWidth, placedLabelRect, dropOverlapping } from '$lib/_chart/labels';
+  import type { LabelRect } from '$lib/_chart/labels';
   import type { LegendItem } from '$lib/_chart/types';
+  import { SvelteMap } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -153,6 +157,76 @@
     data.map((d, i) => ({ label: d.label, color: d.color ?? getColor(i) }))
   );
 
+  // ── Label engine ───────────────────────────────────────────────
+  // A crowded pie (many slices, long labels) used to render every label
+  // unconditionally at its mid-angle: stacked unreadable text that also ran
+  // past the chart box. Labels are now measured, truncated to the horizontal
+  // room the chart actually has, gated on the slice's arc length (inside
+  // position), and de-collided with larger slices winning. Dropped or
+  // truncated text stays available on the tooltip and aria-label.
+  let visibleSliceLabels = $derived.by(() => {
+    const visible = new SvelteMap<number, string>();
+    if ((!showLabels && !showValues) || chartWidth <= 0) {
+      return visible;
+    }
+    const font = {
+      size: containerEl ? readCssVarPx(containerEl, '--piechart-label-font-size', 12) : 12
+    };
+    const lineHeight = measureText('Ag', font).height;
+
+    type LabelCandidate = { index: number; value: number; text: string; rect: LabelRect };
+    const candidates: LabelCandidate[] = [];
+    for (const slice of slices) {
+      const parts: string[] = [];
+      if (showLabels) {
+        parts.push(slice.label);
+      }
+      if (showValues) {
+        parts.push(pctFormat(slice.value));
+      }
+      const raw = parts.join(' ').trim();
+      if (raw.length === 0) {
+        continue;
+      }
+      const absX = cx + slice.labelX;
+      const absY = cy + slice.labelY;
+      // text-anchor is middle, so the budget is twice the room to the nearer edge.
+      const budget = Math.max(0, Math.min(absX, chartWidth - absX) * 2 - 8);
+      const labelRadius = labelPosition === 'outside' ? outerR : (innerR + outerR) / 2;
+      const arcLength = (slice.endAngle - slice.startAngle) * labelRadius;
+      // An inside label sits ON its wedge — hide it when the wedge is thinner
+      // than one text line (outside labels rely on the collision pass instead).
+      if (labelPosition === 'inside' && arcLength < lineHeight) {
+        continue;
+      }
+      const text = truncateToWidth(raw, budget, font);
+      if (text === '') {
+        continue;
+      }
+      const size = measureText(text, font);
+      candidates.push({
+        index: slice.index,
+        value: slice.value,
+        text,
+        rect: placedLabelRect(
+          { x: absX, y: absY, textAnchor: 'middle', dominantBaseline: 'middle' },
+          size
+        )
+      });
+    }
+
+    // Feed the greedy first-come collision pass in value order so the larger
+    // slice keeps its label whenever two collide.
+    const ordered = [...candidates].sort((a, b) => b.value - a.value);
+    const keptFlags = dropOverlapping(ordered.map((candidate) => candidate.rect));
+    ordered.forEach((candidate, orderedIndex) => {
+      if (keptFlags[orderedIndex]) {
+        visible.set(candidate.index, candidate.text);
+      }
+    });
+    return visible;
+  });
+
   let centerBoxSize = $derived(innerR > 0 ? Math.max(0, innerR * 1.3) : 0);
 
   // The foreignObject for the center snippet is positioned relative to the <g>
@@ -243,19 +317,15 @@
             onmouseleave={handleLeave}
             onclick={() => onsliceclick?.({ index: slice.index, slice: data[slice.index] })}
           />
-          {#if showLabels || showValues}
+          {#if visibleSliceLabels.has(slice.index)}
             <text
               class="slice-label"
               class:label-outside={labelPosition === 'outside'}
               x={slice.labelX}
               y={slice.labelY}
               text-anchor="middle"
-              dominant-baseline="middle"
+              dominant-baseline="middle">{visibleSliceLabels.get(slice.index)}</text
             >
-              {#if showLabels}{slice.label}{/if}
-              {#if showValues}
-                {pctFormat(slice.value)}{/if}
-            </text>
           {/if}
         {/each}
 

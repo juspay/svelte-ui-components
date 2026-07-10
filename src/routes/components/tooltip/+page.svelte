@@ -159,3 +159,31 @@
     Forward
   </button>
 </div>
+
+<h3>Edge clamping — the bubble never leaves the viewport, the arrow never leaves the trigger</h3>
+<p>
+  Triggers hugging a viewport edge used to spill their bubble off-screen (the action centred it with
+  a bare <code>translate(-50%)</code>). The bubble now clamps to the viewport with an 8px margin and
+  flips to the opposite side when the preferred side has no room, while the arrow stays anchored to
+  the trigger.
+</p>
+<div class="demo-row" style="justify-content: space-between; width: 100%;">
+  <button
+    data-pw="tooltip-edge-left"
+    use:tooltip={{
+      text: 'A long tooltip on a left-edge trigger that used to spill past the viewport edge',
+      position: 'bottom'
+    }}
+  >
+    Left-edge trigger
+  </button>
+  <button
+    data-pw="tooltip-edge-right"
+    use:tooltip={{
+      text: 'A long tooltip on a right-edge trigger that used to spill past the viewport edge',
+      position: 'bottom'
+    }}
+  >
+    Right-edge trigger
+  </button>
+</div>

@@ -5,6 +5,8 @@
   import { computeSankeyLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
+  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import { truncateToWidth } from '$lib/_chart/labels';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
@@ -52,54 +54,20 @@
   let format = $derived(valueFormat ?? formatNumber);
   let isEmpty = $derived(nodes.length === 0);
   const MARGIN = 40;
-  const LABEL_CHAR_PX = 7.2; // ≈ 0.6em at the 12px default label size
   // A 12px label's rendered line box measures ~16px (≈1.33em) across common
   // font stacks; two label centres closer than this overlap visibly.
   const LABEL_LINE_PX = 16;
 
-  // Per-character width estimate at the 12px default label size. A flat
-  // 7.2px/char average underestimates uppercase-heavy labels ("OTP SKIPPED
-  // (1,234)" is ~8.2px/char), so "truncated" labels still overflowed their
-  // budget and slid under the next column's node bar.
-  const estimateCharWidth = (ch: string): number => {
-    if (/[mwMW@]/.test(ch)) {
-      return 10.6;
-    }
-    if (/[A-Z0-9_#%&]/.test(ch)) {
-      return 8.2;
-    }
-    if (/[iljtfr.,:;'’()[\]!|]/.test(ch)) {
-      return 3.6;
-    }
-    if (ch === ' ') {
-      return 3.8;
-    }
-    return 6.6;
-  };
-
-  const estimateTextWidth = (text: string): number => {
-    let width = 0;
-    for (const ch of text) {
-      width += estimateCharWidth(ch);
-    }
-    return width;
-  };
-
-  // Trim `text` (appending an ellipsis) until its estimated width fits
-  // `available` px. Returns '' when even 3 chars + ellipsis cannot fit —
-  // callers hide the label and rely on the <title> tooltip instead.
-  const fitTextToWidth = (text: string, available: number): string => {
-    if (estimateTextWidth(text) <= available) {
-      return text;
-    }
-    for (let keep = text.length - 1; keep >= 3; keep--) {
-      const candidate = text.slice(0, keep) + '…';
-      if (estimateTextWidth(candidate) <= available) {
-        return candidate;
-      }
-    }
-    return '';
-  };
+  // Real text measurement via the shared canvas-backed helper (exact on the
+  // client, 0.6em/char heuristic under SSR/tests). Character estimates used
+  // to both over-reserve the right label gutter (dead canvas) and under-budget
+  // uppercase-heavy labels (text sliding under the next column's bars).
+  let labelFont = $derived({
+    size: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-size', 12) : 12
+  });
+  let colLabelFont = $derived({
+    size: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-size', 11) : 11
+  });
 
   // Final-column labels render to the RIGHT of their node; the bare 40px margin is
   // nowhere near enough for real funnel labels ("PARTIALLY_FAILED (1,234)"), so they
@@ -118,8 +86,8 @@
       return 0;
     }
     const longestPx =
-      Math.max(...sinkLabels.map((label) => estimateTextWidth(label))) +
-      (showValues ? 9 * LABEL_CHAR_PX : 0);
+      Math.max(...sinkLabels.map((label) => measureText(label, labelFont).width)) +
+      (showValues ? measureText(' (999,999)', labelFont).width : 0);
     const wanted = longestPx + 10 + dataLabelOffsetX;
     // Cap the reservation so labels can never squeeze the diagram below 3/4 width,
     // and floor at 0 — a negative dataLabelOffsetX must not inflate the plot
@@ -175,7 +143,7 @@
   // column count grow; untruncated they collide into one unreadable run. Clip to
   // the column pitch with an ellipsis — the full text stays on the <title>.
   const truncateColumnLabel = (text: string): string => {
-    return fitTextToWidth(text, Math.max(0, colWidth - 6));
+    return truncateToWidth(text, Math.max(0, colWidth - 6), colLabelFont);
   };
 
   const truncateLabel = (text: string, column: number): string => {
@@ -194,7 +162,7 @@
           : Math.max(0, colWidth - nodeWidth - 12 - dataLabelOffsetX);
     // No usable room — hide the label rather than force text that would overflow;
     // the full text is still reachable via the node's <title> on hover.
-    return fitTextToWidth(text, available);
+    return truncateToWidth(text, available, labelFont);
   };
 
   // Vertical label de-collision: labels sit at each node's centre-y, so two

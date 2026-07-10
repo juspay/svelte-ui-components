@@ -65,7 +65,7 @@ Override these custom properties to theme the component.
 
 ## Tooltip Action
 
-The `tooltip` Svelte action is a renderless alternative to the `<Tooltip>` component. It attaches hover and focus listeners directly to the host element without injecting a wrapper `<div>`, so it does not affect flex-child sizing inside toolbars and icon rows. The bubble is always mounted on `document.body` with `position: fixed` coordinates, so it is never clipped by `overflow: hidden` ancestors.
+The `tooltip` Svelte action is a renderless alternative to the `<Tooltip>` component. It attaches hover and focus listeners directly to the host element without injecting a wrapper `<div>`, so it does not affect flex-child sizing inside toolbars and icon rows. The bubble is always mounted on `document.body` with `position: fixed` coordinates, so it is never clipped by `overflow: hidden` ancestors. The bubble is measured after mounting, clamped so it never crosses the viewport edge (8px margin), and flipped to the opposite side when the preferred side has no room; the arrow stays anchored over the trigger even when the bubble shifts.
 
 ```svelte
 <script>

@@ -2,26 +2,32 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.90.0)
 
-The dropdown has always been hard-anchored to the trigger's bottom-left
-corner; consumers whose trigger sits in a table's trailing actions column
-(the row-actions pattern) had to tunnel right-anchoring in from outside,
-and nothing guarded against the panel overflowing the viewport or being
-opened from the last visible row.
+Tooltip action: the renderless use:tooltip bubble was centred with a bare
+translate(-50%) and no edge handling — triggers near a viewport edge spilled
+the bubble off-screen (or shrank it into a skinny text column against the
+right edge), and there was no flip when the preferred side had no room. The
+bubble is now measured after mounting, clamped to the viewport (8px margin),
+flipped to the opposite side when needed, and its arrow stays anchored over
+the trigger in bubble-local pixels.
 
-placement adds the four fixed corners plus 'auto'. The default stays
-'bottom-left' and keeps flowing through the --menu-dropdown-top /
---menu-dropdown-left consumer tokens, so existing consumers render
-byte-identically. 'auto' renders the panel hidden for one tick, measures
-it against the viewport, and picks the corner that fits: right-anchored
-when the panel would overflow the right edge, flipped above the trigger
-when there is no room below but enough above (8px viewport margin).
+PieChart: crowded pies rendered every slice label unconditionally at its
+mid-angle — stacked unreadable text that ran past the chart box. Labels now
+measure (canvas-backed shared helper), truncate to the room the chart has,
+gate inside-labels on wedge arc length, and de-collide with larger slices
+winning; dropped text stays on the tooltip and aria-label.
 
-Covered by tests/menu-placement.test.ts against the component demo page:
-default unchanged, bottom-right anchoring, corner-pinned auto flip,
-auto stay-at-default with viewport room, and an omitted-placement
-regression guard for existing consumers.
+SankeyChart: swap the per-character width estimates for the shared
+measureText helper — the estimator both over-reserved the right label gutter
+(dead canvas) and under-budgeted some labels; reservations and truncation are
+now exact on the client (SSR keeps the heuristic fallback).
+
+Demos: crowded 24-slice pie, all-zero pie, edge-clamp tooltip triggers.
+Specs (negative-controlled: 4 defect tests fail on the unfixed components):
+pie-label-engine (3), tooltip-action-clamping (3); full suite 118/118.
+
+## [2.90.0](https://github.com/juspay/svelte-ui-components/compare/2.90.0..2.89.2) - 10 July 2026
 
 ## [2.89.2](https://github.com/juspay/svelte-ui-components/compare/2.89.2..2.89.1) - 10 July 2026
 

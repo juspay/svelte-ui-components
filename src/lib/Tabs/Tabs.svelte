@@ -252,30 +252,51 @@
     display: none;
   }
 
+  /* Each fade holds FULLY transparent for the first --tabs-fade-solid px before
+     ramping to opaque: a plain 0→fade-size ramp still renders the clipped tab
+     label at ~20% opacity a few px from the edge, which reads as a stray glyph
+     fragment beside the scroll arrow. The solid zone guarantees nothing is
+     perceptible there. */
   .tabs-bar.fade-left {
-    mask-image: linear-gradient(to right, transparent, black var(--tabs-fade-size, 32px));
-    -webkit-mask-image: linear-gradient(to right, transparent, black var(--tabs-fade-size, 32px));
+    mask-image: linear-gradient(
+      to right,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
   }
 
   .tabs-bar.fade-right {
-    mask-image: linear-gradient(to left, transparent, black var(--tabs-fade-size, 32px));
-    -webkit-mask-image: linear-gradient(to left, transparent, black var(--tabs-fade-size, 32px));
+    mask-image: linear-gradient(
+      to left,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+    -webkit-mask-image: linear-gradient(
+      to left,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
   }
 
   .tabs-bar.fade-left.fade-right {
     mask-image: linear-gradient(
       to right,
-      transparent,
+      transparent var(--tabs-fade-solid, 8px),
       black var(--tabs-fade-size, 32px),
       black calc(100% - var(--tabs-fade-size, 32px)),
-      transparent
+      transparent calc(100% - var(--tabs-fade-solid, 8px))
     );
     -webkit-mask-image: linear-gradient(
       to right,
-      transparent,
+      transparent var(--tabs-fade-solid, 8px),
       black var(--tabs-fade-size, 32px),
       black calc(100% - var(--tabs-fade-size, 32px)),
-      transparent
+      transparent calc(100% - var(--tabs-fade-solid, 8px))
     );
   }
 

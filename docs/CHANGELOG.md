@@ -2,7 +2,28 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.89.1)
+
+SankeyChart: replace the flat 7.2px/char label estimate with per-character-class
+width estimation, budget middle-column labels for dataLabelOffsetX, de-collide
+labels per column (smaller-value node yields; full text stays on the hover
+title), and render labels in a second pass so bars can never over-paint them.
+
+Modal: cap .modal-content at the viewport for every size class via the new
+--modal-max-height token (calc(100dvh - 32px) default) and let .slot-content
+shrink (min-height: 0, tokened) so internal scroll engages — a size height var
+overridden to fit-content no longer grows past the screen and pushes the
+footer and bottom rounding off.
+
+Tabs: hold the edge fade fully transparent for --tabs-fade-solid (8px default)
+before ramping to opaque, so a clipped tab label cannot linger as a faint
+glyph fragment beside the scroll arrows.
+
+Each fix ships a demo section and a Playwright spec, verified as a negative
+control against the unfixed components (4 defect tests fail) and green after
+(6/6; full suite 112/112).
+
+## [2.89.1](https://github.com/juspay/svelte-ui-components/compare/2.89.1..2.89.0) - 9 July 2026
 
 ## [2.89.0](https://github.com/juspay/svelte-ui-components/compare/2.89.0..2.88.0) - 8 July 2026
 

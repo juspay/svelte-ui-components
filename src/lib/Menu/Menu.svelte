@@ -2,7 +2,7 @@
   import { tick, onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '../Img/Img.svelte';
-  import type { MenuProperties, MenuItem } from './properties';
+  import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
   let {
     items,
@@ -16,7 +16,8 @@
     selectedValue = null,
     role: menuRole = 'menu',
     ariaLabel: menuAriaLabel,
-    id: menuId
+    id: menuId,
+    placement = 'bottom-left'
   }: MenuProperties = $props();
 
   let itemRole = $derived(menuRole === 'listbox' ? 'option' : 'menuitem');
@@ -27,6 +28,42 @@
   let focusedIndex: number = $state(-1);
   let typeaheadQuery: string = $state('');
   let typeaheadTimer: ReturnType<typeof setTimeout> | null = $state(null);
+
+  /** Fixed corner the dropdown is currently anchored to (resolved from `placement`). */
+  let resolvedPlacement: Exclude<MenuPlacement, 'auto'> = $state('bottom-left');
+  /** True while an `'auto'` open is measuring the hidden panel — suppresses paint. */
+  let measuringPlacement: boolean = $state(false);
+
+  /** Viewport padding the auto placement keeps between the panel and the edges. */
+  const AUTO_PLACEMENT_VIEWPORT_MARGIN = 8;
+
+  /**
+   * Resolves `'auto'` against the live geometry: the panel renders hidden at the
+   * default corner first, then flips right/up only when the default overflows
+   * the viewport and the opposite side actually has room for the panel.
+   */
+  function resolveAutoPlacement(): Exclude<MenuPlacement, 'auto'> {
+    if (menuContainerEl === null || menuListEl === null) {
+      return 'bottom-left';
+    }
+    const containerRect = menuContainerEl.getBoundingClientRect();
+    const panelRect = menuListEl.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const overflowsRight =
+      containerRect.left + panelRect.width > viewportWidth - AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const fitsRightAnchored =
+      containerRect.right - panelRect.width >= AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const horizontal = overflowsRight && fitsRightAnchored ? 'right' : 'left';
+
+    const overflowsBottom =
+      containerRect.bottom + panelRect.height > viewportHeight - AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const fitsAbove = containerRect.top - panelRect.height >= AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const vertical = overflowsBottom && fitsAbove ? 'top' : 'bottom';
+
+    return `${vertical}-${horizontal}`;
+  }
 
   let selectableItems: MenuItem[] = $derived(
     items.filter((item) => item.separator !== true && item.disabled !== true)
@@ -46,6 +83,15 @@
 
   function openMenu(startIndex: number | null = null) {
     open = true;
+    if (placement === 'auto') {
+      // Render the panel hidden at the default corner for one tick so it has
+      // real dimensions to measure, then anchor it to the resolved corner.
+      resolvedPlacement = 'bottom-left';
+      measuringPlacement = true;
+    } else {
+      resolvedPlacement = placement;
+      measuringPlacement = false;
+    }
     // With a known selection, opening focuses the selected option (listbox
     // convention) instead of always parking the focus highlight on item 0.
     const selectedItem =
@@ -57,6 +103,10 @@
     focusedIndex = initialIndex;
     onopen?.();
     tick().then(() => {
+      if (placement === 'auto') {
+        resolvedPlacement = resolveAutoPlacement();
+        measuringPlacement = false;
+      }
       focusItem(initialIndex);
     });
   }
@@ -224,7 +274,8 @@
 
   {#if open}
     <div
-      class="menu-dropdown"
+      class="menu-dropdown menu-dropdown-{placement === 'auto' ? resolvedPlacement : placement}"
+      class:menu-dropdown-measuring={measuringPlacement}
       bind:this={menuListEl}
       role={menuRole}
       id={menuId}
@@ -308,6 +359,33 @@
     overflow-y: auto;
     padding: var(--menu-padding, 4px 0);
     margin: var(--menu-margin, 4px 0);
+  }
+
+  /* Placement corners — `bottom-left` is the base rule above (and stays fully
+     driven by the --menu-dropdown-top/left consumer tokens); the other corners
+     override the anchoring sides. The chained selector outweighs the base rule
+     regardless of source order. */
+  .menu-dropdown.menu-dropdown-bottom-right {
+    left: auto;
+    right: 0;
+  }
+
+  .menu-dropdown.menu-dropdown-top-left {
+    top: auto;
+    bottom: 100%;
+  }
+
+  .menu-dropdown.menu-dropdown-top-right {
+    top: auto;
+    bottom: 100%;
+    left: auto;
+    right: 0;
+  }
+
+  /* One-tick measuring pass for placement="auto": the panel needs rendered
+     dimensions before the corner is chosen, without a visible flash. */
+  .menu-dropdown.menu-dropdown-measuring {
+    visibility: hidden;
   }
 
   .menu-item {

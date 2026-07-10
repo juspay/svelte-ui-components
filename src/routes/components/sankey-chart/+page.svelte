@@ -66,6 +66,40 @@
     { source: 'wallet', target: 'pending', value: 4 },
     { source: 'wallet', target: 'failed', value: 2 }
   ];
+
+  // Crowded funnel — uppercase-heavy labels plus many small stacked sinks. This
+  // is the shape that used to break the label engine: flat per-char estimates
+  // let "truncated" middle-column labels run under the next column's bars, and
+  // small adjacent sinks rendered their labels on top of each other.
+  const crowdedNodes = [
+    { id: 'sessions', label: 'SESSIONS' },
+    { id: 'checkout-initiated', label: 'CHECKOUT INITIATED' },
+    { id: 'payment-attempted', label: 'PAYMENT ATTEMPTED' },
+    { id: 'dropped-off', label: 'DROPPED OFF BEFORE PAYMENT' },
+    { id: 'charged', label: 'CHARGED' },
+    { id: 'authentication-failed', label: 'AUTHENTICATION_FAILED' },
+    { id: 'authorization-failed', label: 'AUTHORIZATION_FAILED' },
+    { id: 'partially-failed', label: 'PARTIALLY_FAILED' },
+    { id: 'pending-vbv', label: 'PENDING_VBV' },
+    { id: 'juspay-declined', label: 'JUSPAY_DECLINED' },
+    { id: 'auto-refunded', label: 'AUTO_REFUNDED' },
+    { id: 'new', label: 'NEW' }
+  ];
+
+  const crowdedLinks = [
+    { source: 'sessions', target: 'checkout-initiated', value: 9000 },
+    { source: 'sessions', target: 'dropped-off', value: 3200 },
+    { source: 'checkout-initiated', target: 'payment-attempted', value: 7400 },
+    { source: 'checkout-initiated', target: 'dropped-off', value: 1600 },
+    { source: 'payment-attempted', target: 'charged', value: 6100 },
+    { source: 'payment-attempted', target: 'authentication-failed', value: 380 },
+    { source: 'payment-attempted', target: 'authorization-failed', value: 340 },
+    { source: 'payment-attempted', target: 'partially-failed', value: 160 },
+    { source: 'payment-attempted', target: 'pending-vbv', value: 150 },
+    { source: 'payment-attempted', target: 'juspay-declined', value: 140 },
+    { source: 'payment-attempted', target: 'auto-refunded', value: 70 },
+    { source: 'payment-attempted', target: 'new', value: 60 }
+  ];
 </script>
 
 <div class="page-header">
@@ -104,6 +138,21 @@
 <h3>disableDimOnHover — All nodes stay at full opacity when hovering</h3>
 <div class="demo-row">
   <SankeyChart nodes={trafficNodes} links={trafficLinks} disableDimOnHover />
+</div>
+
+<h3>
+  Crowded funnel — width-aware truncation + per-column label de-collision (labels never overlap each
+  other or slide under a neighbouring column's bar; hidden labels stay on the hover tooltip)
+</h3>
+<div class="demo-row">
+  <SankeyChart
+    nodes={crowdedNodes}
+    links={crowdedLinks}
+    showValues
+    minLinkWidth={2}
+    columnLabels={['Traffic', 'Checkout', 'Payment', 'Outcome']}
+    testId="sankey-crowded-chart"
+  />
 </div>
 
 <h3>Combined — minLinkWidth + dataLabelOffsetX + disableDimOnHover</h3>

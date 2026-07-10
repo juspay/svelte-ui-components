@@ -4,6 +4,7 @@
 
   let showModal = $state(false);
   let showModalTop = $state(false);
+  let showTallModal = $state(false);
 </script>
 
 <div class="page-header">
@@ -64,8 +65,51 @@
   {/if}
 </div>
 
+<div class="demo-row">
+  <Button text="Open tall modal (viewport containment)" onclick={() => (showTallModal = true)} />
+  {#if showTallModal}
+    <div class="modal-tall-demo">
+      <Modal
+        size="medium"
+        align="center"
+        showOverlay
+        testId="tall-modal"
+        header={{ text: 'Tall content stays contained' }}
+        footer={{
+          primaryButton: { text: 'Save' },
+          secondaryButton: { text: 'Cancel' }
+        }}
+        onclose={() => (showTallModal = false)}
+        onoverlayClick={() => (showTallModal = false)}
+        onprimaryButtonClick={() => (showTallModal = false)}
+        onsecondaryButtonClick={() => (showTallModal = false)}
+      >
+        {#snippet content()}
+          <div style="padding: 16px;">
+            <p>
+              This wrapper overrides <code>--modal-medium-height: fit-content</code> — the common
+              app-level sizing that used to let tall content grow the modal past the viewport. The
+              content box now caps at <code>--modal-max-height</code> and scrolls internally, so the footer
+              and bottom rounding always stay on screen.
+            </p>
+            {#each Array.from({ length: 40 }, (_, i) => i + 1) as row (row)}
+              <p>Form row {row} — enough content to overflow any laptop viewport.</p>
+            {/each}
+          </div>
+        {/snippet}
+      </Modal>
+    </div>
+  {/if}
+</div>
+
 <style>
   .modal-top-aligned {
     --modal-header-align-items: flex-start;
+  }
+
+  .modal-tall-demo {
+    /* Reproduces the app override that used to break containment: a medium
+       modal sized to its content instead of the 50vh default. */
+    --modal-medium-height: fit-content;
   }
 </style>

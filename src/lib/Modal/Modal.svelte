@@ -263,10 +263,23 @@
     border-radius: var(--modal-border-radius, var(--radius, 4px));
     overflow: var(--modal-content-overflow, auto);
     border-top: var(--modal-content-border-top);
+    /* Viewport containment for every size class: only .fit-content used to carry
+       a max-height, so a size whose height var is overridden to fit-content (or
+       anything taller than the screen) grew past the viewport and pushed its
+       footer and bottom rounding off-screen. dvh tracks the real visible
+       viewport on mobile; the vh line is the fallback for engines without dvh. */
+    max-height: var(--modal-max-height, calc(100vh - 32px));
+    max-height: var(--modal-max-height, calc(100dvh - 32px));
   }
 
   .slot-content {
     display: var(--modal-display, flex);
+    /* Flex children default to min-height: auto and refuse to shrink below their
+       content, which defeats the overflow-y scroll once modal-content is
+       height-capped — the content spills instead of scrolling and the footer is
+       pushed out. 0 lets the slot shrink so its own scrollbar engages and the
+       header/footer stay pinned inside the viewport. */
+    min-height: var(--modal-slot-content-min-height, 0);
     overflow-y: var(--modal-overflow-y, scroll);
     scrollbar-width: var(--modal-scrollbar-width, none);
     padding: var(--modal-content-padding, 0);

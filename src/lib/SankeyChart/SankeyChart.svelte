@@ -53,6 +53,53 @@
   let isEmpty = $derived(nodes.length === 0);
   const MARGIN = 40;
   const LABEL_CHAR_PX = 7.2; // ≈ 0.6em at the 12px default label size
+  // A 12px label's rendered line box measures ~16px (≈1.33em) across common
+  // font stacks; two label centres closer than this overlap visibly.
+  const LABEL_LINE_PX = 16;
+
+  // Per-character width estimate at the 12px default label size. A flat
+  // 7.2px/char average underestimates uppercase-heavy labels ("OTP SKIPPED
+  // (1,234)" is ~8.2px/char), so "truncated" labels still overflowed their
+  // budget and slid under the next column's node bar.
+  const estimateCharWidth = (ch: string): number => {
+    if (/[mwMW@]/.test(ch)) {
+      return 10.6;
+    }
+    if (/[A-Z0-9_#%&]/.test(ch)) {
+      return 8.2;
+    }
+    if (/[iljtfr.,:;'’()[\]!|]/.test(ch)) {
+      return 3.6;
+    }
+    if (ch === ' ') {
+      return 3.8;
+    }
+    return 6.6;
+  };
+
+  const estimateTextWidth = (text: string): number => {
+    let width = 0;
+    for (const ch of text) {
+      width += estimateCharWidth(ch);
+    }
+    return width;
+  };
+
+  // Trim `text` (appending an ellipsis) until its estimated width fits
+  // `available` px. Returns '' when even 3 chars + ellipsis cannot fit —
+  // callers hide the label and rely on the <title> tooltip instead.
+  const fitTextToWidth = (text: string, available: number): string => {
+    if (estimateTextWidth(text) <= available) {
+      return text;
+    }
+    for (let keep = text.length - 1; keep >= 3; keep--) {
+      const candidate = text.slice(0, keep) + '…';
+      if (estimateTextWidth(candidate) <= available) {
+        return candidate;
+      }
+    }
+    return '';
+  };
 
   // Final-column labels render to the RIGHT of their node; the bare 40px margin is
   // nowhere near enough for real funnel labels ("PARTIALLY_FAILED (1,234)"), so they
@@ -70,9 +117,10 @@
     if (sinkLabels.length === 0) {
       return 0;
     }
-    const longestChars =
-      Math.max(...sinkLabels.map((label) => label.length)) + (showValues ? 9 : 0);
-    const wanted = longestChars * LABEL_CHAR_PX + 10 + dataLabelOffsetX;
+    const longestPx =
+      Math.max(...sinkLabels.map((label) => estimateTextWidth(label))) +
+      (showValues ? 9 * LABEL_CHAR_PX : 0);
+    const wanted = longestPx + 10 + dataLabelOffsetX;
     // Cap the reservation so labels can never squeeze the diagram below 3/4 width,
     // and floor at 0 — a negative dataLabelOffsetX must not inflate the plot
     // past the right margin.
@@ -127,28 +175,70 @@
   // column count grow; untruncated they collide into one unreadable run. Clip to
   // the column pitch with an ellipsis — the full text stays on the <title>.
   const truncateColumnLabel = (text: string): string => {
-    const maxChars = Math.floor(Math.max(0, colWidth - 6) / LABEL_CHAR_PX);
-    if (maxChars < 3) {
-      return '';
-    }
-    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+    return fitTextToWidth(text, Math.max(0, colWidth - 6));
   };
 
   const truncateLabel = (text: string, column: number): string => {
+    // Middle columns must budget for dataLabelOffsetX too: the label starts at
+    // node.x + nodeWidth + 6 + dataLabelOffsetX, so the room before the next
+    // column's bar shrinks by the same offset. Omitting it let "fitting"
+    // labels run under the neighbouring column's node rect.
+    // First-column labels anchor `end` at node.x - 6 - offset with node.x = 0,
+    // so their room is exactly the left margin minus that inset — budgeting
+    // more pushes long labels past the SVG's left edge, where they clip.
     const available =
       column === 0
-        ? MARGIN + 16
+        ? Math.max(0, MARGIN - 6 - dataLabelOffsetX)
         : column === columnCount - 1
           ? Math.max(0, lastColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
-          : Math.max(0, colWidth - nodeWidth - 12);
-    const maxChars = Math.floor(available / LABEL_CHAR_PX);
+          : Math.max(0, colWidth - nodeWidth - 12 - dataLabelOffsetX);
     // No usable room — hide the label rather than force text that would overflow;
     // the full text is still reachable via the node's <title> on hover.
-    if (maxChars < 3) {
-      return '';
-    }
-    return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+    return fitTextToWidth(text, available);
   };
+
+  // Vertical label de-collision: labels sit at each node's centre-y, so two
+  // small stacked nodes in a crowded column render their 12px labels on top of
+  // each other. Per column, walk labels top-to-bottom and drop the label of
+  // the smaller-value node whenever two centres come closer than one label
+  // line — the hidden label's text stays reachable via the node's <title>.
+  let collidingLabels = $derived.by(() => {
+    const hidden = new SvelteSet<string>();
+    if (!showLabels) {
+      return hidden;
+    }
+    const byColumn = new SvelteMap<number, typeof layout.nodes>();
+    for (const node of layout.nodes) {
+      const bucket = byColumn.get(node.column);
+      if (bucket) {
+        bucket.push(node);
+      } else {
+        byColumn.set(node.column, [node]);
+      }
+    }
+    for (const columnNodes of byColumn.values()) {
+      const sorted = [...columnNodes].sort((a, b) => a.y + a.height / 2 - (b.y + b.height / 2));
+      let lastKept: (typeof sorted)[number] | null = null;
+      for (const node of sorted) {
+        if (lastKept === null) {
+          lastKept = node;
+          continue;
+        }
+        const centerGap = node.y + node.height / 2 - (lastKept.y + lastKept.height / 2);
+        if (centerGap < LABEL_LINE_PX) {
+          if (node.value > lastKept.value) {
+            hidden.add(lastKept.id);
+            lastKept = node;
+          } else {
+            hidden.add(node.id);
+          }
+        } else {
+          lastKept = node;
+        }
+      }
+    }
+    return hidden;
+  });
 
   // ── Helpers ────────────────────────────────────────────────────
 
@@ -391,24 +481,33 @@
             onmouseleave={handleNodeLeave}
             onclick={() => handleNodeClick(node.id)}
           />
-          {#if showLabels}
-            <text
-              class="sankey-label"
-              class:node-dimmed={dimmed}
-              x={node.column === 0
-                ? node.x - 6 - dataLabelOffsetX
-                : node.x + node.width + 6 + dataLabelOffsetX}
-              y={node.y + node.height / 2}
-              text-anchor={node.column === 0 ? 'end' : 'start'}
-              dominant-baseline="middle"
-              >{truncateLabel(
-                showValues ? `${node.label} (${format(node.value)})` : node.label,
-                node.column
-              )}<title>{showValues ? `${node.label} (${format(node.value)})` : node.label}</title
-              ></text
-            >
-          {/if}
         {/each}
+
+        <!-- Labels render in a second pass, after every node rect: within one
+             interleaved loop a label could be over-painted by a later column's
+             bar whenever the width estimate ran short. -->
+        {#if showLabels}
+          {#each layout.nodes as node, ni (ni)}
+            {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
+            {#if !collidingLabels.has(node.id)}
+              <text
+                class="sankey-label"
+                class:node-dimmed={dimmed}
+                x={node.column === 0
+                  ? node.x - 6 - dataLabelOffsetX
+                  : node.x + node.width + 6 + dataLabelOffsetX}
+                y={node.y + node.height / 2}
+                text-anchor={node.column === 0 ? 'end' : 'start'}
+                dominant-baseline="middle"
+                >{truncateLabel(
+                  showValues ? `${node.label} (${format(node.value)})` : node.label,
+                  node.column
+                )}<title>{showValues ? `${node.label} (${format(node.value)})` : node.label}</title
+                ></text
+              >
+            {/if}
+          {/each}
+        {/if}
       </g>
     </ChartContainer>
 

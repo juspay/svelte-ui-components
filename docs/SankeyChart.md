@@ -113,6 +113,18 @@ When you want the overall flow structure to remain fully readable while the user
 </SankeyChart>
 ```
 
+### Label overflow & collisions
+
+Node labels are laid out defensively so a crowded chart never renders overlapping text:
+
+- Labels are truncated with a width-aware estimate (per character class, not a flat average), so
+  uppercase-heavy labels cannot run under a neighbouring column's bars. Middle columns also budget
+  for `dataLabelOffsetX`.
+- Within each column, when two node centres sit closer than one label line, the smaller-value
+  node's label is dropped entirely rather than overlapping.
+- Any truncated or dropped label keeps its full text available via the node's hover `<title>`
+  tooltip.
+
 ## Props
 
 | Prop               | Type                                                    | Required | Default     | Description                                                                                                                                                                                                                                                                                             |

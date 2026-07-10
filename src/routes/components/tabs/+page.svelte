@@ -103,10 +103,16 @@
 </div>
 
 <h3 class="demo-heading">Overflow (scrollable)</h3>
+<p class="demo-caption">
+  Overflowing edges fade out through a mask that holds fully transparent for
+  <code>--tabs-fade-solid</code> (8px) before ramping over <code>--tabs-fade-size</code> (32px), so no
+  clipped glyph fragment stays perceptible beside the scroll arrows.
+</p>
 <div class="demo-row" style="flex-direction: column; max-width: 500px;">
   <Tabs
     items={manyTabs}
     activeIndex={activeOverflow}
+    testId="tabs-overflow-demo"
     onchange={(index) => (activeOverflow = index)}
   />
   <p class="state-display">Active tab: {activeOverflow}</p>

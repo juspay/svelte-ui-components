@@ -2,25 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.91.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.91.1)
 
-A toast is a transient status overlay positioned above page content, and
-it frequently lands over drawer/footer CTAs. Until now its whole box was
-a hit target for its entire duration, so clicks aimed at the controls
-beneath it silently died — surfaced as flaky/broken e2e flows (a
-save-success toast covering a drawer's 'Add products' button swallowed
-the click that should have opened the product picker) and the same dead
-clicks for real users.
-
-The root now defaults to pointer-events: none via the new
---toast-pointer-events token; the close button re-enables its own hit
-area (pointer-events: auto), and consumers rendering actionable
-bottomContent can opt the whole toast back in with
---toast-pointer-events: auto.
-
-Verified: 94/94 unit tests, svelte-check 0 errors; live demo probe —
-the toast computes pointer-events: none and elementFromPoint at the
-toast's own center resolves to the button beneath it.
+## [2.91.1](https://github.com/juspay/svelte-ui-components/compare/2.91.1..2.91.0) - 11 July 2026
 
 ## [2.91.0](https://github.com/juspay/svelte-ui-components/compare/2.91.0..2.90.1) - 11 July 2026
 

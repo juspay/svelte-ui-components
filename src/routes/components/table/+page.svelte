@@ -194,6 +194,9 @@
   const demoDotIcon =
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='8' fill='%2394a3b8'/></svg>";
 
+  const demoEditIcon =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><path d='M11.3 1.9a1.6 1.6 0 0 1 2.8 2.8l-8.6 8.6-3.4.9.9-3.4z' fill='none' stroke='%23626262' stroke-width='1.4' stroke-linejoin='round'/></svg>";
+
   const interactiveColumns: TableColumn[] = [
     { id: 'name', label: 'Name' },
     {
@@ -261,7 +264,11 @@
         itemTestId: 'demo-tier-option'
       },
       note: { value: 'renews in June', testId: 'demo-note-0' },
-      action: { text: 'Renew', testId: 'demo-renew-0' },
+      action: {
+        iconUrl: demoEditIcon,
+        ariaLabel: 'Edit Growth Monthly',
+        testId: 'demo-renew-0'
+      },
       manage: {
         primaryButton: { text: 'Edit', testId: 'demo-edit-0' },
         menuItems: [

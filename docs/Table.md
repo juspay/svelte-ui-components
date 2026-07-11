@@ -65,18 +65,25 @@ The projection used internally is exported as `normalizeColumns(columns, rows)` 
 
 Beyond `'text'` and `'custom'`, `column.type` selects a built-in renderer composed purely from library primitives. Each expects its matching cell-data shape as the row value and falls back to plain text for scalar values (so mixed columns are well-defined). All appearance is themeable via `--table-cell-*` / `--table-trend-*` / `--table-link-*` CSS variables.
 
-| `type`                | Cell value shape                                                               | Renders                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `tag`                 | `TableTagCellData` `{ text, classes?, dismissible?, testId? }`                 | a single Pill — the consumer owns tone→class mapping                                          |
-| `text-tag`            | `TableTextTagCellData` `{ text, tag? }`                                        | text with an optional trailing Pill                                                           |
-| `two-line-text`       | `TableTwoLineTextCellData` `{ text1?, text2? }`                                | primary line over secondary line                                                              |
-| `icon-label`          | `TableIconLabelCellData` `{ icons?, label? }`                                  | leading image(s) plus a label                                                                 |
-| `image-two-line-text` | `TableImageTwoLineTextCellData` `{ imageUrl?, text1?, text2? }`                | thumbnail (or placeholder) plus two lines                                                     |
-| `tag-array`           | `TableTagArrayCellItem[]` `{ text, classes? }[]`                               | a wrapping row of Pills                                                                       |
-| `avatar-stack`        | `TableAvatarStackCellData` `{ items: { id, label? }[], max? }`                 | initials chips capped at `max` (default 4) with a `+N` overflow                               |
-| `compare`             | `TableCompareCellData` `{ primary?, comparison?, trendPercent?, trendLabel? }` | value over comparison with a colored trend row (↑ green / ↓ red / label)                      |
-| `toggle`              | `TableToggleCellData` `{ checked?, ariaLabel?, testId? }`                      | a Toggle; `column.onToggle(rowIndex, checked)` receives the **new** state after the flip      |
-| `link`                | `TableLinkCellData` `{ url, label?, copyable? }` (or a bare url string)        | external link with an optional copy-to-clipboard affordance                                   |
+| `type`                | Cell value shape                                                                                                                          | Renders                                                                                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tag`                 | `TableTagCellData` `{ text, classes?, dismissible?, testId? }`                                                                            | a single Pill — the consumer owns tone→class mapping                                                                                                                                             |
+| `text-tag`            | `TableTextTagCellData` `{ text, tag? }`                                                                                                   | text with an optional trailing Pill                                                                                                                                                              |
+| `two-line-text`       | `TableTwoLineTextCellData` `{ text1?, text2? }`                                                                                           | primary line over secondary line                                                                                                                                                                 |
+| `icon-label`          | `TableIconLabelCellData` `{ icons?, label? }`                                                                                             | leading image(s) plus a label                                                                                                                                                                    |
+| `image-two-line-text` | `TableImageTwoLineTextCellData` `{ imageUrl?, text1?, text2? }`                                                                           | thumbnail (or placeholder) plus two lines                                                                                                                                                        |
+| `tag-array`           | `TableTagArrayCellItem[]` `{ text, classes? }[]`                                                                                          | a wrapping row of Pills                                                                                                                                                                          |
+| `avatar-stack`        | `TableAvatarStackCellData` `{ items: { id, label? }[], max? }`                                                                            | initials chips capped at `max` (default 4) with a `+N` overflow                                                                                                                                  |
+| `compare`             | `TableCompareCellData` `{ primary?, comparison?, trendPercent?, trendLabel? }`                                                            | value over comparison with a colored trend row (↑ green / ↓ red / label)                                                                                                                         |
+| `toggle`              | `TableToggleCellData` `{ checked?, ariaLabel?, testId? }`                                                                                 | a Toggle; `column.onToggle(rowIndex, checked)` receives the **new** state after the flip                                                                                                         |
+| `link`                | `TableLinkCellData` `{ url, label?, copyable? }` (or a bare url string)                                                                   | external link with an optional copy-to-clipboard affordance                                                                                                                                      |
+| `select`              | `TableSelectCellData` `{ options, selectedId?, placeholder?, disabled?, testId?, itemTestId? }`                                           | a Select; `column.onSelect(rowIndex, selectedId, originalIndex)`                                                                                                                                 |
+| `input`               | `TableInputCellData` `{ value?, placeholder?, disabled?, testId?, ariaLabel?, iconUrl?, dataType?, validationPattern?, onErrorMessage? }` | an Input; `column.onInput(rowIndex, value, originalIndex)`. `ariaLabel` names the field for screen readers (recommended — cells have no visible label); `iconUrl` renders a passive leading icon |
+| `button`              | `TableButtonCellData` — union: `{ text, iconUrl?, ariaLabel?, … }` (text button) or `{ iconUrl, ariaLabel, … }` (icon-only)               | a Button; `column.onButtonClick(rowIndex, originalIndex)`. Icon-only buttons render as a bare ghost control and **require** `ariaLabel` (enforced by the type and the runtime narrowing)         |
+| `action-group`        | `TableActionGroupCellData` `{ primaryButton?, menuItems? }`                                                                               | a primary Button plus a kebab overflow Menu; `column.onPrimaryAction` / `column.onMenuAction`                                                                                                    |
+| `popup-menu`          | `TablePopupMenuCellData` `{ items, ariaLabel? }`                                                                                          | a kebab-triggered row Menu; `column.onMenuAction(rowIndex, itemId, originalIndex)`                                                                                                               |
+
+Icon URLs in cell data (`iconUrl`) are scheme-validated at narrowing time: only `http:`, `https:`, `data:image/<svg+xml|png|jpeg|jpg|gif|webp>`, and scheme-less (relative) URLs are accepted — anything else is dropped. A text button whose icon URL is rejected still renders (without the icon); an icon-only cell whose URL is rejected (or whose `ariaLabel` is missing) fails narrowing entirely, and the cell renders the raw value via the plain-text fallback (`'-'` for objects).
 
 ```svelte
 const columns: TableColumn[] = [
@@ -476,14 +483,21 @@ Override these custom properties to theme the component.
 
 ### Data Cells
 
-| Variable                      | Default   | CSS Property     | Description                                                                     |
-| ----------------------------- | --------- | ---------------- | ------------------------------------------------------------------------------- |
-| `--table-content-background`  | `-`       | background-color | Background color of data cells. Falls back to `--table-content-border-bgcolor`. |
-| `--table-content-font-size`   | `14px`    | font-size        | Font size of data cells.                                                        |
-| `--table-content-font-family` | `-`       | font-family      | Font family of data cells.                                                      |
-| `--table-content-color`       | `#111827` | color            | Text color of data cells. Falls back to `--table-content-font-color`.           |
-| `--table-col-highlight-background` | `#f3f9ff` | background-color | Background of a `highlighted: true` column's body cells. Row hover/selection paint over it. |
-| `--table-col-highlight-header-background` | falls back to `--table-col-highlight-background` | background-color | Background of a `highlighted: true` column's header cell. |
+| Variable                                  | Default                                          | CSS Property     | Description                                                                                 |
+| ----------------------------------------- | ------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------- |
+| `--table-content-background`              | `-`                                              | background-color | Background color of data cells. Falls back to `--table-content-border-bgcolor`.             |
+| `--table-content-font-size`               | `14px`                                           | font-size        | Font size of data cells.                                                                    |
+| `--table-content-font-family`             | `-`                                              | font-family      | Font family of data cells.                                                                  |
+| `--table-content-color`                   | `#111827`                                        | color            | Text color of data cells. Falls back to `--table-content-font-color`.                       |
+| `--table-col-highlight-background`        | `#f3f9ff`                                        | background-color | Background of a `highlighted: true` column's body cells. Row hover/selection paint over it. |
+| `--table-col-highlight-header-background` | falls back to `--table-col-highlight-background` | background-color | Background of a `highlighted: true` column's header cell.                                   |
+
+### Built-in Cells
+
+| Variable                       | Default | CSS Property  | Description                                                          |
+| ------------------------------ | ------- | ------------- | -------------------------------------------------------------------- |
+| `--table-cell-icon-size`       | `16px`  | width, height | Size of icons in `icon-label` cells and icon-capable `button` cells. |
+| `--table-cell-input-icon-size` | `16px`  | width, height | Size of the leading icon inside an `input` cell (`iconUrl`).         |
 
 ### Rows
 

@@ -2,30 +2,36 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.90.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.90.1)
 
-Tooltip action: the renderless use:tooltip bubble was centred with a bare
-translate(-50%) and no edge handling — triggers near a viewport edge spilled
-the bubble off-screen (or shrank it into a skinny text column against the
-right edge), and there was no flip when the preferred side had no room. The
-bubble is now measured after mounting, clamped to the viewport (8px margin),
-flipped to the opposite side when needed, and its arrow stays anchored over
-the trigger in bubble-local pixels.
+column.align lands on the td as text-align, which flex layouts ignore —
+an aligned column's builtin cells (compare, two-line-text, text-tag,
+icon-label, image-two-line-text, tag-array, avatar-stack) stayed pinned
+left: column-flex builtins stretch children, row-flex builtins pack to
+flex-start. BuiltinCell now mirrors the column alignment as a modifier
+class (builtin-align-end / builtin-align-center) that column-flex
+containers translate into align-items and row-flex containers into
+justify-content — the same idiom the header already uses for its
+justify-content mapping.
 
-PieChart: crowded pies rendered every slice label unconditionally at its
-mid-angle — stacked unreadable text that ran past the chart box. Labels now
-measure (canvas-backed shared helper), truncate to the room the chart has,
-gate inside-labels on wedge arc length, and de-collide with larger slices
-winning; dropped text stays on the tooltip and aria-label.
+The table body also gains a first-class horizontal scroller
+(.table-scroll) inside a scrim shell (.table-scroll-shell): on narrow
+viewports columns clip behind the scroll with no visual hint that more
+exist. A scroll/resize-tracked action toggles scrollable-left/right
+classes that fade tokened edge scrims in (--table-scroll-scrim-width,
+--table-scroll-scrim-color); pointer-events: none keeps cells under the
+fade clickable and z-index 2 paints above sticky headers. Scrims sit on
+the shell (table-height inside a vertical scroller), so isTableScrollable
+consumers keep their exact scroll behavior; the paginator footer stays
+outside the shell and never gets tinted.
 
-SankeyChart: swap the per-character width estimates for the shared
-measureText helper — the estimator both over-reserved the right label gutter
-(dead canvas) and under-budgeted some labels; reservations and truncation are
-now exact on the client (SSR keeps the heuristic fallback).
+Verified on this base: 94/94 unit tests, svelte-check 0 errors, demo
+probe — aligned compare cell reports align-items: flex-end with the
+trend pill flush to the primary line (0px right gap), and the scrim
+shell carries scrollable-left+scrollable-right with both edge scrims at
+opacity 1 mid-scroll.
 
-Demos: crowded 24-slice pie, all-zero pie, edge-clamp tooltip triggers.
-Specs (negative-controlled: 4 defect tests fail on the unfixed components):
-pie-label-engine (3), tooltip-action-clamping (3); full suite 118/118.
+## [2.90.1](https://github.com/juspay/svelte-ui-components/compare/2.90.1..2.90.0) - 10 July 2026
 
 ## [2.90.0](https://github.com/juspay/svelte-ui-components/compare/2.90.0..2.89.2) - 10 July 2026
 

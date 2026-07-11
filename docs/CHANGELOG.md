@@ -2,34 +2,27 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.90.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.91.0)
 
-column.align lands on the td as text-align, which flex layouts ignore —
-an aligned column's builtin cells (compare, two-line-text, text-tag,
-icon-label, image-two-line-text, tag-array, avatar-stack) stayed pinned
-left: column-flex builtins stretch children, row-flex builtins pack to
-flex-start. BuiltinCell now mirrors the column alignment as a modifier
-class (builtin-align-end / builtin-align-center) that column-flex
-containers translate into align-items and row-flex containers into
-justify-content — the same idiom the header already uses for its
-justify-content mapping.
+A toast is a transient status overlay positioned above page content, and
+it frequently lands over drawer/footer CTAs. Until now its whole box was
+a hit target for its entire duration, so clicks aimed at the controls
+beneath it silently died — surfaced as flaky/broken e2e flows (a
+save-success toast covering a drawer's 'Add products' button swallowed
+the click that should have opened the product picker) and the same dead
+clicks for real users.
 
-The table body also gains a first-class horizontal scroller
-(.table-scroll) inside a scrim shell (.table-scroll-shell): on narrow
-viewports columns clip behind the scroll with no visual hint that more
-exist. A scroll/resize-tracked action toggles scrollable-left/right
-classes that fade tokened edge scrims in (--table-scroll-scrim-width,
---table-scroll-scrim-color); pointer-events: none keeps cells under the
-fade clickable and z-index 2 paints above sticky headers. Scrims sit on
-the shell (table-height inside a vertical scroller), so isTableScrollable
-consumers keep their exact scroll behavior; the paginator footer stays
-outside the shell and never gets tinted.
+The root now defaults to pointer-events: none via the new
+--toast-pointer-events token; the close button re-enables its own hit
+area (pointer-events: auto), and consumers rendering actionable
+bottomContent can opt the whole toast back in with
+--toast-pointer-events: auto.
 
-Verified on this base: 94/94 unit tests, svelte-check 0 errors, demo
-probe — aligned compare cell reports align-items: flex-end with the
-trend pill flush to the primary line (0px right gap), and the scrim
-shell carries scrollable-left+scrollable-right with both edge scrims at
-opacity 1 mid-scroll.
+Verified: 94/94 unit tests, svelte-check 0 errors; live demo probe —
+the toast computes pointer-events: none and elementFromPoint at the
+toast's own center resolves to the button beneath it.
+
+## [2.91.0](https://github.com/juspay/svelte-ui-components/compare/2.91.0..2.90.1) - 11 July 2026
 
 ## [2.90.1](https://github.com/juspay/svelte-ui-components/compare/2.90.1..2.90.0) - 10 July 2026
 

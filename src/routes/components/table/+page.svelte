@@ -191,6 +191,9 @@
   let interactiveLog = $state('none');
   let rowClickLog = $state('none');
 
+  const demoDotIcon =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='8' fill='%2394a3b8'/></svg>";
+
   const interactiveColumns: TableColumn[] = [
     { id: 'name', label: 'Name' },
     {
@@ -283,7 +286,9 @@
         placeholder: 'Add note',
         testId: 'demo-note-1',
         validationPattern: '^\\d+$',
-        onErrorMessage: 'Digits only'
+        onErrorMessage: 'Digits only',
+        ariaLabel: 'Note for Starter Annual',
+        iconUrl: demoDotIcon
       },
       action: { text: 'Renew', disabled: true, testId: 'demo-renew-1' },
       manage: { menuItems: [{ id: 'delete', label: 'Delete', danger: true }] },
@@ -396,9 +401,6 @@
   }));
 
   // ── Media cell renderers demo (icon-label, image-two-line-text) ─────────────
-  const demoDotIcon =
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='8' fill='%2394a3b8'/></svg>";
-
   const mediaColumns: TableColumn[] = [
     { id: 'gateway', label: 'Gateway', type: 'icon-label', sortable: false },
     { id: 'product', label: 'Product', type: 'image-two-line-text', sortable: false }

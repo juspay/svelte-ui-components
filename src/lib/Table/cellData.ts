@@ -4,6 +4,7 @@ import type { IconStackItem } from '../IconStack/properties';
 import type {
   TableActionGroupCellData,
   TableAvatarStackCellData,
+  TableButtonCellCommonData,
   TableButtonCellData,
   TableCompareCellData,
   TableInputCellData,
@@ -13,6 +14,7 @@ import type {
   TableSelectCellData,
   TableTagArrayCellItem,
   TableTagCellData,
+  TableTextButtonCellData,
   TableCellValue
 } from './properties';
 
@@ -27,6 +29,33 @@ import type {
 export const asJsonObject = (value: TableCellValue): { [key: string]: JSONValue } | null => {
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
     return value;
+  }
+  return null;
+};
+
+/**
+ * Accepts an icon URL only when its scheme is safe to place in an `<img src>`
+ * — http(s), a `data:image/*` payload, or a scheme-less (relative) path. Cell
+ * data is consumer-supplied JSON, so `javascript:`/`vbscript:`/non-image
+ * `data:` URIs must never reach the DOM.
+ */
+export const asSafeIconUrl = (value: TableCellValue): string | null => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return null;
+  }
+  const candidate = value.trim();
+  const schemeMatch = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(candidate);
+  if (schemeMatch === null) {
+    return candidate;
+  }
+  const scheme = schemeMatch[1].toLowerCase();
+  if (scheme === 'http' || scheme === 'https') {
+    return candidate;
+  }
+  // Image data URIs only, from an explicit subtype allowlist — a data: URI
+  // continues with ';' (parameters like base64) or ',' (payload).
+  if (scheme === 'data' && /^data:image\/(svg\+xml|png|jpeg|jpg|gif|webp)[;,]/i.test(candidate)) {
+    return candidate;
   }
   return null;
 };
@@ -188,8 +217,9 @@ export const asInputCellData = (value: TableCellValue): TableInputCellData | nul
   if (typeof record.ariaLabel === 'string') {
     inputData.ariaLabel = record.ariaLabel;
   }
-  if (typeof record.iconUrl === 'string') {
-    inputData.iconUrl = record.iconUrl;
+  const inputIconUrl = asSafeIconUrl(record.iconUrl ?? null);
+  if (inputIconUrl !== null) {
+    inputData.iconUrl = inputIconUrl;
   }
   if (typeof record.dataType === 'string') {
     inputData.dataType = record.dataType;
@@ -222,20 +252,38 @@ export const asInputDataType = (value: string | null): InputDataType => {
 
 export const asButtonCellData = (value: TableCellValue): TableButtonCellData | null => {
   const record = asJsonObject(value);
-  if (record === null || typeof record.text !== 'string') {
+  if (record === null) {
     return null;
   }
-  const buttonData: TableButtonCellData = { text: record.text };
+  const buttonIconUrl = asSafeIconUrl(record.iconUrl ?? null);
+  const buttonAriaLabel = typeof record.ariaLabel === 'string' ? record.ariaLabel : null;
+  const common: TableButtonCellCommonData = {};
   if (typeof record.disabled === 'boolean') {
-    buttonData.disabled = record.disabled;
+    common.disabled = record.disabled;
   }
   if (typeof record.classes === 'string') {
-    buttonData.classes = record.classes;
+    common.classes = record.classes;
   }
   if (typeof record.testId === 'string') {
-    buttonData.testId = record.testId;
+    common.testId = record.testId;
   }
-  return buttonData;
+  if (typeof record.text === 'string') {
+    const textButton: TableTextButtonCellData = { text: record.text, ...common };
+    if (buttonIconUrl !== null) {
+      textButton.iconUrl = buttonIconUrl;
+    }
+    if (buttonAriaLabel !== null) {
+      textButton.ariaLabel = buttonAriaLabel;
+    }
+    return textButton;
+  }
+  // Icon-only buttons require BOTH a safe icon and an accessible name — a
+  // button with no visible text and no aria-label is a WCAG 4.1.2 failure,
+  // so such data fails narrowing and the cell falls back to plain text.
+  if (buttonIconUrl !== null && buttonAriaLabel !== null) {
+    return { iconUrl: buttonIconUrl, ariaLabel: buttonAriaLabel, ...common };
+  }
+  return null;
 };
 
 const asMenuItemsData = (rawItems: JSONValue): TableMenuItemData[] | null => {

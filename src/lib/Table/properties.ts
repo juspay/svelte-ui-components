@@ -142,6 +142,8 @@ export type TableInputCellData = {
   /**
    * URL of a passive leading icon rendered inside the input field (e.g. a
    * currency glyph). Sized via `--table-cell-input-icon-size` (default 16px).
+   * Scheme-validated at narrowing time: only http(s), `data:image/*`, and
+   * relative URLs are accepted; anything else is dropped.
    */
   iconUrl?: string;
   /** Input dataType forwarded to the rendered Input ('text' | 'tel' | 'number' | …). */
@@ -155,14 +157,55 @@ export type TableInputCellData = {
   onErrorMessage?: string;
 };
 
-/** Cell shape for `type: 'button'` — the handler lives on the column. */
-export type TableButtonCellData = {
-  text: string;
+/** Options shared by both button cell variants. */
+export type TableButtonCellCommonData = {
   disabled?: boolean;
   /** CSS classes forwarded to the Button (the consumer owns variant mapping). */
   classes?: string;
   testId?: string;
 };
+
+/**
+ * Text-bearing button cell — `text` stays required exactly as before this
+ * type became a union, so existing consumers are unaffected. An optional
+ * `iconUrl` renders a leading icon; `ariaLabel` may override the accessible
+ * name (the visible text already names the button).
+ */
+export type TableTextButtonCellData = TableButtonCellCommonData & {
+  text: string;
+  /**
+   * URL of a leading icon rendered next to the text. Sized via
+   * `--table-cell-icon-size` (default 16px). Scheme-validated at narrowing
+   * time: only http(s), `data:image/*`, and relative URLs are accepted;
+   * anything else is dropped.
+   */
+  iconUrl?: string;
+  ariaLabel?: string;
+};
+
+/**
+ * Icon-only button cell — renders as a bare ghost control. `ariaLabel` is
+ * required (the button has no visible text, so it MUST carry an accessible
+ * name); the decoder enforces the same rule at runtime for untyped data.
+ */
+export type TableIconOnlyButtonCellData = TableButtonCellCommonData & {
+  text?: never;
+  /**
+   * URL of the button's icon. Sized via `--table-cell-icon-size` (default
+   * 16px). Scheme-validated at narrowing time: only http(s), `data:image/*`,
+   * and relative URLs are accepted; anything else is dropped (the cell then
+   * fails narrowing and falls back to plain text of the raw value).
+   */
+  iconUrl: string;
+  ariaLabel: string;
+};
+
+/**
+ * Cell shape for `type: 'button'` — the handler lives on the column. A
+ * discriminated union: text-bearing buttons keep `text` required (unchanged
+ * public contract), icon-only buttons require `iconUrl` + `ariaLabel`.
+ */
+export type TableButtonCellData = TableTextButtonCellData | TableIconOnlyButtonCellData;
 
 /** One overflow-menu entry for action-group / popup-menu cells (JSON-safe). */
 export type TableMenuItemData = {

@@ -305,19 +305,41 @@
 {:else if column.type === 'button'}
   {@const buttonData = asButtonCellData(value)}
   {#if buttonData}
+    <!-- The icon <img> is always decorative (alt=""): an icon-only button is
+         named by the required ariaLabel on the Button, and a text-bearing
+         button is named by its visible text — the image never carries the
+         accessible name itself. -->
+    {#snippet buttonCellIcon()}
+      <img class="builtin-button-icon" src={buttonData.iconUrl} alt="" />
+    {/snippet}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span
       class="builtin-interactive"
+      class:builtin-icon-button={buttonData.iconUrl && !buttonData.text}
       onclick={stopClickPropagation}
       onkeydown={stopKeydownPropagation}
     >
-      <Button
-        text={buttonData.text}
-        disabled={buttonData.disabled ?? false}
-        classes={buttonData.classes ?? ''}
-        testId={buttonData.testId}
-        onclick={() => column.onButtonClick?.(rowIndex, originalIndex)}
-      />
+      {#if buttonData.iconUrl}
+        <Button
+          text={buttonData.text}
+          icon={buttonCellIcon}
+          iconOnly={!buttonData.text}
+          ariaLabel={buttonData.ariaLabel}
+          disabled={buttonData.disabled ?? false}
+          classes={buttonData.classes ?? ''}
+          testId={buttonData.testId}
+          onclick={() => column.onButtonClick?.(rowIndex, originalIndex)}
+        />
+      {:else}
+        <Button
+          text={buttonData.text}
+          ariaLabel={buttonData.ariaLabel}
+          disabled={buttonData.disabled ?? false}
+          classes={buttonData.classes ?? ''}
+          testId={buttonData.testId}
+          onclick={() => column.onButtonClick?.(rowIndex, originalIndex)}
+        />
+      {/if}
     </span>
   {:else}
     {cellValueToText(value)}
@@ -333,13 +355,30 @@
     >
       {#if actionData.primaryButton}
         {@const primary = actionData.primaryButton}
-        <Button
-          text={primary.text}
-          disabled={primary.disabled ?? false}
-          classes={primary.classes ?? ''}
-          testId={primary.testId}
-          onclick={() => column.onPrimaryAction?.(rowIndex, originalIndex)}
-        />
+        {#snippet primaryButtonIcon()}
+          <img class="builtin-button-icon" src={primary.iconUrl} alt="" />
+        {/snippet}
+        {#if primary.iconUrl}
+          <Button
+            text={primary.text}
+            icon={primaryButtonIcon}
+            iconOnly={!primary.text}
+            ariaLabel={primary.ariaLabel}
+            disabled={primary.disabled ?? false}
+            classes={primary.classes ?? ''}
+            testId={primary.testId}
+            onclick={() => column.onPrimaryAction?.(rowIndex, originalIndex)}
+          />
+        {:else}
+          <Button
+            text={primary.text}
+            ariaLabel={primary.ariaLabel}
+            disabled={primary.disabled ?? false}
+            classes={primary.classes ?? ''}
+            testId={primary.testId}
+            onclick={() => column.onPrimaryAction?.(rowIndex, originalIndex)}
+          />
+        {/if}
       {/if}
       {#if actionData.menuItems && actionData.menuItems.length > 0}
         <Menu
@@ -598,6 +637,12 @@
     display: block;
     width: var(--table-cell-input-icon-size, 16px);
     height: var(--table-cell-input-icon-size, 16px);
+  }
+
+  .builtin-button-icon {
+    display: block;
+    width: var(--table-cell-icon-size, 16px);
+    height: var(--table-cell-icon-size, 16px);
   }
 
   .builtin-action-group {

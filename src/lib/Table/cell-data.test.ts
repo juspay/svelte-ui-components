@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   asAvatarStackData,
+  asButtonCellData,
   asCompareCellData,
   asInputCellData,
   asLinkCellData,
@@ -64,6 +65,52 @@ describe('cell narrowing', () => {
     });
     expect(asInputCellData({ iconUrl: 42, ariaLabel: false })).toEqual({});
     expect(asInputCellData('amount')).toBeNull();
+  });
+
+  it('asButtonCellData accepts text buttons and icon-only buttons with an ariaLabel', () => {
+    expect(asButtonCellData({ text: 'Renew', testId: 't' })).toEqual({
+      text: 'Renew',
+      testId: 't'
+    });
+    expect(asButtonCellData({ iconUrl: 'data:image/svg+xml;utf8,x', ariaLabel: 'Edit' })).toEqual({
+      iconUrl: 'data:image/svg+xml;utf8,x',
+      ariaLabel: 'Edit'
+    });
+    expect(asButtonCellData({ text: 'Edit', iconUrl: 'data:image/svg+xml;utf8,x' })).toEqual({
+      text: 'Edit',
+      iconUrl: 'data:image/svg+xml;utf8,x'
+    });
+    // Icon-only without an accessible name fails narrowing (WCAG 4.1.2).
+    expect(asButtonCellData({ iconUrl: 'data:image/svg+xml;utf8,x' })).toBeNull();
+    expect(asButtonCellData({ disabled: true })).toBeNull();
+    expect(asButtonCellData({ iconUrl: 42, ariaLabel: 'Edit' })).toBeNull();
+    expect(asButtonCellData('Renew')).toBeNull();
+  });
+
+  it('icon URLs only pass with a safe scheme (http/https/data:image/relative)', () => {
+    expect(asButtonCellData({ iconUrl: 'https://cdn.test/edit.svg', ariaLabel: 'Edit' })).toEqual({
+      iconUrl: 'https://cdn.test/edit.svg',
+      ariaLabel: 'Edit'
+    });
+    expect(asButtonCellData({ iconUrl: '/assets/edit.svg', ariaLabel: 'Edit' })).toEqual({
+      iconUrl: '/assets/edit.svg',
+      ariaLabel: 'Edit'
+    });
+    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
+    expect(asButtonCellData({ iconUrl: 'javascript:alert(1)', ariaLabel: 'Edit' })).toBeNull();
+    expect(
+      asButtonCellData({ iconUrl: 'data:text/html,<script>1</script>', ariaLabel: 'Edit' })
+    ).toBeNull();
+    // A text button keeps rendering when its icon URL is rejected.
+    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
+    expect(asButtonCellData({ text: 'Renew', iconUrl: 'javascript:alert(1)' })).toEqual({
+      text: 'Renew'
+    });
+    expect(asInputCellData({ iconUrl: 'data:image/svg+xml;utf8,x' })).toEqual({
+      iconUrl: 'data:image/svg+xml;utf8,x'
+    });
+    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
+    expect(asInputCellData({ iconUrl: 'javascript:alert(1)' })).toEqual({});
   });
 
   it('cellValueToText renders scalars, dashes empty/object values', () => {

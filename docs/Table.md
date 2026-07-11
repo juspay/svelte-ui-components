@@ -98,13 +98,13 @@ const rows: TableRow[] = [
 
 ### Per-Column Header Metadata
 
-Keyed columns carry their own header behavior: `tooltip` (hover text on the label), `align` (`'left' | 'center' | 'right'`, applied to header and body cells), `maxWidth` (caps the column; overflowing scalar cells ellipsize with the full value on the native title tooltip), and `filter` (a header dropdown — Table renders the Menu mechanics, the consumer owns options/selection/filtering; re-selecting the active option clears to `null`):
+Keyed columns carry their own header behavior: `tooltip` (hover text on the label), `align` (`'left' | 'center' | 'right'`, applied to header and body cells), `maxWidth` (caps the column; overflowing scalar cells ellipsize with the full value on the native title tooltip), `highlighted` (paints the column's header and body cells with the highlight wash — see `--table-col-highlight-background`; row hover and row selection still paint over it), and `filter` (a header dropdown — Table renders the Menu mechanics, the consumer owns options/selection/filtering; re-selecting the active option clears to `null`):
 
 ```svelte
 const columns: TableColumn[] = [
   { id: 'id', label: 'Order', maxWidth: '120px' },
   { id: 'name', label: 'Name', tooltip: 'Customer display name' },
-  { id: 'amount', label: 'Amount', align: 'right' },
+  { id: 'amount', label: 'Amount', align: 'right', highlighted: true },
   {
     id: 'status', label: 'Status',
     filter: {
@@ -482,6 +482,8 @@ Override these custom properties to theme the component.
 | `--table-content-font-size`   | `14px`    | font-size        | Font size of data cells.                                                        |
 | `--table-content-font-family` | `-`       | font-family      | Font family of data cells.                                                      |
 | `--table-content-color`       | `#111827` | color            | Text color of data cells. Falls back to `--table-content-font-color`.           |
+| `--table-col-highlight-background` | `#f3f9ff` | background-color | Background of a `highlighted: true` column's body cells. Row hover/selection paint over it. |
+| `--table-col-highlight-header-background` | falls back to `--table-col-highlight-background` | background-color | Background of a `highlighted: true` column's header cell. |
 
 ### Rows
 

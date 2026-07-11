@@ -232,6 +232,14 @@ export type TableColumn = {
    * ellipsizes with the full value available on the native title tooltip.
    */
   maxWidth?: string;
+  /**
+   * Paints this column's header and body cells with the highlight wash —
+   * `--table-col-highlight-background` (body) and
+   * `--table-col-highlight-header-background` (header; falls back to the body
+   * wash). Use to emphasize a selected/pivot column. Row hover and row
+   * selection still paint over the wash.
+   */
+  highlighted?: boolean;
   /** Opt-in header filter dropdown (see TableColumnFilterConfig). */
   filter?: TableColumnFilterConfig;
   /**

@@ -127,7 +127,7 @@
     { id: 'state', label: 'State', type: 'tag' },
     { id: 'channels', label: 'Channels', type: 'tag-array' },
     { id: 'owners', label: 'Owners', type: 'avatar-stack' },
-    { id: 'revenue', label: 'Revenue', type: 'compare', align: 'right' },
+    { id: 'revenue', label: 'Revenue', type: 'compare', align: 'right', highlighted: true },
     {
       id: 'active',
       label: 'Active',

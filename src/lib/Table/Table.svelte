@@ -669,6 +669,7 @@
                 <th
                   class="table-header"
                   class:table-header-sticky={isStickyHeader}
+                  class:table-col-highlighted={headerColumn?.highlighted === true}
                   data-pw={headerColumn?.testId ?? null}
                   style:text-align={headerColumn?.align ?? null}
                   style:max-width={headerColumn?.maxWidth ?? null}
@@ -848,6 +849,7 @@
                       typeof cellValue === 'boolean'}
                     <td
                       class="table-content"
+                      class:table-col-highlighted={keyedColumn?.highlighted === true}
                       data-pw={typeof getCellTestId === 'function'
                         ? getCellTestId(row, cellValue, rowIndex)
                         : null}
@@ -1178,6 +1180,20 @@
     font-size: var(--table-content-font-size, 14px);
     font-family: var(--table-content-font-family);
     color: var(--table-content-color, var(--table-content-font-color, #111827));
+  }
+
+  /* Column highlight (TableColumn.highlighted). Row hover keeps higher
+     specificity and row selection is declared later at equal specificity, so
+     both row states paint over the column wash. */
+  .table-header.table-col-highlighted {
+    background-color: var(
+      --table-col-highlight-header-background,
+      var(--table-col-highlight-background, #f3f9ff)
+    );
+  }
+
+  .table-content.table-col-highlighted {
+    background-color: var(--table-col-highlight-background, #f3f9ff);
   }
 
   .table-row {

@@ -133,6 +133,37 @@
   let isRowClickable = $derived(typeof onRowClick === 'function');
   let isStickyHeader = $derived(stickyHeader || isTableScrollable);
 
+  // ─── Horizontal-scroll affordance ────────────────────────────────────────
+  // The table clips columns behind an internal horizontal scroll on narrow
+  // viewports, but a bare scroll container gives no visual hint that more
+  // columns exist. Track whether either edge has hidden content and surface
+  // it as edge scrims (see .table-scroll-shell styles).
+  let canScrollLeft = $state(false);
+  let canScrollRight = $state(false);
+
+  const trackHorizontalScroll = (scrollNode: HTMLElement) => {
+    const updateScrollHints = () => {
+      canScrollLeft = scrollNode.scrollLeft > 2;
+      canScrollRight = scrollNode.scrollLeft + scrollNode.clientWidth < scrollNode.scrollWidth - 2;
+    };
+    updateScrollHints();
+    scrollNode.addEventListener('scroll', updateScrollHints, { passive: true });
+    // Both the container resizing (viewport changes) and the table resizing
+    // (async rows/columns arriving) change scrollWidth, so observe both.
+    const hintResizeObserver = new ResizeObserver(updateScrollHints);
+    hintResizeObserver.observe(scrollNode);
+    const tableElement = scrollNode.querySelector('table');
+    if (tableElement) {
+      hintResizeObserver.observe(tableElement);
+    }
+    return {
+      destroy: () => {
+        scrollNode.removeEventListener('scroll', updateScrollHints);
+        hintResizeObserver.disconnect();
+      }
+    };
+  };
+
   // ─── C2-3: Search ─────────────────────────────────────────────────────────
   let searchTerm = $state('');
   let hasSearchConfig = $derived(!!searchConfig);
@@ -572,263 +603,286 @@
     class="table-container {isTableScrollable ? 'scrollable-table' : ''} {classes ?? ''}"
     data-pw={testId}
   >
-    <table>
-      {#if caption}
-        <caption class="sr-only">{caption}</caption>
-      {/if}
-      <thead>
-        <tr>
-          {#if isCheckboxMode && !isSingleSelect}
-            <th class="table-header table-checkbox-col" class:table-header-sticky={isStickyHeader}>
-              <!-- Header tri-state checkbox -->
-              <span
-                class="table-checkbox-box"
-                class:checked={headerCheckboxState === 'all'}
-                class:indeterminate={headerCheckboxState === 'some'}
-                role="checkbox"
-                tabindex={0}
-                aria-checked={headerCheckboxState === 'some'
-                  ? 'mixed'
-                  : headerCheckboxState === 'all'}
-                aria-label="Select all rows"
-                {...checkboxSelection?.getRowAttributes
-                  ? checkboxSelection.getRowAttributes('__header__', -1)
-                  : {}}
-                aria-controls={selectableRowIds.map((rowId) => `row-checkbox-${rowId}`).join(' ')}
-                onclick={toggleAllSelection}
-                onkeydown={(keyboardEvent) =>
-                  handleCheckboxKeydown(keyboardEvent, toggleAllSelection)}
-              >
-                {#if headerCheckboxState === 'all'}
-                  <!-- eslint-disable svelte/no-at-html-tags -->
-                  <span class="table-checkbox-icon">{@html checkmarkSvg}</span>
-                {:else if headerCheckboxState === 'some'}
-                  <!-- eslint-disable svelte/no-at-html-tags -->
-                  <span class="table-checkbox-icon">{@html minusSvg}</span>
-                {/if}
-              </span>
-            </th>
-          {:else if isCheckboxMode && isSingleSelect}
-            <!-- In single-select mode the header cell is an empty spacer -->
-            <th class="table-header table-checkbox-col" class:table-header-sticky={isStickyHeader}>
-            </th>
+    <div
+      class="table-scroll-shell"
+      class:scrollable-left={canScrollLeft}
+      class:scrollable-right={canScrollRight}
+    >
+      <div class="table-scroll" use:trackHorizontalScroll>
+        <table>
+          {#if caption}
+            <caption class="sr-only">{caption}</caption>
           {/if}
-          {#if rowNumberColumn}
-            <th class="table-header table-row-number-col" class:table-header-sticky={isStickyHeader}
-              >{rowNumberLabel}</th
-            >
-          {/if}
-          {#each effectiveHeaders as header, colIndex (colIndex)}
-            {@const headerColumn = columns?.[colIndex]}
-            <th
-              class="table-header"
-              class:table-header-sticky={isStickyHeader}
-              data-pw={headerColumn?.testId ?? null}
-              style:text-align={headerColumn?.align ?? null}
-              style:max-width={headerColumn?.maxWidth ?? null}
-            >
-              <span
-                class="table-header-content"
-                style:justify-content={headerColumn?.align === 'right'
-                  ? 'flex-end'
-                  : headerColumn?.align === 'center'
-                    ? 'center'
-                    : null}
-              >
-                {#if headerColumn?.tooltip}
-                  <Tooltip
-                    text={headerColumn.tooltip}
-                    position={headerTooltipPosition}
-                    icon={headerTooltipIcon}
-                    iconPosition="trailing"
-                  >
-                    <span
-                      class="table-header-label"
-                      class:table-header-label-plain={headerTooltipIcon}>{header}</span
-                    >
-                  </Tooltip>
-                {:else}
-                  {header}
-                {/if}
-                {#if headerColumn?.filter}
-                  {@const filter = headerColumn.filter}
-                  <span class="table-header-filter">
-                    <Menu
-                      items={filter.options.map((option) => ({
-                        value: option.value,
-                        label: option.label
-                      }))}
-                      selectedValue={filter.selectedValue ?? null}
-                      role="listbox"
-                      testId={headerColumn.testId && `${headerColumn.testId}-filter`}
-                      onselect={(menuItem) =>
-                        filter.onFilterChange?.(
-                          menuItem.value === filter.selectedValue ? null : menuItem.value
-                        )}
-                    >
-                      {#snippet trigger()}
-                        <span
-                          class="table-header-filter-trigger"
-                          class:table-header-filter-active={typeof filter.selectedValue ===
-                            'string'}
-                        >
-                          <Button
-                            ariaLabel="Filter by {header}"
-                            testId={headerColumn.testId && `${headerColumn.testId}-filter-trigger`}
-                          >
-                            {#snippet icon()}
-                              <!-- eslint-disable svelte/no-at-html-tags -->
-                              <span class="table-header-filter-icon">{@html chevronDownSmSvg}</span>
-                            {/snippet}
-                          </Button>
-                        </span>
-                      {/snippet}
-                    </Menu>
-                  </span>
-                {/if}
-                {#if isColumnSortable(colIndex)}
-                  <div class="sort-button">
-                    <Button onclick={() => handleSort(colIndex)} ariaLabel="Sort by {header}">
-                      {#if sortColumn === colIndex && sortDirection === 'asc'}
-                        {#if typeof sortAscIcon === 'function'}
-                          {@render sortAscIcon()}
-                        {:else}
-                          <span class="sort-icon">
-                            <!-- eslint-disable svelte/no-at-html-tags -->
-                            {@html chevronUpSvg}
-                          </span>
-                        {/if}
-                      {:else if sortColumn === colIndex && sortDirection === 'desc'}
-                        {#if typeof sortDescIcon === 'function'}
-                          {@render sortDescIcon()}
-                        {:else}
-                          <span class="sort-icon">
-                            <!-- eslint-disable svelte/no-at-html-tags -->
-                            {@html chevronDownSvg}
-                          </span>
-                        {/if}
-                      {:else if typeof sortDefaultIcon === 'function'}
-                        {@render sortDefaultIcon()}
-                      {:else}
-                        <span class="sort-icon sort-icon-idle">
-                          <!-- eslint-disable svelte/no-at-html-tags -->
-                          {@html sortDefaultSvg}
-                        </span>
-                      {/if}
-                    </Button>
-                  </div>
-                {/if}
-              </span>
-            </th>
-          {/each}
-        </tr>
-      </thead>
-      <tbody>
-        {#if filteredTableData.length === 0 && typeof empty === 'function'}
-          <tr>
-            <td
-              class="table-empty"
-              colspan={effectiveHeaders.length +
-                (isCheckboxMode ? 1 : 0) +
-                (rowNumberColumn ? 1 : 0)}
-            >
-              {@render empty()}
-            </td>
-          </tr>
-        {:else}
-          {#each paginatedTableData as row, pageRowIndex (rowIdByRow.get(row) ?? pageRowIndex)}
-            {@const rowIndex = pageRowIndex + rowIndexOffset}
-            {@const originalIndex = originalIndexByRow.get(row) ?? rowIndex}
-            {@const rowId = rowIdByRow.get(row) ?? String(rowIndex)}
-            {@const rowDisabled = isCheckboxMode && isRowDisabled(rowId)}
-            {@const rowSelected = isCheckboxMode && isRowSelected(rowId)}
-            <tr
-              class="table-row"
-              class:table-row-clickable={isRowClickable}
-              class:table-row-selected={rowSelected}
-              data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
-              onclick={isRowClickable ? () => handleRowClick(rowIndex, row, originalIndex) : null}
-              onkeydown={isRowClickable
-                ? (keyboardEvent) => handleRowKeydown(keyboardEvent, rowIndex, row, originalIndex)
-                : null}
-              tabindex={isRowClickable ? 0 : null}
-            >
-              {#if isCheckboxMode}
-                <td class="table-content table-checkbox-col">
+          <thead>
+            <tr>
+              {#if isCheckboxMode && !isSingleSelect}
+                <th
+                  class="table-header table-checkbox-col"
+                  class:table-header-sticky={isStickyHeader}
+                >
+                  <!-- Header tri-state checkbox -->
                   <span
                     class="table-checkbox-box"
-                    class:checked={rowSelected}
-                    class:disabled={rowDisabled}
+                    class:checked={headerCheckboxState === 'all'}
+                    class:indeterminate={headerCheckboxState === 'some'}
                     role="checkbox"
-                    id={`row-checkbox-${rowId}`}
-                    tabindex={rowDisabled ? -1 : 0}
-                    aria-checked={rowSelected}
-                    aria-disabled={rowDisabled}
-                    aria-label={`Select row ${rowId || 'non-selectable'}`}
+                    tabindex={0}
+                    aria-checked={headerCheckboxState === 'some'
+                      ? 'mixed'
+                      : headerCheckboxState === 'all'}
+                    aria-label="Select all rows"
                     {...checkboxSelection?.getRowAttributes
-                      ? checkboxSelection.getRowAttributes(rowId, rowIndex)
+                      ? checkboxSelection.getRowAttributes('__header__', -1)
                       : {}}
-                    onclick={(mouseEvent) => {
-                      mouseEvent.stopPropagation();
-                      toggleRowSelection(rowId);
-                    }}
-                    onkeydown={(keyboardEvent) => {
-                      keyboardEvent.stopPropagation();
-                      handleCheckboxKeydown(keyboardEvent, () => toggleRowSelection(rowId));
-                    }}
+                    aria-controls={selectableRowIds
+                      .map((rowId) => `row-checkbox-${rowId}`)
+                      .join(' ')}
+                    onclick={toggleAllSelection}
+                    onkeydown={(keyboardEvent) =>
+                      handleCheckboxKeydown(keyboardEvent, toggleAllSelection)}
                   >
-                    {#if rowSelected}
+                    {#if headerCheckboxState === 'all'}
                       <!-- eslint-disable svelte/no-at-html-tags -->
                       <span class="table-checkbox-icon">{@html checkmarkSvg}</span>
+                    {:else if headerCheckboxState === 'some'}
+                      <!-- eslint-disable svelte/no-at-html-tags -->
+                      <span class="table-checkbox-icon">{@html minusSvg}</span>
                     {/if}
                   </span>
-                </td>
+                </th>
+              {:else if isCheckboxMode && isSingleSelect}
+                <!-- In single-select mode the header cell is an empty spacer -->
+                <th
+                  class="table-header table-checkbox-col"
+                  class:table-header-sticky={isStickyHeader}
+                >
+                </th>
               {/if}
               {#if rowNumberColumn}
-                <td class="table-content table-row-number-col">{rowNumberFor(pageRowIndex)}</td>
-              {/if}
-              {#each row as cellValue, colIndex (colIndex)}
-                {@const keyedColumn = columns?.[colIndex]}
-                {@const keyedRow = keyedRowByProjected?.get(row)}
-                {@const isScalarCell =
-                  typeof cellValue === 'string' ||
-                  typeof cellValue === 'number' ||
-                  typeof cellValue === 'boolean'}
-                <td
-                  class="table-content"
-                  data-pw={typeof getCellTestId === 'function'
-                    ? getCellTestId(row, cellValue, rowIndex)
-                    : null}
-                  style:text-align={keyedColumn?.align ?? null}
-                  style:max-width={keyedColumn?.maxWidth ?? null}
-                  title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
+                <th
+                  class="table-header table-row-number-col"
+                  class:table-header-sticky={isStickyHeader}>{rowNumberLabel}</th
                 >
-                  <div
-                    class={isContentScrollable ? 'scrollable-content' : ''}
-                    class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
+              {/if}
+              {#each effectiveHeaders as header, colIndex (colIndex)}
+                {@const headerColumn = columns?.[colIndex]}
+                <th
+                  class="table-header"
+                  class:table-header-sticky={isStickyHeader}
+                  data-pw={headerColumn?.testId ?? null}
+                  style:text-align={headerColumn?.align ?? null}
+                  style:max-width={headerColumn?.maxWidth ?? null}
+                >
+                  <span
+                    class="table-header-content"
+                    style:justify-content={headerColumn?.align === 'right'
+                      ? 'flex-end'
+                      : headerColumn?.align === 'center'
+                        ? 'center'
+                        : null}
                   >
-                    {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
-                      {@render keyedColumn.cell(keyedRow, rowIndex, originalIndex)}
-                    {:else if keyedColumn?.type && keyedColumn.type !== 'text' && keyedColumn.type !== 'custom'}
-                      <BuiltinCell
-                        column={keyedColumn}
-                        value={cellValue}
-                        {rowIndex}
-                        {originalIndex}
-                      />
-                    {:else if typeof cell === 'function'}
-                      {@render cell(cellValue, rowIndex, colIndex)}
+                    {#if headerColumn?.tooltip}
+                      <Tooltip
+                        text={headerColumn.tooltip}
+                        position={headerTooltipPosition}
+                        icon={headerTooltipIcon}
+                        iconPosition="trailing"
+                      >
+                        <span
+                          class="table-header-label"
+                          class:table-header-label-plain={headerTooltipIcon}>{header}</span
+                        >
+                      </Tooltip>
                     {:else}
-                      {cellValue}
+                      {header}
                     {/if}
-                  </div>
-                </td>
+                    {#if headerColumn?.filter}
+                      {@const filter = headerColumn.filter}
+                      <span class="table-header-filter">
+                        <Menu
+                          items={filter.options.map((option) => ({
+                            value: option.value,
+                            label: option.label
+                          }))}
+                          selectedValue={filter.selectedValue ?? null}
+                          role="listbox"
+                          testId={headerColumn.testId && `${headerColumn.testId}-filter`}
+                          onselect={(menuItem) =>
+                            filter.onFilterChange?.(
+                              menuItem.value === filter.selectedValue ? null : menuItem.value
+                            )}
+                        >
+                          {#snippet trigger()}
+                            <span
+                              class="table-header-filter-trigger"
+                              class:table-header-filter-active={typeof filter.selectedValue ===
+                                'string'}
+                            >
+                              <Button
+                                ariaLabel="Filter by {header}"
+                                testId={headerColumn.testId &&
+                                  `${headerColumn.testId}-filter-trigger`}
+                              >
+                                {#snippet icon()}
+                                  <!-- eslint-disable svelte/no-at-html-tags -->
+                                  <span class="table-header-filter-icon"
+                                    >{@html chevronDownSmSvg}</span
+                                  >
+                                {/snippet}
+                              </Button>
+                            </span>
+                          {/snippet}
+                        </Menu>
+                      </span>
+                    {/if}
+                    {#if isColumnSortable(colIndex)}
+                      <div class="sort-button">
+                        <Button onclick={() => handleSort(colIndex)} ariaLabel="Sort by {header}">
+                          {#if sortColumn === colIndex && sortDirection === 'asc'}
+                            {#if typeof sortAscIcon === 'function'}
+                              {@render sortAscIcon()}
+                            {:else}
+                              <span class="sort-icon">
+                                <!-- eslint-disable svelte/no-at-html-tags -->
+                                {@html chevronUpSvg}
+                              </span>
+                            {/if}
+                          {:else if sortColumn === colIndex && sortDirection === 'desc'}
+                            {#if typeof sortDescIcon === 'function'}
+                              {@render sortDescIcon()}
+                            {:else}
+                              <span class="sort-icon">
+                                <!-- eslint-disable svelte/no-at-html-tags -->
+                                {@html chevronDownSvg}
+                              </span>
+                            {/if}
+                          {:else if typeof sortDefaultIcon === 'function'}
+                            {@render sortDefaultIcon()}
+                          {:else}
+                            <span class="sort-icon sort-icon-idle">
+                              <!-- eslint-disable svelte/no-at-html-tags -->
+                              {@html sortDefaultSvg}
+                            </span>
+                          {/if}
+                        </Button>
+                      </div>
+                    {/if}
+                  </span>
+                </th>
               {/each}
             </tr>
-          {/each}
-        {/if}
-      </tbody>
-    </table>
+          </thead>
+          <tbody>
+            {#if filteredTableData.length === 0 && typeof empty === 'function'}
+              <tr>
+                <td
+                  class="table-empty"
+                  colspan={effectiveHeaders.length +
+                    (isCheckboxMode ? 1 : 0) +
+                    (rowNumberColumn ? 1 : 0)}
+                >
+                  {@render empty()}
+                </td>
+              </tr>
+            {:else}
+              {#each paginatedTableData as row, pageRowIndex (rowIdByRow.get(row) ?? pageRowIndex)}
+                {@const rowIndex = pageRowIndex + rowIndexOffset}
+                {@const originalIndex = originalIndexByRow.get(row) ?? rowIndex}
+                {@const rowId = rowIdByRow.get(row) ?? String(rowIndex)}
+                {@const rowDisabled = isCheckboxMode && isRowDisabled(rowId)}
+                {@const rowSelected = isCheckboxMode && isRowSelected(rowId)}
+                <tr
+                  class="table-row"
+                  class:table-row-clickable={isRowClickable}
+                  class:table-row-selected={rowSelected}
+                  data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
+                  onclick={isRowClickable
+                    ? () => handleRowClick(rowIndex, row, originalIndex)
+                    : null}
+                  onkeydown={isRowClickable
+                    ? (keyboardEvent) =>
+                        handleRowKeydown(keyboardEvent, rowIndex, row, originalIndex)
+                    : null}
+                  tabindex={isRowClickable ? 0 : null}
+                >
+                  {#if isCheckboxMode}
+                    <td class="table-content table-checkbox-col">
+                      <span
+                        class="table-checkbox-box"
+                        class:checked={rowSelected}
+                        class:disabled={rowDisabled}
+                        role="checkbox"
+                        id={`row-checkbox-${rowId}`}
+                        tabindex={rowDisabled ? -1 : 0}
+                        aria-checked={rowSelected}
+                        aria-disabled={rowDisabled}
+                        aria-label={`Select row ${rowId || 'non-selectable'}`}
+                        {...checkboxSelection?.getRowAttributes
+                          ? checkboxSelection.getRowAttributes(rowId, rowIndex)
+                          : {}}
+                        onclick={(mouseEvent) => {
+                          mouseEvent.stopPropagation();
+                          toggleRowSelection(rowId);
+                        }}
+                        onkeydown={(keyboardEvent) => {
+                          keyboardEvent.stopPropagation();
+                          handleCheckboxKeydown(keyboardEvent, () => toggleRowSelection(rowId));
+                        }}
+                      >
+                        {#if rowSelected}
+                          <!-- eslint-disable svelte/no-at-html-tags -->
+                          <span class="table-checkbox-icon">{@html checkmarkSvg}</span>
+                        {/if}
+                      </span>
+                    </td>
+                  {/if}
+                  {#if rowNumberColumn}
+                    <td class="table-content table-row-number-col">{rowNumberFor(pageRowIndex)}</td>
+                  {/if}
+                  {#each row as cellValue, colIndex (colIndex)}
+                    {@const keyedColumn = columns?.[colIndex]}
+                    {@const keyedRow = keyedRowByProjected?.get(row)}
+                    {@const isScalarCell =
+                      typeof cellValue === 'string' ||
+                      typeof cellValue === 'number' ||
+                      typeof cellValue === 'boolean'}
+                    <td
+                      class="table-content"
+                      data-pw={typeof getCellTestId === 'function'
+                        ? getCellTestId(row, cellValue, rowIndex)
+                        : null}
+                      style:text-align={keyedColumn?.align ?? null}
+                      style:max-width={keyedColumn?.maxWidth ?? null}
+                      title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
+                    >
+                      <div
+                        class={isContentScrollable ? 'scrollable-content' : ''}
+                        class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
+                      >
+                        {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
+                          {@render keyedColumn.cell(keyedRow, rowIndex, originalIndex)}
+                        {:else if keyedColumn?.type && keyedColumn.type !== 'text' && keyedColumn.type !== 'custom'}
+                          <BuiltinCell
+                            column={keyedColumn}
+                            value={cellValue}
+                            {rowIndex}
+                            {originalIndex}
+                          />
+                        {:else if typeof cell === 'function'}
+                          {@render cell(cellValue, rowIndex, colIndex)}
+                        {:else}
+                          {cellValue}
+                        {/if}
+                      </div>
+                    </td>
+                  {/each}
+                </tr>
+              {/each}
+            {/if}
+          </tbody>
+        </table>
+      </div>
+    </div>
     {#if typeof paginatorSlot === 'function'}
       <div class="table-footer">
         {@render paginatorSlot()}
@@ -966,6 +1020,57 @@
   .scrollable-table {
     height: var(--table-container-height, 143px);
     overflow-y: auto;
+  }
+
+  .table-scroll-shell {
+    position: relative;
+    min-width: 0;
+  }
+
+  /* Edge scrims: fade the clipped side of the table into its background so
+     hidden columns read as "more content this way". Class-driven from live
+     scroll state — never shown when the table fits. pointer-events: none
+     keeps cells under the fade clickable; z-index 2 paints above sticky
+     headers (z-index 1). */
+  .table-scroll-shell::before,
+  .table-scroll-shell::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--table-scroll-scrim-width, 32px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 2;
+  }
+
+  .table-scroll-shell::before {
+    left: 0;
+    border-radius: var(--table-border-radius, var(--radius, 4px)) 0 0
+      var(--table-border-radius, var(--radius, 4px));
+    background: linear-gradient(to right, var(--table-scroll-scrim-color, #ffffff), transparent);
+  }
+
+  .table-scroll-shell::after {
+    right: 0;
+    border-radius: 0 var(--table-border-radius, var(--radius, 4px))
+      var(--table-border-radius, var(--radius, 4px)) 0;
+    background: linear-gradient(to left, var(--table-scroll-scrim-color, #ffffff), transparent);
+  }
+
+  .table-scroll-shell.scrollable-left::before {
+    opacity: 1;
+  }
+
+  .table-scroll-shell.scrollable-right::after {
+    opacity: 1;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    min-width: 0;
+    scrollbar-width: thin;
   }
 
   table {

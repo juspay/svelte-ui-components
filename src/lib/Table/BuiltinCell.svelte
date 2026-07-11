@@ -42,6 +42,20 @@
     originalIndex: number;
   } = $props();
 
+  // The td applies column.align as text-align, which flex containers ignore:
+  // column-flex builtins stretch their children and row-flex builtins pack to
+  // flex-start, so an aligned column's builtin cells stayed left. Mirror the
+  // column alignment as a modifier class the flex builtins translate into
+  // align-items / justify-content (same idiom as the header's
+  // justify-content mapping).
+  const alignmentClass = $derived(
+    column.align === 'right'
+      ? 'builtin-align-end'
+      : column.align === 'center'
+        ? 'builtin-align-center'
+        : ''
+  );
+
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -99,7 +113,7 @@
 {:else if column.type === 'text-tag'}
   {@const data = asJsonObject(value) ?? {}}
   {@const tag = asTagCellData(data.tag ?? null)}
-  <div class="builtin-text-tag">
+  <div class="builtin-text-tag {alignmentClass}">
     <span class="builtin-primary-text"
       >{typeof data.text === 'string' ? data.text : cellValueToText(value)}</span
     >
@@ -114,7 +128,7 @@
   </div>
 {:else if column.type === 'two-line-text'}
   {@const data = asJsonObject(value) ?? {}}
-  <div class="builtin-two-line">
+  <div class="builtin-two-line {alignmentClass}">
     <span class="builtin-primary-text">{typeof data.text1 === 'string' ? data.text1 : '-'}</span>
     <span class="builtin-secondary-text">{typeof data.text2 === 'string' ? data.text2 : '-'}</span>
   </div>
@@ -123,7 +137,7 @@
   {@const icons = Array.isArray(data.icons)
     ? data.icons.filter((iconSrc) => typeof iconSrc === 'string')
     : []}
-  <div class="builtin-icon-label">
+  <div class="builtin-icon-label {alignmentClass}">
     {#each icons as iconSrc, iconIndex (`${iconIndex}-${iconSrc}`)}
       <span class="builtin-icon-label-icon">
         <Img src={String(iconSrc)} alt="" fallback="" />
@@ -133,7 +147,7 @@
   </div>
 {:else if column.type === 'image-two-line-text'}
   {@const data = asJsonObject(value) ?? {}}
-  <div class="builtin-image-two-line">
+  <div class="builtin-image-two-line {alignmentClass}">
     {#if typeof data.imageUrl === 'string' && data.imageUrl}
       <span class="builtin-thumb">
         <Img
@@ -145,7 +159,7 @@
     {:else}
       <span class="builtin-thumb builtin-thumb-placeholder"></span>
     {/if}
-    <div class="builtin-two-line">
+    <div class="builtin-two-line {alignmentClass}">
       <span class="builtin-primary-text">{typeof data.text1 === 'string' ? data.text1 : '-'}</span>
       <span class="builtin-secondary-text">{typeof data.text2 === 'string' ? data.text2 : '-'}</span
       >
@@ -154,7 +168,7 @@
 {:else if column.type === 'tag-array'}
   {@const tags = asTagArrayItems(value)}
   {#if tags}
-    <div class="builtin-tag-array">
+    <div class="builtin-tag-array {alignmentClass}">
       {#each tags as tag (tag.text)}
         <Pill text={tag.text} classes={tag.classes ?? ''} />
       {/each}
@@ -166,7 +180,7 @@
   {@const stackData = asAvatarStackData(value)}
   {#if stackData}
     {@const stack = buildAvatarStack(stackData)}
-    <div class="builtin-avatar-stack">
+    <div class="builtin-avatar-stack {alignmentClass}">
       <IconStack icons={stack.icons} />
       {#if stack.rest > 0}
         <span class="builtin-avatar-rest">+{stack.rest}</span>
@@ -181,7 +195,7 @@
   {:else}
     {@const compare = asCompareCellData(value)}
     {#if compare}
-      <div class="builtin-compare">
+      <div class="builtin-compare {alignmentClass}">
         {#if typeof compare.primary === 'string'}
           <span class="builtin-primary-text">{compare.primary}</span>
         {/if}
@@ -446,6 +460,35 @@
     display: flex;
     flex-direction: column;
     gap: var(--table-cell-line-gap, 2px);
+  }
+
+  /* column.align lands on the td as text-align, which flex layouts ignore.
+     Column-flex builtins follow it via align-items… */
+  .builtin-two-line.builtin-align-end,
+  .builtin-compare.builtin-align-end {
+    align-items: flex-end;
+  }
+
+  .builtin-two-line.builtin-align-center,
+  .builtin-compare.builtin-align-center {
+    align-items: center;
+  }
+
+  /* …and row-flex builtins follow it via justify-content. */
+  .builtin-text-tag.builtin-align-end,
+  .builtin-icon-label.builtin-align-end,
+  .builtin-image-two-line.builtin-align-end,
+  .builtin-tag-array.builtin-align-end,
+  .builtin-avatar-stack.builtin-align-end {
+    justify-content: flex-end;
+  }
+
+  .builtin-text-tag.builtin-align-center,
+  .builtin-icon-label.builtin-align-center,
+  .builtin-image-two-line.builtin-align-center,
+  .builtin-tag-array.builtin-align-center,
+  .builtin-avatar-stack.builtin-align-center {
+    justify-content: center;
   }
 
   .builtin-text-tag {

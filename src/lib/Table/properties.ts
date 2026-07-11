@@ -222,6 +222,9 @@ export type TableColumn = {
   /**
    * Horizontal alignment for this column's header and body cells. When unset,
    * cells follow the table-wide `--table-text-align` (left by default).
+   * Built-in flex cells (compare, two-line-text, text-tag, icon-label,
+   * image-two-line-text, tag-array, avatar-stack) mirror it into their flex
+   * alignment so stacked/inline content follows the aligned edge too.
    */
   align?: 'left' | 'center' | 'right';
   /**

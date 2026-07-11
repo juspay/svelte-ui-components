@@ -86,7 +86,7 @@
       <div class="tooltip-title">{tooltipData.title}</div>
     {/if}
     {#each tooltipData.items as item, i (i)}
-      <div class="tooltip-item">
+      <div class="tooltip-item" data-pw={`tooltip-item-${i}`}>
         {#if item.color}
           <span class="tooltip-swatch" style="background: {item.color}"></span>
         {/if}
@@ -106,6 +106,7 @@
       class="chart-tooltip portal {unstyled ? 'unstyled' : ''} {classes ?? ''}"
       style="left: {pos.left}px; top: {pos.top}px;"
       use:portalToBody
+      data-pw="chart-tooltip"
     >
       {@render inner(data)}
     </div>
@@ -116,6 +117,7 @@
       bind:clientHeight={tooltipHeight}
       class="chart-tooltip {unstyled ? 'unstyled' : ''} {classes ?? ''}"
       style="left: {pos.left}px; top: {pos.top}px;"
+      data-pw="chart-tooltip"
     >
       {@render inner(data)}
     </div>

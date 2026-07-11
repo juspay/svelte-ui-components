@@ -10,7 +10,7 @@ test.describe('Sheet anchor position tokens', () => {
     await page.goto('/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
-    const panel = page.locator('.sheet-panel.right').first();
+    const panel = page.getByTestId('sheet-right-panel');
     await expect(panel).toBeVisible();
     await page.waitForTimeout(400);
 
@@ -30,7 +30,7 @@ test.describe('Sheet anchor position tokens', () => {
     await page.goto('/components/sheet');
 
     await page.getByText('Open account menu').click();
-    const panel = page.locator('[data-pw="sheet-anchored"] .sheet-panel').first();
+    const panel = page.getByTestId('sheet-anchored-panel');
     await expect(panel).toBeVisible();
     // Let the 300ms fly-in transition finish — mid-transition the panel sits at
     // an intermediate translateX, not its resting position.
@@ -59,7 +59,7 @@ test.describe('Sheet dismissOnOutsideClick', () => {
     await page.goto('/components/sheet');
 
     await page.getByText('Open account menu').click();
-    const overlay = page.locator('[data-pw="sheet-anchored"]');
+    const overlay = page.getByTestId('sheet-anchored');
     await expect(overlay).toBeVisible();
 
     // No dimming — the overlay is fully transparent.
@@ -70,7 +70,7 @@ test.describe('Sheet dismissOnOutsideClick', () => {
 
     // Clicking the (invisible) overlay outside the panel still dismisses it.
     await overlay.click({ position: { x: 5, y: 5 } });
-    await expect(page.locator('[data-pw="sheet-anchored"]')).toHaveCount(0);
+    await expect(page.getByTestId('sheet-anchored')).toHaveCount(0);
   });
 
   test('a visible, non-dismissible overlay blocks the page but does not close on click', async ({
@@ -79,7 +79,7 @@ test.describe('Sheet dismissOnOutsideClick', () => {
     await page.goto('/components/sheet');
 
     await page.getByText('Open blocking sheet').click();
-    const overlay = page.locator('[data-pw="sheet-blocking"]');
+    const overlay = page.getByTestId('sheet-blocking');
     await expect(overlay).toBeVisible();
     await page.waitForTimeout(300);
 
@@ -109,8 +109,8 @@ test.describe('Sheet reference-counted scroll lock', () => {
     await page.goto('/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
-    await expect(page.locator('.sheet-panel.right').first()).toBeVisible();
-    await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+    await expect(page.getByTestId('sheet-right-panel')).toBeVisible();
+    await expect(page.getByTestId('page-body')).toHaveCSS('overflow', 'hidden');
 
     // The first sheet's full-screen overlay legitimately blocks real clicks on
     // the rest of the page (that's the point of a modal backdrop) — `force`
@@ -119,12 +119,12 @@ test.describe('Sheet reference-counted scroll lock', () => {
     // element instead, simulating a second sheet opened by some other trigger
     // (e.g. a notification), the realistic multi-sheet scenario this fix covers.
     await page.getByText('Open with footer').dispatchEvent('click');
-    await expect(page.locator('.sheet-panel.right').nth(1)).toBeVisible();
-    await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+    await expect(page.getByTestId('sheet-footer-panel')).toBeVisible();
+    await expect(page.getByTestId('page-body')).toHaveCSS('overflow', 'hidden');
 
     // Close the second sheet (via its own overlay/Escape) — the first is still open,
     // so the page must remain scroll-locked.
     await page.keyboard.press('Escape');
-    await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+    await expect(page.getByTestId('page-body')).toHaveCSS('overflow', 'hidden');
   });
 });

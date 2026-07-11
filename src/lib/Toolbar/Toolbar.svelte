@@ -18,7 +18,7 @@
 </script>
 
 <div class="toolbar {classes ?? ''}" data-pw={testId}>
-  <div class="content">
+  <div class="content" data-pw={typeof testId === 'string' ? `${testId}-content` : null}>
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
     {:else if showBackButton && typeof backIcon === 'string' && backIcon.length > 0}

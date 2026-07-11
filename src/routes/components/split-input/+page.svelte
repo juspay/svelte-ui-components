@@ -14,7 +14,7 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>OTP / PIN (auto-advance)</h3>
-  <SplitInput bind:values={otpValues} autoAdvance />
+  <SplitInput bind:values={otpValues} autoAdvance testId="split-input-default" />
   <p>Value: {otpValues.join('')}</p>
 </div>
 

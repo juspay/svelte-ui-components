@@ -7,21 +7,21 @@ test.describe('DateRangePicker — preset toggle-off', () => {
   test('re-clicking the active preset reverts to the committed preset', async ({ page }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-preset-toggle-demo"]');
+    const picker = page.getByTestId('drp-preset-toggle-demo');
     await expect(picker).toBeVisible();
 
     // Open the dropdown — the committed preset ("Today", seeded via initialPresetLabel) is active.
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
-    await expect(picker.locator('.drp-preset-item.drp-preset-active')).toContainText('Today');
+    await expect(page.getByTestId('drp-preset-toggle-demo-panel')).toBeVisible();
+    await expect(picker.getByRole('option', { selected: true })).toContainText('Today');
 
     // Pick a different preset — it becomes the active one.
     await picker.getByRole('option', { name: 'Yesterday', exact: true }).click();
-    await expect(picker.locator('.drp-preset-item.drp-preset-active')).toContainText('Yesterday');
+    await expect(picker.getByRole('option', { selected: true })).toContainText('Yesterday');
 
     // Re-click the now-active preset — it toggles off, reverting to the committed "Today".
     await picker.getByRole('option', { name: 'Yesterday', exact: true }).click();
-    await expect(picker.locator('.drp-preset-item.drp-preset-active')).toContainText('Today');
-    await expect(picker.locator('.drp-preset-item.drp-preset-active')).toHaveCount(1);
+    await expect(picker.getByRole('option', { selected: true })).toContainText('Today');
+    await expect(picker.getByRole('option', { selected: true })).toHaveCount(1);
   });
 });

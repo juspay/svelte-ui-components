@@ -567,6 +567,7 @@
               width={hr.width}
               height={dims.innerHeight}
               fill="transparent"
+              data-pw={`hover-target-${hr.catIdx}`}
               data-category-index={hr.catIdx}
               tabindex="0"
               role="button"

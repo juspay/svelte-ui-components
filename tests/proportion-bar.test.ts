@@ -7,18 +7,26 @@ test.describe('ProportionBar', () => {
   test('renders one rect and one legend item per segment', async ({ page }) => {
     await page.goto('/components/proportion-bar');
 
-    const bar = page.locator('[data-pw="payment-methods-bar"]');
+    const bar = page.getByTestId('payment-methods-bar');
     await expect(bar).toBeVisible();
-    await expect(bar.locator('.proportion-bar-svg rect')).toHaveCount(5);
-    await expect(bar.locator('.proportion-bar-legend-item')).toHaveCount(5);
+    await expect
+      .poll(async () =>
+        bar
+          .getByTestId('payment-methods-bar-svg')
+          .evaluate((svg) => svg.querySelectorAll('rect').length)
+      )
+      .toBe(5);
+    await expect(bar.getByTestId(/^payment-methods-bar-legend-item-\d+$/)).toHaveCount(5);
   });
 
   test('segment widths fill the whole track (~100%)', async ({ page }) => {
     await page.goto('/components/proportion-bar');
 
-    const widths = await page
-      .locator('[data-pw="payment-methods-bar"] .proportion-bar-svg rect')
-      .evaluateAll((rects) => rects.map((rect) => Number(rect.getAttribute('width'))));
+    const bar = page.getByTestId('payment-methods-bar');
+    const widths = await bar.getByTestId('payment-methods-bar-svg').evaluate((svg) => {
+      const rects = svg.querySelectorAll('rect');
+      return Array.from(rects).map((rect) => Number(rect.getAttribute('width')));
+    });
     const total = widths.reduce((sum, width) => sum + width, 0);
     expect(Math.round(total)).toBe(100);
   });
@@ -26,10 +34,10 @@ test.describe('ProportionBar', () => {
   test('exposes an accessible SVG summary when the legend is hidden', async ({ page }) => {
     await page.goto('/components/proportion-bar');
 
-    const bar = page.locator('[data-pw="no-legend-bar"]');
-    await expect(bar.locator('.proportion-bar-legend')).toHaveCount(0);
+    const bar = page.getByTestId('no-legend-bar');
+    await expect(bar.getByTestId('no-legend-bar-legend')).toHaveCount(0);
 
-    const svg = bar.locator('.proportion-bar-svg');
+    const svg = bar.getByTestId('no-legend-bar-svg');
     await expect(svg).toHaveAttribute('role', 'img');
     await expect(svg).toHaveAttribute('aria-label', /UPI/);
   });
@@ -37,12 +45,17 @@ test.describe('ProportionBar', () => {
   test('ignores negative and non-finite values (widths stay within 0–100)', async ({ page }) => {
     await page.goto('/components/proportion-bar');
 
-    const rects = page.locator('[data-pw="robust-bar"] .proportion-bar-svg rect');
-    await expect(rects).toHaveCount(4);
+    const bar = page.getByTestId('robust-bar');
+    const rectCount = await bar
+      .getByTestId('robust-bar-svg')
+      .evaluate((svg) => svg.querySelectorAll('rect').length);
+    expect(rectCount).toBe(4);
 
-    const widths = await rects.evaluateAll((nodes) =>
-      nodes.map((node) => Number(node.getAttribute('width')))
-    );
+    const widths = await bar
+      .getByTestId('robust-bar-svg')
+      .evaluate((svg) =>
+        Array.from(svg.querySelectorAll('rect')).map((rect) => Number(rect.getAttribute('width')))
+      );
     for (const width of widths) {
       expect(width).toBeGreaterThanOrEqual(0);
       expect(width).toBeLessThanOrEqual(100);

@@ -9,18 +9,21 @@
 
   const checkoutRows = [
     {
+      testId: 'checkout-row-0',
       heading: 'Gross Revenue',
       value: '₹12.4Cr',
       change: 8.2,
       tooltip: { text: 'Total revenue before returns and cancellations', position: 'top' as const }
     },
     {
+      testId: 'checkout-row-1',
       heading: 'Net Revenue',
       value: '₹10.9Cr',
       change: 5.7,
       additionalContent: 'after RTO'
     },
     {
+      testId: 'checkout-row-2',
       heading: 'RTO Rate',
       value: '12.1%',
       change: -2.3,

@@ -2,10 +2,17 @@
   import Img from '../Img/Img.svelte';
   import type { IconProperties } from './properties';
 
-  let { icon, svg, text, onclick, onkeydown, classes }: IconProperties = $props();
+  let { icon, svg, text, onclick, onkeydown, classes, testId }: IconProperties = $props();
 </script>
 
-<div class="icon-container {classes ?? ''}" {onclick} {onkeydown} role="button" tabindex="0">
+<div
+  class="icon-container {classes ?? ''}"
+  {onclick}
+  {onkeydown}
+  role="button"
+  tabindex="0"
+  data-pw={typeof testId === 'string' ? testId : null}
+>
   {#if typeof svg === 'string' && svg.length > 0}
     <!-- eslint-disable svelte/no-at-html-tags -->
     <span class="icon-svg">{@html svg}</span>

@@ -8,7 +8,8 @@
     showLoader = $bindable(false),
     onclick,
     onkeydown,
-    classes
+    classes,
+    testId
   }: GridItemProperties = $props();
 
   function handleClick(event: MouseEvent) {
@@ -17,7 +18,14 @@
   }
 </script>
 
-<div class="container {classes ?? ''}" onclick={handleClick} {onkeydown} role="button" tabindex="0">
+<div
+  class="container {classes ?? ''}"
+  onclick={handleClick}
+  {onkeydown}
+  role="button"
+  tabindex="0"
+  data-pw={typeof testId === 'string' ? testId : null}
+>
   <div class="grid-header">
     <img src={headerIcon} alt="" class="grid-item-header-icon" />
   </div>

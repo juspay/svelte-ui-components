@@ -37,6 +37,7 @@ export type OptionalInputButtonProperties = {
    * internal validation messages surface normally.
    */
   error?: string;
+  testId?: string;
 };
 
 export type InputButtonEventProperties = {

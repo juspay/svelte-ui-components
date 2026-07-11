@@ -356,7 +356,10 @@
   {/if}
 
   {#if onErrorMessage !== '' && showError && !actionInput}
-    <div class="error-message">
+    <div
+      class="error-message"
+      data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
+    >
       {onErrorMessage}
     </div>
   {/if}

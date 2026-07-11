@@ -58,6 +58,7 @@
     tabindex={-1}
     aria-hidden="true"
     onclick={(e: MouseEvent) => e.stopPropagation()}
+    data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
   />
   <span
     class="box"
@@ -69,6 +70,7 @@
     aria-disabled={disabled}
     aria-controls={ariaControls ?? null}
     onkeydown={handleKeyDown}
+    data-pw={typeof testId === 'string' ? `${testId}-box` : null}
   >
     {#if checked && !indeterminate}
       {#if typeof checkedIcon === 'function'}

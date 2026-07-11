@@ -22,7 +22,7 @@
 <h3>Right (default)</h3>
 <div class="demo-row">
   <Button text="Open right" onclick={() => (showRight = true)} />
-  <Sheet bind:open={showRight} side="right" title="Settings">
+  <Sheet bind:open={showRight} side="right" title="Settings" testId="sheet-right">
     {#snippet content()}
       <p>Side panel sliding in from the right. Use for settings, details, or editing forms.</p>
     {/snippet}
@@ -62,7 +62,7 @@
 <h3>With footer</h3>
 <div class="demo-row">
   <Button text="Open with footer" onclick={() => (showFooter = true)} />
-  <Sheet bind:open={showFooter} side="right" title="Confirm">
+  <Sheet bind:open={showFooter} side="right" title="Confirm" testId="sheet-footer">
     {#snippet content()}
       <p>Sheet with a footer for action buttons.</p>
     {/snippet}

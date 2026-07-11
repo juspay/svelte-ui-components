@@ -139,7 +139,10 @@
     : []}
   <div class="builtin-icon-label {alignmentClass}">
     {#each icons as iconSrc, iconIndex (`${iconIndex}-${iconSrc}`)}
-      <span class="builtin-icon-label-icon">
+      <span
+        class="builtin-icon-label-icon"
+        data-pw={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
+      >
         <Img src={String(iconSrc)} alt="" fallback="" />
       </span>
     {/each}
@@ -149,7 +152,7 @@
   {@const data = asJsonObject(value) ?? {}}
   <div class="builtin-image-two-line {alignmentClass}">
     {#if typeof data.imageUrl === 'string' && data.imageUrl}
-      <span class="builtin-thumb">
+      <span class="builtin-thumb" data-pw={column.testId ? `${column.testId}-thumb` : null}>
         <Img
           src={data.imageUrl}
           alt={typeof data.text1 === 'string' ? data.text1 : ''}
@@ -157,7 +160,10 @@
         />
       </span>
     {:else}
-      <span class="builtin-thumb builtin-thumb-placeholder"></span>
+      <span
+        class="builtin-thumb builtin-thumb-placeholder"
+        data-pw={column.testId ? `${column.testId}-thumb-placeholder` : null}
+      ></span>
     {/if}
     <div class="builtin-two-line {alignmentClass}">
       <span class="builtin-primary-text">{typeof data.text1 === 'string' ? data.text1 : '-'}</span>
@@ -169,8 +175,12 @@
   {@const tags = asTagArrayItems(value)}
   {#if tags}
     <div class="builtin-tag-array {alignmentClass}">
-      {#each tags as tag (tag.text)}
-        <Pill text={tag.text} classes={tag.classes ?? ''} />
+      {#each tags as tag, tagIndex (`${tagIndex}-${tag.text}`)}
+        <Pill
+          text={tag.text}
+          classes={tag.classes ?? ''}
+          testId={tag.testId ?? (column.testId && `${column.testId}-tag-${tagIndex}`)}
+        />
       {/each}
     </div>
   {:else}
@@ -204,13 +214,19 @@
         {/if}
         {#if typeof compare.trendPercent === 'number'}
           {#if compare.trendPercent > 0}
-            <span class="builtin-trend builtin-trend-up">
+            <span
+              class="builtin-trend builtin-trend-up"
+              data-pw={column.testId ? `${column.testId}-trend-up` : null}
+            >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendUpSvg}</span>
               {compare.trendPercent}%
             </span>
           {:else if compare.trendPercent < 0}
-            <span class="builtin-trend builtin-trend-down">
+            <span
+              class="builtin-trend builtin-trend-down"
+              data-pw={column.testId ? `${column.testId}-trend-down` : null}
+            >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendDownSvg}</span>
               {compare.trendPercent}%
@@ -431,7 +447,10 @@
           </Button>
         </span>
         {#if copied}
-          <span class="builtin-link-copied">Copied</span>
+          <span
+            class="builtin-link-copied"
+            data-pw={column.testId ? `${column.testId}-link-copied` : null}>Copied</span
+          >
         {/if}
       {/if}
     </div>

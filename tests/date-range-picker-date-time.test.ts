@@ -8,21 +8,21 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-datetime-demo"]');
+    const picker = page.getByTestId('drp-datetime-demo');
     await expect(picker).toBeVisible();
 
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-datetime-demo-panel')).toBeVisible();
 
     // Read-only date boxes are present (seeded from the "Today" preset).
-    await expect(page.locator('[data-pw="drp-datetime-demo-start-date"]')).toBeVisible();
-    await expect(page.locator('[data-pw="drp-datetime-demo-end-date"]')).toBeVisible();
+    await expect(page.getByTestId('drp-datetime-demo-start-date')).toBeVisible();
+    await expect(page.getByTestId('drp-datetime-demo-end-date')).toBeVisible();
 
     // Time inputs are hidden until the clock toggle is clicked.
-    await expect(page.locator('[data-pw="drp-datetime-demo-start-time"]')).toHaveCount(0);
-    await page.locator('[data-pw="drp-datetime-demo-time-toggle"]').click();
+    await expect(page.getByTestId('drp-datetime-demo-start-time')).toHaveCount(0);
+    await page.getByTestId('drp-datetime-demo-time-toggle').click();
 
-    const startTime = page.locator('[data-pw="drp-datetime-demo-start-time"]');
+    const startTime = page.getByTestId('drp-datetime-demo-start-time');
     await expect(startTime).toBeVisible();
 
     const applyButton = picker.getByRole('button', { name: 'Apply date selection' });
@@ -40,12 +40,12 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   test('blocks Apply when start time is after end time on the same day', async ({ page }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-datetime-demo"]');
+    const picker = page.getByTestId('drp-datetime-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await page.locator('[data-pw="drp-datetime-demo-time-toggle"]').click();
+    await page.getByTestId('drp-datetime-demo-time-toggle').click();
 
-    const startTime = page.locator('[data-pw="drp-datetime-demo-start-time"]');
-    const endTime = page.locator('[data-pw="drp-datetime-demo-end-time"]');
+    const startTime = page.getByTestId('drp-datetime-demo-start-time');
+    const endTime = page.getByTestId('drp-datetime-demo-end-time');
     const applyButton = picker.getByRole('button', { name: 'Apply date selection' });
 
     // The seeded "Today" preset puts start and end on the same calendar day, so a
@@ -66,20 +66,20 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-datetime-inline-demo"]');
+    const picker = page.getByTestId('drp-datetime-inline-demo');
     await expect(picker).toBeVisible();
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-datetime-inline-demo-panel')).toBeVisible();
 
     // No toggle in inline mode; the time inputs are visible immediately.
-    await expect(page.locator('[data-pw="drp-datetime-inline-demo-time-toggle"]')).toHaveCount(0);
-    const startTime = page.locator('[data-pw="drp-datetime-inline-demo-start-time"]');
-    const endTime = page.locator('[data-pw="drp-datetime-inline-demo-end-time"]');
+    await expect(page.getByTestId('drp-datetime-inline-demo-time-toggle')).toHaveCount(0);
+    const startTime = page.getByTestId('drp-datetime-inline-demo-start-time');
+    const endTime = page.getByTestId('drp-datetime-inline-demo-end-time');
     await expect(startTime).toBeVisible();
     await expect(endTime).toBeVisible();
 
     // The start time input is on the same row as its date box and to its right.
-    const dateBox = await page.locator('[data-pw="drp-datetime-inline-demo-start-date"]').boundingBox();
+    const dateBox = await page.getByTestId('drp-datetime-inline-demo-start-date').boundingBox();
     const timeBox = await startTime.boundingBox();
     expect(dateBox).not.toBeNull();
     expect(timeBox).not.toBeNull();

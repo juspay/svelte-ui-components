@@ -338,6 +338,7 @@
             {disabled}
             autocomplete="off"
             tabindex={disabled ? -1 : 0}
+            data-pw={typeof testId === 'string' ? `${testId}-search` : null}
           />
         {/if}
       {:else}
@@ -362,6 +363,7 @@
             {disabled}
             autocomplete="off"
             tabindex={disabled ? -1 : 0}
+            data-pw={typeof testId === 'string' ? `${testId}-search` : null}
           />
         {:else if value.length === 0}
           <span class="select-placeholder">{placeholder}</span>
@@ -379,6 +381,7 @@
         {disabled}
         autocomplete="off"
         tabindex={disabled ? -1 : 0}
+        data-pw={typeof testId === 'string' ? `${testId}-search` : null}
       />
     {:else}
       <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
@@ -429,12 +432,17 @@
                   class:checked={allFilteredSelected}
                   class:indeterminate={selectAllIndeterminate}
                   aria-hidden="true"
+                  data-checked={allFilteredSelected ? 'true' : 'false'}
+                  data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
                 >
                   {#if allFilteredSelected}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     <span class="select-option-check">{@html checkmarkSvg}</span>
                   {:else if selectAllIndeterminate}
-                    <span class="select-option-dash"></span>
+                    <span
+                      class="select-option-dash"
+                      data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                    ></span>
                   {/if}
                 </span>
               {/if}
@@ -472,6 +480,10 @@
                     class="select-option-indicator"
                     class:checked={value.includes(row.item.id)}
                     aria-hidden="true"
+                    data-checked={value.includes(row.item.id) ? 'true' : 'false'}
+                    data-pw={typeof testId === 'string'
+                      ? `${testId}-option-indicator-${row.item.id}`
+                      : null}
                   >
                     {#if value.includes(row.item.id)}
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->

@@ -12,11 +12,11 @@ test.describe('Checkbox — native input stays in sync with the rendered state',
   }) => {
     await page.goto('/components/checkbox');
 
-    const checkbox = page.locator('[data-pw="checkbox-default"]');
+    const checkbox = page.getByTestId('checkbox-default');
     await expect(checkbox).toBeVisible();
 
-    const nativeInput = checkbox.locator('input.native-checkbox');
-    const box = checkbox.locator('[role="checkbox"]');
+    const nativeInput = checkbox.getByTestId('checkbox-default-native-input');
+    const box = checkbox.getByRole('checkbox');
 
     await expect(box).toHaveAttribute('aria-checked', 'false');
     await expect(nativeInput).not.toBeChecked();
@@ -33,9 +33,9 @@ test.describe('Checkbox — native input stays in sync with the rendered state',
   test('keyboard toggling via the box keeps the native input in sync', async ({ page }) => {
     await page.goto('/components/checkbox');
 
-    const checkbox = page.locator('[data-pw="checkbox-default"]');
-    const nativeInput = checkbox.locator('input.native-checkbox');
-    const box = checkbox.locator('[role="checkbox"]');
+    const checkbox = page.getByTestId('checkbox-default');
+    const nativeInput = checkbox.getByTestId('checkbox-default-native-input');
+    const box = checkbox.getByRole('checkbox');
 
     await box.focus();
     await page.keyboard.press('Space');

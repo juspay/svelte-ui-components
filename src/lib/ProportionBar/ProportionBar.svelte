@@ -109,6 +109,7 @@
       role={showLegend ? null : 'img'}
       aria-hidden={showLegend ? 'true' : null}
       aria-label={showLegend ? null : ariaSummary}
+      data-pw={typeof testId === 'string' ? `${testId}-svg` : null}
     >
       {#each rectSegments as rectSegment, rectIndex (rectIndex)}
         <rect
@@ -130,9 +131,16 @@
   </div>
 
   {#if showLegend}
-    <ul class="proportion-bar-legend" aria-label="Segment breakdown">
+    <ul
+      class="proportion-bar-legend"
+      aria-label="Segment breakdown"
+      data-pw={typeof testId === 'string' ? `${testId}-legend` : null}
+    >
       {#each computedSegments as computedSegment, legendIndex (legendIndex)}
-        <li class="proportion-bar-legend-item">
+        <li
+          class="proportion-bar-legend-item"
+          data-pw={typeof testId === 'string' ? `${testId}-legend-item-${legendIndex}` : null}
+        >
           <span
             class="proportion-bar-swatch"
             style="background: {computedSegment.color};"

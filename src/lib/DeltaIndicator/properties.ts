@@ -24,7 +24,7 @@ export type OptionalDeltaIndicatorProperties = {
   /** Absolute values at or below this are treated as `neutral` (default 0). */
   neutralThreshold?: number;
   /** Test selector applied as the `data-pw` attribute. */
-  testId?: string;
+  testId?: string | null;
   /** Additional CSS classes for theming. */
   classes?: string;
 };

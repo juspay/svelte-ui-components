@@ -9,7 +9,7 @@
 
 <div class="demo-row" style="align-items: center; gap: 32px;">
   <LoadingDots />
-  <LoadingDots animation="pulse" />
+  <LoadingDots animation="pulse" testId="loading-dots-pulse" />
   <div style="--loading-dots-size: 10px;">
     <LoadingDots dots={5} />
   </div>

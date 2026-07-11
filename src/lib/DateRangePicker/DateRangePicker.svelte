@@ -556,6 +556,7 @@
       onclick={togglePicker}
       ariaLabel={isOpen ? 'Close date picker' : 'Open date picker'}
       classes="drp-trigger {isOpen ? 'drp-trigger-open' : ''}"
+      {...typeof testId === 'string' ? { testId: `${testId}-trigger` } : {}}
     >
       {#if typeof triggerSnippet === 'function'}
         {@render triggerSnippet(triggerLabel)}
@@ -652,6 +653,7 @@
       role="dialog"
       aria-label="Date range picker"
       aria-modal="true"
+      data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
     >
       <div class="drp-panel-inner">
         <!-- Preset sidebar -->
@@ -676,11 +678,17 @@
                 role="option"
                 aria-selected={isPresetActive(preset)}
                 onclick={() => handlePreset(preset)}
+                data-pw={typeof testId === 'string' ? `${testId}-preset-${preset.label}` : null}
               >
                 {preset.label}
                 {#if presetCheckmark && isPresetActive(preset)}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  <span class="drp-preset-check" aria-hidden="true">{@html checkmarkSvg}</span>
+                  <span
+                    class="drp-preset-check"
+                    aria-hidden="true"
+                    data-pw={typeof testId === 'string' ? `${testId}-preset-check` : null}
+                    >{@html checkmarkSvg}</span
+                  >
                 {/if}
               </button>
             {/each}

@@ -9,22 +9,22 @@ test.describe('DateRangePicker — trigger toggles the panel', () => {
   }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-range-demo"]');
+    const picker = page.getByTestId('drp-range-demo');
     await expect(picker).toBeVisible();
 
     // The trigger's accessible name flips to 'Close date picker' while open,
-    // so locate it by its stable class rather than by name.
-    const trigger = picker.locator('.drp-trigger button');
+    // so locate it by its stable testId rather than by name.
+    const trigger = page.getByTestId('drp-range-demo-trigger');
 
     await trigger.click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-range-demo-panel')).toBeVisible();
 
     // Second click on the same trigger dismisses the picker.
     await trigger.click();
-    await expect(picker.locator('.drp-panel')).toBeHidden();
+    await expect(page.getByTestId('drp-range-demo-panel')).toBeHidden();
 
     // Trigger still works as an opener afterwards.
     await trigger.click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-range-demo-panel')).toBeVisible();
   });
 });

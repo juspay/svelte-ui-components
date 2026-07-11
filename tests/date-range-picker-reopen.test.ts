@@ -10,21 +10,21 @@ test.describe('DateRangePicker — committed preset persists across the open cyc
   }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-same-day-presets-demo"]');
+    const picker = page.getByTestId('drp-same-day-presets-demo');
     await expect(picker).toBeVisible();
 
     // Open, pick "Today" (exact), confirm a single highlight, then apply.
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-same-day-presets-demo-panel')).toBeVisible();
     await picker.getByRole('option', { name: 'Today', exact: true }).click();
-    await expect(picker.locator('.drp-preset-item[aria-selected="true"]')).toHaveCount(1);
+    await expect(picker.getByRole('option', { selected: true })).toHaveCount(1);
     await picker.getByRole('button', { name: 'Apply date selection' }).click();
-    await expect(picker.locator('.drp-panel')).toBeHidden();
+    await expect(page.getByTestId('drp-same-day-presets-demo-panel')).toBeHidden();
 
     // Re-open: only "Today" stays highlighted — not all three same-day presets.
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
-    const active = picker.locator('.drp-preset-item[aria-selected="true"]');
+    await expect(page.getByTestId('drp-same-day-presets-demo-panel')).toBeVisible();
+    const active = picker.getByRole('option', { selected: true });
     await expect(active).toHaveCount(1);
     await expect(active).toHaveText('Today');
   });
@@ -35,13 +35,13 @@ test.describe('DateRangePicker — committed preset persists across the open cyc
   test('initialPresetLabel highlights only the seeded preset on first open', async ({ page }) => {
     await page.goto('/components/date-range-picker');
 
-    const picker = page.locator('[data-pw="drp-initial-preset-demo"]');
+    const picker = page.getByTestId('drp-initial-preset-demo');
     await expect(picker).toBeVisible();
 
     await picker.getByRole('button', { name: 'Open date picker' }).click();
-    await expect(picker.locator('.drp-panel')).toBeVisible();
+    await expect(page.getByTestId('drp-initial-preset-demo-panel')).toBeVisible();
 
-    const active = picker.locator('.drp-preset-item[aria-selected="true"]');
+    const active = picker.getByRole('option', { selected: true });
     await expect(active).toHaveCount(1);
     await expect(active).toHaveText('All time');
   });

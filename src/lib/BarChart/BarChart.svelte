@@ -884,6 +884,7 @@
                           effectiveHighlightedIndex !== bar.pi)}
                       d={stackedBarPath(bar)}
                       fill={barFillAttr(bar)}
+                      data-pw={`bar-${i}`}
                       tabindex="0"
                       role="button"
                       aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
@@ -912,6 +913,7 @@
                       rx={barRadius}
                       ry={barRadius}
                       fill={barFillAttr(bar)}
+                      data-pw={`bar-${i}`}
                       tabindex="0"
                       role="button"
                       aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
@@ -930,10 +932,12 @@
                     <text
                       class="bar-value"
                       class:bar-value-inside={bl.p.placement === 'inside'}
+                      data-inside={bl.p.placement === 'inside' ? 'true' : 'false'}
                       x={bl.p.x}
                       y={bl.p.y}
                       text-anchor={bl.p.textAnchor}
                       dominant-baseline={bl.p.dominantBaseline}
+                      data-pw={`bar-value-${i}`}
                       style={bl.p.placement === 'inside'
                         ? `fill: ${getContrastColor(bl.bar.color)}; stroke: ${contrastOutline(bl.bar.color)};`
                         : ''}>{bl.text}</text

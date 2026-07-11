@@ -19,7 +19,8 @@
     classes,
     mandatory,
     size,
-    error
+    error,
+    testId
   }: InputButtonProperties = $props();
 
   let validationState = $state<ValidationState>('InProgress');
@@ -61,7 +62,7 @@
   }
 </script>
 
-<div class="container {classes ?? ''}">
+<div class="container {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
   {#if inputProperties.label && inputProperties.label !== ''}
     <label class="label" for={inputProperties.name}>
       {inputProperties.label}{#if mandatory}<span class="mandatory-marker" aria-label="required">

@@ -124,10 +124,17 @@
 
   const builtinColumns: TableColumn[] = [
     { id: 'plan', label: 'Plan', type: 'two-line-text' },
-    { id: 'state', label: 'State', type: 'tag' },
-    { id: 'channels', label: 'Channels', type: 'tag-array' },
+    { id: 'state', label: 'State', type: 'tag', testId: 'builtin-state' },
+    { id: 'channels', label: 'Channels', type: 'tag-array', testId: 'builtin-channels' },
     { id: 'owners', label: 'Owners', type: 'avatar-stack' },
-    { id: 'revenue', label: 'Revenue', type: 'compare', align: 'right', highlighted: true },
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      type: 'compare',
+      align: 'right',
+      highlighted: true,
+      testId: 'builtin-revenue'
+    },
     {
       id: 'active',
       label: 'Active',
@@ -143,10 +150,10 @@
   const builtinRows: TableRow[] = [
     {
       plan: { text1: 'Growth Monthly', text2: 'PLN-0042' },
-      state: { text: 'Active', classes: 'pill-success' },
+      state: { text: 'Active', classes: 'pill-success', testId: 'builtin-state-0' },
       channels: [
-        { text: 'Web', classes: 'pill-info' },
-        { text: 'App', classes: 'pill-info' }
+        { text: 'Web', classes: 'pill-info', testId: 'builtin-channels-web-0' },
+        { text: 'App', classes: 'pill-info', testId: 'builtin-channels-app-0' }
       ],
       owners: {
         items: [
@@ -160,8 +167,8 @@
     },
     {
       plan: { text1: 'Starter Annual', text2: 'PLN-0007' },
-      state: { text: 'Paused', classes: 'pill-warning' },
-      channels: [{ text: 'Web', classes: 'pill-info' }],
+      state: { text: 'Paused', classes: 'pill-warning', testId: 'builtin-state-1' },
+      channels: [{ text: 'Web', classes: 'pill-info', testId: 'builtin-channels-web-1' }],
       owners: {
         items: [
           { id: 'u1', label: 'carol' },
@@ -178,7 +185,7 @@
     },
     {
       plan: { text1: 'Legacy', text2: 'PLN-0001' },
-      state: { text: 'Expired', classes: 'pill-error' },
+      state: { text: 'Expired', classes: 'pill-error', testId: 'builtin-state-2' },
       channels: [],
       owners: { items: [] },
       revenue: 'n/a',
@@ -198,7 +205,7 @@
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><path d='M11.3 1.9a1.6 1.6 0 0 1 2.8 2.8l-8.6 8.6-3.4.9.9-3.4z' fill='none' stroke='%23626262' stroke-width='1.4' stroke-linejoin='round'/></svg>";
 
   const interactiveColumns: TableColumn[] = [
-    { id: 'name', label: 'Name' },
+    { id: 'name', label: 'Name', testId: 'demo-name' },
     {
       id: 'tier',
       label: 'Tier',
@@ -360,8 +367,8 @@
   ]);
 
   const serverColumns: TableColumn[] = [
-    { id: 'name', label: 'Name', sortable: false },
-    { id: 'score', label: 'Score' }
+    { id: 'name', label: 'Name', sortable: false, testId: 'srv-sort-name' },
+    { id: 'score', label: 'Score', testId: 'srv-sort-score' }
   ];
 
   const handleServerSort = (colIndex: number, direction: 'asc' | 'desc'): void => {
@@ -373,8 +380,8 @@
 
   // ── Built-in pagination + row numbers demo ───────────────────────────────────
   const pagedColumns: TableColumn[] = [
-    { id: 'item', label: 'Item' },
-    { id: 'qty', label: 'Qty', align: 'right' }
+    { id: 'item', label: 'Item', testId: 'paged-item' },
+    { id: 'qty', label: 'Qty', align: 'right', testId: 'paged-qty' }
   ];
 
   const pagedRows: TableRow[] = Array.from({ length: 23 }, (_, index) => ({
@@ -387,8 +394,8 @@
   let lastBulkAction = $state('none');
 
   const selectionColumns: TableColumn[] = [
-    { id: 'name', label: 'Name' },
-    { id: 'team', label: 'Team' }
+    { id: 'name', label: 'Name', testId: 'sel-name' },
+    { id: 'team', label: 'Team', testId: 'sel-team' }
   ];
 
   const selectionRows: TableRow[] = [
@@ -401,7 +408,9 @@
   // ── Page-scoped select-all demo (client pagination + checkboxes) ────────────
   let pagedSelectionLog = $state('empty');
 
-  const pagedSelectColumns: TableColumn[] = [{ id: 'member', label: 'Member' }];
+  const pagedSelectColumns: TableColumn[] = [
+    { id: 'member', label: 'Member', testId: 'psel-member' }
+  ];
 
   const pagedSelectRows: TableRow[] = Array.from({ length: 7 }, (_, index) => ({
     member: `Member ${index + 1}`
@@ -409,8 +418,20 @@
 
   // ── Media cell renderers demo (icon-label, image-two-line-text) ─────────────
   const mediaColumns: TableColumn[] = [
-    { id: 'gateway', label: 'Gateway', type: 'icon-label', sortable: false },
-    { id: 'product', label: 'Product', type: 'image-two-line-text', sortable: false }
+    {
+      id: 'gateway',
+      label: 'Gateway',
+      type: 'icon-label',
+      sortable: false,
+      testId: 'builtin-gateway'
+    },
+    {
+      id: 'product',
+      label: 'Product',
+      type: 'image-two-line-text',
+      sortable: false,
+      testId: 'builtin-product'
+    }
   ];
 
   const mediaRows: TableRow[] = [
@@ -429,7 +450,9 @@
   const SERVER_TOTAL_RECORDS = 12;
   let serverPageNumber = $state(1);
 
-  const serverPagedColumns: TableColumn[] = [{ id: 'record', label: 'Record', sortable: false }];
+  const serverPagedColumns: TableColumn[] = [
+    { id: 'record', label: 'Record', sortable: false, testId: 'srv-paged-record' }
+  ];
 
   const serverPagedRows = $derived(
     Array.from(
@@ -479,7 +502,11 @@
 {/snippet}
 
 {#snippet keyedStatusCell(row: TableRow, _rowIndex: number)}
-  <Pill text={String(row.status)} classes={statusClasses[String(row.status)] ?? ''} />
+  <Pill
+    text={String(row.status)}
+    classes={statusClasses[String(row.status)] ?? ''}
+    testId={`keyed-status-${String(row.status).toLowerCase()}`}
+  />
 {/snippet}
 
 <div class="page-header">

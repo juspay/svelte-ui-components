@@ -17,6 +17,7 @@
             class:legend-hidden={item.hidden}
             aria-pressed={!item.hidden}
             onclick={() => onToggle(i)}
+            data-pw={`legend-toggle-${i}`}
           >
             <span class="legend-swatch" style="background: {item.color}"></span>
             <span class="legend-label">{item.label}</span>

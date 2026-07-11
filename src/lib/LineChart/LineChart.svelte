@@ -584,7 +584,14 @@
           {/if}
 
           {#each haloPoints as hp, i (i)}
-            <circle class="dot-halo" cx={hp.x} cy={hp.y} r={dotRadius + 6} fill={hp.color} />
+            <circle
+              class="dot-halo"
+              cx={hp.x}
+              cy={hp.y}
+              r={dotRadius + 6}
+              fill={hp.color}
+              data-pw={`dot-halo-${i}`}
+            />
           {/each}
 
           {#each lines as line, si (si)}
@@ -672,6 +679,7 @@
             width={dims.innerWidth}
             height={dims.innerHeight}
             fill="transparent"
+            data-pw="hover-overlay"
             onpointermove={handleOverlayMove}
             onpointerleave={handleLeave}
             onclick={handleClick}

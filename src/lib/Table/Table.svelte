@@ -630,6 +630,7 @@
                       ? 'mixed'
                       : headerCheckboxState === 'all'}
                     aria-label="Select all rows"
+                    data-pw={typeof testId === 'string' ? `${testId}-select-all` : null}
                     {...checkboxSelection?.getRowAttributes
                       ? checkboxSelection.getRowAttributes('__header__', -1)
                       : {}}
@@ -817,6 +818,9 @@
                         aria-checked={rowSelected}
                         aria-disabled={rowDisabled}
                         aria-label={`Select row ${rowId || 'non-selectable'}`}
+                        data-pw={typeof testId === 'string'
+                          ? `${testId}-row-checkbox-${rowId}`
+                          : null}
                         {...checkboxSelection?.getRowAttributes
                           ? checkboxSelection.getRowAttributes(rowId, rowIndex)
                           : {}}
@@ -859,6 +863,9 @@
                       <div
                         class={isContentScrollable ? 'scrollable-content' : ''}
                         class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
+                        data-pw={keyedColumn?.testId
+                          ? `${keyedColumn.testId}-cell-${rowIndex}`
+                          : null}
                       >
                         {#if keyedColumn && typeof keyedColumn.cell === 'function' && keyedRow}
                           {@render keyedColumn.cell(keyedRow, rowIndex, originalIndex)}
@@ -894,7 +901,14 @@
            more than one page (or the server reports more chunks); a
            single-page table shows no footer. -->
       <div class="table-footer table-paginator" data-pw={pagination.testId ?? null}>
-        <span class="table-paginator-range">{paginationRangeText}</span>
+        <span
+          class="table-paginator-range"
+          data-pw={typeof testId === 'string'
+            ? `${testId}-paginator-range`
+            : pagination?.testId
+              ? `${pagination.testId}-range`
+              : null}>{paginationRangeText}</span
+        >
         <span class="table-paginator-controls">
           {#if pageSizeOptions.length > 0}
             <span class="table-paginator-size">

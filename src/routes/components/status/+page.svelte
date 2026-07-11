@@ -36,7 +36,7 @@
     <Status statusText="Processing" statusDescription="Hang tight…">
       {#snippet icon()}
         <div style="width: 48px; height: 48px;" data-pw="status-icon-slot-lottie">
-          <LottiePlayer animationData={minimalAnimation} />
+          <LottiePlayer animationData={minimalAnimation} testId="status-lottie" />
         </div>
       {/snippet}
     </Status>

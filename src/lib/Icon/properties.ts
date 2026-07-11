@@ -5,6 +5,7 @@ export type OptionalIconProperties = {
   svg?: string;
   text?: string | null;
   classes?: string;
+  testId?: string;
 };
 
 export type IconEventProperties = {

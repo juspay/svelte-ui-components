@@ -9,9 +9,16 @@
     align?: ModalAlign;
     transitionType?: ModalTransition;
     children?: Snippet;
+    testId?: string;
   };
 
-  let { enable = true, align = 'bottom', transitionType = 'ALL', children }: Props = $props();
+  let {
+    enable = true,
+    align = 'bottom',
+    transitionType = 'ALL',
+    children,
+    testId
+  }: Props = $props();
 
   let flyAnimationProperties = $derived.by(() => {
     const base = { x: 0, y: 0, duration: 380 };
@@ -34,19 +41,33 @@
 
 {#if enable}
   {#if useFlyAnimation && useOutTransition}
-    <div in:fly|global={flyAnimationProperties} out:fly|global={flyAnimationProperties}>
+    <div
+      in:fly|global={flyAnimationProperties}
+      out:fly|global={flyAnimationProperties}
+      data-pw={typeof testId === 'string' ? testId : null}
+    >
       {@render children?.()}
     </div>
   {:else if useFlyAnimation}
-    <div in:fly|global={flyAnimationProperties}>
+    <div
+      in:fly|global={flyAnimationProperties}
+      data-pw={typeof testId === 'string' ? testId : null}
+    >
       {@render children?.()}
     </div>
   {:else if useOutTransition}
-    <div in:fade|global={fadeAnimationProperties} out:fade|global={fadeAnimationProperties}>
+    <div
+      in:fade|global={fadeAnimationProperties}
+      out:fade|global={fadeAnimationProperties}
+      data-pw={typeof testId === 'string' ? testId : null}
+    >
       {@render children?.()}
     </div>
   {:else}
-    <div in:fade|global={fadeAnimationProperties}>
+    <div
+      in:fade|global={fadeAnimationProperties}
+      data-pw={typeof testId === 'string' ? testId : null}
+    >
       {@render children?.()}
     </div>
   {/if}

@@ -91,7 +91,7 @@
   onkeydown={isInteractive ? handleKeydown : null}
 >
   {#if hasHeaderContent}
-    <div class="statcard-header">
+    <div class="statcard-header" data-pw={typeof testId === 'string' ? `${testId}-header` : null}>
       <div class="statcard-header-left">
         {#if hasTitle}
           {#if tooltip}
@@ -112,7 +112,12 @@
               </span>
             </Tooltip>
           {:else}
-            <div class="statcard-title">{title}</div>
+            <div
+              class="statcard-title"
+              data-pw={typeof testId === 'string' ? `${testId}-title` : null}
+            >
+              {title}
+            </div>
           {/if}
         {/if}
         {#if checkbox}
@@ -137,10 +142,17 @@
   {/if}
 
   {#if hasRows && rows}
-    <div class="statcard-rows" class:statcard-rows-horizontal={rowsDirection === 'row'}>
+    <div
+      class="statcard-rows"
+      class:statcard-rows-horizontal={rowsDirection === 'row'}
+      data-pw={typeof testId === 'string' ? `${testId}-rows` : null}
+    >
       {#each rows as row, rowIndex (rowIndex)}
         {#if rowIndex > 0}
-          <div class="statcard-row-divider"></div>
+          <div
+            class="statcard-row-divider"
+            data-pw={typeof testId === 'string' ? `${testId}-row-divider-${rowIndex}` : null}
+          ></div>
         {/if}
         <div class="statcard-row" data-pw={typeof row.testId === 'string' ? row.testId : null}>
           {#if typeof row.heading === 'string' && row.heading.length > 0}
@@ -159,9 +171,18 @@
             </div>
           {/if}
           <div class="statcard-row-value-line">
-            <div class="statcard-value">{row.value}</div>
+            <div
+              class="statcard-value"
+              data-pw={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
+            >
+              {row.value}
+            </div>
             {#if typeof row.change === 'number'}
-              <DeltaIndicator value={row.change} invertColors={row.invertChangeColors ?? false} />
+              <DeltaIndicator
+                value={row.change}
+                invertColors={row.invertChangeColors ?? false}
+                testId={testId ? `${testId}-delta-${rowIndex}` : null}
+              />
             {/if}
             {#if typeof row.additionalContent === 'string' && row.additionalContent.length > 0}
               <div class="statcard-row-additional">{row.additionalContent}</div>
@@ -173,7 +194,12 @@
             {/if}
             <div class="statcard-breakdown-grid">
               {#each row.breakdown as breakdownItem, breakdownIndex (breakdownIndex)}
-                <div class="statcard-breakdown-item">
+                <div
+                  class="statcard-breakdown-item"
+                  data-pw={typeof testId === 'string'
+                    ? `${testId}-breakdown-item-${rowIndex}-${breakdownIndex}`
+                    : null}
+                >
                   <div class="statcard-breakdown-label">{breakdownItem.label}</div>
                   <div class="statcard-breakdown-value">{breakdownItem.value}</div>
                   {#if typeof breakdownItem.change === 'number'}
@@ -192,9 +218,13 @@
   {:else}
     <div class="statcard-value-row">
       {#if typeof valueSnippet === 'function'}
-        <div class="statcard-value">{@render valueSnippet()}</div>
+        <div class="statcard-value" data-pw={typeof testId === 'string' ? `${testId}-value` : null}>
+          {@render valueSnippet()}
+        </div>
       {:else if typeof value === 'string' && value.length > 0}
-        <div class="statcard-value">{value}</div>
+        <div class="statcard-value" data-pw={typeof testId === 'string' ? `${testId}-value` : null}>
+          {value}
+        </div>
       {/if}
 
       {#if hasDelta}
@@ -210,7 +240,12 @@
   {/if}
 
   {#if typeof subtitle === 'string' && subtitle.length > 0}
-    <div class="statcard-subtitle">{subtitle}</div>
+    <div
+      class="statcard-subtitle"
+      data-pw={typeof testId === 'string' ? `${testId}-subtitle` : null}
+    >
+      {subtitle}
+    </div>
   {/if}
 
   {#if children}

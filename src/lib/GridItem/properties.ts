@@ -11,6 +11,7 @@ export type OptionalGridItemProperties = {
   headerIcon?: string | null;
   showLoader?: boolean;
   classes?: string;
+  testId?: string;
 };
 
 export type GridItemEventProperties = {

@@ -3,4 +3,5 @@ export type BrandLoaderProperties = {
   brandText: string;
   subText?: string | null;
   classes?: string;
+  testId?: string;
 };

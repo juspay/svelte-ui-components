@@ -234,6 +234,10 @@
     }
     const bubble = document.createElement('div');
     bubble.setAttribute('role', 'tooltip');
+    bubble.setAttribute(
+      'data-pw',
+      typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble'
+    );
 
     const coords = computePortalCoords(rect, pos);
     bubble.style.cssText = [
@@ -369,6 +373,7 @@
       class="tooltip-bubble {displayPosition}"
       role="tooltip"
       style:--tooltip-shift="{bubbleShift}px"
+      data-pw={typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble'}
     >
       <div class="tooltip-arrow"></div>
       {#if typeof content === 'function'}

@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { BrandLoaderProperties } from './properties';
 
-  let { brandLogoURL, brandText, subText, classes }: BrandLoaderProperties = $props();
+  let { brandLogoURL, brandText, subText, classes, testId }: BrandLoaderProperties = $props();
 </script>
 
-<div class="background {classes ?? ''}">
+<div class="background {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
   <div class="loader">
     <img src={brandLogoURL} alt="" />
     <div class="text">{brandText}</div>

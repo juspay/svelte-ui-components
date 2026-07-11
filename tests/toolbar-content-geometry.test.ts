@@ -7,7 +7,7 @@ test.describe('Toolbar content-row geometry tokens', () => {
   test('defaults leave an unconfigured toolbar content row unchanged', async ({ page }) => {
     await page.goto('/components/toolbar');
 
-    const content = page.locator('[data-pw="toolbar-root"] .content');
+    const content = page.getByTestId('toolbar-root-content');
     await expect(content).toBeVisible();
 
     const style = await content.evaluate((element) => {
@@ -28,8 +28,7 @@ test.describe('Toolbar content-row geometry tokens', () => {
   test('an instance can clamp and center its content row via tokens', async ({ page }) => {
     await page.goto('/components/toolbar');
 
-    const toolbar = page.locator('[data-pw="toolbar-content-tokens"]');
-    const content = toolbar.locator('.content');
+    const content = page.getByTestId('toolbar-content-tokens-content');
     await expect(content).toBeVisible();
 
     const style = await content.evaluate((element) => {

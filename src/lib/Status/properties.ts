@@ -13,6 +13,7 @@ export type StatusProperties = StatusEventProperties & {
    * priority over `statusIcon` when provided.
    */
   icon?: Snippet;
+  testId?: string;
 };
 
 export type StatusEventProperties = {

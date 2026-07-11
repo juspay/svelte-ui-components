@@ -332,6 +332,7 @@
               class:funnel-bar-dimmed={hoveredIndex !== null && hoveredIndex !== index}
               x={bx}
               y={by}
+              data-pw={`funnel-bar-${index}`}
               width={stageColumnWidth}
               height={bh}
               fill={color}

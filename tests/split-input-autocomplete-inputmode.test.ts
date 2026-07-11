@@ -8,10 +8,10 @@ test.describe('SplitInput — autoComplete / inputMode field passthrough', () =>
   test('per-field autoComplete and inputMode render on the native inputs', async ({ page }) => {
     await page.goto('/components/split-input');
 
-    const group = page.locator('[data-pw="split-input-sms-otp"]');
+    const group = page.getByTestId('split-input-sms-otp');
     await expect(group).toBeVisible();
 
-    const fields = group.locator('input');
+    const fields = group.getByRole('textbox');
     await expect(fields).toHaveCount(4);
 
     for (let index = 0; index < 4; index++) {
@@ -26,8 +26,8 @@ test.describe('SplitInput — autoComplete / inputMode field passthrough', () =>
 
     // The plain OTP demo (length-based default fields) is unchanged: default
     // autocomplete stays 'on' and no inputmode attribute is rendered.
-    const defaultGroup = page.locator('.field-group').first();
-    const firstField = defaultGroup.locator('input').first();
+    const defaultGroup = page.getByTestId('split-input-default');
+    const firstField = defaultGroup.getByRole('textbox').first();
     await expect(firstField).toHaveAttribute('autocomplete', 'on');
     await expect(firstField).not.toHaveAttribute('inputmode', /.+/);
   });

@@ -178,6 +178,14 @@
     background-color: var(--toast-background-color, #87ceeb);
     opacity: var(--toast-opacity, 1);
     box-sizing: var(--toast-box-sizing);
+
+    /* A toast is a transient status overlay, not a click target: it floats
+       above page content (often over drawer/footer CTAs) and used to swallow
+       clicks meant for the controls beneath it for its whole duration.
+       Click-through by default; the close button re-enables its own hit
+       area below, and consumers with actionable bottomContent can opt the
+       whole toast back in via --toast-pointer-events: auto. */
+    pointer-events: var(--toast-pointer-events, none);
   }
 
   .no-page-overlap {
@@ -213,6 +221,7 @@
   }
 
   .close-button {
+    pointer-events: auto;
     width: var(--toast-close-button-width, 20px);
     height: var(--toast-close-button-height, 20px);
     cursor: var(--toast-close-button-cursor, pointer);

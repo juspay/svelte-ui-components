@@ -57,6 +57,8 @@ export type OptionalInputProperties = {
   testId?: string;
   classes?: string;
   role?: string;
+  /** Accessible name applied to the native input/textarea (aria-label). */
+  ariaLabel?: string | null;
   ariaExpanded?: boolean;
   ariaAutocomplete?: 'none' | 'inline' | 'list' | 'both';
   ariaControls?: string | null;

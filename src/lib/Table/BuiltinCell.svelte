@@ -274,6 +274,9 @@
 {:else if column.type === 'input'}
   {@const inputData = asInputCellData(value)}
   {#if inputData}
+    {#snippet inputLeadingIcon()}
+      <img class="builtin-input-icon" src={inputData.iconUrl} alt="" />
+    {/snippet}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span
       class="builtin-interactive"
@@ -283,6 +286,7 @@
       <Input
         value={inputData.value ?? ''}
         placeholder={inputData.placeholder ?? ''}
+        ariaLabel={inputData.ariaLabel ?? null}
         disable={inputData.disabled ?? false}
         testId={inputData.testId ?? ''}
         dataType={asInputDataType(inputData.dataType ?? null)}
@@ -292,6 +296,7 @@
         onErrorMessage={inputData.onErrorMessage ?? null}
         actionInput={false}
         onInput={(newValue) => column.onInput?.(rowIndex, newValue, originalIndex)}
+        {...inputData.iconUrl ? { leftIcon: inputLeadingIcon } : {}}
       />
     </span>
   {:else}
@@ -587,6 +592,12 @@
     align-items: center;
     min-width: 0;
     width: var(--table-interactive-width, auto);
+  }
+
+  .builtin-input-icon {
+    display: block;
+    width: var(--table-cell-input-icon-size, 16px);
+    height: var(--table-cell-input-icon-size, 16px);
   }
 
   .builtin-action-group {

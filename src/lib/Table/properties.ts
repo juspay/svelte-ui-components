@@ -133,6 +133,17 @@ export type TableInputCellData = {
   placeholder?: string;
   disabled?: boolean;
   testId?: string;
+  /**
+   * Accessible name forwarded to the rendered Input's native element
+   * (aria-label). Recommended whenever the cell has no visible label —
+   * required in practice for icon-bearing inputs.
+   */
+  ariaLabel?: string;
+  /**
+   * URL of a passive leading icon rendered inside the input field (e.g. a
+   * currency glyph). Sized via `--table-cell-input-icon-size` (default 16px).
+   */
+  iconUrl?: string;
   /** Input dataType forwarded to the rendered Input ('text' | 'tel' | 'number' | …). */
   dataType?: string;
   /**

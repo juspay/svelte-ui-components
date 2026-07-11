@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   asAvatarStackData,
   asCompareCellData,
+  asInputCellData,
   asLinkCellData,
   asTagArrayItems,
   asTagCellData,
@@ -47,6 +48,22 @@ describe('cell narrowing', () => {
     expect(asLinkCellData('https://x.test')).toEqual({ url: 'https://x.test' });
     expect(asLinkCellData('')).toBeNull();
     expect(asLinkCellData({ href: 'https://x.test' })).toBeNull();
+  });
+
+  it('asInputCellData carries string iconUrl/ariaLabel and drops non-string values', () => {
+    expect(
+      asInputCellData({
+        placeholder: 'Amount',
+        iconUrl: 'data:image/svg+xml;utf8,x',
+        ariaLabel: 'Amount in rupees'
+      })
+    ).toEqual({
+      placeholder: 'Amount',
+      ariaLabel: 'Amount in rupees',
+      iconUrl: 'data:image/svg+xml;utf8,x'
+    });
+    expect(asInputCellData({ iconUrl: 42, ariaLabel: false })).toEqual({});
+    expect(asInputCellData('amount')).toBeNull();
   });
 
   it('cellValueToText renders scalars, dashes empty/object values', () => {

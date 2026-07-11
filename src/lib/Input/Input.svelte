@@ -37,6 +37,7 @@
     onKeyDown = () => {},
     classes,
     role,
+    ariaLabel,
     ariaExpanded,
     ariaAutocomplete,
     ariaControls,
@@ -256,6 +257,7 @@
       <textarea
         {value}
         {placeholder}
+        aria-label={ariaLabel}
         autocomplete={autoComplete}
         inputmode={inputMode}
         {name}
@@ -287,6 +289,7 @@
         type={dataType}
         {value}
         {placeholder}
+        aria-label={ariaLabel}
         autocomplete={autoComplete}
         inputmode={inputMode}
         {name}

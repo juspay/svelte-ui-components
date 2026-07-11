@@ -185,6 +185,12 @@ export const asInputCellData = (value: TableCellValue): TableInputCellData | nul
   if (typeof record.testId === 'string') {
     inputData.testId = record.testId;
   }
+  if (typeof record.ariaLabel === 'string') {
+    inputData.ariaLabel = record.ariaLabel;
+  }
+  if (typeof record.iconUrl === 'string') {
+    inputData.iconUrl = record.iconUrl;
+  }
   if (typeof record.dataType === 'string') {
     inputData.dataType = record.dataType;
   }

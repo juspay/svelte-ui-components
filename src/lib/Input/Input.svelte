@@ -396,6 +396,7 @@
     resize: none;
     visibility: var(--input-visibility, visible);
     text-align: var(--input-text-align, left);
+    text-transform: var(--input-text-transform, none);
     color: var(--input-text-color);
   }
 

@@ -401,7 +401,8 @@
     );
     --input-box-shadow: none;
     --input-width: 100%;
-    --input-height: 38px;
+    --input-height: var(--color-picker-input-height, 38px);
+    --input-text-transform: var(--color-picker-value-text-transform, none);
     margin-left: -1px;
   }
 
@@ -538,6 +539,7 @@
     --input-height: 32px;
     --input-text-align: center;
     --input-focus-border: 1px solid var(--color-picker-field-focus-border, #3b82f6);
+    --input-text-transform: var(--color-picker-value-text-transform, none);
   }
 
   .cp-split-input {

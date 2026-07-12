@@ -127,6 +127,7 @@ Override these custom properties to theme the component.
 | `--input-border`                    | `1px solid transparent`                                | border           | Border of the input in its normal state.                                    |
 | `--input-visibility`                | `visible`                                              | visibility       | Controls input visibility (visible/hidden).                                 |
 | `--input-text-align`                | `left`                                                 | text-align       | Text alignment inside the input.                                            |
+| `--input-text-transform`            | `none`                                                 | text-transform   | Text transform for the input value (e.g. `uppercase`).                      |
 | `--input-text-color`                | `-`                                                    | color            | Color of the input text.                                                    |
 | `--input-focus-border`              | `1px solid transparent`                                | border           | Border of the input when focused.                                           |
 | `--input-container-margin`          | `-`                                                    | margin           | Outer margin of the input container.                                        |

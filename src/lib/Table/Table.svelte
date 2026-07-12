@@ -10,8 +10,6 @@
   import Pagination from '../Pagination/Pagination.svelte';
   import Select from '../Select/Select.svelte';
   import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
-  import sortAscendingSvg from '$lib/assets/sort-ascending.svg?raw';
-  import sortDescendingSvg from '$lib/assets/sort-descending.svg?raw';
   import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
   import searchSvg from '$lib/assets/search.svg?raw';
   import closeSvg from '$lib/assets/close.svg?raw';
@@ -743,18 +741,18 @@
                             {#if typeof sortAscIcon === 'function'}
                               {@render sortAscIcon()}
                             {:else}
-                              <span class="sort-icon">
+                              <span class="sort-icon sort-icon-asc">
                                 <!-- eslint-disable svelte/no-at-html-tags -->
-                                {@html sortAscendingSvg}
+                                {@html sortDefaultSvg}
                               </span>
                             {/if}
                           {:else if sortColumn === colIndex && sortDirection === 'desc'}
                             {#if typeof sortDescIcon === 'function'}
                               {@render sortDescIcon()}
                             {:else}
-                              <span class="sort-icon">
+                              <span class="sort-icon sort-icon-desc">
                                 <!-- eslint-disable svelte/no-at-html-tags -->
-                                {@html sortDescendingSvg}
+                                {@html sortDefaultSvg}
                               </span>
                             {/if}
                           {:else if typeof sortDefaultIcon === 'function'}
@@ -1336,6 +1334,21 @@
     width: var(--table-sort-icon-size, 14px);
     height: var(--table-sort-icon-size, 14px);
     display: block;
+  }
+
+  /* Two-tone state painting. The shared sort-default.svg asset stays
+     color-agnostic (fill="currentColor", like every other icon asset); the
+     state colors live here. All halves default to the inactive fill, then
+     the sorted direction's half is released back to currentColor (the
+     active color above). Path order in the asset is up-chevron first,
+     down-chevron second. */
+  .sort-button :global(.sort-icon svg path) {
+    fill: var(--table-sort-inactive-color, #c7c7c7);
+  }
+
+  .sort-button :global(.sort-icon-asc svg path:first-child),
+  .sort-button :global(.sort-icon-desc svg path:last-child) {
+    fill: currentColor;
   }
 
   /* The design system draws every sort state fully opaque — faintness comes

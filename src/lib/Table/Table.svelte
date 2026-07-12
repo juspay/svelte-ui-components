@@ -10,8 +10,8 @@
   import Pagination from '../Pagination/Pagination.svelte';
   import Select from '../Select/Select.svelte';
   import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
-  import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import sortAscendingSvg from '$lib/assets/sort-ascending.svg?raw';
+  import sortDescendingSvg from '$lib/assets/sort-descending.svg?raw';
   import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
   import searchSvg from '$lib/assets/search.svg?raw';
   import closeSvg from '$lib/assets/close.svg?raw';
@@ -745,7 +745,7 @@
                             {:else}
                               <span class="sort-icon">
                                 <!-- eslint-disable svelte/no-at-html-tags -->
-                                {@html chevronUpSvg}
+                                {@html sortAscendingSvg}
                               </span>
                             {/if}
                           {:else if sortColumn === colIndex && sortDirection === 'desc'}
@@ -754,7 +754,7 @@
                             {:else}
                               <span class="sort-icon">
                                 <!-- eslint-disable svelte/no-at-html-tags -->
-                                {@html chevronDownSvg}
+                                {@html sortDescendingSvg}
                               </span>
                             {/if}
                           {:else if typeof sortDefaultIcon === 'function'}
@@ -1324,18 +1324,32 @@
     align-items: center;
   }
 
+  /* The sorted-direction half paints via currentColor; without an explicit
+     color it inherits the Button's text color (white on the default button
+     theme), which disappears on light headers. Default to the design
+     system's active blue. */
+  .sort-button :global(.sort-icon:not(.sort-icon-idle)) {
+    color: var(--table-sort-active-color, #1b85ff);
+  }
+
   .sort-button :global(.sort-icon svg) {
     width: var(--table-sort-icon-size, 14px);
     height: var(--table-sort-icon-size, 14px);
     display: block;
   }
 
+  /* The design system draws every sort state fully opaque — faintness comes
+     from the glyph fills (inactive halves #C7C7C7, active direction
+     currentColor), never from transparency. The opacity vars remain for
+     consumers that prefer a fade but now default to solid; hover steps the
+     inactive halves to the design system's hover gray. */
   .sort-button :global(.sort-icon-idle) {
-    opacity: var(--table-sort-idle-opacity, 0.5);
+    opacity: var(--table-sort-idle-opacity, 1);
   }
 
   .sort-button:hover :global(.sort-icon-idle) {
-    opacity: var(--table-sort-idle-hover-opacity, 0.85);
+    opacity: var(--table-sort-idle-hover-opacity, 1);
+    --table-sort-inactive-color: var(--table-sort-hover-color, #797979);
   }
 
   /* ── Empty ──────────────────────────────────────────────────────────────── */

@@ -398,9 +398,9 @@ Pass `searchConfig` to show a search input above the table. By default the table
 | isContentScrollable | `boolean`                                                           | No       | `false`          | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                            |
 | testId              | `string`                                                            | No       | `-`              | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                          |
 | caption             | `string`                                                            | No       | `-`              | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                               |
-| sortAscIcon         | `Snippet`                                                           | No       | SVG chevron up   | Custom snippet rendered for the ascending sort indicator.                                                                                                                               |
-| sortDescIcon        | `Snippet`                                                           | No       | SVG chevron down | Custom snippet rendered for the descending sort indicator.                                                                                                                              |
-| sortDefaultIcon     | `Snippet`                                                           | No       | SVG chevron pair | Custom snippet rendered for columns that haven't been sorted yet. Default is a dimmed up/down chevron pair.                                                                             |
+| sortAscIcon         | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.    |
+| sortDescIcon        | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.   |
+| sortDefaultIcon     | `Snippet`                                                           | No       | SVG chevron pair | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                           |
 | cell                | `Snippet<[JSONValue, number, number]>`                              | No       | `-`              | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                    |
 | empty               | `Snippet`                                                           | No       | `-`              | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                      |
 | classes             | `string`                                                            | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                  |
@@ -513,12 +513,15 @@ Override these custom properties to theme the component.
 
 | Variable                               | Default            | CSS Property     | Description                                                                 |
 | -------------------------------------- | ------------------ | ---------------- | --------------------------------------------------------------------------- |
-| `--table-sort-button-color`            | `inherit`          | color            | Color of the sort button icon.                                              |
+| `--table-sort-button-color`            | `inherit`          | color            | Color of the sort button icon — paints the ACTIVE (sorted) chevron half via `currentColor`. |
 | `--table-sort-button-hover-color`      | `-`                | color            | Color of the sort button icon on hover.                                     |
 | `--table-sort-button-hover-background` | `rgba(0,0,0,0.05)` | background-color | Background of the sort button on hover.                                     |
 | `--table-sort-icon-size`               | `14px`             | width, height    | Size of the sort indicator SVG icons.                                       |
-| `--table-sort-idle-opacity`            | `0.5`              | opacity          | Opacity of the default (unsorted) sort indicator.                           |
-| `--table-sort-idle-hover-opacity`      | `0.85`             | opacity          | Opacity of the default sort indicator on hover (before a column is sorted). |
+| `--table-sort-active-color`            | `#1B85FF`          | color            | Color of the active (sorted) chevron half.                                  |
+| `--table-sort-inactive-color`          | `#C7C7C7`          | fill             | Fill of the inactive chevron halves: both halves when unsorted, and the non-sorted direction when a column is sorted. |
+| `--table-sort-hover-color`             | `#797979`          | fill             | Fill the inactive halves step to while the sort button is hovered.          |
+| `--table-sort-idle-opacity`            | `1`                | opacity          | Opacity of the default (unsorted) sort indicator. The design system draws sort glyphs solid — faintness comes from `--table-sort-inactive-color`; set below 1 only to restore the legacy fade. |
+| `--table-sort-idle-hover-opacity`      | `1`                | opacity          | Opacity of the default sort indicator on hover (before a column is sorted). |
 
 ### Empty State
 

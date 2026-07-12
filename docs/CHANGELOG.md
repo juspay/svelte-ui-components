@@ -2,7 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.95.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.95.1)
+
+The inline hex value input hardcoded a 38px height and never transformed the
+hex text, so a consumer embedding the picker as a compact boxed config field
+could not shrink the control or show uppercase hex to match a native-input
+look. Expose two ColorPicker CSS variables with backward-compatible defaults:
+--color-picker-input-height (38px) and --color-picker-value-text-transform
+(none). The latter is threaded through a new --input-text-transform variable
+on Input, because a bare text-transform on the field wrapper does not reach
+the form-control's own text.
+
+## [2.95.1](https://github.com/juspay/svelte-ui-components/compare/2.95.1..2.95.0) - 12 July 2026
 
 ## [2.95.0](https://github.com/juspay/svelte-ui-components/compare/2.95.0..2.94.0) - 12 July 2026
 

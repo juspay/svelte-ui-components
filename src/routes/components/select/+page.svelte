@@ -52,6 +52,8 @@
   let ghostValue: string[] = $state([]);
   let openEventLog: string[] = $state([]);
   let leftIconValue: string[] = $state([]);
+  let portalValue: string[] = $state([]);
+  let inflowValue: string[] = $state([]);
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
@@ -296,7 +298,60 @@
   {/if}
 </div>
 
+<h3>usePortal — escape a clipping container</h3>
+<p>
+  Inside an <code>overflow: hidden</code> ancestor (like a table cell), the default in-flow panel is
+  clipped. Set <code>usePortal</code> to portal the panel to <code>&lt;body&gt;</code> and position
+  it
+  <code>fixed</code> against the trigger so it renders in full.
+</p>
+<div class="overflow-demo-grid">
+  <div class="clipper" data-pw="select-inflow-clipper">
+    <span class="clipper-label">Default (clipped)</span>
+    <Select
+      items={fruits}
+      bind:value={inflowValue}
+      placeholder="In-flow"
+      testId="select-inflow-demo"
+    />
+  </div>
+  <div class="clipper" data-pw="select-portal-clipper">
+    <span class="clipper-label">usePortal (escapes)</span>
+    <Select
+      items={fruits}
+      bind:value={portalValue}
+      placeholder="Portaled"
+      usePortal
+      testId="select-portal-demo"
+    />
+  </div>
+</div>
+
 <style>
+  /* Small, fixed-height, overflow-clipping boxes to demonstrate the difference
+     between the in-flow and portaled dropdown. */
+  .overflow-demo-grid {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .clipper {
+    width: 220px;
+    height: 90px;
+    overflow: hidden;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .clipper-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #888;
+  }
+
   .demo-info {
     margin: 8px 0 0;
     font-size: 13px;

@@ -3,6 +3,7 @@
   import type { SelectItem, SelectProperties } from './properties';
   import Pill from '$lib/Pill/Pill.svelte';
   import Img from '$lib/Img/Img.svelte';
+  import { computeSelectDropdownPosition } from './dropdownPosition';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
@@ -29,7 +30,8 @@
     dropdownAlign = 'left',
     hierarchy = 'default',
     leftIcon,
-    leftIconTestId
+    leftIconTestId,
+    usePortal = false
   }: SelectProperties = $props();
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
@@ -42,6 +44,16 @@
   let containerEl: HTMLDivElement | null = $state(null);
   let searchInputEl: HTMLInputElement | null = $state(null);
   let triggerEl: HTMLDivElement | null = $state(null);
+  let dropdownEl: HTMLDivElement | null = $state(null);
+  let dropdownWidth = $state(0);
+  let dropdownHeight = $state(0);
+  // Portal placement reads untracked DOM (trigger rect, viewport size); bump on
+  // scroll/resize so the derived style re-runs while the dropdown is open.
+  let portalTick = $state(0);
+
+  // Gap between trigger and portaled panel, matching the --select-dropdown-gap
+  // default. The in-flow panel still honours the CSS var via its margin-top.
+  const PORTAL_DROPDOWN_GAP = 4;
 
   const listboxId = `select-listbox-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -94,6 +106,77 @@
   );
 
   let searchPlaceholder = $derived(open && displayText.length > 0 ? displayText : placeholder);
+
+  // Keep the portaled panel anchored to its trigger while the page scrolls or
+  // resizes. Mirrors the chart-tooltip portal pattern; $effect is the sanctioned
+  // reactive escape hatch here for untracked window listeners. Reposition work is
+  // coalesced into one animation frame so fast/inertial scrolling can't thrash
+  // layout with a getBoundingClientRect on every event.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (!usePortal || !open || typeof window === 'undefined') {
+      return;
+    }
+    let frame: number | null = null;
+    const bump = (): void => {
+      if (frame !== null) {
+        return;
+      }
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        portalTick += 1;
+      });
+    };
+    window.addEventListener('scroll', bump, { capture: true, passive: true });
+    window.addEventListener('resize', bump);
+    return () => {
+      window.removeEventListener('scroll', bump, { capture: true });
+      window.removeEventListener('resize', bump);
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  });
+
+  /**
+   * Svelte action: relocates the dropdown to document.body when usePortal is set,
+   * so a position:fixed panel is never clipped by an overflow/scroll ancestor
+   * (e.g. a table cell). No-op otherwise; `use:` actions never run during SSR.
+   */
+  const portalToBody = (node: HTMLElement) => {
+    if (!usePortal) {
+      return;
+    }
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
+  };
+
+  let portalStyle = $derived.by(() => {
+    if (!usePortal || !open || triggerEl === null) {
+      return '';
+    }
+    void portalTick;
+    const rect = triggerEl.getBoundingClientRect();
+    const viewport =
+      typeof window === 'undefined'
+        ? { width: Number.POSITIVE_INFINITY, height: Number.POSITIVE_INFINITY }
+        : { width: window.innerWidth, height: window.innerHeight };
+    const placement = computeSelectDropdownPosition({
+      trigger: {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width
+      },
+      dropdown: { width: dropdownWidth, height: dropdownHeight },
+      viewport,
+      align: dropdownAlign,
+      gap: PORTAL_DROPDOWN_GAP
+    });
+    const widthRule = placement.width === null ? '' : `width:${placement.width}px;`;
+    return `top:${placement.top}px;left:${placement.left}px;min-width:${placement.minWidth}px;${widthRule}`;
+  });
 
   async function openDropdown(): Promise<void> {
     if (disabled || open) {
@@ -173,8 +256,10 @@
     }
     highlightedIndex = next;
     await tick();
-    if (containerEl !== null) {
-      const el = containerEl.querySelector('.select-option.highlighted');
+    // Query the dropdown node itself, not containerEl, so highlight-scrolling
+    // keeps working once the panel is portaled out to <body>.
+    if (dropdownEl !== null) {
+      const el = dropdownEl.querySelector('.select-option.highlighted');
       if (el instanceof HTMLElement) {
         el.scrollIntoView({ block: 'nearest' });
       }
@@ -275,10 +360,14 @@
   }
 
   function handleClickOutside(event: Event): void {
+    // A portaled dropdown lives outside containerEl, so a click on an option is
+    // not contained by it — treat the dropdown node as "inside" too, otherwise a
+    // multi-select would close on every pick.
     if (
       event.target instanceof Node &&
       containerEl !== null &&
-      !containerEl.contains(event.target)
+      !containerEl.contains(event.target) &&
+      !(dropdownEl !== null && dropdownEl.contains(event.target))
     ) {
       close();
     }
@@ -393,9 +482,15 @@
     <div
       class="select-dropdown"
       class:select-dropdown-right={dropdownAlign === 'right'}
+      class:select-dropdown-portal={usePortal}
+      bind:this={dropdownEl}
+      bind:clientWidth={dropdownWidth}
+      bind:clientHeight={dropdownHeight}
       role="listbox"
       id={listboxId}
       aria-multiselectable={multiple}
+      style={portalStyle}
+      use:portalToBody
     >
       {#if filteredItems.length === 0}
         <div class="select-empty">No results</div>
@@ -624,6 +719,19 @@
     min-width: var(--select-dropdown-min-width, 100%);
     max-width: var(--select-dropdown-max-width, none);
     width: var(--select-dropdown-width, max-content);
+  }
+
+  .select-dropdown.select-dropdown-portal {
+    /* Portaled to <body>: fixed positioning escapes overflow/scroll ancestors
+       (e.g. a table cell). Placement (top/left/width/min-width) is set inline
+       from the trigger rect, so neutralise the in-flow anchoring here. */
+    position: fixed;
+    right: auto;
+    margin-top: 0;
+    /* In the root stacking context the panel competes with modals/sheets rather
+       than painting above same-container siblings, so default it into the
+       top-layer band (consumers still override via --select-dropdown-z-index). */
+    z-index: var(--select-dropdown-z-index, 1000);
   }
 
   .select-option {

@@ -67,6 +67,19 @@ export type OptionalSelectProperties = {
   leftIcon?: string;
   /** `data-pw` test id forwarded to the leading icon `<Img>` element. */
   leftIconTestId?: string;
+  /**
+   * When `true`, the dropdown panel is portaled to `document.body` and positioned
+   * `fixed` relative to the trigger, so an ancestor with `overflow: hidden` or a
+   * scroll container (e.g. a table cell) cannot clip it. Placement follows the
+   * trigger on scroll/resize and flips above the trigger when there is no room
+   * below. Defaults to `false` (in-flow `position: absolute`), which preserves the
+   * existing behaviour — including any consumer CSS that targets `.select-dropdown`
+   * via an ancestor selector, since that only resolves while the panel stays inside
+   * the `.select` container. Opt in for Selects rendered inside clipping containers.
+   * When portaled the panel defaults to `z-index: 1000` (top-layer band); raise
+   * `--select-dropdown-z-index` if it must sit above an even higher overlay.
+   */
+  usePortal?: boolean;
 };
 
 export type SelectEventProperties = {

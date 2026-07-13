@@ -43,6 +43,19 @@ export type OptionalMenuProperties = {
    * / `--menu-dropdown-left` consumer tokens). Fixed corners anchor statically;
    * `'auto'` resolves the best-fitting corner against the viewport on open. */
   placement?: MenuPlacement;
+  /**
+   * When `true`, the dropdown panel is portaled to `document.body` and positioned
+   * `fixed` at the resolved `placement` corner, so an ancestor with
+   * `overflow: hidden` or a scroll container (e.g. a table cell) cannot clip it.
+   * Placement follows the trigger on scroll/resize. Defaults to `false` (in-flow
+   * `position: absolute`), which preserves the existing behaviour — including any
+   * consumer CSS that targets `.menu-dropdown` via an ancestor selector, since
+   * that only resolves while the panel stays inside the `.menu-container`. Opt in
+   * for Menus rendered inside clipping containers. When portaled the panel defaults
+   * to `z-index: 1000` (top-layer band); raise `--menu-z-index` if it must sit
+   * above an even higher overlay.
+   */
+  usePortal?: boolean;
 };
 
 export type MenuEventProperties = {

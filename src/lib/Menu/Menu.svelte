@@ -2,6 +2,7 @@
   import { tick, onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '../Img/Img.svelte';
+  import { computeMenuDropdownPosition } from './dropdownPosition';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
   let {
@@ -17,7 +18,8 @@
     role: menuRole = 'menu',
     ariaLabel: menuAriaLabel,
     id: menuId,
-    placement = 'bottom-left'
+    placement = 'bottom-left',
+    usePortal = false
   }: MenuProperties = $props();
 
   let itemRole = $derived(menuRole === 'listbox' ? 'option' : 'menuitem');
@@ -25,6 +27,11 @@
   let menuContainerEl: HTMLDivElement | null = $state(null);
   let menuListEl: HTMLDivElement | null = $state(null);
   let triggerEl: HTMLDivElement | null = $state(null);
+  let dropdownWidth = $state(0);
+  let dropdownHeight = $state(0);
+  // Portal placement reads untracked DOM (container rect, viewport); bump on
+  // scroll/resize so the derived style re-runs while the menu is open.
+  let portalTick = $state(0);
   let focusedIndex: number = $state(-1);
   let typeaheadQuery: string = $state('');
   let typeaheadTimer: ReturnType<typeof setTimeout> | null = $state(null);
@@ -64,6 +71,82 @@
 
     return `${vertical}-${horizontal}`;
   }
+
+  // Gap between trigger and portaled panel, matching the --menu-margin default.
+  const PORTAL_MENU_GAP = 4;
+
+  // Keep the portaled panel anchored to its trigger while the page scrolls or
+  // resizes. Mirrors the chart-tooltip portal pattern; $effect is the sanctioned
+  // reactive escape hatch here for untracked window listeners. Reposition work is
+  // coalesced into one animation frame so fast/inertial scrolling can't thrash
+  // layout with a getBoundingClientRect on every event.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (!usePortal || !open || typeof window === 'undefined') {
+      return;
+    }
+    let frame: number | null = null;
+    const bump = (): void => {
+      if (frame !== null) {
+        return;
+      }
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        portalTick += 1;
+      });
+    };
+    window.addEventListener('scroll', bump, { capture: true, passive: true });
+    window.addEventListener('resize', bump);
+    return () => {
+      window.removeEventListener('scroll', bump, { capture: true });
+      window.removeEventListener('resize', bump);
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  });
+
+  /**
+   * Svelte action: relocates the dropdown to document.body when usePortal is set,
+   * so a position:fixed panel is never clipped by an overflow/scroll ancestor
+   * (e.g. a table cell). No-op otherwise; `use:` actions never run during SSR.
+   */
+  const portalToBody = (node: HTMLElement) => {
+    if (!usePortal) {
+      return;
+    }
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
+  };
+
+  let portalStyle = $derived.by(() => {
+    if (!usePortal || !open || menuContainerEl === null) {
+      return '';
+    }
+    void portalTick;
+    const containerRect = menuContainerEl.getBoundingClientRect();
+    const viewport =
+      typeof window === 'undefined'
+        ? { width: Number.POSITIVE_INFINITY, height: Number.POSITIVE_INFINITY }
+        : { width: window.innerWidth, height: window.innerHeight };
+    const { left, top } = computeMenuDropdownPosition({
+      container: {
+        left: containerRect.left,
+        right: containerRect.right,
+        top: containerRect.top,
+        bottom: containerRect.bottom
+      },
+      dropdown: { width: dropdownWidth, height: dropdownHeight },
+      placement: resolvedPlacement,
+      gap: PORTAL_MENU_GAP,
+      viewport
+    });
+    // Inline wins over the corner-class anchoring, so the portaled panel is
+    // driven entirely by these fixed coordinates. Default into the top-layer
+    // z-index band (root stacking context competes with modals/sheets); consumers
+    // still override via --menu-z-index.
+    return `position:fixed;left:${left}px;top:${top}px;right:auto;bottom:auto;margin:0;z-index:var(--menu-z-index,1000);`;
+  });
 
   let selectableItems: MenuItem[] = $derived(
     items.filter((item) => item.separator !== true && item.disabled !== true)
@@ -231,11 +314,15 @@
   }
 
   function handleClickOutside(event: Event) {
+    // A portaled panel lives outside menuContainerEl, so a click on a separator
+    // or padding inside it is not contained — treat the panel node as "inside"
+    // too, matching the in-flow behaviour of not closing on such clicks.
     if (
       open &&
       event.target instanceof Node &&
       menuContainerEl !== null &&
-      !menuContainerEl.contains(event.target)
+      !menuContainerEl.contains(event.target) &&
+      !(menuListEl !== null && menuListEl.contains(event.target))
     ) {
       close();
     }
@@ -277,11 +364,15 @@
       class="menu-dropdown menu-dropdown-{placement === 'auto' ? resolvedPlacement : placement}"
       class:menu-dropdown-measuring={measuringPlacement}
       bind:this={menuListEl}
+      bind:clientWidth={dropdownWidth}
+      bind:clientHeight={dropdownHeight}
       role={menuRole}
       id={menuId}
       aria-label={menuAriaLabel}
       tabindex="-1"
+      style={portalStyle}
       onkeydown={handleMenuKeydown}
+      use:portalToBody
     >
       {#each items as item (item.value)}
         {#if item.separator === true}

@@ -72,10 +72,78 @@
   </Menu>
 </div>
 
+<h3>usePortal — escape a clipping container</h3>
+<p>
+  Inside an <code>overflow: hidden</code> ancestor (like a table cell), the default in-flow panel is
+  clipped. Set <code>usePortal</code> to portal the panel to <code>&lt;body&gt;</code> and position
+  it
+  <code>fixed</code> at the resolved corner so it renders in full.
+</p>
+<div class="overflow-demo-grid">
+  <div class="clipper" data-pw="menu-inflow-clipper">
+    <span class="clipper-label">Default (clipped)</span>
+    <Menu
+      items={[
+        { label: 'Edit', value: 'edit' },
+        { label: 'Duplicate', value: 'duplicate' },
+        { label: 'Archive', value: 'archive', separator: true },
+        { label: 'Delete', value: 'delete', danger: true }
+      ]}
+      testId="menu-inflow-demo"
+    >
+      {#snippet trigger()}
+        <Button text="In-flow" />
+      {/snippet}
+    </Menu>
+  </div>
+  <div class="clipper" data-pw="menu-portal-clipper">
+    <span class="clipper-label">usePortal (escapes)</span>
+    <Menu
+      items={[
+        { label: 'Edit', value: 'edit' },
+        { label: 'Duplicate', value: 'duplicate' },
+        { label: 'Archive', value: 'archive', separator: true },
+        { label: 'Delete', value: 'delete', danger: true }
+      ]}
+      usePortal
+      testId="menu-portal-demo"
+    >
+      {#snippet trigger()}
+        <Button text="Portaled" />
+      {/snippet}
+    </Menu>
+  </div>
+</div>
+
 <style>
   .corner-pinned-demo {
     position: fixed;
     right: 16px;
     bottom: 16px;
+  }
+
+  /* Small, fixed-height, overflow-clipping boxes to contrast the in-flow and
+     portaled dropdown. */
+  .overflow-demo-grid {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .clipper {
+    width: 220px;
+    height: 90px;
+    overflow: hidden;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .clipper-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #888;
   }
 </style>

@@ -2,25 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.0)
 
-Add the capabilities that force Lighthouse (and any consumer) to hand-roll raw
-&lt;button&gt;/dropdown/accordion instead of using these components:
+BZ-4623: the built-in paginator's page-size Select sits at the very bottom of
+.table-container (overflow: hidden) and opens downward, so its options were
+clipped behind the footer. It is internal chrome consumers cannot reach, so give
+it usePortal unconditionally (consistent with the in-cell selects) — it now
+portals to document.body with fixed, collision-aware positioning and escapes the
+container's clip. No consumer change required beyond consuming this version.
 
-- Accordion: `disabled` prop — suppresses toggle + Enter/Space, drops the trigger
-from the tab order, emits aria-disabled, adds a `disabled` trigger class + a
-not-allowed cursor. `expand` still honoured, so a locked accordion can be shown
-open/closed under controlled state.
-- Button: `style` prop on the outer .button-container — for per-instance dynamic
-values a static class can't express (e.g. a runtime-driven CSS custom property).
-- Select: per-option `icon` on SelectItem — renders an &lt;Img&gt; before each option
-label (icon pickers); sized via --select-option-icon-size. Inline + vertically
-centred so icon-less lists are unaffected.
-- Tabs: per-tab `icon` + `status` ('none'|'pending'|'error'|'success') on TabItem —
-leading icon + trailing status dot in the default layout, and both forwarded to
-the `tab` snippet. Themeable via --tabs-item-{icon-size,status-*-color}.
+BZ-4620: the image-two-line-text cell rendered an empty grey box when a row had
+no imageUrl. Render the first letter of text1 (uppercased), centered, in the
+placeholder — so line-item tables show product-name initials like the rest of
+the app, for every image-cell consumer at once.
 
-svelte-check, lint, and build all pass.
+## [2.98.0](https://github.com/juspay/svelte-ui-components/compare/2.98.0..2.97.2) - 14 July 2026
 
 ## [2.97.2](https://github.com/juspay/svelte-ui-components/compare/2.97.2..2.97.1) - 14 July 2026
 

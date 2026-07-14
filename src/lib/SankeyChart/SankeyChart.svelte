@@ -95,7 +95,35 @@
     return Math.max(0, Math.min(chartWidth * 0.25, wanted));
   });
 
-  let plotWidth = $derived(Math.max(0, chartWidth - MARGIN * 2 - lastColumnLabelGutter));
+  // First-column labels render to the LEFT of their node, anchored `end` into the
+  // left margin. The bare 40px margin is nowhere near enough for real source labels
+  // ("SESSIONS", "Source A", "START") — they truncate to a few characters and, once
+  // the room falls below an ellipsis, vanish entirely. Mirror the sink gutter:
+  // reserve a capped left gutter sized from the source-node labels (sources are what
+  // land in the first column) and shift the diagram right by it.
+  let firstColumnLabelGutter = $derived.by(() => {
+    if (!showLabels || nodes.length === 0 || chartWidth <= 0) {
+      return 0;
+    }
+    const targetIds = new Set(links.map((link) => link.target));
+    const sourceLabels = nodes
+      .filter((node) => !targetIds.has(node.id))
+      .map((node) => node.label ?? node.id);
+    if (sourceLabels.length === 0) {
+      return 0;
+    }
+    const longestPx =
+      Math.max(...sourceLabels.map((label) => measureText(label, labelFont).width)) +
+      (showValues ? measureText(' (999,999)', labelFont).width : 0);
+    const wanted = longestPx + 10 + dataLabelOffsetX;
+    // Same 25% cap and 0 floor as the sink gutter so the two together can never
+    // starve the diagram, and a negative dataLabelOffsetX can't push past the margin.
+    return Math.max(0, Math.min(chartWidth * 0.25, wanted));
+  });
+
+  let plotWidth = $derived(
+    Math.max(0, chartWidth - MARGIN * 2 - firstColumnLabelGutter - lastColumnLabelGutter)
+  );
   let layout = $derived(
     computeSankeyLayout(
       nodes,
@@ -151,12 +179,13 @@
     // node.x + nodeWidth + 6 + dataLabelOffsetX, so the room before the next
     // column's bar shrinks by the same offset. Omitting it let "fitting"
     // labels run under the neighbouring column's node rect.
-    // First-column labels anchor `end` at node.x - 6 - offset with node.x = 0,
-    // so their room is exactly the left margin minus that inset — budgeting
-    // more pushes long labels past the SVG's left edge, where they clip.
+    // First-column labels anchor `end` at node.x - 6 - offset with node.x = 0.
+    // The diagram is shifted right by firstColumnLabelGutter, so the room to the
+    // SVG's left edge is that gutter plus the base margin, minus the inset —
+    // symmetric with the last column's sink-gutter budget below.
     const available =
       column === 0
-        ? Math.max(0, MARGIN - 6 - dataLabelOffsetX)
+        ? Math.max(0, firstColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
         : column === columnCount - 1
           ? Math.max(0, lastColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
           : Math.max(0, colWidth - nodeWidth - 12 - dataLabelOffsetX);
@@ -396,7 +425,7 @@
     <div class="chart-empty">{@render empty()}</div>
   {:else}
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio} {maxHeight}>
-      <g transform="translate({MARGIN}, {MARGIN})">
+      <g transform="translate({MARGIN + firstColumnLabelGutter}, {MARGIN})">
         {#if columnLabels != null && columnLabels.length > 0}
           {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
             <text

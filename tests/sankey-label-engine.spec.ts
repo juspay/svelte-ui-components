@@ -20,7 +20,10 @@ test.describe('SankeyChart label engine', () => {
       // Shrink each box by 1px per side so antialiasing/rounding can never
       // count touching neighbours as an overlap.
       const intersects = (a: DOMRect, b: DOMRect) =>
-        a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        a.left < b.right - 1 &&
+        b.left < a.right - 1 &&
+        a.top < b.bottom - 1 &&
+        b.top < a.bottom - 1;
 
       const labels = boxesOf('.sankey-label');
       const nodes = boxesOf('.sankey-node');
@@ -67,5 +70,43 @@ test.describe('SankeyChart label engine', () => {
     });
 
     expect(overflowing).toBe(0);
+  });
+
+  // First-column (source) labels anchor `end` into the left margin. Historically
+  // they were budgeted only the bare 40px margin, so any real source label
+  // ("SESSIONS (12.2K)") truncated to "SES…" — or, once the room fell below an
+  // ellipsis, vanished entirely — at every width. A left gutter, symmetric with
+  // the sink gutter, must now give them full room. A clipped label still fits
+  // inside the chart box, so the edge test above cannot catch this.
+  test('first-column source labels render their full text (not clipped)', async ({ page }) => {
+    await page.goto('/components/sankey-chart');
+
+    const chart = page.getByTestId('sankey-crowded-chart');
+    await expect(chart.locator('.sankey-label').first()).toBeVisible();
+
+    const sources = await chart.evaluate((root) => {
+      // Source labels are the ones anchored `end` (rendered left of their node).
+      return Array.from(root.querySelectorAll('.sankey-label'))
+        .filter((el) => el.getAttribute('text-anchor') === 'end')
+        .map((el) => {
+          const visible = Array.from(el.childNodes)
+            .filter((node) => node.nodeType === Node.TEXT_NODE)
+            .map((node) => node.nodeValue ?? '')
+            .join('')
+            .trim();
+          const full = el.querySelector('title')?.textContent?.trim() ?? '';
+          return { visible, full };
+        });
+    });
+
+    // The engine must be exercised (the crowded funnel has a "SESSIONS" source).
+    expect(sources.length).toBeGreaterThan(0);
+    for (const source of sources) {
+      // Not truncated to an ellipsis, and not squeezed away to nothing.
+      expect(source.visible).not.toContain('…');
+      expect(source.visible.length).toBeGreaterThan(0);
+      // The full, untruncated label is what actually renders.
+      expect(source.visible).toBe(source.full);
+    }
   });
 });

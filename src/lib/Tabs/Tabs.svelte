@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TabItem, TabsProperties } from './properties';
+  import Img from '../Img/Img.svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
 
@@ -191,9 +192,22 @@
         onkeydown={(event) => handleKeydown(event, index)}
       >
         {#if typeof tab === 'function'}
-          {@render tab({ label, index, active: isActiveItem(index), subtitle: tabItem?.subtitle })}
+          {@render tab({
+            label,
+            index,
+            active: isActiveItem(index),
+            subtitle: tabItem?.subtitle,
+            icon: tabItem?.icon,
+            status: tabItem?.status
+          })}
         {:else}
+          {#if typeof tabItem?.icon === 'string' && tabItem.icon.length > 0}
+            <Img src={tabItem.icon} alt="" fallback="" classes="tabs-item-icon" />
+          {/if}
           {label}
+          {#if tabItem?.status && tabItem.status !== 'none'}
+            <span class="tabs-item-status status-{tabItem.status}" aria-hidden="true"></span>
+          {/if}
         {/if}
       </div>
     {/each}
@@ -327,6 +341,7 @@
   .tabs-item {
     display: flex;
     align-items: center;
+    gap: var(--tabs-item-gap, 8px);
     position: relative;
     padding: var(--tabs-item-padding, 12px 16px);
     font-size: var(--tabs-item-font-size, 14px);
@@ -342,6 +357,38 @@
     flex-shrink: 0;
     user-select: none;
     transition: var(--tabs-transition, color 0.2s ease, background 0.2s ease);
+  }
+
+  .tabs-item :global(.tabs-item-icon) {
+    --image-width: var(--tabs-item-icon-size, 16px);
+    --image-height: var(--tabs-item-icon-size, 16px);
+    --image-object-fit: contain;
+
+    flex-shrink: 0;
+  }
+
+  /* Trailing status dot for nav/menu tabs. margin-left:auto pushes it to the row's
+     end (e.g. a settings menu); harmless on a normal tab bar where the item shrinks
+     to content. */
+  .tabs-item-status {
+    width: var(--tabs-item-status-size, 8px);
+    height: var(--tabs-item-status-size, 8px);
+    margin-left: auto;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--tabs-item-status-default-color, transparent);
+  }
+
+  .tabs-item-status.status-pending {
+    background: var(--tabs-item-status-pending-color, #f59e0b);
+  }
+
+  .tabs-item-status.status-error {
+    background: var(--tabs-item-status-error-color, #e7000b);
+  }
+
+  .tabs-item-status.status-success {
+    background: var(--tabs-item-status-success-color, #16a34a);
   }
 
   .tabs-item:hover:not(.active):not([aria-disabled]) {

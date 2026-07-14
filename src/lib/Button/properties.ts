@@ -61,6 +61,13 @@ export type OptionalButtonProperties = {
   role?: string;
   disabled?: boolean;
   classes?: string;
+  /**
+   * Inline style applied to the outer `.button-container`. Use for per-instance
+   * dynamic values a static class can't express — e.g. a CSS custom property
+   * driven by runtime state (`--offset: {n}px`). Prefer `classes` / `--button-*`
+   * tokens for anything static.
+   */
+  style?: string;
 };
 
 export type ButtonEventProperties = {

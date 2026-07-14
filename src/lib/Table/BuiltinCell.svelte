@@ -165,7 +165,10 @@
       <span
         class="builtin-thumb builtin-thumb-placeholder"
         data-pw={column.testId ? `${column.testId}-thumb-placeholder` : null}
-      ></span>
+        >{typeof data.text1 === 'string' && data.text1
+          ? data.text1.charAt(0).toUpperCase()
+          : ''}</span
+      >
     {/if}
     <div class="builtin-two-line {alignmentClass}">
       <span class="builtin-primary-text">{typeof data.text1 === 'string' ? data.text1 : '-'}</span>
@@ -600,7 +603,15 @@
   }
 
   .builtin-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: var(--table-cell-thumb-placeholder-background, #f3f4f6);
+    color: var(--table-cell-thumb-placeholder-color, #6b7280);
+    font-size: var(--table-cell-thumb-placeholder-font-size, 14px);
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
   }
 
   .builtin-tag-array {

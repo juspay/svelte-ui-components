@@ -2,18 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.2)
 
-PieChart: the centre-snippet foreignObject was innerR*1.3 (~2/3 of the inner-hole
-diameter), so a currency total like "₹31.24k" was clipped on both sides and a
-two-word caption ("Total Sales") wrapped. Widen the box to innerR*1.9 — every
-edge stays inside the hole at the text mid-line while giving the centre label the
-room it needs. Realistic abbreviated values (k / L / Cr) now render in full.
+The overlay backdrop reads its colour from `--background-color`, a very
+generic token name that collides with app-level `--background-color`
+values (frequently set to transparent), silently overriding the modal
+backdrop so a showOverlay modal renders no visible dim.
 
-StatCard: breakdown items laid out label, value and the change indicator as three
-stacked column children, so the delta rendered on its own line beneath the
-number. Wrap value + delta in a flex line (.statcard-breakdown-value-line) so the
-delta sits next to the value; the label stays the caption above.
+Add a modal-specific `--modal-overlay-background-color` and read it first,
+falling back to the legacy `--background-color`, then the `#00000066`
+default. Fully backward-compatible: consumers already setting
+`--background-color` are unaffected; new consumers can theme the backdrop
+without the generic-token collision. Docs table updated.
+
+## [2.98.2](https://github.com/juspay/svelte-ui-components/compare/2.98.2..2.98.1) - 14 July 2026
 
 ## [2.98.1](https://github.com/juspay/svelte-ui-components/compare/2.98.1..2.98.0) - 14 July 2026
 

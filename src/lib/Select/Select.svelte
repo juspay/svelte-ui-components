@@ -587,6 +587,9 @@
                   </span>
                 {/if}
               {/if}
+              {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
+                <Img src={row.item.icon} alt="" fallback="" classes="select-option-icon" />
+              {/if}
               <span class="select-option-label">{row.item.label}</span>
               {#if showSelectedTick && !multiple && value.includes(row.item.id)}
                 <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -752,6 +755,17 @@
     font-size: var(--select-option-font-size, inherit);
     cursor: pointer;
     transition: background 0.1s;
+  }
+
+  /* Per-option leading icon (SelectItem.icon). Kept inline + vertically centred so
+     it needs no change to the option's display and can't regress icon-less lists. */
+  .select-option :global(.select-option-icon) {
+    --image-width: var(--select-option-icon-size, 16px);
+    --image-height: var(--select-option-icon-size, 16px);
+    --image-object-fit: contain;
+
+    vertical-align: middle;
+    margin-right: var(--select-option-icon-gap, 8px);
   }
 
   .select-option.multi {

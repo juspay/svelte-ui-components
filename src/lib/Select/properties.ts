@@ -9,6 +9,14 @@ export type SelectItem = {
   label: string;
   /** Optional per-option test id, emitted as `data-pw` on the option element. */
   testId?: string;
+  /**
+   * Optional image src (URL or data URI) rendered at the left of the option row,
+   * before the label — for icon pickers and any list whose options carry a glyph.
+   * Size is controlled by the `--select-option-icon-size` CSS variable (default 16px).
+   * Pair with the trigger's `leftIcon` (driven by the selected option's icon) to show
+   * the current selection in the closed trigger.
+   */
+  icon?: string;
 };
 
 export type MandatorySelectProperties = {

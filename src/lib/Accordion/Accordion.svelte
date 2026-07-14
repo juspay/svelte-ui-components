@@ -8,10 +8,14 @@
     ontoggle,
     triggerClasses,
     classes,
-    testId
+    testId,
+    disabled = false
   }: AccordionProperties = $props();
 
   function handleTriggerClick(): void {
+    if (disabled) {
+      return;
+    }
     expand = !expand;
     ontoggle?.(expand);
   }
@@ -20,9 +24,11 @@
 {#if trigger}
   <div
     class="accordion-trigger {triggerClasses ?? ''}"
+    class:disabled
     role="button"
-    tabindex="0"
+    tabindex={disabled ? -1 : 0}
     aria-expanded={expand}
+    aria-disabled={disabled}
     onclick={handleTriggerClick}
     onkeydown={(event) => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -48,6 +54,10 @@
 <style>
   .accordion-trigger {
     cursor: var(--accordion-trigger-cursor, pointer);
+  }
+
+  .accordion-trigger.disabled {
+    cursor: var(--accordion-trigger-disabled-cursor, not-allowed);
   }
 
   .accordion {

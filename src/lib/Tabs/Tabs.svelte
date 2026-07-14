@@ -3,12 +3,15 @@
   import Img from '../Img/Img.svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
+  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
   let {
     items,
     activeIndex = $bindable(0),
     activeKey,
     disabled = false,
+    orientation = 'horizontal',
     testId,
     scrollLeftIcon,
     scrollRightIcon,
@@ -17,6 +20,8 @@
     onchange,
     onkeychange
   }: TabsProperties = $props();
+
+  const isVertical = $derived(orientation === 'vertical');
 
   const isObjectMode = $derived(items.length > 0 && typeof items.at(0) === 'object');
 
@@ -44,14 +49,27 @@
   let scrollContainer: HTMLDivElement | null = null;
   let canScrollLeft = $state(false);
   let canScrollRight = $state(false);
+  let canScrollUp = $state(false);
+  let canScrollDown = $state(false);
 
-  // Sliding indicator state
+  // Sliding indicator state — horizontal tracks left/width, vertical tracks top/height.
   let indicatorLeft = $state(0);
   let indicatorWidth = $state(0);
+  let indicatorTop = $state(0);
+  let indicatorHeight = $state(0);
   let indicatorReady = $state(false);
+
+  const showStartArrow = $derived(isVertical ? canScrollUp : canScrollLeft);
+  const showEndArrow = $derived(isVertical ? canScrollDown : canScrollRight);
 
   function updateOverflow(): void {
     if (scrollContainer === null) {
+      return;
+    }
+    if (isVertical) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      canScrollUp = scrollTop > 1;
+      canScrollDown = scrollTop + clientHeight < scrollHeight - 1;
       return;
     }
     const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
@@ -68,20 +86,35 @@
       indicatorReady = false;
       indicatorLeft = 0;
       indicatorWidth = 0;
+      indicatorTop = 0;
+      indicatorHeight = 0;
       return;
     }
-    indicatorLeft = activeEl.offsetLeft;
-    indicatorWidth = activeEl.offsetWidth;
+    if (isVertical) {
+      indicatorTop = activeEl.offsetTop;
+      indicatorHeight = activeEl.offsetHeight;
+    } else {
+      indicatorLeft = activeEl.offsetLeft;
+      indicatorWidth = activeEl.offsetWidth;
+    }
     indicatorReady = true;
   }
 
-  function scroll(direction: 'left' | 'right'): void {
+  function scroll(edge: 'start' | 'end'): void {
     if (scrollContainer === null) {
+      return;
+    }
+    if (isVertical) {
+      const amount = scrollContainer.clientHeight * 0.6;
+      scrollContainer.scrollBy({
+        top: edge === 'start' ? -amount : amount,
+        behavior: 'smooth'
+      });
       return;
     }
     const amount = scrollContainer.clientWidth * 0.6;
     scrollContainer.scrollBy({
-      left: direction === 'left' ? -amount : amount,
+      left: edge === 'start' ? -amount : amount,
       behavior: 'smooth'
     });
   }
@@ -154,18 +187,18 @@
   );
 </script>
 
-<div class={rootClass} class:disabled data-pw={testId}>
-  {#if canScrollLeft}
+<div class={rootClass} class:disabled class:vertical={isVertical} data-pw={testId}>
+  {#if showStartArrow}
     <button
-      class="tabs-arrow tabs-arrow-left"
-      aria-label="Scroll tabs left"
-      onclick={() => scroll('left')}
+      class="tabs-arrow tabs-arrow-start"
+      aria-label={isVertical ? 'Scroll tabs up' : 'Scroll tabs left'}
+      onclick={() => scroll('start')}
     >
       {#if typeof scrollLeftIcon === 'function'}
         {@render scrollLeftIcon()}
       {:else}
         <!-- eslint-disable svelte/no-at-html-tags -->
-        {@html chevronLeftSvg}
+        {@html isVertical ? chevronUpSvg : chevronLeftSvg}
       {/if}
     </button>
   {/if}
@@ -173,6 +206,8 @@
     class="tabs-bar"
     class:fade-left={canScrollLeft}
     class:fade-right={canScrollRight}
+    class:fade-top={canScrollUp}
+    class:fade-bottom={canScrollDown}
     role="tablist"
     {@attach initOverflow}
     onscroll={updateOverflow}
@@ -180,6 +215,9 @@
     {#each items as item, index (isObjectMode ? (toTabItem(item)?.key ?? index) : index)}
       {@const tabItem = toTabItem(item)}
       {@const label = toStringLabel(item)}
+      {#if typeof tabItem?.sectionLabel === 'string' && tabItem.sectionLabel.length > 0}
+        <div class="tabs-section-label" aria-hidden="true">{tabItem.sectionLabel}</div>
+      {/if}
       <div
         class="tabs-item"
         class:active={isActiveItem(index)}
@@ -215,21 +253,23 @@
       <span
         class="tabs-indicator"
         aria-hidden="true"
-        style="left: {indicatorLeft}px; width: {indicatorWidth}px;"
+        style={isVertical
+          ? `top: ${indicatorTop}px; height: ${indicatorHeight}px;`
+          : `left: ${indicatorLeft}px; width: ${indicatorWidth}px;`}
       ></span>
     {/if}
   </div>
-  {#if canScrollRight}
+  {#if showEndArrow}
     <button
-      class="tabs-arrow tabs-arrow-right"
-      aria-label="Scroll tabs right"
-      onclick={() => scroll('right')}
+      class="tabs-arrow tabs-arrow-end"
+      aria-label={isVertical ? 'Scroll tabs down' : 'Scroll tabs right'}
+      onclick={() => scroll('end')}
     >
       {#if typeof scrollRightIcon === 'function'}
         {@render scrollRightIcon()}
       {:else}
         <!-- eslint-disable svelte/no-at-html-tags -->
-        {@html chevronRightSvg}
+        {@html isVertical ? chevronDownSvg : chevronRightSvg}
       {/if}
     </button>
   {/if}
@@ -376,7 +416,13 @@
     margin-left: auto;
     border-radius: 50%;
     flex-shrink: 0;
-    background: var(--tabs-item-status-default-color, transparent);
+    background: transparent;
+  }
+
+  /* Neutral "has activity / configured" dot — blue by default, matching the app's
+     --text-color-focus. Maps from a settings menu's Default circle type. */
+  .tabs-item-status.status-default {
+    background: var(--tabs-item-status-default-color, #1a73e8);
   }
 
   .tabs-item-status.status-pending {
@@ -416,8 +462,96 @@
     pointer-events: none;
   }
 
+  /* ---------- Vertical orientation (nav / menu rail) ---------- */
+  .tabs-wrapper.vertical {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: none;
+    border-bottom: none;
+  }
+
+  .tabs-wrapper.vertical .tabs-bar {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .tabs-wrapper.vertical .tabs-item {
+    /* Full-width rows: label sits at the leading edge, the status dot's margin-left:auto
+       pushes it to the trailing edge (the settings-menu look). */
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+  }
+
+  .tabs-bar.fade-top {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+  }
+
+  .tabs-bar.fade-bottom {
+    mask-image: linear-gradient(
+      to top,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+    -webkit-mask-image: linear-gradient(
+      to top,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px)
+    );
+  }
+
+  .tabs-bar.fade-top.fade-bottom {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px),
+      black calc(100% - var(--tabs-fade-size, 32px)),
+      transparent calc(100% - var(--tabs-fade-solid, 8px))
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent var(--tabs-fade-solid, 8px),
+      black var(--tabs-fade-size, 32px),
+      black calc(100% - var(--tabs-fade-size, 32px)),
+      transparent calc(100% - var(--tabs-fade-solid, 8px))
+    );
+  }
+
+  .tabs-wrapper.vertical .tabs-indicator {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    width: var(--tabs-indicator-height, 2px);
+    height: var(--tabs-indicator-height, 2px);
+    border-radius: var(--tabs-indicator-border-radius-vertical, 0 2px 2px 0);
+    transition: var(--tabs-indicator-transition-vertical, top 0.3s ease, height 0.3s ease);
+  }
+
+  /* Section header rendered above a group of vertical nav items. */
+  .tabs-section-label {
+    padding: var(--tabs-section-label-padding, 12px 16px 4px);
+    font-size: var(--tabs-section-label-font-size, 11px);
+    font-weight: var(--tabs-section-label-font-weight, 700);
+    letter-spacing: var(--tabs-section-label-letter-spacing, 0.04em);
+    text-transform: var(--tabs-section-label-text-transform, uppercase);
+    color: var(--tabs-section-label-color, var(--tabs-item-color, #999999));
+    white-space: nowrap;
+    user-select: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .tabs-indicator {
+    .tabs-indicator,
+    .tabs-wrapper.vertical .tabs-indicator {
       transition: none;
     }
   }

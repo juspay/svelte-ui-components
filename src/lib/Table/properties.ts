@@ -444,6 +444,14 @@ export type OptionalTableProperties = {
   headerTooltipIcon?: Snippet;
   /** Placement of every header tooltip bubble. Defaults to `'top'`. */
   headerTooltipPosition?: TooltipPosition;
+  /**
+   * When `true`, in-cell `Select` dropdowns (`type: 'select'` columns) and in-cell
+   * `Menu` popovers (`type: 'action-group'` / `'popup-menu'` columns) are portaled
+   * to `document.body` and positioned `fixed`, so the table's own scroll/overflow
+   * container cannot clip them. Set this on tables whose rows can be near a scroll
+   * edge. Defaults to `false` (in-flow rendering, unchanged).
+   */
+  usePortal?: boolean;
   sortable?: boolean;
   sortableColumns?: number[];
   stickyHeader?: boolean;

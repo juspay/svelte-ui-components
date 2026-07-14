@@ -2,18 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.1)
 
-First-column (source) labels anchor `end` into the left margin, but were
-budgeted only the bare 40px margin. Any real source label ("SESSIONS",
-"Source A", "START") truncated to a few characters — and once the room fell
-below an ellipsis, vanished entirely — at every width, not just narrow ones.
-This is what made the User-Journey funnel look distorted/squeezed.
+The component's own `.choicebox:not(.disabled):hover` rule (specificity 0,3,0)
+outranked `.choicebox.selected` (0,2,0), so hovering a selected card repainted
+it with the neutral hover border/fill until the cursor left. Exclude the
+selected state from the hover rule (`:not(.selected)`) so the selected look
+shows through on hover — no token juggling, correct by default for every
+consumer. Adds a regression test that fails on the old rule (border drifts off
+the selected blue on hover) and passes now.
 
-Mirror the existing sink gutter: reserve a capped (25%) left gutter sized from
-the source-node labels, shift the diagram right by it, and budget the
-first-column label at gutter+margin. Adds a discriminating regression test that
-fails on the old code (renders "SES…") and passes now.
+## [2.97.1](https://github.com/juspay/svelte-ui-components/compare/2.97.1..2.97.0) - 14 July 2026
 
 ## [2.97.0](https://github.com/juspay/svelte-ui-components/compare/2.97.0..2.96.2) - 14 July 2026
 

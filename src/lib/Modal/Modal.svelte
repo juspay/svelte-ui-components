@@ -244,7 +244,12 @@
   }
 
   .overlay-active {
-    background-color: var(--background-color, #00000066);
+    /* Prefer the modal-specific token; fall back to the legacy generic
+       --background-color (kept for backward compatibility), then the default.
+       The generic name collides with app-level --background-color tokens, which
+       silently override the overlay; --modal-overlay-background-color lets a
+       consumer theme the backdrop without that collision. */
+    background-color: var(--modal-overlay-background-color, var(--background-color, #00000066));
     backdrop-filter: var(--modal-overlay-backdrop-filter, none);
     -webkit-backdrop-filter: var(--modal-overlay-backdrop-filter, none);
     pointer-events: auto;

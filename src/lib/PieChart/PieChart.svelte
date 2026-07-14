@@ -227,7 +227,13 @@
     return visible;
   });
 
-  let centerBoxSize = $derived(innerR > 0 ? Math.max(0, innerR * 1.3) : 0);
+  // The centre snippet (e.g. a currency total like "₹31.24k") is clipped by the
+  // foreignObject bounds, so the box must be wide enough for it. The inner hole
+  // has diameter 2*innerR; a square of side ~1.9*innerR keeps every edge inside
+  // the hole at the text's mid-line while giving the label the room a plain
+  // "innerR*1.3" (≈2/3 of the hole) did not — the old value cut the ₹/k off the
+  // sides and forced the caption onto two lines.
+  let centerBoxSize = $derived(innerR > 0 ? Math.max(0, innerR * 1.9) : 0);
 
   // The foreignObject for the center snippet is positioned relative to the <g>
   // origin (which is at cx, cy in SVG space). The box is always centred on

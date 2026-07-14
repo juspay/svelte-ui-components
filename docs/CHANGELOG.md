@@ -2,18 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.99.0)
 
-The overlay backdrop reads its colour from `--background-color`, a very
-generic token name that collides with app-level `--background-color`
-values (frequently set to transparent), silently overriding the modal
-backdrop so a showOverlay modal renders no visible dim.
+Adds three additive, backward-compatible Tabs capabilities for vertical
+nav/menu rails (the classic horizontal tab bar is unchanged):
 
-Add a modal-specific `--modal-overlay-background-color` and read it first,
-falling back to the legacy `--background-color`, then the `#00000066`
-default. Fully backward-compatible: consumers already setting
-`--background-color` are unaffected; new consumers can theme the backdrop
-without the generic-token collision. Docs table updated.
+- orientation='vertical' — column layout, leading-edge sliding indicator,
+up/down scroll arrows and top/bottom fade masks.
+- status='default' — neutral blue "has activity / configured" dot beside
+the existing pending/error/success dots.
+- TabItem.sectionLabel — optional group header rendered above an item.
+
+orientation defaults to 'horizontal', so every existing call site is
+unaffected. Demo extended with a vertical rail exercising all three.
+
+## [2.99.0](https://github.com/juspay/svelte-ui-components/compare/2.99.0..2.98.2) - 14 July 2026
 
 ## [2.98.2](https://github.com/juspay/svelte-ui-components/compare/2.98.2..2.98.1) - 14 July 2026
 

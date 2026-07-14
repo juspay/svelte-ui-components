@@ -919,6 +919,7 @@
                 }))}
                 value={[String(effectivePageSize)]}
                 disabled={pagination.isLoading ?? false}
+                usePortal
                 testId={pagination.testId && `${pagination.testId}-page-size`}
                 onchange={(selectedSizes) => {
                   if (selectedSizes.length > 0) {

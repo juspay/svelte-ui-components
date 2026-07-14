@@ -68,7 +68,11 @@
     box-shadow: var(--choicebox-focus-ring, 0 0 0 3px rgba(33, 150, 243, 0.3));
   }
 
-  .choicebox:not(.disabled):hover {
+  /* Exclude the selected state from hover: without :not(.selected) this rule
+     (specificity 0,3,0) outranks .choicebox.selected (0,2,0), so hovering a
+     selected card repaints it with the neutral hover border/fill until the
+     cursor leaves. Excluding selected lets .choicebox.selected show through. */
+  .choicebox:not(.disabled):not(.selected):hover {
     border-color: var(--choicebox-hover-border-color, #9e9e9e);
     background: var(--choicebox-hover-background, var(--choicebox-background, #ffffff));
   }

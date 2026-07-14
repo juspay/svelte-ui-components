@@ -2,15 +2,27 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.2)
 
-The component's own `.choicebox:not(.disabled):hover` rule (specificity 0,3,0)
-outranked `.choicebox.selected` (0,2,0), so hovering a selected card repainted
-it with the neutral hover border/fill until the cursor left. Exclude the
-selected state from the hover rule (`:not(.selected)`) so the selected look
-shows through on hover — no token juggling, correct by default for every
-consumer. Adds a regression test that fails on the old rule (border drifts off
-the selected blue on hover) and passes now.
+Add the capabilities that force Lighthouse (and any consumer) to hand-roll raw
+&lt;button&gt;/dropdown/accordion instead of using these components:
+
+- Accordion: `disabled` prop — suppresses toggle + Enter/Space, drops the trigger
+from the tab order, emits aria-disabled, adds a `disabled` trigger class + a
+not-allowed cursor. `expand` still honoured, so a locked accordion can be shown
+open/closed under controlled state.
+- Button: `style` prop on the outer .button-container — for per-instance dynamic
+values a static class can't express (e.g. a runtime-driven CSS custom property).
+- Select: per-option `icon` on SelectItem — renders an &lt;Img&gt; before each option
+label (icon pickers); sized via --select-option-icon-size. Inline + vertically
+centred so icon-less lists are unaffected.
+- Tabs: per-tab `icon` + `status` ('none'|'pending'|'error'|'success') on TabItem —
+leading icon + trailing status dot in the default layout, and both forwarded to
+the `tab` snippet. Themeable via --tabs-item-{icon-size,status-*-color}.
+
+svelte-check, lint, and build all pass.
+
+## [2.97.2](https://github.com/juspay/svelte-ui-components/compare/2.97.2..2.97.1) - 14 July 2026
 
 ## [2.97.1](https://github.com/juspay/svelte-ui-components/compare/2.97.1..2.97.0) - 14 July 2026
 

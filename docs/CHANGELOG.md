@@ -2,9 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.96.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.96.1)
 
-The dropdown rendered in-flow (position: absolute inside .select), so any ancestor with overflow: hidden or a scroll container (e.g. a table cell) clipped it. Add an opt-in usePortal prop that relocates the panel to document.body and positions it fixed against the trigger — mirroring the chart-tooltip portal pattern — repositioning on scroll/resize and flipping above the trigger when there is no room below. Defaults to false, preserving in-flow behaviour and any consumer CSS that targets .select-dropdown via an ancestor selector. Placement math is a pure, unit-tested helper; a Playwright spec proves the panel escapes an overflow:hidden box.
+Adds a usePortal prop to Table, passed through BuiltinCell to the in-cell &lt;Select&gt; (type:'select' columns) and &lt;Menu&gt; (type:'action-group' / 'popup-menu' columns). When set, those dropdowns portal to document.body and position fixed (via the Select/Menu usePortal shipped in 2.96.1), so a table's own scroll/overflow container can no longer clip them. Defaults to false (in-flow, unchanged). Demo + Playwright spec verify the in-cell dropdown escapes an overflow:hidden frame, and a control confirms the default table keeps its dropdown in-flow.
+
+## [2.96.1](https://github.com/juspay/svelte-ui-components/compare/2.96.1..2.96.0) - 13 July 2026
 
 ## [2.96.0](https://github.com/juspay/svelte-ui-components/compare/2.96.0..2.95.1) - 12 July 2026
 

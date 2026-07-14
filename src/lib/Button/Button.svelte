@@ -34,7 +34,8 @@
     ontouchend,
     icon,
     children,
-    classes
+    classes,
+    style
   }: ButtonProperties = $props();
 
   // `loading` and the legacy Circular loaderType both render the spinner and disable the button.
@@ -65,6 +66,7 @@
   class="button-container variant-{variant} size-{size} {classes ?? ''}"
   class:icon-only={iconOnly}
   class:full-width={fullWidth}
+  style={style ?? null}
 >
   {#if showProgressBar}
     <div class="button-progress-bar"></div>

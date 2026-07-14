@@ -2,20 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.96.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.97.0)
 
-- Add testId prop + data-pw emission to 7 components missing it (BrandLoader,
-GridItem, Icon, IconStack, InputButton, Status, Animations)
-- Add data-pw to internal sub-elements across ~20 components (Table checkboxes,
-BuiltinCell trends/thumbs/icons, Select indicators, BarChart bar-values,
-Axis tick-labels, ChartTooltip, Legend, StatCard, Checkbox, Tooltip, etc.)
-- Add data-checked/data-inside data attributes for state-based filtering
-without CSS classes (Select indicators, BarChart bar-values)
-- Add testId to all column definitions in table demo page
-- Convert all 24 test files from .locator('.classname') to getByTestId()/
-getByRole()/evaluate() — zero .locator() calls remain
-- Add data-pw="page-body" to app.html body element
-- Add testId?: string to TableTagArrayCellItem type
+First-column (source) labels anchor `end` into the left margin, but were
+budgeted only the bare 40px margin. Any real source label ("SESSIONS",
+"Source A", "START") truncated to a few characters — and once the room fell
+below an ellipsis, vanished entirely — at every width, not just narrow ones.
+This is what made the User-Journey funnel look distorted/squeezed.
+
+Mirror the existing sink gutter: reserve a capped (25%) left gutter sized from
+the source-node labels, shift the diagram right by it, and budget the
+first-column label at gutter+margin. Adds a discriminating regression test that
+fails on the old code (renders "SES…") and passes now.
+
+## [2.97.0](https://github.com/juspay/svelte-ui-components/compare/2.97.0..2.96.2) - 14 July 2026
 
 ## [2.96.2](https://github.com/juspay/svelte-ui-components/compare/2.96.2..2.96.1) - 14 July 2026
 

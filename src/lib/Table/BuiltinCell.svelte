@@ -34,12 +34,14 @@
     column,
     value,
     rowIndex,
-    originalIndex
+    originalIndex,
+    usePortal = false
   }: {
     column: TableColumn;
     value: TableCellValue;
     rowIndex: number;
     originalIndex: number;
+    usePortal?: boolean;
   } = $props();
 
   // The td applies column.align as text-align, which flex containers ignore:
@@ -261,6 +263,7 @@
         disabled={selectData.disabled ?? false}
         testId={selectData.testId}
         itemTestId={selectData.itemTestId}
+        {usePortal}
         onchange={(selectedIds) => {
           if (selectedIds.length > 0) {
             column.onSelect?.(rowIndex, selectedIds[0], originalIndex);
@@ -389,6 +392,7 @@
             separator: item.separator
           }))}
           testId={column.testId && `${column.testId}-menu-${rowIndex}`}
+          {usePortal}
           onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
         >
           {#snippet trigger()}
@@ -427,6 +431,7 @@
           separator: item.separator
         }))}
         testId={column.testId && `${column.testId}-popup-${rowIndex}`}
+        {usePortal}
         onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
       >
         {#snippet trigger()}

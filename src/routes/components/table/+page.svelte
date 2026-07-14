@@ -444,6 +444,26 @@
       })
     )
   );
+
+  // usePortal demo — a select column inside an overflow-clipping container.
+  const portalColumns: TableColumn[] = [
+    { id: 'name', label: 'Name' },
+    { id: 'tier', label: 'Tier', type: 'select', sortable: false }
+  ];
+  const portalRows: TableRow[] = [
+    {
+      name: 'Row one',
+      tier: {
+        options: [
+          { id: 'basic', label: 'Basic' },
+          { id: 'pro', label: 'Pro' },
+          { id: 'enterprise', label: 'Enterprise' }
+        ],
+        selectedId: 'pro',
+        testId: 'portal-tier-0'
+      }
+    }
+  ];
 </script>
 
 {#snippet bulkToolbar({ selectedIds }: { selectedIds: Set<string> })}
@@ -930,7 +950,28 @@
   </div>
 </div>
 
+<!-- usePortal: in-cell select escapes an overflow-clipping ancestor -->
+<h3>usePortal — in-cell dropdown escapes a clipping container</h3>
+<p>
+  With <code>usePortal</code>, a <code>type: 'select'</code> cell's dropdown (and in-cell menus) are
+  portaled to <code>&lt;body&gt;</code> so the table's own <code>overflow</code> can't clip them.
+</p>
+<div class="table-portal-clipper" data-pw="table-portal-clipper">
+  <Table columns={portalColumns} rows={portalRows} usePortal testId="table-portal-cells" />
+</div>
+
 <style>
+  /* Fixed-height, overflow-clipping frame to demonstrate the portaled dropdown
+     rendering in full instead of being cut off. */
+  .table-portal-clipper {
+    max-width: 420px;
+    height: 120px;
+    overflow: hidden;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
   :global(.custom-cell-table th:nth-child(1)),
   :global(.custom-cell-table td:nth-child(1)) {
     width: 180px;

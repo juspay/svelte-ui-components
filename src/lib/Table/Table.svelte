@@ -50,7 +50,8 @@
     rowNumberColumn = false,
     rowNumberLabel = '#',
     headerTooltipIcon,
-    headerTooltipPosition
+    headerTooltipPosition,
+    usePortal = false
   }: TableProperties = $props();
 
   // ─── Keyed column model → positional projection ─────────────────────────────
@@ -867,6 +868,7 @@
                             value={cellValue}
                             {rowIndex}
                             {originalIndex}
+                            {usePortal}
                           />
                         {:else if typeof cell === 'function'}
                           {@render cell(cellValue, rowIndex, colIndex)}

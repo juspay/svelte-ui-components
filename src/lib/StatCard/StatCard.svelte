@@ -201,13 +201,15 @@
                     : null}
                 >
                   <div class="statcard-breakdown-label">{breakdownItem.label}</div>
-                  <div class="statcard-breakdown-value">{breakdownItem.value}</div>
-                  {#if typeof breakdownItem.change === 'number'}
-                    <DeltaIndicator
-                      value={breakdownItem.change}
-                      invertColors={breakdownItem.invertChangeColors ?? false}
-                    />
-                  {/if}
+                  <div class="statcard-breakdown-value-line">
+                    <div class="statcard-breakdown-value">{breakdownItem.value}</div>
+                    {#if typeof breakdownItem.change === 'number'}
+                      <DeltaIndicator
+                        value={breakdownItem.change}
+                        invertColors={breakdownItem.invertChangeColors ?? false}
+                      />
+                    {/if}
+                  </div>
                 </div>
               {/each}
             </div>
@@ -486,6 +488,16 @@
     display: flex;
     flex-direction: column;
     gap: var(--statcard-breakdown-item-gap, 2px);
+  }
+
+  /* The metric value and its change indicator share one line (label sits above
+     as the caption). Previously the delta was a third stacked child, so it
+     rendered on its own line beneath the number. */
+  .statcard-breakdown-value-line {
+    display: flex;
+    align-items: baseline;
+    gap: var(--statcard-breakdown-value-gap, 6px);
+    flex-wrap: wrap;
   }
 
   .statcard-breakdown-label {

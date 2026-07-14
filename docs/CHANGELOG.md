@@ -2,19 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.98.1)
 
-BZ-4623: the built-in paginator's page-size Select sits at the very bottom of
-.table-container (overflow: hidden) and opens downward, so its options were
-clipped behind the footer. It is internal chrome consumers cannot reach, so give
-it usePortal unconditionally (consistent with the in-cell selects) — it now
-portals to document.body with fixed, collision-aware positioning and escapes the
-container's clip. No consumer change required beyond consuming this version.
+PieChart: the centre-snippet foreignObject was innerR*1.3 (~2/3 of the inner-hole
+diameter), so a currency total like "₹31.24k" was clipped on both sides and a
+two-word caption ("Total Sales") wrapped. Widen the box to innerR*1.9 — every
+edge stays inside the hole at the text mid-line while giving the centre label the
+room it needs. Realistic abbreviated values (k / L / Cr) now render in full.
 
-BZ-4620: the image-two-line-text cell rendered an empty grey box when a row had
-no imageUrl. Render the first letter of text1 (uppercased), centered, in the
-placeholder — so line-item tables show product-name initials like the rest of
-the app, for every image-cell consumer at once.
+StatCard: breakdown items laid out label, value and the change indicator as three
+stacked column children, so the delta rendered on its own line beneath the
+number. Wrap value + delta in a flex line (.statcard-breakdown-value-line) so the
+delta sits next to the value; the label stays the caption above.
+
+## [2.98.1](https://github.com/juspay/svelte-ui-components/compare/2.98.1..2.98.0) - 14 July 2026
 
 ## [2.98.0](https://github.com/juspay/svelte-ui-components/compare/2.98.0..2.97.2) - 14 July 2026
 

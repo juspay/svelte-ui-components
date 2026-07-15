@@ -87,6 +87,29 @@ test.describe('axis crowding', () => {
   });
 });
 
+test.describe('bar value label override', () => {
+  test('a data point with valueLabel renders that exact text; others keep the default valueFormat', async ({
+    page
+  }) => {
+    await page.goto('/components/bar-chart');
+    const chart = page.getByTestId('bar-value-label-chart');
+    // valueLabel is set: rendered verbatim instead of the formatted value.
+    await expect(chart.getByTestId('bar-value-0')).toHaveText('5,000 visits');
+    // valueLabel is absent: falls through to the default valueFormat(value) path.
+    await expect(chart.getByTestId('bar-value-1')).toHaveText('1.2K');
+    await expect(chart.getByTestId('bar-value-2')).toHaveText('340');
+  });
+
+  test('an empty valueLabel is treated as absent, not as a blank label', async ({ page }) => {
+    await page.goto('/components/bar-chart');
+    const chart = page.getByTestId('bar-value-label-chart');
+    // Pins the non-empty-only contract: `valueLabel: ''` falls back to the
+    // formatter rather than rendering an empty value label. If that contract is
+    // ever deliberately changed, this test makes the change visible.
+    await expect(chart.getByTestId('bar-value-3')).toHaveText('28');
+  });
+});
+
 test.describe('line hover', () => {
   test('hover shows a halo and a shared tooltip listing all series', async ({ page }) => {
     await page.goto('/components/line-chart');

@@ -72,6 +72,16 @@
     { label: 'Gamma', value: 90 }
   ];
 
+  // ── valueLabel demo ─────────────────────────────────────────────
+
+  const funnelWithValueLabel = [
+    { label: 'Visited', value: 5000, valueLabel: '5,000 visits' },
+    { label: 'Signed up', value: 1200 },
+    { label: 'Purchased', value: 340 },
+    // An empty valueLabel is treated the same as an absent one — falls back to valueFormat(value).
+    { label: 'Refunded', value: 28, valueLabel: '' }
+  ];
+
   // ── onChartReady + declarative highlightedIndex demo ──────────
 
   let highlightApi: ChartHighlightAPI | null = $state(null);
@@ -195,6 +205,18 @@
 </p>
 <div class="demo-row">
   <BarChart data={labelOnlyData} hideBarGraphics showXAxis showYAxis showGridlines />
+</div>
+
+<h3>Per-bar value label override (<code>valueLabel</code>)</h3>
+<p>
+  A data point's non-empty <code>valueLabel</code> renders verbatim as its value label, overriding
+  the default
+  <code>valueFormat(value)</code>
+  output for that bar only. Other bars — including any whose
+  <code>valueLabel</code> is an empty string — keep going through the normal formatter.
+</p>
+<div class="demo-row">
+  <BarChart data={funnelWithValueLabel} showValues testId="bar-value-label-chart" />
 </div>
 
 <h3>Labels near the axis max (outside → inside flip)</h3>

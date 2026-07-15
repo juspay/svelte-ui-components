@@ -641,7 +641,25 @@
       right: dims.margin.right,
       bottom: dims.margin.bottom,
       left: dims.margin.left
-    }
+    },
+    bars: bars.map((bar, index) => {
+      // barLabels is index-aligned with bars (both derive from the same list);
+      // fall back to the bar's top-centre when value labels are hidden.
+      const barLabel = barLabels[index];
+      return {
+        index,
+        seriesIndex: bar.si,
+        pointIndex: bar.pi,
+        x: bar.x,
+        y: bar.y,
+        width: bar.width,
+        height: bar.height,
+        value: bar.dataPoint.value,
+        label: bar.dataPoint.label ?? '',
+        labelX: barLabel ? barLabel.p.x : bar.x + bar.width / 2,
+        labelY: barLabel ? barLabel.p.y : bar.y
+      };
+    })
   });
 
   // ── Interactions ───────────────────────────────────────────────

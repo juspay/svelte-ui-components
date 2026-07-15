@@ -2,13 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.101.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.102.0)
 
-`valueFormat(value)` receives only the value, so a caller can't label one bar
-differently from the rest (e.g. a funnel baseline that should show its raw count
-while the other steps show a percentage). Add an optional `valueLabel` to
-BarChartDataPoint; when set, getDisplayValue returns it verbatim, otherwise the
-existing normalized/range/valueFormat path is unchanged. Backward-compatible.
+Exposes CSS-variable hooks (all defaulting to the current values, so existing
+consumers are unchanged) for the StatCard's layout so a theme can drive the look
+from :root instead of reaching into the DOM:
+- --statcard-{header,subtitle,rows,value-row}-order — reorder the card's direct
+flex children (e.g. render the subtitle/caption above the value).
+- --statcard-breakdown-item-flex-direction / -align-items / -flex-wrap and
+--statcard-breakdown-value-line-order — value-then-label inline sub-lines.
+- --statcard-breakdown-heading-text-transform — sentence-case captions vs the
+uppercase grid-label default.
+
+## [2.102.0](https://github.com/juspay/svelte-ui-components/compare/2.102.0..2.101.0) - 15 July 2026
 
 ## [2.101.0](https://github.com/juspay/svelte-ui-components/compare/2.101.0..2.100.2) - 15 July 2026
 

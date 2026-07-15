@@ -40,7 +40,9 @@
 >
   {#if !hideArrow && direction !== 'neutral'}
     <span class="delta-indicator-arrow delta-arrow-{direction}" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M22 7L13.5 15.5L8.5 10.5L2 17" /><path d="M16 7H22V13" /></svg>
+      <svg viewBox="0 0 24 24"
+        ><path d="M22 7L13.5 15.5L8.5 10.5L2 17" /><path d="M16 7H22V13" /></svg
+      >
     </span>
   {/if}
   <span class="delta-indicator-text">{text}</span>

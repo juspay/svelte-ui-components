@@ -246,6 +246,9 @@
   let isStackedMode = $derived(isMulti && groupMode === 'stacked');
 
   function getDisplayValue(bar: BarRect): string {
+    if (typeof bar.dataPoint.valueLabel === 'string' && bar.dataPoint.valueLabel.length > 0) {
+      return bar.dataPoint.valueLabel;
+    }
     if (isNormalized && bar.normalizedValue != null) {
       return normalizedFormat(bar.normalizedValue);
     }

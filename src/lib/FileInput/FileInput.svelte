@@ -15,11 +15,22 @@
 
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);
+  let pickerBusy = false;
 
   export const openFilePicker = (): void => {
-    if (!disabled) {
-      inputEl?.click();
+    if (disabled || pickerBusy) {
+      return;
     }
+    // Idempotent within one click dispatch: if an inner trigger control wires
+    // openFilePicker AND the wrapper's own onclick fires for the same user click,
+    // the second call is a no-op (guarding against a double-open). Released on the
+    // next microtask — after the whole click has finished bubbling — so a genuinely
+    // separate later click still opens the picker.
+    pickerBusy = true;
+    inputEl?.click();
+    queueMicrotask(() => {
+      pickerBusy = false;
+    });
   };
 
   function isAccepted(file: File): boolean {
@@ -107,6 +118,20 @@
       openFilePicker();
     }
   }
+
+  function handleClick(event: MouseEvent): void {
+    if (disabled) {
+      return;
+    }
+    // openFilePicker() calls inputEl.click(), whose click bubbles back up to this
+    // wrapper — ignore it so we don't re-enter openFilePicker in a loop. Consumers
+    // whose trigger already wires openFilePicker on an inner control should NOT also
+    // rely on this handler (it would double-open); clicking the trigger is enough.
+    if (event.target === inputEl) {
+      return;
+    }
+    openFilePicker();
+  }
 </script>
 
 <div
@@ -121,6 +146,7 @@
   ondragleave={handleDragLeave}
   ondrop={handleDrop}
   onkeydown={handleKeyDown}
+  onclick={handleClick}
 >
   <input
     bind:this={inputEl}

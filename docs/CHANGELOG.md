@@ -2,16 +2,15 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.101.0)
 
-Exposes each rendered bar's geometry (rect x/y/width/height, series/point
-indices, value, category label, and the value-label anchor) on the
-renderOverlay context, in inner post-margin coordinates. This lets a consumer
-anchor an overlay annotation — e.g. a small icon above the first funnel step's
-count — to a specific bar without re-deriving the band scale from innerWidth.
+`valueFormat(value)` receives only the value, so a caller can't label one bar
+differently from the rest (e.g. a funnel baseline that should show its raw count
+while the other steps show a percentage). Add an optional `valueLabel` to
+BarChartDataPoint; when set, getDisplayValue returns it verbatim, otherwise the
+existing normalized/range/valueFormat path is unchanged. Backward-compatible.
 
-Falls back to the bar's top-centre for labelX/labelY when value labels are
-hidden. Adds the BarChartBarPosition type (exported via properties).
+## [2.101.0](https://github.com/juspay/svelte-ui-components/compare/2.101.0..2.100.2) - 15 July 2026
 
 ## [2.100.2](https://github.com/juspay/svelte-ui-components/compare/2.100.2..2.100.1) - 15 July 2026
 

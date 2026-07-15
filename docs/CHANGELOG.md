@@ -2,19 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.2)
 
-The FileInput wrapper is role="button" and opened the native picker on
-keyboard (Enter/Space) and drag-drop, but not on a plain click — so a
-non-button trigger (e.g. a Card drop zone) couldn't open it without the
-consumer wiring openFilePicker onto an inner control. Add onclick to the
-wrapper so clicking anywhere in the drop zone opens the picker.
+Exposes each rendered bar's geometry (rect x/y/width/height, series/point
+indices, value, category label, and the value-label anchor) on the
+renderOverlay context, in inner post-margin coordinates. This lets a consumer
+anchor an overlay annotation — e.g. a small icon above the first funnel step's
+count — to a specific bar without re-deriving the band scale from innerWidth.
 
-openFilePicker is made idempotent within a single click dispatch (a
-microtask-released busy flag) so a trigger that ALSO wires openFilePicker on
-an inner button plus this wrapper's onclick can't double-open; a target guard
-ignores the hidden input's own bubbled click to avoid re-entrancy. Verified:
-card trigger and inner-button trigger each open the picker exactly once.
+Falls back to the bar's top-centre for labelX/labelY when value labels are
+hidden. Adds the BarChartBarPosition type (exported via properties).
+
+## [2.100.2](https://github.com/juspay/svelte-ui-components/compare/2.100.2..2.100.1) - 15 July 2026
 
 ## [2.100.1](https://github.com/juspay/svelte-ui-components/compare/2.100.1..2.100.0) - 15 July 2026
 

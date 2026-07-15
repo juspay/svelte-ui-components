@@ -2,19 +2,13 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.99.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.0)
 
-Adds three additive, backward-compatible Tabs capabilities for vertical
-nav/menu rails (the classic horizontal tab bar is unchanged):
+The trend-arrow change put two &lt;path&gt; elements on one line, exceeding the print
+width; the release lint step (prettier --check) failed and blocked publish.
+Reflow via prettier --write. No behavioural change.
 
-- orientation='vertical' — column layout, leading-edge sliding indicator,
-up/down scroll arrows and top/bottom fade masks.
-- status='default' — neutral blue "has activity / configured" dot beside
-the existing pending/error/success dots.
-- TabItem.sectionLabel — optional group header rendered above an item.
-
-orientation defaults to 'horizontal', so every existing call site is
-unaffected. Demo extended with a vertical rail exercising all three.
+## [2.100.0](https://github.com/juspay/svelte-ui-components/compare/2.100.0..2.99.0) - 14 July 2026
 
 ## [2.99.0](https://github.com/juspay/svelte-ui-components/compare/2.99.0..2.98.2) - 14 July 2026
 

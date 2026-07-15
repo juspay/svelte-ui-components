@@ -77,6 +77,20 @@
   {/if}
 </div>
 
+<h3>Card trigger (click-to-open via the wrapper — no inner button)</h3>
+<div class="demo-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+  <FileInput testId="file-input-card" onfiles={(files) => (acceptedFiles = files)}>
+    {#snippet trigger({ dragOver })}
+      <div
+        class="card-trigger"
+        style="border: 1px dashed #cccccc; border-radius: 8px; padding: 24px 48px;"
+      >
+        {dragOver ? 'Drop files here' : 'A plain card — click anywhere to open'}
+      </div>
+    {/snippet}
+  </FileInput>
+</div>
+
 <h3>Disabled</h3>
 <div class="demo-row">
   <FileInput disabled testId="file-input-disabled">

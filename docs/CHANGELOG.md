@@ -2,11 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.100.1)
 
-The trend-arrow change put two &lt;path&gt; elements on one line, exceeding the print
-width; the release lint step (prettier --check) failed and blocked publish.
-Reflow via prettier --write. No behavioural change.
+The FileInput wrapper is role="button" and opened the native picker on
+keyboard (Enter/Space) and drag-drop, but not on a plain click — so a
+non-button trigger (e.g. a Card drop zone) couldn't open it without the
+consumer wiring openFilePicker onto an inner control. Add onclick to the
+wrapper so clicking anywhere in the drop zone opens the picker.
+
+openFilePicker is made idempotent within a single click dispatch (a
+microtask-released busy flag) so a trigger that ALSO wires openFilePicker on
+an inner button plus this wrapper's onclick can't double-open; a target guard
+ignores the hidden input's own bubbled click to avoid re-entrancy. Verified:
+card trigger and inner-button trigger each open the picker exactly once.
+
+## [2.100.1](https://github.com/juspay/svelte-ui-components/compare/2.100.1..2.100.0) - 15 July 2026
 
 ## [2.100.0](https://github.com/juspay/svelte-ui-components/compare/2.100.0..2.99.0) - 14 July 2026
 

@@ -49,6 +49,12 @@ export type BarChartDataPoint = {
   range?: [number, number];
   /** Per-bar fill: plain color, pattern, or gradient. Overrides series color. */
   color?: BarFill;
+  /**
+   * Custom text for this bar's value label, rendered verbatim instead of the
+   * `valueFormat(value)` output. Lets a caller label a single bar differently —
+   * e.g. a funnel baseline showing a raw count while the rest show a percentage.
+   */
+  valueLabel?: string;
 };
 
 export type BarChartSeries = {

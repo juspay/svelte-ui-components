@@ -288,6 +288,7 @@
   }
 
   .statcard-header {
+    order: var(--statcard-header-order, 0);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -362,6 +363,7 @@
   }
 
   .statcard-value-row {
+    order: var(--statcard-value-row-order, 0);
     display: flex;
     align-items: var(--statcard-value-row-align, baseline);
     gap: var(--statcard-value-row-gap, 8px);
@@ -391,6 +393,7 @@
   }
 
   .statcard-subtitle {
+    order: var(--statcard-subtitle-order, 0);
     font-size: var(--statcard-subtitle-font-size, 12px);
     font-weight: var(--statcard-subtitle-font-weight, 400);
     color: var(--statcard-subtitle-color, #9ca3af);
@@ -399,6 +402,7 @@
 
   /* Multi-row layout */
   .statcard-rows {
+    order: var(--statcard-rows-order, 0);
     display: flex;
     flex-direction: column;
     gap: var(--statcard-rows-gap, 0px);
@@ -473,7 +477,7 @@
     font-weight: var(--statcard-breakdown-heading-font-weight, 600);
     color: var(--statcard-breakdown-heading-color, #6b7280);
     letter-spacing: 0.04em;
-    text-transform: uppercase;
+    text-transform: var(--statcard-breakdown-heading-text-transform, uppercase);
     margin-top: var(--statcard-breakdown-heading-margin-top, 6px);
   }
 
@@ -486,7 +490,9 @@
 
   .statcard-breakdown-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: var(--statcard-breakdown-item-flex-direction, column);
+    align-items: var(--statcard-breakdown-item-align-items, stretch);
+    flex-wrap: var(--statcard-breakdown-item-flex-wrap, nowrap);
     gap: var(--statcard-breakdown-item-gap, 2px);
   }
 
@@ -494,6 +500,7 @@
      as the caption). Previously the delta was a third stacked child, so it
      rendered on its own line beneath the number. */
   .statcard-breakdown-value-line {
+    order: var(--statcard-breakdown-value-line-order, 0);
     display: flex;
     align-items: baseline;
     gap: var(--statcard-breakdown-value-gap, 6px);

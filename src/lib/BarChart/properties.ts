@@ -60,6 +60,37 @@ export type BarChartSeries = {
 
 // ── Render-overlay escape hatch (A1-4) ───────────────────────
 
+/**
+ * Geometry for a single rendered bar, in inner (post-margin) coordinates — the
+ * same space the overlay `<g>` draws in, so values map 1:1 without re-applying
+ * the margin. `labelX`/`labelY` are the value-label anchor when `showValues` is
+ * on, otherwise the bar's top-centre.
+ */
+export type BarChartBarPosition = {
+  /** Zero-based index in render order. */
+  index: number;
+  /** Series index (0-based). */
+  seriesIndex: number;
+  /** Category / point index (0-based). */
+  pointIndex: number;
+  /** Bar rectangle x (left edge). */
+  x: number;
+  /** Bar rectangle y (top edge). */
+  y: number;
+  /** Bar rectangle width. */
+  width: number;
+  /** Bar rectangle height. */
+  height: number;
+  /** The datum's numeric value. */
+  value: number;
+  /** The datum's category label. */
+  label: string;
+  /** Value-label anchor x. */
+  labelX: number;
+  /** Value-label anchor y. */
+  labelY: number;
+};
+
 export type BarChartRenderContext = {
   /** Inner drawing width (pixels) */
   innerWidth: number;
@@ -73,6 +104,12 @@ export type BarChartRenderContext = {
    * a bottom-edge connector in a funnel overlay).
    */
   margin: { top: number; right: number; bottom: number; left: number };
+  /**
+   * Per-bar geometry in render order. Lets an overlay anchor annotations
+   * (e.g. an icon above the first funnel step's value) to a specific bar
+   * without re-deriving the band scale from innerWidth.
+   */
+  bars: BarChartBarPosition[];
 };
 
 // ── Component property types ──────────────────────────────────

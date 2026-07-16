@@ -2,20 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.103.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.104.0)
 
-- --sankey-label-font-weight / --sankey-col-label-font-weight tokens
-(default 400), wired into both the CSS and the canvas text-measurement
-engine so truncation budgets and gutters stay honest at bolder weights
-- --sankey-label-halo-color / --sankey-label-halo-width tokens: a
-Highcharts-style paint-order stroke outline so node labels stay legible
-over dense link ribbons (off by default)
-- firstColumnLabelSide prop ('left' default): 'right' renders first-column
-labels like every other column and frees the reserved left gutter
-- label de-collision line height now derives from the tokened font size
-instead of a hardcoded 16px
+- lastColumnLabelSide prop ('right' default): 'left' renders sink labels
+inside the plot over the incoming ribbons (mirror of firstColumnLabelSide
+'right') and frees the reserved right gutter for plot width
+- marginX prop (default 40): configurable horizontal inset so funnels can run
+edge-to-edge; the vertical margin stays fixed for column headers
+- column headers now clamp to the svg canvas (measured at the rendered font)
+so an edge header can never paint past the boundary at tight margins —
+a no-op at the default margins
 
 All defaults preserve current rendering exactly.
+
+## [2.104.0](https://github.com/juspay/svelte-ui-components/compare/2.104.0..2.103.0) - 16 July 2026
 
 ## [2.103.0](https://github.com/juspay/svelte-ui-components/compare/2.103.0..2.102.0) - 15 July 2026
 

@@ -48,6 +48,7 @@
     xAxisCategories,
     xTickFormat,
     yTickFormat,
+    yIntegerTicks = false,
     aspectRatio = 16 / 9,
     minHeight = 0,
     maxHeight = DEFAULT_CHART_MAX_HEIGHT,
@@ -561,6 +562,7 @@
               orientation="left"
               scale={yScale}
               tickCount={yTickCount}
+              integerTicks={yIntegerTicks}
               {showGridlines}
               gridlineLength={dims.innerWidth}
               label={yAxisLabel}

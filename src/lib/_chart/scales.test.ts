@@ -20,4 +20,12 @@ describe('computeLinearTicks — integer mode (category axes)', () => {
   it('still produces fractional steps when integer mode is off', () => {
     expect(computeLinearTicks([1, 6], 8)).toContain(1.5);
   });
+
+  it('snaps count-style y domains to whole ticks', () => {
+    // Regression: a low-volume order-count chart with y domain [0, 2] rendered
+    // ticks 0, 0.5, 1, 1.5, 2 — fractional values for a discrete count. With
+    // integer mode (the new yIntegerTicks prop) the axis shows 0, 1, 2.
+    expect(computeLinearTicks([0, 2], 5)).toContain(0.5);
+    expect(computeLinearTicks([0, 2], 5, true)).toEqual([0, 1, 2]);
+  });
 });

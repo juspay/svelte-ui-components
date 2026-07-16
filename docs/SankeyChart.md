@@ -1,6 +1,6 @@
 # SankeyChart
 
-A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones (opt-out via `disableDimOnHover`). Supports a configurable minimum link/node thickness (`minLinkWidth`) so tiny flows remain visible, and a horizontal label offset (`dataLabelOffsetX`) for fine-grained spacing between node bars and their text labels.
+A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Node heights and link widths share one global px-per-value scale (set by the tightest column), so equal values render equally tall in every column and each node's ribbon stack sits flush inside its bar — ribbons never spill past a bar's bottom edge. Hovering highlights all connected nodes and dims unrelated ones (opt-out via `disableDimOnHover`). Supports a configurable minimum link/node thickness (`minLinkWidth`) so tiny flows remain visible, and a horizontal label offset (`dataLabelOffsetX`) for fine-grained spacing between node bars and their text labels.
 
 ## Usage
 

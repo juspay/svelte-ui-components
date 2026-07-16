@@ -157,12 +157,13 @@
   let plotWidth = $derived(
     Math.max(0, chartWidth - marginX * 2 - firstColumnLabelGutter - lastColumnLabelGutter)
   );
+  let plotHeight = $derived(Math.max(0, chartHeight - MARGIN * 2));
   let layout = $derived(
     computeSankeyLayout(
       nodes,
       links,
       plotWidth,
-      Math.max(0, chartHeight - MARGIN * 2),
+      plotHeight,
       nodeWidth,
       nodePadding,
       iterations,
@@ -482,6 +483,10 @@
   {:else}
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio} {maxHeight}>
       <g transform="translate({marginX + firstColumnLabelGutter}, {MARGIN})">
+        <!-- Optional backdrop panel behind the diagram (--sankey-plot-background,
+             transparent by default). Spans exactly the plot: first column's bars
+             to last column's bars, header row excluded. -->
+        <rect class="sankey-plot-bg" x={0} y={0} width={plotWidth} height={plotHeight} />
         {#if columnLabels != null && columnLabels.length > 0}
           {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
             <text
@@ -578,6 +583,10 @@
   .sankey-chart {
     width: 100%;
     position: relative;
+  }
+  .sankey-plot-bg {
+    fill: var(--sankey-plot-background, transparent);
+    pointer-events: none;
   }
   .sankey-link {
     transition: stroke-opacity var(--chart-transition-duration, 0.2s) ease;

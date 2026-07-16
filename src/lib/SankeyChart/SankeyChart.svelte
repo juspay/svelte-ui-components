@@ -36,7 +36,8 @@
     nodeColorResolver,
     minLinkWidth = 1,
     dataLabelOffsetX = 0,
-    disableDimOnHover = false
+    disableDimOnHover = false,
+    firstColumnLabelSide = 'left'
   }: SankeyChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -54,20 +55,44 @@
   let format = $derived(valueFormat ?? formatNumber);
   let isEmpty = $derived(nodes.length === 0);
   const MARGIN = 40;
-  // A 12px label's rendered line box measures ~16px (≈1.33em) across common
-  // font stacks; two label centres closer than this overlap visibly.
-  const LABEL_LINE_PX = 16;
 
   // Real text measurement via the shared canvas-backed helper (exact on the
   // client, 0.6em/char heuristic under SSR/tests). Character estimates used
   // to both over-reserve the right label gutter (dead canvas) and under-budget
   // uppercase-heavy labels (text sliding under the next column's bars).
+  // Weight and family are part of the spec: a 700-weight label is measurably
+  // wider than a 400 one, and the app's rendered font rarely matches the
+  // measurement default — budgets must be computed at the rendered style or
+  // borderline labels truncate (or overflow) for no visible reason.
+  // Family only enters the spec once the document's fonts have loaded: measuring
+  // a not-yet-loaded webfont silently measures its fallback (usually wider) and
+  // the width cache would pin that stale value under the loaded font's key.
+  // Until then the measurement default applies — same behaviour as before.
+  // One-shot promise subscription at init (browser only) — nothing to tear
+  // down, and the $state write re-derives every measurement consumer.
+  let fontsLoaded = $state(typeof document !== 'undefined' && document.fonts?.status === 'loaded');
+  if (typeof document !== 'undefined' && document.fonts?.status !== 'loaded') {
+    document.fonts?.ready.then(() => {
+      fontsLoaded = true;
+    });
+  }
+  let chartFontFamily = $derived(
+    fontsLoaded && containerEl ? getComputedStyle(containerEl).fontFamily : null
+  );
   let labelFont = $derived({
-    size: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-size', 12) : 12
+    size: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-size', 12) : 12,
+    weight: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-weight', 400) : 400,
+    family: chartFontFamily
   });
   let colLabelFont = $derived({
-    size: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-size', 11) : 11
+    size: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-size', 11) : 11,
+    weight: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-weight', 400) : 400,
+    family: chartFontFamily
   });
+  // A label's rendered line box measures ≈1.33em across common font stacks;
+  // two label centres closer than this overlap visibly. Derived from the
+  // tokened size so consumers that scale labels keep honest de-collision.
+  let labelLinePx = $derived(Math.ceil(labelFont.size * 1.33));
 
   // Final-column labels render to the RIGHT of their node; the bare 40px margin is
   // nowhere near enough for real funnel labels ("PARTIALLY_FAILED (1,234)"), so they
@@ -101,8 +126,11 @@
   // the room falls below an ellipsis, vanish entirely. Mirror the sink gutter:
   // reserve a capped left gutter sized from the source-node labels (sources are what
   // land in the first column) and shift the diagram right by it.
+  // With `firstColumnLabelSide: 'right'` the labels render over the outgoing
+  // ribbons like every other column, so no gutter is reserved at all and the
+  // diagram gains that width.
   let firstColumnLabelGutter = $derived.by(() => {
-    if (!showLabels || nodes.length === 0 || chartWidth <= 0) {
+    if (firstColumnLabelSide === 'right' || !showLabels || nodes.length === 0 || chartWidth <= 0) {
       return 0;
     }
     const targetIds = new Set(links.map((link) => link.target));
@@ -184,7 +212,7 @@
     // SVG's left edge is that gutter plus the base margin, minus the inset —
     // symmetric with the last column's sink-gutter budget below.
     const available =
-      column === 0
+      column === 0 && firstColumnLabelSide === 'left'
         ? Math.max(0, firstColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
         : column === columnCount - 1
           ? Math.max(0, lastColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
@@ -222,7 +250,7 @@
           continue;
         }
         const centerGap = node.y + node.height / 2 - (lastKept.y + lastKept.height / 2);
-        if (centerGap < LABEL_LINE_PX) {
+        if (centerGap < labelLinePx) {
           if (node.value > lastKept.value) {
             hidden.add(lastKept.id);
             lastKept = node;
@@ -490,11 +518,11 @@
               <text
                 class="sankey-label"
                 class:node-dimmed={dimmed}
-                x={node.column === 0
+                x={node.column === 0 && firstColumnLabelSide === 'left'
                   ? node.x - 6 - dataLabelOffsetX
                   : node.x + node.width + 6 + dataLabelOffsetX}
                 y={node.y + node.height / 2}
-                text-anchor={node.column === 0 ? 'end' : 'start'}
+                text-anchor={node.column === 0 && firstColumnLabelSide === 'left' ? 'end' : 'start'}
                 dominant-baseline="middle"
                 >{truncateLabel(
                   showValues ? `${node.label} (${format(node.value)})` : node.label,
@@ -537,13 +565,22 @@
   .sankey-label {
     fill: var(--sankey-label-color, #333);
     font-size: var(--sankey-label-font-size, 12px);
+    font-weight: var(--sankey-label-font-weight, 400);
     font-family: var(--chart-font-family, inherit);
+    /* Highcharts-style text outline: node labels render over link ribbons, so
+       a halo in the chart's background colour keeps them legible at any flow
+       density. Off (transparent / 0) by default. */
+    paint-order: stroke;
+    stroke: var(--sankey-label-halo-color, transparent);
+    stroke-width: var(--sankey-label-halo-width, 0);
+    stroke-linejoin: round;
     pointer-events: none;
     transition: opacity var(--chart-transition-duration, 0.2s) ease;
   }
   .sankey-col-label {
     fill: var(--sankey-col-label-color, #666);
     font-size: var(--sankey-col-label-font-size, 11px);
+    font-weight: var(--sankey-col-label-font-weight, 400);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
   }

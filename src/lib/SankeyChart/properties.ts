@@ -90,6 +90,14 @@ export type OptionalSankeyChartProperties = {
    * to read the overall structure. Defaults to `false` (standard dim-on-hover behaviour).
    */
   disableDimOnHover?: boolean;
+  /**
+   * Which side of a first-column node its label renders on. `'left'` (default) anchors the
+   * label into a reserved left gutter outside the diagram. `'right'` renders it like every
+   * other column — to the right of the bar, over the outgoing ribbons (pair with the
+   * `--sankey-label-halo-*` tokens for legibility); no left gutter is reserved, so the
+   * diagram gains that width.
+   */
+  firstColumnLabelSide?: 'left' | 'right';
 };
 
 export type SankeyChartEventProperties = {

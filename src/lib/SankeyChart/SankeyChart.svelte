@@ -37,7 +37,9 @@
     minLinkWidth = 1,
     dataLabelOffsetX = 0,
     disableDimOnHover = false,
-    firstColumnLabelSide = 'left'
+    firstColumnLabelSide = 'left',
+    lastColumnLabelSide = 'right',
+    marginX = 40
   }: SankeyChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -99,8 +101,11 @@
   // used to run past the svg edge and clip. Reserve a capped gutter sized from the
   // sink-node labels (sinks are what land in the final column) and lay the diagram
   // out in the remaining width instead.
+  // With `lastColumnLabelSide: 'left'` sink labels render inside the plot over
+  // the incoming ribbons (mirroring the first column's 'right' mode), so no
+  // right gutter is reserved and the diagram runs to the right edge.
   let lastColumnLabelGutter = $derived.by(() => {
-    if (!showLabels || nodes.length === 0 || chartWidth <= 0) {
+    if (lastColumnLabelSide === 'left' || !showLabels || nodes.length === 0 || chartWidth <= 0) {
       return 0;
     }
     const sourceIds = new Set(links.map((link) => link.source));
@@ -150,7 +155,7 @@
   });
 
   let plotWidth = $derived(
-    Math.max(0, chartWidth - MARGIN * 2 - firstColumnLabelGutter - lastColumnLabelGutter)
+    Math.max(0, chartWidth - marginX * 2 - firstColumnLabelGutter - lastColumnLabelGutter)
   );
   let layout = $derived(
     computeSankeyLayout(
@@ -202,6 +207,29 @@
     return truncateToWidth(text, Math.max(0, colWidth - 6), colLabelFont);
   };
 
+  // Column headers centre on their column's bar; at tight horizontal margins an
+  // edge header (e.g. a long last-column title) would otherwise paint past the
+  // svg boundary. Clamp each header's centre so its rendered text stays on the
+  // canvas — a no-op at the default margins.
+  const columnLabelX = (columnIndex: number, label: string): number => {
+    const center = columnIndex * colWidth + nodeWidth / 2;
+    const textWidth = measureText(truncateColumnLabel(label), colLabelFont).width;
+    const canvasLeft = -(marginX + firstColumnLabelGutter) + 2;
+    const canvasRight = plotWidth + lastColumnLabelGutter + marginX - 2;
+    const min = canvasLeft + textWidth / 2;
+    const max = canvasRight - textWidth / 2;
+    // Text wider than the whole canvas keeps its centre; the colWidth-based
+    // truncation budget makes that unreachable in practice.
+    return max < min ? center : Math.min(Math.max(center, min), max);
+  };
+
+  // Which side of its bar a node's label renders on. First and last columns are
+  // configurable (`firstColumnLabelSide` / `lastColumnLabelSide`); in a
+  // single-column chart the first-column setting wins.
+  const labelOnLeft = (column: number): boolean =>
+    (column === 0 && firstColumnLabelSide === 'left') ||
+    (column === columnCount - 1 && column !== 0 && lastColumnLabelSide === 'left');
+
   const truncateLabel = (text: string, column: number): string => {
     // Middle columns must budget for dataLabelOffsetX too: the label starts at
     // node.x + nodeWidth + 6 + dataLabelOffsetX, so the room before the next
@@ -213,9 +241,9 @@
     // symmetric with the last column's sink-gutter budget below.
     const available =
       column === 0 && firstColumnLabelSide === 'left'
-        ? Math.max(0, firstColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
-        : column === columnCount - 1
-          ? Math.max(0, lastColumnLabelGutter + MARGIN - 6 - dataLabelOffsetX)
+        ? Math.max(0, firstColumnLabelGutter + marginX - 6 - dataLabelOffsetX)
+        : column === columnCount - 1 && lastColumnLabelSide === 'right'
+          ? Math.max(0, lastColumnLabelGutter + marginX - 6 - dataLabelOffsetX)
           : Math.max(0, colWidth - nodeWidth - 12 - dataLabelOffsetX);
     // No usable room — hide the label rather than force text that would overflow;
     // the full text is still reachable via the node's <title> on hover.
@@ -453,12 +481,12 @@
     <div class="chart-empty">{@render empty()}</div>
   {:else}
     <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio} {maxHeight}>
-      <g transform="translate({MARGIN + firstColumnLabelGutter}, {MARGIN})">
+      <g transform="translate({marginX + firstColumnLabelGutter}, {MARGIN})">
         {#if columnLabels != null && columnLabels.length > 0}
           {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
             <text
               class="sankey-col-label"
-              x={ci * colWidth + nodeWidth / 2}
+              x={columnLabelX(ci, label)}
               y={-8}
               text-anchor="middle"
               dominant-baseline="auto">{truncateColumnLabel(label)}<title>{label}</title></text
@@ -518,11 +546,11 @@
               <text
                 class="sankey-label"
                 class:node-dimmed={dimmed}
-                x={node.column === 0 && firstColumnLabelSide === 'left'
+                x={labelOnLeft(node.column)
                   ? node.x - 6 - dataLabelOffsetX
                   : node.x + node.width + 6 + dataLabelOffsetX}
                 y={node.y + node.height / 2}
-                text-anchor={node.column === 0 && firstColumnLabelSide === 'left' ? 'end' : 'start'}
+                text-anchor={labelOnLeft(node.column) ? 'end' : 'start'}
                 dominant-baseline="middle"
                 >{truncateLabel(
                   showValues ? `${node.label} (${format(node.value)})` : node.label,

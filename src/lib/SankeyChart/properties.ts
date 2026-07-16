@@ -98,6 +98,21 @@ export type OptionalSankeyChartProperties = {
    * diagram gains that width.
    */
   firstColumnLabelSide?: 'left' | 'right';
+  /**
+   * Which side of a last-column (sink) node its label renders on. `'right'` (default)
+   * anchors the label into a reserved right gutter outside the diagram. `'left'` renders it
+   * inside the plot — left of the bar, over the incoming ribbons (pair with the
+   * `--sankey-label-halo-*` tokens); no right gutter is reserved, so the diagram runs to the
+   * right edge. In a single-column chart `firstColumnLabelSide` wins.
+   */
+  lastColumnLabelSide?: 'left' | 'right';
+  /**
+   * Horizontal inset in pixels between the svg edges and the diagram (plus any label
+   * gutters). Defaults to `40`, matching the fixed vertical margin. Lower it for
+   * edge-to-edge funnels when both first/last column labels render inside the plot;
+   * column headers clamp to the canvas so they never paint past the svg.
+   */
+  marginX?: number;
 };
 
 export type SankeyChartEventProperties = {

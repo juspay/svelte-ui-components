@@ -50,4 +50,12 @@ describe('computeLinearTicks — count is a hard maximum (design spec: max 6 tic
     expect(computeLinearTicks([1, 15], 1, true).length).toBeGreaterThanOrEqual(1);
     expect(computeLinearTicks([1, 15], 1, true).length).toBeLessThanOrEqual(2);
   });
+
+  it('snaps count-style y domains to whole ticks', () => {
+    // Regression: a low-volume order-count chart with y domain [0, 2] rendered
+    // ticks 0, 0.5, 1, 1.5, 2 — fractional values for a discrete count. With
+    // integer mode (the new yIntegerTicks prop) the axis shows 0, 1, 2.
+    expect(computeLinearTicks([0, 2], 5)).toContain(0.5);
+    expect(computeLinearTicks([0, 2], 5, true)).toEqual([0, 1, 2]);
+  });
 });

@@ -97,6 +97,13 @@ export type OptionalLineChartProperties = {
   xTickFormat?: (value: number | string) => string;
   /** Formatter for Y axis tick labels. */
   yTickFormat?: (value: number | string) => string;
+  /**
+   * Snap Y-axis ticks to whole numbers (mirrors the X axis' category
+   * behaviour). Use for count-style series (orders, items) where a small
+   * domain would otherwise produce fractional ticks (0, 0.5, 1, 1.5, 2) —
+   * `yTickFormat` only changes label text, not tick placement.
+   */
+  yIntegerTicks?: boolean;
   /** Width-to-height ratio for the chart. */
   aspectRatio?: number;
   /** Minimum chart height in pixels, regardless of computed aspect-ratio height. */

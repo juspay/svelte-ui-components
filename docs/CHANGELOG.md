@@ -2,15 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.2)
 
-The nice-step ladder could overshoot the requested tick count (range 14 at
-count 6 picks step 2 → 7 ticks), so axes rendered more ticks than the
-design-system spec's "max 6". When the built ticks exceed the count, the
-step now escalates until they fit: category (integer) axes step through
-whole numbers — any integer stride is a valid category step, so 15 daily
-categories at max 6 land on the natural every-3rd-day stride — while
-numeric axes climb the 1-2-5-10 ladder so tick values stay round.
+- marginX: fixed horizontal inset between the svg edges and the plot,
+overriding the auto layout's tick-label padding — edge-to-edge funnels
+had ~28/72px of dead space beside the first/last bars.
+- Grouped/single bars now round only their value end (design-system bar
+spec): vertical bars round the top (bottom when negative), horizontal
+bars the right (left when negative), floating range bars both ends. The
+old all-corner rect rounding let a track/backdrop bar behind the value
+bar peek through the notches at its baseline corners.
+
+## [2.106.2](https://github.com/juspay/svelte-ui-components/compare/2.106.2..2.106.1) - 16 July 2026
 
 ## [2.106.1](https://github.com/juspay/svelte-ui-components/compare/2.106.1..2.106.0) - 16 July 2026
 

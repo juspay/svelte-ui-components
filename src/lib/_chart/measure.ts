@@ -1,7 +1,7 @@
 export type FontSpec = {
   /** Font size in px. */
   size: number;
-  family?: string;
+  family?: string | null;
   weight?: number | string;
 };
 

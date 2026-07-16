@@ -2,12 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.105.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.0)
 
---sankey-plot-background (default transparent) fills a rect spanning exactly
-the plot — first column's bars to last column's bars, header row excluded —
-matching the funnel design's subtle backdrop panel. Non-breaking: transparent
-default renders nothing.
+A non-finite y (NaN — a missing value in a sparse series) used to poison the
+whole SVG path: the browser drops every command after the first NaN, visually
+cutting the line mid-chart. linePath/areaPath now split points into finite
+runs and emit one subpath per run, so the line gaps over missing points and
+resumes. Gap points render no marker, halo, crosshair, data label, or tooltip
+row, and are excluded from auto-computed domains.
+
+Also caps x-axis ticks at 6 per the design-system line-chart spec ("Max no.
+of tiks should be 6" — Akshay, spec sticky note); y was already capped at 6.
+
+## [2.106.0](https://github.com/juspay/svelte-ui-components/compare/2.106.0..2.105.0) - 16 July 2026
 
 ## [2.105.0](https://github.com/juspay/svelte-ui-components/compare/2.105.0..2.104.0) - 16 July 2026
 

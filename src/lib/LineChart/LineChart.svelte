@@ -131,9 +131,12 @@
     if (xDomain) {
       return xDomain;
     }
+    // Non-finite coordinates mark gap points in sparse series; they must not
+    // poison the auto-domain (Math.min/max propagate NaN).
     const allX = series
       .filter((_, si) => !hiddenSeries.has(si))
-      .flatMap((s) => s.data.map((d) => d.x));
+      .flatMap((s) => s.data.map((d) => d.x))
+      .filter((x) => Number.isFinite(x));
     if (allX.length === 0) {
       return [0, 1];
     }
@@ -145,7 +148,8 @@
     }
     const allY = series
       .filter((_, si) => !hiddenSeries.has(si))
-      .flatMap((s) => s.data.map((d) => d.y));
+      .flatMap((s) => s.data.map((d) => d.y))
+      .filter((y) => Number.isFinite(y));
     if (allY.length === 0) {
       return [0, 1];
     }
@@ -170,7 +174,8 @@
   });
 
   let yTickCount = $derived(Math.max(2, Math.min(6, Math.floor(chartHeight / 70))));
-  let xTickCount = $derived(Math.max(2, Math.min(8, Math.floor(chartWidth / 90))));
+  // Capped at 6 per the design-system line-chart spec ("Max no. of ticks should be 6").
+  let xTickCount = $derived(Math.max(2, Math.min(6, Math.floor(chartWidth / 90))));
   // Category positions are whole numbers — fractional tick steps would repeat labels.
   let xIntegerTicks = $derived(Boolean(xAxisCategories && xAxisCategories.length > 0));
 
@@ -222,9 +227,14 @@
     hovered === null ? null : (series[hovered.si]?.data[hovered.pi] ?? null)
   );
 
-  let hoverLineX = $derived(
-    hovered === null ? null : (lines[hovered.si]?.points[hovered.pi]?.x ?? null)
-  );
+  let hoverLineX = $derived.by<number | null>(() => {
+    if (hovered === null) {
+      return null;
+    }
+    const x = lines[hovered.si]?.points[hovered.pi]?.x ?? null;
+    // A gap point (non-finite) anchors no crosshair.
+    return x !== null && Number.isFinite(x) ? x : null;
+  });
 
   // When a highlight index is active (imperative or prop), show the vertical
   // crosshair at that point even without a mouse hover.
@@ -238,7 +248,7 @@
         continue;
       }
       const point = line.points[effectiveHighlight];
-      if (point) {
+      if (point && Number.isFinite(point.x)) {
         return point.x;
       }
     }
@@ -280,7 +290,9 @@
           ({ si }) =>
             !hiddenSeries.has(si) &&
             (shared || si === hovered?.si) &&
-            series[si]?.data[hovered!.pi] != null
+            series[si]?.data[hovered!.pi] != null &&
+            // A gap point (non-finite y) has nothing to report in the tooltip.
+            Number.isFinite(series[si].data[hovered!.pi].y)
         )
         .map(({ p }) => ({ label: p.name, value: formatNumber(p.y), color: p.color }))
     };
@@ -296,7 +308,10 @@
         return [];
       }
       const p = line.points[hovered!.pi];
-      return p ? [{ x: p.x, y: p.y, color: line.color }] : [];
+      // A gap point (non-finite) has no marker, so it gets no halo either.
+      return p && Number.isFinite(p.x) && Number.isFinite(p.y)
+        ? [{ x: p.x, y: p.y, color: line.color }]
+        : [];
     });
   });
 
@@ -408,6 +423,11 @@
     let nearestPi = 0;
     let nearestXDist = Infinity;
     for (let i = 0; i < reference.length; i++) {
+      // Gap points (non-finite) are not hoverable — NaN distances would never
+      // win the comparison, but skipping keeps nearestPi from defaulting to one.
+      if (!Number.isFinite(reference[i].x) || !Number.isFinite(reference[i].y)) {
+        continue;
+      }
       const px = xScale(reference[i].x);
       const dist = Math.abs(px - plotX);
       if (dist < nearestXDist) {
@@ -619,7 +639,7 @@
                 stroke-width={strokeWidth}
                 fill="none"
               />
-              {#if line.points.length === 1 && !showDots}
+              {#if line.points.length === 1 && !showDots && Number.isFinite(line.points[0].x) && Number.isFinite(line.points[0].y)}
                 <circle
                   class="single-point"
                   class:dimmed={isLineDimmed(si)}
@@ -631,21 +651,24 @@
               {/if}
               {#if showDots}
                 {#each line.points as point, pi (pi)}
-                  <circle
-                    class="dot"
-                    class:dimmed={isDotDimmed(si, pi)}
-                    class:highlighted={isHighlightedDot(si, pi)}
-                    cx={point.x}
-                    cy={point.y}
-                    r={isHighlightedDot(si, pi) ? dotRadius * 1.5 : dotRadius}
-                    fill={line.color}
-                  />
+                  <!-- Gap points (non-finite) render no marker. -->
+                  {#if Number.isFinite(point.x) && Number.isFinite(point.y)}
+                    <circle
+                      class="dot"
+                      class:dimmed={isDotDimmed(si, pi)}
+                      class:highlighted={isHighlightedDot(si, pi)}
+                      cx={point.x}
+                      cy={point.y}
+                      r={isHighlightedDot(si, pi) ? dotRadius * 1.5 : dotRadius}
+                      fill={line.color}
+                    />
+                  {/if}
                 {/each}
               {/if}
               {#if showValues && pointLabelPlacements[si]}
                 {#each line.points as _point, pi (pi)}
                   {@const pl = pointLabelPlacements[si][pi]}
-                  {#if pl?.visible}
+                  {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
                     <text
                       class="point-value"
                       x={pl.x}

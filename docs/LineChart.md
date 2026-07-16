@@ -174,6 +174,38 @@ Hovering anywhere over the plot area finds the nearest point and shows a crossha
 </LineChart>
 ```
 
+### Sparse Series — Gap Points
+
+A data point with a non-finite y (`NaN`) marks a **gap**: the line breaks around it and resumes
+at the next finite point, instead of one poisoned SVG path (a single `NaN` coordinate makes the
+browser drop everything after it, visually cutting the line mid-chart). Gap points render no
+marker, no data label, are skipped by hover/crosshair/tooltip, and are excluded from the
+auto-computed axis domains.
+
+```svelte
+<script>
+  const series = [
+    {
+      name: 'Sales',
+      // Jun 3 had no data — the line gaps over x=3 and resumes at x=4.
+      data: [
+        { x: 1, y: 120 },
+        { x: 2, y: 180 },
+        { x: 3, y: NaN },
+        { x: 4, y: 150 }
+      ]
+    }
+  ];
+</script>
+
+<LineChart {series} />
+```
+
+### X-Axis Tick Density
+
+The x-axis renders at most **6 ticks** (per the design-system line-chart spec), thinning further
+on narrow charts. Y-axis ticks were already capped at 6.
+
 ## Props
 
 | Prop              | Type                                                         | Required | Default      | Description                                                                                                                                                                                                                         |

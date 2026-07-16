@@ -2,18 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.107.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.107.1)
 
-Link widths were sized at the source column px-per-value scale while target
-nodes were laid out at their own column scale (every column stretched to fill
-the full plot height). Incoming ribbon stacks therefore overran target bars by
-15-27px on real payment-funnel data and painted past the deepest node row.
+Count-style series (orders, items) with small domains rendered
+fractional Y ticks — a [0, 2] domain picked step 0.5, showing
+0, 0.5, 1, 1.5, 2 for discrete counts. The integer-tick machinery
+already exists (computeLinearTicks integer mode, Axis integerTicks)
+and the X axis uses it for categories; the Y axis just never wired
+it and exposed no prop. yIntegerTicks (default false, no behaviour
+change for existing consumers) mirrors the X-axis pattern.
+yTickFormat cannot fix this — it only changes label text, not tick
+placement, so rounded labels would duplicate (0, 1, 1, 2, 2).
 
-Node heights and link widths now share one global scale set by the tightest
-column (d3-sankey ky): equal values render equally tall in every column,
-columns are value-true instead of stretched, and each node is inflated to fit
-its minLinkWidth-clamped stacks so no ribbon can leave its bar. Regression
-tests assert per-link flush containment and cross-column height equality.
+## [2.107.1](https://github.com/juspay/svelte-ui-components/compare/2.107.1..2.107.0) - 16 July 2026
 
 ## [2.107.0](https://github.com/juspay/svelte-ui-components/compare/2.107.0..2.106.2) - 16 July 2026
 

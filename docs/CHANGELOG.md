@@ -2,16 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.107.0)
 
-- marginX: fixed horizontal inset between the svg edges and the plot,
-overriding the auto layout's tick-label padding — edge-to-edge funnels
-had ~28/72px of dead space beside the first/last bars.
-- Grouped/single bars now round only their value end (design-system bar
-spec): vertical bars round the top (bottom when negative), horizontal
-bars the right (left when negative), floating range bars both ends. The
-old all-corner rect rounding let a track/backdrop bar behind the value
-bar peek through the notches at its baseline corners.
+Link widths were sized at the source column px-per-value scale while target
+nodes were laid out at their own column scale (every column stretched to fill
+the full plot height). Incoming ribbon stacks therefore overran target bars by
+15-27px on real payment-funnel data and painted past the deepest node row.
+
+Node heights and link widths now share one global scale set by the tightest
+column (d3-sankey ky): equal values render equally tall in every column,
+columns are value-true instead of stretched, and each node is inflated to fit
+its minLinkWidth-clamped stacks so no ribbon can leave its bar. Regression
+tests assert per-link flush containment and cross-column height equality.
+
+## [2.107.0](https://github.com/juspay/svelte-ui-components/compare/2.107.0..2.106.2) - 16 July 2026
 
 ## [2.106.2](https://github.com/juspay/svelte-ui-components/compare/2.106.2..2.106.1) - 16 July 2026
 

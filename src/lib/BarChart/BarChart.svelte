@@ -78,6 +78,7 @@
     stackNormalize = false,
     scrollable = false,
     minBandWidth = 48,
+    marginX,
     tooltipSnippet,
     empty,
     renderOverlay,
@@ -309,7 +310,19 @@
       base: { top: 20, left: showYAxis ? 50 : 28, right: 28, bottom: showXAxis ? 40 : 8 }
     });
   });
-  let dims = $derived(layout);
+  let dims = $derived.by(() => {
+    if (marginX == null) {
+      return layout;
+    }
+    // Fixed horizontal inset: overrides the auto layout's tick-label padding
+    // so the plot (and its edge bars) runs to the requested inset.
+    const inset = Math.max(0, marginX);
+    return {
+      ...layout,
+      margin: { ...layout.margin, left: inset, right: inset },
+      innerWidth: Math.max(0, chartWidth - inset * 2)
+    };
+  });
 
   let catScale = $derived(
     createBandScale(labels, isVertical ? [0, dims.innerWidth] : [0, dims.innerHeight], barPadding)
@@ -608,6 +621,38 @@
       const br = isLast ? barRadius : 0;
       return roundedRectPath(bar.x, bar.y, bar.width, bar.height, tl, tr, br, bl);
     }
+  }
+
+  // Grouped/single bars round only their value end (design-system bar spec):
+  // a vertical bar rounds its top (bottom when the value is negative), a
+  // horizontal bar its right (left when negative). The old all-corner rect
+  // rounding let the backdrop/track behind a bar peek through the notches at
+  // its baseline corners. Floating [low, high] range bars round both ends.
+  function valueEndBarPath(bar: BarRect): string {
+    if (barRadius <= 0) {
+      return roundedRectPath(bar.x, bar.y, bar.width, bar.height, 0, 0, 0, 0);
+    }
+    if (bar.isFloating) {
+      return roundedRectPath(
+        bar.x,
+        bar.y,
+        bar.width,
+        bar.height,
+        barRadius,
+        barRadius,
+        barRadius,
+        barRadius
+      );
+    }
+    const isNegative = (bar.dataPoint.value ?? 0) < 0;
+    if (isVertical) {
+      return isNegative
+        ? roundedRectPath(bar.x, bar.y, bar.width, bar.height, 0, 0, barRadius, barRadius)
+        : roundedRectPath(bar.x, bar.y, bar.width, bar.height, barRadius, barRadius, 0, 0);
+    }
+    return isNegative
+      ? roundedRectPath(bar.x, bar.y, bar.width, bar.height, barRadius, 0, 0, barRadius)
+      : roundedRectPath(bar.x, bar.y, bar.width, bar.height, 0, barRadius, barRadius, 0);
   }
 
   // ── Fill attribute helper ──────────────────────────────────────
@@ -918,7 +963,7 @@
                       onclick={() => handleClick(bar)}
                     />
                   {:else}
-                    <rect
+                    <path
                       class="bar"
                       class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
                       class:highlighted={effectiveHighlightedIndex !== null &&
@@ -927,12 +972,7 @@
                         (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
                         (effectiveHighlightedIndex !== null &&
                           effectiveHighlightedIndex !== bar.pi)}
-                      x={bar.x}
-                      y={bar.y}
-                      width={bar.width}
-                      height={bar.height}
-                      rx={barRadius}
-                      ry={barRadius}
+                      d={valueEndBarPath(bar)}
                       fill={barFillAttr(bar)}
                       data-pw={`bar-${i}`}
                       tabindex="0"

@@ -167,6 +167,7 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 | stackNormalize        | `boolean`                              | No       | `false`       | Normalises stacked values to 100%. Applies only when `groupMode="stacked"`. Appends `%` to value labels unless `valueFormat` is supplied.                                                                                                                                    |
 | scrollable            | `boolean`                              | No       | `false`       | Wraps the chart in a horizontally-scrollable container. Use with `minBandWidth` to keep bars readable.                                                                                                                                                                        |
 | minBandWidth          | `number`                               | No       | `48`          | Minimum pixel width per category band when `scrollable` is `true`.                                                                                                                                                                                                            |
+| marginX               | `number`                               | No       | auto          | Fixed horizontal inset (px) between the svg edges and the plot, overriding the auto layout's left/right margins. Use for edge-to-edge funnels where tick-label padding leaves dead space beside the first/last bars; short category labels recommended (long edge labels may clip). |
 | onChartReady          | `(api: ChartHighlightAPI) => void`     | No       | `-`           | Called once on mount with an imperative highlight handle. Use `api.highlight(index)` to emphasise a bar; `api.highlight(null)` clears. `api.getCategories()` returns the ordered label list. `api.type` is always `'bar-chart'`.                                              |
 | highlightedIndex      | `number \| null`                       | No       | `null`        | Declarative highlight: the bar at this zero-based index is shown at full opacity; all others are dimmed. Overrides any index set via `onChartReady`. Set to `null` to show all bars normally.                                                                                 |
 | normaliseToFirstPoint | `boolean`                              | No       | `false`       | When `true`, each series' values are expressed as a percentage of that series' own first data point (baseline = 100). Series whose first point is zero are left unchanged.                                                                                                    |
@@ -181,6 +182,14 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 | interactiveLegend | `boolean` | No | `false` | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data. |
 | hideLegendBelow | `number` | No | `360` | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior. |
 | tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
+
+### Bar corner rounding
+
+Grouped and single bars round only their **value end** (per the design-system bar spec): a vertical
+bar rounds its top corners (bottom when the value is negative), a horizontal bar its right corners
+(left when negative), and floating `[low, high]` range bars round both ends. This keeps a backdrop
+or track bar behind the value bar from peeking through notches at the baseline corners (the old
+all-corner `rx` rounding). Stacked bars keep their existing outer-end-only rounding.
 
 ## Events
 

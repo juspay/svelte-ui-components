@@ -2,18 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.104.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.105.0)
 
-- lastColumnLabelSide prop ('right' default): 'left' renders sink labels
-inside the plot over the incoming ribbons (mirror of firstColumnLabelSide
-'right') and frees the reserved right gutter for plot width
-- marginX prop (default 40): configurable horizontal inset so funnels can run
-edge-to-edge; the vertical margin stays fixed for column headers
-- column headers now clamp to the svg canvas (measured at the rendered font)
-so an edge header can never paint past the boundary at tight margins —
-a no-op at the default margins
+--sankey-plot-background (default transparent) fills a rect spanning exactly
+the plot — first column's bars to last column's bars, header row excluded —
+matching the funnel design's subtle backdrop panel. Non-breaking: transparent
+default renders nothing.
 
-All defaults preserve current rendering exactly.
+## [2.105.0](https://github.com/juspay/svelte-ui-components/compare/2.105.0..2.104.0) - 16 July 2026
 
 ## [2.104.0](https://github.com/juspay/svelte-ui-components/compare/2.104.0..2.103.0) - 16 July 2026
 

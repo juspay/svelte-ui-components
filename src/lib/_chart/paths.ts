@@ -50,6 +50,31 @@ export function arcPath(
   return `M ${cx} ${cy}` + `L ${x1} ${y1}` + `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2}Z`;
 }
 
+/**
+ * Splits a point run into finite sub-runs. A non-finite coordinate (NaN /
+ * Infinity — typically a missing value in a sparse series) acts as a break:
+ * the line renders as separate segments with a gap at the missing point
+ * instead of one poisoned path — a single NaN coordinate in `d` makes the
+ * browser drop everything from that command onward, visually cutting the
+ * line mid-chart.
+ */
+function finiteSegments(points: Point[]): Point[][] {
+  const segments: Point[][] = [];
+  let current: Point[] = [];
+  for (const point of points) {
+    if (Number.isFinite(point.x) && Number.isFinite(point.y)) {
+      current.push(point);
+    } else if (current.length > 0) {
+      segments.push(current);
+      current = [];
+    }
+  }
+  if (current.length > 0) {
+    segments.push(current);
+  }
+  return segments;
+}
+
 function linearPath(points: Point[]): string {
   if (points.length === 0) {
     return '';
@@ -143,7 +168,7 @@ function monotonePath(points: Point[]): string {
   return d;
 }
 
-export function linePath(points: Point[], curve: CurveType = 'linear'): string {
+function linePathSegment(points: Point[], curve: CurveType): string {
   if (points.length < 2) {
     return points.length === 1 ? `M ${points[0].x} ${points[0].y}` : '';
   }
@@ -159,14 +184,28 @@ export function linePath(points: Point[], curve: CurveType = 'linear'): string {
   }
 }
 
-export function areaPath(points: Point[], baseline: number, curve: CurveType = 'linear'): string {
+export function linePath(points: Point[], curve: CurveType = 'linear'): string {
+  return finiteSegments(points)
+    .map((segment) => linePathSegment(segment, curve))
+    .filter((d) => d !== '')
+    .join(' ');
+}
+
+function areaPathSegment(points: Point[], baseline: number, curve: CurveType): string {
   if (points.length === 0) {
     return '';
   }
-  const topPath = linePath(points, curve);
+  const topPath = linePathSegment(points, curve);
   const lastPoint = points[points.length - 1];
   const firstPoint = points[0];
   return topPath + ` L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
+}
+
+export function areaPath(points: Point[], baseline: number, curve: CurveType = 'linear'): string {
+  return finiteSegments(points)
+    .map((segment) => areaPathSegment(segment, baseline, curve))
+    .filter((d) => d !== '')
+    .join(' ');
 }
 
 /**

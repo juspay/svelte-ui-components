@@ -2,17 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.106.1)
 
-A non-finite y (NaN — a missing value in a sparse series) used to poison the
-whole SVG path: the browser drops every command after the first NaN, visually
-cutting the line mid-chart. linePath/areaPath now split points into finite
-runs and emit one subpath per run, so the line gaps over missing points and
-resumes. Gap points render no marker, halo, crosshair, data label, or tooltip
-row, and are excluded from auto-computed domains.
+The nice-step ladder could overshoot the requested tick count (range 14 at
+count 6 picks step 2 → 7 ticks), so axes rendered more ticks than the
+design-system spec's "max 6". When the built ticks exceed the count, the
+step now escalates until they fit: category (integer) axes step through
+whole numbers — any integer stride is a valid category step, so 15 daily
+categories at max 6 land on the natural every-3rd-day stride — while
+numeric axes climb the 1-2-5-10 ladder so tick values stay round.
 
-Also caps x-axis ticks at 6 per the design-system line-chart spec ("Max no.
-of tiks should be 6" — Akshay, spec sticky note); y was already capped at 6.
+## [2.106.1](https://github.com/juspay/svelte-ui-components/compare/2.106.1..2.106.0) - 16 July 2026
 
 ## [2.106.0](https://github.com/juspay/svelte-ui-components/compare/2.106.0..2.105.0) - 16 July 2026
 

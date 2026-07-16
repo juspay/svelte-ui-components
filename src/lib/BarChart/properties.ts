@@ -174,6 +174,14 @@ export type OptionalBarChartProperties = {
    * is `false`. Default is `48`.
    */
   minBandWidth?: number;
+  /**
+   * Fixed horizontal inset (px) between the svg edges and the plot, overriding
+   * the auto-computed left/right margins. Use for edge-to-edge funnels where
+   * the auto layout's tick-label padding leaves dead space beside the first and
+   * last bars. Category tick labels near the edges may clip if they are wider
+   * than their band, so pair small values with short labels.
+   */
+  marginX?: number;
   tooltipSnippet?: Snippet<[BarChartDataPoint, number]>;
   empty?: Snippet;
   /**

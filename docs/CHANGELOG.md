@@ -2,17 +2,22 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.102.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.103.0)
 
-Exposes CSS-variable hooks (all defaulting to the current values, so existing
-consumers are unchanged) for the StatCard's layout so a theme can drive the look
-from :root instead of reaching into the DOM:
-- --statcard-{header,subtitle,rows,value-row}-order — reorder the card's direct
-flex children (e.g. render the subtitle/caption above the value).
-- --statcard-breakdown-item-flex-direction / -align-items / -flex-wrap and
---statcard-breakdown-value-line-order — value-then-label inline sub-lines.
-- --statcard-breakdown-heading-text-transform — sentence-case captions vs the
-uppercase grid-label default.
+- --sankey-label-font-weight / --sankey-col-label-font-weight tokens
+(default 400), wired into both the CSS and the canvas text-measurement
+engine so truncation budgets and gutters stay honest at bolder weights
+- --sankey-label-halo-color / --sankey-label-halo-width tokens: a
+Highcharts-style paint-order stroke outline so node labels stay legible
+over dense link ribbons (off by default)
+- firstColumnLabelSide prop ('left' default): 'right' renders first-column
+labels like every other column and frees the reserved left gutter
+- label de-collision line height now derives from the tokened font size
+instead of a hardcoded 16px
+
+All defaults preserve current rendering exactly.
+
+## [2.103.0](https://github.com/juspay/svelte-ui-components/compare/2.103.0..2.102.0) - 15 July 2026
 
 ## [2.102.0](https://github.com/juspay/svelte-ui-components/compare/2.102.0..2.101.0) - 15 July 2026
 

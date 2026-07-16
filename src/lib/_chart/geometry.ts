@@ -226,33 +226,59 @@ export function computeSankeyLayout(
   const colWidth = maxCol === 0 ? 0 : (width - nodeWidth) / maxCol;
   const columnPadding = new Map<number, number>();
 
-  // Initialize y positions
+  // Global px-per-value scale (d3-sankey's `ky`): the tightest column — least
+  // height left after node gaps — sets one scale for the whole diagram, so a
+  // given value renders the same height in every column. The previous layout
+  // stretched every column to fill the full plot height, which gave each
+  // column its own scale; link widths (sized at the source column's scale)
+  // then overflowed target nodes laid out at a smaller scale, and the ribbon
+  // stacks spilled below the bottom node row.
+  let pxPerValue = Number.POSITIVE_INFINITY;
+  for (const ids of columnGroups.values()) {
+    const totalValue = ids.reduce((s, id) => s + (nodeValues.get(id) ?? 0), 0);
+    const availableHeight = height - (ids.length - 1) * nodePadding;
+    if (totalValue > 0 && availableHeight > 0) {
+      pxPerValue = Math.min(pxPerValue, availableHeight / totalValue);
+    }
+  }
+  if (!Number.isFinite(pxPerValue)) {
+    // All-zero data: nothing carries volume, every bar collapses to the minimum.
+    pxPerValue = 0;
+  }
+
+  const linkRenderWidth = (value: number): number => Math.max(minLinkWidth, value * pxPerValue);
+
+  // Initialize y positions. A node must be at least as tall as its thicker
+  // side's rendered link stack: every ribbon is clamped to minLinkWidth, so a
+  // node fanning into many near-zero links would otherwise be shorter than the
+  // inflated stack attached to it.
   const nodeY = new Map<string, number>();
   const nodeH = new Map<string, number>();
   for (const [col, ids] of columnGroups) {
-    const totalValue = ids.reduce((s, id) => s + (nodeValues.get(id) ?? 0), 0);
     const gapCount = ids.length - 1;
-    const availableHeight = height - gapCount * nodePadding;
     const renderedHeights = ids.map((id) => {
-      const val = nodeValues.get(id) ?? 0;
-      const h =
-        totalValue > 0 ? (val / totalValue) * availableHeight : availableHeight / ids.length;
-      return Math.max(minLinkWidth, h);
+      const outStack = (outgoing.get(id) ?? []).reduce(
+        (s, link) => s + linkRenderWidth(link.value),
+        0
+      );
+      const inStack = (incoming.get(id) ?? []).reduce(
+        (s, link) => s + linkRenderWidth(link.value),
+        0
+      );
+      return Math.max(minLinkWidth, (nodeValues.get(id) ?? 0) * pxPerValue, outStack, inStack);
     });
 
     const sumRendered = renderedHeights.reduce((s, h) => s + h, 0);
     const paddingBudget = gapCount > 0 ? (height - sumRendered) / gapCount : 0;
     const effectivePadding = Math.max(0, Math.min(nodePadding, paddingBudget));
-    const scale = sumRendered > height && sumRendered > 0 ? height / sumRendered : 1;
     columnPadding.set(col, effectivePadding);
 
     let y = 0;
     for (let index = 0; index < ids.length; index++) {
       const id = ids[index];
-      const renderedH = renderedHeights[index] * scale;
       nodeY.set(id, y);
-      nodeH.set(id, renderedH);
-      y += renderedH + effectivePadding;
+      nodeH.set(id, renderedHeights[index]);
+      y += renderedHeights[index] + effectivePadding;
     }
   }
 
@@ -336,11 +362,11 @@ export function computeSankeyLayout(
   const nodeById = new Map(computedNodes.map((n) => [n.id, n]));
 
   const linkKey = (l: { source: string; target: string }): string => `${l.source} ${l.target}`;
+  // Link widths use the same global scale as node heights, so each node's link
+  // stack fills its bar exactly and never runs past its bottom edge.
   const linkWidths = new Map<string, number>();
   for (const l of links) {
-    const sVal = nodeValues.get(l.source) ?? 1;
-    const sourceH = nodeH.get(l.source) ?? 0;
-    linkWidths.set(linkKey(l), Math.max(minLinkWidth, (l.value / Math.max(sVal, 1)) * sourceH));
+    linkWidths.set(linkKey(l), linkRenderWidth(l.value));
   }
   const linkSy = new Map<string, number>();
   const linkTy = new Map<string, number>();

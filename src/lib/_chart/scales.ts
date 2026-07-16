@@ -41,11 +41,41 @@ export function computeLinearTicks(
     step = 1;
   }
 
-  const ticks: number[] = [];
-  let tick = Math.ceil(min / step) * step;
-  while (tick <= max + step * 0.001) {
-    ticks.push(Math.round(tick * 1e10) / 1e10);
-    tick += step;
+  const buildTicks = (tickStep: number): number[] => {
+    const ticks: number[] = [];
+    let tick = Math.ceil(min / tickStep) * tickStep;
+    while (tick <= max + tickStep * 0.001) {
+      ticks.push(Math.round(tick * 1e10) / 1e10);
+      tick += tickStep;
+    }
+    return ticks;
+  };
+
+  // The next rung up the 1-2-5-10 ladder, e.g. 0.2 → 0.5, 2 → 5, 5 → 10.
+  const nextNiceStep = (current: number): number => {
+    const stepExp = Math.floor(Math.log10(current) + 1e-10);
+    const stepBase = Math.pow(10, stepExp);
+    const mantissa = current / stepBase;
+    if (mantissa < 1.5) {
+      return stepBase * 2;
+    }
+    if (mantissa < 3.5) {
+      return stepBase * 5;
+    }
+    return stepBase * 10;
+  };
+
+  // `count` is a hard maximum (design-system chart spec: "max 6 ticks"), not a
+  // hint — the nice-step ladder can overshoot it (range 14 at count 6 picks
+  // step 2 → 7 ticks). Escalate the step until the ticks fit: category axes
+  // step through whole numbers (any integer stride is a valid category step,
+  // so 15 days at max 6 lands on the natural every-3rd-day), numeric axes
+  // climb the ladder so tick values stay round.
+  let ticks = buildTicks(step);
+  const maxTicks = Math.max(2, count);
+  while (ticks.length > maxTicks) {
+    step = integer ? Math.floor(step) + 1 : nextNiceStep(step);
+    ticks = buildTicks(step);
   }
   return ticks;
 }

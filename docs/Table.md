@@ -144,6 +144,12 @@ The standalone `sortTableRows(rows, columnIndex, direction, options?)` export so
 
 `rowNumberColumn` prepends a 1-based, pagination-aware sequence column.
 
+`summaryRowIndex` marks one row (by its index in the consumer-supplied `rows`, pre-sort/pre-filter) as a summary/period-total row: it gets the `table-summary-row` class and a distinct background from `--table-summary-row-background` (falling back to the regular cell background when the token is unset). Because the row is matched by its original position, the highlight survives sorting, searching, and pagination. Pair it with `sortTableRows(..., { hasSummaryRow: true })` to also pin the row in place during client-side re-sorts.
+
+```svelte
+<Table {columns} {rows} summaryRowIndex={0} />
+```
+
 ### Controlled Selection + Bulk Toolbar
 
 `checkboxSelection.selectedIds` switches selection to controlled mode: Table renders from the consumer's set and never mutates it — `onSelectionChange` reports the would-be next set (required for cross-page-persistent selection under server pagination). Omitting it keeps the internal uncontrolled behavior exactly as before. `getRowAttributes(rowId, rowIndex)` spreads arbitrary attributes onto each row checkbox (`rowIndex` is `-1` for the header select-all) — an escape hatch for consumer-specific attributes such as native test IDs. `toolbarSlot` renders a bulk-action bar above the table while the selection is non-empty; the library owns only placement, the content is consumer-rendered:
@@ -507,6 +513,7 @@ Override these custom properties to theme the component.
 | `--table-row-alt-background`      | `-`       | background-color | Background of even-numbered rows for striped effect. Falls back to `--table-row-background`.                          |
 | `--table-row-hover-background`    | `-`       | background-color | Background color of data rows on hover.                                                                               |
 | `--table-row-selected-background` | `#eff6ff` | background-color | Background of selected rows (when `checkboxSelection` is active). Applied to both the `<tr>` and its `<td>` children. |
+| `--table-summary-row-background`  | falls back to `--table-content-background` | background-color | Background of the `summaryRowIndex` row. Applied to both the `<tr>` and its `<td>` children so it wins over a themed cell background. |
 | `--table-focus-outline-color`     | `#3b82f6` | outline          | Outline color for focused clickable rows and focused search inputs.                                                   |
 
 ### Sort Controls

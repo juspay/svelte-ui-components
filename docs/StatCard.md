@@ -197,7 +197,7 @@ The header renders even without a title. `onCheckboxChange` fires with the new c
 | subtitle      | `string`                      | No       | `-`     | Secondary label rendered below the value row.                                                                                                         |
 | footer        | `Snippet`                     | No       | `-`     | Snippet rendered in the card footer area, separated by a border-top line.                                                                             |
 | valueSnippet  | `Snippet`                     | No       | `-`     | Replaces the string `value` with a custom snippet for advanced value rendering.                                                                       |
-| rows          | `StatCardRow[]`               | No       | `-`     | Multiple metric rows. When set, replaces the single value/delta row with a divider-separated column. Each row supports `heading`, `change`, `invertChangeColors`, `tooltip`, `additionalContent`, `breakdownHeading`, and a `breakdown` grid. |
+| rows          | `StatCardRow[]`               | No       | `-`     | Multiple metric rows. When set, replaces the single value/delta row with a divider-separated column. Each row supports `heading`, `comparisonValue` (inline "/ ₹10L" denominator), `change` (`number` renders the delta with a "—" glyph at 0; `null` renders "N/A"; `undefined` renders nothing), `invertChangeColors`, `tooltip`, `additionalContent`, `breakdownHeading`, and a `breakdown` grid. |
 | rowsDirection | `'column' \| 'row'`           | No       | `'column'` | Layout direction for `rows`. `'column'` stacks rows vertically with horizontal dividers; `'row'` lays the sections side by side with vertical dividers, each section flexing to share the width equally. |
 | tooltip       | `StatCardTooltip`             | No       | `-`     | Tooltip shown on the card title — `{ text, position?, testId? }`.                                                                                     |
 | checkbox      | `{ text: string; checked?: boolean }` | No | `-` | Renders a checkbox next to the title. The header is shown even when `title` is omitted. Pair with `onCheckboxChange` for a controlled checkbox.       |
@@ -252,6 +252,11 @@ Override these custom properties to theme the component.
 | `--statcard-delta-line-height`    | `1.4`                    | line-height    | Line height of the delta badge.                                              |
 | `--statcard-delta-positive-color` | `#16a34a`                | color          | Colour of a positive delta (`+` prefix or `deltaPositive={true}`).           |
 | `--statcard-delta-negative-color` | `#dc2626`                | color          | Colour of a negative delta (`-` prefix or `deltaPositive={false}`).          |
+| `--statcard-delta-na-color`       | falls back to `--statcard-delta-color` | color | Colour of the "N/A" state rendered when a row's `change` is `null`.  |
+| `--statcard-comparison-font-size` | `16px`                   | font-size      | Font size of the inline `comparisonValue` denominator ("/ ₹10L").            |
+| `--statcard-comparison-font-weight` | `700`                  | font-weight    | Font weight of the inline comparison denominator.                            |
+| `--statcard-comparison-color`     | `#c7c7c7`                | color          | Colour of the inline comparison denominator.                                 |
+| `--statcard-comparison-line-height` | `1.4`                  | line-height    | Line height of the inline comparison denominator.                            |
 | `--statcard-subtitle-font-size`   | `12px`                   | font-size      | Font size of the subtitle label.                                             |
 | `--statcard-subtitle-font-weight` | `400`                    | font-weight    | Font weight of the subtitle label.                                           |
 | `--statcard-subtitle-color`       | `#9ca3af`                | color          | Colour of the subtitle label.                                                |

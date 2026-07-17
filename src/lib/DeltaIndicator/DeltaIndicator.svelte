@@ -44,6 +44,10 @@
         ><path d="M22 7L13.5 15.5L8.5 10.5L2 17" /><path d="M16 7H22V13" /></svg
       >
     </span>
+  {:else if !hideArrow}
+    <!-- Neutral/no-change glyph (design-system "— 0%" treatment): an em dash in
+         place of the trend arrow, so a flat delta still reads as a stated state. -->
+    <span class="delta-indicator-dash" aria-hidden="true">—</span>
   {/if}
   <span class="delta-indicator-text">{text}</span>
 </span>
@@ -82,6 +86,11 @@
     display: inline-flex;
     width: var(--delta-indicator-arrow-size, 16px);
     height: var(--delta-indicator-arrow-size, 16px);
+    flex-shrink: 0;
+  }
+
+  .delta-indicator-dash {
+    color: inherit;
     flex-shrink: 0;
   }
 

@@ -49,6 +49,7 @@
     toolbarSlot,
     rowNumberColumn = false,
     rowNumberLabel = '#',
+    summaryRowIndex = null,
     headerTooltipIcon,
     headerTooltipPosition,
     usePortal = false
@@ -796,6 +797,8 @@
                   class="table-row"
                   class:table-row-clickable={isRowClickable}
                   class:table-row-selected={rowSelected}
+                  class:table-summary-row={summaryRowIndex !== null &&
+                    originalIndex === summaryRowIndex}
                   data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   onclick={isRowClickable
                     ? () => handleRowClick(rowIndex, row, originalIndex)
@@ -1251,6 +1254,17 @@
 
   .table-row-selected > .table-content {
     background-color: var(--table-row-selected-background, #eff6ff);
+  }
+
+  /* Summary/period-total row (summaryRowIndex): both the row and its cells,
+     since a themed --table-content-background would otherwise paint over a
+     row-level background. Falls back to the regular cell background. */
+  .table-summary-row {
+    background-color: var(--table-summary-row-background, var(--table-content-background));
+  }
+
+  .table-summary-row > .table-content {
+    background-color: var(--table-summary-row-background, var(--table-content-background));
   }
 
   /* ── C2-1 Checkbox column ───────────────────────────────────────────────── */

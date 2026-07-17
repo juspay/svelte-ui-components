@@ -432,6 +432,15 @@ export type OptionalTableProperties = {
   toolbarSlot?: Snippet<[{ selectedIds: Set<string> }]>;
   /** Prepends a sequential row-number column (1-based, pagination-aware). */
   rowNumberColumn?: boolean;
+  /**
+   * Index (into the consumer-supplied `rows`, pre-sort/pre-filter) of a
+   * summary/period-total row that renders with a distinct background — the
+   * DataGrid-parity `summaryRowIndex`. The row is matched by its original
+   * position, so it keeps its highlight through sort, search, and pagination.
+   * Background comes from `--table-summary-row-background` (falls back to the
+   * regular cell background when unset). Pass `null`/omit for no summary row.
+   */
+  summaryRowIndex?: number | null;
   /** Header label for the row-number column. Defaults to `'#'`. */
   rowNumberLabel?: string;
   /**

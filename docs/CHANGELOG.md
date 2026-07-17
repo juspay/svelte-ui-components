@@ -2,17 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.107.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.108.0)
 
-Count-style series (orders, items) with small domains rendered
-fractional Y ticks — a [0, 2] domain picked step 0.5, showing
-0, 0.5, 1, 1.5, 2 for discrete counts. The integer-tick machinery
-already exists (computeLinearTicks integer mode, Axis integerTicks)
-and the X axis uses it for categories; the Y axis just never wired
-it and exposed no prop. yIntegerTicks (default false, no behaviour
-change for existing consumers) mirrors the X-axis pattern.
-yTickFormat cannot fix this — it only changes label text, not tick
-placement, so rounded labels would duplicate (0, 1, 1, 2, 2).
+## [2.108.0](https://github.com/juspay/svelte-ui-components/compare/2.108.0..2.107.1) - 16 July 2026
 
 ## [2.107.1](https://github.com/juspay/svelte-ui-components/compare/2.107.1..2.107.0) - 16 July 2026
 

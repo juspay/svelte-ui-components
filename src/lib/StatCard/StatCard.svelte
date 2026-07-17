@@ -177,12 +177,29 @@
             >
               {row.value}
             </div>
+            {#if typeof row.comparisonValue === 'string' && row.comparisonValue.length > 0}
+              <div
+                class="statcard-comparison-value"
+                data-pw={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
+              >
+                / {row.comparisonValue}
+              </div>
+            {/if}
             {#if typeof row.change === 'number'}
               <DeltaIndicator
                 value={row.change}
                 invertColors={row.invertChangeColors ?? false}
                 testId={testId ? `${testId}-delta-${rowIndex}` : null}
               />
+            {:else if row.change === null}
+              <!-- Comparison expected but not computable — a stated "N/A" beats
+                   silently rendering nothing (design-system trend states). -->
+              <div
+                class="statcard-delta statcard-delta-na"
+                data-pw={typeof testId === 'string' ? `${testId}-delta-na-${rowIndex}` : null}
+              >
+                N/A
+              </div>
             {/if}
             {#if typeof row.additionalContent === 'string' && row.additionalContent.length > 0}
               <div class="statcard-row-additional">{row.additionalContent}</div>
@@ -390,6 +407,20 @@
 
   .statcard-delta-negative {
     color: var(--statcard-delta-negative-color, #dc2626);
+  }
+
+  .statcard-delta-na {
+    color: var(--statcard-delta-na-color, var(--statcard-delta-color, #6b7280));
+  }
+
+  /* Inline comparison denominator ("₹60k / ₹10L") — a muted, slightly smaller
+     companion to the metric value, baseline-aligned by the value row. */
+  .statcard-comparison-value {
+    font-size: var(--statcard-comparison-font-size, 16px);
+    font-weight: var(--statcard-comparison-font-weight, 700);
+    color: var(--statcard-comparison-color, #c7c7c7);
+    line-height: var(--statcard-comparison-line-height, 1.4);
+    white-space: nowrap;
   }
 
   .statcard-subtitle {

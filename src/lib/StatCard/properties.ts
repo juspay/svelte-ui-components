@@ -35,8 +35,17 @@ export type StatCardRow = {
   value: string;
   /** Optional row-level heading label. */
   heading?: string;
-  /** Numeric change for the delta indicator. */
-  change?: number;
+  /**
+   * Comparison-period value rendered inline after the metric as "/ <value>"
+   * (e.g. "₹60k / ₹10L") in a muted denominator style. Omit to hide.
+   */
+  comparisonValue?: string;
+  /**
+   * Numeric change for the delta indicator. A number renders the delta
+   * (0 renders the neutral "— 0%" treatment); `null` means a comparison was
+   * expected but not computable and renders "N/A"; `undefined` renders nothing.
+   */
+  change?: number | null;
   /** Invert delta colors for lower-is-better metrics on this row. */
   invertChangeColors?: boolean;
   /** Additional descriptive text rendered after the delta. */

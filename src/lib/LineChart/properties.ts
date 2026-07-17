@@ -12,6 +12,12 @@ export type LineChartSeries = {
   name: string;
   data: LineChartDataPoint[];
   color?: string;
+  /**
+   * Dashed stroke for this series (e.g. a comparison/previous-period line).
+   * `true` uses the default `'6 4'` pattern; a string is passed through as a
+   * custom SVG `stroke-dasharray`. Omit for a solid line.
+   */
+  dash?: boolean | string;
 };
 
 export type LineChartTooltipContext = {

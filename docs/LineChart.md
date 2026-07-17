@@ -141,6 +141,23 @@ Highlight a point without a callback. Set `highlightedIndex` to a zero-based poi
 <LineChart {series} showValues />
 ```
 
+### Dashed Comparison Series
+
+Set `dash` on a series to render it with a dashed stroke — the standard treatment for a comparison/previous-period line. `true` uses the default `'6 4'` pattern; pass a string for a custom SVG `stroke-dasharray`.
+
+```svelte
+<LineChart
+  series={[
+    { name: 'This week', data: current },
+    { name: 'Last week', data: previous, color: '#A4CEFF', dash: true }
+  ]}
+/>
+```
+
+### Single Data Point
+
+A series whose data resolves to a single finite point renders as a **flat horizontal line at that y across the full plot width** (design-system contract — a lone dot reads as a glitch). The point marker still renders at its true x, and hover/tooltip behave normally.
+
 ### Without Dots (Overlay Hover)
 
 ```svelte
@@ -289,6 +306,8 @@ type LineChartSeries = {
   name: string;
   data: LineChartDataPoint[];
   color?: string;
+  /** Dashed stroke: true = '6 4', string = custom stroke-dasharray. */
+  dash?: boolean | string;
 };
 
 type LineChartTooltipContext = {

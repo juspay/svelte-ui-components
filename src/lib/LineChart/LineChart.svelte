@@ -204,11 +204,25 @@
     series.map((s, si) => {
       const color = s.color ?? getColor(si);
       const points: Point[] = s.data.map((d) => ({ x: xScale(d.x), y: yScale(d.y) }));
+      const finitePoints = points.filter(
+        (point) => Number.isFinite(point.x) && Number.isFinite(point.y)
+      );
+      // Design-system contract: a series with a single data point renders as a
+      // flat line at that y across the full plot width (a lone dot reads as a
+      // glitch), while the point marker itself still renders at its true x.
+      const isSinglePoint = finitePoints.length === 1;
+      const pathPoints: Point[] = isSinglePoint
+        ? [
+            { x: 0, y: finitePoints[0].y },
+            { x: dims.innerWidth, y: finitePoints[0].y }
+          ]
+        : points;
       return {
         color,
         points,
-        path: linePath(points, curve),
-        areaD: areaPath(points, dims.innerHeight, curve),
+        dash: s.dash === true ? '6 4' : typeof s.dash === 'string' ? s.dash : null,
+        path: linePath(pathPoints, isSinglePoint ? 'linear' : curve),
+        areaD: areaPath(pathPoints, dims.innerHeight, isSinglePoint ? 'linear' : curve),
         hidden: hiddenSeries.has(si)
       };
     })
@@ -639,6 +653,7 @@
                 d={line.path}
                 stroke={line.color}
                 stroke-width={strokeWidth}
+                stroke-dasharray={line.dash}
                 fill="none"
               />
               {#if line.points.length === 1 && !showDots && Number.isFinite(line.points[0].x) && Number.isFinite(line.points[0].y)}

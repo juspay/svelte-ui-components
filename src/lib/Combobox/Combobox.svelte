@@ -345,7 +345,13 @@
   });
 </script>
 
-<div class="combobox {classes ?? ''}" class:disabled bind:this={containerEl} data-pw={testId}>
+<div
+  class="combobox {classes ?? ''}"
+  class:disabled
+  bind:this={containerEl}
+  data-pw={testId}
+  testID={testId}
+>
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div class="combobox-input-wrapper" class:multiple onclick={handleControlClick}>
     {#if typeof inputPrefix === 'function'}
@@ -423,6 +429,7 @@
               }
             }}
             data-pw={typeof testId === 'string' ? `${testId}-option-${item.id}` : null}
+            testID={typeof testId === 'string' ? `${testId}-option-${item.id}` : null}
           >
             {#if typeof itemSnippet === 'function'}
               {@render itemSnippet(item, isHighlighted)}
@@ -446,6 +453,7 @@
           onclick={() => create()}
           onmouseenter={() => (highlightedIndex = createNavIndex)}
           data-pw={typeof testId === 'string' ? `${testId}-create` : null}
+          testID={typeof testId === 'string' ? `${testId}-create` : null}
         >
           <span class="combobox-create-icon" aria-hidden="true">
             <svg viewBox="0 0 20 20" width="14" height="14" fill="none">
@@ -474,6 +482,7 @@
           onclick={() => runAction()}
           onmouseenter={() => (highlightedIndex = actionNavIndex)}
           data-pw={typeof testId === 'string' ? `${testId}-action` : null}
+          testID={typeof testId === 'string' ? `${testId}-action` : null}
         >
           {#if typeof actionIcon === 'function'}
             <span class="combobox-action-icon" aria-hidden="true">{@render actionIcon()}</span>

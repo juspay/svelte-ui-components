@@ -8,6 +8,7 @@
   class="breadcrumb {classes ?? ''}"
   aria-label={ariaLabel}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <ol class="breadcrumb-list">
     {#each items as crumb, index (index)}

@@ -42,6 +42,7 @@
   onclick={handleClick}
   onkeydown={handleKeyDown}
   data-pw={testId}
+  testID={testId}
 >
   {#if typeof children === 'function'}
     {@render children()}

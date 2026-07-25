@@ -30,6 +30,7 @@
 <div
   class="gauge {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
   role="progressbar"
   aria-valuenow={clamped}
   aria-valuemin={0}

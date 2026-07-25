@@ -116,9 +116,17 @@
     aria-label={alt.length > 0 ? alt : null}
     aria-hidden={alt.length === 0 ? 'true' : null}
     data-pw={testId}
+    testID={testId}
   ></svg>
 {:else}
-  <img class={classes ?? ''} src={currentSrc} {alt} onerror={handleFallback} data-pw={testId} />
+  <img
+    class={classes ?? ''}
+    src={currentSrc}
+    {alt}
+    onerror={handleFallback}
+    data-pw={testId}
+    testID={testId}
+  />
 {/if}
 
 <style>

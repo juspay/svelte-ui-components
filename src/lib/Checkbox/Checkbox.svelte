@@ -49,6 +49,7 @@
     handleClick();
   }}
   data-pw={testId}
+  testID={testId}
 >
   <input
     type="checkbox"
@@ -59,6 +60,7 @@
     aria-hidden="true"
     onclick={(e: MouseEvent) => e.stopPropagation()}
     data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
+    testID={typeof testId === 'string' ? `${testId}-native-input` : null}
   />
   <span
     class="box"
@@ -71,6 +73,7 @@
     aria-controls={ariaControls ?? null}
     onkeydown={handleKeyDown}
     data-pw={typeof testId === 'string' ? `${testId}-box` : null}
+    testID={typeof testId === 'string' ? `${testId}-box` : null}
   >
     {#if checked && !indeterminate}
       {#if typeof checkedIcon === 'function'}

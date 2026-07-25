@@ -35,7 +35,12 @@
   );
 </script>
 
-<div class={containerClass} data-pw={typeof testId === 'string' ? testId : null} role="list">
+<div
+  class={containerClass}
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+  role="list"
+>
   {#each steps as currentStep, stepIndex (stepIndex)}
     {@const effectiveStatus = resolveStatus(stepIndex, currentStep.status ?? null)}
     <div

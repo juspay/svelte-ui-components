@@ -84,6 +84,7 @@
     {ontouchstart}
     {ontouchend}
     data-pw={testId}
+    testID={testId}
     role={role ?? null}
     aria-label={ariaLabel ?? null}
     aria-expanded={ariaExpanded ?? null}

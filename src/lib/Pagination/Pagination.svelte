@@ -70,6 +70,7 @@
   class="pagination {classes ?? ''}"
   class:disabled
   data-pw={typeof testId === 'string' && testId.length > 0 ? testId : null}
+  testID={typeof testId === 'string' && testId.length > 0 ? testId : null}
 >
   <button
     class="page-button prev-button"
@@ -77,6 +78,7 @@
     onclick={() => goToPage(currentPage - 1)}
     aria-label="Previous page"
     data-pw={typeof prevButtonTestId === 'string' ? prevButtonTestId : null}
+    testID={typeof prevButtonTestId === 'string' ? prevButtonTestId : null}
   >
     &#8249;
   </button>
@@ -105,6 +107,7 @@
       onclick={loadMore}
       aria-label="Load more"
       data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
+      testID={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
     >
       &#8250;
     </button>
@@ -115,6 +118,7 @@
       onclick={() => goToPage(currentPage + 1)}
       aria-label="Next page"
       data-pw={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
+      testID={typeof nextButtonTestId === 'string' ? nextButtonTestId : null}
     >
       &#8250;
     </button>

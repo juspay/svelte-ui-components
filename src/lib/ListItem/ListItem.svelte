@@ -73,6 +73,7 @@
       aria-selected={ariaSelected}
       {id}
       data-pw={testId}
+      testID={testId}
     >
       <div
         class="top-section"
@@ -82,6 +83,7 @@
         role="button"
         tabindex="0"
         data-pw={topSectionTestId}
+        testID={topSectionTestId}
       >
         <div class="left-content">
           {#if typeof leftImageUrl === 'string' && leftImageUrl.length > 0}
@@ -92,6 +94,7 @@
               role="button"
               tabindex="0"
               data-pw={leftImageTestId}
+              testID={leftImageTestId}
             >
               <Img src={leftImageUrl} alt="" fallback={leftImageFallbackUrl} />
             </div>
@@ -110,6 +113,7 @@
               role="button"
               tabindex="0"
               data-pw={centerTextTestId}
+              testID={centerTextTestId}
             >
               <!-- eslint-disable-next-line -->
               {@html label}
@@ -131,6 +135,7 @@
               role="button"
               tabindex="0"
               data-pw={rightImageTestId}
+              testID={rightImageTestId}
             >
               <div class="right-img-wrapper">
                 <Img src={rightImageUrl} alt="" />

@@ -796,6 +796,7 @@
   class="bar-chart {classes ?? ''}"
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
@@ -951,6 +952,7 @@
                       d={stackedBarPath(bar)}
                       fill={barFillAttr(bar)}
                       data-pw={`bar-${i}`}
+                      testID={`bar-${i}`}
                       tabindex="0"
                       role="button"
                       aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
@@ -975,6 +977,7 @@
                       d={valueEndBarPath(bar)}
                       fill={barFillAttr(bar)}
                       data-pw={`bar-${i}`}
+                      testID={`bar-${i}`}
                       tabindex="0"
                       role="button"
                       aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
@@ -999,6 +1002,7 @@
                       text-anchor={bl.p.textAnchor}
                       dominant-baseline={bl.p.dominantBaseline}
                       data-pw={`bar-value-${i}`}
+                      testID={`bar-value-${i}`}
                       style={bl.p.placement === 'inside'
                         ? `fill: ${getContrastColor(bl.bar.color)}; stroke: ${contrastOutline(bl.bar.color)};`
                         : ''}>{bl.text}</text

@@ -519,6 +519,7 @@
   class="line-chart {classes ?? ''}"
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
@@ -627,6 +628,7 @@
               r={dotRadius + 6}
               fill={hp.color}
               data-pw={`dot-halo-${i}`}
+              testID={`dot-halo-${i}`}
             />
           {/each}
 
@@ -720,6 +722,7 @@
             height={dims.innerHeight}
             fill="transparent"
             data-pw="hover-overlay"
+            testID="hover-overlay"
             onpointermove={handleOverlayMove}
             onpointerleave={handleLeave}
             onclick={handleClick}

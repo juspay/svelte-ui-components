@@ -144,6 +144,7 @@
 <div
   class="carousel-container {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if views.length > 0}
     <div class="carousel" bind:this={carouselDiv}>
@@ -164,6 +165,7 @@
     <div
       class="dots-wrapper"
       data-pw={typeof dotsWrapperTestId === 'string' ? dotsWrapperTestId : null}
+      testID={typeof dotsWrapperTestId === 'string' ? dotsWrapperTestId : null}
     >
       <!-- eslint-disable-next-line -->
       {#each views as _, index}
@@ -173,6 +175,7 @@
           {onkeydown}
           role="none"
           data-pw={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
+          testID={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
         ></div>
       {/each}
     </div>

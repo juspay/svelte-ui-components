@@ -25,6 +25,7 @@
   role="button"
   tabindex="0"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <div class="grid-header">
     <img src={headerIcon} alt="" class="grid-item-header-icon" />

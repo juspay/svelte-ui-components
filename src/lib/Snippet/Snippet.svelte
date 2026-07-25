@@ -29,7 +29,11 @@
   }
 </script>
 
-<div class="snippet {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="snippet {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   <code class="snippet-code">
     <span class="snippet-prompt">{prompt}</span>
     <span class="snippet-text">{text}</span>

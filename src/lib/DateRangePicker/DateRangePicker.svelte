@@ -549,7 +549,7 @@
 
 <svelte:document onclick={handleDocumentClick} onkeydown={handleDocumentKeyDown} />
 
-<div class="drp-root {classes ?? ''}" data-pw={testId}>
+<div class="drp-root {classes ?? ''}" data-pw={testId} testID={testId}>
   <!-- Trigger wrapper — bind:this here so outside-click detection works -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
@@ -654,6 +654,7 @@
       aria-label="Date range picker"
       aria-modal="true"
       data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
+      testID={typeof testId === 'string' ? `${testId}-panel` : null}
     >
       <div class="drp-panel-inner">
         <!-- Preset sidebar -->
@@ -679,6 +680,7 @@
                 aria-selected={isPresetActive(preset)}
                 onclick={() => handlePreset(preset)}
                 data-pw={typeof testId === 'string' ? `${testId}-preset-${preset.label}` : null}
+                testID={typeof testId === 'string' ? `${testId}-preset-${preset.label}` : null}
               >
                 {preset.label}
                 {#if presetCheckmark && isPresetActive(preset)}
@@ -687,6 +689,7 @@
                     class="drp-preset-check"
                     aria-hidden="true"
                     data-pw={typeof testId === 'string' ? `${testId}-preset-check` : null}
+                    testID={typeof testId === 'string' ? `${testId}-preset-check` : null}
                     >{@html checkmarkSvg}</span
                   >
                 {/if}
@@ -702,7 +705,11 @@
               <div class="drp-date-input-row">
                 {#if isInlineTime}
                   <div class="drp-date-time-group">
-                    <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
+                    <div
+                      class="drp-date-input"
+                      data-pw={testId ? `${testId}-start-date` : null}
+                      testID={testId ? `${testId}-start-date` : null}
+                    >
                       <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span
                       >
                     </div>
@@ -721,13 +728,18 @@
                         aria-label="Start time"
                         aria-invalid={!isStartTimeValid}
                         data-pw={testId ? `${testId}-start-time` : null}
+                        testID={testId ? `${testId}-start-time` : null}
                       />
                     </div>
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
                   <div class="drp-date-time-group">
-                    <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
+                    <div
+                      class="drp-date-input"
+                      data-pw={testId ? `${testId}-end-date` : null}
+                      testID={testId ? `${testId}-end-date` : null}
+                    >
                       <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
                     </div>
                     <div
@@ -745,16 +757,25 @@
                         aria-label="End time"
                         aria-invalid={!isEndTimeValid}
                         data-pw={testId ? `${testId}-end-time` : null}
+                        testID={testId ? `${testId}-end-time` : null}
                       />
                     </div>
                   </div>
                 {:else}
-                  <div class="drp-date-input" data-pw={testId ? `${testId}-start-date` : null}>
+                  <div
+                    class="drp-date-input"
+                    data-pw={testId ? `${testId}-start-date` : null}
+                    testID={testId ? `${testId}-start-date` : null}
+                  >
                     <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
-                  <div class="drp-date-input" data-pw={testId ? `${testId}-end-date` : null}>
+                  <div
+                    class="drp-date-input"
+                    data-pw={testId ? `${testId}-end-date` : null}
+                    testID={testId ? `${testId}-end-date` : null}
+                  >
                     <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
                   </div>
                   {#if showTimeSelection}
@@ -765,6 +786,7 @@
                       aria-label="Toggle time selection"
                       aria-pressed={showTimeRow}
                       data-pw={testId ? `${testId}-time-toggle` : null}
+                      testID={testId ? `${testId}-time-toggle` : null}
                       onclick={() => (showTimeRow = !showTimeRow)}
                     >
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -787,6 +809,7 @@
                       aria-label="Start time"
                       aria-invalid={!isStartTimeValid}
                       data-pw={testId ? `${testId}-start-time` : null}
+                      testID={testId ? `${testId}-start-time` : null}
                     />
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -803,6 +826,7 @@
                       aria-label="End time"
                       aria-invalid={!isEndTimeValid}
                       data-pw={testId ? `${testId}-end-time` : null}
+                      testID={testId ? `${testId}-end-time` : null}
                     />
                   </div>
                 </div>

@@ -301,7 +301,13 @@
   }
 </script>
 
-<div class="calendar {classes ?? ''}" data-pw={testId} role="application" aria-label="Calendar">
+<div
+  class="calendar {classes ?? ''}"
+  data-pw={testId}
+  testID={testId}
+  role="application"
+  aria-label="Calendar"
+>
   <div class="header">
     <div class="nav-button nav-prev">
       <Button onclick={() => navigateMonth(-1)} ariaLabel="Previous month">

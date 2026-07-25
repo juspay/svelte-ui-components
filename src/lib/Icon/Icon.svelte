@@ -12,6 +12,7 @@
   role="button"
   tabindex="0"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if typeof svg === 'string' && svg.length > 0}
     <!-- eslint-disable svelte/no-at-html-tags -->

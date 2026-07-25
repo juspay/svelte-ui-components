@@ -113,6 +113,7 @@
     onclick={handleToggle}
     aria-label="Switch theme"
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
   >
     {#each options as option, i (option.value)}
       <span class="icon" class:active={i === currentIndex}>
@@ -126,7 +127,11 @@
     {/each}
   </button>
 {:else}
-  <div class="segment-control {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+  <div
+    class="segment-control {classes ?? ''}"
+    data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
+  >
     <div
       class="segment-indicator"
       style="left: {indicatorLeft}px; width: {indicatorWidth}px;"

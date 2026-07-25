@@ -17,7 +17,13 @@
   }: BrowserProperties = $props();
 </script>
 
-<div class="browser {variant} {classes ?? ''}" class:shadow class:rounded data-pw={testId}>
+<div
+  class="browser {variant} {classes ?? ''}"
+  class:shadow
+  class:rounded
+  data-pw={testId}
+  testID={testId}
+>
   <div class="chrome">
     <div class="titlebar">
       <div class="dots">

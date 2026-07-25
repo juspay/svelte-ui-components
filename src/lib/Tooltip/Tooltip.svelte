@@ -234,10 +234,9 @@
     }
     const bubble = document.createElement('div');
     bubble.setAttribute('role', 'tooltip');
-    bubble.setAttribute(
-      'data-pw',
-      typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble'
-    );
+    const bubbleTestId = typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble';
+    bubble.setAttribute('data-pw', bubbleTestId);
+    bubble.setAttribute('testID', bubbleTestId);
 
     const coords = computePortalCoords(rect, pos);
     bubble.style.cssText = [
@@ -359,6 +358,7 @@
   onfocusin={showTooltip}
   onfocusout={hideTooltip}
   data-pw={testId}
+  testID={testId}
 >
   {#if typeof icon === 'function' && iconPosition === 'leading'}
     <span class="tooltip-icon" aria-hidden="true">{@render icon()}</span>
@@ -374,6 +374,7 @@
       role="tooltip"
       style:--tooltip-shift="{bubbleShift}px"
       data-pw={typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble'}
+      testID={typeof testId === 'string' ? `${testId}-bubble` : 'tooltip-bubble'}
     >
       <div class="tooltip-arrow"></div>
       {#if typeof content === 'function'}

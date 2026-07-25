@@ -44,7 +44,11 @@
   const TICK_SIZE = 6;
 </script>
 
-<g class="axis axis-{orientation} {classes ?? ''}" data-pw={`axis-${orientation}`}>
+<g
+  class="axis axis-{orientation} {classes ?? ''}"
+  data-pw={`axis-${orientation}`}
+  testID={`axis-${orientation}`}
+>
   {#if isHorizontal}
     <line class="axis-line" x1={scale.range[0]} x2={scale.range[1]} y1={0} y2={0} />
     {#each tickValues as tick, i (i)}
@@ -59,6 +63,7 @@
               text-anchor="end"
               dominant-baseline="auto"
               data-pw={`tick-label-${i}`}
+              testID={`tick-label-${i}`}
             >
               {format(tick)}
             </text>
@@ -69,6 +74,7 @@
               text-anchor="middle"
               dominant-baseline={orientation === 'bottom' ? 'hanging' : 'auto'}
               data-pw={`tick-label-${i}`}
+              testID={`tick-label-${i}`}
             >
               {format(tick)}
             </text>
@@ -105,6 +111,7 @@
           text-anchor={orientation === 'left' ? 'end' : 'start'}
           dominant-baseline="middle"
           data-pw={`tick-label-${i}`}
+          testID={`tick-label-${i}`}
         >
           {format(tick)}
         </text>

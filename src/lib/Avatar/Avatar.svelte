@@ -47,12 +47,19 @@
     type="button"
     aria-label={alt}
     data-pw={testId}
+    testID={testId}
     {onclick}
   >
     {@render content()}
   </button>
 {:else}
-  <div class="avatar avatar-{size} {classes ?? ''}" role="img" aria-label={alt} data-pw={testId}>
+  <div
+    class="avatar avatar-{size} {classes ?? ''}"
+    role="img"
+    aria-label={alt}
+    data-pw={testId}
+    testID={testId}
+  >
     {@render content()}
   </div>
 {/if}

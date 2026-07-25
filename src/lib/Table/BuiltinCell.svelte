@@ -144,6 +144,7 @@
       <span
         class="builtin-icon-label-icon"
         data-pw={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
+        testID={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
       >
         <Img src={String(iconSrc)} alt="" fallback="" />
       </span>
@@ -154,7 +155,11 @@
   {@const data = asJsonObject(value) ?? {}}
   <div class="builtin-image-two-line {alignmentClass}">
     {#if typeof data.imageUrl === 'string' && data.imageUrl}
-      <span class="builtin-thumb" data-pw={column.testId ? `${column.testId}-thumb` : null}>
+      <span
+        class="builtin-thumb"
+        data-pw={column.testId ? `${column.testId}-thumb` : null}
+        testID={column.testId ? `${column.testId}-thumb` : null}
+      >
         <Img
           src={data.imageUrl}
           alt={typeof data.text1 === 'string' ? data.text1 : ''}
@@ -165,6 +170,7 @@
       <span
         class="builtin-thumb builtin-thumb-placeholder"
         data-pw={column.testId ? `${column.testId}-thumb-placeholder` : null}
+        testID={column.testId ? `${column.testId}-thumb-placeholder` : null}
         >{typeof data.text1 === 'string' && data.text1
           ? data.text1.charAt(0).toUpperCase()
           : ''}</span
@@ -222,6 +228,7 @@
             <span
               class="builtin-trend builtin-trend-up"
               data-pw={column.testId ? `${column.testId}-trend-up` : null}
+              testID={column.testId ? `${column.testId}-trend-up` : null}
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendUpSvg}</span>
@@ -231,6 +238,7 @@
             <span
               class="builtin-trend builtin-trend-down"
               data-pw={column.testId ? `${column.testId}-trend-down` : null}
+              testID={column.testId ? `${column.testId}-trend-down` : null}
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendDownSvg}</span>
@@ -256,6 +264,7 @@
     aria-checked={isChecked ? 'true' : 'false'}
     aria-label={typeof data.ariaLabel === 'string' ? data.ariaLabel : null}
     data-pw={typeof data.testId === 'string' ? data.testId : null}
+    testID={typeof data.testId === 'string' ? data.testId : null}
     onclick={stopClickPropagation}
     onkeydown={stopKeydownPropagation}
     tabindex={-1}
@@ -482,6 +491,7 @@
         rel="noopener noreferrer"
         class="builtin-link-anchor"
         data-pw={column.testId ? `${column.testId}-link-${rowIndex}` : null}
+        testID={column.testId ? `${column.testId}-link-${rowIndex}` : null}
       >
         {link.label ?? link.url}
       </a>
@@ -501,7 +511,8 @@
         {#if copied}
           <span
             class="builtin-link-copied"
-            data-pw={column.testId ? `${column.testId}-link-copied` : null}>Copied</span
+            data-pw={column.testId ? `${column.testId}-link-copied` : null}
+            testID={column.testId ? `${column.testId}-link-copied` : null}>Copied</span
           >
         {/if}
       {/if}

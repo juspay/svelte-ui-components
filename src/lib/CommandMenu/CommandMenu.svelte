@@ -198,6 +198,7 @@
     aria-label="Command menu"
     tabindex="-1"
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
   >
     <div class="command-menu-dialog">
       <div class="command-menu-input-wrapper">
@@ -219,6 +220,7 @@
           autocomplete="off"
           spellcheck="false"
           data-pw={typeof testId === 'string' ? `${testId}-input` : null}
+          testID={typeof testId === 'string' ? `${testId}-input` : null}
         />
       </div>
 
@@ -253,6 +255,7 @@
                 aria-disabled={item.disabled}
                 tabindex="-1"
                 data-pw={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
+                testID={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
               >
                 {#if typeof itemIcon === 'function'}
                   <span class="command-menu-item-icon">

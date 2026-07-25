@@ -4,7 +4,11 @@
   let { brandLogoURL, brandText, subText, classes, testId }: BrandLoaderProperties = $props();
 </script>
 
-<div class="background {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="background {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   <div class="loader">
     <img src={brandLogoURL} alt="" />
     <div class="text">{brandText}</div>

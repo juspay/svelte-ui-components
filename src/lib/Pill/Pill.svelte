@@ -52,6 +52,7 @@
   tabindex={interactive ? 0 : null}
   aria-disabled={interactive && disabled ? true : null}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if typeof leadingIcon === 'function'}
     <span class="pill-leading-icon">{@render leadingIcon()}</span>

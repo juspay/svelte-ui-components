@@ -29,9 +29,10 @@
   class="key-value key-value--{layout} key-value--{size} {classes}"
   style="--keyvalue-columns: {columns};"
   data-pw={testId}
+  testID={testId}
 >
   {#each visibleItems as item, index (item.label + '-' + index)}
-    <div class="key-value-item" data-pw={item.testId}>
+    <div class="key-value-item" data-pw={item.testId} testID={item.testId}>
       <dt class="key-value-label">
         {#if labelSnippet}
           {@render labelSnippet(item, index)}

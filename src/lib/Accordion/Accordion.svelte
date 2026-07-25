@@ -45,6 +45,7 @@
   class="accordion {classes ?? ''}"
   class:expanded={expand}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <div class="accordion-content">
     {@render children?.()}

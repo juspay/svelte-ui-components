@@ -45,6 +45,7 @@
   class:card-has-scroll={scrollable}
   style={styleAttr}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
   role={isInteractive ? 'button' : null}
   tabindex={isInteractive ? 0 : null}
   onclick={isInteractive ? onclick : null}

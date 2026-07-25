@@ -42,7 +42,7 @@
   });
 </script>
 
-<div class="iframe-viewer {classes ?? ''}" data-pw={testId}>
+<div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
   {#if src}
     <iframe bind:this={iframeEl} {src} {title} {allow} {sandbox} {loading} {referrerpolicy}
     ></iframe>

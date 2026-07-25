@@ -37,6 +37,7 @@
 <span
   class="delta-indicator delta-{tone} {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if !hideArrow && direction !== 'neutral'}
     <span class="delta-indicator-arrow delta-arrow-{direction}" aria-hidden="true">

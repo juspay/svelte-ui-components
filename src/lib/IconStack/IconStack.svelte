@@ -4,7 +4,11 @@
   let { icons, classes, testId }: IconStackProperties = $props();
 </script>
 
-<div class="stack-container {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="stack-container {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   {#each icons as icon, i (i)}
     <div class="stack-icon" style:z-index={icons.length - i}>
       {#if icon.type === 'image'}

@@ -343,6 +343,7 @@
   class="menu-container {classes ?? ''}"
   bind:this={menuContainerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <div
     class="menu-trigger"
@@ -402,6 +403,7 @@
               }
             }}
             data-pw={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
+            testID={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
           >
             {#if typeof item.icon === 'string'}
               <span class="menu-item-icon">

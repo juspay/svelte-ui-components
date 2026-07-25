@@ -107,6 +107,7 @@
   aria-hidden={ariaHidden ? 'true' : null}
   role={ariaHidden ? null : 'img'}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 ></div>
 
 <style>

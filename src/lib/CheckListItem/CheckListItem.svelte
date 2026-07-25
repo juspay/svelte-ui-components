@@ -18,7 +18,7 @@
   }
 </script>
 
-<div class="container {classes ?? ''}" class:disabled data-pw={testId}>
+<div class="container {classes ?? ''}" class:disabled data-pw={testId} testID={testId}>
   <div class="checkbox-wrapper">
     <Checkbox
       text=""

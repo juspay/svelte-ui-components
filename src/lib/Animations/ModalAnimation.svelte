@@ -45,6 +45,7 @@
       in:fly|global={flyAnimationProperties}
       out:fly|global={flyAnimationProperties}
       data-pw={typeof testId === 'string' ? testId : null}
+      testID={typeof testId === 'string' ? testId : null}
     >
       {@render children?.()}
     </div>
@@ -52,6 +53,7 @@
     <div
       in:fly|global={flyAnimationProperties}
       data-pw={typeof testId === 'string' ? testId : null}
+      testID={typeof testId === 'string' ? testId : null}
     >
       {@render children?.()}
     </div>
@@ -60,6 +62,7 @@
       in:fade|global={fadeAnimationProperties}
       out:fade|global={fadeAnimationProperties}
       data-pw={typeof testId === 'string' ? testId : null}
+      testID={typeof testId === 'string' ? testId : null}
     >
       {@render children?.()}
     </div>
@@ -67,6 +70,7 @@
     <div
       in:fade|global={fadeAnimationProperties}
       data-pw={typeof testId === 'string' ? testId : null}
+      testID={typeof testId === 'string' ? testId : null}
     >
       {@render children?.()}
     </div>

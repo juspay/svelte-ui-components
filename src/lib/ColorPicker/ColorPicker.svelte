@@ -188,6 +188,7 @@
   class="color-picker-container {classes ?? ''}"
   class:disabled
   data-pw={testId}
+  testID={testId}
   bind:this={containerEl}
 >
   {#if typeof label === 'string'}

@@ -117,6 +117,7 @@
     out:fly={animationConfig.out}
     onoutroend={handleAnimationEnd}
     data-pw={testId}
+    testID={testId}
   >
     {#if typeof leftIcon === 'string' && leftIcon.length > 0}
       <div class="toast-icon-wrapper">
@@ -124,10 +125,10 @@
       </div>
     {/if}
 
-    <div class="toast-message" data-pw={messageTestId}>
+    <div class="toast-message" data-pw={messageTestId} testID={messageTestId}>
       {message}
       {#if typeof subtext === 'string' && subtext.length > 0}
-        <div class="toast-subtext" data-pw={subTextTestId}>{subtext}</div>
+        <div class="toast-subtext" data-pw={subTextTestId} testID={subTextTestId}>{subtext}</div>
       {/if}
 
       {#if typeof bottomContent === 'function'}
@@ -148,6 +149,7 @@
           }
         }}
         data-pw={closeIconTestId}
+        testID={closeIconTestId}
       >
         <Img inlineSvg src={rightIcon} alt="Close" fallback="" />
       </div>

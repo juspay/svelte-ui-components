@@ -17,8 +17,12 @@
   }: ToolbarProperties = $props();
 </script>
 
-<div class="toolbar {classes ?? ''}" data-pw={testId}>
-  <div class="content" data-pw={typeof testId === 'string' ? `${testId}-content` : null}>
+<div class="toolbar {classes ?? ''}" data-pw={testId} testID={testId}>
+  <div
+    class="content"
+    data-pw={typeof testId === 'string' ? `${testId}-content` : null}
+    testID={typeof testId === 'string' ? `${testId}-content` : null}
+  >
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
     {:else if showBackButton && typeof backIcon === 'string' && backIcon.length > 0}
@@ -31,7 +35,7 @@
         {@render centerContent()}
       </div>
     {:else if typeof text === 'string' && text.length > 0}
-      <div class="text" data-pw={headingTestId}>
+      <div class="text" data-pw={headingTestId} testID={headingTestId}>
         {text}
       </div>
     {/if}

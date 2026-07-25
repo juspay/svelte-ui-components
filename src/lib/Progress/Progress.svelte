@@ -7,7 +7,11 @@
   let isIndeterminate = $derived(value < 0);
 </script>
 
-<div class="container {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="container {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   <div class="track">
     <div
       class="bar"

@@ -15,7 +15,11 @@
   }: StatusProperties = $props();
 </script>
 
-<div class="background {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="background {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   <div class="order-status">
     <div class="status-image">
       {#if icon}

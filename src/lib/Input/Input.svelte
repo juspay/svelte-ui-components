@@ -275,6 +275,7 @@
         onclick={onClick}
         onkeydown={onKeyDown}
         data-pw={testId}
+        testID={testId}
         class:action-input={actionInput}
         style="--focus-border: {addFocusColor ? 1 : 0}px;"
         style:resize={effectiveResize}
@@ -307,6 +308,7 @@
         onclick={onClick}
         onkeydown={onKeyDown}
         data-pw={testId}
+        testID={testId}
         class:action-input={actionInput}
         disabled={disable}
         bind:this={inputElement}
@@ -362,6 +364,7 @@
     <div
       class="error-message"
       data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
+      testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
     >
       {onErrorMessage}
     </div>

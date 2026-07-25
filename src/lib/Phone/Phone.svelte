@@ -16,7 +16,11 @@
   let isModern = $derived(variant === 'modern');
 </script>
 
-<div class="phone-wrapper {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="phone-wrapper {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   <div class="side-buttons-left">
     <div class="side-button volume-up"></div>
     <div class="side-button volume-down"></div>

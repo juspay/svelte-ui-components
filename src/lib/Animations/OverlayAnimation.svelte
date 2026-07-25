@@ -10,6 +10,10 @@
   let { children, testId }: Props = $props();
 </script>
 
-<div out:fade={{ duration: 350 }} data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  out:fade={{ duration: 350 }}
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   {@render children?.()}
 </div>

@@ -43,6 +43,7 @@
 <span
   class="keyboard-input {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
   onclick={interactive ? onclick : null}
   onkeydown={interactive ? handleKeydown : null}
   role={interactive ? 'button' : null}

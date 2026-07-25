@@ -139,6 +139,7 @@
   class:file-input-dragover={dragOver}
   class:file-input-disabled={disabled}
   data-pw={testId}
+  testID={testId}
   role="button"
   tabindex={disabled ? -1 : 0}
   aria-disabled={disabled}
@@ -156,6 +157,7 @@
     {multiple}
     {disabled}
     data-pw={typeof testId === 'string' ? `${testId}-input` : null}
+    testID={typeof testId === 'string' ? `${testId}-input` : null}
     onchange={handleInputChange}
     tabindex="-1"
     aria-hidden="true"

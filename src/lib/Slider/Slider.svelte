@@ -43,6 +43,7 @@
     {value}
     {disabled}
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
     oninput={handleInput}
     onchange={handleChange}
     style="--slider-fill-percent: {percentage}%"

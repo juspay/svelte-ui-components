@@ -13,7 +13,11 @@
   }: EmptyStateProperties = $props();
 </script>
 
-<div class="empty-state {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="empty-state {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   {#if typeof icon === 'function'}
     <div class="empty-state-icon">
       {@render icon()}

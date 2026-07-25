@@ -100,6 +100,7 @@
   class="proportion-bar {classes ?? ''}"
   style={trackHeightStyle}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <div class="proportion-bar-track">
     <svg
@@ -110,6 +111,7 @@
       aria-hidden={showLegend ? 'true' : null}
       aria-label={showLegend ? null : ariaSummary}
       data-pw={typeof testId === 'string' ? `${testId}-svg` : null}
+      testID={typeof testId === 'string' ? `${testId}-svg` : null}
     >
       {#each rectSegments as rectSegment, rectIndex (rectIndex)}
         <rect
@@ -135,11 +137,13 @@
       class="proportion-bar-legend"
       aria-label="Segment breakdown"
       data-pw={typeof testId === 'string' ? `${testId}-legend` : null}
+      testID={typeof testId === 'string' ? `${testId}-legend` : null}
     >
       {#each computedSegments as computedSegment, legendIndex (legendIndex)}
         <li
           class="proportion-bar-legend-item"
           data-pw={typeof testId === 'string' ? `${testId}-legend-item-${legendIndex}` : null}
+          testID={typeof testId === 'string' ? `${testId}-legend-item-${legendIndex}` : null}
         >
           <span
             class="proportion-bar-swatch"

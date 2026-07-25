@@ -85,13 +85,18 @@
   class="statcard {classes ?? ''}"
   class:statcard-interactive={isInteractive}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
   role={isInteractive ? 'button' : null}
   tabindex={isInteractive ? 0 : null}
   onclick={isInteractive ? onclick : null}
   onkeydown={isInteractive ? handleKeydown : null}
 >
   {#if hasHeaderContent}
-    <div class="statcard-header" data-pw={typeof testId === 'string' ? `${testId}-header` : null}>
+    <div
+      class="statcard-header"
+      data-pw={typeof testId === 'string' ? `${testId}-header` : null}
+      testID={typeof testId === 'string' ? `${testId}-header` : null}
+    >
       <div class="statcard-header-left">
         {#if hasTitle}
           {#if tooltip}
@@ -115,6 +120,7 @@
             <div
               class="statcard-title"
               data-pw={typeof testId === 'string' ? `${testId}-title` : null}
+              testID={typeof testId === 'string' ? `${testId}-title` : null}
             >
               {title}
             </div>
@@ -146,15 +152,21 @@
       class="statcard-rows"
       class:statcard-rows-horizontal={rowsDirection === 'row'}
       data-pw={typeof testId === 'string' ? `${testId}-rows` : null}
+      testID={typeof testId === 'string' ? `${testId}-rows` : null}
     >
       {#each rows as row, rowIndex (rowIndex)}
         {#if rowIndex > 0}
           <div
             class="statcard-row-divider"
             data-pw={typeof testId === 'string' ? `${testId}-row-divider-${rowIndex}` : null}
+            testID={typeof testId === 'string' ? `${testId}-row-divider-${rowIndex}` : null}
           ></div>
         {/if}
-        <div class="statcard-row" data-pw={typeof row.testId === 'string' ? row.testId : null}>
+        <div
+          class="statcard-row"
+          data-pw={typeof row.testId === 'string' ? row.testId : null}
+          testID={typeof row.testId === 'string' ? row.testId : null}
+        >
           {#if typeof row.heading === 'string' && row.heading.length > 0}
             <div class="statcard-row-heading-wrap">
               {#if row.tooltip}
@@ -174,6 +186,7 @@
             <div
               class="statcard-value"
               data-pw={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
+              testID={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
             >
               {row.value}
             </div>
@@ -181,6 +194,7 @@
               <div
                 class="statcard-comparison-value"
                 data-pw={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
+                testID={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
               >
                 / {row.comparisonValue}
               </div>
@@ -197,6 +211,7 @@
               <div
                 class="statcard-delta statcard-delta-na"
                 data-pw={typeof testId === 'string' ? `${testId}-delta-na-${rowIndex}` : null}
+                testID={typeof testId === 'string' ? `${testId}-delta-na-${rowIndex}` : null}
               >
                 N/A
               </div>
@@ -214,6 +229,9 @@
                 <div
                   class="statcard-breakdown-item"
                   data-pw={typeof testId === 'string'
+                    ? `${testId}-breakdown-item-${rowIndex}-${breakdownIndex}`
+                    : null}
+                  testID={typeof testId === 'string'
                     ? `${testId}-breakdown-item-${rowIndex}-${breakdownIndex}`
                     : null}
                 >
@@ -237,11 +255,19 @@
   {:else}
     <div class="statcard-value-row">
       {#if typeof valueSnippet === 'function'}
-        <div class="statcard-value" data-pw={typeof testId === 'string' ? `${testId}-value` : null}>
+        <div
+          class="statcard-value"
+          data-pw={typeof testId === 'string' ? `${testId}-value` : null}
+          testID={typeof testId === 'string' ? `${testId}-value` : null}
+        >
           {@render valueSnippet()}
         </div>
       {:else if typeof value === 'string' && value.length > 0}
-        <div class="statcard-value" data-pw={typeof testId === 'string' ? `${testId}-value` : null}>
+        <div
+          class="statcard-value"
+          data-pw={typeof testId === 'string' ? `${testId}-value` : null}
+          testID={typeof testId === 'string' ? `${testId}-value` : null}
+        >
           {value}
         </div>
       {/if}
@@ -262,6 +288,7 @@
     <div
       class="statcard-subtitle"
       data-pw={typeof testId === 'string' ? `${testId}-subtitle` : null}
+      testID={typeof testId === 'string' ? `${testId}-subtitle` : null}
     >
       {subtitle}
     </div>

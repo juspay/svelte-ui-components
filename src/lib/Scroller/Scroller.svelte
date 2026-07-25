@@ -159,6 +159,7 @@
   class:horizontal={direction === 'horizontal'}
   class:vertical={direction === 'vertical'}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if showArrowControls && canScrollPrev}
     <div class="arrow arrow-prev">

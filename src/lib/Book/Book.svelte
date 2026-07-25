@@ -101,6 +101,7 @@
 <div
   class="book {classes ?? ''}"
   data-pw={testId}
+  testID={testId}
   onkeydown={handleKeyDown}
   ontouchstart={handleTouchStart}
   ontouchend={handleTouchEnd}

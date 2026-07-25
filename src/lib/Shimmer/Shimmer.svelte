@@ -4,7 +4,11 @@
   let { testId, classes }: ShimmerProperties = $props();
 </script>
 
-<div class="shimmer {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}></div>
+<div
+  class="shimmer {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+></div>
 
 <style>
   .shimmer {

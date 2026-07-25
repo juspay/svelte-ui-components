@@ -187,7 +187,7 @@
   );
 </script>
 
-<div class={rootClass} class:disabled class:vertical={isVertical} data-pw={testId}>
+<div class={rootClass} class:disabled class:vertical={isVertical} data-pw={testId} testID={testId}>
   {#if showStartArrow}
     <button
       class="tabs-arrow tabs-arrow-start"
@@ -226,6 +226,7 @@
         aria-disabled={disabled ? true : null}
         tabindex={isActiveItem(index) ? 0 : -1}
         data-pw={tabItem?.testId}
+        testID={tabItem?.testId}
         onclick={() => handleTabClick(index)}
         onkeydown={(event) => handleKeydown(event, index)}
       >

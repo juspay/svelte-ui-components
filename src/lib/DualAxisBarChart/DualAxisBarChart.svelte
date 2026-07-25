@@ -441,6 +441,7 @@
   class="dual-axis-bar-chart {classes ?? ''}"
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if !isEmpty}
     {#if showLegend && (chartWidth === 0 || hideLegendBelow === 0 || chartWidth >= hideLegendBelow)}
@@ -568,6 +569,7 @@
               height={dims.innerHeight}
               fill="transparent"
               data-pw={`hover-target-${hr.catIdx}`}
+              testID={`hover-target-${hr.catIdx}`}
               data-category-index={hr.catIdx}
               tabindex="0"
               role="button"

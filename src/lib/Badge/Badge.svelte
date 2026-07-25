@@ -23,7 +23,11 @@
 </script>
 
 {#if showImage}
-  <div class="badge-icon {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+  <div
+    class="badge-icon {classes ?? ''}"
+    data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
+  >
     <div class="badge-wrap">
       <img class="icon-img" src={image} {alt} />
       {#if showBadge}
@@ -38,6 +42,7 @@
     role={standaloneRole}
     aria-label={standaloneAriaLabel}
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
   >
     {isDot ? '' : (value ?? '')}
   </div>

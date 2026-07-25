@@ -18,7 +18,13 @@
   };
 </script>
 
-<div class="container {classes ?? ''}" class:disabled aria-disabled={disabled} data-pw={testId}>
+<div
+  class="container {classes ?? ''}"
+  class:disabled
+  aria-disabled={disabled}
+  data-pw={testId}
+  testID={testId}
+>
   <div class="text" hidden={text.length === 0}>{text}</div>
   <label class="switch">
     <input

@@ -27,6 +27,7 @@
   class="radio-container {classes ?? ''}"
   class:disabled
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   <input
     type="radio"

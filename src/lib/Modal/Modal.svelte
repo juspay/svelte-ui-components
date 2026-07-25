@@ -150,6 +150,7 @@
       role="button"
       tabindex="0"
       data-pw={testId}
+      testID={testId}
     >
       <ModalAnimation enable={enableTransition} {align} {transitionType}>
         <div class="modal-content {size}">
@@ -162,6 +163,7 @@
                   role="button"
                   tabindex="0"
                   data-pw={leftImageTestId}
+                  testID={leftImageTestId}
                 >
                   <!-- Inline SVGs so currentColor icons inherit the header text
                        colour; non-SVG URLs fall back to a plain <img>. -->
@@ -175,7 +177,7 @@
                 </div>
               {/if}
               {#if typeof header.text === 'string' && header.text.length > 0}
-                <div class="header-text" data-pw={header.testId}>
+                <div class="header-text" data-pw={header.testId} testID={header.testId}>
                   {header.text}
                 </div>
               {/if}
@@ -186,6 +188,7 @@
                   onclick={handleRightImageClick}
                   onkeydown={handleRightImageKeyDown}
                   data-pw={header.buttonTestId}
+                  testID={header.buttonTestId}
                 >
                   <Img
                     inlineSvg

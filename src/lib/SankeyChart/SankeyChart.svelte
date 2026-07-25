@@ -477,6 +477,7 @@
   class="sankey-chart {classes ?? ''}"
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>

@@ -92,6 +92,7 @@
       class="relative-time {classes ?? ''}"
       datetime={isoString}
       data-pw={typeof testId === 'string' ? testId : null}
+      testID={typeof testId === 'string' ? testId : null}
     >
       {relativeText}
     </time>
@@ -101,6 +102,7 @@
     class="relative-time {classes ?? ''}"
     datetime={isoString}
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
   >
     {relativeText}
   </time>

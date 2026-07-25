@@ -69,6 +69,7 @@
   class="chart-container {classes ?? ''}"
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
 >
   {#if width > 0 && height > 0}
     <svg

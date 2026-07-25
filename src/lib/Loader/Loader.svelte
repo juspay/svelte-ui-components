@@ -4,7 +4,11 @@
   let { classes, testId }: LoaderProperties = $props();
 </script>
 
-<div class="loader {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}></div>
+<div
+  class="loader {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+></div>
 
 <style>
   .loader {

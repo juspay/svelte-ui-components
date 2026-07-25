@@ -136,6 +136,7 @@
     role="button"
     tabindex="-1"
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
     transition:fade={{ duration: 200 }}
   >
     <div
@@ -146,6 +147,7 @@
       aria-label={title ?? 'Sheet'}
       tabindex="-1"
       data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
+      testID={typeof testId === 'string' ? `${testId}-panel` : null}
       transition:fly|global={flyParams}
       onintroend={handleIntroEnd}
       onoutroend={handleOutroEnd}

@@ -53,6 +53,7 @@
     role={role !== null ? role : interactive ? 'button' : null}
     tabindex={interactive ? 0 : null}
     data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
     transition:slide={{ duration: 300 }}
   >
     {#if typeof icon === 'function'}

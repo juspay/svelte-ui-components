@@ -390,7 +390,7 @@
   class:disabled
   class:ghost={hierarchy === 'ghost'}
   bind:this={containerEl}
-  {...typeof testId === 'string' ? { 'data-pw': testId } : {}}
+  {...typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
 >
   <div
     class="select-trigger"
@@ -428,6 +428,7 @@
             autocomplete="off"
             tabindex={disabled ? -1 : 0}
             data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+            testID={typeof testId === 'string' ? `${testId}-search` : null}
           />
         {/if}
       {:else}
@@ -453,6 +454,7 @@
             autocomplete="off"
             tabindex={disabled ? -1 : 0}
             data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+            testID={typeof testId === 'string' ? `${testId}-search` : null}
           />
         {:else if value.length === 0}
           <span class="select-placeholder">{placeholder}</span>
@@ -471,6 +473,7 @@
         autocomplete="off"
         tabindex={disabled ? -1 : 0}
         data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+        testID={typeof testId === 'string' ? `${testId}-search` : null}
       />
     {:else}
       <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
@@ -512,7 +515,9 @@
                 ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
                 : selectAllLabel}
               tabindex="-1"
-              {...typeof testId === 'string' ? { 'data-pw': `${testId}-select-all` } : {}}
+              {...typeof testId === 'string'
+                ? { 'data-pw': `${testId}-select-all`, testID: `${testId}-select-all` }
+                : {}}
               onclick={toggleSelectAll}
               onmouseenter={() => (highlightedIndex = index)}
             >
@@ -529,6 +534,7 @@
                   aria-hidden="true"
                   data-checked={allFilteredSelected ? 'true' : 'false'}
                   data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
+                  testID={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
                 >
                   {#if allFilteredSelected}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -537,6 +543,7 @@
                     <span
                       class="select-option-dash"
                       data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                      testID={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
                     ></span>
                   {/if}
                 </span>
@@ -555,11 +562,14 @@
               aria-selected={value.includes(row.item.id)}
               tabindex="-1"
               {...typeof row.item.testId === 'string'
-                ? { 'data-pw': row.item.testId }
+                ? { 'data-pw': row.item.testId, testID: row.item.testId }
                 : typeof itemTestId === 'string'
-                  ? { 'data-pw': `${itemTestId}-${row.item.id}` }
+                  ? {
+                      'data-pw': `${itemTestId}-${row.item.id}`,
+                      testID: `${itemTestId}-${row.item.id}`
+                    }
                   : typeof testId === 'string'
-                    ? { 'data-pw': `${testId}-${row.item.id}` }
+                    ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
                     : {}}
               onclick={() => selectItem(row.item.id)}
               onmouseenter={() => (highlightedIndex = index)}
@@ -577,6 +587,9 @@
                     aria-hidden="true"
                     data-checked={value.includes(row.item.id) ? 'true' : 'false'}
                     data-pw={typeof testId === 'string'
+                      ? `${testId}-option-indicator-${row.item.id}`
+                      : null}
+                    testID={typeof testId === 'string'
                       ? `${testId}-option-indicator-${row.item.id}`
                       : null}
                   >

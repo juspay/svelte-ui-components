@@ -164,6 +164,7 @@
   oncontextmenu={handleContextMenu}
   role="application"
   data-pw={testId}
+  testID={testId}
 >
   {#if typeof children === 'function'}
     {@render children()}
@@ -203,6 +204,7 @@
             }
           }}
           data-pw={testId ? `${testId}-item-${item.value}` : null}
+          testID={testId ? `${testId}-item-${item.value}` : null}
         >
           {#if item.icon}
             <img class="context-menu-item-icon" src={item.icon} alt="" />

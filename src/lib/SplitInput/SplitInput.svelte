@@ -144,7 +144,7 @@
   }
 </script>
 
-<div class="field-group {classes ?? ''}" data-pw={testId}>
+<div class="field-group {classes ?? ''}" data-pw={testId} testID={testId}>
   {#each fieldConfigs as config, index (index)}
     {#if typeof separator === 'string' && index > 0}
       <span class="field-group-separator">{separator}</span>

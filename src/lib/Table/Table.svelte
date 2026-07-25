@@ -575,6 +575,7 @@
       value={searchTerm}
       oninput={handleSearchInput}
       data-pw={searchConfig?.testId ?? null}
+      testID={searchConfig?.testId ?? null}
       aria-label={searchConfig?.placeholder ?? 'Search'}
       autocomplete="off"
     />
@@ -602,6 +603,7 @@
   <div
     class="table-container {isTableScrollable ? 'scrollable-table' : ''} {classes ?? ''}"
     data-pw={testId}
+    testID={testId}
   >
     <div
       class="table-scroll-shell"
@@ -632,6 +634,7 @@
                       : headerCheckboxState === 'all'}
                     aria-label="Select all rows"
                     data-pw={typeof testId === 'string' ? `${testId}-select-all` : null}
+                    testID={typeof testId === 'string' ? `${testId}-select-all` : null}
                     {...checkboxSelection?.getRowAttributes
                       ? checkboxSelection.getRowAttributes('__header__', -1)
                       : {}}
@@ -672,6 +675,7 @@
                   class:table-header-sticky={isStickyHeader}
                   class:table-col-highlighted={headerColumn?.highlighted === true}
                   data-pw={headerColumn?.testId ?? null}
+                  testID={headerColumn?.testId ?? null}
                   style:text-align={headerColumn?.align ?? null}
                   style:max-width={headerColumn?.maxWidth ?? null}
                 >
@@ -800,6 +804,7 @@
                   class:table-summary-row={summaryRowIndex !== null &&
                     originalIndex === summaryRowIndex}
                   data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
+                  testID={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   onclick={isRowClickable
                     ? () => handleRowClick(rowIndex, row, originalIndex)
                     : null}
@@ -822,6 +827,9 @@
                         aria-disabled={rowDisabled}
                         aria-label={`Select row ${rowId || 'non-selectable'}`}
                         data-pw={typeof testId === 'string'
+                          ? `${testId}-row-checkbox-${rowId}`
+                          : null}
+                        testID={typeof testId === 'string'
                           ? `${testId}-row-checkbox-${rowId}`
                           : null}
                         {...checkboxSelection?.getRowAttributes
@@ -859,6 +867,9 @@
                       data-pw={typeof getCellTestId === 'function'
                         ? getCellTestId(row, cellValue, rowIndex)
                         : null}
+                      testID={typeof getCellTestId === 'function'
+                        ? getCellTestId(row, cellValue, rowIndex)
+                        : null}
                       style:text-align={keyedColumn?.align ?? null}
                       style:max-width={keyedColumn?.maxWidth ?? null}
                       title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
@@ -867,6 +878,9 @@
                         class={isContentScrollable ? 'scrollable-content' : ''}
                         class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
                         data-pw={keyedColumn?.testId
+                          ? `${keyedColumn.testId}-cell-${rowIndex}`
+                          : null}
+                        testID={keyedColumn?.testId
                           ? `${keyedColumn.testId}-cell-${rowIndex}`
                           : null}
                       >
@@ -903,10 +917,19 @@
       <!-- DataGrid parity: pagination chrome only renders when the data spans
            more than one page (or the server reports more chunks); a
            single-page table shows no footer. -->
-      <div class="table-footer table-paginator" data-pw={pagination.testId ?? null}>
+      <div
+        class="table-footer table-paginator"
+        data-pw={pagination.testId ?? null}
+        testID={pagination.testId ?? null}
+      >
         <span
           class="table-paginator-range"
           data-pw={typeof testId === 'string'
+            ? `${testId}-paginator-range`
+            : pagination?.testId
+              ? `${pagination.testId}-range`
+              : null}
+          testID={typeof testId === 'string'
             ? `${testId}-paginator-range`
             : pagination?.testId
               ? `${pagination.testId}-range`

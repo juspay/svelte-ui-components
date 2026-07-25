@@ -62,7 +62,11 @@
   }
 </script>
 
-<div class="container {classes ?? ''}" data-pw={typeof testId === 'string' ? testId : null}>
+<div
+  class="container {classes ?? ''}"
+  data-pw={typeof testId === 'string' ? testId : null}
+  testID={typeof testId === 'string' ? testId : null}
+>
   {#if inputProperties.label && inputProperties.label !== ''}
     <label class="label" for={inputProperties.name}>
       {inputProperties.label}{#if mandatory}<span class="mandatory-marker" aria-label="required">

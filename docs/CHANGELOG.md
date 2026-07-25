@@ -2,7 +2,26 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.110.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.0)
+
+Playwright reads data-pw; Appium resolves elements by the native accessibility
+identifier and never sees data-pw. Components accepted a single testId but only
+emitted data-pw, so consumers had to hand-roll a Svelte action that set both --
+and swapping such an action for the library's testId prop silently dropped
+native-test coverage.
+
+All 186 emissions now render both attributes, including the imperatively built
+Tooltip portal bubble and the static chart/overlay ids. A shipped module
+augmentation declares the attribute on svelte/elements so it type-checks; the
+key is lower case because Svelte normalises DOM attribute names, as does
+setAttribute.
+
+Declaring the attribute rather than spreading an object is deliberate: a spread
+makes Svelte skip its static a11y analysis for that element, which turned six
+existing svelte-ignore comments into dead code and would have silently disabled
+real a11y warnings across the component set.
+
+## [2.111.0](https://github.com/juspay/svelte-ui-components/compare/2.111.0..2.110.0) - 17 July 2026
 
 ## [2.110.0](https://github.com/juspay/svelte-ui-components/compare/2.110.0..2.109.0) - 17 July 2026
 

@@ -1,5 +1,9 @@
 <script lang="ts">
-  import type { DateRangePickerProperties, DateRangePreset } from './properties';
+  import type {
+    DateRangePickerProperties,
+    DateRangePreset,
+    TimeDisplayBoundary
+  } from './properties';
   import { tick, untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
@@ -11,6 +15,7 @@
     TIME_DISPLAY_PATTERN,
     applyTimeDisplay,
     formatTimeDisplay,
+    parseDateDisplay,
     toMinutesOfDay
   } from './timeUtils';
 
@@ -80,6 +85,23 @@
   let endTimeDisplay: string = $state('11:59 PM');
   let showTimeRow: boolean = $state(false);
 
+  // Typed text for the built-in date inputs (showDateInputs, range mode). The displayed
+  // text is *derived* from draftStart/draftEnd — the single source of truth — so it can
+  // never go stale relative to a draft change made elsewhere (preset pick, calendar
+  // click, the initialPresetLabel seed effect, ...). While the user is actively editing
+  // a field, its edit buffer holds the in-progress text instead (a half-typed string
+  // must never reach the calendar grid or Apply's canApply check); the buffer resets to
+  // null — falling back to the canonical formatted date — on every successful or
+  // rejected commit, see commitTypedDate.
+  let startDateEditBuffer: string | null = $state(null);
+  let endDateEditBuffer: string | null = $state(null);
+  const startDateInputText: string = $derived(
+    startDateEditBuffer ?? (draftStart !== null ? formatDate(draftStart) : '')
+  );
+  const endDateInputText: string = $derived(
+    endDateEditBuffer ?? (draftEnd !== null ? formatDate(draftEnd) : '')
+  );
+
   // Inline time layout (timeSelectionLayout="inline"): the start/end time inputs
   // render beside their date inputs on the same row, always visible — no clock
   // toggle and no collapsible row. All seeding/validation/fold logic is shared
@@ -99,11 +121,14 @@
 
   // When maxRangeDays is set, disable any date whose span from the in-progress
   // start would exceed the limit (inclusive of both ends), until the range is
-  // completed. Falls back to the raw disabledDates otherwise.
+  // completed. Falls back to the raw disabledDates otherwise. Always returns a
+  // callable predicate (rather than sometimes the raw Date[]/predicate union) so
+  // it can be called directly — by both the Calendar grid and isDateSelectable's
+  // typed-date validation — without a union-type call-signature error.
   const rangeConstrainedDisabledDates = $derived.by(() => {
     const limit = maxRangeDays;
     if (limit === null) {
-      return disabledDates;
+      return (date: Date): boolean => isBaseDisabledDate(date);
     }
     const anchor = draftStart;
     const selecting = anchor !== null && draftEnd === null;
@@ -200,10 +225,6 @@
     return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  // Read-only date-input box contents (opt-in via showDateInputs), reflecting the draft.
-  const draftStartDateLabel: string = $derived(draftStart !== null ? formatDate(draftStart) : '');
-  const draftEndDateLabel: string = $derived(draftEnd !== null ? formatDate(draftEnd) : '');
-
   const isStartTimeValid: boolean = $derived(TIME_DISPLAY_PATTERN.test(startTimeDisplay.trim()));
   const isEndTimeValid: boolean = $derived(TIME_DISPLAY_PATTERN.test(endTimeDisplay.trim()));
   // Apply is blocked while a time is malformed, or while both ends fall on the same
@@ -258,6 +279,13 @@
     // Re-seed the session from the committed preset so the sidebar re-highlights it
     // by label. A direct calendar click later clears this, reverting to date matching.
     selectedPresetLabel = committedPresetLabel;
+
+    // Discard any in-progress typed text from a previous session — the date-input
+    // display text is derived from draftStart/draftEnd above, so it already reflects
+    // whatever draft this open seeds (including a later re-seed from initialPresetLabel,
+    // which runs in an $effect.pre after this synchronous assignment).
+    startDateEditBuffer = null;
+    endDateEditBuffer = null;
 
     // Seed the time inputs from the committed range's time-of-day, and collapse the
     // time row so each open starts from the date view.
@@ -407,6 +435,8 @@
       draftEnd = rangeEnd;
       draftValue = value;
       selectedPresetLabel = committedPresetLabel;
+      startDateEditBuffer = null;
+      endDateEditBuffer = null;
       const anchor = rangeStart !== null ? rangeStart : value !== null ? value : now;
       leftYear = anchor.getFullYear();
       leftMonth = anchor.getMonth();
@@ -420,6 +450,10 @@
     if (mode === 'range') {
       draftStart = start;
       draftEnd = end;
+      // Discard any in-progress typed text — the date-input display text is derived
+      // from draftStart/draftEnd, so it already reflects the preset's own start/end.
+      startDateEditBuffer = null;
+      endDateEditBuffer = null;
       // Reseed the time-of-day inputs from the preset's own start/end so a
       // time-bearing preset (e.g. "Last 30 minutes" / "Last 12 Hours") is not
       // silently overwritten by a stale display string in handleApply's
@@ -443,6 +477,9 @@
     draftEnd = event.rangeEnd;
     // A direct calendar click is not a preset selection.
     selectedPresetLabel = null;
+    // Discard any in-progress typed text in favor of the calendar's own selection.
+    startDateEditBuffer = null;
+    endDateEditBuffer = null;
     if (showTimeSelection) {
       startTimeDisplay = '12:00 AM';
       endTimeDisplay = isSameDay(event.rangeEnd, now) ? formatTimeDisplay(now) : '11:59 PM';
@@ -453,6 +490,177 @@
     draftValue = event.date;
     // A direct calendar click is not a preset selection.
     selectedPresetLabel = null;
+  }
+
+  // Whether a typed date passes the same minDate/maxDate/disabledDates/maxRangeDays
+  // constraints the calendar grid itself enforces — a typed date must never commit
+  // somewhere the grid would have refused to let the user click. Checks
+  // rangeConstrainedDisabledDates (not just the raw disabledDates) so a typed end date
+  // that would blow past maxRangeDays mid-selection is rejected exactly like a click on
+  // the same grid cell would be.
+  function isDateSelectable(date: Date): boolean {
+    if (minDate !== null) {
+      const normalizedMinDate = new SvelteDate(
+        minDate.getFullYear(),
+        minDate.getMonth(),
+        minDate.getDate()
+      );
+      if (date.getTime() < normalizedMinDate.getTime()) {
+        return false;
+      }
+    }
+    if (maxDate !== null) {
+      const normalizedMaxDate = new SvelteDate(
+        maxDate.getFullYear(),
+        maxDate.getMonth(),
+        maxDate.getDate()
+      );
+      if (date.getTime() > normalizedMaxDate.getTime()) {
+        return false;
+      }
+    }
+    return !rangeConstrainedDisabledDates(date);
+  }
+
+  // The single acceptance rule for a typed date, shared by the live invalid-border
+  // feedback and by commitTypedDate. Keeping one predicate is the point: while these
+  // were two separate expressions, the border could stay clean for a date that commit
+  // then silently rejected, leaving no cue as to why the field reverted.
+  //
+  // Three ways a parsed date is refused:
+  //   1. it isn't selectable at all (minDate/maxDate/disabled, and the maxRangeDays
+  //      span while a range is mid-selection),
+  //   2. it crosses the opposite boundary (a start after the end, or vice versa),
+  //   3. it would stretch an *already-complete* range past maxRangeDays.
+  // Case 3 is not covered by isDateSelectable: rangeConstrainedDisabledDates only
+  // applies its span check while `selecting` is true (draftStart set, draftEnd still
+  // null). Once both boundaries exist that guard goes quiet, so retyping either one
+  // could otherwise commit a range longer than the calendar grid would ever allow.
+  function isTypedDateAcceptable(boundary: TimeDisplayBoundary, candidate: Date): boolean {
+    if (!isDateSelectable(candidate)) {
+      return false;
+    }
+    const otherBoundaryDate = boundary === 'start' ? draftEnd : draftStart;
+    if (otherBoundaryDate === null) {
+      return true;
+    }
+    const crossesOtherBoundary =
+      boundary === 'start'
+        ? candidate.getTime() > otherBoundaryDate.getTime()
+        : candidate.getTime() < otherBoundaryDate.getTime();
+    if (crossesOtherBoundary) {
+      return false;
+    }
+    if (maxRangeDays !== null) {
+      const spanDays =
+        Math.abs(Math.round((candidate.getTime() - otherBoundaryDate.getTime()) / MS_PER_DAY)) + 1;
+      if (spanDays > maxRangeDays) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Live validity feedback for the typed date-input text, mirroring isStartTimeValid /
+  // isEndTimeValid — the field is flagged invalid as soon as the typed text can't parse
+  // into a date this picker would accept, matching the time input's parse-as-you-type
+  // styling. Empty text is not flagged invalid; nothing has been typed yet.
+  const isStartDateValid: boolean = $derived.by(() => {
+    const trimmedStartDateText = startDateInputText.trim();
+    if (trimmedStartDateText === '') {
+      return true;
+    }
+    const parsedStartDate = parseDateDisplay(startDateInputText);
+    return parsedStartDate !== null && isTypedDateAcceptable('start', parsedStartDate);
+  });
+  const isEndDateValid: boolean = $derived.by(() => {
+    const trimmedEndDateText = endDateInputText.trim();
+    if (trimmedEndDateText === '') {
+      return true;
+    }
+    const parsedEndDate = parseDateDisplay(endDateInputText);
+    return parsedEndDate !== null && isTypedDateAcceptable('end', parsedEndDate);
+  });
+
+  // True when date's month is already one of the two visible calendar months (or the
+  // single visible month outside dual-month mode) — used to avoid an unnecessary
+  // re-navigation/remount when a typed date is already on screen.
+  function isMonthVisible(date: Date): boolean {
+    const isLeftMonthVisible = date.getFullYear() === leftYear && date.getMonth() === leftMonth;
+    if (!isDualMonth) {
+      return isLeftMonthVisible;
+    }
+    const rightMonth = new SvelteDate(leftYear, leftMonth + 1, 1);
+    const isRightMonthVisible =
+      date.getFullYear() === rightMonth.getFullYear() && date.getMonth() === rightMonth.getMonth();
+    return isLeftMonthVisible || isRightMonthVisible;
+  }
+
+  function navigateCalendarTo(date: Date): void {
+    if (isMonthVisible(date)) {
+      return;
+    }
+    leftYear = date.getFullYear();
+    leftMonth = date.getMonth();
+    calendarKey++;
+  }
+
+  // Discard one boundary's in-progress edit buffer, falling back to the derived display
+  // of its current draft value. Used both to normalize a successful commit and to revert
+  // a rejected/unparseable one.
+  function clearDateEditBuffer(boundary: TimeDisplayBoundary): void {
+    if (boundary === 'start') {
+      startDateEditBuffer = null;
+    } else {
+      endDateEditBuffer = null;
+    }
+  }
+
+  // Record the in-progress typed text for one date-input boundary as the user types.
+  function handleDateInputChange(event: Event, boundary: TimeDisplayBoundary): void {
+    if (!(event.currentTarget instanceof HTMLInputElement)) {
+      return;
+    }
+    if (boundary === 'start') {
+      startDateEditBuffer = event.currentTarget.value;
+    } else {
+      endDateEditBuffer = event.currentTarget.value;
+    }
+  }
+
+  // Parse and commit the typed text for one date-input boundary (called on blur and on
+  // Enter). Invalid text (unparseable, outside minDate/maxDate, disabled, exceeding
+  // maxRangeDays, or crossing the other boundary) is rejected — the field reverts to the
+  // last valid value instead of committing garbage into draftStart/draftEnd. A no-op
+  // when the field was never edited (buffer already null — nothing to commit).
+  function commitTypedDate(boundary: TimeDisplayBoundary): void {
+    const editBuffer = boundary === 'start' ? startDateEditBuffer : endDateEditBuffer;
+    if (editBuffer === null) {
+      return;
+    }
+    const parsedDate = parseDateDisplay(editBuffer);
+
+    if (parsedDate === null || !isTypedDateAcceptable(boundary, parsedDate)) {
+      clearDateEditBuffer(boundary);
+      return;
+    }
+
+    if (boundary === 'start') {
+      draftStart = parsedDate;
+    } else {
+      draftEnd = parsedDate;
+    }
+    // A typed date is a custom selection, same as a direct calendar click.
+    selectedPresetLabel = null;
+    navigateCalendarTo(parsedDate);
+    clearDateEditBuffer(boundary);
+  }
+
+  function handleDateInputKeyDown(event: KeyboardEvent, boundary: TimeDisplayBoundary): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitTypedDate(boundary);
+    }
   }
 
   // Close on outside-click
@@ -705,13 +913,21 @@
               <div class="drp-date-input-row">
                 {#if isInlineTime}
                   <div class="drp-date-time-group">
-                    <div
-                      class="drp-date-input"
-                      data-pw={testId ? `${testId}-start-date` : null}
-                      testID={testId ? `${testId}-start-date` : null}
-                    >
-                      <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span
-                      >
+                    <div class="drp-date-input" class:drp-date-input-invalid={!isStartDateValid}>
+                      <input
+                        type="text"
+                        class="drp-date-input-value"
+                        value={startDateInputText}
+                        oninput={(event) => handleDateInputChange(event, 'start')}
+                        maxlength="32"
+                        placeholder="Start date"
+                        aria-label="Start date"
+                        aria-invalid={!isStartDateValid}
+                        onblur={() => commitTypedDate('start')}
+                        onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
+                        data-pw={testId ? `${testId}-start-date` : null}
+                        testID={testId ? `${testId}-start-date` : null}
+                      />
                     </div>
                     <div
                       class="drp-time-input drp-time-input-inline"
@@ -735,12 +951,21 @@
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
                   <div class="drp-date-time-group">
-                    <div
-                      class="drp-date-input"
-                      data-pw={testId ? `${testId}-end-date` : null}
-                      testID={testId ? `${testId}-end-date` : null}
-                    >
-                      <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
+                    <div class="drp-date-input" class:drp-date-input-invalid={!isEndDateValid}>
+                      <input
+                        type="text"
+                        class="drp-date-input-value"
+                        value={endDateInputText}
+                        oninput={(event) => handleDateInputChange(event, 'end')}
+                        maxlength="32"
+                        placeholder="End date"
+                        aria-label="End date"
+                        aria-invalid={!isEndDateValid}
+                        onblur={() => commitTypedDate('end')}
+                        onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
+                        data-pw={testId ? `${testId}-end-date` : null}
+                        testID={testId ? `${testId}-end-date` : null}
+                      />
                     </div>
                     <div
                       class="drp-time-input drp-time-input-inline"
@@ -762,21 +987,39 @@
                     </div>
                   </div>
                 {:else}
-                  <div
-                    class="drp-date-input"
-                    data-pw={testId ? `${testId}-start-date` : null}
-                    testID={testId ? `${testId}-start-date` : null}
-                  >
-                    <span class="drp-date-input-value">{draftStartDateLabel || 'Start date'}</span>
+                  <div class="drp-date-input" class:drp-date-input-invalid={!isStartDateValid}>
+                    <input
+                      type="text"
+                      class="drp-date-input-value"
+                      value={startDateInputText}
+                      oninput={(event) => handleDateInputChange(event, 'start')}
+                      maxlength="32"
+                      placeholder="Start date"
+                      aria-label="Start date"
+                      aria-invalid={!isStartDateValid}
+                      onblur={() => commitTypedDate('start')}
+                      onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
+                      data-pw={testId ? `${testId}-start-date` : null}
+                      testID={testId ? `${testId}-start-date` : null}
+                    />
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
-                  <div
-                    class="drp-date-input"
-                    data-pw={testId ? `${testId}-end-date` : null}
-                    testID={testId ? `${testId}-end-date` : null}
-                  >
-                    <span class="drp-date-input-value">{draftEndDateLabel || 'End date'}</span>
+                  <div class="drp-date-input" class:drp-date-input-invalid={!isEndDateValid}>
+                    <input
+                      type="text"
+                      class="drp-date-input-value"
+                      value={endDateInputText}
+                      oninput={(event) => handleDateInputChange(event, 'end')}
+                      maxlength="32"
+                      placeholder="End date"
+                      aria-label="End date"
+                      aria-invalid={!isEndDateValid}
+                      onblur={() => commitTypedDate('end')}
+                      onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
+                      data-pw={testId ? `${testId}-end-date` : null}
+                      testID={testId ? `${testId}-end-date` : null}
+                    />
                   </div>
                   {#if showTimeSelection}
                     <button
@@ -1218,13 +1461,28 @@
     background: var(--drp-date-input-background, #ffffff);
   }
 
+  .drp-date-input-invalid {
+    border-color: var(--drp-date-input-invalid-border, #e5484d);
+  }
+
   .drp-date-input-value {
     display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
     color: var(--drp-date-input-color, #333333);
     font-size: var(--drp-date-input-font-size, 13px);
+    font-family: inherit;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .drp-date-input-value::placeholder {
+    color: var(--drp-date-input-placeholder-color, #aaaaaa);
   }
 
   .drp-datetime-arrow {

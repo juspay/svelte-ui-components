@@ -294,6 +294,11 @@
 
   const today = new SvelteDate();
   const maxDate = new SvelteDate(today.getFullYear(), today.getMonth(), today.getDate());
+  const typeableMinDate = new SvelteDate(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 30
+  );
 </script>
 
 <div class="page-header">
@@ -628,6 +633,53 @@
       initialPresetLabel="Today"
       placeholder="Select range + time"
       testId="drp-datetime-inline-demo"
+    />
+  </div>
+</section>
+
+<!-- ── 12c. Typeable date inputs (type + Enter/blur to commit) ── -->
+<section class="demo-section">
+  <h2>Range mode — typeable date inputs</h2>
+  <p class="section-note">
+    The <code>showDateInputs</code> boxes are directly editable: type a date, then press
+    <code>Enter</code> or blur the field to commit it. Invalid, out-of-range (<code>minDate</code
+    >/<code>maxDate</code>), or boundary-crossing text is rejected and the field reverts to its last
+    valid value. This instance sets both <code>minDate</code> and <code>maxDate</code> so out-of-range
+    typed dates can be exercised.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      showDateInputs
+      minDate={typeableMinDate}
+      {maxDate}
+      initialPresetLabel="Today"
+      placeholder="Select range"
+      testId="drp-typeable-dates-demo"
+    />
+  </div>
+</section>
+
+<!-- ── 12b. Typeable date inputs + maxRangeDays ── -->
+<section class="demo-section">
+  <h2>Range mode — typeable inputs with a maximum span (maxRangeDays)</h2>
+  <p class="section-note">
+    Combines <code>showDateInputs</code> with <code>maxRangeDays</code>. A typed boundary is held to
+    the same span limit the calendar grid enforces, including when the range is already complete —
+    the grid's own limit only applies mid-selection, so the typed path checks the span itself.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      showDateInputs
+      maxRangeDays={7}
+      minDate={typeableMinDate}
+      {maxDate}
+      initialPresetLabel="Today"
+      presets={commonPresets}
+      placeholder="Select range (max 7 days)"
+      testId="drp-typeable-maxrange-demo"
     />
   </div>
 </section>

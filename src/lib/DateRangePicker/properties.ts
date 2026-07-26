@@ -43,8 +43,13 @@ export type OptionalDateRangePickerProperties = {
    */
   presetCheckmark?: boolean;
   /**
-   * Show read-only start/end date boxes at the top of the calendar area (range mode),
-   * reflecting the current draft selection. Opt-in. Default: false.
+   * Show typeable start/end date boxes at the top of the calendar area (range mode).
+   * Each box seeds from the current draft selection and can be edited directly by
+   * typing a date; the typed text is parsed and committed on blur or Enter. Accepts
+   * the component's own display format ("Jul 10, 2026"), numeric "M/D/YYYY", or ISO
+   * "YYYY-MM-DD". Unparseable, out-of-range (minDate/maxDate), disabled, or
+   * boundary-crossing (start after end, or vice versa) input is rejected — the field
+   * reverts to its last valid value instead of committing garbage. Opt-in. Default: false.
    */
   showDateInputs?: boolean;
   /**

@@ -1,4 +1,4 @@
-// Time-of-day helpers for the DateRangePicker's built-in date + time inputs.
+// Time-of-day and calendar-date helpers for the DateRangePicker's built-in date + time inputs.
 import type { TimeDisplayBoundary } from './properties';
 
 /** Matches a 12-hour clock display such as "2:30 PM" or "02:05 am". */
@@ -54,4 +54,91 @@ export const applyTimeDisplay = (
 export const toMinutesOfDay = (display: string): number | null => {
   const parsed = parseTimeDisplay(display);
   return parsed === null ? null : parsed.hours * 60 + parsed.minutes;
+};
+
+const SHORT_MONTH_NAMES = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'may',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'oct',
+  'nov',
+  'dec'
+];
+
+/** Matches the DateRangePicker's own display format, e.g. "Jul 10, 2026" or "Jul 10 2026". */
+const MONTH_NAME_DATE_PATTERN = /^([A-Za-z]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})$/;
+
+/** Matches numeric "M/D/YYYY" or "M-D-YYYY" input. */
+const NUMERIC_SLASH_DATE_PATTERN = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/;
+
+/** Matches ISO "YYYY-MM-DD" input. */
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+/**
+ * Build a local-midnight Date for the given calendar parts.
+ *
+ * `new Date(year, ...)` maps years 0-99 onto 1900-1999, so a literal the parser accepts
+ * as four digits — "0050-01-01" — would silently land in 1950. setFullYear has no such
+ * remapping, so the date is constructed neutrally and then stamped.
+ */
+const localMidnightFromParts = (year: number, monthIndex: number, day: number): Date => {
+  const date = new Date();
+  date.setFullYear(year, monthIndex, day);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const daysInMonth = (year: number, monthIndex: number): number =>
+  // Day 0 of the next month is the last day of this one.
+  localMidnightFromParts(year, monthIndex + 1, 0).getDate();
+
+/** Build a local-midnight Date from year/monthIndex/day, or null when the calendar date does not exist. */
+const buildDateFromParts = (year: number, monthIndex: number, day: number): Date | null => {
+  if (monthIndex < 0 || monthIndex > 11 || day < 1 || day > daysInMonth(year, monthIndex)) {
+    return null;
+  }
+  return localMidnightFromParts(year, monthIndex, day);
+};
+
+/**
+ * Parse a typed calendar-date string into a local-midnight Date, or null when the text is
+ * unparseable or names a calendar date that does not exist (e.g. "Feb 30, 2026"). Accepts the
+ * component's own display format ("Jul 10, 2026"), numeric "M/D/YYYY", and ISO "YYYY-MM-DD".
+ */
+export const parseDateDisplay = (display: string): Date | null => {
+  const trimmedDisplay = display.trim();
+  if (trimmedDisplay === '') {
+    return null;
+  }
+
+  const isoMatch = ISO_DATE_PATTERN.exec(trimmedDisplay);
+  if (isoMatch !== null) {
+    return buildDateFromParts(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+  }
+
+  const monthNameMatch = MONTH_NAME_DATE_PATTERN.exec(trimmedDisplay);
+  if (monthNameMatch !== null) {
+    const monthIndex = SHORT_MONTH_NAMES.indexOf(monthNameMatch[1].slice(0, 3).toLowerCase());
+    if (monthIndex === -1) {
+      return null;
+    }
+    return buildDateFromParts(Number(monthNameMatch[3]), monthIndex, Number(monthNameMatch[2]));
+  }
+
+  const slashMatch = NUMERIC_SLASH_DATE_PATTERN.exec(trimmedDisplay);
+  if (slashMatch !== null) {
+    return buildDateFromParts(
+      Number(slashMatch[3]),
+      Number(slashMatch[1]) - 1,
+      Number(slashMatch[2])
+    );
+  }
+
+  return null;
 };

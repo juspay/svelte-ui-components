@@ -2,24 +2,40 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.1)
 
-Playwright reads data-pw; Appium resolves elements by the native accessibility
-identifier and never sees data-pw. Components accepted a single testId but only
-emitted data-pw, so consumers had to hand-roll a Svelte action that set both --
-and swapping such an action for the library's testId prop silently dropped
-native-test coverage.
+The start/end date boxes were read-only display text. They are now real inputs:
+typed text is parsed on blur and Enter, committed when the picker would accept
+that date, and reverted otherwise.
 
-All 186 emissions now render both attributes, including the imperatively built
-Tooltip portal bubble and the static chart/overlay ids. A shipped module
-augmentation declares the attribute on svelte/elements so it type-checks; the
-key is lower case because Svelte normalises DOM attribute names, as does
-setAttribute.
+Addresses three review findings:
 
-Declaring the attribute rather than spreading an object is deliberate: a spread
-makes Svelte skip its static a11y analysis for that element, which turned six
-existing svelte-ignore comments into dead code and would have silently disabled
-real a11y warnings across the component set.
+- The live invalid-border feedback and the commit rule were separate
+expressions, so a date that crossed the other boundary typed cleanly with no
+invalid styling and then silently reverted on commit, with no cue as to why.
+Both now share one predicate, isTypedDateAcceptable, so they cannot disagree.
+
+- maxRangeDays was enforced only while a range was mid-selection:
+rangeConstrainedDisabledDates applies its span check when draftStart is set
+and draftEnd is still null. Once both boundaries exist that guard goes quiet,
+so retyping either one could commit a range longer than the calendar grid
+would ever have allowed. The shared predicate now checks the span itself.
+
+- buildDateFromParts used new Date(year, ...), which maps years 0-99 onto
+1900-1999, so the four-digit literal "0050-01-01" resolved to 1950. Dates are
+now built with setFullYear, which has no such remapping. daysInMonth goes
+through the same helper, so leap-year validation is correct for those years.
+
+Verification: 8 Playwright cases (6 pre-existing plus one per new finding) and
+7 timeUtils unit cases. Each new test was negative-controlled by disabling only
+its own fix: reverting the shared predicate fails the boundary-border test,
+removing just the span check fails the maxRangeDays test, and restoring
+new Date(year,...) fails the year test with 'expected 1950 to be 50'.
+
+A demo combining showDateInputs with maxRangeDays was added, since no existing
+fixture exercised both together.
+
+## [2.111.1](https://github.com/juspay/svelte-ui-components/compare/2.111.1..2.111.0) - 25 July 2026
 
 ## [2.111.0](https://github.com/juspay/svelte-ui-components/compare/2.111.0..2.110.0) - 17 July 2026
 

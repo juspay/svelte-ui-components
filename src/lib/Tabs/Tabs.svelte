@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import type { TabItem, TabsProperties } from './properties';
   import Img from '../Img/Img.svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
@@ -149,11 +150,49 @@
     }
   }
 
+  // After a keyboard-driven selection the active item changes (directly in
+  // string mode; via the consumer's activeKey update in object mode), and the
+  // roving tabindex re-roves with it. Move DOM focus onto the newly active tab
+  // so the user can keep arrowing — without this, focus is stranded on a
+  // tabindex="-1" item and the roving pattern breaks down.
+  function moveFocusToActiveTab(): void {
+    void tick().then(() => {
+      const activeTab = scrollContainer?.querySelector<HTMLElement>('[role="tab"][tabindex="0"]');
+      activeTab?.focus();
+    });
+  }
+
+  // WAI-ARIA APG tablist keyboard contract with activation-follows-focus:
+  // Arrow keys (orientation-aware) move selection to the adjacent tab with
+  // wrap-around, Home/End jump to the first/last tab. Without this, the roving
+  // tabindex makes every non-active tab keyboard-unreachable.
   function handleKeydown(event: KeyboardEvent, index: number): void {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleTabClick(index);
+      return;
     }
+    const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+    const previousKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+    let targetIndex: number | null = null;
+    if (event.key === nextKey) {
+      targetIndex = (index + 1) % items.length;
+    } else if (event.key === previousKey) {
+      targetIndex = (index - 1 + items.length) % items.length;
+    } else if (event.key === 'Home') {
+      targetIndex = 0;
+    } else if (event.key === 'End') {
+      targetIndex = items.length - 1;
+    }
+    if (targetIndex === null) {
+      return;
+    }
+    event.preventDefault();
+    if (disabled || targetIndex === index) {
+      return;
+    }
+    handleTabClick(targetIndex);
+    moveFocusToActiveTab();
   }
 
   function initOverflow(node: HTMLDivElement): () => void {
@@ -209,6 +248,7 @@
     class:fade-top={canScrollUp}
     class:fade-bottom={canScrollDown}
     role="tablist"
+    aria-orientation={isVertical ? 'vertical' : null}
     {@attach initOverflow}
     onscroll={updateOverflow}
   >

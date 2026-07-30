@@ -2,38 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.2)
 
-The start/end date boxes were read-only display text. They are now real inputs:
-typed text is parsed on blur and Enter, committed when the picker would accept
-that date, and reverted otherwise.
+The tablist roves tabindex (active tab 0, all others -1) but the keydown
+handler only covered Enter/Space, so a keyboard user who focused the active
+tab could never reach any other tab. Orientation-aware ArrowRight/ArrowLeft
+(ArrowDown/ArrowUp when vertical) now move selection with wrap-around and
+activation-follows-focus, Home/End jump to the ends, and DOM focus follows
+onto the newly active tab after the tabindex re-roves. The tablist also
+exposes aria-orientation when vertical.
 
-Addresses three review findings:
-
-- The live invalid-border feedback and the commit rule were separate
-expressions, so a date that crossed the other boundary typed cleanly with no
-invalid styling and then silently reverted on commit, with no cue as to why.
-Both now share one predicate, isTypedDateAcceptable, so they cannot disagree.
-
-- maxRangeDays was enforced only while a range was mid-selection:
-rangeConstrainedDisabledDates applies its span check when draftStart is set
-and draftEnd is still null. Once both boundaries exist that guard goes quiet,
-so retyping either one could commit a range longer than the calendar grid
-would ever have allowed. The shared predicate now checks the span itself.
-
-- buildDateFromParts used new Date(year, ...), which maps years 0-99 onto
-1900-1999, so the four-digit literal "0050-01-01" resolved to 1950. Dates are
-now built with setFullYear, which has no such remapping. daysInMonth goes
-through the same helper, so leap-year validation is correct for those years.
-
-Verification: 8 Playwright cases (6 pre-existing plus one per new finding) and
-7 timeUtils unit cases. Each new test was negative-controlled by disabling only
-its own fix: reverting the shared predicate fails the boundary-border test,
-removing just the span check fails the maxRangeDays test, and restoring
-new Date(year,...) fails the year test with 'expected 1950 to be 50'.
-
-A demo combining showDateInputs with maxRangeDays was added, since no existing
-fixture exercised both together.
+## [2.111.2](https://github.com/juspay/svelte-ui-components/compare/2.111.2..2.111.1) - 27 July 2026
 
 ## [2.111.1](https://github.com/juspay/svelte-ui-components/compare/2.111.1..2.111.0) - 25 July 2026
 

@@ -2,15 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.3)
 
-The tablist roves tabindex (active tab 0, all others -1) but the keydown
-handler only covered Enter/Space, so a keyboard user who focused the active
-tab could never reach any other tab. Orientation-aware ArrowRight/ArrowLeft
-(ArrowDown/ArrowUp when vertical) now move selection with wrap-around and
-activation-follows-focus, Home/End jump to the ends, and DOM focus follows
-onto the newly active tab after the tabindex re-roves. The tablist also
-exposes aria-orientation when vertical.
+WebOTP / Android-SMS autofill drops the entire code into the first field as
+one input event. Input's dataType='tel' sanitizer truncated an overflowing
+value to its LAST maxLength digits before onInput fired, so with single-char
+fields the distribute branch never ran and a 6-digit code landed as one wrong
+digit. Single-char autoAdvance fields now widen the inner Input maxLength to
+the code length and SplitInput enforces one-char-per-field itself: whole codes
+distribute from field 0 (digit-sanitized for tel — separators like 123-456
+never land in a field), partial strings no longer clear fields beyond them,
+and overtyping a filled field keeps the newest digit and advances. FieldConfig
+gains testId passthrough to the inner Input (data-pw/testID per field).
+
+New spec pins the contract; 3 of its 4 tests fail against the previous
+component (negative control).
+
+## [2.111.3](https://github.com/juspay/svelte-ui-components/compare/2.111.3..2.111.2) - 30 July 2026
 
 ## [2.111.2](https://github.com/juspay/svelte-ui-components/compare/2.111.2..2.111.1) - 27 July 2026
 

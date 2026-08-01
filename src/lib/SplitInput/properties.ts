@@ -12,6 +12,7 @@ export type FieldConfig = Pick<
   | 'label'
   | 'autoComplete'
   | 'inputMode'
+  | 'testId'
 >;
 
 export type SplitInputProperties = MandatorySplitInputProperties &

@@ -56,6 +56,32 @@
 
   // ── Input handler ───────────────────────────────────────────────
 
+  // Multi-char cleanup for the distribute paths: tel fields keep digits only
+  // (an OTP autofilled/pasted as "123-456" or "123 456" must land as 123456,
+  // never distribute a separator into a field); other dataTypes keep the old
+  // whitespace-strip behavior.
+  function sanitizeChars(config: FieldConfig, raw: string): string {
+    if ((config.dataType ?? 'text') === 'tel') {
+      return raw.replace(/\D/g, '');
+    }
+    return raw.replace(/\s/g, '');
+  }
+
+  // Single-char autoAdvance fields widen the inner Input's maxLength to the
+  // whole code length: Input's dataType='tel' sanitizer truncates an overflowing
+  // value to its LAST maxLength digits BEFORE onInput fires, so with the literal
+  // maxLength of 1 a WebOTP / Android-SMS autofill that drops the whole code
+  // into one field reached handleFieldInput as a single wrong digit and the
+  // distribute branch below could never run. One-char-per-field semantics are
+  // enforced by handleFieldInput itself, not by the inner Input.
+  function innerMaxLength(config: FieldConfig): number {
+    const configured = config.maxLength ?? 1000;
+    if (autoAdvance && configured === 1) {
+      return fieldCount;
+    }
+    return configured;
+  }
+
   function handleFieldInput(index: number, inputValue: string) {
     const config = fieldConfigs.at(index);
     if (typeof config === 'undefined') {
@@ -64,11 +90,25 @@
     const maxLen = config.maxLength ?? 1000;
 
     if (autoAdvance && maxLen === 1 && inputValue.length > 1) {
-      const chars = inputValue.replace(/\s/g, '');
-      for (let i = 0; i < fieldCount; i++) {
-        values[i] = chars.charAt(i);
+      const chars = sanitizeChars(config, inputValue);
+      if (chars.length === 0) {
+        values[index] = '';
+      } else if (index === 0 || chars.length >= fieldCount) {
+        // Autofill / OS-level insertion of a whole code: distribute from the
+        // start. Only provided characters are written — a partial string must
+        // not clear fields beyond it.
+        for (let i = 0; i < Math.min(chars.length, fieldCount); i++) {
+          values[i] = chars.charAt(i);
+        }
+        focusField(Math.min(chars.length, fieldCount) - 1);
+      } else {
+        // Overtyping an already-filled field: keep the newest character and
+        // advance, mirroring single-char entry.
+        values[index] = chars.slice(-1);
+        if (index < fieldCount - 1) {
+          focusField(index + 1);
+        }
       }
-      focusField(Math.min(chars.length, fieldCount) - 1);
     } else {
       values[index] = inputValue;
       if (autoAdvance && maxLen === 1 && inputValue.length > 0 && index < fieldCount - 1) {
@@ -111,9 +151,10 @@
     }
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').trim();
+    const config = fieldConfigs.at(index);
 
-    if (autoAdvance) {
-      const chars = pasted.replace(/\s/g, '');
+    if (autoAdvance && typeof config !== 'undefined') {
+      const chars = sanitizeChars(config, pasted);
       for (let i = index; i < fieldCount; i++) {
         const charIdx = i - index;
         if (charIdx >= chars.length) {
@@ -153,7 +194,8 @@
       <Input
         value={getFieldValue(index)}
         dataType={config.dataType ?? 'text'}
-        maxLength={config.maxLength ?? 1000}
+        maxLength={innerMaxLength(config)}
+        testId={config.testId}
         min={config.min}
         max={config.max}
         placeholder={config.placeholder}

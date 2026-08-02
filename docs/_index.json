@@ -72,6 +72,10 @@
     "description": "A checkbox list item with an HTML-capable text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet and disabled state. The checked state is bindable."
   },
   {
+    "name": "ChipInput",
+    "description": "A free-text tag/chip input built by composing Input and Pill. Typed text commits into a chip on Enter or on blur, rendered as a dismissible Pill; the bindable `values` array holds the committed chips. Deduplicates on add, supports a disabled state, and exposes onadd/ondismiss/onchange callbacks alongside the bindable array. Use for tag lists, keyword entry, or any freeform multi-value field."
+  },
+  {
     "name": "Choicebox",
     "description": "A selectable option group with single-select (radio) or multi-select (checkbox) behavior. Each item renders a children snippet with custom content. Supports disabled items, keyboard navigation, and configurable layout via CSS grid variables."
   },

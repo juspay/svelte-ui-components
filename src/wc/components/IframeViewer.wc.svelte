@@ -8,6 +8,7 @@
       allowedOrigins: { type: 'Object', attribute: 'allowed-origins' },
       allow: { type: 'String', reflect: true },
       sandbox: { type: 'String', reflect: true },
+      credentialless: { type: 'Boolean', reflect: true, attribute: 'credentialless' },
       loading: { type: 'String', reflect: true },
       referrerpolicy: { type: 'String', attribute: 'referrer-policy' },
       testId: { type: 'String', attribute: 'test-id' },

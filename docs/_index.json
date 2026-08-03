@@ -117,7 +117,7 @@
   },
   {
     "name": "IframeViewer",
-    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window \u2014 an empty list (the default) processes nothing, so it is secure by default. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
+    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window \u2014 an empty list (the default) processes nothing, so it is secure by default. Supports an optional `credentialless` attribute (applied in the same render statement as `src`, no effect-timing dependency) and an exported `postMessage(message, targetOrigin)` instance method for sending messages into the embedded frame. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
   },
   {
     "name": "Img",

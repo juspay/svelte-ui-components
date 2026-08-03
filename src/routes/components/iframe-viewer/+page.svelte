@@ -7,6 +7,24 @@
       '<p>This document is rendered inside an IframeViewer.</p>' +
       '</div>'
   )}`;
+
+  const messagingDoc = `data:text/html,${encodeURIComponent(
+    '<div style="font-family: sans-serif; padding: 24px; color: #1a1a1a;">' +
+      '<h2>credentialless + postMessage</h2>' +
+      '<p id="log">Waiting for a message…</p>' +
+      '<script>' +
+      'window.addEventListener("message", (event) => {' +
+      'document.getElementById("log").textContent = "Received: " + JSON.stringify(event.data);' +
+      '});' +
+      '<\\/script>' +
+      '</div>'
+  )}`;
+
+  let messagingFrame: IframeViewer | null = $state(null);
+
+  const sendPing = (): void => {
+    messagingFrame?.postMessage({ type: 'ping', at: Date.now() }, '*');
+  };
 </script>
 
 <div class="page-header">
@@ -24,6 +42,27 @@
 <div class="demo-row">
   <div class="frame-box">
     <IframeViewer src={demoDoc} title="Demo document" allow="fullscreen" />
+  </div>
+</div>
+
+<h3>credentialless + outbound postMessage</h3>
+<div class="demo-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+  <button
+    class="toggle-btn"
+    onclick={sendPing}
+    data-pw="iframe-viewer-send-message"
+    testID="iframe-viewer-send-message"
+  >
+    Send message to iframe
+  </button>
+  <div class="frame-box">
+    <IframeViewer
+      bind:this={messagingFrame}
+      src={messagingDoc}
+      title="Messaging demo"
+      credentialless
+      testId="iframe-viewer-messaging"
+    />
   </div>
 </div>
 

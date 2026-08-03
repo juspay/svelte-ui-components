@@ -2,16 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.112.0)
 
-Composes Input + Pill into a generic bindable string[] chip input:
-type into the draft field, Enter or blur commits a deduped chip as a
-dismissible Pill. Ports lighthouse's app-local ChipInput (BZ-4233
-component-migration campaign) into a generic, unstyled-by-default
-component with a --chip-input-* CSS variable contract, onadd/
-ondismiss/onchange callbacks, a disabled state, and dual data-pw/
-testID emission. Registered in the lib barrel, docs manifest, demo
-nav, and a new demo route.
+Ports lighthouse's app-side FileDropzoneTrigger (PR #6700, 9 files / 14
+call sites) into the library so it is authored once and imported, not
+hand-rolled per consumer. Composes with FileInput's existing trigger
+snippet: onclick wires to openFilePicker. Drops the mutedCaption boolean
+in favor of --file-dropzone-trigger-caption-color, a pure-appearance
+concern exposed as a themeable CSS variable instead of a prop.
+
+## [2.112.0](https://github.com/juspay/svelte-ui-components/compare/2.112.0..2.111.4) - 3 August 2026
 
 ## [2.111.4](https://github.com/juspay/svelte-ui-components/compare/2.111.4..2.111.3) - 1 August 2026
 

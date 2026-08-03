@@ -2,21 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.111.4)
 
-WebOTP / Android-SMS autofill drops the entire code into the first field as
-one input event. Input's dataType='tel' sanitizer truncated an overflowing
-value to its LAST maxLength digits before onInput fired, so with single-char
-fields the distribute branch never ran and a 6-digit code landed as one wrong
-digit. Single-char autoAdvance fields now widen the inner Input maxLength to
-the code length and SplitInput enforces one-char-per-field itself: whole codes
-distribute from field 0 (digit-sanitized for tel — separators like 123-456
-never land in a field), partial strings no longer clear fields beyond them,
-and overtyping a filled field keeps the newest digit and advances. FieldConfig
-gains testId passthrough to the inner Input (data-pw/testID per field).
+Composes Input + Pill into a generic bindable string[] chip input:
+type into the draft field, Enter or blur commits a deduped chip as a
+dismissible Pill. Ports lighthouse's app-local ChipInput (BZ-4233
+component-migration campaign) into a generic, unstyled-by-default
+component with a --chip-input-* CSS variable contract, onadd/
+ondismiss/onchange callbacks, a disabled state, and dual data-pw/
+testID emission. Registered in the lib barrel, docs manifest, demo
+nav, and a new demo route.
 
-New spec pins the contract; 3 of its 4 tests fail against the previous
-component (negative control).
+## [2.111.4](https://github.com/juspay/svelte-ui-components/compare/2.111.4..2.111.3) - 1 August 2026
 
 ## [2.111.3](https://github.com/juspay/svelte-ui-components/compare/2.111.3..2.111.2) - 30 July 2026
 

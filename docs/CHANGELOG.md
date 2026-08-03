@@ -2,14 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.112.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.113.0)
 
-Ports lighthouse's app-side FileDropzoneTrigger (PR #6700, 9 files / 14
-call sites) into the library so it is authored once and imported, not
-hand-rolled per consumer. Composes with FileInput's existing trigger
-snippet: onclick wires to openFilePicker. Drops the mutedCaption boolean
-in favor of --file-dropzone-trigger-caption-color, a pure-appearance
-concern exposed as a themeable CSS variable instead of a prop.
+The header's left/right image wrappers render as role="button"
+tabindex="0" divs with no text content, so screen readers announced
+a bare "button" with no name — every consumer whose header renders
+a close/back icon inherited this gap.
+
+Add buttonAriaLabel to the header config (mirrors the existing
+buttonTestId placement, applies to the right image) and a top-level
+leftImageAriaLabel (mirrors the existing leftImageTestId placement,
+applies to the left image). Both are optional and render as
+aria-label; omitting them preserves current (nameless) behavior.
+
+## [2.113.0](https://github.com/juspay/svelte-ui-components/compare/2.113.0..2.112.0) - 3 August 2026
 
 ## [2.112.0](https://github.com/juspay/svelte-ui-components/compare/2.112.0..2.111.4) - 3 August 2026
 

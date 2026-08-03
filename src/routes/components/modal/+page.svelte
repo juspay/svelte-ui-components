@@ -5,6 +5,11 @@
   let showModal = $state(false);
   let showModalTop = $state(false);
   let showTallModal = $state(false);
+
+  // Inline data-URI so the demo has no external asset dependency; exercises
+  // the Img component's `inlineSvg` currentColor path used by the header.
+  const closeIconSrc =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E";
 </script>
 
 <div class="page-header">
@@ -19,12 +24,18 @@
       size="medium"
       align="center"
       showOverlay
-      header={{ text: 'Confirm Action' }}
+      header={{
+        text: 'Confirm Action',
+        rightImage: closeIconSrc,
+        buttonTestId: 'confirm-modal-close',
+        buttonAriaLabel: 'Close dialog'
+      }}
       footer={{
         primaryButton: { text: 'Confirm' },
         secondaryButton: { text: 'Cancel' }
       }}
       onclose={() => (showModal = false)}
+      onheaderRightImageClick={() => (showModal = false)}
       onoverlayClick={() => (showModal = false)}
       onprimaryButtonClick={() => {
         alert('Confirmed!');

@@ -20,6 +20,8 @@ export type OptionalModalProperties = {
     text?: string;
     testId?: string;
     buttonTestId?: string;
+    /** Accessible name for the right header image's role="button" wrapper (e.g. a close control). Rendered as aria-label. */
+    buttonAriaLabel?: string;
   };
   footer?: {
     primaryButton?: ButtonProperties;
@@ -27,6 +29,8 @@ export type OptionalModalProperties = {
   };
   debounceTime?: number;
   leftImageTestId?: string;
+  /** Accessible name for the left header image's role="button" wrapper (e.g. a back control). Rendered as aria-label. */
+  leftImageAriaLabel?: string;
   testId?: string;
   content?: Snippet;
   footerSnippet?: Snippet;

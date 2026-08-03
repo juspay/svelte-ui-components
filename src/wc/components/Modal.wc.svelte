@@ -13,6 +13,7 @@
       footer: { type: 'Object' },
       debounceTime: { type: 'Number', attribute: 'debounce-time' },
       leftImageTestId: { type: 'String', attribute: 'left-image-test-id' },
+      leftImageAriaLabel: { type: 'String', attribute: 'left-image-aria-label' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclose: { type: 'Object' },

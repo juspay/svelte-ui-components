@@ -10,12 +10,17 @@
     sandbox,
     loading,
     referrerpolicy,
+    credentialless,
     testId,
     classes,
     onMessage = () => {}
   }: IframeViewerProperties = $props();
 
   let iframeEl: HTMLIFrameElement | null = $state(null);
+
+  export const postMessage = (message: unknown, targetOrigin: string): void => {
+    iframeEl?.contentWindow?.postMessage(message, targetOrigin);
+  };
 
   const messageHandler = (event: MessageEvent): void => {
     // Secure by default: forward a message only when its origin is allow-listed AND it
@@ -44,7 +49,15 @@
 
 <div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
   {#if src}
-    <iframe bind:this={iframeEl} {src} {title} {allow} {sandbox} {loading} {referrerpolicy}
+    <iframe
+      bind:this={iframeEl}
+      {src}
+      {title}
+      {allow}
+      {sandbox}
+      {loading}
+      {referrerpolicy}
+      {...credentialless ? { credentialless: '' } : {}}
     ></iframe>
   {/if}
 </div>

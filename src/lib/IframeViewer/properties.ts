@@ -19,6 +19,13 @@ export type OptionalIframeViewerProperties = {
   allow?: string;
   /** Value for the iframe `sandbox` attribute. Omitted when not set. */
   sandbox?: string;
+  /**
+   * Sets the iframe's `credentialless` attribute, isolating it from the embedding
+   * document's credentials/storage. Applied in the same render statement as `src` (not
+   * via a post-mount effect), so it is guaranteed to be present before the iframe's
+   * first load — no timing dependency on effect scheduling.
+   */
+  credentialless?: boolean;
   /** Loading strategy for the iframe. Omitted when not set. */
   loading?: 'eager' | 'lazy';
   /** Referrer policy for the iframe. Omitted when not set. */

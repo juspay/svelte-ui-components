@@ -26,6 +26,7 @@ A security-conscious iframe embed. It renders an `<iframe>` for the given `src` 
 | allowedOrigins | `string[]`          | No       | `[]`                 | Origins allowed to send `postMessage` events to `onMessage`. An empty array (the default) processes nothing — secure by default. |
 | allow          | `string`            | No       | `'fullscreen'`       | Permissions policy applied to the iframe `allow` attribute.                                                                      |
 | sandbox        | `string`            | No       | `-`                  | Value for the iframe `sandbox` attribute. Omitted when not set.                                                                  |
+| credentialless | `boolean`           | No       | `-`                  | Sets the iframe's `credentialless` attribute. Applied in the same render statement as `src`, so it is present before the iframe's first load — no dependency on effect-scheduling order. |
 | loading        | `'eager' \| 'lazy'` | No       | `-`                  | Loading strategy for the iframe. Omitted when not set.                                                                           |
 | referrerpolicy | `ReferrerPolicy`    | No       | `-`                  | Referrer policy for the iframe. Omitted when not set.                                                                            |
 | testId         | `string`            | No       | `-`                  | Test selector applied as `data-pw` on the container.                                                                             |
@@ -38,6 +39,29 @@ Event handler props with callback signatures.
 | Event     | Type                            | Description                                                                                                                                 |
 | --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | onMessage | `(event: MessageEvent) => void` | Called with the `MessageEvent` for `postMessage` events whose origin is in `allowedOrigins` and whose source is the embedded iframe window. |
+
+## Instance Methods
+
+`postMessage` is exported from the component instance — bind it to send messages into the embedded iframe (outbound), mirroring `onMessage` for the inbound direction:
+
+```svelte
+<script>
+  import { IframeViewer } from '@juspay/svelte-ui-components';
+
+  let viewerRef;
+</script>
+
+<IframeViewer bind:this={viewerRef} src="https://example.com" />
+<button onclick={() => viewerRef.postMessage({ type: 'ping' }, 'https://example.com')}>
+  Send message
+</button>
+```
+
+| Method                                                | Description                                                                                        |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `postMessage(message: unknown, targetOrigin: string)` | Posts `message` to the embedded iframe's `contentWindow` at `targetOrigin`. No-op before the iframe mounts (`src` unset) or once it unmounts. |
+
+This is a Svelte-only accessor via `bind:this` (same pattern as `FileInput`'s `openFilePicker`) — it is not bridged onto the `<sui-iframe-viewer>` custom element; see Web Component section below.
 
 ## CSS Variables
 
@@ -60,6 +84,7 @@ Tag: `<sui-iframe-viewer>`
   title="Example"
   allow="fullscreen"
   sandbox="allow-scripts allow-same-origin"
+  credentialless
   loading="lazy"
   referrer-policy="no-referrer"
   test-id="commerce-frame"
@@ -73,3 +98,5 @@ const frame = document.querySelector('sui-iframe-viewer');
 frame.allowedOrigins = ['https://example.com'];
 frame.onMessage = (event) => console.log(event.data);
 ```
+
+`postMessage` is **not** exposed on `<sui-iframe-viewer>` — it is a Svelte-only instance accessor (see Instance Methods above). Web Component consumers already have a standard way to reach the same outcome: query the rendered `<iframe>` inside the element's shadow root and call its `contentWindow.postMessage` directly.

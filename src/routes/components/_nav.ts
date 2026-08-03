@@ -47,6 +47,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Color Picker', slug: 'color-picker' },
       { name: 'SplitInput', slug: 'split-input' },
       { name: 'ChipInput', slug: 'chip-input' },
+      { name: 'FileDropzoneTrigger', slug: 'file-dropzone-trigger' },
       { name: 'FileInput', slug: 'file-input' }
     ]
   },

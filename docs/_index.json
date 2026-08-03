@@ -96,6 +96,10 @@
     "description": "A centered placeholder component for empty lists, search results, or views. Renders an optional icon snippet above a required title, an optional description (omitted entirely when absent), and an optional action area (e.g. buttons) below; all colors inherit from the parent for seamless light/dark theme support."
   },
   {
+    "name": "FileDropzoneTrigger",
+    "description": "The visual body for a FileInput trigger snippet — an icon plus heading and optional caption, built on the library's own Img and Button. Supports a compact variant (bare icon-sm + heading, no Button wrapper or caption) for inline/dense placements. Pass onclick={openFilePicker} from FileInput's trigger snippet in the non-compact variant; compact relies on FileInput's own whole-area click/drop handling. Use for upload dropzones, CSV/image pickers, or any file-picker trigger that needs the icon+heading+caption recipe instead of hand-rolled markup."
+  },
+  {
     "name": "FileInput",
     "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, and `disabled`."
   },

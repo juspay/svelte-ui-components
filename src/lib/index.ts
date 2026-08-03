@@ -76,6 +76,7 @@ export { default as DualAxisBarChart } from './DualAxisBarChart/DualAxisBarChart
 export { default as FunnelChart } from './FunnelChart/FunnelChart.svelte';
 export { default as ProportionBar } from './ProportionBar/ProportionBar.svelte';
 export { default as ChipInput } from './ChipInput/ChipInput.svelte';
+export { default as FileDropzoneTrigger } from './FileDropzoneTrigger/FileDropzoneTrigger.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -149,6 +150,7 @@ export type * from './DualAxisBarChart/properties';
 export type * from './FunnelChart/properties';
 export type * from './ProportionBar/properties';
 export type * from './ChipInput/properties';
+export type * from './FileDropzoneTrigger/properties';
 export type * from './_chart/highlight';
 
 export { validateInput } from './utils';

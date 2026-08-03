@@ -21,6 +21,7 @@
     footer,
     debounceTime = 700,
     leftImageTestId,
+    leftImageAriaLabel,
     testId,
     content,
     footerSnippet,
@@ -162,6 +163,7 @@
                   onkeydown={handleLeftImageKeyDown}
                   role="button"
                   tabindex="0"
+                  aria-label={leftImageAriaLabel ?? null}
                   data-pw={leftImageTestId}
                   testID={leftImageTestId}
                 >
@@ -187,6 +189,7 @@
                   tabindex="0"
                   onclick={handleRightImageClick}
                   onkeydown={handleRightImageKeyDown}
+                  aria-label={header.buttonAriaLabel ?? null}
                   data-pw={header.buttonTestId}
                   testID={header.buttonTestId}
                 >

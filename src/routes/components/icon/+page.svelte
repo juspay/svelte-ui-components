@@ -22,3 +22,23 @@
   <Icon svg={heartSvg} text="Heart" />
   <Icon svg={checkSvg} text="Check" />
 </div>
+
+<h3 class="demo-heading">Non-interactive (interactive={false})</h3>
+<p class="demo-caption">
+  For icons that are purely decorative or informational — no click handler, no
+  <code>role="button"</code>, no tab stop.
+</p>
+<div class="demo-row" style="align-items: center;">
+  <Icon svg={checkSvg} text="Verified" interactive={false} />
+</div>
+
+<style>
+  .demo-heading {
+    margin: 24px 0 8px;
+  }
+
+  .demo-caption {
+    margin: 0 0 12px;
+    color: #666;
+  }
+</style>

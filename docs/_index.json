@@ -113,7 +113,7 @@
   },
   {
     "name": "Icon",
-    "description": "A clickable icon component that displays an image with an optional text label below. The entire container is a button for accessibility."
+    "description": "An icon component that displays an image with an optional text label below. Interactive (button semantics) by default; set interactive={false} for decorative icons."
   },
   {
     "name": "IconStack",

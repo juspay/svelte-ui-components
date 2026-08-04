@@ -1,6 +1,6 @@
 # Icon
 
-A clickable icon component that displays an image or inline SVG with an optional text label. The entire container is a button for accessibility. Layout direction (row or column) is controlled via CSS variable `--icon-container-direction`. Supports two rendering modes: image URL via `icon` prop, or raw SVG markup via `svg` prop.
+An icon component that displays an image or inline SVG with an optional text label. By default the container renders as an interactive button (`role="button"`, `tabindex`, click/keydown handling) for accessibility; set `interactive={false}` for purely decorative or informational icons that shouldn't be exposed to assistive tech or the tab order. Layout direction (row or column) is controlled via CSS variable `--icon-container-direction`. Supports two rendering modes: image URL via `icon` prop, or raw SVG markup via `svg` prop.
 
 ## Usage
 
@@ -24,6 +24,7 @@ A clickable icon component that displays an image or inline SVG with an optional
 | svg     | `string`         | No       | `-`     | Raw SVG markup string to render inline via `{@html}`. When provided, takes priority over `icon`. Inherits `currentColor` for styling. **Must be trusted content** — never pass unsanitized user input (see Security note below). |
 | text    | `string \| null` | No       | `-`     | Optional text label displayed below the icon.                                                                                                                          |
 | classes | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| interactive | `boolean`    | No       | `true`  | When `true`, the container gets `role="button"`, `tabindex="0"`, and the `onclick`/`onkeydown` handlers. When `false`, none of those are rendered — use for decorative or informational icons with no click behavior. |
 
 > **Note:** At least one of `icon` or `svg` should be provided. If both are provided, `svg` takes priority.
 
@@ -33,8 +34,8 @@ A clickable icon component that displays an image or inline SVG with an optional
 
 | Event     | Type                             | Description                                                     |
 | --------- | -------------------------------- | --------------------------------------------------------------- |
-| onclick   | `(event: MouseEvent) => void`    | Fires when the icon container is clicked.                       |
-| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the icon container has focus. |
+| onclick   | `(event: MouseEvent) => void`    | Fires when the icon container is clicked. Only wired up when `interactive` is `true` (the default). |
+| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the icon container has focus. Only wired up when `interactive` is `true` (the default). |
 
 ## CSS Variables
 

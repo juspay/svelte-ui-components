@@ -2,15 +2,25 @@
   import Img from '../Img/Img.svelte';
   import type { IconProperties } from './properties';
 
-  let { icon, svg, text, onclick, onkeydown, classes, testId }: IconProperties = $props();
+  let {
+    icon,
+    svg,
+    text,
+    onclick,
+    onkeydown,
+    classes,
+    testId,
+    interactive = true
+  }: IconProperties = $props();
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="icon-container {classes ?? ''}"
-  {onclick}
-  {onkeydown}
-  role="button"
-  tabindex="0"
+  onclick={interactive ? onclick : null}
+  onkeydown={interactive ? onkeydown : null}
+  role={interactive ? 'button' : null}
+  tabindex={interactive ? 0 : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >

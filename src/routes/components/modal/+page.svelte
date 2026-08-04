@@ -5,9 +5,14 @@
   let showModal = $state(false);
   let showModalTop = $state(false);
   let showTallModal = $state(false);
+  let showDecorativeLeftImageModal = $state(false);
+  let showBackButtonModal = $state(false);
+  let backButtonClickCount = $state(0);
 
   // Inline data-URI so the demo has no external asset dependency; exercises
   // the Img component's `inlineSvg` currentColor path used by the header.
+  const backIconSrc =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M15 18l-6-6 6-6'/%3E%3C/svg%3E";
   const closeIconSrc =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E";
 </script>
@@ -73,6 +78,64 @@
         {/snippet}
       </Modal>
     </div>
+  {/if}
+</div>
+
+<div class="demo-row">
+  <Button
+    text="Open modal with decorative left image"
+    onclick={() => (showDecorativeLeftImageModal = true)}
+  />
+  {#if showDecorativeLeftImageModal}
+    <Modal
+      size="medium"
+      align="center"
+      showOverlay
+      testId="decorative-left-image-modal"
+      leftImageTestId="decorative-left-image"
+      header={{ text: 'Decorative left image', leftImage: backIconSrc, rightImage: closeIconSrc }}
+      onclose={() => (showDecorativeLeftImageModal = false)}
+      onoverlayClick={() => (showDecorativeLeftImageModal = false)}
+      onheaderRightImageClick={() => (showDecorativeLeftImageModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p>
+            No <code>onheaderLeftImageClick</code> is supplied, so the left image is a plain decorative
+            image — it must not be focusable and must not be announced as a button.
+          </p>
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+</div>
+
+<div class="demo-row">
+  <Button text="Open modal with back button" onclick={() => (showBackButtonModal = true)} />
+  {#if showBackButtonModal}
+    <Modal
+      size="medium"
+      align="center"
+      showOverlay
+      testId="back-button-modal"
+      leftImageTestId="back-button-left-image"
+      leftImageAriaLabel="Go back"
+      header={{ text: 'Back button', leftImage: backIconSrc, rightImage: closeIconSrc }}
+      onclose={() => (showBackButtonModal = false)}
+      onoverlayClick={() => (showBackButtonModal = false)}
+      onheaderRightImageClick={() => (showBackButtonModal = false)}
+      onheaderLeftImageClick={() => (backButtonClickCount += 1)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p>
+            A real back control: <code>onheaderLeftImageClick</code> is supplied, so it keeps
+            <code>role="button"</code>, its tab stop and keyboard activation.
+          </p>
+          <p data-pw="back-button-click-count">clicks: {backButtonClickCount}</p>
+        </div>
+      {/snippet}
+    </Modal>
   {/if}
 </div>
 

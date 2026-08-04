@@ -21,6 +21,7 @@ A large-target selection card used for prominent single or multi-choice selectio
 | selected | `boolean`               | No       | `false`     | The current selection state of the choicebox. Bindable.                                                                                                                |
 | mode     | `'radio' \| 'checkbox'` | No       | `'radio'`   | Controls the indicator style. `radio` shows a filled circle when selected, `checkbox` shows a checkmark box.                                                           |
 | disabled | `boolean`               | No       | `false`     | When true, the choicebox is non-interactive and visually dimmed.                                                                                                       |
+| showIndicator | `boolean`          | No       | `true`      | Whether to render the radio dot / checkbox tick. Set false when the card supplies its own selected affordance.                                                          |
 | testId   | `string`                | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
 | classes  | `string`                | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
@@ -69,3 +70,23 @@ Tag: `<sui-choicebox>`
   <span>Option A</span>
 </sui-choicebox>
 ```
+
+### Indicator
+
+The indicator is decorative — the card itself carries `role` and `aria-checked`, so the mark is
+`aria-hidden`. It is placed last and pushed to the trailing edge; reorder it with
+`--choicebox-indicator-order`.
+
+| Variable                                    | Default             | Description                                        |
+| ------------------------------------------- | ------------------- | -------------------------------------------------- |
+| `--choicebox-indicator-size`                 | `20px`              | Width and height of the indicator.                 |
+| `--choicebox-indicator-border`               | `2px solid #757575` | Border when unselected.                            |
+| `--choicebox-indicator-background`           | `transparent`       | Fill when unselected.                              |
+| `--choicebox-indicator-selected-border`      | `2px solid #2196f3` | Border when selected.                              |
+| `--choicebox-indicator-selected-background`  | `#2196f3`           | Fill when selected.                                |
+| `--choicebox-indicator-border-radius`        | `var(--radius, 4px)`| Corner rounding in `checkbox` mode.                |
+| `--choicebox-indicator-dot-inset`            | `4px`               | Ring thickness that forms the dot in `radio` mode. |
+| `--choicebox-indicator-icon-size`            | `14px`              | Size of the checkmark in `checkbox` mode.          |
+| `--choicebox-indicator-icon-color`           | `#ffffff`           | Colour of the checkmark.                           |
+| `--choicebox-indicator-order`                | `1`                 | Flex order of the indicator within the card.       |
+| `--choicebox-indicator-margin-inline-start`  | `auto`              | Leading margin; `auto` pins it to the trailing edge. |

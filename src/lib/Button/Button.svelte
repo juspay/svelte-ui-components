@@ -232,7 +232,8 @@
     opacity: var(--opacity, 1);
     border: var(--button-border, var(--_btn-border, none));
     box-sizing: border-box;
-    text-decoration: none;
+    text-decoration: var(--button-text-decoration, none);
+    line-height: var(--button-line-height, normal);
     display: flex;
     justify-content: var(--button-justify-content, center);
     align-items: center;
@@ -255,6 +256,7 @@
     color: var(--disabled-text-color, var(--button-text-color, var(--_btn-text-color, white)));
     font-size: var(--disabled-font-size);
     font-weight: var(--disabled-font-weight);
+    text-decoration: var(--button-disabled-text-decoration, var(--button-text-decoration, none));
     /* Preserve the variant border when disabled so secondary (bordered) stays distinct from ghost. */
     border: var(--disabled-border, var(--button-border, var(--_btn-border, none)));
     background: var(

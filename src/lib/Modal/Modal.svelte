@@ -17,6 +17,7 @@
     supportHardwareBackPress = false,
     enableTransition = true,
     transitionType = 'ALL',
+    entryAnimation,
     header = {},
     footer,
     debounceTime = 700,
@@ -34,6 +35,7 @@
     onkeydown,
     classes,
     overlayBackdropFilter,
+    overlayFadeIn = false,
     usePortal = false
   }: ModalProperties = $props();
 
@@ -138,7 +140,7 @@
 <svelte:window onkeydown={handleKeyDown} />
 
 {#if typeof content === 'function'}
-  <OverlayAnimation>
+  <OverlayAnimation fadeIn={overlayFadeIn}>
     <div
       bind:this={overlayDiv}
       use:portalAction={{ usePortal }}
@@ -153,7 +155,7 @@
       data-pw={testId}
       testID={testId}
     >
-      <ModalAnimation enable={enableTransition} {align} {transitionType}>
+      <ModalAnimation enable={enableTransition} {align} {transitionType} {entryAnimation}>
         <div class="modal-content {size}">
           {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
             <div class="header">

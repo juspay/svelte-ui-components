@@ -9,6 +9,7 @@
       supportHardwareBackPress: { type: 'Boolean', attribute: 'support-hardware-back-press' },
       enableTransition: { type: 'Boolean', reflect: true, attribute: 'enable-transition' },
       transitionType: { type: 'String', reflect: true, attribute: 'transition-type' },
+      entryAnimation: { type: 'String', reflect: true, attribute: 'entry-animation' },
       header: { type: 'Object' },
       footer: { type: 'Object' },
       debounceTime: { type: 'Number', attribute: 'debounce-time' },
@@ -24,6 +25,7 @@
       onoverlayClick: { type: 'Object' },
       onkeydown: { type: 'Object' },
       overlayBackdropFilter: { type: 'String', attribute: 'overlay-backdrop-filter' },
+      overlayFadeIn: { type: 'Boolean', attribute: 'overlay-fade-in' },
       usePortal: { type: 'Boolean', attribute: 'use-portal' }
     }
   }}

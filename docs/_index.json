@@ -161,15 +161,15 @@
   },
   {
     "name": "Modal",
-    "description": "A dialog overlay component that renders on top of the page with configurable size, alignment, header, footer, and transition animations. Locks body scroll and optionally handles hardware back-press navigation. Supports click-to-dismiss and Escape key."
+    "description": "A dialog overlay component that renders on top of the page with configurable size, alignment, header, footer, and transition animations. entryAnimation can override the per-align default, e.g. a slide-up bottom-sheet-style dialog while centered. Locks body scroll and optionally handles hardware back-press navigation. Supports click-to-dismiss and Escape key."
   },
   {
     "name": "ModalAnimation",
-    "description": "A wrapper that applies fly or fade Svelte transitions to its children based on the modal's `align` prop. For top alignment, content flies in from above; for bottom, from below; for center, a fade transition is used."
+    "description": "A wrapper that applies fly or fade Svelte transitions to its children based on the modal's `align` prop. For top alignment, content flies in from above; for bottom, from below; for center, a fade transition is used. The optional entryAnimation prop can override this per-align default."
   },
   {
     "name": "OverlayAnimation",
-    "description": "A wrapper that applies a fade-out transition (350ms) to its children when they are removed from the DOM. Used internally by Modal to animate the overlay background."
+    "description": "A wrapper that applies a fade-out transition (350ms) to its children when they are removed from the DOM, and optionally a matching fade-in on mount via the fadeIn prop. Used internally by Modal to animate the overlay background."
   },
   {
     "name": "Pagination",

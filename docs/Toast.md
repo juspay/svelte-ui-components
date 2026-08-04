@@ -72,6 +72,7 @@ Override these custom properties to theme the component.
 | `--toast-top`                          | `10px`                                   | top              | Top position of the toast.                                              |
 | `--toast-left`                         | `0`                                      | left             | Left position of the toast.                                             |
 | `--toast-right`                        | `0`                                      | right            | Right position of the toast.                                            |
+| `--toast-bottom`                       | `auto`                                   | bottom           | Bottom position of the toast. Combine with `--toast-top: auto` to anchor to the bottom edge instead of the top. |
 | `--toast-background-color`             | `#87ceeb`                                | background-color | Default background color of the toast.                                  |
 | `--toast-opacity`                      | `1`                                      | opacity          | Opacity of the toast.                                                   |
 | `--toast-box-sizing`                   | `-`                                      | box-sizing       |                                                                         |

@@ -177,6 +177,7 @@
     top: var(--toast-top, 10px);
     left: var(--toast-left, 0);
     right: var(--toast-right, 0);
+    bottom: var(--toast-bottom, auto);
     background-color: var(--toast-background-color, #87ceeb);
     opacity: var(--toast-opacity, 1);
     box-sizing: var(--toast-box-sizing);

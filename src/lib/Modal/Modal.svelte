@@ -158,25 +158,35 @@
           {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
             <div class="header">
               {#if typeof header.leftImage === 'string' && header.leftImage.length > 0}
-                <div
-                  onclick={handleLeftImageClick}
-                  onkeydown={handleLeftImageKeyDown}
-                  role="button"
-                  tabindex="0"
-                  aria-label={leftImageAriaLabel ?? null}
-                  data-pw={leftImageTestId}
-                  testID={leftImageTestId}
-                >
+                {@const leftImageSrc = header.leftImage}
+                {#snippet leftImage()}
                   <!-- Inline SVGs so currentColor icons inherit the header text
                        colour; non-SVG URLs fall back to a plain <img>. -->
-                  <Img
-                    inlineSvg
-                    src={header.leftImage}
-                    alt=""
-                    fallback=""
-                    classes="header-left-img"
-                  />
-                </div>
+                  <Img inlineSvg src={leftImageSrc} alt="" fallback="" classes="header-left-img" />
+                {/snippet}
+                <!-- The left image is only a control when a click handler is actually supplied.
+                     Consumers pass a decorative brand/source logo here far more often than a back
+                     button, and announcing those as a focusable "button" that does nothing when
+                     activated is worse for assistive tech than leaving them unannounced. The two
+                     branches are written out rather than computed so the role/tabindex pairing
+                     stays statically checkable. -->
+                {#if typeof onheaderLeftImageClick === 'function'}
+                  <div
+                    onclick={handleLeftImageClick}
+                    onkeydown={handleLeftImageKeyDown}
+                    role="button"
+                    tabindex="0"
+                    aria-label={leftImageAriaLabel ?? null}
+                    data-pw={leftImageTestId}
+                    testID={leftImageTestId}
+                  >
+                    {@render leftImage()}
+                  </div>
+                {:else}
+                  <div data-pw={leftImageTestId} testID={leftImageTestId}>
+                    {@render leftImage()}
+                  </div>
+                {/if}
               {/if}
               {#if typeof header.text === 'string' && header.text.length > 0}
                 <div class="header-text" data-pw={header.testId} testID={header.testId}>

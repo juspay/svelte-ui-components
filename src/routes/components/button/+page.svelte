@@ -116,4 +116,23 @@
   <div class="demo-row">
     <Button text="Open docs" href="https://svelte.dev" target="_blank" variant="secondary" />
   </div>
+
+  <h3>Gradient background</h3>
+  <p>
+    <code>--button-background</code> takes any <code>background-image</code> value — here a gradient
+    layered over <code>--button-color</code> — and persists into hover/active instead of falling
+    back to a flat color. Pair it with <code>--button-transition</code> to animate state changes (here,
+    the hover lift).
+  </p>
+  <div class="demo-row">
+    <Button text="Book a Demo" classes="btn-gradient" />
+  </div>
 </div>
+
+<style>
+  :global(.btn-gradient) {
+    --button-background: linear-gradient(135deg, #8f41fc, #59299c);
+    --button-hover-transform: translateY(-2px);
+    --button-transition: background 0.2s ease, transform 0.15s ease;
+  }
+</style>

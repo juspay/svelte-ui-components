@@ -198,6 +198,10 @@
     font-weight: var(--button-font-weight, 500);
     font-size: var(--button-font-size, var(--_btn-font-size, 14px));
     background-color: var(--button-color, var(--_btn-color, #3a4550));
+    /* Image layer, deliberately not the `background` shorthand — the shorthand
+       would reset a consumer's own background-image/position/size layers
+       whenever the hook is unset. Gradients go here; solids stay on --button-color. */
+    background-image: var(--button-background, none);
     color: var(--button-text-color, var(--_btn-text-color, white));
     height: var(--button-height, fit-content);
     padding: var(--button-padding, var(--_btn-padding, 16px));
@@ -216,6 +220,7 @@
     gap: var(--button-content-gap, 16px);
     visibility: var(--button-visibility, visible);
     box-shadow: var(--button-box-shadow, none);
+    transition: var(--button-transition, none);
 
     /* A button label should never soft-wrap onto a second line as the label text
        changes (e.g. "Select" -> "Select (1)") — that jitters the layout around it.
@@ -232,7 +237,10 @@
     font-weight: var(--disabled-font-weight);
     /* Preserve the variant border when disabled so secondary (bordered) stays distinct from ghost. */
     border: var(--disabled-border, var(--button-border, var(--_btn-border, none)));
-    background: var(--disabled-background-color, var(--button-color, var(--_btn-color, #3a4550)));
+    background: var(
+      --disabled-background-color,
+      var(--button-background, var(--button-color, var(--_btn-color, #3a4550)))
+    );
     box-shadow: var(
       --button-disabled-box-shadow,
       var(--disabled-box-shadow, var(--button-box-shadow, none))
@@ -262,7 +270,10 @@
   .button-el:hover:not(.disabled) {
     background: var(
       --button-hover-color,
-      var(--_btn-hover-color, var(--button-color, var(--_btn-color, #3a4550)))
+      var(
+        --_btn-hover-color,
+        var(--button-background, var(--button-color, var(--_btn-color, #3a4550)))
+      )
     );
     color: var(
       --button-hover-text-color,
@@ -278,7 +289,10 @@
 
   .button-el:active:not(.disabled) {
     transform: var(--button-active-transform);
-    background: var(--button-active-background, var(--button-color, var(--_btn-color, #3a4550)));
+    background: var(
+      --button-active-background,
+      var(--button-background, var(--button-color, var(--_btn-color, #3a4550)))
+    );
     box-shadow: var(--button-active-box-shadow, var(--button-box-shadow, none));
   }
 

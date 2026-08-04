@@ -8,6 +8,7 @@
   let showDecorativeLeftImageModal = $state(false);
   let showBackButtonModal = $state(false);
   let backButtonClickCount = $state(0);
+  let showSlideUpModal = $state(false);
 
   // Inline data-URI so the demo has no external asset dependency; exercises
   // the Img component's `inlineSvg` currentColor path used by the header.
@@ -173,6 +174,42 @@
         {/snippet}
       </Modal>
     </div>
+  {/if}
+</div>
+
+<div class="demo-row">
+  <Button text="Open centered modal (slide-up)" onclick={() => (showSlideUpModal = true)} />
+  {#if showSlideUpModal}
+    <Modal
+      size="fit-content"
+      align="center"
+      entryAnimation="slide-up"
+      overlayFadeIn
+      showOverlay
+      header={{
+        text: 'Slides Up, Stays Centered',
+        rightImage: closeIconSrc,
+        buttonTestId: 'slide-up-modal-close',
+        buttonAriaLabel: 'Close dialog'
+      }}
+      footer={{
+        primaryButton: { text: 'Got it' }
+      }}
+      onclose={() => (showSlideUpModal = false)}
+      onheaderRightImageClick={() => (showSlideUpModal = false)}
+      onoverlayClick={() => (showSlideUpModal = false)}
+      onprimaryButtonClick={() => (showSlideUpModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p>
+            <code>align="center"</code> paired with <code>entryAnimation="slide-up"</code> — the
+            dialog stays centered but enters like a bottom sheet instead of fading in.
+            <code>overlayFadeIn</code> softens the backdrop's appearance to match.
+          </p>
+        </div>
+      {/snippet}
+    </Modal>
   {/if}
 </div>
 

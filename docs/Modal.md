@@ -22,6 +22,7 @@ A dialog overlay component that renders on top of the page with configurable siz
 | supportHardwareBackPress | `boolean`                                                                                                                   | No       | `false`         | When true, pushes a history state on mount so that pressing the device back button triggers onclose instead of navigating away. Cleans up on destroy.                                                        |
 | enableTransition         | `boolean`                                                                                                                   | No       | `true`          | When true, the modal content animates in/out using fly or fade transitions via ModalAnimation.                                                                                                               |
 | transitionType           | `ModalTransition = 'IN' \| 'ALL'`                                                                                           | No       | `'ALL'`         | Controls transition behavior. 'ALL' animates both in and out transitions. 'IN' only animates the in-transition (content disappears instantly on close).                                                      |
+| entryAnimation           | `ModalEntryAnimation = 'fade' \| 'slide-up' \| 'slide-down'`                                                                | No       | `-`             | Overrides the default per-align entry transition. 'slide-up'/'slide-down' reuse the same fly distance/duration as bottom/top alignment — e.g. pair with `align="center"` for a bottom-sheet-style slide-up dialog. Unset keeps the existing per-align default (fly for top/bottom, fade for center).            |
 | header                   | `{     leftImage?: string;     rightImage?: string;     text?: string;     testId?: string;     buttonTestId?: string;     buttonAriaLabel?: string;   }` | No       | `{}`            | Object configuring the modal header bar. leftImage: URL for left icon (e.g., back arrow); rightImage: URL for right icon (e.g., close button); text: header title text; testId/buttonTestId: test selectors; buttonAriaLabel: accessible name (rendered as `aria-label`) for the right image's `role="button"` wrapper — required for screen readers since the wrapper carries no visible text. |
 | footer                   | `{     primaryButton?: ButtonProperties;     secondaryButton?: ButtonProperties;   }`                                       | No       | `-`             | Object configuring footer action buttons. primaryButton: ButtonProperties for the main action button; secondaryButton: ButtonProperties for the alternate action button.                                     |
 | debounceTime             | `number`                                                                                                                    | No       | `700`           | Debounce delay in milliseconds for overlay click handling. Prevents rapid repeated overlay dismissals.                                                                                                       |
@@ -30,6 +31,7 @@ A dialog overlay component that renders on top of the page with configurable siz
 | testId                   | `string`                                                                                                                    | No       | `-`             | Value for data-pw on the modal overlay container.                                                                                                                                                            |
 | classes                  | `string`                                                                                                                    | No       | `-`             | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                       |
 | overlayBackdropFilter    | `string`                                                                                                                    | No       | `-`             | CSS `backdrop-filter` value applied to the overlay (e.g. `"blur(6px)"`). Sets `--modal-overlay-backdrop-filter` inline on the overlay div. Default: `none` (no blur).                                        |
+| overlayFadeIn            | `boolean`                                                                                                                   | No       | `false`         | When true, the overlay backdrop fades in on mount instead of appearing instantly. Pairs well with `entryAnimation="slide-up"` for a softer combined entrance.                                                |
 | usePortal                | `boolean`                                                                                                                   | No       | `false`         | When true, mounts the modal overlay at `document.body` so it escapes any ancestor clipping or stacking contexts. Useful inside `overflow: hidden` or `transform` containers.                                 |
 
 ## Snippets
@@ -177,6 +179,12 @@ type ModalAlign = 'top' | 'center' | 'bottom';
 
 ```typescript
 type ModalTransition = 'IN' | 'ALL';
+```
+
+### ModalEntryAnimation
+
+```typescript
+type ModalEntryAnimation = 'fade' | 'slide-up' | 'slide-down';
 ```
 
 ### ButtonProperties

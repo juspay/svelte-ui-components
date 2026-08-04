@@ -4,6 +4,14 @@ import type { Snippet } from 'svelte';
 
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';
 export type ModalAlign = 'top' | 'center' | 'bottom';
+/**
+ * Overrides ModalAnimation's default per-align entry transition ('top'/'bottom'
+ * fly, 'center' fade). 'slide-up' and 'slide-down' reuse the same fly
+ * distance/duration constants as bottom/top alignment respectively, so e.g. a
+ * centered modal can slide up like a bottom sheet instead of just fading in.
+ * Leave unset to keep the existing per-align default.
+ */
+export type ModalEntryAnimation = 'fade' | 'slide-up' | 'slide-down';
 
 export type ModalProperties = OptionalModalProperties & ModalEventProperties;
 
@@ -14,6 +22,8 @@ export type OptionalModalProperties = {
   supportHardwareBackPress?: boolean;
   enableTransition?: boolean;
   transitionType?: ModalTransition;
+  /** Overrides the default per-align entry transition. See ModalEntryAnimation. Default: unset (per-align behavior). */
+  entryAnimation?: ModalEntryAnimation;
   header?: {
     leftImage?: string;
     rightImage?: string;
@@ -37,6 +47,8 @@ export type OptionalModalProperties = {
   classes?: string;
   /** CSS value applied to backdrop-filter on the overlay (e.g. "blur(6px)"). Exposed as --modal-overlay-backdrop-filter CSS var. Default: none (no blur). */
   overlayBackdropFilter?: string;
+  /** When true, the overlay backdrop fades in on mount instead of appearing instantly. Pairs well with entryAnimation="slide-up" for a softer combined entrance. Default: false (current instant-appear behavior). */
+  overlayFadeIn?: boolean;
   /** When true, mounts the overlay at document.body to escape clipping/stacking contexts. Default: false. */
   usePortal?: boolean;
 };

@@ -9,6 +9,7 @@ export type OptionalChoiceboxProperties = {
   selected?: boolean;
   mode?: ChoiceboxMode;
   disabled?: boolean;
+  showIndicator?: boolean;
   testId?: string;
   classes?: string;
 };

@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { ChoiceboxProperties } from './properties';
+  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
   let {
     children,
     selected = $bindable(false),
     mode = 'radio',
     disabled = false,
+    showIndicator = true,
     testId,
     onclick,
     classes
@@ -47,6 +49,14 @@
   {#if typeof children === 'function'}
     {@render children()}
   {/if}
+  {#if showIndicator}
+    <span class="indicator {mode}" class:selected aria-hidden="true">
+      {#if mode === 'checkbox' && selected}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        <span class="indicator-icon">{@html checkmarkSvg}</span>
+      {/if}
+    </span>
+  {/if}
 </div>
 
 <style>
@@ -86,5 +96,50 @@
   .choicebox.disabled {
     opacity: var(--choicebox-disabled-opacity, 0.4);
     cursor: var(--choicebox-disabled-cursor, not-allowed);
+  }
+
+  .indicator {
+    flex: 0 0 auto;
+    order: var(--choicebox-indicator-order, 1);
+    margin-inline-start: var(--choicebox-indicator-margin-inline-start, auto);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--choicebox-indicator-size, 20px);
+    height: var(--choicebox-indicator-size, 20px);
+    border: var(--choicebox-indicator-border, 2px solid #757575);
+    background: var(--choicebox-indicator-background, transparent);
+    transition: var(--choicebox-indicator-transition, background 0.2s, border-color 0.2s);
+  }
+
+  .indicator.radio {
+    border-radius: 50%;
+  }
+
+  .indicator.checkbox {
+    border-radius: var(--choicebox-indicator-border-radius, var(--radius, 4px));
+  }
+
+  .indicator.selected {
+    border: var(--choicebox-indicator-selected-border, 2px solid #2196f3);
+    background: var(--choicebox-indicator-selected-background, #2196f3);
+  }
+
+  .indicator.radio.selected {
+    box-shadow: inset 0 0 0 var(--choicebox-indicator-dot-inset, 4px)
+      var(--choicebox-background, #ffffff);
+  }
+
+  .indicator-icon {
+    display: flex;
+    width: var(--choicebox-indicator-icon-size, 14px);
+    height: var(--choicebox-indicator-icon-size, 14px);
+    color: var(--choicebox-indicator-icon-color, #ffffff);
+  }
+
+  .indicator-icon :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 </style>

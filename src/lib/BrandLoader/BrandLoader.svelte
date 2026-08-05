@@ -32,8 +32,15 @@
   }
 
   .loader {
-    height: var(--loader-height, 100vh);
-    width: var(--loader-width, 100vw);
+    /* --loader-height/--loader-width are also independently read by the
+       unrelated Loader component (with a 20px default there, vs 100vh/100vw
+       here), so a consumer setting either name in a scope containing both
+       components would size them identically. --brand-loader-* is the
+       namespaced, collision-free override point; the legacy --loader-*
+       names are kept as a fallback so existing consumer overrides keep
+       working unchanged. */
+    height: var(--brand-loader-height, var(--loader-height, 100vh));
+    width: var(--brand-loader-width, var(--loader-width, 100vw));
     border-radius: var(--loader-background-border-radius, 0px);
     display: flex;
     justify-content: var(--loader-justify-content, center);

@@ -43,4 +43,33 @@ test.describe('ChipInput token passthrough', () => {
     await expect(pill).toHaveCSS('background-color', 'rgb(47, 53, 66)');
     await expect(pill).toHaveCSS('color', 'rgb(241, 242, 246)');
   });
+
+  // Colour was only the visible half. Size and shape were swallowed by the identical mechanism,
+  // so an app whose Pill is a larger, squarer chip still got a 13px 999px-radius one. These assert
+  // the passthrough covers appearance as a whole rather than the subset that happened to be noticed.
+  test("inherits the app's Pill size and shape, not just its colours", async ({ page }) => {
+    await page.goto('/components/chip-input');
+
+    const pill = page.getByTestId('chip-input-inherited-chip').first();
+    await expect(pill).toBeVisible();
+
+    await expect(pill).toHaveCSS('font-size', '17px');
+    await expect(pill).toHaveCSS('padding', '3px 14px');
+    await expect(pill).toHaveCSS('border-radius', '5px');
+  });
+
+  // The flip side of the contract: tokens the component owns structurally must NOT follow the app,
+  // or the draft field stops sitting inline among the chips.
+  test('keeps the draft field structural tokens regardless of the app Input theme', async ({
+    page
+  }) => {
+    await page.goto('/components/chip-input');
+
+    const draft = page.getByTestId('chip-input-inherited-input');
+    await expect(draft).toBeVisible();
+
+    await expect(draft).toHaveCSS('padding', '0px 2px');
+    await expect(draft).toHaveCSS('margin', '0px');
+    await expect(draft).toHaveCSS('box-shadow', 'none');
+  });
 });

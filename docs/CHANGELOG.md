@@ -2,33 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.114.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.114.1)
 
-Modal wrapped ANY non-empty header.leftImage in role="button" with tabindex="0"
-and click/keydown handlers, whether or not onheaderLeftImageClick was passed.
+Harbour's marketing site (BZ-5142) hand-rolls gradient CTA buttons with
+animated hovers instead of using this library's Button, because the
+rest state is background-color-only (no gradient support) and there is
+no transition hook. Both gaps close by inserting --button-background
+into the existing --button-color fallback chain (rest, disabled, hover,
+active) and adding --button-transition, defaulting to none. Every chain
+still bottoms out at the same primitives, so unset behavior is
+byte-for-byte identical for existing consumers; gradients and animated
+state changes are opt-in.
 
-Consumers pass a decorative brand or source logo in that slot far more often
-than a back button, so assistive tech announced a focusable "button" that did
-nothing when activated, and keyboard users got a dead tab stop on every such
-modal. That is worse than leaving the image unannounced, because it promises an
-action the control does not have.
-
-The wrapper is now interactive only when onheaderLeftImageClick is a function.
-The two branches are written out explicitly rather than computed into the
-attributes so the role/tabindex pairing stays statically checkable by
-svelte-check, and so no 'undefined' attribute values are needed (the repo lint
-config bans them). The image markup is shared via a snippet, and the narrowed
-src is captured in a {@const} because a snippet is its own scope.
-
-Backward compatible: the only behavioural difference is for call sites that pass
-leftImage WITHOUT a handler, where the control did nothing anyway. Sites that do
-pass a handler are untouched -- verified by the new spec's back-button case,
-which passes both before and after the change.
-
-Adds tests/modal-left-image-interactivity.spec.ts covering both states, plus the
-two demo modals it drives. Negative control performed: with the fix reverted the
-decorative case fails on the role="button" assertion and the back-button case
-still passes.
+## [2.114.1](https://github.com/juspay/svelte-ui-components/compare/2.114.1..2.114.0) - 4 August 2026
 
 ## [2.114.0](https://github.com/juspay/svelte-ui-components/compare/2.114.0..2.113.0) - 3 August 2026
 

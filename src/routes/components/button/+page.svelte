@@ -127,6 +127,18 @@
   <div class="demo-row">
     <Button text="Book a Demo" classes="btn-gradient" />
   </div>
+
+  <h3>Brand variant</h3>
+  <p>
+    <code>variant="brand"</code> is a transparent chassis (white text, no border, no background of
+    its own) purpose-built for gradient marketing CTAs — pair it with a
+    <code>--button-background</code> gradient via <code>classes</code>. Unlike the plain gradient
+    recipe above, the variant's internal hover default is also transparent, so set
+    <code>--button-hover-color</code> too or the gradient will flatten to transparent on hover.
+  </p>
+  <div class="demo-row">
+    <Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
+  </div>
 </div>
 
 <style>
@@ -134,5 +146,12 @@
     --button-background: linear-gradient(135deg, #8f41fc, #59299c);
     --button-hover-transform: translateY(-2px);
     --button-transition: background 0.2s ease, transform 0.15s ease;
+  }
+
+  :global(.btn-brand-gradient) {
+    --button-background: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-hover-color: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-transition: background 0.2s ease, transform 0.15s ease;
+    --button-hover-transform: translateY(-2px);
   }
 </style>

@@ -4,6 +4,7 @@
   let productTags = $state(['sale', 'featured']);
   let blockedEmails = $state<string[]>([]);
   let themedTags = $state(['urgent']);
+  let inheritedTags = $state(['inherited']);
 </script>
 
 <div class="page-header">
@@ -34,7 +35,16 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>Themed</h3>
-  <ChipInput bind:values={themedTags} classes="chip-input-accent" />
+  <ChipInput bind:values={themedTags} classes="chip-input-accent" testId="chip-input-accent" />
+</div>
+
+<div class="demo-row app-themed" style="max-width: 400px;">
+  <h3>Inside an app that themes Pill globally</h3>
+  <p>
+    The surrounding app sets <code>--pill-background</code> / <code>--pill-color</code> the way a consumer's
+    own theme would. The chips should follow that theme rather than the library's light-mode default.
+  </p>
+  <ChipInput bind:values={inheritedTags} testId="chip-input-inherited" />
 </div>
 
 <style>
@@ -42,5 +52,13 @@
     --chip-input-pill-background: #d1ecf1;
     --chip-input-pill-color: #0c5460;
     --chip-input-draft-focus-border: 1px solid #3b82f6;
+  }
+
+  /* Mimics a consuming app that themes Pill app-wide (e.g. a dark surface). Before the token
+     passthrough fix, ChipInput re-declared --pill-background on the pill element, so this
+     inherited value was ignored and chips rendered with the library's light-mode hex. */
+  .app-themed {
+    --pill-background: #2f3542;
+    --pill-color: #f1f2f6;
   }
 </style>

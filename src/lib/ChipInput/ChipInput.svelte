@@ -88,6 +88,19 @@
     justify-content: var(--chip-input-justify-content, flex-start);
     gap: var(--chip-input-gap, 6px);
     width: var(--chip-input-width, 100%);
+
+    /* Capture the surrounding cascade's Pill and Input values under distinct names, so the
+       per-token mappings below can fall back to them. This has to happen HERE, on the root, where
+       --pill-* and --input-* have not yet been re-declared: reading them in the same declaration
+       that sets them would be a custom-property cycle and would compute to invalid. Consumers that
+       theme Pill/Input app-wide get chips that match the rest of their UI, instead of the library's
+       hardcoded light-theme hexes overriding their theme. */
+    --chip-input-pill-background-default: var(--pill-background, #e0e0e0);
+    --chip-input-pill-color-default: var(--pill-color, #333333);
+    --chip-input-pill-dismiss-color-default: var(--pill-dismiss-color, currentColor);
+    --chip-input-draft-border-default: var(--input-border, 1px solid transparent);
+    --chip-input-draft-focus-border-default: var(--input-focus-border, 1px solid transparent);
+    --chip-input-draft-radius-default: var(--input-radius, 4px);
   }
 
   .chip-input-draft-wrap {
@@ -96,8 +109,8 @@
 
   .chip-input :global(.chip-input-pill) {
     --pill-gap: var(--chip-input-pill-gap, 4px);
-    --pill-background: var(--chip-input-pill-background, #e0e0e0);
-    --pill-color: var(--chip-input-pill-color, #333333);
+    --pill-background: var(--chip-input-pill-background, var(--chip-input-pill-background-default));
+    --pill-color: var(--chip-input-pill-color, var(--chip-input-pill-color-default));
     --pill-font-size: var(--chip-input-pill-font-size, 13px);
     --pill-font-weight: var(--chip-input-pill-font-weight, 500);
     --pill-padding: var(--chip-input-pill-padding, 6px 10px);
@@ -105,15 +118,21 @@
     --pill-border: var(--chip-input-pill-border, none);
     --pill-max-width: var(--chip-input-pill-max-width);
     --pill-dismiss-size: var(--chip-input-pill-dismiss-size, 14px);
-    --pill-dismiss-color: var(--chip-input-pill-dismiss-color, currentColor);
+    --pill-dismiss-color: var(
+      --chip-input-pill-dismiss-color,
+      var(--chip-input-pill-dismiss-color-default)
+    );
   }
 
   .chip-input-draft-wrap :global(.chip-input-draft) {
     --input-width: var(--chip-input-draft-width, 90px);
     --input-height: var(--chip-input-draft-height, 28px);
-    --input-border: var(--chip-input-draft-border, 1px solid transparent);
-    --input-radius: var(--chip-input-draft-radius, 4px);
-    --input-focus-border: var(--chip-input-draft-focus-border, 1px solid transparent);
+    --input-border: var(--chip-input-draft-border, var(--chip-input-draft-border-default));
+    --input-radius: var(--chip-input-draft-radius, var(--chip-input-draft-radius-default));
+    --input-focus-border: var(
+      --chip-input-draft-focus-border,
+      var(--chip-input-draft-focus-border-default)
+    );
     --input-padding: var(--chip-input-draft-padding, 0 2px);
     --input-margin: 0;
     --input-font-size: var(--chip-input-draft-font-size, 13px);

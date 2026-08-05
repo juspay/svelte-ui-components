@@ -2,17 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.114.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.115.0)
 
-Harbour's marketing site (BZ-5142) hand-rolls gradient CTA buttons with
-animated hovers instead of using this library's Button, because the
-rest state is background-color-only (no gradient support) and there is
-no transition hook. Both gaps close by inserting --button-background
-into the existing --button-color fallback chain (rest, disabled, hover,
-active) and adding --button-transition, defaulting to none. Every chain
-still bottoms out at the same primitives, so unset behavior is
-byte-for-byte identical for existing consumers; gradients and animated
-state changes are opt-in.
+ModalAnimation picks its entry transition purely from align (fly for
+top/bottom, fade for center), with no way to get a centered dialog that
+slides in like a bottom sheet. entryAnimation ('fade' | 'slide-up' |
+'slide-down') overrides that per-align default, reusing the exact fly
+distance/duration bottom/top alignment already use. Left unset, behavior
+is unchanged.
+
+overlayFadeIn (threaded to a new fadeIn prop on OverlayAnimation, which
+previously only faded out) softens the backdrop's instant appearance to
+match a slide-up entrance. Default false preserves current behavior.
+
+## [2.115.0](https://github.com/juspay/svelte-ui-components/compare/2.115.0..2.114.1) - 5 August 2026
 
 ## [2.114.1](https://github.com/juspay/svelte-ui-components/compare/2.114.1..2.114.0) - 4 August 2026
 

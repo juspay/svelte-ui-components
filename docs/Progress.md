@@ -16,11 +16,20 @@ A linear progress bar showing task completion or usage. The `value` prop control
 
 | Prop      | Type      | Required | Default | Description                                                                                                                                                            |
 | --------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value     | `number`  | Yes      | `-`     | Current progress value (0 to max). Values are clamped to the 0-max range. A negative value activates the indeterminate animation for unknown-duration tasks.           |
-| max       | `number`  | No       | `100`   | The maximum value representing 100% completion. The filled percentage is calculated as (value / max) \* 100.                                                           |
+| value     | `number`  | Yes      | `-`     | Current progress value (0 to max). Values are clamped to the 0-max range. A negative value activates the indeterminate animation for unknown-duration tasks. A non-finite value (e.g. `NaN`) is treated as an invalid range -- see `max` below.       |
+| max       | `number`  | No       | `100`   | The maximum value representing 100% completion. The filled percentage is calculated as (value / max) \* 100. `max` must be finite and positive; a zero, negative, or non-finite `max` (or a non-finite `value`) is an invalid range and renders the bar at 0% instead of `NaN`. |
 | showLabel | `boolean` | No       | `false` | Whether to display the rounded percentage text next to the progress bar. Hidden during indeterminate mode.                                                             |
+| ariaLabel | `string`  | No       | `-`     | Accessible name for the progress bar. Falls back to the same percentage text as `showLabel` (e.g. `"75%"`) when determinate, or `"Loading"` when indeterminate.        |
 | testId    | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                |
 | classes   | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+
+## Accessibility
+
+The root element sets `role="progressbar"` with `aria-valuemin="0"` and `aria-valuemax="100"` — these two are constant regardless of the raw `value`/`max` domain, so assistive technology always hears a plain 0-100 scale (matching the convention `Gauge` already uses). `aria-valuenow` itself is only well-defined for a *valid* range, i.e. a finite `value` and a finite, positive `max`; when it is, `aria-valuenow` is rounded to 2 decimal places rather than the nearest whole number, so it stays effectively in step with the bar's raw fractional width instead of drifting from what's visually shown (matching `Gauge`'s convention of tying `aria-valuenow` to the raw computed value rather than the rounded display text); the separate `showLabel` text still rounds to the nearest whole percent, since that's the right precision for a human-readable label. For an invalid range (zero, negative, or non-finite `max`, or a non-finite `value`) the component does not propagate `NaN` into `aria-valuenow` or the label -- it falls back to a 0% determinate bar (`aria-valuenow="0"`, label `"0%"`) instead.
+
+In indeterminate mode (`value < 0`) `aria-valuenow` is omitted entirely per the WAI-ARIA progressbar pattern, and `aria-valuetext="indeterminate"` plus `aria-busy="true"` are set instead, so assistive technology announces the unknown-duration state rather than reading it as stuck at a fixed value. `aria-valuemin`/`aria-valuemax` are kept in both modes — the 0-100 scale itself isn't unknown, only the current position within it is.
+
+Use the `ariaLabel` prop to give the bar an accessible name describing what it measures (e.g. `"File upload progress"`). When omitted, it falls back to the same percentage text `showLabel` displays (or `"Loading"` while indeterminate, matching the `aria-label` `LoadingDots` already uses for its own loading state), so assistive technology always announces a name even if you forget to set one explicitly.
 
 ## CSS Variables
 

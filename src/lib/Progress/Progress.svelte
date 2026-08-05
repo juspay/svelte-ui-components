@@ -1,16 +1,54 @@
 <script lang="ts">
   import type { ProgressProperties } from './properties';
 
-  let { value, max = 100, showLabel = false, testId, classes }: ProgressProperties = $props();
+  let {
+    value,
+    max = 100,
+    showLabel = false,
+    ariaLabel,
+    testId,
+    classes
+  }: ProgressProperties = $props();
 
-  let percentage = $derived(Math.min(100, Math.max(0, (value / max) * 100)));
+  // `max` has to be a finite positive number for a percentage to mean
+  // anything. A zero, negative, or non-finite max (an as-yet-unloaded total,
+  // say) would make (value / max) NaN or Infinity and put "NaN" into
+  // aria-valuenow, which is not a valid ARIA value -- and a non-finite value
+  // has the same effect. Treat an unusable range as an empty (0%) bar
+  // instead. `value` is guarded here too, not just `max`: a NaN value isn't
+  // `< 0`, so it would otherwise slip past the isIndeterminate check below
+  // and hit the same NaN-percentage path. This check is deliberately kept
+  // independent of `isIndeterminate` below -- a negative `value` (e.g. -1)
+  // still signals indeterminate on its own, even paired with an invalid
+  // `max`, since indeterminate mode never reads `percentage` in the markup.
+  let hasValidRange = $derived(Number.isFinite(value) && Number.isFinite(max) && max > 0);
+  let percentage = $derived(hasValidRange ? Math.min(100, Math.max(0, (value / max) * 100)) : 0);
   let isIndeterminate = $derived(value < 0);
+  // Rounded to 2 decimal places rather than the nearest whole number, so
+  // aria-valuenow stays effectively in step with the bar's raw fractional
+  // width (matching Gauge's convention of tying aria-valuenow to the raw
+  // computed value, not the rounded display text). Full raw precision isn't
+  // used because (value / max) * 100 can land on binary floating-point noise
+  // like 55.00000000000001 -- rounding to 2 decimals clears that while still
+  // keeping the value far closer to the bar's true width than whole numbers.
+  let preciseValueNow = $derived(Math.round(percentage * 100) / 100);
+  // Shared by the visible label and the aria-label fallback, mirroring
+  // Gauge's labelText convention. "Loading" matches the aria-label
+  // LoadingDots already uses for its own indeterminate role="status" element.
+  let labelText = $derived(isIndeterminate ? 'Loading' : `${Math.round(percentage)}%`);
 </script>
 
 <div
   class="container {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
+  role="progressbar"
+  aria-valuenow={isIndeterminate ? null : preciseValueNow}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-valuetext={isIndeterminate ? 'indeterminate' : null}
+  aria-busy={isIndeterminate ? true : null}
+  aria-label={ariaLabel ?? labelText}
 >
   <div class="track">
     <div
@@ -20,7 +58,7 @@
     ></div>
   </div>
   {#if showLabel && !isIndeterminate}
-    <div class="label">{Math.round(percentage)}%</div>
+    <div class="label">{labelText}</div>
   {/if}
 </div>
 

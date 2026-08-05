@@ -2,30 +2,43 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.116.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.117.0)
 
-A cross-repo audit of Harbour's marketing site found eight call sites
-(gradient CTAs like BuddyButton, TalkToBuddy, EnterpriseCta,
-EnterpriseHero, EnterprisePricing, UseCases, and a contact-us submit
-button) that all hand-roll the same shape: a transparent chassis
-(white text, no border, no background of its own) so a
---button-background gradient shows through untouched. Today that
-shape requires overriding --button-color/--button-text-color/
---button-border individually on every call site.
+Selecting a tab bumps its font-weight from --tabs-item-font-weight
+(400) to --tabs-active-font-weight (600). That weight jump resizes
+the tab's own box, which reflows every tab after it in the bar and
+makes the whole row visibly shift on each selection change -- not
+just an indicator timing issue, the tabs themselves move. This is
+most noticeable in the horizontal overflow layout, where a shift can
+even change which tabs are clipped by the scroll fade, but it also
+throws off vertical nav rails.
 
-variant="brand" packages it as a single preset, following the exact
-pattern of the existing primary/secondary/ghost/destructive variants
--- it only sets the internal --_btn-* layer, which any explicit
---button-* override or classes recipe still wins over. No existing
-variant's CSS block is touched, so unset behavior for every current
-consumer is unchanged.
+The fix reserves each label's active-state width up front using a
+hidden ::after ghost: the label span now carries its own text via a
+data-text attribute, and a ::after pseudo-element renders
+attr(data-text) at the active font-weight with height:0 and
+visibility:hidden. Because the parent label is display:inline-block
+and shrink-to-fit, the invisible bold ghost -- wider than the
+currently-visible lighter-weight text -- pre-sizes the box to the
+active width. Toggling the visible text's own weight on activation
+never changes the rendered box size. The ghost weight reads
+var(--tabs-active-font-weight, 600) rather than a hardcoded value, so
+a consumer overriding that variable keeps a self-consistent,
+reflow-free reservation without any extra work.
 
-The variant's hover default is also transparent, matching its rest
-state, which surfaces a pre-existing subtlety in the hover fallback
-chain: --_btn-hover-color sits ahead of --button-background, so a
---button-background gradient without a matching --button-hover-color
-will flatten to transparent on hover. Docs and the demo route both
-show the two set together to steer consumers around it.
+This only touches the default (non-tab-snippet) label render path.
+The tab snippet hands rendering entirely to the consumer, so the
+library has no visibility into what markup or text needs its width
+reserved there -- same boundary already drawn for Carousel's
+keyboard handling in a prior PR.
+
+Three new Playwright specs assert bounding-box equality across
+activation for a horizontal sibling tab (proving no reflow beyond
+the activated tab), the activated horizontal tab itself (proving no
+self-resize), and a vertical nav item's label (proving the technique
+holds in both orientations).
+
+## [2.117.0](https://github.com/juspay/svelte-ui-components/compare/2.117.0..2.116.1) - 5 August 2026
 
 ## [2.116.1](https://github.com/juspay/svelte-ui-components/compare/2.116.1..2.116.0) - 5 August 2026
 

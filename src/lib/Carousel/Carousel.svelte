@@ -173,7 +173,9 @@
           class={activeSlideIndex == index ? 'active-dot' : 'dot'}
           onclick={() => moveSlideToIndex(index)}
           {onkeydown}
-          role="none"
+          role="button"
+          tabindex="0"
+          aria-label={`Go to slide ${index + 1}`}
           data-pw={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
           testID={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
         ></div>
@@ -216,7 +218,7 @@
     width: var(--dot-width, 5px);
     height: var(--dot-height, 5px);
     border-radius: 50%;
-    background: #c4c4c4;
+    background: var(--carousel-dot-color, #c4c4c4);
     cursor: pointer;
     transition: 0.3s ease;
   }
@@ -226,7 +228,7 @@
     height: var(--dot-height, 5px);
     border-radius: 50%;
     cursor: pointer;
-    background: #000000;
+    background: var(--carousel-dot-active-color, #000000);
     transition: 0.3s ease;
   }
   /*

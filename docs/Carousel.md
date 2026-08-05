@@ -41,10 +41,18 @@ Override these custom properties to theme the component.
 | `--carousel-height`        | `100px` | height        | Height of the carousel slides.                                                   |
 | `--carousel-shadow`        | `-`     | box-shadow    | Box shadow of the carousel container.                                            |
 | `--carousel-border-radius` | `0%`    | border-radius | Corner rounding of the carousel container.                                       |
+| `--carousel-dot-color`     | `#c4c4c4` | background  | Background color of an inactive dot indicator.                                   |
+| `--carousel-dot-active-color` | `#000000` | background | Background color of the active dot indicator.                              |
 | `--dot-gap`                | `10px`  | gap           | Gap between dot indicators.                                                      |
 | `--dot-padding-top`        | `10px`  | padding-top   | Top padding above the dot indicators.                                            |
 | `--dot-width`              | `5px`   | width         | Width of each dot indicator.                                                     |
 | `--dot-height`             | `5px`   | height        | Height of each dot indicator.                                                    |
+
+## Accessibility
+
+- Dot indicators are focusable (`tabindex="0"`) so keyboard users can Tab to them, not just click/touch.
+- `onkeydown` remains a raw passthrough — the library does not itself trigger navigation on Enter/Space. Consumers that want full keyboard operability should implement that in their `onkeydown` handler (e.g. call the same logic as the dot's `onclick`, or dispatch a `.click()` on the focused element).
+- Dots use `role="none"`, so screen readers don't announce them as buttons. Consumers relying on assistive technology should pair `showDots` with an alternative navigation method or extend the markup with their own labeling.
 
 ## Type Reference
 

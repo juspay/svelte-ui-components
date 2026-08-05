@@ -2,18 +2,28 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.115.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.116.0)
 
-ModalAnimation picks its entry transition purely from align (fly for
-top/bottom, fade for center), with no way to get a centered dialog that
-slides in like a bottom sheet. entryAnimation ('fade' | 'slide-up' |
-'slide-down') overrides that per-align default, reusing the exact fly
-distance/duration bottom/top alignment already use. Left unset, behavior
-is unchanged.
+ChipInput re-declares --pill-* and --input-* on its pill and draft-input
+elements to expose its own --chip-input-* API. A declaration on the element
+beats an inherited one, so that mapping swallowed any --pill-background,
+--pill-color or --input-border a consuming app had set app-wide and fell through
+to the library's hardcoded light-mode hexes. An app theming Pill for a dark
+surface got light-grey chips with dark text, at wrong contrast, with no way to
+fix it short of defining --chip-input-* overrides at every call site.
 
-overlayFadeIn (threaded to a new fadeIn prop on OverlayAnimation, which
-previously only faded out) softens the backdrop's instant appearance to
-match a slide-up entrance. Default false preserves current behavior.
+The mappings now fall back to the surrounding cascade's value instead of a raw
+hex. The captures live on the ChipInput root, where --pill-*/--input-* have not
+yet been re-declared: reading them in the same declaration that sets them would
+be a custom-property cycle and would compute to invalid.
+
+Precedence is unchanged for existing consumers and now has a middle rung:
+explicit --chip-input-* override &gt; inherited app theme &gt; library default.
+
+Found while migrating a consumer app onto this component: the swap moved
+631,175 pixels against an 8px noise floor, and this was one of the two causes.
+
+## [2.116.0](https://github.com/juspay/svelte-ui-components/compare/2.116.0..2.115.0) - 5 August 2026
 
 ## [2.115.0](https://github.com/juspay/svelte-ui-components/compare/2.115.0..2.114.1) - 5 August 2026
 

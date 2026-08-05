@@ -1,6 +1,6 @@
 # Button
 
-An action button with a built-in variant and size system: four visual styles (`primary`, `secondary`, `ghost`, `destructive`), three sizes (`sm`/`md`/`lg`), plus `iconOnly` and `fullWidth` affordances. It can render as a styled link via `href`, exposes a `loading` state (spinner + `aria-busy`), and supports icon/children snippets. Every visual property remains overridable through `--button-*` CSS variables, so an explicit override or a `classes` recipe always wins over the variant default.
+An action button with a built-in variant and size system: five visual styles (`primary`, `secondary`, `ghost`, `destructive`, `brand`), three sizes (`sm`/`md`/`lg`), plus `iconOnly` and `fullWidth` affordances. It can render as a styled link via `href`, exposes a `loading` state (spinner + `aria-busy`), and supports icon/children snippets. Every visual property remains overridable through `--button-*` CSS variables, so an explicit override or a `classes` recipe always wins over the variant default.
 
 ## Usage
 
@@ -19,6 +19,28 @@ An action button with a built-in variant and size system: four visual styles (`p
 <Button text="Secondary" variant="secondary" />
 <Button text="Ghost" variant="ghost" />
 <Button text="Destructive" variant="destructive" />
+<Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
+```
+
+### Brand variant (gradient CTAs)
+
+`brand` is a transparent chassis — white text, no border, no background of its own — designed to be paired with a `--button-background` gradient via `classes`. Used alone (no `--button-background` set) it renders fully transparent, so always pair it with a background recipe:
+
+```svelte
+<Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
+
+<style>
+  :global(.btn-brand-gradient) {
+    --button-background: linear-gradient(135deg, #ff7a45, #8f41fc);
+    /* Also set --button-hover-color: the brand variant's internal hover default is
+       `transparent`, and it sits before --button-background in the hover fallback
+       chain — without an explicit --button-hover-color the gradient would flatten
+       to transparent on hover. */
+    --button-hover-color: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-transition: background 0.2s ease, transform 0.15s ease;
+    --button-hover-transform: translateY(-2px);
+  }
+</style>
 ```
 
 ### Sizes
@@ -93,7 +115,7 @@ With `href` the button renders as a styled `<a>`. A disabled link is rendered in
 | Prop            | Type                              | Required | Default    | Description                                                                                                                                                                                                                |
 | --------------- | --------------------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | text            | `string`                          | No       | `-`        | The button label text. Rendered as plain text by default; set `allowHtml` to render as HTML.                                                                                                                               |
-| variant         | `'primary' \| 'secondary' \| 'ghost' \| 'destructive'` | No | `'primary'` | Visual style. Maps to the `--button-*` variables; an explicit `--button-color`/`classes` override wins over the variant default.                                                          |
+| variant         | `'primary' \| 'secondary' \| 'ghost' \| 'destructive' \| 'brand'` | No | `'primary'` | Visual style. Maps to the `--button-*` variables; an explicit `--button-color`/`classes` override wins over the variant default. `brand` is a transparent chassis meant to pair with a `--button-background` gradient. |
 | size            | `'sm' \| 'md' \| 'lg'`            | No       | `'md'`     | Size preset controlling padding, height, and font size.                                                                                                                                                                    |
 | iconOnly        | `boolean`                         | No       | `false`    | Square padding for an icon-only button. Pair with `ariaLabel`.                                                                                                                                                             |
 | fullWidth       | `boolean`                         | No       | `false`    | Stretch the button to the full width of its container.                                                                                                                                                                     |
@@ -199,7 +221,7 @@ Custom types used by this component's props and events:
 ### ButtonVariant
 
 ```typescript
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'brand';
 ```
 
 ### ButtonSize

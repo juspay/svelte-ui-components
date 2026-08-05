@@ -158,6 +158,21 @@
     --_btn-hover-border: none;
   }
 
+  /* Transparent chassis for gradient marketing CTAs — deliberately no background
+     of its own. Pair with a --button-background gradient (and usually a matching
+     --button-hover-color, since --_btn-hover-color sits before --button-background
+     in the hover fallback chain and would otherwise flatten the gradient to
+     transparent on hover). Geometry (padding/font-size) is intentionally left to
+     the size preset, not this variant. */
+  .variant-brand {
+    --_btn-color: transparent;
+    --_btn-text-color: #ffffff;
+    --_btn-border: none;
+    --_btn-hover-color: transparent;
+    --_btn-hover-text-color: #ffffff;
+    --_btn-hover-border: none;
+  }
+
   /* ---- Size defaults (md reproduces the legacy 16px padding / 14px font) ---- */
   .size-sm {
     --_btn-padding: 8px 12px;

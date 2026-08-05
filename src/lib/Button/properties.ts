@@ -3,7 +3,7 @@ import type { Snippet } from 'svelte';
 export type LoaderType = 'Circular' | 'ProgressBar';
 
 /** Visual style of the button. Maps to a built-in palette via `--button-*` variables. */
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'brand';
 
 /** Size preset controlling padding/height/font-size. */
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -14,7 +14,8 @@ export type OptionalButtonProperties = {
   text?: string;
   /**
    * Visual style: `primary` (default, filled), `secondary` (outlined), `ghost`
-   * (transparent), `destructive` (danger). Each maps to the `--button-*` variables, so an
+   * (transparent), `destructive` (danger), `brand` (transparent chassis for gradient CTAs —
+   * pair with a `--button-background` gradient). Each maps to the `--button-*` variables, so an
    * explicit `--button-color` / `classes` override always wins over the variant default.
    */
   variant?: ButtonVariant;

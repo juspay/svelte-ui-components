@@ -283,7 +283,7 @@
           {#if typeof tabItem?.icon === 'string' && tabItem.icon.length > 0}
             <Img src={tabItem.icon} alt="" fallback="" classes="tabs-item-icon" />
           {/if}
-          {label}
+          <span class="tabs-item-label" data-text={label}>{label}</span>
           {#if tabItem?.status && tabItem.status !== 'none'}
             <span class="tabs-item-status status-{tabItem.status}" aria-hidden="true"></span>
           {/if}
@@ -446,6 +446,28 @@
     --image-object-fit: contain;
 
     flex-shrink: 0;
+  }
+
+  /* Reserves the active-state (bolder) width of the label so selecting a tab
+     never reflows the tab bar: without this, .tabs-item.active's font-weight
+     jump makes the tab (and every tab after it) physically resize, which
+     visibly shifts sibling tabs and defeats the indicator's slide animation
+     with a jump. The ::after ghost renders data-text at the active weight
+     with height:0/visibility:hidden -- invisible, but its width still sets
+     the shrink-to-fit width of the inline-block label, so the box is already
+     as wide as the active state needs even while showing the lighter weight. */
+  .tabs-item-label {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tabs-item-label::after {
+    content: attr(data-text);
+    display: block;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-weight: var(--tabs-active-font-weight, 600);
   }
 
   /* Trailing status dot for nav/menu tabs. margin-left:auto pushes it to the row's

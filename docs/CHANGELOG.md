@@ -2,29 +2,32 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.117.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.118.0)
 
-The dot indicators had two gaps: their colors were hardcoded hex
-(#c4c4c4 / #000000) with no CSS variable hook, unlike every other
-visual property on this component, and they were not focusable even
-though docs/Carousel.md already documented onkeydown as firing "while
-a dot indicator has focus" -- a claim tabindex never actually made
-true.
+The token passthrough added for the chip colours covered only half the problem.
+ChipInput re-declares --pill-* on the pill element to expose its own
+--chip-input-pill-* API, and a declaration on the element beats an inherited one
+whatever the property is — so font size, weight, padding, border radius, border,
+gap and dismiss size were still overriding the consuming app's Pill theme with
+the library's own values.
 
---carousel-dot-color and --carousel-dot-active-color replace the
-hardcoded values, defaulting to the same colors so unset behavior is
-unchanged. tabindex="0" makes the dots reachable by keyboard, and
-role changes from "none" to "button" to match -- svelte-check flags
-a nonnegative tabindex on a noninteractive role as invalid, and the
-dot already behaves like one (it has an onclick). aria-label gives
-each dot the accessible name role="button" now requires.
+An app whose Pill is a 14px chip with a 16px radius still got a 13px chip with a
+999px radius. Restoring only the colours left exactly the same bug somewhere less
+obvious, which is why it went unnoticed.
 
-onkeydown remains a raw passthrough: the library still does not
-trigger navigation on Enter/Space itself, only makes the element
-reachable. Documented as a known boundary in the new Accessibility
-section rather than silently expanded, since wiring default
-activation would change how the existing public onkeydown prop
-composes with internal behavior for any consumer already using it.
+Every token carrying the chip's appearance now falls back to the surrounding
+cascade, captured on the root under distinct names for the same reason as before:
+reading a token in the declaration that sets it is a custom-property cycle and
+computes to invalid. Precedence is unchanged — explicit --chip-input-pill-*, then
+the app's own theme, then the library default.
+
+Tokens the component owns structurally stay fixed: the draft field's inline
+padding, margin and shadow keep it sitting among the chips rather than describing
+how it looks, and an app that themes Input globally must not disturb that. The
+demo sets deliberately hostile --input-* values so a spec asserts they are
+ignored.
+
+## [2.118.0](https://github.com/juspay/svelte-ui-components/compare/2.118.0..2.117.1) - 5 August 2026
 
 ## [2.117.1](https://github.com/juspay/svelte-ui-components/compare/2.117.1..2.117.0) - 5 August 2026
 

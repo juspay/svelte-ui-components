@@ -1,6 +1,6 @@
 # Card
 
-A generic container component with an optional title/description header and a content body. Designed as a building block for dashboards, settings panels, product listings, and any grouped content. All visual properties are controlled via CSS custom properties — it looks correct with zero consumer overrides and is fully theme-agnostic. When `onclick` is provided the root element becomes an accessible button (`role="button"`, `tabindex="0"`, Enter/Space keyboard support) without any API change for existing consumers that omit the prop.
+A generic container component with an optional title/description header and a content body. Designed as a building block for dashboards, settings panels, product listings, and any grouped content. All visual properties are controlled via CSS custom properties — it looks correct with zero consumer overrides and is fully theme-agnostic. When `onclick` is provided the root element becomes an accessible button (`role="button"`, `tabindex="0"`, Enter/Space keyboard support) without any API change for existing consumers that omit the prop. When `href` is provided instead (or alongside `onclick`), the root renders as a native `<a>` with the same styling — see "Anchor Card (Link)" below.
 
 ## Usage
 
@@ -86,6 +86,29 @@ A generic container component with an optional title/description header and a co
   }
 </style>
 ```
+
+### Anchor Card (Link)
+
+```svelte
+<script>
+  import { Card } from '@juspay/svelte-ui-components';
+</script>
+
+<div class="clickable-card">
+  <Card href="/integrations/shopify" title="Shopify" description="Connected" testId="shopify-card">
+    <p>View integration details.</p>
+  </Card>
+</div>
+
+<!-- External link: rel defaults to "noopener noreferrer" because target="_blank" -->
+<div class="clickable-card">
+  <Card href="https://shopify.com" target="_blank" title="Shopify docs">
+    <p>Opens in a new tab.</p>
+  </Card>
+</div>
+```
+
+With `href` set, the root renders as a native `<a>` instead of a `<div>` — all existing styling (including `.card-interactive`'s cursor/focus-ring) is preserved unchanged, but focus and Enter-activation come from the browser's native anchor behavior rather than the synthetic `role="button"`/`tabindex`/keydown shim used for a clickable `<div>` (that shim is skipped entirely when `href` is set, since it would be redundant). `onclick` still fires if also provided, e.g. for click tracking alongside navigation.
 
 ### Custom Layout (Consumer Recipe)
 
@@ -192,7 +215,10 @@ This pattern gives full layout control to the consumer (any number of zones, any
 | description | `string`                           | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                                                                                                                                                         |
 | classes     | `string`                           | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                         |
 | testId      | `string`                           | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                     |
-| onclick     | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided, the card root becomes interactive: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. Omit to keep a plain `<div>`.                                                                                                                                   |
+| onclick     | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided (and `href` is not), the card root becomes an interactive `<div>`: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. When `href` is also set, `onclick` still fires but the shim is skipped in favor of native anchor semantics. Omit both to keep a plain `<div>`.                                                                                                                                   |
+| href        | `string`                           | No       | `-`     | Renders the card root as a native `<a href="...">` instead of a `<div>`, styled identically. Natively focusable and Enter-activated, so the `role="button"`/`tabindex`/keydown shim used for `onclick`-only cards is skipped. Omit to keep a `<div>` root. |
+| target      | `string`                           | No       | `-`     | Anchor `target` (e.g. `_blank`). Only applied when `href` is set. |
+| rel         | `string`                           | No       | `-`     | Anchor `rel`. Only applied when `href` is set. Defaults to `noopener noreferrer` when `target="_blank"` and `rel` is not explicitly provided. |
 | headerRight | `Snippet`                          | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                                                                                                                                                  |
 | footer      | `Snippet`                          | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                                                                                                                                                   |
 | stretch     | `boolean`                          | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.                                                                                                                                            |
@@ -203,7 +229,7 @@ This pattern gives full layout control to the consumer (any number of zones, any
 
 | Event   | Type                          | Description                                                                                                                                          |
 | ------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onclick | `(event: MouseEvent) => void` | Fires when the card is clicked. When provided, the card gains `role="button"`, `tabindex="0"`, and keyboard support (Enter/Space). No-op if omitted. |
+| onclick | `(event: MouseEvent) => void` | Fires when the card is clicked. When provided and `href` is not set, the card also gains `role="button"`, `tabindex="0"`, and keyboard support (Enter/Space). With `href` set, `onclick` still fires but that shim is skipped — the native `<a>` already provides focus/keyboard activation. No-op if omitted. |
 
 ## CSS Variables
 

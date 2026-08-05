@@ -112,6 +112,68 @@
 </div>
 
 <div class="demo-section">
+  <h2 class="demo-section-title">Anchor Cards (href / target / rel)</h2>
+  <p class="demo-hint" style="margin: 0 0 16px;">
+    With <code>href</code> set, the root renders as a native <code>&lt;a&gt;</code> instead of a
+    <code>&lt;div&gt;</code> — same styling, but focus and Enter-activation come from the browser
+    rather than a synthetic <code>role="button"</code>/<code>tabindex</code> shim.
+  </p>
+  <div class="demo-row" style="gap: 16px; flex-wrap: wrap;">
+    <div class="card-clickable">
+      <Card href="/components/button" testId="internal-link-card">
+        <div class="platform-tile">
+          <span class="platform-icon">🔗</span>
+          <span class="platform-name">Internal link</span>
+        </div>
+      </Card>
+    </div>
+
+    <div class="card-clickable">
+      <Card href="https://svelte.dev" target="_blank" testId="external-link-card">
+        <div class="platform-tile">
+          <span class="platform-icon">↗️</span>
+          <span class="platform-name">Opens in new tab</span>
+        </div>
+      </Card>
+    </div>
+  </div>
+  <p class="demo-hint">
+    The external link's <code>rel</code> defaults to <code>noopener noreferrer</code> because
+    <code>target="_blank"</code> is set, without needing to pass <code>rel</code> explicitly.
+  </p>
+</div>
+
+<div class="demo-section">
+  <h2 class="demo-section-title">Anchor / Div Layout Parity</h2>
+  <p class="demo-hint" style="margin: 0 0 16px;">
+    Same sizing, same content -- only <code>href</code> differs. The rendered box must be identical
+    whether the root is a <code>&lt;div&gt;</code> or an <code>&lt;a&gt;</code>.
+  </p>
+  <div class="demo-row" style="gap: 16px; flex-wrap: wrap;">
+    <div class="card-parity-theme">
+      <Card
+        title="Layout Parity"
+        description="Fixed-size layout for a bounding-box comparison test."
+        testId="parity-div-card"
+      >
+        <p style="margin: 0;">Identical content in both cards.</p>
+      </Card>
+    </div>
+
+    <div class="card-parity-theme">
+      <Card
+        href="/components/card"
+        title="Layout Parity"
+        description="Fixed-size layout for a bounding-box comparison test."
+        testId="parity-anchor-card"
+      >
+        <p style="margin: 0;">Identical content in both cards.</p>
+      </Card>
+    </div>
+  </div>
+</div>
+
+<div class="demo-section">
   <h2 class="demo-section-title">Custom Layout (Consumer Recipe)</h2>
   <p class="demo-hint" style="margin: 0 0 16px;">
     Place the layout inside the default content area — the Card provides the container, shadow, and

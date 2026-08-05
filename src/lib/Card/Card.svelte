@@ -8,6 +8,9 @@
     classes,
     testId,
     onclick,
+    href,
+    target,
+    rel,
     headerRight,
     footer,
     stretch = false,
@@ -15,7 +18,14 @@
     cssVars
   }: CardProperties = $props();
 
-  const isInteractive = $derived(typeof onclick === 'function');
+  const isAnchor = $derived(typeof href === 'string' && href.length > 0);
+  const isInteractive = $derived(isAnchor || typeof onclick === 'function');
+  // HTML target values are ASCII case-insensitive (e.g. "_BLANK" opens a new
+  // context identically to "_blank"), so the comparison must normalize case
+  // to keep the noopener/noreferrer default from being silently skipped.
+  const resolvedRel = $derived(
+    rel ?? (target?.toLowerCase() === '_blank' ? 'noopener noreferrer' : null)
+  );
 
   const styleAttr = $derived(
     cssVars
@@ -37,8 +47,8 @@
   };
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
+<svelte:element
+  this={isAnchor ? 'a' : 'div'}
   class="card {classes ?? ''}"
   class:card-interactive={isInteractive}
   class:card-stretch={stretch}
@@ -46,10 +56,13 @@
   style={styleAttr}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
-  role={isInteractive ? 'button' : null}
-  tabindex={isInteractive ? 0 : null}
-  onclick={isInteractive ? onclick : null}
-  onkeydown={isInteractive ? handleKeydown : null}
+  role={!isAnchor && isInteractive ? 'button' : null}
+  tabindex={!isAnchor && isInteractive ? 0 : null}
+  href={isAnchor ? href : null}
+  target={isAnchor ? target : null}
+  rel={isAnchor ? resolvedRel : null}
+  onclick={onclick ?? null}
+  onkeydown={!isAnchor && isInteractive ? handleKeydown : null}
 >
   {#if (typeof title === 'string' && title.length > 0) || typeof headerRight === 'function'}
     <div class="card-header" class:card-header-split={typeof headerRight === 'function'}>
@@ -85,10 +98,16 @@
       {@render footer()}
     </footer>
   {/if}
-</div>
+</svelte:element>
 
 <style>
   .card {
+    /* Explicit so the root's layout doesn't depend on the browser default for
+       whichever tag svelte:element renders -- a <div> defaults to block and an
+       <a> defaults to inline, and an inline box ignores width/height entirely.
+       Pinning both here keeps anchor-mode cards byte-identical to div cards. */
+    display: block;
+    text-decoration: none;
     background: var(--card-background, inherit);
     border: var(--card-border, 1px solid currentColor);
     border-radius: var(--card-border-radius, var(--radius, 4px));

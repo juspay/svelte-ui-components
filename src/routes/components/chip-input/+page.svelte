@@ -56,9 +56,23 @@
 
   /* Mimics a consuming app that themes Pill app-wide (e.g. a dark surface). Before the token
      passthrough fix, ChipInput re-declared --pill-background on the pill element, so this
-     inherited value was ignored and chips rendered with the library's light-mode hex. */
+     inherited value was ignored and chips rendered with the library's light-mode hex.
+
+     The size and shape tokens are here for the same reason: an app whose Pill is a larger,
+     squarer chip was still getting the library's 13px / 999px pill, because re-declaring a token
+     on the element beats inheriting it whatever the property. */
   .app-themed {
     --pill-background: #2f3542;
     --pill-color: #f1f2f6;
+    --pill-font-size: 17px;
+    --pill-padding: 3px 14px;
+    --pill-border-radius: 5px;
+
+    /* Deliberately hostile values for the draft field. These are the tokens ChipInput owns
+       structurally to keep the field inline among the chips, so they must NOT be inherited —
+       the spec asserts the component ignores them. */
+    --input-padding: 20px 30px;
+    --input-margin: 12px;
+    --input-box-shadow: 0 0 0 3px red;
   }
 </style>

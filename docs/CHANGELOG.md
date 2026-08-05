@@ -2,26 +2,32 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.116.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.116.1)
 
-ChipInput re-declares --pill-* and --input-* on its pill and draft-input
-elements to expose its own --chip-input-* API. A declaration on the element
-beats an inherited one, so that mapping swallowed any --pill-background,
---pill-color or --input-border a consuming app had set app-wide and fell through
-to the library's hardcoded light-mode hexes. An app theming Pill for a dark
-surface got light-grey chips with dark text, at wrong contrast, with no way to
-fix it short of defining --chip-input-* overrides at every call site.
+A cross-repo audit of Harbour's marketing site found eight call sites
+(gradient CTAs like BuddyButton, TalkToBuddy, EnterpriseCta,
+EnterpriseHero, EnterprisePricing, UseCases, and a contact-us submit
+button) that all hand-roll the same shape: a transparent chassis
+(white text, no border, no background of its own) so a
+--button-background gradient shows through untouched. Today that
+shape requires overriding --button-color/--button-text-color/
+--button-border individually on every call site.
 
-The mappings now fall back to the surrounding cascade's value instead of a raw
-hex. The captures live on the ChipInput root, where --pill-*/--input-* have not
-yet been re-declared: reading them in the same declaration that sets them would
-be a custom-property cycle and would compute to invalid.
+variant="brand" packages it as a single preset, following the exact
+pattern of the existing primary/secondary/ghost/destructive variants
+-- it only sets the internal --_btn-* layer, which any explicit
+--button-* override or classes recipe still wins over. No existing
+variant's CSS block is touched, so unset behavior for every current
+consumer is unchanged.
 
-Precedence is unchanged for existing consumers and now has a middle rung:
-explicit --chip-input-* override &gt; inherited app theme &gt; library default.
+The variant's hover default is also transparent, matching its rest
+state, which surfaces a pre-existing subtlety in the hover fallback
+chain: --_btn-hover-color sits ahead of --button-background, so a
+--button-background gradient without a matching --button-hover-color
+will flatten to transparent on hover. Docs and the demo route both
+show the two set together to steer consumers around it.
 
-Found while migrating a consumer app onto this component: the swap moved
-631,175 pixels against an 8px noise floor, and this was one of the two causes.
+## [2.116.1](https://github.com/juspay/svelte-ui-components/compare/2.116.1..2.116.0) - 5 August 2026
 
 ## [2.116.0](https://github.com/juspay/svelte-ui-components/compare/2.116.0..2.115.0) - 5 August 2026
 

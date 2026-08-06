@@ -2,30 +2,58 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.118.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.118.1)
 
-The token passthrough added for the chip colours covered only half the problem.
-ChipInput re-declares --pill-* on the pill element to expose its own
---chip-input-pill-* API, and a declaration on the element beats an inherited one
-whatever the property is — so font size, weight, padding, border radius, border,
-gap and dismiss size were still overriding the consuming app's Pill theme with
-the library's own values.
+Card's only interactive mode was onclick, which renders a &lt;div&gt; with
+a role="button"/tabindex/keydown shim. That covers action-style
+clicks, but card-styled navigation links (integration tiles, "view
+details" cards) are a distinct and common case -- forcing them
+through onclick means giving up native anchor semantics: no
+ctrl/cmd-click to open in a new tab, no "open in new tab" from the
+context menu, no crawlable href, and no real focus/Enter-activation
+without the synthetic shim.
 
-An app whose Pill is a 14px chip with a 16px radius still got a 13px chip with a
-999px radius. Restoring only the colours left exactly the same bug somewhere less
-obvious, which is why it went unnoticed.
+href/target/rel are added mirroring Button.svelte's existing anchor
+pattern exactly. When href is set, the root renders as &lt;a&gt; instead of
+&lt;div&gt; via svelte:element, keeping every existing class and style
+untouched. resolvedRel defaults to "noopener noreferrer" when
+target="_blank" and rel is not explicitly provided, same fallback
+Button already uses. The role="button"/tabindex/onkeydown shim is
+now skipped when href is set, since a native &lt;a&gt; already provides
+focus and Enter-activation and the shim would be redundant; onclick
+still fires either way, so click tracking alongside navigation keeps
+working. href is omitted by default, so existing onclick-only and
+plain cards see zero behavior change.
 
-Every token carrying the chip's appearance now falls back to the surrounding
-cascade, captured on the root under distinct names for the same reason as before:
-reading a token in the declaration that sets it is a custom-property cycle and
-computes to invalid. Precedence is unchanged — explicit --chip-input-pill-*, then
-the app's own theme, then the library default.
+.card had no explicit display or text-decoration, so its layout
+depended entirely on each tag's browser default: block for &lt;div&gt;,
+inline for &lt;a&gt;. An inline box ignores width/height/min-width/
+max-width/margin outright, so --card-width/--card-height silently
+stopped applying the moment a card became anchor-rendered, and the
+anchor also picked up the browser's default underline. Both are now
+pinned explicitly on .card (display: block; text-decoration: none;),
+so the div and anchor render paths compute an identical box; .card
+already had color: inherit, which was already sufficient to override
+the browser's default link color since normal author-origin rules
+beat normal user-agent-origin rules regardless of specificity, so no
+further change was needed there. .card-stretch's own display: flex
+still wins for stretch=true cards, unaffected, since it is declared
+after .card in source order at equal specificity.
 
-Tokens the component owns structurally stay fixed: the draft field's inline
-padding, margin and shadow keep it sitting among the chips rather than describing
-how it looks, and an app that themes Input globally must not disturb that. The
-demo sets deliberately hostile --input-* values so a spec asserts they are
-ignored.
+resolvedRel also compared target with a case-sensitive === '_blank',
+but the HTML spec treats target values as ASCII case-insensitive, so
+target="_BLANK" opens a new browsing context identically but was
+silently skipping the noopener/noreferrer default. The comparison
+now lowercases target first, preserving explicit rel overrides and
+still omitting rel for any non-blank target.
+
+A new demo section (Anchor / Div Layout Parity) and Playwright spec
+(card-anchor-div-layout-parity.spec.ts) pin this down: two cards with
+identical sizing overrides and identical content, one div-rendered
+and one anchor-rendered, must produce pixel-identical bounding
+boxes, compute display: block, and have no underline.
+
+## [2.118.1](https://github.com/juspay/svelte-ui-components/compare/2.118.1..2.118.0) - 5 August 2026
 
 ## [2.118.0](https://github.com/juspay/svelte-ui-components/compare/2.118.0..2.117.1) - 5 August 2026
 

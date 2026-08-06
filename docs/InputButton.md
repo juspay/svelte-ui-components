@@ -59,6 +59,7 @@ Override these custom properties to theme the component.
 
 | Variable                                | Default                                              | CSS Property                    | Description                                                                 |
 | --------------------------------------- | ---------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------- |
+| `--input-button-container-width`        | `auto`                                               | width                           | Width of the entire InputButton container. Set to `100%` to make the control fill its parent. |
 | `--input-button-container-margin`       | `-`                                                  | margin                          | Outer margin of the entire InputButton container.                           |
 | `--input-height`                        | `fit-content`                                        | height                          | Height of the input-button container. Overridden by size preset vars when `size` is set. |
 | `--input-font-size`                     | `16px`                                               | font-size                       |                                                                             |

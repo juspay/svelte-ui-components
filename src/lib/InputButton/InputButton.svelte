@@ -128,6 +128,7 @@
   .container {
     display: flex;
     flex-direction: column;
+    width: var(--input-button-container-width, auto);
     margin: var(--input-button-container-margin);
   }
 

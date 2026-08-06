@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import Card from '$lib/Card/Card.svelte';
   import Button from '$lib/Button/Button.svelte';
 
@@ -120,7 +121,7 @@
   </p>
   <div class="demo-row" style="gap: 16px; flex-wrap: wrap;">
     <div class="card-clickable">
-      <Card href="/components/button" testId="internal-link-card">
+      <Card href="{base}/components/button" testId="internal-link-card">
         <div class="platform-tile">
           <span class="platform-icon">🔗</span>
           <span class="platform-name">Internal link</span>
@@ -162,7 +163,7 @@
 
     <div class="card-parity-theme">
       <Card
-        href="/components/card"
+        href="{base}/components/card"
         title="Layout Parity"
         description="Fixed-size layout for a bounding-box comparison test."
         testId="parity-anchor-card"

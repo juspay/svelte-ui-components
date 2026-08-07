@@ -88,6 +88,7 @@ Override these custom properties to theme the component.
 | `--pill-font-size`           | `13px`                                    | font-size        | Font size of the pill text.                                               |
 | `--pill-font-weight`         | `500`                                     | font-weight      | Font weight of the pill text.                                             |
 | `--pill-font-family`         | `-`                                       | font-family      | Font family of the pill text.                                             |
+| `--pill-line-height`         | `1`                                       | line-height      | Line height of the pill text.                                             |
 | `--pill-padding`             | `6px 10px`                                | padding          | Inner padding of the pill.                                                |
 | `--pill-border-radius`       | `999px`                                   | border-radius    | Corner rounding of the pill (999px creates a fully rounded shape).        |
 | `--pill-border`              | `none`                                    | border           | Border style of the pill.                                                 |
@@ -97,7 +98,6 @@ Override these custom properties to theme the component.
 | `--pill-justify-content`     | `center`                                  | justify-content  | Content alignment inside the pill.                                        |
 | `--pill-text-align`          | `center`                                  | text-align       | Label alignment.                                                          |
 | `--pill-max-width`           | `-`                                       | max-width        | Maximum width of the pill. Text is truncated with ellipsis when exceeded. |
-| `--pill-line-height`         | `1`                                       | line-height      | Line height of the pill.                                                  |
 | `--pill-flex-shrink`         | `-`                                       | flex-shrink      | Flex shrink behavior of the pill.                                         |
 | `--pill-text-overflow`       | `ellipsis`                                | text-overflow    | How overflowing text is displayed (e.g., ellipsis or clip).               |
 | `--pill-hover-background`    | `var(--pill-background, #d0d0d0)`         | background-color | Background color when hovering over the pill.                             |

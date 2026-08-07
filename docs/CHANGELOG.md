@@ -2,15 +2,76 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.119.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.0)
 
-The `classes` prop lands on `.container`, which exposed only
---input-button-container-margin. With no width token, a consumer that
-needs the control to fill its parent had no choice but to reach the
-element through a Svelte `:global()` escape hatch.
+Progress rendered as a bare div with no ARIA at all -- a screen reader
+had no way to know the .container element was a progress indicator,
+let alone read its current completion. This wires up the standard
+WAI-ARIA progressbar pattern: role="progressbar" plus aria-valuenow,
+aria-valuemin, aria-valuemax, and aria-busy on the root element, along
+with an accessible name via a new ariaLabel prop.
 
-Defaults to `auto`, the current computed value, so no existing consumer
-renders differently.
+The value attributes are expressed as a normalized 0-100 percentage
+rather than the raw value/max domain, matching the convention Gauge
+already ships in this repo -- assistive technology hears a plain "45%"
+regardless of whether the underlying task is 45 of 100 bytes or 4.5 of
+10 minutes. aria-valuenow is rounded to 2 decimal places rather than
+the nearest whole number, so it stays effectively in step with the
+bar's raw fractional width instead of drifting from what's visually
+shown by a full percentage point on repeating-decimal values (e.g.
+value=1/max=3 renders a 33.333...% bar but previously announced a
+flat "33"). Full raw precision isn't used instead, because
+(value / max) * 100 can land on binary floating-point noise like
+55.00000000000001 -- 2-decimal rounding clears that while keeping the
+announced value far closer to the true width than whole-number
+rounding. The separate showLabel text keeps whole-number rounding,
+since that's the right precision for a human-readable label.
+
+Indeterminate mode (value &lt; 0) needed its own handling that Gauge
+doesn't: per the WAI-ARIA progressbar spec, aria-valuenow is omitted
+entirely when progress isn't currently determinable, so assistive
+technology doesn't read a stale or misleading number. aria-valuetext
+is set to "indeterminate" instead, and aria-busy is now set to "true"
+so the busy state is exposed through the dedicated ARIA property built
+for it, not just prose in aria-valuetext. aria-valuemin and
+aria-valuemax are kept in both modes -- the 0-100 scale itself isn't
+unknown while indeterminate, only the current position within it is.
+
+Adds the ariaLabel prop this component previously left as a disclosed
+follow-up. It mirrors Gauge's exact fallback pattern --
+aria-label={ariaLabel ?? labelText} -- falling back to the same
+percentage text showLabel displays, or "Loading" while indeterminate
+(matching the aria-label LoadingDots already uses for its own loading
+state), so assistive technology always announces a name even when the
+consumer doesn't set one explicitly. Documented in docs/Progress.md
+and demonstrated in the component's demo route.
+
+Playwright specs cover: role/value/label attributes on the determinate
+demo including the custom ariaLabel, aria-valuenow tracking the
+visible label across value changes for whole-number percentages, the
+2-decimal precision divergence on a repeating-decimal value/max pair,
+the indeterminate instance's aria-valuenow omission alongside
+aria-busy and the "Loading" label fallback, and all three demo
+instances being discoverable via the progressbar role query.
+
+Also fixes a CodeRabbit follow-up: value={0} max={0} made
+(value / max) * 100 evaluate to NaN, and the old min/max clamps
+preserved it as-is, landing "NaN" in aria-valuenow (not a valid ARIA
+value), a "NaN%" bar width, and a "NaN%" visible label. percentage now
+derives from a hasValidRange guard -- value and max both finite, and
+max &gt; 0 -- and falls back to 0 for an invalid range, so the bar renders
+as an ordinary empty 0% progress bar instead of propagating NaN. The
+guard is kept independent of isIndeterminate on purpose: a negative
+value (e.g. -1) still activates the indeterminate animation on its own
+even paired with an invalid max, since indeterminate mode never reads
+percentage in the markup. Documented the invalid-range contract on the
+max/ariaLabel JSDoc in properties.ts, and corrected docs/Progress.md,
+which previously claimed the normalized ARIA value held for every raw
+value/max domain. Added Playwright coverage for value=0/max=0, a
+negative max, a non-finite max, a non-finite value, and a negative
+value paired with an invalid max (still correctly indeterminate).
+
+## [2.120.0](https://github.com/juspay/svelte-ui-components/compare/2.120.0..2.119.0) - 6 August 2026
 
 ## [2.119.0](https://github.com/juspay/svelte-ui-components/compare/2.119.0..2.118.1) - 6 August 2026
 

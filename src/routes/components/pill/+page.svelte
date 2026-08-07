@@ -89,6 +89,15 @@
   </Pill>
 </div>
 
+<div class="demo-row">
+  <Pill text="Default line-height" testId="pill-line-height-default" />
+  <Pill
+    text="Custom line-height"
+    classes="pill-relaxed-line-height"
+    testId="pill-line-height-custom"
+  />
+</div>
+
 <style>
   :global(.pill-info) {
     --pill-background: #d1ecf1;
@@ -100,5 +109,10 @@
     --pill-background: #f8d7da;
     --pill-color: #721c24;
     --pill-hover-background: #f1b0b7;
+  }
+
+  /* --pill-line-height override demo: the pill's own line-height, not its wrapping row's. */
+  :global(.pill-relaxed-line-height) {
+    --pill-line-height: 1.4;
   }
 </style>

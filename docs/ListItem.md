@@ -79,6 +79,8 @@ Override these custom properties to theme the component.
 | `--list-item-transition`                         | `-`                                       | transition              | Transition animation for the list item (e.g., on hover). |
 | `--list-item-hover-background-color`             | `var(--list-item-background-color)`       | background-color        | Background color on hover.                               |
 | `--list-item-hover-border`                       | `var(--list-item-border)`                 | border                  | Border on hover.                                         |
+| `--list-item-top-section-align-items`            | `-`                                       | align-items             | Vertical alignment for the top content row.              |
+| `--list-item-top-section-gap`                    | `-`                                       | gap                     | Gap between top row content areas.                       |
 | `--list-item-left-content-display`               | `flex`                                    | display                 |                                                          |
 | `--list-item-left-image-height`                  | `24px`                                    | --image-height          | Height of the left image.                                |
 | `--list-item-left-image-width`                   | `24px`                                    | --image-width           | Width of the left image.                                 |
@@ -102,6 +104,7 @@ Override these custom properties to theme the component.
 | `--list-item-center-text-cursor`                 | `pointer`                                 | cursor                  | Cursor for the center text.                              |
 | `--list-item-center-text-font-family`            | `-`                                       | font-family             | Font family of the center text.                          |
 | `--list-item-right-content-display`              | `flex`                                    | display                 | Display mode of the right content area.                  |
+| `--list-item-right-content-flex`                 | `-`                                       | flex                    | Flex sizing for the right content area.                  |
 | `--list-item-right-content-loader-margin`        | `-`                                       | margin                  |                                                          |
 | `--list-item-right-image-height`                 | `18px`                                    | --image-height          | Height of the right image.                               |
 | `--list-item-right-image-width`                  | `18px`                                    | --image-width           | Width of the right image.                                |

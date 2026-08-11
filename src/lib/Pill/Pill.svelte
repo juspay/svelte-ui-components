@@ -92,7 +92,8 @@
     border: var(--pill-border, none);
     cursor: var(--pill-cursor, pointer);
     max-width: var(--pill-max-width);
-    line-height: 1;
+    line-height: var(--pill-line-height, 1);
+    flex-shrink: var(--pill-flex-shrink);
   }
 
   .pill:hover:not(.disabled) {

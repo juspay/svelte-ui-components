@@ -215,6 +215,8 @@
   .top-section {
     display: flex;
     flex-direction: row;
+    align-items: var(--list-item-top-section-align-items);
+    gap: var(--list-item-top-section-gap);
     margin-bottom: 0;
   }
 
@@ -263,6 +265,7 @@
 
   .right-content {
     display: var(--list-item-right-content-display, flex);
+    flex: var(--list-item-right-content-flex);
   }
 
   .right-content-loader {

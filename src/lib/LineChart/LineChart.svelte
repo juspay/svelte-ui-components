@@ -228,6 +228,10 @@
     })
   );
 
+  // Markers paint back-to-front so the first series ends up on top — see the
+  // comment on the marker loop in the markup.
+  let markerPaintOrder = $derived(lines.map((_line, index) => index).reverse());
+
   let legendItems = $derived<LegendItem[]>(
     series.map((s, i) => ({
       label: s.name,
@@ -658,6 +662,38 @@
                 stroke-dasharray={line.dash}
                 fill="none"
               />
+              {#if showValues && pointLabelPlacements[si]}
+                {#each line.points as _point, pi (pi)}
+                  {@const pl = pointLabelPlacements[si][pi]}
+                  {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
+                    <text
+                      class="point-value"
+                      x={pl.x}
+                      y={pl.y}
+                      text-anchor="middle"
+                      dominant-baseline={pl.dominantBaseline}
+                      >{formatNumber(series[si].data[pi].y)}</text
+                    >
+                  {/if}
+                {/each}
+              {/if}
+            {/if}
+          {/each}
+
+          <!--
+            Point markers are painted after every line, and in REVERSE series
+            order. Two series that share a value put their markers on identical
+            coordinates, and SVG has no z-index — whichever is written last wins.
+            Painting forwards meant the last series in the array hid the first,
+            so a chart passed [primary, comparison] lost the primary series'
+            marker wherever the two periods happened to agree, most visibly at
+            the first bucket. Reversing here makes the FIRST series win, which is
+            the one a reader is looking at; the legend keeps its original order
+            because it is derived from `series`, not from this loop.
+          -->
+          {#each markerPaintOrder as si (si)}
+            {@const line = lines[si]}
+            {#if !line.hidden}
               {#if line.points.length === 1 && !showDots && Number.isFinite(line.points[0].x) && Number.isFinite(line.points[0].y)}
                 <circle
                   class="single-point"
@@ -681,21 +717,6 @@
                       r={isHighlightedDot(si, pi) ? dotRadius * 1.5 : dotRadius}
                       fill={line.color}
                     />
-                  {/if}
-                {/each}
-              {/if}
-              {#if showValues && pointLabelPlacements[si]}
-                {#each line.points as _point, pi (pi)}
-                  {@const pl = pointLabelPlacements[si][pi]}
-                  {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
-                    <text
-                      class="point-value"
-                      x={pl.x}
-                      y={pl.y}
-                      text-anchor="middle"
-                      dominant-baseline={pl.dominantBaseline}
-                      >{formatNumber(series[si].data[pi].y)}</text
-                    >
                   {/if}
                 {/each}
               {/if}

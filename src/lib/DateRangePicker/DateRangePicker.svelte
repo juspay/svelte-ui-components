@@ -147,6 +147,12 @@
   let isOpen: boolean = $state(false);
   let panelRef: HTMLDivElement | null = $state(null);
   let triggerRef: HTMLDivElement | null = $state(null);
+  // The panel anchors below the trigger by default. When the trigger sits low in
+  // the viewport there is no room for it there, and because the panel is
+  // position:absolute (not portaled, not fixed) it simply extends past the fold
+  // and the lower weeks become unreachable without scrolling whatever container
+  // it happens to live in. Flipping it above the trigger keeps it on screen.
+  let opensUpward: boolean = $state(false);
   let comparePanelRef: HTMLDivElement | null = $state(null);
   let compareTriggerRef: HTMLDivElement | null = $state(null);
   // Stores the element that opened the compare panel so focus can be restored on close.
@@ -307,8 +313,42 @@
 
   function closePicker(): void {
     isOpen = false;
+    opensUpward = false;
     onopentoggle?.({ open: false });
   }
+
+  /**
+   * Decide which side of the trigger the panel should open on, by measuring
+   * rather than guessing: flip up only when the panel genuinely does not fit
+   * below AND fits better above. A panel that overflows in both directions
+   * stays below, where its first weeks are at least readable.
+   */
+  function positionPanel(): void {
+    if (panelRef === null || triggerRef === null || typeof window === 'undefined') {
+      return;
+    }
+    const trigger = triggerRef.getBoundingClientRect();
+    const panelHeight = panelRef.offsetHeight;
+    const offset = 6;
+    const roomBelow = window.innerHeight - trigger.bottom - offset;
+    const roomAbove = trigger.top - offset;
+    opensUpward = panelHeight > roomBelow && roomAbove > roomBelow;
+  }
+
+  $effect(() => {
+    if (!isOpen || panelRef === null || triggerRef === null) {
+      return;
+    }
+    positionPanel();
+    window.addEventListener('resize', positionPanel);
+    // Scrolling moves the trigger relative to the viewport, so the side that had
+    // room when the panel opened may not have it a moment later.
+    window.addEventListener('scroll', positionPanel, true);
+    return () => {
+      window.removeEventListener('resize', positionPanel);
+      window.removeEventListener('scroll', positionPanel, true);
+    };
+  });
 
   // The trigger toggles: clicking it while the panel is already open dismisses
   // the picker instead of re-opening it onto itself. The open-only handler left
@@ -856,6 +896,7 @@
     <div
       bind:this={panelRef}
       class="drp-panel"
+      class:drp-panel-above={opensUpward}
       class:drp-panel-align-left={align === 'left'}
       class:drp-panel-align-right={align === 'right'}
       role="dialog"
@@ -1259,6 +1300,12 @@
     max-width: var(--drp-panel-max-width, 760px);
     max-height: var(--drp-panel-max-height, calc(100dvh - 80px));
     overflow: hidden;
+  }
+
+  /* Set only when the panel would not fit below the trigger — see positionPanel(). */
+  .drp-panel-above {
+    top: auto;
+    bottom: calc(100% + var(--drp-panel-offset, 6px));
   }
 
   .drp-panel-align-left {

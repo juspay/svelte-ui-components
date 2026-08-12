@@ -323,32 +323,33 @@
    * below AND fits better above. A panel that overflows in both directions
    * stays below, where its first weeks are at least readable.
    */
-  function positionPanel(): void {
-    if (panelRef === null || triggerRef === null || typeof window === 'undefined') {
+  function positionPanel(panelNode: HTMLDivElement | null = panelRef): void {
+    if (panelNode === null || triggerRef === null || typeof window === 'undefined') {
       return;
     }
     const trigger = triggerRef.getBoundingClientRect();
-    const panelHeight = panelRef.offsetHeight;
+    const panelHeight = panelNode.offsetHeight;
     const offset = 6;
     const roomBelow = window.innerHeight - trigger.bottom - offset;
     const roomAbove = trigger.top - offset;
     opensUpward = panelHeight > roomBelow && roomAbove > roomBelow;
   }
 
-  $effect(() => {
-    if (!isOpen || panelRef === null || triggerRef === null) {
-      return;
-    }
-    positionPanel();
-    window.addEventListener('resize', positionPanel);
+  function positionPanelWhileMounted(panelNode: HTMLDivElement): { destroy: () => void } {
+    const updatePanelPosition = () => positionPanel(panelNode);
+    updatePanelPosition();
+    tick().then(updatePanelPosition);
+    window.addEventListener('resize', updatePanelPosition);
     // Scrolling moves the trigger relative to the viewport, so the side that had
     // room when the panel opened may not have it a moment later.
-    window.addEventListener('scroll', positionPanel, true);
-    return () => {
-      window.removeEventListener('resize', positionPanel);
-      window.removeEventListener('scroll', positionPanel, true);
+    window.addEventListener('scroll', updatePanelPosition, true);
+    return {
+      destroy: () => {
+        window.removeEventListener('resize', updatePanelPosition);
+        window.removeEventListener('scroll', updatePanelPosition, true);
+      }
     };
-  });
+  }
 
   // The trigger toggles: clicking it while the panel is already open dismisses
   // the picker instead of re-opening it onto itself. The open-only handler left
@@ -894,6 +895,7 @@
   <!-- Dropdown panel -->
   {#if isOpen}
     <div
+      use:positionPanelWhileMounted
       bind:this={panelRef}
       class="drp-panel"
       class:drp-panel-above={opensUpward}

@@ -96,20 +96,17 @@ describe('cell narrowing', () => {
       iconUrl: '/assets/edit.svg',
       ariaLabel: 'Edit'
     });
-    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
     expect(asButtonCellData({ iconUrl: 'javascript:alert(1)', ariaLabel: 'Edit' })).toBeNull();
     expect(
       asButtonCellData({ iconUrl: 'data:text/html,<script>1</script>', ariaLabel: 'Edit' })
     ).toBeNull();
     // A text button keeps rendering when its icon URL is rejected.
-    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
     expect(asButtonCellData({ text: 'Renew', iconUrl: 'javascript:alert(1)' })).toEqual({
       text: 'Renew'
     });
     expect(asInputCellData({ iconUrl: 'data:image/svg+xml;utf8,x' })).toEqual({
       iconUrl: 'data:image/svg+xml;utf8,x'
     });
-    // eslint-disable-next-line no-script-url -- asserting the guard rejects it
     expect(asInputCellData({ iconUrl: 'javascript:alert(1)' })).toEqual({});
   });
 

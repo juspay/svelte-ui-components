@@ -57,7 +57,7 @@
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
-    `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23555' stroke-width='1.5'%3E` +
+    `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.5'%3E` +
     `%3Ccircle cx='8' cy='8' r='6.5'/%3E` +
     `%3Cellipse cx='8' cy='8' rx='3' ry='6.5'/%3E` +
     `%3Cline x1='1.5' y1='8' x2='14.5' y2='8'/%3E` +
@@ -285,7 +285,13 @@
   Pass an image URL (or data URI) via <code>leftIcon</code> to render a leading icon at the left of
   the trigger. Size is controlled by the <code>--select-left-icon-size</code> CSS variable (default 16px).
 </p>
-<div class="demo-row" style="max-width: 300px;">
+<p>
+  An SVG source is <strong>inlined</strong>, so an icon drawn with <code>currentColor</code> — like
+  the globe below — takes the trigger's text colour and follows the theme. This demo sets
+  <code>--select-color</code>, and the globe follows it. Non-SVG sources still render as a plain
+  <code>&lt;img&gt;</code>.
+</p>
+<div class="demo-row" style="max-width: 300px; --select-color: #2563eb;">
   <Select
     items={cities}
     bind:value={leftIconValue}

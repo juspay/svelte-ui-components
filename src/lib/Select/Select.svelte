@@ -406,8 +406,10 @@
   >
     {#if typeof leftIcon === 'string' && leftIcon.length > 0}
       <Img
+        inlineSvg
         src={leftIcon}
         alt=""
+        fallback=""
         classes="select-left-icon"
         {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
       />
@@ -601,7 +603,13 @@
                 {/if}
               {/if}
               {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
-                <Img src={row.item.icon} alt="" fallback="" classes="select-option-icon" />
+                <Img
+                  inlineSvg
+                  src={row.item.icon}
+                  alt=""
+                  fallback=""
+                  classes="select-option-icon"
+                />
               {/if}
               <span class="select-option-label">{row.item.label}</span>
               {#if showSelectedTick && !multiple && value.includes(row.item.id)}

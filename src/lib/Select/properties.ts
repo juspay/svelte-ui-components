@@ -13,6 +13,8 @@ export type SelectItem = {
    * Optional image src (URL or data URI) rendered at the left of the option row,
    * before the label — for icon pickers and any list whose options carry a glyph.
    * Size is controlled by the `--select-option-icon-size` CSS variable (default 16px).
+   * An SVG source is inlined, so an icon drawn with `currentColor` inherits the
+   * option row's text colour; anything else renders as a plain `<img>`.
    * Pair with the trigger's `leftIcon` (driven by the selected option's icon) to show
    * the current selection in the closed trigger.
    */
@@ -71,7 +73,12 @@ export type OptionalSelectProperties = {
   triggerSummary?: import('svelte').Snippet<[{ value: string[]; items: SelectItem[] }]>;
   /** Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. Defaults to `'default'`. */
   hierarchy?: SelectHierarchy;
-  /** Optional image src (URL or data URI) rendered at the left of the trigger. Size is controlled by the `--select-left-icon-size` CSS variable (default 16px). */
+  /**
+   * Optional image src (URL or data URI) rendered at the left of the trigger.
+   * Size is controlled by the `--select-left-icon-size` CSS variable (default 16px).
+   * An SVG source is inlined, so an icon drawn with `currentColor` inherits the
+   * trigger's text colour; anything else renders as a plain `<img>`.
+   */
   leftIcon?: string;
   /** `data-pw` test id forwarded to the leading icon `<Img>` element. */
   leftIconTestId?: string;

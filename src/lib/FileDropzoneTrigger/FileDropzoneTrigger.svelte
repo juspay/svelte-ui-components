@@ -17,7 +17,7 @@
 {#if compact}
   <div class="file-dropzone-trigger-compact {classes ?? ''}">
     <div class="file-dropzone-trigger-icon-sm" aria-hidden="true">
-      <Img src={icon} alt="" fallback="" classes="file-dropzone-trigger-icon-sm-img" />
+      <Img inlineSvg src={icon} alt="" fallback="" classes="file-dropzone-trigger-icon-sm-img" />
     </div>
     <span class="file-dropzone-trigger-heading" data-pw={testId} testID={testId}>{heading}</span>
   </div>
@@ -28,7 +28,7 @@
     {...typeof testId === 'string' ? { testId } : {}}
   >
     <div class="file-dropzone-trigger-icon" aria-hidden="true">
-      <Img src={icon} alt="" fallback="" classes="file-dropzone-trigger-icon-img" />
+      <Img inlineSvg src={icon} alt="" fallback="" classes="file-dropzone-trigger-icon-img" />
     </div>
     <p class="file-dropzone-trigger-heading-wrap">
       <span class="file-dropzone-trigger-heading">{heading}</span>

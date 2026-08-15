@@ -25,7 +25,7 @@
       {#if icon}
         {@render icon()}
       {:else}
-        <Img src={statusIcon} alt="status" />
+        <Img inlineSvg src={statusIcon} alt="status" />
       {/if}
     </div>
     <div class="status-text">{statusText}</div>

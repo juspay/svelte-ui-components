@@ -263,7 +263,7 @@
                   </span>
                 {:else if typeof item.icon === 'string' && item.icon.length > 0}
                   <div class="command-menu-item-icon-img-wrapper">
-                    <Img src={item.icon} alt="" />
+                    <Img inlineSvg src={item.icon} alt="" />
                   </div>
                 {/if}
                 <span class="command-menu-item-label">{item.label}</span>

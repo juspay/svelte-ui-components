@@ -2,10 +2,82 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.2)
 
-- Replace restricted DateRangePicker `$effect` usage with a panel-scoped Svelte action.
-- Remove unused eslint-disable comments from Table cell data tests.
+Every icon slot in the library rendered through a plain &lt;Img src&gt;, which produces
+an &lt;img&gt;. An &lt;img&gt; renders its source as an ISOLATED document, so currentColor
+inside the SVG resolves against that document's own root rather than against the
+surrounding component - it paints UA black regardless of the theme. Consumers
+wanting a themed icon therefore had to ship one asset per colour, or bake a hex
+and accept it being wrong in dark mode.
+
+All of these now pass inlineSvg, matching what Toast already did:
+
+Select                leftIcon, and the per-option icon
+Tabs                  tabItem.icon
+FileDropzoneTrigger   icon (both the sm and default sizes)
+CommandMenu           item.icon
+Status                statusIcon
+Table/BuiltinCell     iconSrc, in the icon-label cell
+
+WHERE THE LINE IS DRAWN
+
+Icon slots inline. Image slots do not, and the four left alone are all content
+images rather than glyphs:
+
+ListItem      leftImageUrl / rightImageUrl
+BuiltinCell   data.imageUrl, the image-two-line thumbnail
+Avatar        src
+
+Avatar is the clearest case: it passes onerror={handleImageError}, and the inline
+branch has no equivalent, so inlining would silently drop its fallback. The others
+are photographs and product thumbnails - an SVG logo in a ListItem should not
+start inheriting the row's text colour.
+
+SAFE BY CONSTRUCTION
+
+No opt-out is needed. Img only takes the inline path when the source is actually
+an SVG, and retreats if the markup will not parse:
+
+shouldInline = (inlineSvg || typeof transformSvg === 'function')
+&& isSvgSource(currentSrc)      // .svg path or data:image/svg+xml
+&& failedInlineSrc !== currentSrc
+
+A PNG or JPEG icon is untouched. Layout is unchanged too: Img's style block
+targets `img, svg` identically, so --image-width/--image-height and the rest apply
+either way, and both branches carry the same class and test-id attributes - so
+.select-left-icon, .tabs-item-icon and the rest still land on the element.
+
+DEMO AND TEST
+
+The Select demo's globe icon now draws with currentColor instead of a baked #555,
+and its row sets --select-color, so the page shows the icon following the trigger
+colour rather than just asserting it.
+
+tests/select-lefticon-inline-svg.test.ts checks the leading icon is an &lt;svg&gt; whose
+parsed content is present, and that its stroke equals the trigger's computed
+colour. Negative control run: removing inlineSvg fails it with Expected "svg",
+Received "img", so it cannot pass vacuously. The other five components take the
+identical one-line change, so they are not re-tested individually. The non-SVG
+path is not re-tested either - isSvgSource() and the parse-failure fallback both
+predate this change.
+
+VERIFIED
+
+Full suite: 164 passed, 9 failed. All 9 are pre-existing Table failures - the
+identical 9 fail on a clean release with these changes stashed. prettier and
+eslint clean; svelte-check 0 errors (4 warnings, all pre-existing, other files).
+
+WHY NOW
+
+Icons in the Lighthouse dashboard's currentColor migration are blocked on exactly
+this: they are used at both an inline call site and a library icon prop, so
+migrating the asset today would fix one and break the other. Select unblocks
+map-pin-location; FileDropzoneTrigger unblocks upload-blue across 14 call sites;
+Table/BuiltinCell unblocks the marketing-channel icons. Tracked in
+juspay/lighthouse under BZ-5354.
+
+## [2.120.2](https://github.com/juspay/svelte-ui-components/compare/2.120.2..2.120.1) - 12 August 2026
 
 ## [2.120.1](https://github.com/juspay/svelte-ui-components/compare/2.120.1..2.120.0) - 7 August 2026
 

@@ -52,6 +52,7 @@
   let ghostValue: string[] = $state([]);
   let openEventLog: string[] = $state([]);
   let leftIconValue: string[] = $state([]);
+  let iconTintValue: string[] = $state([]);
   let portalValue: string[] = $state([]);
   let inflowValue: string[] = $state([]);
 
@@ -302,6 +303,32 @@
   {#if leftIconValue.length > 0}
     <p class="demo-info">Selected: {leftIconValue.at(0)}</p>
   {/if}
+</div>
+
+<h3>Tinting the icon independently of the label</h3>
+<p>
+  Inheriting the trigger's text colour is the default, but it is not always what you want: a muted
+  icon beside a strong label is a common, deliberate hierarchy, and an icon that can only match its
+  label cannot express it. Set <code>--select-left-icon-color</code> to break the two apart.
+</p>
+<p>
+  Below, the label stays near-black while the globe is muted grey. Every inlining slot has the
+  matching token — <code>--select-option-icon-color</code>, <code>--tabs-item-icon-color</code>,
+  <code>--file-dropzone-trigger-icon-color</code>, <code>--command-menu-item-icon-color</code>,
+  <code>--status-icon-color</code> and <code>--table-cell-icon-color</code>. Each defaults to
+  <code>inherit</code>, so a component that sets none behaves exactly as before.
+</p>
+<div
+  class="demo-row"
+  style="max-width: 300px; --select-color: #111827; --select-left-icon-color: #9ca3af;"
+>
+  <Select
+    items={cities}
+    bind:value={iconTintValue}
+    placeholder="Muted icon, dark label"
+    leftIcon={globeIconSrc}
+    leftIconTestId="select-tinted-left-icon"
+  />
 </div>
 
 <h3>usePortal — escape a clipping container</h3>

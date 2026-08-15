@@ -57,11 +57,17 @@
   .file-dropzone-trigger-icon-sm :global(.file-dropzone-trigger-icon-sm-img) {
     --image-width: var(--file-dropzone-trigger-icon-sm-size, 16px);
     --image-height: var(--file-dropzone-trigger-icon-sm-size, 16px);
+
+    color: var(--file-dropzone-trigger-icon-color, inherit);
   }
 
   .file-dropzone-trigger-icon :global(.file-dropzone-trigger-icon-img) {
     --image-width: var(--file-dropzone-trigger-icon-size, 24px);
     --image-height: var(--file-dropzone-trigger-icon-size, 24px);
+
+    /* Both sizes share one colour token deliberately: they are the same icon at two
+       scales, and splitting them would invite the two to drift apart. */
+    color: var(--file-dropzone-trigger-icon-color, inherit);
   }
 
   .file-dropzone-trigger-heading {

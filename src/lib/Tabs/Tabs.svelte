@@ -445,6 +445,7 @@
     --image-height: var(--tabs-item-icon-size, 16px);
     --image-object-fit: contain;
 
+    color: var(--tabs-item-icon-color, inherit);
     flex-shrink: 0;
   }
 

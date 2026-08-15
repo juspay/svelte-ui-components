@@ -416,6 +416,9 @@
   .command-menu-item-icon-img-wrapper {
     --image-width: var(--command-menu-item-icon-size, 20px);
     --image-height: var(--command-menu-item-icon-size, 20px);
+
+    /* Mirrors --command-menu-search-icon-color, which this component already had. */
+    color: var(--command-menu-item-icon-color, inherit);
     flex-shrink: 0;
     display: flex;
     align-items: center;

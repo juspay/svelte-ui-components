@@ -589,6 +589,8 @@
   .builtin-icon-label-icon :global(svg) {
     width: var(--table-cell-icon-size, 16px);
     height: var(--table-cell-icon-size, 16px);
+
+    color: var(--table-cell-icon-color, inherit);
     display: block;
   }
 

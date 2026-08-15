@@ -54,6 +54,7 @@
   }
 
   .status-image {
+    color: var(--status-icon-color, inherit);
     display: flex;
     margin-bottom: 25px;
   }

@@ -281,7 +281,7 @@
           })}
         {:else}
           {#if typeof tabItem?.icon === 'string' && tabItem.icon.length > 0}
-            <Img src={tabItem.icon} alt="" fallback="" classes="tabs-item-icon" />
+            <Img inlineSvg src={tabItem.icon} alt="" fallback="" classes="tabs-item-icon" />
           {/if}
           <span class="tabs-item-label" data-text={label}>{label}</span>
           {#if tabItem?.status && tabItem.status !== 'none'}

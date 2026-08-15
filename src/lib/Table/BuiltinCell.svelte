@@ -146,7 +146,7 @@
         data-pw={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
         testID={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
       >
-        <Img src={String(iconSrc)} alt="" fallback="" />
+        <Img inlineSvg src={String(iconSrc)} alt="" fallback="" />
       </span>
     {/each}
     <span>{typeof data.label === 'string' ? data.label : '-'}</span>

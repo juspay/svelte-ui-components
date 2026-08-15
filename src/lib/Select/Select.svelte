@@ -664,6 +664,13 @@
     --image-width: var(--select-left-icon-size, 16px);
     --image-height: var(--select-left-icon-size, 16px);
     --image-object-fit: contain;
+
+    /* The icon inlines, so a currentColor asset resolves against this. Defaults to
+       `inherit` — the trigger's text colour, which is what it already did — so this is
+       a hook, not a change. Without it a consumer cannot tint the icon independently
+       of the label, and an icon migrated to currentColor is forced to match its label
+       exactly, flattening any deliberate muted-icon/strong-label hierarchy. */
+    color: var(--select-left-icon-color, inherit);
     flex: none;
   }
 
@@ -785,6 +792,7 @@
     --image-height: var(--select-option-icon-size, 16px);
     --image-object-fit: contain;
 
+    color: var(--select-option-icon-color, inherit);
     vertical-align: middle;
     margin-right: var(--select-option-icon-gap, 8px);
   }

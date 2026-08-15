@@ -2,80 +2,70 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.3)
 
-Every icon slot in the library rendered through a plain &lt;Img src&gt;, which produces
-an &lt;img&gt;. An &lt;img&gt; renders its source as an ISOLATED document, so currentColor
-inside the SVG resolves against that document's own root rather than against the
-surrounding component - it paints UA black regardless of the theme. Consumers
-wanting a themed icon therefore had to ship one asset per colour, or bake a hex
-and accept it being wrong in dark mode.
+2.120.3 made these six slots inline their SVG, so a currentColor asset finally
+resolves against the host document instead of painting UA black. That was
+necessary but NOT sufficient, and the gap is worth stating plainly because it
+blocked a consumer migration.
 
-All of these now pass inlineSvg, matching what Toast already did:
+None of the six exposed a COLOUR hook. Each sizes its icon
+(--select-left-icon-size, --file-dropzone-trigger-icon-size, ...) and gives it no
+independent colour, so an inlined icon inherits the component's text colour and
+lands on exactly its label's value. A muted-icon/strong-label hierarchy - which is
+a deliberate, common design - became inexpressible, and any consumer migrating an
+icon to currentColor had to accept the flattening. In the Lighthouse dashboard
+that is 9 icons that cannot move: migrating map-pin-location would repaint the pin
+from #a0a0a0 to the trigger's #333.
 
-Select                leftIcon, and the per-option icon
-Tabs                  tabItem.icon
-FileDropzoneTrigger   icon (both the sm and default sizes)
-CommandMenu           item.icon
-Status                statusIcon
-Table/BuiltinCell     iconSrc, in the icon-label cell
+Each slot now reads a colour token:
 
-WHERE THE LINE IS DRAWN
+--select-left-icon-color
+--select-option-icon-color
+--tabs-item-icon-color
+--file-dropzone-trigger-icon-color      (both sizes share one, deliberately -
+same icon at two scales)
+--command-menu-item-icon-color          (mirrors the existing
+--command-menu-search-icon-color)
+--status-icon-color
+--table-cell-icon-color
 
-Icon slots inline. Image slots do not, and the four left alone are all content
-images rather than glyphs:
+EVERY ONE DEFAULTS TO `inherit`
 
-ListItem      leftImageUrl / rightImageUrl
-BuiltinCell   data.imageUrl, the image-two-line thumbnail
-Avatar        src
+That is the whole compatibility story: a component that sets none behaves exactly
+as it does today, because inheriting the text colour IS the current behaviour.
+This adds a hook, it does not change a pixel. Setting the fallback to a concrete
+hex would have made the exception the default, which is the trap where a
+route-specific value leaks into every consumer.
 
-Avatar is the clearest case: it passes onerror={handleImageError}, and the inline
-branch has no equivalent, so inlining would silently drop its fallback. The others
-are photographs and product thumbnails - an SVG logo in a ListItem should not
-start inheriting the row's text colour.
+TESTS
 
-SAFE BY CONSTRUCTION
+tests/icon-slot-color-token.spec.ts, three cases covering the contract:
 
-No opt-out is needed. Img only takes the inline path when the source is actually
-an SVG, and retreats if the markup will not parse:
+- default: the untinted demo icon still tracks --select-color (#2563eb)
+- override: with --select-color #111827 and --select-left-icon-color #9ca3af the
+icon takes the grey AND the trigger keeps the near-black. Asserting only the
+icon would still pass if the token had recoloured everything, which is the
+failure this is for
+- inlining: the element's own computed `stroke` is the token colour, not just a
+wrapper's `color`. A plain &lt;img&gt; would report the right wrapper colour while
+rendering UA black, so this is what distinguishes a real fix from a fake one
 
-shouldInline = (inlineSvg || typeof transformSvg === 'function')
-&& isSvgSource(currentSrc)      // .svg path or data:image/svg+xml
-&& failedInlineSrc !== currentSrc
+With inlineSvg the testId lands on the &lt;svg&gt; ITSELF rather than a wrapper, so the
+assertions target the element directly - noted in the spec, because a descendant
+`.locator('svg')` silently finds nothing and looks like a broken feature.
 
-A PNG or JPEG icon is untouched. Layout is unchanged too: Img's style block
-targets `img, svg` identically, so --image-width/--image-height and the rest apply
-either way, and both branches carry the same class and test-id attributes - so
-.select-left-icon, .tabs-item-icon and the rest still land on the element.
+PRE-EXISTING FAILURES, NOT FROM THIS CHANGE
 
-DEMO AND TEST
+tests/table-builtin-cells.test.ts has 7 failures. They reproduce identically on
+clean release with this branch stashed - the table demo does not render, every
+assertion is "element(s) not found", and none of them concern colour. Verified by
+control run rather than assumed. Left for whoever owns that demo.
 
-The Select demo's globe icon now draws with currentColor instead of a baked #555,
-and its row sets --select-color, so the page shows the icon following the trigger
-colour rather than just asserting it.
+Demo: the Select page gains a "Tinting the icon independently of the label"
+section showing the muted-icon/dark-label pairing and naming all seven tokens.
 
-tests/select-lefticon-inline-svg.test.ts checks the leading icon is an &lt;svg&gt; whose
-parsed content is present, and that its stroke equals the trigger's computed
-colour. Negative control run: removing inlineSvg fails it with Expected "svg",
-Received "img", so it cannot pass vacuously. The other five components take the
-identical one-line change, so they are not re-tested individually. The non-SVG
-path is not re-tested either - isSvgSource() and the parse-failure fallback both
-predate this change.
-
-VERIFIED
-
-Full suite: 164 passed, 9 failed. All 9 are pre-existing Table failures - the
-identical 9 fail on a clean release with these changes stashed. prettier and
-eslint clean; svelte-check 0 errors (4 warnings, all pre-existing, other files).
-
-WHY NOW
-
-Icons in the Lighthouse dashboard's currentColor migration are blocked on exactly
-this: they are used at both an inline call site and a library icon prop, so
-migrating the asset today would fix one and break the other. Select unblocks
-map-pin-location; FileDropzoneTrigger unblocks upload-blue across 14 call sites;
-Table/BuiltinCell unblocks the marketing-channel icons. Tracked in
-juspay/lighthouse under BZ-5354.
+## [2.120.3](https://github.com/juspay/svelte-ui-components/compare/2.120.3..2.120.2) - 15 August 2026
 
 ## [2.120.2](https://github.com/juspay/svelte-ui-components/compare/2.120.2..2.120.1) - 12 August 2026
 

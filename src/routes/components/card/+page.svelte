@@ -16,6 +16,28 @@
 </div>
 
 <div class="demo-section">
+  <h2 class="demo-section-title">Rich Title / Description (titleSnippet, descriptionSnippet)</h2>
+  <div class="demo-row" style="flex-direction: column; max-width: 420px; gap: 16px;">
+    <div class="card-theme">
+      <Card testId="card-snippet-header">
+        {#snippet titleSnippet()}
+          <h3 style="margin: 0; font: inherit;" data-pw="snippet-card-heading">Editing window</h3>
+        {/snippet}
+        {#snippet descriptionSnippet()}
+          <p style="margin: 0; font: inherit;" data-pw="snippet-card-description">
+            Counts from order creation. <a href="{base}/components/button">Learn more</a>
+          </p>
+        {/snippet}
+        <p style="margin: 0;">
+          Snippets render inside the same .card-title / .card-description containers, so the header
+          keeps its normal typography. No placeholder title="" is needed.
+        </p>
+      </Card>
+    </div>
+  </div>
+</div>
+
+<div class="demo-section">
   <h2 class="demo-section-title">Basic Cards</h2>
   <div class="demo-row" style="flex-direction: column; max-width: 420px; gap: 16px;">
     <div class="card-theme">

@@ -11,6 +11,22 @@ export type OptionalCardProperties = {
   children?: Snippet;
   title?: string;
   description?: string;
+  /**
+   * Optional snippet rendered in place of the `title` string, inside the same
+   * `.card-title` container. When provided, `title` is not rendered — the snippet
+   * takes priority — and the header row is shown even if `title` is omitted
+   * entirely. Use this when the title needs markup a string prop cannot carry:
+   * rich text, an inline icon, or a test hook such as `data-pw` /
+   * `use:testAttributes` that must sit on the title element itself.
+   */
+  titleSnippet?: Snippet;
+  /**
+   * Optional snippet rendered in place of the `description` string, inside the
+   * same `.card-description` container. When provided, `description` is not
+   * rendered. Like `titleSnippet`, this exists for descriptions that need markup
+   * or a test hook on the element itself.
+   */
+  descriptionSnippet?: Snippet;
   classes?: string;
   /** Renders as `data-pw` on the root element for Playwright test selection. */
   testId?: string;

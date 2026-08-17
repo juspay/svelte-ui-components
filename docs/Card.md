@@ -189,6 +189,36 @@ This pattern gives full layout control to the consumer (any number of zones, any
 </Card>
 ```
 
+### Rich-Markup Title and Description via Snippets
+
+`title` and `description` are plain strings, so they cannot carry markup or an
+attribute. When the title needs an inline icon, formatted text, or a test hook on
+the element itself, use `titleSnippet` / `descriptionSnippet` instead — each
+renders inside the same `.card-title` / `.card-description` container, so the
+card keeps its normal header typography and spacing.
+
+```svelte
+<script>
+  import { Card } from '@juspay/svelte-ui-components';
+</script>
+
+<Card>
+  {#snippet titleSnippet()}
+    <h3 data-pw="settings-card-heading">Editing window</h3>
+  {/snippet}
+  {#snippet descriptionSnippet()}
+    <p data-pw="settings-card-description">
+      Counts from when the order is created. <a href="/docs">Learn more</a>
+    </p>
+  {/snippet}
+  <p>Card body content.</p>
+</Card>
+```
+
+Providing `titleSnippet` renders the header row even when `title` is omitted, so
+there is no need to pass a placeholder `title=""`. A snippet always takes
+priority over the matching string prop — only one of the two is rendered.
+
 ### Stretch and Scrollable Card
 
 ```svelte
@@ -213,6 +243,8 @@ This pattern gives full layout control to the consumer (any number of zones, any
 | children    | `Snippet`                          | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                                                                                                                                                  |
 | title       | `string`                           | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                                                                                                                                                          |
 | description | `string`                           | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                                                                                                                                                         |
+| titleSnippet | `Snippet`                         | No       | `-`     | Rich-markup override for the title. Rendered inside the same `.card-title` container and takes priority over `title`. Providing it renders the header row even when `title` is omitted.                                                                                                                        |
+| descriptionSnippet | `Snippet`                   | No       | `-`     | Rich-markup override for the description. Rendered inside the same `.card-description` container and takes priority over `description`.                                                                                                                                                                        |
 | classes     | `string`                           | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                         |
 | testId      | `string`                           | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                     |
 | onclick     | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided (and `href` is not), the card root becomes an interactive `<div>`: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. When `href` is also set, `onclick` still fires but the shim is skipped in favor of native anchor semantics. Omit both to keep a plain `<div>`.                                                                                                                                   |

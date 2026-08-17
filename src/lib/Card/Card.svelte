@@ -5,6 +5,8 @@
     children,
     title,
     description,
+    titleSnippet,
+    descriptionSnippet,
     classes,
     testId,
     onclick,
@@ -64,13 +66,17 @@
   onclick={onclick ?? null}
   onkeydown={!isAnchor && isInteractive ? handleKeydown : null}
 >
-  {#if (typeof title === 'string' && title.length > 0) || typeof headerRight === 'function'}
+  {#if (typeof title === 'string' && title.length > 0) || typeof titleSnippet === 'function' || typeof headerRight === 'function'}
     <div class="card-header" class:card-header-split={typeof headerRight === 'function'}>
       <div class="card-header-main">
-        {#if typeof title === 'string' && title.length > 0}
+        {#if typeof titleSnippet === 'function'}
+          <div class="card-title">{@render titleSnippet()}</div>
+        {:else if typeof title === 'string' && title.length > 0}
           <div class="card-title">{title}</div>
         {/if}
-        {#if typeof description === 'string' && description.length > 0}
+        {#if typeof descriptionSnippet === 'function'}
+          <div class="card-description">{@render descriptionSnippet()}</div>
+        {:else if typeof description === 'string' && description.length > 0}
           <div class="card-description">{description}</div>
         {/if}
       </div>

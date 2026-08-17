@@ -2,68 +2,36 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.120.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.121.0)
 
-2.120.3 made these six slots inline their SVG, so a currentColor asset finally
-resolves against the host document instead of painting UA black. That was
-necessary but NOT sufficient, and the gap is worth stating plainly because it
-blocked a consumer migration.
+Card's title and description are plain strings, so a consumer whose heading
+carries markup — or a test hook like data-pw / use:testAttributes that a suite
+already selects on — cannot use the card's own header at all. The workaround is
+to hand-roll a heading in the card body, which loses the header typography and
+leaves the header row unrendered.
 
-None of the six exposed a COLOUR hook. Each sizes its icon
-(--select-left-icon-size, --file-dropzone-trigger-icon-size, ...) and gives it no
-independent colour, so an inlined icon inherits the component's text colour and
-lands on exactly its label's value. A muted-icon/strong-label hierarchy - which is
-a deliberate, common design - became inexpressible, and any consumer migrating an
-icon to currentColor had to accept the flattening. In the Lighthouse dashboard
-that is 9 icons that cannot move: migrating map-pin-location would repaint the pin
-from #a0a0a0 to the trigger's #333.
+Mirrors the pattern EmptyState already ships. Each snippet renders inside the
+same .card-title / .card-description container, so the header keeps its normal
+typography and spacing, and a snippet takes priority over the matching string
+prop.
 
-Each slot now reads a colour token:
+One deliberate difference from EmptyState: Card's `title` is optional, so
+supplying titleSnippet alone renders the header row and no placeholder title=""
+is needed.
 
---select-left-icon-color
---select-option-icon-color
---tabs-item-icon-color
---file-dropzone-trigger-icon-color      (both sizes share one, deliberately -
-same icon at two scales)
---command-menu-item-icon-color          (mirrors the existing
---command-menu-search-icon-color)
---status-icon-color
---table-cell-icon-color
+Backward compatible. The header gate only gains an OR on titleSnippet, and the
+string branches are untouched, so a consumer passing no snippet renders exactly
+as before — covered by a regression test. `description` alone still does not
+open the header, matching today's behaviour.
 
-EVERY ONE DEFAULTS TO `inherit`
+Found while migrating a consumer app: 28 Card call sites could not adopt the
+title prop purely because their heading carried a Playwright hook.
 
-That is the whole compatibility story: a component that sets none behaves exactly
-as it does today, because inheriting the text colour IS the current behaviour.
-This adds a hook, it does not change a pixel. Setting the fallback to a concrete
-hex would have made the exception the default, which is the trap where a
-route-specific value leaks into every consumer.
+Tests: 3 Playwright cases (header renders from titleSnippet with no title prop;
+snippet content lands inside .card-title/.card-description and keeps its hook;
+string path unchanged). Full suite green — 128 unit, lint and svelte-check clean.
 
-TESTS
-
-tests/icon-slot-color-token.spec.ts, three cases covering the contract:
-
-- default: the untinted demo icon still tracks --select-color (#2563eb)
-- override: with --select-color #111827 and --select-left-icon-color #9ca3af the
-icon takes the grey AND the trigger keeps the near-black. Asserting only the
-icon would still pass if the token had recoloured everything, which is the
-failure this is for
-- inlining: the element's own computed `stroke` is the token colour, not just a
-wrapper's `color`. A plain &lt;img&gt; would report the right wrapper colour while
-rendering UA black, so this is what distinguishes a real fix from a fake one
-
-With inlineSvg the testId lands on the &lt;svg&gt; ITSELF rather than a wrapper, so the
-assertions target the element directly - noted in the spec, because a descendant
-`.locator('svg')` silently finds nothing and looks like a broken feature.
-
-PRE-EXISTING FAILURES, NOT FROM THIS CHANGE
-
-tests/table-builtin-cells.test.ts has 7 failures. They reproduce identically on
-clean release with this branch stashed - the table demo does not render, every
-assertion is "element(s) not found", and none of them concern colour. Verified by
-control run rather than assumed. Left for whoever owns that demo.
-
-Demo: the Select page gains a "Tinting the icon independently of the label"
-section showing the muted-icon/dark-label pairing and naming all seven tokens.
+## [2.121.0](https://github.com/juspay/svelte-ui-components/compare/2.121.0..2.120.3) - 15 August 2026
 
 ## [2.120.3](https://github.com/juspay/svelte-ui-components/compare/2.120.3..2.120.2) - 15 August 2026
 

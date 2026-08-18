@@ -12,6 +12,8 @@
     infoMessage = '',
     validators = [],
     disable = false,
+    readonly = false,
+    spellcheck = null,
     validationPattern = null,
     inProgressPattern = null,
     addFocusColor = false,
@@ -189,6 +191,15 @@
       return;
     }
 
+    // Everything below the tel branch is tel-specific digit normalisation, and
+    // onPaste was only ever invoked from inside it — so a non-tel field (notably
+    // useTextArea) had no way to observe a paste at all. Hand the event over
+    // before that branch and return, leaving tel's behaviour byte-identical.
+    if (dataType !== 'tel') {
+      onPaste(event);
+      return;
+    }
+
     if (event.clipboardData) {
       if (dataType === 'tel') {
         let unfilteredNumber = event.clipboardData.getData('text');
@@ -281,6 +292,8 @@
         style:resize={effectiveResize}
         rows={rows ?? null}
         disabled={disable}
+        readonly={readonly || null}
+        {spellcheck}
         bind:this={inputElement}
         maxlength={dataType === 'tel' ? null : maxLength}
         minlength={minLength}
@@ -311,6 +324,8 @@
         testID={testId}
         class:action-input={actionInput}
         disabled={disable}
+        readonly={readonly || null}
+        {spellcheck}
         bind:this={inputElement}
         maxlength={dataType === 'tel' ? null : maxLength}
         minlength={minLength}

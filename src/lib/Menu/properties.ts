@@ -1,5 +1,14 @@
 import type { Snippet } from 'svelte';
 
+/** The interaction wiring Menu hands to its `trigger` snippet. */
+export type MenuTriggerProps = {
+  onclick: (event: MouseEvent) => void;
+  onkeydown: (event: KeyboardEvent) => void;
+  /** camelCase to match the library's own prop convention, so it spreads onto Button. */
+  ariaHaspopup: 'menu';
+  ariaExpanded: boolean;
+};
+
 export type MenuItem = {
   label: string;
   value: string;
@@ -28,7 +37,26 @@ export type MandatoryMenuProperties = {
 export type OptionalMenuProperties = {
   open?: boolean;
   testId?: string;
-  trigger?: Snippet;
+  /**
+   * Renders the control that opens the menu. Receives Menu's interaction wiring, so a
+   * consumer whose trigger is ITSELF an interactive element (a Button, say) can spread
+   * it onto that element and set `interactiveTrigger` — see below. A snippet that
+   * declares no parameters simply ignores what it is handed, so existing triggers are
+   * unaffected.
+   */
+  trigger?: Snippet<[MenuTriggerProps]>;
+  /**
+   * Set when the trigger snippet renders its own interactive element. Menu then stops
+   * making its wrapper a second one.
+   *
+   * By default Menu wraps the trigger in a `role="button" tabindex="0"` div carrying
+   * the click/keydown handlers. That is correct for inert trigger content, but if the
+   * snippet renders a real control the result is two focusable elements for one
+   * conceptual trigger — two Tab stops, both announcing as a button, and interactive
+   * content nested inside interactive content. Defaults to `false`, preserving the
+   * existing behaviour for every current consumer.
+   */
+  interactiveTrigger?: boolean;
   classes?: string;
   /** Value of the currently selected item. When set, opening the menu focuses the
    * selected option instead of the first item, the matching item gets the

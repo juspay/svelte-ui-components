@@ -18,6 +18,19 @@ export type OptionalInputProperties = {
   infoMessage?: string | null;
   validators?: CustomValidator[];
   disable?: boolean;
+  /**
+   * Renders the field read-only: the value can be focused, selected and copied but not
+   * edited. Deliberately distinct from `disable`, which also removes the element from
+   * the focus order and so cannot serve a select-all-to-copy affordance.
+   */
+  readonly?: boolean;
+  /**
+   * Native `spellcheck`. Defaults to `null`, which Svelte renders as "attribute
+   * absent", so the browser default is unchanged for every existing consumer.
+   * Pass `false` for fields holding code, JSON or identifiers, where red
+   * squiggles are noise.
+   */
+  spellcheck?: boolean | null;
   validationPattern?: RegExp | null;
   inProgressPattern?: RegExp | null;
   addFocusColor?: boolean;

@@ -10,6 +10,7 @@
     open = $bindable(false),
     testId,
     trigger,
+    interactiveTrigger = false,
     onselect,
     onopen,
     onclose,
@@ -345,20 +346,45 @@
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
-  <div
-    class="menu-trigger"
-    bind:this={triggerEl}
-    onclick={toggle}
-    onkeydown={handleTriggerKeydown}
-    role="button"
-    tabindex="0"
-    aria-haspopup="menu"
-    aria-expanded={open}
-  >
-    {#if typeof trigger === 'function'}
-      {@render trigger()}
-    {/if}
-  </div>
+  <!-- Two shapes on purpose. When the snippet renders its own interactive element this
+       wrapper must NOT be a second one: two focusable nodes for one conceptual trigger
+       means two Tab stops, both announcing as a button, and interactive content nested
+       inside interactive content. The wiring is handed to the snippet instead, for it to
+       spread onto the one real control. Written as two branches rather than conditional
+       attributes so role/tabindex stay statically paired — Svelte's a11y check reads them
+       together, and a dynamic pair trips a11y_no_noninteractive_tabindex. -->
+  {#if interactiveTrigger}
+    <div class="menu-trigger" bind:this={triggerEl}>
+      {#if typeof trigger === 'function'}
+        {@render trigger({
+          onclick: toggle,
+          onkeydown: handleTriggerKeydown,
+          ariaHaspopup: 'menu',
+          ariaExpanded: open
+        })}
+      {/if}
+    </div>
+  {:else}
+    <div
+      class="menu-trigger"
+      bind:this={triggerEl}
+      onclick={toggle}
+      onkeydown={handleTriggerKeydown}
+      role="button"
+      tabindex="0"
+      aria-haspopup="menu"
+      aria-expanded={open}
+    >
+      {#if typeof trigger === 'function'}
+        {@render trigger({
+          onclick: toggle,
+          onkeydown: handleTriggerKeydown,
+          ariaHaspopup: 'menu',
+          ariaExpanded: open
+        })}
+      {/if}
+    </div>
+  {/if}
 
   {#if open}
     <div

@@ -8,6 +8,11 @@
   let resizable = $state('');
   let resizableX = $state('');
   let resizableBoth = $state('');
+  let scheduleTime = $state('09:30');
+  let configJson = $state('{ "enabled": true }');
+  let readonlySnapshot = $state('{"captured":"selector"}');
+  let pastedInto = $state('');
+  let pasteCount = $state(0);
 </script>
 
 <div class="page-header">
@@ -75,6 +80,72 @@
 <div class="demo-row resize-narrow">
   <Input bind:value={resizableBoth} useTextArea resize="both" label="Both" rows={3} />
 </div>
+
+<h3>Native input types (dataType)</h3>
+<p>
+  <code>dataType</code> is passed straight through as the native <code>type</code>. Beyond the
+  original text/tel/password/email/number it also accepts <code>time</code>, <code>date</code>,
+  <code>search</code> and <code>url</code>.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={scheduleTime}
+    dataType="time"
+    label="Schedule time"
+    name="schedule-time"
+    testId="input-datatype-time"
+  />
+</div>
+
+<h3>spellcheck</h3>
+<p>
+  Defaults to unset, so the browser default is untouched. Pass <code>false</code> for fields holding code,
+  JSON or identifiers.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={configJson}
+    useTextArea
+    spellcheck={false}
+    label="Config JSON"
+    rows={3}
+    testId="input-spellcheck-off"
+  />
+</div>
+
+<h3>readonly</h3>
+<p>
+  <code>readonly</code> keeps the field focusable and selectable but not editable — unlike
+  <code>disable</code>, which removes it from the focus order entirely and so cannot carry a
+  select-all-to-copy affordance.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={readonlySnapshot}
+    useTextArea
+    readonly
+    label="Captured snapshot"
+    rows={3}
+    testId="input-readonly"
+  />
+</div>
+
+<h3>onPaste on a non-tel field</h3>
+<p>
+  The paste callback fires for every <code>dataType</code>, not just <code>tel</code> — which is what
+  lets a consumer intercept pasted files or images in a multi-line field.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={pastedInto}
+    useTextArea
+    label="Paste here"
+    rows={3}
+    testId="input-paste-textarea"
+    onPaste={() => (pasteCount += 1)}
+  />
+</div>
+<p data-pw="input-paste-count">paste events seen: {pasteCount}</p>
 
 <style>
   /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */

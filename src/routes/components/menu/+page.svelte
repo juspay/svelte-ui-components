@@ -115,6 +115,28 @@
   </div>
 </div>
 
+<h3>interactiveTrigger — trigger is its own control</h3>
+<p>
+  By default Menu wraps the trigger in a <code>role="button" tabindex="0"</code> div. When the
+  snippet renders a real control, set <code>interactiveTrigger</code> and spread the wiring Menu hands
+  the snippet onto that control — one Tab stop instead of two, and no interactive element nested inside
+  another.
+</p>
+<div class="demo-row">
+  <Menu
+    testId="menu-interactive-trigger"
+    interactiveTrigger
+    items={[
+      { label: 'Newest first', value: 'new' },
+      { label: 'Oldest first', value: 'old' }
+    ]}
+  >
+    {#snippet trigger(props)}
+      <Button {...props} text="Sort" testId="menu-interactive-trigger-button" />
+    {/snippet}
+  </Menu>
+</div>
+
 <style>
   .corner-pinned-demo {
     position: fixed;

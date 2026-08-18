@@ -58,6 +58,11 @@ export type OptionalButtonProperties = {
   children?: Snippet;
   ariaLabel?: string;
   ariaExpanded?: boolean;
+  /**
+   * Native `aria-haspopup`. Needed when the button is the trigger for a menu, listbox or
+   * dialog — Menu hands exactly this to its `trigger` snippet.
+   */
+  ariaHaspopup?: 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | boolean;
   ariaSelected?: boolean;
   role?: string;
   disabled?: boolean;

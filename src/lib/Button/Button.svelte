@@ -22,6 +22,7 @@
     testId,
     ariaLabel,
     ariaExpanded,
+    ariaHaspopup,
     ariaSelected,
     role,
     onclick,
@@ -88,6 +89,7 @@
     role={role ?? null}
     aria-label={ariaLabel ?? null}
     aria-expanded={ariaExpanded ?? null}
+    aria-haspopup={ariaHaspopup ?? null}
     aria-selected={ariaSelected ?? null}
     aria-busy={isBusy || null}
     type={href ? null : type}

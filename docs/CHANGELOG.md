@@ -2,34 +2,63 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.121.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.122.0)
 
-Card's title and description are plain strings, so a consumer whose heading
-carries markup — or a test hook like data-pw / use:testAttributes that a suite
-already selects on — cannot use the card's own header at all. The workaround is
-to hand-roll a heading in the card body, which loses the header typography and
-leaves the header row unrendered.
+Five consumers in the Lighthouse dashboard hand-roll a native &lt;input&gt;, &lt;textarea&gt;
+or &lt;button&gt; because the library cannot express what they need. Each is a small
+additive gap rather than a design disagreement, so this closes all five and lets
+those call sites move onto the components.
 
-Mirrors the pattern EmptyState already ships. Each snippet renders inside the
-same .card-title / .card-description container, so the header keeps its normal
-typography and spacing, and a snippet takes priority over the matching string
-prop.
+Input
+- InputDataType gains 'time', 'date', 'search' and 'url'. Input already renders
+&lt;input type={dataType}&gt;, so the union was the only thing standing in the way —
+a scheduling field had to hand-roll &lt;input type="time"&gt; purely to name a type
+the component would have rendered anyway. validateInput() switches on dataType
+with no default branch and 'number' has always fallen through it unvalidated;
+these four fall through identically and keep `value` a plain string with no
+parallel checked/files model. Deliberately NOT added: checkbox and radio, which
+are driven by `checked`, and file, which rejects scripted value writes — those
+need new props, not a wider union.
+- New `spellcheck` prop, defaulting to null so the attribute is absent and every
+existing field keeps the browser default. A JSON paste box wants it off.
+- New `readonly` prop. Deliberately distinct from `disable`: a disabled element
+cannot take focus, so it cannot carry a select-all-to-copy affordance, which is
+exactly what the consumer needing this does.
+- onPaste now fires for non-tel fields. It was only ever invoked from inside the
+tel-specific digit-normalisation branch, so a useTextArea consumer could not
+observe a paste at all — a chat composer that intercepts pasted images had no
+way to migrate without silently losing that feature. The tel path is untouched.
 
-One deliberate difference from EmptyState: Card's `title` is optional, so
-supplying titleSnippet alone renders the header row and no placeholder title=""
-is needed.
+Menu + Button
+- Menu's `trigger` snippet now receives Menu's interaction wiring, and a new
+`interactiveTrigger` prop stops Menu making its own wrapper interactive.
+Menu wraps the trigger in a role="button" tabindex="0" div, which is right for
+inert content and wrong when the snippet renders a real control: the result is
+two focusable elements for one conceptual trigger, both announcing as a button,
+with interactive content nested inside interactive content. A consumer with a
+real Button as its trigger could not produce an accessible result at all.
+Defaults to false, so every existing menu behaves exactly as before.
+- Button gains `ariaHaspopup`, without which the wiring Menu hands over cannot
+land on it. Found by writing the Menu test: the first version of the render-prop
+passed kebab-case aria attributes, which a component destructuring named props
+silently drops — the shape has to match the library's own camelCase convention.
+- The trigger is written as two branches rather than conditional attributes so
+role and tabindex stay statically paired; a dynamic pair trips Svelte's
+a11y_no_noninteractive_tabindex check.
 
-Backward compatible. The header gate only gains an OR on titleSnippet, and the
-string branches are untouched, so a consumer passing no snippet renders exactly
-as before — covered by a regression test. `description` alone still does not
-open the header, matching today's behaviour.
+Verified against a baseline captured before any edit: svelte-check 0 errors and
+the same 4 pre-existing warnings, prettier/eslint clean, 128 unit tests passing,
+and the package builds. Eight new Playwright tests cover the additions, and three
+of them exist specifically to prove nothing changed for consumers that do not opt
+in — a field without the new props emits no spellcheck or readonly attribute and
+stays editable, and a menu without interactiveTrigger keeps role="button"
+tabindex="0" on its wrapper.
 
-Found while migrating a consumer app: 28 Card call sites could not adopt the
-title prop purely because their heading carried a Playwright hook.
+Nine Table tests fail in the full suite. They fail identically on unmodified
+origin/release when run back-to-back under the same conditions, so they are
+pre-existing and not introduced here.
 
-Tests: 3 Playwright cases (header renders from titleSnippet with no title prop;
-snippet content lands inside .card-title/.card-description and keeps its hook;
-string path unchanged). Full suite green — 128 unit, lint and svelte-check clean.
+## [2.122.0](https://github.com/juspay/svelte-ui-components/compare/2.122.0..2.121.0) - 17 August 2026
 
 ## [2.121.0](https://github.com/juspay/svelte-ui-components/compare/2.121.0..2.120.3) - 15 August 2026
 

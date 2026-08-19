@@ -2,61 +2,77 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.122.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.123.0)
 
-Five consumers in the Lighthouse dashboard hand-roll a native &lt;input&gt;, &lt;textarea&gt;
-or &lt;button&gt; because the library cannot express what they need. Each is a small
-additive gap rather than a design disagreement, so this closes all five and lets
-those call sites move onto the components.
+Follow-up to #453. Migrating the last Lighthouse call sites onto these components
+surfaced five more gaps and one defect in what #453 shipped. Each addition defaults
+to the value the component already computes, so no existing consumer moves.
 
 Input
-- InputDataType gains 'time', 'date', 'search' and 'url'. Input already renders
-&lt;input type={dataType}&gt;, so the union was the only thing standing in the way —
-a scheduling field had to hand-roll &lt;input type="time"&gt; purely to name a type
-the component would have rendered anyway. validateInput() switches on dataType
-with no default branch and 'number' has always fallen through it unvalidated;
-these four fall through identically and keep `value` a plain string with no
-parallel checked/files model. Deliberately NOT added: checkbox and radio, which
-are driven by `checked`, and file, which rejects scripted value writes — those
-need new props, not a wider union.
-- New `spellcheck` prop, defaulting to null so the attribute is absent and every
-existing field keeps the browser default. A JSON paste box wants it off.
-- New `readonly` prop. Deliberately distinct from `disable`: a disabled element
-cannot take focus, so it cannot carry a select-all-to-copy affordance, which is
-exactly what the consumer needing this does.
-- onPaste now fires for non-tel fields. It was only ever invoked from inside the
-tel-specific digit-normalisation branch, so a useTextArea consumer could not
-observe a paste at all — a chat composer that intercepts pasted images had no
-way to migrate without silently losing that feature. The tel path is untouched.
+- `maxLength` accepts null. It defaults to 1000 and was rendered as a native
+maxlength unconditionally, so migrating an UNCAPPED textarea onto Input silently
+truncated it at 1000 characters — a chat composer or a JSON paste box loses data
+with no error. Every numeric use of the value is either tel-only normalisation or
+the character counter, so those read through a resolved fallback of 1000 and are
+unchanged.
+- New --input-min-height and --input-max-height. A textarea that grows with its
+content needs a ceiling before it can scroll, and one used as a paste target needs
+a floor; neither was reachable. Both default to the CSS initial value (auto/none).
+- New --input-line-height. This one was unreachable by ANY means: the UA stylesheet
+sets line-height on the input/textarea itself, and a declaration on the element
+beats a value inherited from a styled container, so a consumer could not restore
+the type ramp of the raw textarea it was replacing. Defaulting to `normal` — what
+these fields already compute today — makes it byte-identical for everyone else.
 
-Menu + Button
-- Menu's `trigger` snippet now receives Menu's interaction wiring, and a new
-`interactiveTrigger` prop stops Menu making its own wrapper interactive.
-Menu wraps the trigger in a role="button" tabindex="0" div, which is right for
-inert content and wrong when the snippet renders a real control: the result is
-two focusable elements for one conceptual trigger, both announcing as a button,
-with interactive content nested inside interactive content. A consumer with a
-real Button as its trigger could not produce an accessible result at all.
-Defaults to false, so every existing menu behaves exactly as before.
-- Button gains `ariaHaspopup`, without which the wiring Menu hands over cannot
-land on it. Found by writing the Menu test: the first version of the render-prop
-passed kebab-case aria attributes, which a component destructuring named props
-silently drops — the shape has to match the library's own camelCase convention.
-- The trigger is written as two branches rather than conditional attributes so
-role and tabindex stay statically paired; a dynamic pair trips Svelte's
-a11y_no_noninteractive_tabindex check.
+Button
+- New `ariaBusy`. aria-busy was derivable only from `loading`, which also renders the
+spinner and disables the control, so "my contents are still loading but I am still
+clickable" was unreachable. That is exactly what a menu/filter trigger needs while
+its options load.
+- New `title`, the browser's own hover tooltip. Distinct from `ariaLabel`, which names
+the control for assistive tech with no visible affordance; an icon-only button
+generally wants both, and #453 left a consumer unable to keep its tooltip.
 
-Verified against a baseline captured before any edit: svelte-check 0 errors and
-the same 4 pre-existing warnings, prettier/eslint clean, 128 unit tests passing,
-and the package builds. Eight new Playwright tests cover the additions, and three
-of them exist specifically to prove nothing changed for consumers that do not opt
-in — a field without the new props emits no spellcheck or readonly attribute and
-stays editable, and a menu without interactiveTrigger keeps role="button"
-tabindex="0" on its wrapper.
+Menu
+- Fixes a defect in #453's `interactiveTrigger`. That flag hands the snippet Menu's
+keydown handler, which claims Enter and Space — but the snippet now owns a REAL
+&lt;button&gt;, which already synthesises a click from both, and that click is wired to
+the same toggle. The two cancel: the menu opens and immediately closes. An
+interactive trigger now gets a handler that deliberately ignores Enter and Space
+and adds only the arrow keys, which no native button implements. The inert-trigger
+path is untouched.
+
+Eleven new Playwright tests, five of which exist purely to prove nothing changed for
+consumers that do not opt in: a field that sets neither height var still computes
+min-height auto and max-height none, one that sets no line-height still computes
+normal, one that leaves maxLength alone still renders maxlength="1000", and a button
+that passes neither new prop emits no title and no aria-busy. Three more cover the
+Enter / Space / ArrowDown behaviour of an interactive trigger directly.
+
+Verified in the BUILT package, not just the dev server: the suite runs against Vite,
+which serves src/lib, so it can pass in full while `npm pack` produces a tarball
+containing none of the changes. dist/ and the tarball were checked for each addition
+before the package was consumed downstream.
 
 Nine Table tests fail in the full suite. They fail identically on unmodified
-origin/release when run back-to-back under the same conditions, so they are
-pre-existing and not introduced here.
+origin/release under the same conditions (21 passed / 9 failed either way), so they
+are pre-existing and not introduced here.
+
+Addresses three findings from the automated review, each verified against the code and
+each with a negative control proving the new test fails without the fix:
+
+- autoResize derived its ceiling from maxRows alone, so a field capped by
+--input-max-height computed Infinity: the inline height grew past the CSS clamp and
+overflowY was set to 'hidden'. The box stopped at the right size but its overflow
+became unreachable instead of scrollable. It now takes the lower of the two ceilings.
+- close() focused the wrapper div. Under interactiveTrigger that wrapper deliberately
+carries no tabindex, so the call was a no-op and focus fell to &lt;body&gt; after Escape or
+selecting an item — a keyboard user was left stranded. It now focuses the control the
+snippet rendered. This is a defect in what #453 shipped, not in the additions here.
+- Three new demo sections had been nested inside the paste demo's row, inheriting its
+400px constraint.
+
+## [2.123.0](https://github.com/juspay/svelte-ui-components/compare/2.123.0..2.122.0) - 19 August 2026
 
 ## [2.122.0](https://github.com/juspay/svelte-ui-components/compare/2.122.0..2.121.0) - 17 August 2026
 

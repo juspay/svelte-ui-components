@@ -64,7 +64,20 @@ export type OptionalButtonProperties = {
    */
   ariaHaspopup?: 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | boolean;
   ariaSelected?: boolean;
+  /**
+   * Native `aria-busy`, for a control that stays usable while related data loads.
+   * Deliberately separate from `loading`, which also renders the spinner and
+   * disables the button — a trigger whose *contents* are still loading must stay
+   * clickable, so it cannot express that state through `loading`.
+   */
+  ariaBusy?: boolean;
   role?: string;
+  /**
+   * Native `title`, rendered as the browser's own hover tooltip. Distinct from
+   * `ariaLabel`, which names the control for assistive tech without any visible
+   * affordance; an icon-only button generally wants both.
+   */
+  title?: string;
   disabled?: boolean;
   classes?: string;
   /**

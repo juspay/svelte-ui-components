@@ -145,11 +145,96 @@
     onPaste={() => (pasteCount += 1)}
   />
 </div>
+
+<h3>maxLength={null} — no limit</h3>
+<p>
+  <code>maxLength</code> defaults to 1000 and is rendered as a native <code>maxlength</code>
+  unconditionally. A composer or paste target that silently truncates long input is worse than an unbounded
+  one, so pass <code>null</code> to omit the attribute entirely.
+</p>
+<div class="demo-row">
+  <Input
+    value=""
+    useTextArea
+    maxLength={null}
+    label="Unbounded"
+    name="unbounded-textarea"
+    testId="input-unbounded"
+  />
+</div>
+
+<h3>line-height</h3>
+<p>
+  A textarea/input computes <code>line-height: normal</code> from the UA sheet regardless of what
+  its container inherits, so a consumer cannot reach it by inheritance. This is the hook; the
+  default is the same <code>normal</code>, so existing fields are unchanged.
+</p>
+<div class="demo-row">
+  <Input
+    value=""
+    useTextArea
+    rows={3}
+    label="Tall lines"
+    name="lineheight-textarea"
+    classes="lineheight-textarea"
+    testId="input-line-height"
+  />
+</div>
+
+<h3>min-height / max-height</h3>
+<p>
+  A textarea that grows with its content needs a ceiling before it can scroll, and one used as a
+  paste target needs a floor. Both default to the CSS initial value, so a field that sets neither is
+  unchanged.
+</p>
+<div class="demo-row">
+  <Input
+    value=""
+    useTextArea
+    label="Bounded"
+    name="bounded-textarea"
+    classes="bounded-textarea"
+    testId="input-bounded-height"
+  />
+</div>
+
+<h3>autoResize with a CSS ceiling</h3>
+<p>
+  <code>autoResize</code> grows the field to fit its content. When the ceiling comes from
+  <code>--input-max-height</code> rather than <code>maxRows</code>, the field must still become
+  scrollable at the ceiling instead of clipping what it cannot show.
+</p>
+<div class="demo-row">
+  <Input
+    value=""
+    useTextArea
+    autoResize
+    minRows={1}
+    label="Grows, then scrolls"
+    name="autoresize-capped"
+    classes="autoresize-capped"
+    testId="input-autoresize-capped"
+  />
+</div>
+
 <p data-pw="input-paste-count">paste events seen: {pasteCount}</p>
 
 <style>
   /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */
   .resize-narrow :global(.input-container) {
     --input-width: 240px;
+  }
+
+  :global(.lineheight-textarea) {
+    --input-line-height: 32px;
+  }
+
+  :global(.autoresize-capped) {
+    --input-max-height: 90px;
+  }
+
+  :global(.bounded-textarea) {
+    --input-min-height: 80px;
+    --input-max-height: 160px;
   }
 </style>

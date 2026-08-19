@@ -250,8 +250,6 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
     );
     await expect(startDateInput).toHaveAttribute('aria-invalid', 'false');
     await startDateInput.press('Enter');
-    await expect(startDateInput).toHaveValue(
-      new RegExp(String(withinLimit.getDate()) + '\\b')
-    );
+    await expect(startDateInput).toHaveValue(new RegExp(String(withinLimit.getDate()) + '\\b'));
   });
 });

@@ -139,6 +139,23 @@
   <div class="demo-row">
     <Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
   </div>
+
+  <h3>title and ariaBusy</h3>
+  <p>
+    <code>title</code> renders the browser's own hover tooltip; <code>ariaLabel</code> names the
+    control for assistive tech without any visible affordance, so an icon-only button generally
+    wants both. <code>ariaBusy</code> marks a control whose related data is still loading while
+    leaving it clickable — unlike <code>loading</code>, which also spins and disables.
+  </p>
+  <div class="demo-row">
+    <Button
+      text="Filters"
+      title="Filters"
+      ariaLabel="Filters, 2 selected"
+      ariaBusy
+      testId="button-title-busy"
+    />
+  </div>
 </div>
 
 <style>

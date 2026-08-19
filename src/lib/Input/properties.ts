@@ -34,7 +34,12 @@ export type OptionalInputProperties = {
   validationPattern?: RegExp | null;
   inProgressPattern?: RegExp | null;
   addFocusColor?: boolean;
-  maxLength?: number;
+  /**
+   * Native `maxlength`. Defaults to 1000. Pass `null` for no limit — a composer or
+   * paste target that silently truncates long input is worse than an unbounded one,
+   * and the attribute is rendered unconditionally otherwise.
+   */
+  maxLength?: number | null;
   minLength?: number;
   min?: number;
   max?: number;

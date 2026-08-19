@@ -24,7 +24,9 @@
     ariaExpanded,
     ariaHaspopup,
     ariaSelected,
+    ariaBusy,
     role,
+    title,
     onclick,
     onkeydown = () => {},
     onkeyup = () => {},
@@ -91,7 +93,8 @@
     aria-expanded={ariaExpanded ?? null}
     aria-haspopup={ariaHaspopup ?? null}
     aria-selected={ariaSelected ?? null}
-    aria-busy={isBusy || null}
+    aria-busy={isBusy || ariaBusy || null}
+    title={title ?? null}
     type={href ? null : type}
     disabled={href ? null : isDisabled}
     href={href ? (isDisabled ? null : href) : null}

@@ -115,6 +115,9 @@
   const hasRightIcon = $derived(typeof rightIcon === 'function');
 
   const charCount = $derived(value?.length ?? 0);
+  // Every numeric use below is either tel-only normalisation or the character
+  // counter; `null` means "no attribute", not "no ceiling on those paths".
+  const effectiveMaxLength = $derived(maxLength ?? 1000);
   const effectiveResize = $derived(autoResize ? 'none' : resize);
 
   // Grow the textarea to fit its content between minRows and maxRows.
@@ -130,8 +133,16 @@
     const border = parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth);
     const lower = minRows ?? rows ?? 2;
     const minHeight = lower * lineHeight + verticalPadding + border;
-    const maxHeight =
+    const rowsCeiling =
       maxRows != null ? maxRows * lineHeight + verticalPadding + border : Number.POSITIVE_INFINITY;
+    // --input-max-height is a ceiling too. Reading only maxRows left it at Infinity, so the
+    // inline height grew past the CSS clamp and overflowY was set to `hidden` — the box
+    // stopped at the right size but its overflow became unreachable instead of scrollable.
+    const styleCeiling = parseFloat(styles.maxHeight);
+    const maxHeight = Math.min(
+      rowsCeiling,
+      Number.isFinite(styleCeiling) ? styleCeiling : Number.POSITIVE_INFINITY
+    );
     const nextHeight = Math.min(Math.max(el.scrollHeight, minHeight), maxHeight);
     el.style.height = `${nextHeight}px`;
     el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
@@ -163,16 +174,16 @@
         inputElement.value = value;
         return;
       }
-      if (numberLength > maxLength) {
+      if (numberLength > effectiveMaxLength) {
         const existingInput = value;
-        if (existingInput.length === maxLength) {
+        if (existingInput.length === effectiveMaxLength) {
           inputElement.value = applyTextPresentation(value);
           return;
         }
         /**
          * choose last max length number of digits if length is bigger than max length passed in props
          */
-        currentValue = currentValue.substring(numberLength - maxLength);
+        currentValue = currentValue.substring(numberLength - effectiveMaxLength);
       }
       currentValue = applyTextPresentation(currentValue);
       inputElement.value = currentValue;
@@ -221,12 +232,12 @@
         /**
          * user pasted 10+ digit number , overrides all cases
          */
-        if (filteredNumber.length > maxLength) {
+        if (filteredNumber.length > effectiveMaxLength) {
           /**
            * choose last max length number of digits if length is bigger than max length passed in props
            */
           const finalValue = applyTextPresentation(
-            filteredNumber.substring(filteredNumberLength - maxLength)
+            filteredNumber.substring(filteredNumberLength - effectiveMaxLength)
           );
           // Adding reactivity
           value = finalValue;
@@ -390,8 +401,8 @@
     </div>
   {/if}
   {#if useTextArea && showCount && !actionInput}
-    <div class="input-char-count" class:at-limit={charCount >= maxLength}>
-      {charCount}/{maxLength}
+    <div class="input-char-count" class:at-limit={charCount >= effectiveMaxLength}>
+      {charCount}/{effectiveMaxLength}
     </div>
   {/if}
 </div>
@@ -401,6 +412,13 @@
   input {
     box-sizing: var(--input-box-sizing, border-box);
     height: var(--input-height, fit-content);
+
+    /* Both default to the CSS initial value, so a consumer that sets neither is
+       byte-identical to before. A textarea that grows with its content needs a
+       ceiling before it can scroll, and one used as a paste target needs a floor;
+       neither was reachable through the --input-* surface. */
+    min-height: var(--input-min-height, auto);
+    max-height: var(--input-max-height, none);
     background-color: var(--input-background, white);
     font-size: var(--input-font-size, 16px) !important;
     font-family: var(--input-font-family, inherit);
@@ -408,6 +426,12 @@
     outline: none;
     padding: var(--input-padding, 16px);
     font-weight: var(--input-font-weight, 500);
+
+    /* `normal` is what a textarea/input computes today regardless of any inherited
+       value — the UA sheet sets it, and inheritance loses to a UA declaration on the
+       element itself. So the default here is byte-identical for existing consumers,
+       and this is the only way a consumer can set it at all. */
+    line-height: var(--input-line-height, normal);
     width: var(--input-width, fit-content);
     margin: var(--input-margin, 0);
     appearance: none !important;

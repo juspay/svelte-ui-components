@@ -200,9 +200,28 @@
     focusedIndex = -1;
     typeaheadQuery = '';
     onclose?.();
-    if (triggerEl !== null) {
-      triggerEl.focus({ preventScroll: true });
+    focusTrigger();
+  }
+
+  /**
+   * Returns focus to whatever is actually focusable for this trigger. Under
+   * `interactiveTrigger` the wrapper carries no tabindex, so focusing it is a no-op and
+   * focus falls to <body> — the control the snippet rendered is the real target.
+   */
+  function focusTrigger() {
+    if (triggerEl === null) {
+      return;
     }
+    if (interactiveTrigger) {
+      const control = triggerEl.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (control instanceof HTMLElement) {
+        control.focus({ preventScroll: true });
+        return;
+      }
+    }
+    triggerEl.focus({ preventScroll: true });
   }
 
   function selectItem(item: MenuItem) {
@@ -232,6 +251,23 @@
 
   function handleTriggerKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      openMenu();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      openMenu(selectableItems.length - 1);
+    }
+  }
+
+  /**
+   * Keydown wiring handed to an `interactiveTrigger` snippet. Enter and Space are
+   * deliberately NOT handled here: the snippet owns a real `<button>`, which already
+   * synthesises a click from both, and that click is already wired to `toggle`. Handling
+   * them again would open a menu the click then immediately closes. Only the arrow keys —
+   * which no native button implements — are added.
+   */
+  function handleInteractiveTriggerKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown') {
       event.preventDefault();
       openMenu();
     } else if (event.key === 'ArrowUp') {
@@ -358,7 +394,7 @@
       {#if typeof trigger === 'function'}
         {@render trigger({
           onclick: toggle,
-          onkeydown: handleTriggerKeydown,
+          onkeydown: handleInteractiveTriggerKeydown,
           ariaHaspopup: 'menu',
           ariaExpanded: open
         })}

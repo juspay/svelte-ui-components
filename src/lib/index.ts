@@ -78,6 +78,18 @@ export { default as ProportionBar } from './ProportionBar/ProportionBar.svelte';
 export { default as ChipInput } from './ChipInput/ChipInput.svelte';
 export { default as FileDropzoneTrigger } from './FileDropzoneTrigger/FileDropzoneTrigger.svelte';
 
+export { default as Chat } from './Chat/Chat.svelte';
+export { default as ChatHeader } from './ChatHeader/ChatHeader.svelte';
+export { default as ChatMessage } from './ChatMessage/ChatMessage.svelte';
+export { default as ChatMessageList } from './ChatMessageList/ChatMessageList.svelte';
+export { default as ChatComposer } from './ChatComposer/ChatComposer.svelte';
+export { default as ChatSuggestions } from './ChatSuggestions/ChatSuggestions.svelte';
+export { default as ChatToolStatus } from './ChatToolStatus/ChatToolStatus.svelte';
+export { default as ChatBubble } from './ChatBubble/ChatBubble.svelte';
+export { default as Resizable } from './Resizable/Resizable.svelte';
+export { ChatController } from './Chat/controller.svelte';
+export { partyOf } from './Chat/roles';
+
 export type * from './Button/properties';
 export type * from './Modal/properties';
 export type * from './Input/properties';
@@ -152,6 +164,17 @@ export type * from './ProportionBar/properties';
 export type * from './ChipInput/properties';
 export type * from './FileDropzoneTrigger/properties';
 export type * from './_chart/highlight';
+
+export type * from './Chat/properties';
+export type * from './Chat/types';
+export type * from './ChatHeader/properties';
+export type * from './ChatMessage/properties';
+export type * from './ChatMessageList/properties';
+export type * from './ChatComposer/properties';
+export type * from './ChatSuggestions/properties';
+export type * from './ChatToolStatus/properties';
+export type * from './ChatBubble/properties';
+export type * from './Resizable/properties';
 
 export { validateInput } from './utils';
 export { formatNumberIndian } from './_chart/format';

@@ -16,7 +16,8 @@ export const componentNav: NavGroup[] = [
       { name: 'Browser', slug: 'browser' },
       { name: 'Phone', slug: 'phone' },
       { name: 'IframeViewer', slug: 'iframe-viewer' },
-      { name: 'Book', slug: 'book' }
+      { name: 'Book', slug: 'book' },
+      { name: 'Resizable', slug: 'resizable' }
     ]
   },
   {
@@ -122,6 +123,19 @@ export const componentNav: NavGroup[] = [
       { name: 'Avatar', slug: 'avatar' },
       { name: 'Icon', slug: 'icon' },
       { name: 'Img', slug: 'img' }
+    ]
+  },
+  {
+    category: 'Chat',
+    items: [
+      { name: 'Chat', slug: 'chat' },
+      { name: 'ChatMessage', slug: 'chat-message' },
+      { name: 'ChatMessageList', slug: 'chat-message-list' },
+      { name: 'ChatComposer', slug: 'chat-composer' },
+      { name: 'ChatHeader', slug: 'chat-header' },
+      { name: 'ChatToolStatus', slug: 'chat-tool-status' },
+      { name: 'ChatSuggestions', slug: 'chat-suggestions' },
+      { name: 'ChatBubble', slug: 'chat-bubble' }
     ]
   },
   {

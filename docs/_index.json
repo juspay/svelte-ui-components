@@ -298,5 +298,41 @@
   {
     "name": "FunnelChart",
     "description": "A horizontal funnel chart built entirely from pure SVG, with no external charting library dependency. Renders sequential stages as rectangles whose height is proportional to each stage's value relative to the maximum, joined by trapezoidal connector polygons that visually convey drop-off between steps. Supports per-stage color overrides, a custom value-and-percentage label formatter, configurable slope connector width, hover-expansion animation, click and hover events, an empty-state snippet, and full CSS-variable theming through the shared chart token system."
+  },
+  {
+    "name": "Chat",
+    "description": "A full chat surface composing ChatHeader, ChatMessageList, ChatSuggestions, ChatToolStatus, and ChatComposer. Fully controlled (pass `messages`, handle `onsend`) with no baked-in transport. Opt-in features: header image, stop-generation, voice mic, file attachments, prompt suggestions, smart autoscroll, and per-message copy/retry/feedback. Render your own UI below any bubble with the `messageAttachments` snippet. Pair with the decoupled `ChatController` runes class \u2014 message state, streaming, typewriter reveal, retry, and session threading \u2014 which delegates the network call to a pluggable `ChatTransport` (adapt SSE, WebSocket, or polling). Markdown is not bundled \u2014 pass pre-sanitized HTML on a message's `html` field."
+  },
+  {
+    "name": "ChatHeader",
+    "description": "A header bar for a chat surface: an optional brand image (via the Img component) or avatar snippet, title and subtitle, extra actions snippet, and a close button (the Button component) shown when `onclose` is provided. Close icon falls back to a built-in asset and is overridable via snippet."
+  },
+  {
+    "name": "ChatMessage",
+    "description": "A single chat bubble. The primitive is the two-party `role`: `sender` (right, accent bubble) or `responder` (left). `user`/`assistant`/`system` and any custom string are recognized extensions that map onto a party (sender/user \u2192 sender; everything else \u2192 responder), so LLM message arrays drop in unchanged; the exported `partyOf(role)` resolves a role to its party. Renders pre-sanitized `html` (e.g. rendered markdown) or plain `content`, shows a typing indicator (LoadingDots) while streaming with no content, and accepts avatar, header, and attachments snippets. Opt-in hover actions on responder messages: built-in copy (with checkmark feedback), retry (onretry), and \ud83d\udc4d/\ud83d\udc4e (onfeedback). Basic markdown elements are styled via :global."
+  },
+  {
+    "name": "ChatMessageList",
+    "description": "A scrollable conversation container with smart auto-scroll: it sticks to the bottom only while you're already near it, and shows a jump-to-latest button when you've scrolled up. Renders each message with ChatMessage by default, adds your own UI below any bubble via the per-message `messageAttachments` snippet, or replaces a message entirely with the `message` snippet, shows an `empty` snippet when there are no messages, and forwards opt-in message actions (allowCopy, onretry, onfeedback). Uses a Svelte action (no effects), respecting reduced-motion."
+  },
+  {
+    "name": "ChatComposer",
+    "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable."
+  },
+  {
+    "name": "ChatSuggestions",
+    "description": "A row of tappable prompt chips (the Pill component), typically shown on an empty conversation. Each item is a string or `{ label, value }`; selecting a chip fires `onselect` with the value and index."
+  },
+  {
+    "name": "ChatToolStatus",
+    "description": "A compact status pill pairing a spinner (the Loader component) with a label to show what the assistant is doing (searching, calling a tool, thinking). The leading indicator is overridable via snippet."
+  },
+  {
+    "name": "ChatBubble",
+    "description": "A floating launcher button (FAB) pinned to a viewport corner that toggles a floating panel (role=dialog). Drop a Chat (or anything) inside via the children snippet \u2014 ChatBubble owns only the launcher, corner positioning, bindable `open` state, focus management (focus into panel on open, Escape to close and return focus), and reuses the Button component for the launcher. Optionally `draggable` (grab the launcher to reposition the whole widget, with click-vs-drag detection and viewport clamping; bindable `dragX`/`dragY`). `dragMode` controls drag style: `'snap'` (default) anchors to the nearest left/right screen edge on release like a mobile chat head (panel re-opens toward center), `'free'` stays where dropped. Optionally `resizable` (resize the open panel; bindable `panelWidth`/`panelHeight`, handles derived from the corner via the Resizable component). Decoupled from its contents; fully themeable via CSS variables."
+  },
+  {
+    "name": "Resizable",
+    "description": "A wrapper that makes its content user-resizable via drag handles on chosen edges/corners (`handles`). Dragging updates the bindable `width`/`height` (clamped to min/max) so size is observable and persistable; `onresize`/`onresizestart`/`onresizeend` fire too. Each handle is a focusable WAI-ARIA splitter \u2014 arrow keys resize by `step`, with role=separator and aria-valuenow/min/max. Resize changes size only (not position), so pick handle edges that match how the element is anchored. Layout-agnostic: wrap a Chat panel, Modal, image, or card."
   }
 ]

@@ -2,75 +2,43 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.123.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.124.0)
 
-Follow-up to #453. Migrating the last Lighthouse call sites onto these components
-surfaced five more gaps and one defect in what #453 shipped. Each addition defaults
-to the value the component already computes, so no existing consumer moves.
+Components:
+- Add 8 chat components: Chat, ChatHeader, ChatMessage, ChatMessageList, ChatComposer, ChatSuggestions,
+ChatToolStatus, ChatBubble
+- Add Resizable, a hard dependency of ChatBubble's resizable panel
+- Add ChatController runes class & partyOf role resolver, both exported from index.ts
+- Add 8 SVG assets: chat, send, stop, mic, attach, retry, thumb-up, thumb-down
+- Export 9 components & 10 property/type modules from index.ts
 
-Input
-- `maxLength` accepts null. It defaults to 1000 and was rendered as a native
-maxlength unconditionally, so migrating an UNCAPPED textarea onto Input silently
-truncated it at 1000 characters — a chat composer or a JSON paste box loses data
-with no error. Every numeric use of the value is either tel-only normalisation or
-the character counter, so those read through a resolved fallback of 1000 and are
-unchanged.
-- New --input-min-height and --input-max-height. A textarea that grows with its
-content needs a ceiling before it can scroll, and one used as a paste target needs
-a floor; neither was reachable. Both default to the CSS initial value (auto/none).
-- New --input-line-height. This one was unreachable by ANY means: the UA stylesheet
-sets line-height on the input/textarea itself, and a declaration on the element
-beats a value inherited from a styled container, so a consumer could not restore
-the type ramp of the raw textarea it was replacing. Defaulting to `normal` — what
-these fields already compute today — makes it byte-identical for everyone else.
+Conventions:
+- Emit testID alongside data-pw on every root element, guarded with typeof, per testing-attributes.d.ts
+- ChatBubble's grab/grabbing launcher drives --cursor, the hook Button reads
+- ChatToolStatus sets --loader-foreground & --loader-foreground-end; Loader carries no currentColor
+fallback, so an unstyled spinner renders invisible. Exposed as --chat-tool-status-spinner-color
+& --chat-tool-status-spinner-color-end
 
-Button
-- New `ariaBusy`. aria-busy was derivable only from `loading`, which also renders the
-spinner and disables the control, so "my contents are still loading but I am still
-clickable" was unreachable. That is exactly what a menu/filter trigger needs while
-its options load.
-- New `title`, the browser's own hover tooltip. Distinct from `ariaLabel`, which names
-the control for assistive tech with no visible affordance; an icon-only button
-generally wants both, and #453 left a consumer unable to keep its tooltip.
+Web Components:
+- Add 9 &lt;sui-*&gt; wrappers registered in src/wc/index.ts
 
-Menu
-- Fixes a defect in #453's `interactiveTrigger`. That flag hands the snippet Menu's
-keydown handler, which claims Enter and Space — but the snippet now owns a REAL
-&lt;button&gt;, which already synthesises a click from both, and that click is wired to
-the same toggle. The two cancel: the menu opens and immediately closes. An
-interactive trigger now gets a handler that deliberately ignores Enter and Space
-and adds only the arrow keys, which no native button implements. The inert-trigger
-path is untouched.
+Docs site:
+- Add 9 demo pages under /components
+- Add a Chat nav category & file Resizable under Layout & Containers
 
-Eleven new Playwright tests, five of which exist purely to prove nothing changed for
-consumers that do not opt in: a field that sets neither height var still computes
-min-height auto and max-height none, one that sets no line-height still computes
-normal, one that leaves maxLength alone still renders maxlength="1000", and a button
-that passes neither new prop emits no title and no aria-busy. Three more cover the
-Enter / Space / ArrowDown behaviour of an interactive trigger directly.
+MCP docs:
+- Add 9 markdown docs & 9 _index.json entries
 
-Verified in the BUILT package, not just the dev server: the suite runs against Vite,
-which serves src/lib, so it can pass in full while `npm pack` produces a tarball
-containing none of the changes. dist/ and the tarball were checked for each addition
-before the package was consumed downstream.
+Known deviations from GUIDELINES.md, deliberate and left for a follow-up:
+- ChatComposer hand-rolls a textarea & a file picker rather than composing Input (useTextArea,
+autoResize) and FileInput (§4)
+- autoGrow, pinToBottom, and ChatController.drain's check are arrow consts, not declarations
+- ChatBubble's expanded is $bindable but never internally assigned (§7)
+- ChatMessageData is referenced by Chat & ChatMessageList docs but resolved in neither
+- The WC wrappers pass snippets as object props without mapping named slots, so &lt;sui-chat-bubble&gt;
+cannot receive panel content from HTML
 
-Nine Table tests fail in the full suite. They fail identically on unmodified
-origin/release under the same conditions (21 passed / 9 failed either way), so they
-are pre-existing and not introduced here.
-
-Addresses three findings from the automated review, each verified against the code and
-each with a negative control proving the new test fails without the fix:
-
-- autoResize derived its ceiling from maxRows alone, so a field capped by
---input-max-height computed Infinity: the inline height grew past the CSS clamp and
-overflowY was set to 'hidden'. The box stopped at the right size but its overflow
-became unreachable instead of scrollable. It now takes the lower of the two ceilings.
-- close() focused the wrapper div. Under interactiveTrigger that wrapper deliberately
-carries no tabindex, so the call was a no-op and focus fell to &lt;body&gt; after Escape or
-selecting an item — a keyboard user was left stranded. It now focuses the control the
-snippet rendered. This is a defect in what #453 shipped, not in the additions here.
-- Three new demo sections had been nested inside the paste demo's row, inheriting its
-400px constraint.
+## [2.124.0](https://github.com/juspay/svelte-ui-components/compare/2.124.0..2.123.0) - 19 August 2026
 
 ## [2.123.0](https://github.com/juspay/svelte-ui-components/compare/2.123.0..2.122.0) - 19 August 2026
 

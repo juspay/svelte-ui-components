@@ -320,6 +320,10 @@
     "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable."
   },
   {
+    "name": "SpeechToText",
+    "description": "Headless speech-to-text controller over the browser SpeechRecognition API: support detection, one-shot host permission hook, start-with-retry, interim/final transcript assembly, and a self-hiding error toast. Renders nothing; pair with ChatComposer's voice control."
+  },
+  {
     "name": "ChatSuggestions",
     "description": "A row of tappable prompt chips (the Pill component), typically shown on an empty conversation. Each item is a string or `{ label, value }`; selecting a chip fires `onselect` with the value and index."
   },

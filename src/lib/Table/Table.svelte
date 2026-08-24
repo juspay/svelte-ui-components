@@ -5,6 +5,7 @@
   import type { JSONValue } from 'type-decoder';
   import { SvelteSet } from 'svelte/reactivity';
   import Button from '../Button/Button.svelte';
+  import Input from '../Input/Input.svelte';
   import Menu from '../Menu/Menu.svelte';
   import Tooltip from '../Tooltip/Tooltip.svelte';
   import Pagination from '../Pagination/Pagination.svelte';
@@ -169,23 +170,39 @@
   let hasSearchConfig = $derived(!!searchConfig);
   let isServerSearch = $derived(typeof onSearchChange === 'function');
   let searchInputRef = $state<HTMLInputElement | null>(null);
+  let inlineSearchInputRef = $state<{ focus: () => void } | null>(null);
+  let isInlineSearch = $derived(searchConfig?.displayMode === 'inline');
+  let isInlineSearchExpanded = $state(false);
+
+  const updateSearch = (term: string): void => {
+    searchTerm = term;
+    pageOverride = 1;
+    pagination?.onPageChange?.(1);
+    if (isServerSearch) {
+      onSearchChange?.(term);
+    }
+  };
 
   const handleSearchInput = (): void => {
     if (!searchInputRef) {
       return;
     }
-    searchTerm = searchInputRef.value;
-    pageOverride = 1;
-    if (isServerSearch) {
-      onSearchChange?.(searchTerm);
-    }
+    updateSearch(searchInputRef.value);
   };
 
   const clearSearch = (): void => {
-    searchTerm = '';
-    pageOverride = 1;
-    if (isServerSearch) {
-      onSearchChange?.('');
+    updateSearch('');
+    isInlineSearchExpanded = false;
+  };
+
+  const expandInlineSearch = (): void => {
+    isInlineSearchExpanded = true;
+    queueMicrotask(() => inlineSearchInputRef?.focus());
+  };
+
+  const collapseInlineSearchIfEmpty = (): void => {
+    if (searchTerm.trim() === '') {
+      clearSearch();
     }
   };
 
@@ -561,7 +578,7 @@
   </div>
 {/if}
 
-{#if hasSearchConfig}
+{#if hasSearchConfig && !isInlineSearch}
   <div class="table-search">
     <span class="table-search-icon">
       <!-- eslint-disable svelte/no-at-html-tags -->
@@ -772,6 +789,51 @@
                           {/if}
                         </Button>
                       </div>
+                    {/if}
+                    {#if hasSearchConfig && isInlineSearch && colIndex === effectiveHeaders.length - 1}
+                      <span class="table-header-inline-search">
+                        {#if isInlineSearchExpanded}
+                          <Input
+                            bind:this={inlineSearchInputRef}
+                            bind:value={searchTerm}
+                            placeholder={searchConfig?.placeholder ?? 'Search…'}
+                            testId={searchConfig?.testId ?? ''}
+                            ariaLabel={searchConfig?.placeholder ?? 'Search'}
+                            autoComplete="off"
+                            onInput={(value: string) => updateSearch(value)}
+                            onBlur={collapseInlineSearchIfEmpty}
+                            classes="table-inline-search-input"
+                          />
+                          <span class="table-inline-search-clear">
+                            <Button
+                              variant="ghost"
+                              iconOnly={true}
+                              ariaLabel="Close search"
+                              onclick={clearSearch}
+                            >
+                              {#snippet icon()}
+                                <!-- eslint-disable svelte/no-at-html-tags -->
+                                {@html closeSvg}
+                              {/snippet}
+                            </Button>
+                          </span>
+                        {:else}
+                          <span class="table-inline-search-trigger">
+                            <Button
+                              variant="ghost"
+                              iconOnly={true}
+                              ariaLabel={searchConfig?.placeholder ?? 'Search'}
+                              testId={searchConfig?.testId && `${searchConfig.testId}-trigger`}
+                              onclick={expandInlineSearch}
+                            >
+                              {#snippet icon()}
+                                <!-- eslint-disable svelte/no-at-html-tags -->
+                                {@html searchSvg}
+                              {/snippet}
+                            </Button>
+                          </span>
+                        {/if}
+                      </span>
                     {/if}
                   </span>
                 </th>
@@ -1050,6 +1112,43 @@
   .table-search-clear :global(svg) {
     width: var(--table-search-clear-icon-size, 14px);
     height: var(--table-search-clear-icon-size, 14px);
+  }
+
+  .table-header-inline-search {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--table-inline-search-gap, 6px);
+    margin-left: auto;
+  }
+
+  .table-inline-search-trigger {
+    --button-color: transparent;
+    --button-border: none;
+    --button-padding: var(--table-inline-search-trigger-padding, 4px);
+    --button-text-color: var(--table-inline-search-icon-color, #9ca3af);
+  }
+
+  .table-inline-search-trigger :global(svg) {
+    width: var(--table-inline-search-icon-size, 16px);
+    height: var(--table-inline-search-icon-size, 16px);
+    display: block;
+  }
+
+  .table-inline-search-input {
+    --input-margin: 0;
+    width: var(--table-inline-search-input-width, 160px);
+  }
+
+  .table-inline-search-clear {
+    --button-color: transparent;
+    --button-border: none;
+    --button-padding: var(--table-inline-search-clear-padding, 2px);
+    --button-text-color: var(--table-inline-search-clear-color, #6b7280);
+  }
+
+  .table-inline-search-clear :global(svg) {
+    width: var(--table-inline-search-clear-icon-size, 14px);
+    height: var(--table-inline-search-clear-icon-size, 14px);
   }
 
   /* ── Container ──────────────────────────────────────────────────────────── */

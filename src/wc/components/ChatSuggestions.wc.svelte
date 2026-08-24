@@ -5,8 +5,13 @@
     props: {
       items: { type: 'Object' },
       disabled: { type: 'Boolean', reflect: true },
+      layout: { type: 'String' },
+      direction: { type: 'String' },
+      maxVisible: { type: 'Number', attribute: 'max-visible' },
+      loading: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      chipClasses: { type: 'String', attribute: 'chip-classes' },
       onselect: { type: 'Object' }
     }
   }}

@@ -81,6 +81,12 @@
   .pill {
     display: inline-flex;
     align-items: center;
+    /* A pill is content-width by default. A caller stacking pills into a menu needs
+       them to fill the column and align their labels left, which is a layout choice
+       the call site owns — hence tokens rather than a variant. */
+    width: var(--pill-width, auto);
+    justify-content: var(--pill-justify-content, center);
+    text-align: var(--pill-text-align, center);
     gap: var(--pill-gap, 4px);
     background-color: var(--pill-background, #e0e0e0);
     color: var(--pill-color, #333333);

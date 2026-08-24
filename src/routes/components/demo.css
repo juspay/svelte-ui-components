@@ -66,6 +66,104 @@
   color-scheme: dark;
 }
 
+/* ============================================================================
+   Chat family — dark theme.
+   The components ship light literals as their token fallbacks (the library
+   convention); theming is the consumer's job, and on this site that consumer
+   is the demo shell. Without these, dark mode renders the chat surfaces with
+   their light defaults — white composer on a near-black page, #27272a
+   responder text on #0f0f17.
+   ============================================================================ */
+[data-theme='dark'] {
+  /* ChatMessage */
+  --chat-message-sender-background: #e4e4e7;
+  --chat-message-sender-color: #18181b;
+  --chat-message-color: #d1d5db;
+  --chat-message-background: #1e1e2e;
+  --chat-message-header-color: #9ca3af;
+  --chat-message-action-color: #9ca3af;
+  --chat-message-action-hover-background-color: #252535;
+  --chat-message-code-background: rgb(255 255 255 / 8%);
+  --chat-message-pre-background: rgb(255 255 255 / 8%);
+  --chat-message-link-color: #a5b4fc;
+  --chat-message-error-color: #f87171;
+
+  /* ChatComposer */
+  --chat-composer-background: #1e1e2e;
+  --chat-composer-border: 1px solid #2a2a3c;
+  --chat-composer-color: #e5e7eb;
+  --chat-composer-placeholder-color: #6b7280;
+  --chat-composer-action-color: #9ca3af;
+  --chat-composer-action-hover-background-color: #252535;
+  --chat-composer-send-background-color: #e4e4e7;
+  --chat-composer-send-color: #18181b;
+  --chat-composer-send-hover-background-color: #d4d4d8;
+  --chat-composer-stop-background-color: #e4e4e7;
+  --chat-composer-stop-color: #18181b;
+  --chat-composer-voice-recording-background-color: #450a0a;
+  --chat-composer-voice-recording-color: #f87171;
+
+  /* ChatToolStatus */
+  --chat-tool-status-background: #1e1e2e;
+  --chat-tool-status-border: 1px solid #2a2a3c;
+  --chat-tool-status-color: #9ca3af;
+  --chat-tool-status-box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+
+  /* ChatHeader */
+  --chat-header-title-color: #e5e7eb;
+  --chat-header-subtitle-color: #9ca3af;
+  --chat-header-close-color: #9ca3af;
+  --chat-header-close-hover-background-color: #252535;
+
+  /* ChatMessageList */
+  --chat-message-list-jump-background-color: #1e1e2e;
+  --chat-message-list-jump-color: #d1d5db;
+  --chat-message-list-jump-hover-background-color: #252535;
+  --chat-message-list-jump-box-shadow: 0 4px 12px rgb(0 0 0 / 45%);
+
+  /* Chat surface + ChatBubble widget */
+  --chat-background: #161621;
+  --chat-bubble-background-color: #e4e4e7;
+  --chat-bubble-color: #18181b;
+  --chat-bubble-hover-background-color: #d4d4d8;
+  --chat-bubble-panel-background: #161621;
+
+  /* HITL */
+  --hitl-background: #1e1e2e;
+  --hitl-border: 1px solid #2a2a3c;
+  --hitl-divider-color: #2a2a3c;
+  --hitl-title-color: #e5e7eb;
+  --hitl-param-value-color: #e5e7eb;
+  --hitl-badge-color: #9ca3af;
+  --hitl-description-color: #9ca3af;
+  --hitl-param-label-color: #9ca3af;
+  --hitl-completion-background: #252535;
+  --hitl-approved-color: #4ade80;
+  --hitl-halted-color: #fbbf24;
+  --hitl-countdown-filter: brightness(1.6);
+
+  /* ThinkingIndicator */
+  --thinking-indicator-label-color: #9ca3af;
+  --thinking-indicator-detail-color: #6b7280;
+  --thinking-indicator-arrow-color: #9ca3af;
+  --thinking-indicator-border-bottom: 1px solid #2a2a3c;
+
+  /* AttachmentChipRow */
+  --attachment-chip-row-chip-background: #1e1e2e;
+  --attachment-chip-row-file-tile-background: #252535;
+  --attachment-chip-row-file-tile-border: 1px solid #2a2a3c;
+  --attachment-chip-row-file-tile-box-shadow: 0 2px 0.25rem rgb(0 0 0 / 40%);
+  --attachment-chip-row-file-name-color: #d1d5db;
+  --attachment-chip-row-file-glyph-color: #9ca3af;
+  --attachment-chip-row-file-glyph-fold-color: #1e1e2e;
+
+  /* Pill — chat suggestion chips and composer attachment pills */
+  --pill-background: #252535;
+  --pill-color: #d1d5db;
+  --pill-hover-background: #2f2f45;
+  --pill-hover-color: #e5e7eb;
+}
+
 .page-header {
   margin-bottom: 24px;
 }

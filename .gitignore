@@ -16,3 +16,4 @@ vite.config.ts.timestamp-*
 # Playwright artifacts
 test-results/
 .superpowers/
+juspay-svelte-ui-components-*.tgz

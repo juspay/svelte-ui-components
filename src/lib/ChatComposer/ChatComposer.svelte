@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '../Button/Button.svelte';
   import Pill from '../Pill/Pill.svelte';
+  import AttachmentChipRow from '../AttachmentChipRow/AttachmentChipRow.svelte';
   import sendSvg from '$lib/assets/send.svg?raw';
   import stopSvg from '$lib/assets/stop.svg?raw';
   import micSvg from '$lib/assets/mic.svg?raw';
@@ -17,6 +18,21 @@
     streaming = false,
     recording = false,
     attachments = $bindable([]),
+    attachmentsPreview,
+    richImages = [],
+    richFiles = [],
+    richVideos = [],
+    richImageTooltip,
+    richVideoTooltip,
+    richRemoveIcon,
+    richFileIcon,
+    onremoverichimage,
+    onremoverichfile,
+    onremoverichvideo,
+    onopenrichimage,
+    onopenrichvideo,
+    onopenrichfile,
+    sendable = null,
     accept = '',
     multiple = false,
     sendLabel = 'Send message',
@@ -27,22 +43,42 @@
     stopIcon,
     voiceIcon,
     attachIcon,
+    actionIcon,
+    actionLabel = 'Voice conversation',
     leading,
     onsubmit,
     oninput,
     onkeydown,
+    onpaste,
     onstop,
     onvoice,
     onattach,
+    onattachclick,
+    onaction,
     testId,
+    inputTestId,
+    inputAriaLabel,
+    sendTestId,
+    sendSlotTestId,
+    stopTestId,
+    voiceTestId,
+    attachTestId,
+    actionTestId,
     classes
   }: ChatComposerProperties = $props();
 
   let fileInput: HTMLInputElement | null = $state(null);
 
   let showVoice = $derived(typeof onvoice === 'function');
-  let showAttach = $derived(typeof onattach === 'function');
-  let canSend = $derived(!disabled && (value.trim().length > 0 || attachments.length > 0));
+  let showAttach = $derived(typeof onattach === 'function' || typeof onattachclick === 'function');
+  let hasRichAttachments = $derived(
+    richImages.length > 0 || richVideos.length > 0 || richFiles.length > 0
+  );
+
+  let canSend = $derived(
+    !disabled &&
+      (sendable ?? (value.trim().length > 0 || attachments.length > 0 || hasRichAttachments))
+  );
 
   function submit(): void {
     if (!canSend) {
@@ -100,7 +136,28 @@
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
-  {#if attachments.length > 0}
+  {#if typeof attachmentsPreview === 'function'}
+    {@render attachmentsPreview()}
+  {:else if hasRichAttachments}
+    <div class="attachments-rich">
+      <AttachmentChipRow
+        images={richImages}
+        videos={richVideos}
+        files={richFiles}
+        onRemoveImage={onremoverichimage}
+        onRemoveVideo={onremoverichvideo}
+        onRemoveFile={onremoverichfile}
+        onOpenImage={onopenrichimage}
+        onOpenVideo={onopenrichvideo}
+        onOpenFile={onopenrichfile}
+        imageTooltip={richImageTooltip}
+        videoTooltip={richVideoTooltip}
+        removeIcon={richRemoveIcon}
+        fileIcon={richFileIcon}
+        testId={testId && `${testId}-rich-attachments`}
+      />
+    </div>
+  {:else if attachments.length > 0}
     <div class="attachments">
       {#each attachments as file, index (file.name + index)}
         <Pill text={file.name} dismissible ondismiss={() => removeAttachment(index)} />
@@ -111,7 +168,18 @@
   <div class="input-row">
     {#if showAttach}
       <div class="control attach">
-        <Button onclick={() => fileInput?.click()} {disabled} ariaLabel={attachLabel}>
+        <Button
+          onclick={() => {
+            if (typeof onattachclick === 'function') {
+              onattachclick();
+              return;
+            }
+            fileInput?.click();
+          }}
+          {disabled}
+          ariaLabel={attachLabel}
+          testId={attachTestId}
+        >
           {#if typeof attachIcon === 'function'}
             {@render attachIcon()}
           {:else}
@@ -137,20 +205,22 @@
 
     <textarea
       class="input"
+      data-pw={inputTestId ?? null}
       bind:value
       {placeholder}
       {disabled}
       rows="1"
-      aria-label={placeholder.length > 0 ? placeholder : 'Message'}
+      aria-label={inputAriaLabel ?? (placeholder.length > 0 ? placeholder : 'Message')}
       maxlength={maxLength > 0 ? maxLength : null}
       oninput={handleInput}
       onkeydown={handleKeydown}
+      onpaste={(event) => onpaste?.(event)}
       use:autoGrow={value}
     ></textarea>
 
     {#if showVoice}
       <div class="control voice" class:recording>
-        <Button onclick={() => onvoice?.()} {disabled} ariaLabel={voiceLabel}>
+        <Button onclick={() => onvoice?.()} {disabled} ariaLabel={voiceLabel} testId={voiceTestId}>
           {#if typeof voiceIcon === 'function'}
             {@render voiceIcon()}
           {:else}
@@ -162,8 +232,8 @@
     {/if}
 
     {#if streaming}
-      <div class="control send stop">
-        <Button onclick={() => onstop?.()} ariaLabel={stopLabel}>
+      <div class="control send stop" data-pw={sendSlotTestId ?? null}>
+        <Button onclick={() => onstop?.()} ariaLabel={stopLabel} testId={stopTestId}>
           {#if typeof stopIcon === 'function'}
             {@render stopIcon()}
           {:else}
@@ -172,9 +242,20 @@
           {/if}
         </Button>
       </div>
+    {:else if typeof onaction === 'function' && !canSend && !recording}
+      <div class="control send action" data-pw={sendSlotTestId ?? null}>
+        <Button onclick={() => onaction()} {disabled} ariaLabel={actionLabel} testId={actionTestId}>
+          {#if typeof actionIcon === 'function'}
+            {@render actionIcon()}
+          {:else}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html micSvg}
+          {/if}
+        </Button>
+      </div>
     {:else}
-      <div class="control send">
-        <Button onclick={submit} disabled={!canSend} ariaLabel={sendLabel}>
+      <div class="control send" data-pw={sendSlotTestId ?? null}>
+        <Button onclick={submit} disabled={!canSend} ariaLabel={sendLabel} testId={sendTestId}>
           {#if typeof sendIcon === 'function'}
             {@render sendIcon()}
           {:else}
@@ -205,6 +286,10 @@
     opacity: var(--chat-composer-disabled-opacity, 0.6);
   }
 
+  .attachments-rich {
+    padding: var(--chat-composer-attachments-padding, 2px 4px 0);
+  }
+
   .attachments {
     display: flex;
     flex-wrap: wrap;
@@ -233,6 +318,7 @@
     background: transparent;
     font-family: var(--chat-composer-font-family, inherit);
     font-size: var(--chat-composer-font-size, 0.9375rem);
+    font-weight: var(--chat-composer-font-weight, 400);
     line-height: var(--chat-composer-line-height, 1.5);
     color: var(--chat-composer-color, #18181b);
     padding: var(--chat-composer-input-padding, 6px 4px);

@@ -171,6 +171,7 @@
   let isServerSearch = $derived(typeof onSearchChange === 'function');
   let searchInputRef = $state<HTMLInputElement | null>(null);
   let inlineSearchInputRef = $state<{ focus: () => void } | null>(null);
+  let inlineSearchTriggerRef = $state<HTMLElement | null>(null);
   let isInlineSearch = $derived(searchConfig?.displayMode === 'inline');
   let isInlineSearchExpanded = $state(false);
 
@@ -191,8 +192,12 @@
   };
 
   const clearSearch = (): void => {
+    const wasInlineExpanded = isInlineSearchExpanded;
     updateSearch('');
     isInlineSearchExpanded = false;
+    if (wasInlineExpanded) {
+      focusInlineSearchTrigger();
+    }
   };
 
   const expandInlineSearch = (): void => {
@@ -200,8 +205,31 @@
     queueMicrotask(() => inlineSearchInputRef?.focus());
   };
 
+  // Mirror of expandInlineSearch: collapsing unmounts the input, so without an
+  // explicit restore the focus falls to the document and a keyboard user loses
+  // their place in the table. The trigger only exists once the collapse has
+  // rendered, hence the microtask.
+  const focusInlineSearchTrigger = (): void => {
+    queueMicrotask(() =>
+      inlineSearchTriggerRef?.querySelector<HTMLButtonElement>('button')?.focus()
+    );
+  };
+
+  // The expanded guard matters: collapsing unmounts the focused input, which can
+  // fire blur on the way out. Without it, an Escape (or close-button) collapse
+  // re-enters clearSearch and fires a second onSearchChange('') — a duplicate
+  // request on the server-search path.
   const collapseInlineSearchIfEmpty = (): void => {
-    if (searchTerm.trim() === '') {
+    if (isInlineSearchExpanded && searchTerm.trim() === '') {
+      clearSearch();
+    }
+  };
+
+  // Escape is the expected way out of an expand-in-place search; without it the
+  // only exits are the close button and blurring while already empty.
+  const handleInlineSearchKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
       clearSearch();
     }
   };
@@ -795,13 +823,14 @@
                         {#if isInlineSearchExpanded}
                           <Input
                             bind:this={inlineSearchInputRef}
-                            bind:value={searchTerm}
+                            value={searchTerm}
                             placeholder={searchConfig?.placeholder ?? 'Search…'}
                             testId={searchConfig?.testId ?? ''}
                             ariaLabel={searchConfig?.placeholder ?? 'Search'}
                             autoComplete="off"
                             onInput={(value: string) => updateSearch(value)}
                             onBlur={collapseInlineSearchIfEmpty}
+                            onKeyDown={handleInlineSearchKeyDown}
                             classes="table-inline-search-input"
                           />
                           <span class="table-inline-search-clear">
@@ -818,7 +847,10 @@
                             </Button>
                           </span>
                         {:else}
-                          <span class="table-inline-search-trigger">
+                          <span
+                            class="table-inline-search-trigger"
+                            bind:this={inlineSearchTriggerRef}
+                          >
                             <Button
                               variant="ghost"
                               iconOnly={true}

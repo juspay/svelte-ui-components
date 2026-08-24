@@ -89,6 +89,7 @@ export { default as ChatBubble } from './ChatBubble/ChatBubble.svelte';
 export { default as Resizable } from './Resizable/Resizable.svelte';
 export { ChatController } from './Chat/controller.svelte';
 export { partyOf } from './Chat/roles';
+export { SpeechToTextController } from './SpeechToText/controller.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -167,6 +168,7 @@ export type * from './_chart/highlight';
 
 export type * from './Chat/properties';
 export type * from './Chat/types';
+export type * from './SpeechToText/types';
 export type * from './ChatHeader/properties';
 export type * from './ChatMessage/properties';
 export type * from './ChatMessageList/properties';

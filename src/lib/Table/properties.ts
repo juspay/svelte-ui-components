@@ -397,6 +397,7 @@ export type TableSearchConfig = {
   placeholder?: string;
   searchableColumnIndices?: number[];
   testId?: string;
+  displayMode?: 'toolbar' | 'inline';
 };
 
 export type TableProperties = OptionalTableProperties & TableEventProperties;

@@ -76,6 +76,18 @@
         )
   );
 
+  const inlineSearchColumns: TableColumn[] = [
+    { id: 'value', label: 'Phone Number (4)', testId: 'inline-search-value' },
+    { id: 'action', label: '' }
+  ];
+
+  const inlineSearchRows: TableRow[] = [
+    { value: '7740027120', action: null },
+    { value: '9876543210', action: null },
+    { value: '8123456789', action: null },
+    { value: '9998887776', action: null }
+  ];
+
   // ── onCellChange wiring demo ─────────────────────────────────────────────────
   let editableRows = $state<Array<[string, string]>>([
     ['Alice Johnson', 'Engineering'],
@@ -926,6 +938,31 @@
       {/if}
     {/snippet}
   </Table>
+</div>
+
+<h3>Search (inline header trigger)</h3>
+<p style="color: #6b7280; margin: 0 0 8px 0;">
+  <code>searchConfig.displayMode: 'inline'</code> renders a compact magnifying-glass icon inside the last
+  header cell instead of the persistent search bar above the table. Clicking it expands an input in place;
+  it collapses back to the icon on blur once emptied.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Table
+    columns={inlineSearchColumns}
+    rows={inlineSearchRows}
+    sortable={false}
+    searchConfig={{
+      placeholder: 'Search phone number…',
+      searchableColumnIndices: [0],
+      testId: 'inline-search',
+      displayMode: 'inline'
+    }}
+    checkboxSelection={{
+      enabled: true,
+      getRowId: (_row, index) => String(index)
+    }}
+    testId="table-inline-search"
+  />
 </div>
 
 <!-- Search — Server-Side Delegation -->

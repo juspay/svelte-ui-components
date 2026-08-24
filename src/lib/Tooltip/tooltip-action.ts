@@ -215,6 +215,12 @@ export const tooltip = (
       return;
     }
 
+    // An empty text renders a degenerate stub bubble (arrow + sliver) that reads as a
+    // clipped artifact — consumers legitimately pass '' to mean "no tooltip here".
+    if (currentOptions.text.trim().length === 0) {
+      return;
+    }
+
     const doShow = () => {
       // Re-check after the delay: hide() may have been called while the timer was pending.
       if (bubbleEl !== null) {

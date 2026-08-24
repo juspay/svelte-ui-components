@@ -143,6 +143,24 @@
   an animated scale-up. {liveWidth} × {liveHeight}
 </p>
 
+<h2>Empty state — the empty snippet fills the blank transcript</h2>
+<div class="chat-theme chat-card empty-frame">
+  <Chat
+    messages={[]}
+    value=""
+    title="Shopping Assistant"
+    placeholder="Ask anything…"
+    onsend={() => {}}
+  >
+    {#snippet empty()}
+      <div class="empty-note">
+        <p><strong>No messages yet.</strong></p>
+        <p>Ask about an order, a product, or returns — or pick a suggestion below.</p>
+      </div>
+    {/snippet}
+  </Chat>
+</div>
+
 <style>
   /* Cascades into the child Resizable, which animates width/height on expand
      (and disables it while drag-resizing / under reduced motion). */
@@ -186,5 +204,20 @@
     border-radius: 999px;
     padding: 3px 10px;
     width: fit-content;
+  }
+
+  .empty-frame {
+    max-width: 480px;
+    height: 360px;
+  }
+
+  .empty-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--doc-text-secondary);
   }
 </style>

@@ -2,41 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.124.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.125.0)
 
-Components:
-- Add 8 chat components: Chat, ChatHeader, ChatMessage, ChatMessageList, ChatComposer, ChatSuggestions,
-ChatToolStatus, ChatBubble
-- Add Resizable, a hard dependency of ChatBubble's resizable panel
-- Add ChatController runes class & partyOf role resolver, both exported from index.ts
-- Add 8 SVG assets: chat, send, stop, mic, attach, retry, thumb-up, thumb-down
-- Export 9 components & 10 property/type modules from index.ts
-
-Conventions:
-- Emit testID alongside data-pw on every root element, guarded with typeof, per testing-attributes.d.ts
-- ChatBubble's grab/grabbing launcher drives --cursor, the hook Button reads
-- ChatToolStatus sets --loader-foreground & --loader-foreground-end; Loader carries no currentColor
-fallback, so an unstyled spinner renders invisible. Exposed as --chat-tool-status-spinner-color
-& --chat-tool-status-spinner-color-end
-
-Web Components:
-- Add 9 &lt;sui-*&gt; wrappers registered in src/wc/index.ts
-
-Docs site:
-- Add 9 demo pages under /components
-- Add a Chat nav category & file Resizable under Layout & Containers
-
-MCP docs:
-- Add 9 markdown docs & 9 _index.json entries
-
-Known deviations from GUIDELINES.md, deliberate and left for a follow-up:
-- ChatComposer hand-rolls a textarea & a file picker rather than composing Input (useTextArea,
-autoResize) and FileInput (§4)
-- autoGrow, pinToBottom, and ChatController.drain's check are arrow consts, not declarations
-- ChatBubble's expanded is $bindable but never internally assigned (§7)
-- ChatMessageData is referenced by Chat & ChatMessageList docs but resolved in neither
-- The WC wrappers pass snippets as object props without mapping named slots, so &lt;sui-chat-bubble&gt;
-cannot receive panel content from HTML
+## [2.125.0](https://github.com/juspay/svelte-ui-components/compare/2.125.0..2.124.0) - 21 August 2026
 
 ## [2.124.0](https://github.com/juspay/svelte-ui-components/compare/2.124.0..2.123.0) - 19 August 2026
 

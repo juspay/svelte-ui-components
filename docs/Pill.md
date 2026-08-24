@@ -92,9 +92,12 @@ Override these custom properties to theme the component.
 | `--pill-border`              | `none`                                    | border           | Border style of the pill.                                                 |
 | `--pill-gap`                 | `4px`                                     | gap              | Spacing between the text and the dismiss button.                          |
 | `--pill-cursor`              | `pointer`                                 | cursor           | Cursor style when hovering over the pill.                                 |
+| `--pill-width`               | `auto`                                    | width            | Chip width. Set to `100%` to fill a column.                               |
+| `--pill-justify-content`     | `center`                                  | justify-content  | Content alignment inside the pill.                                        |
+| `--pill-text-align`          | `center`                                  | text-align       | Label alignment.                                                          |
 | `--pill-max-width`           | `-`                                       | max-width        | Maximum width of the pill. Text is truncated with ellipsis when exceeded. |
-| `--pill-line-height`         | `1`                                       | line-height      | Line height of the pill.                                                   |
-| `--pill-flex-shrink`         | `-`                                       | flex-shrink      | Flex shrink behavior of the pill.                                          |
+| `--pill-line-height`         | `1`                                       | line-height      | Line height of the pill.                                                  |
+| `--pill-flex-shrink`         | `-`                                       | flex-shrink      | Flex shrink behavior of the pill.                                         |
 | `--pill-text-overflow`       | `ellipsis`                                | text-overflow    | How overflowing text is displayed (e.g., ellipsis or clip).               |
 | `--pill-hover-background`    | `var(--pill-background, #d0d0d0)`         | background-color | Background color when hovering over the pill.                             |
 | `--pill-hover-color`         | `var(--pill-color, #333333)`              | color            | Text color when hovering over the pill.                                   |

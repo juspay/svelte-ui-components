@@ -386,8 +386,8 @@
   }
 
   .launcher {
-    --button-width: var(--chat-bubble-size, 56px);
-    --button-height: var(--chat-bubble-size, 56px);
+    --button-width: var(--chat-bubble-width, var(--chat-bubble-size, 56px));
+    --button-height: var(--chat-bubble-height, var(--chat-bubble-size, 56px));
     --button-padding: var(--chat-bubble-padding, 16px);
     --button-border-radius: var(--chat-bubble-border-radius, 50%);
     --button-color: var(--chat-bubble-background-color, #18181b);

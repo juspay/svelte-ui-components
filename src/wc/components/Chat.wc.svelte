@@ -25,6 +25,7 @@
       headerAvatar: { type: 'Object' },
       headerActions: { type: 'Object' },
       message: { type: 'Object' },
+      messageBody: { type: 'Object' },
       messageAttachments: { type: 'Object' },
       empty: { type: 'Object' },
       composerLeading: { type: 'Object' },

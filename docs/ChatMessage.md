@@ -25,6 +25,7 @@ A single chat bubble. The primitive is the **party** — every message is from o
 | role        | `ChatRole`                            | Yes      | `-`     | The message's party or an extension mapping to one (`sender`/`user` → sender side; everything else → responder). Drives alignment and bubble styling. See Type Reference. |
 | content     | `string`                              | No       | `''`    | Plain-text content. Rendered as text unless `html` is set.      |
 | html        | `string`                              | No       | `-`     | Pre-sanitized HTML rendered in place of `content`.              |
+| body | `Snippet \| null` | No | `-` | Replaces the rendered body while keeping the bubble chrome (avatar, header, attachments, actions). Keep `content` as the text form for copy. |
 | streaming   | `boolean`                             | No       | `false` | Shows a typing indicator when there is no content yet.          |
 | status      | `'sending' \| 'sent' \| 'error'`      | No       | `-`     | `error` tints the bubble with the error color.                  |
 | avatar      | `Snippet`                             | No       | `-`     | Avatar shown beside the bubble.                                 |

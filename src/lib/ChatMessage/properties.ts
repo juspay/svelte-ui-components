@@ -14,6 +14,13 @@ export type MandatoryChatMessageProperties = {
 export type OptionalChatMessageProperties = {
   content?: string;
   html?: string;
+  /**
+   * Replaces the rendered bubble body with arbitrary markup while keeping the
+   * message chrome (role styling, avatar, header, attachments, copy/retry/
+   * feedback actions). Keep `content` populated with the text form so the copy
+   * action still has something to copy.
+   */
+  body?: Snippet | null;
   streaming?: boolean;
   status?: ChatMessageStatus;
   avatar?: Snippet;

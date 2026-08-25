@@ -32,6 +32,8 @@ export type OptionalChatProperties = {
   headerActions?: Snippet;
   headerContent?: Snippet;
   message?: Snippet<[ChatMessageData]>;
+  /** Per-message bubble body, threaded through to ChatMessageList's `messageBody`. */
+  messageBody?: Snippet<[ChatMessageData]>;
   messageAttachments?: Snippet<[ChatMessageData]>;
   empty?: Snippet;
   composerLeading?: Snippet;

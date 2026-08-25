@@ -13,6 +13,7 @@
     role,
     content = '',
     html,
+    body,
     streaming = false,
     status,
     avatar,
@@ -37,7 +38,8 @@
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   let hasHtml = $derived(typeof html === 'string' && html.length > 0);
-  let hasContent = $derived(hasHtml || content.length > 0);
+  let hasBody = $derived(typeof body === 'function');
+  let hasContent = $derived(hasBody || hasHtml || content.length > 0);
   let showTyping = $derived(streaming && !hasContent);
   let showRetry = $derived(typeof onretry === 'function');
   let showFeedback = $derived(typeof onfeedback === 'function');
@@ -91,7 +93,9 @@
       {/if}
 
       <div class="bubble">
-        {#if hasHtml}
+        {#if hasBody}
+          <div class="body">{@render body?.()}</div>
+        {:else if hasHtml}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <div class="body">{@html html}</div>
         {:else if content.length > 0}

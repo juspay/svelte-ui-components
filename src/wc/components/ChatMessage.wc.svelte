@@ -6,6 +6,7 @@
       role: { type: 'String', reflect: true },
       content: { type: 'String' },
       html: { type: 'String' },
+      body: { type: 'Object' },
       streaming: { type: 'Boolean', reflect: true },
       status: { type: 'String', reflect: true },
       avatar: { type: 'Object' },

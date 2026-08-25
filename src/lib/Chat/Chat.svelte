@@ -30,6 +30,7 @@
     headerActions,
     headerContent,
     message,
+    messageBody,
     messageAttachments,
     empty,
     composerLeading,
@@ -92,6 +93,7 @@
     {messages}
     {autoscroll}
     {message}
+    {messageBody}
     {messageAttachments}
     {empty}
     {allowCopy}

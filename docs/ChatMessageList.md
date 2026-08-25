@@ -1,6 +1,6 @@
 # ChatMessageList
 
-A scrollable, auto-scrolling container for a conversation. It renders each message with `ChatMessage` by default. To add your own UI below a bubble, pass `messageAttachments` — it receives each `ChatMessageData` and keeps the default bubble along with its copy/retry/feedback actions. Use the `message` snippet only when you want to replace a message entirely, which forgoes that default rendering. When there are no messages, the `empty` snippet is shown. **Smart auto-scroll** keeps the latest content in view only while you're already near the bottom — if you scroll up to read history it won't yank you down, and a **jump-to-latest** button appears instead. Opt-in message actions (`allowCopy`, `onretry`, `onfeedback`) are applied to the default-rendered messages: copy and feedback on assistant messages, retry on the most recent assistant message. Implemented with a Svelte action (no effects), respecting `prefers-reduced-motion`.
+A scrollable, auto-scrolling container for a conversation. It renders each message with `ChatMessage` by default. To add your own UI below a bubble, pass `messageAttachments` — it receives each `ChatMessageData` and keeps the default bubble along with its copy/retry/feedback actions. To render your own markup *inside* the bubble (metric cards, reports, media) while keeping all of that chrome, pass `messageBody`; keep `content` populated with the text form so the copy action still works. Use the `message` snippet only when you want to replace a message entirely, which forgoes that default rendering. When there are no messages, the `empty` snippet is shown. An exported `scrollToBottom()` instance method scrolls programmatically. Two scroll policies: the default **smart auto-scroll** keeps the latest content in view only while you're already near the bottom, and `scrollPolicy="pin-sender-turn"` implements the conversational-AI pattern — each new sender message pins to the top with reserved headroom (held by `pinHold`) so the reply streams beneath the question. **Smart auto-scroll** keeps the latest content in view only while you're already near the bottom — if you scroll up to read history it won't yank you down, and a **jump-to-latest** button appears instead. Opt-in message actions (`allowCopy`, `onretry`, `onfeedback`) are applied to the default-rendered messages: copy and feedback on assistant messages, retry on the most recent assistant message. Implemented with a Svelte action (no effects), respecting `prefers-reduced-motion`.
 
 ## Usage
 
@@ -24,6 +24,10 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 | messages   | `ChatMessageData[]`           | Yes      | `-`     | Messages to render.                                             |
 | autoscroll | `boolean`                     | No       | `true`  | Auto-scroll to the latest message as content changes.          |
 | message    | `Snippet<[ChatMessageData]>`  | No       | `-`     | Custom per-message rendering; overrides the default bubble.    |
+| messageBody | `Snippet<[ChatMessageData]>` | No | `-`     | Own markup inside each bubble; keeps role styling and actions. |
+| scrollPolicy | `'near-bottom' \| 'pin-sender-turn'` | No | `'near-bottom'` | `pin-sender-turn` pins each new sender message to the top and reserves headroom so the reply streams beneath it. |
+| pinHold | `boolean` | No | `false` | pin-sender-turn only: hold the reserved headroom while the host's turn is still busy; flipping false collapses it. |
+| jump | `boolean` | No | `true` | Render the built-in jump-to-latest button. Hosts with their own affordance pass false. |
 | messageAttachments | `Snippet<[ChatMessageData]>` | No | `-`     | Own UI below each bubble; keeps the default bubble and actions. |
 | empty      | `Snippet`                     | No       | `-`     | Shown when there are no messages.                              |
 | jumpLabel  | `string`                      | No       | `'Jump to latest'` | Aria-label for the jump-to-latest button.          |
@@ -38,6 +42,7 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 | ---------- | ---------------------------------------------------------- | --------------------------------------------------- |
 | onretry    | `() => void`                                               | Enables retry on the most recent assistant message. |
 | onfeedback | `(value: 'up' \| 'down', message: ChatMessageData) => void`| Enables feedback on assistant messages.             |
+| onscrollstate | `(state: { atBottom: boolean; scrollable: boolean }) => void` | Reports scroll state changes, for external jump affordances. |
 
 ## CSS Variables
 

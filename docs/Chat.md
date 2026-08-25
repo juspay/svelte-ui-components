@@ -182,6 +182,7 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 | headerActions   | `Snippet`                     | No       | `-`     | Extra inline header actions.                                                |
 | headerContent   | `Snippet`                     | No       | `-`     | Extra content as a full-width second row in the header (toolbar, status…).  |
 | message         | `Snippet<[ChatMessageData]>`  | No       | `-`     | Custom per-message rendering. Replaces the default bubble entirely.        |
+| messageBody | `Snippet<[ChatMessageData]>` | No | `-` | Per-message bubble body, threaded to `ChatMessageList`. |
 | messageAttachments | `Snippet<[ChatMessageData]>` | No     | `-`     | Your own UI rendered below each bubble, keeping the default bubble and its actions. |
 | empty           | `Snippet`                     | No       | `-`     | Empty-state content.                                                        |
 | composerLeading | `Snippet`                     | No       | `-`     | Content before the composer input.                                         |

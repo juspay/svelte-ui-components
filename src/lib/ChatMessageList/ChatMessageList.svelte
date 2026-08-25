@@ -13,12 +13,17 @@
   let {
     messages,
     autoscroll = true,
+    scrollPolicy = 'near-bottom',
+    pinHold = false,
+    jump = true,
     message,
+    messageBody,
     messageAttachments,
     empty,
     jumpLabel = 'Jump to latest',
     jumpIcon,
     allowCopy = false,
+    onscrollstate,
     onretry,
     onfeedback,
     testId,
@@ -26,7 +31,10 @@
   }: ChatMessageListProperties = $props();
 
   let listEl: HTMLElement | null = $state(null);
+  let innerEl: HTMLElement | null = $state(null);
   let atBottom = $state(true);
+  let scrollable = $state(false);
+  let pinActive = false;
 
   let scrollKey = $derived(`${messages.length}:${messages.at(-1)?.content.length ?? 0}`);
   let showJump = $derived(!atBottom && messages.length > 0);
@@ -62,22 +70,103 @@
     return node.scrollHeight - node.scrollTop - node.clientHeight < NEAR_BOTTOM_THRESHOLD;
   }
 
-  function handleScroll(event: Event & { currentTarget: HTMLElement }): void {
-    atBottom = isNearBottom(event.currentTarget);
+  function reportScrollState(node: HTMLElement): void {
+    atBottom = isNearBottom(node);
+    scrollable = node.scrollHeight - node.clientHeight > NEAR_BOTTOM_THRESHOLD;
+    onscrollstate?.({ atBottom, scrollable });
   }
 
-  function scrollToBottom(): void {
+  function handleScroll(event: Event & { currentTarget: HTMLElement }): void {
+    reportScrollState(event.currentTarget);
+  }
+
+  export function scrollToBottom(): void {
     if (listEl !== null) {
       listEl.scrollTop = listEl.scrollHeight;
-      atBottom = true;
+      reportScrollState(listEl);
+    }
+  }
+
+  function lastSenderId(): string | null {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (partyOf(messages[index].role) === 'sender') {
+        return messages[index].id;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * pin-sender-turn: reserve headroom below the newest sender message and scroll it
+   * to the top of the viewport, so the reply streams in beneath the question. The
+   * reservation is released when `pinHold` turns false (the host says the turn is
+   * over), collapsing the blank space a short reply would otherwise leave.
+   *
+   * Hosts often append the sender message TOGETHER with a streaming reply
+   * placeholder, so the pin targets the last sender message's row, not the last
+   * row. Rows map to messages by index — a custom `message` snippet must render
+   * exactly one root element per message for this policy.
+   */
+  function pinLatestSenderMessage(): void {
+    if (listEl === null || innerEl === null) {
+      return;
+    }
+    let senderIndex = -1;
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (partyOf(messages[index].role) === 'sender') {
+        senderIndex = index;
+        break;
+      }
+    }
+    if (senderIndex === -1) {
+      return;
+    }
+    const rows = Array.from(innerEl.children).filter((child) => !child.classList.contains('jump'));
+    const target = rows.length === messages.length ? rows[senderIndex] : rows[rows.length - 1];
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const innerRect = innerEl.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const rowOffsetInContent = targetRect.top - innerRect.top;
+    innerEl.style.minHeight = `${Math.ceil(rowOffsetInContent + listEl.clientHeight)}px`;
+    pinActive = true;
+    const listRect = listEl.getBoundingClientRect();
+    const paddingTop = Number.parseFloat(getComputedStyle(listEl).paddingTop) || 0;
+    listEl.scrollTop += targetRect.top - listRect.top - paddingTop;
+    reportScrollState(listEl);
+  }
+
+  function releasePin(): void {
+    if (innerEl !== null) {
+      innerEl.style.minHeight = '';
+    }
+    pinActive = false;
+    if (listEl !== null) {
+      reportScrollState(listEl);
     }
   }
 
   const pinToBottom: Action<HTMLElement, string> = (node) => {
     let previousCount = messages.length;
+    let previousSenderId = lastSenderId();
     function scroll(): void {
       const newMessage = messages.length > previousCount;
       previousCount = messages.length;
+      if (scrollPolicy === 'pin-sender-turn') {
+        // Only a NEW sender message moves the viewport; streaming reply content
+        // grows below the pinned question without yanking the reader. Hosts often
+        // append the sender message together with a reply placeholder, so the
+        // trigger is the last SENDER id changing, not the last row's role.
+        const senderId = lastSenderId();
+        if (newMessage && senderId !== null && senderId !== previousSenderId) {
+          queueMicrotask(() => {
+            pinLatestSenderMessage();
+          });
+        }
+        previousSenderId = senderId;
+        return;
+      }
       if (autoscroll && (atBottom || newMessage)) {
         queueMicrotask(() => {
           node.scrollTop = node.scrollHeight;
@@ -86,6 +175,45 @@
     }
     scroll();
     return { update: scroll };
+  };
+
+  /**
+   * A stateful `message`/`messageBody` snippet can grow without changing
+   * `messages.length` or the last message's `content.length`, so the scroll-key
+   * driven action never re-runs. Observing the inner wrapper's size keeps the
+   * near-bottom stick (and the reported scroll state) honest for custom bodies.
+   */
+  const followContentGrowth: Action<HTMLElement> = (node) => {
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      if (listEl === null) {
+        return;
+      }
+      if (scrollPolicy === 'near-bottom' && autoscroll && atBottom) {
+        listEl.scrollTop = listEl.scrollHeight;
+      }
+      reportScrollState(listEl);
+    });
+    observer.observe(node);
+    return {
+      destroy(): void {
+        observer.disconnect();
+      }
+    };
+  };
+
+  const releaseOnHoldEnd: Action<HTMLElement, boolean> = () => {
+    let previousHold = pinHold;
+    function check(): void {
+      if (previousHold && !pinHold && pinActive) {
+        releasePin();
+      }
+      previousHold = pinHold;
+    }
+    check();
+    return { update: check };
   };
 </script>
 
@@ -98,44 +226,51 @@
   bind:this={listEl}
   onscroll={handleScroll}
   use:pinToBottom={scrollKey}
+  use:releaseOnHoldEnd={pinHold}
 >
-  {#if messages.length === 0 && typeof empty === 'function'}
-    {@render empty()}
-  {/if}
-
-  {#each messages as msg (msg.id)}
-    {#if typeof message === 'function'}
-      {@render message(msg)}
-    {:else}
-      {#snippet attachmentsFor()}
-        {@render messageAttachments?.(msg)}
-      {/snippet}
-      <ChatMessage
-        role={msg.role}
-        content={msg.content}
-        html={msg.html}
-        streaming={msg.streaming}
-        status={msg.status}
-        allowCopy={allowCopy && partyOf(msg.role) === 'responder'}
-        attachments={typeof messageAttachments === 'function' ? attachmentsFor : null}
-        onretry={retryFor(msg)}
-        onfeedback={feedbackFor(msg)}
-      />
+  <div class="inner" bind:this={innerEl} use:followContentGrowth>
+    {#if messages.length === 0 && typeof empty === 'function'}
+      {@render empty()}
     {/if}
-  {/each}
 
-  {#if showJump}
-    <div class="jump">
-      <Button onclick={scrollToBottom} ariaLabel={jumpLabel}>
-        {#if typeof jumpIcon === 'function'}
-          {@render jumpIcon()}
-        {:else}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html chevronDownSvg}
-        {/if}
-      </Button>
-    </div>
-  {/if}
+    {#each messages as msg (msg.id)}
+      {#if typeof message === 'function'}
+        {@render message(msg)}
+      {:else}
+        {#snippet attachmentsFor()}
+          {@render messageAttachments?.(msg)}
+        {/snippet}
+        {#snippet bodyFor()}
+          {@render messageBody?.(msg)}
+        {/snippet}
+        <ChatMessage
+          role={msg.role}
+          content={msg.content}
+          html={msg.html}
+          body={typeof messageBody === 'function' ? bodyFor : null}
+          streaming={msg.streaming}
+          status={msg.status}
+          allowCopy={allowCopy && partyOf(msg.role) === 'responder'}
+          attachments={typeof messageAttachments === 'function' ? attachmentsFor : null}
+          onretry={retryFor(msg)}
+          onfeedback={feedbackFor(msg)}
+        />
+      {/if}
+    {/each}
+
+    {#if showJump && jump}
+      <div class="jump">
+        <Button onclick={scrollToBottom} ariaLabel={jumpLabel}>
+          {#if typeof jumpIcon === 'function'}
+            {@render jumpIcon()}
+          {:else}
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html chevronDownSvg}
+          {/if}
+        </Button>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -143,12 +278,20 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: var(--chat-message-list-gap, 1rem);
     flex: 1;
     width: 100%;
     overflow-y: auto;
     padding: var(--chat-message-list-padding, 0.75rem 1.5rem);
     scroll-behavior: var(--chat-message-list-scroll-behavior, smooth);
+  }
+
+  /* The inner wrapper is what the pin-sender-turn policy reserves height on; it
+     carries the column layout so the reservation becomes scrollable headroom. */
+  .inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--chat-message-list-gap, 1rem);
+    flex: 1 0 auto;
   }
 
   .jump {

@@ -123,6 +123,36 @@ Both launcher icons are snippets; provide your own for closed (`icon`) and open 
 </ChatBubble>
 ```
 
+The launcher is not limited to icons — a snippet can render an icon plus a text label to make
+a pill launcher. Set `--chat-bubble-width: fit-content` (and a capsule `--chat-bubble-border-radius`)
+so the button's width follows its content; `--chat-bubble-size` keeps governing the height:
+
+The launcher `Button` renders with `--button-content-gap: 0`, so a snippet with several
+children needs its own gap wrapper:
+
+```svelte
+<ChatBubble bind:open label="Ask Assistant" classes="assistant-pill">
+  {#snippet icon()}
+    <span class="pill-content"><MessageIcon /> Ask Assistant</span>
+  {/snippet}
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+</ChatBubble>
+
+<style>
+  :global(.assistant-pill) {
+    --chat-bubble-width: fit-content;
+    --chat-bubble-border-radius: 999px;
+    --chat-bubble-padding: 8px 20px;
+  }
+
+  :global(.assistant-pill .pill-content) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+```
+
 ## Snippets
 
 | Snippet  | Description                                                                          |
@@ -184,6 +214,8 @@ Reuses `Button` (the launcher) and `Resizable` (panel resizing). Its content is 
 | `--chat-bubble-offset-x`              | `24px`                                        | left/right    | Horizontal distance from the edge.|
 | `--chat-bubble-offset-y`              | `24px`                                        | top/bottom    | Vertical distance from the edge.  |
 | `--chat-bubble-size`                  | `56px`                                        | height/width  | Launcher button size.             |
+| `--chat-bubble-width`                 | `var(--chat-bubble-size, 56px)`               | width         | Launcher width alone — set to `fit-content` for a pill launcher whose width follows its content (e.g. icon + label) while `--chat-bubble-size` keeps the height. |
+| `--chat-bubble-height`                | `var(--chat-bubble-size, 56px)`               | height        | Launcher height alone, when it must differ from the width. |
 | `--chat-bubble-padding`               | `16px`                                        | padding       | Launcher icon padding.            |
 | `--chat-bubble-border-radius`         | `50%`                                         | border-radius | Launcher corner rounding.         |
 | `--chat-bubble-background-color`      | `#18181b`                                     | background    | Launcher background.              |

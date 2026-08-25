@@ -2,32 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.126.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.127.0)
 
-HITL (human-in-the-loop approval card) was born ChatConfirmation and renamed
-before release; the demo covers the full state surface — live countdown,
-sections, history approved/rejected/expired, manual-only with custom labels,
-hiddenKeys secret redaction, and the voice-flow mic integration.
+Ports the speech-to-text lifecycle that apps hand-roll around the non-standard
+SpeechRecognition API into a reusable runes controller: support detection, a
+one-shot host permission hook (native-shell mic bridges), start-with-retry
+through a re-init, interim/final transcript assembly seeded from the composer
+value, and a self-hiding error toast with per-error-code copy. Renders nothing;
+pairs with ChatComposer voice control. The recognition constructor is
+injectable, so tests and demos run the full lifecycle without a microphone.
 
-AttachmentChipRow renders image, video (poster + play badge) and file chips
-with self-contained remove buttons that can never be clipped or lose contrast
-to the host theme, and opt-in onOpen* callbacks that turn a tile into a real
-button (lightbox/playback seam). The tooltip action no longer renders a
-degenerate stub bubble for empty text. The composer demo attaches a real
-JPEG photo and a real H.264 clip (static/demo-media, locally generated) and
-opens them in a lightbox through those seams.
-
-ChatComposer gains a built-in, opt-in rich attachment strip: non-empty
-richImages/richVideos/richFiles render an AttachmentChipRow above the input
-row (counted toward can-send, read-only without removal callbacks, clickable
-with onopenrich*), so hosts with a processed attachment model no longer need
-the attachmentsPreview override for the common case. Defaults are unchanged.
-
-Generation placeholders deliberately ship as a Shimmer recipe rather than a
-component — the frame is appearance only. AgentPicker was likewise withdrawn:
-Select's default (non-multiple) mode already carries single-pick replace
-semantics, so the picker added only consumer policy. Chat hosts compose
-Select directly.
+## [2.127.0](https://github.com/juspay/svelte-ui-components/compare/2.127.0..2.126.0) - 25 August 2026
 
 ## [2.126.0](https://github.com/juspay/svelte-ui-components/compare/2.126.0..2.125.0) - 24 August 2026
 

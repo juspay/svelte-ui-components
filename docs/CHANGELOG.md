@@ -2,15 +2,32 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.128.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.129.0)
 
---chat-bubble-width / --chat-bubble-height now override each axis
-independently, both defaulting through --chat-bubble-size so existing
-consumers are byte-identical. Setting --chat-bubble-width: fit-content
-lets an icon-plus-label snippet render as a pill launcher (Button's own
-default width is fit-content; the launcher was pinning both axes to one
-size token). Demo gains a bottom-left pill-launcher variant; docs gain
-the two token rows and a pill recipe.
+Three follow-ups to the inline table search shipped in #456, none of which
+change what the component does in the happy path.
+
+- The inline Input had both `bind:value={searchTerm}` and
+`onInput={updateSearch}`, so `searchTerm` had two write paths. Only
+`updateSearch` performs the side effects (page reset, `onSearchChange`),
+which meant a write through the binding could move the term without them.
+The prop is now one-way and `onInput` is the single entry point, matching
+how the toolbar variant already works.
+
+- Collapsing the search unmounted the focused input with no focus restore,
+dropping keyboard users to the document. `expandInlineSearch` already
+focuses the input on the way in; `clearSearch` now mirrors it on the way
+out, but only when it was actually collapsing an expanded inline search.
+
+- Escape now closes the inline search, which is the expected exit for an
+expand-in-place control. It was previously reachable only via the close
+button or by blurring while already empty.
+
+`collapseInlineSearchIfEmpty` also gains an expanded guard: collapsing can
+fire blur on the unmounting input, which re-entered `clearSearch` and sent a
+second `onSearchChange('')` on the server-search path.
+
+## [2.129.0](https://github.com/juspay/svelte-ui-components/compare/2.129.0..2.128.1) - 26 August 2026
 
 ## [2.128.1](https://github.com/juspay/svelte-ui-components/compare/2.128.1..2.128.0) - 26 August 2026
 

@@ -2,14 +2,17 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.128.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.128.1)
 
-The demo site deploys under BASE_PATH=/svelte-ui-components; the chat demo
-pages referenced their media root-relative (/demo-media/…), which the
-prerender crawl rejects with '404 … does not begin with base', failing the
-Deploy to GitHub Pages workflow on release since the chat-primitives merge.
-Every reference now goes through {base} from $app/paths. Verified locally:
-BASE_PATH=/svelte-ui-components pnpm build prerenders clean.
+--chat-bubble-width / --chat-bubble-height now override each axis
+independently, both defaulting through --chat-bubble-size so existing
+consumers are byte-identical. Setting --chat-bubble-width: fit-content
+lets an icon-plus-label snippet render as a pill launcher (Button's own
+default width is fit-content; the launcher was pinning both axes to one
+size token). Demo gains a bottom-left pill-launcher variant; docs gain
+the two token rows and a pill recipe.
+
+## [2.128.1](https://github.com/juspay/svelte-ui-components/compare/2.128.1..2.128.0) - 26 August 2026
 
 ## [2.128.0](https://github.com/juspay/svelte-ui-components/compare/2.128.0..2.127.0) - 25 August 2026
 

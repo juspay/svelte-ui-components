@@ -38,18 +38,35 @@ ai:
   # codebase context. Keep enabled so the reviewer sees your repo's rules.
   explore:
     enabled: true
+    # v3 no longer defaults this to 0.1 — set it explicitly to keep the old
+    # deterministic explore behaviour.
+    temperature: 0.1
     timeout: "5m"
     cacheResults: true
 
-# GitHub MCP only. Jira/Bitbucket off so no extra credentials are needed. Yama's
-# built-in denylist already blocks repo-mutating GitHub tools; this is a
-# read + review-comment workflow.
+# GitHub MCP only (v3 schema: definitions live under mcpServers.servers.<id>
+# and are full generic definitions — nothing is hardcoded in yama any more).
+# Jira support was removed in yama v3, so no jira key exists. The token env var
+# is YAMA_GITHUB_TOKEN: the action forwards its github-token input under that
+# non-reserved name specifically for MCP config substitution (GITHUB_TOKEN can
+# be clobbered by the runner inside a composite action). This stays a
+# read + review-comment workflow: repo-mutating tools are block-listed.
 mcpServers:
-  github:
-    enabled: true
-    # transport defaults to "http" (hosted GitHub MCP at api.githubcopilot.com).
-  jira:
-    enabled: false
+  servers:
+    github:
+      enabled: true
+      transport: http
+      url: https://api.githubcopilot.com/mcp/
+      headers:
+        Authorization: "Bearer ${YAMA_GITHUB_TOKEN}"
+      roles: [review, explore]
+      modes: [pr]
+      blockedTools:
+        - push_files
+        - create_or_update_file
+        - create_branch
+        - delete_file
+        - merge_pull_request
 
 review:
   enabled: true

@@ -162,6 +162,57 @@
   --pill-color: #d1d5db;
   --pill-hover-background: #2f2f45;
   --pill-hover-color: #e5e7eb;
+
+  /* ThinkingTrace */
+  --thinking-indicator-trace-connector-color: #2a2a3c;
+  --thinking-indicator-trace-row-color: #d1d5db;
+  --thinking-indicator-trace-prose-color: #9ca3af;
+  --thinking-indicator-trace-secondary-color: #6b7280;
+  --thinking-indicator-trace-icon-color: #6b7280;
+  --thinking-indicator-trace-spinner-color: #9ca3af;
+  --thinking-indicator-trace-spinner-track-color: #2a2a3c;
+  --thinking-indicator-trace-spinner-color-end: #2a2a3c;
+  --thinking-indicator-trace-row-hover-background: #252535;
+  --thinking-indicator-trace-row-selected-background: #2f2f45;
+  --thinking-indicator-trace-query-background: #252535;
+  --thinking-indicator-trace-query-color: #d1d5db;
+  --thinking-indicator-trace-more-color: #6b7280;
+  --thinking-indicator-trace-added-color: #4ade80;
+  --thinking-indicator-trace-removed-color: #f87171;
+
+  /* ToolCallLog */
+  --tool-call-log-chip-background: #1e1e2e;
+  --tool-call-log-chip-border: 1px solid #2a2a3c;
+  --tool-call-log-chip-hover-background: #252535;
+  --tool-call-log-chip-open-border-color: #6366f1;
+  --tool-call-log-label-color: #d1d5db;
+  --tool-call-log-meta-color: #9ca3af;
+  --tool-call-log-error-background: #2a1416;
+  --tool-call-log-error-border-color: #7f1d1d;
+  --tool-call-log-error-color: #f87171;
+  --tool-call-log-error-hover-background: #3b1a1c;
+  --tool-call-log-added-background: rgb(74 222 128 / 12%);
+  --tool-call-log-added-color: #4ade80;
+  --tool-call-log-removed-background: rgb(248 113 113 / 12%);
+  --tool-call-log-removed-color: #f87171;
+  --tool-call-log-spinner-color: #9ca3af;
+  --tool-call-log-spinner-track-color: #2a2a3c;
+  --tool-call-log-popover-background: #1e1e2e;
+  --tool-call-log-popover-border: 1px solid #2a2a3c;
+  --tool-call-log-popover-color: #d1d5db;
+  --tool-call-log-popover-shadow: 0 8px 24px rgb(0 0 0 / 55%);
+
+  /* TaskList */
+  --task-list-row-color: #d1d5db;
+  --task-list-secondary-color: #9ca3af;
+  --task-list-dot-color: #4b5563;
+  --task-list-done-color: #9ca3af;
+  --task-list-error-color: #f87171;
+  --task-list-spinner-color: #9ca3af;
+  --task-list-spinner-track-color: #2a2a3c;
+  --task-list-retry-background: #2a1416;
+  --task-list-retry-color: #f87171;
+  --task-list-retry-hover-background: #3b1a1c;
 }
 
 .page-header {

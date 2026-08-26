@@ -7,6 +7,7 @@
       detail: { type: 'String' },
       expanded: { type: 'Boolean', reflect: true },
       variant: { type: 'String', reflect: true },
+      showElapsed: { type: 'Boolean', attribute: 'show-elapsed' },
       onToggle: { type: 'Object' },
       avatar: { type: 'Object' },
       toggleIcon: { type: 'Object' },
@@ -14,7 +15,17 @@
       toggleTestId: { type: 'String', attribute: 'toggle-test-id' },
       detailTestId: { type: 'String', attribute: 'detail-test-id' },
       labelTestId: { type: 'String', attribute: 'label-test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      rows: { type: 'Array' },
+      kind: { type: 'String', reflect: true },
+      busy: { type: 'Boolean', reflect: true },
+      query: { type: 'String' },
+      moreLabel: { type: 'String', attribute: 'more-label' },
+      selectable: { type: 'Boolean' },
+      selected: { type: 'Object' },
+      onrowselect: { type: 'Object' },
+      onsettled: { type: 'Object' },
+      collapseDelayMs: { type: 'Object', attribute: 'collapse-delay-ms' }
     }
   }}
 />

@@ -67,3 +67,6 @@ import './components/ChatComposer.wc.svelte';
 import './components/ChatSuggestions.wc.svelte';
 import './components/ChatToolStatus.wc.svelte';
 import './components/ChatBubble.wc.svelte';
+import './components/ToolCallLog.wc.svelte';
+import './components/TaskList.wc.svelte';
+import './components/ThinkingIndicator.wc.svelte';

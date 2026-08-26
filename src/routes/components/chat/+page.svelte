@@ -1,9 +1,21 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Chat from '$lib/Chat/Chat.svelte';
   import Button from '$lib/Button/Button.svelte';
   import Resizable from '$lib/Resizable/Resizable.svelte';
+  import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
+  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
+  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
+  import ChatSuggestions from '$lib/ChatSuggestions/ChatSuggestions.svelte';
+  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
+  import TaskList from '$lib/TaskList/TaskList.svelte';
   import { ChatController } from '$lib/Chat/controller.svelte';
-  import type { ChatTransport } from '$lib/Chat/types';
+  import type { ChatMessageData, ChatTransport } from '$lib/Chat/types';
+  import type { ThinkingIndicatorTraceRow } from '$lib/ThinkingIndicator/properties';
+  import type { ToolCallChip } from '$lib/ToolCallLog/properties';
+  import type { TaskListRow, TaskStatus } from '$lib/TaskList/properties';
+  import type { ChatSuggestion } from '$lib/ChatSuggestions/properties';
 
   type ChatOption = { label: string };
 
@@ -72,6 +84,220 @@
       panelHeight = value;
     }
   }
+
+  // ---- Full agent turn: ThinkingIndicator trace + ToolCallLog + TaskList,
+  // composed straight into a ChatMessageList transcript, ending with follow-up
+  // ChatSuggestions in their real spot — above the composer. Every stage is a
+  // host-owned timer, exactly like the ThinkingIndicator / ToolCallLog / TaskList
+  // showcase pages; nothing here is built into the components themselves.
+
+  const TURN_USER_ID = 'turn-user';
+  const TURN_ASSISTANT_ID = 'turn-assistant';
+  const TURN_QUESTION = 'Can you put together a plan to fix our winter waffle-cone shortage?';
+  const TURN_QUERY = 'winter waffle-cone shortage';
+  const TURN_REPLY =
+    'Joy Cone can restock 600 units by Friday — I priced two shipping options and flagged the cheaper one in the plan below.';
+
+  const TURN_TRACE_ROWS: ThinkingIndicatorTraceRow[] = [
+    {
+      primary: 'Joy Cone wholesale pricing',
+      secondary: 'joycone.com',
+      href: 'https://example.com'
+    },
+    {
+      primary: 'Regional distributor stock levels',
+      secondary: 'scoopdata.io',
+      href: 'https://example.com'
+    },
+    {
+      primary: 'Shipping cost comparison',
+      secondary: 'freightbay.io',
+      href: 'https://example.com'
+    }
+  ];
+
+  const TURN_TOOL_CHIPS: ToolCallChip[] = [
+    { label: 'Read', meta: 'inventory.csv', mono: true },
+    { label: 'Run', meta: 'reorder-calculator', mono: true },
+    { label: 'Fetch', meta: 'supplier catalog', mono: true }
+  ];
+
+  const TURN_PLAN_TEMPLATE: Array<Omit<TaskListRow, 'status'>> = [
+    { label: 'Reorder 600 units', secondary: 'Joy Cone' },
+    { label: 'Notify the warehouse team' },
+    { label: 'Update the storefront banner', secondary: 'homepage' }
+  ];
+
+  const FOLLOW_UP_SUGGESTIONS: ChatSuggestion[] = [
+    'Draft the supplier email',
+    'Show me the cost comparison',
+    { label: 'Adjust the plan', value: 'Can you spread this reorder across two suppliers instead?' }
+  ];
+
+  const createInitialTurnMessages = (): ChatMessageData[] => [
+    { id: TURN_USER_ID, role: 'sender', content: TURN_QUESTION },
+    { id: TURN_ASSISTANT_ID, role: 'responder', content: '', streaming: true }
+  ];
+
+  const toPendingPlanRow = (row: Omit<TaskListRow, 'status'>): TaskListRow => {
+    return { ...row, status: 'pending' };
+  };
+
+  let turnMessages = $state<ChatMessageData[]>(createInitialTurnMessages());
+  let turnThinkingBusy = $state(true);
+  let turnThinkingRows = $state<ThinkingIndicatorTraceRow[]>([]);
+  let turnThinkingLabel = $derived(
+    turnThinkingBusy ? 'Searching the web' : `Searched ${TURN_TRACE_ROWS.length * 2} sources`
+  );
+  let turnToolChips = $state<ToolCallChip[]>([]);
+  let turnPlanRows = $state<TaskListRow[]>([]);
+  let turnPlanVisible = $state(false);
+  let turnFollowUpsVisible = $state(false);
+  let turnComposerValue = $state('');
+  let turnFollowUpCounter = 0;
+  let turnTimers: ReturnType<typeof setTimeout>[] = [];
+
+  const setAssistantContent = (content: string, streaming: boolean): void => {
+    turnMessages = turnMessages.map((entry) =>
+      entry.id === TURN_ASSISTANT_ID ? { ...entry, content, streaming } : entry
+    );
+  };
+
+  const setPlanStatus = (index: number, status: TaskStatus): void => {
+    const row = turnPlanRows[index];
+    if (!row) {
+      return;
+    }
+    turnPlanRows[index] = { ...row, status };
+  };
+
+  const runPlan = (): void => {
+    let elapsed = 0;
+    TURN_PLAN_TEMPLATE.forEach((_, index) => {
+      elapsed += 550;
+      turnTimers.push(setTimeout(() => setPlanStatus(index, 'running'), elapsed));
+      elapsed += 550;
+      turnTimers.push(
+        setTimeout(() => {
+          setPlanStatus(index, 'done');
+          if (index === TURN_PLAN_TEMPLATE.length - 1) {
+            turnFollowUpsVisible = true;
+          }
+        }, elapsed)
+      );
+    });
+  };
+
+  const runToolChips = (): void => {
+    TURN_TOOL_CHIPS.forEach((chip, index) => {
+      const isLast = index === TURN_TOOL_CHIPS.length - 1;
+      turnTimers.push(
+        setTimeout(
+          () => {
+            turnToolChips = [...turnToolChips, { ...chip, state: isLast ? 'running' : 'done' }];
+          },
+          (index + 1) * 450
+        )
+      );
+    });
+    turnTimers.push(
+      setTimeout(
+        () => {
+          turnToolChips = turnToolChips.map((chip, index) =>
+            index === TURN_TOOL_CHIPS.length - 1 ? { ...chip, state: 'done' } : chip
+          );
+          turnPlanRows = TURN_PLAN_TEMPLATE.map(toPendingPlanRow);
+          turnPlanVisible = true;
+          runPlan();
+        },
+        TURN_TOOL_CHIPS.length * 450 + 700
+      )
+    );
+  };
+
+  const streamReply = (): void => {
+    const words = TURN_REPLY.split(' ');
+    words.forEach((_, index) => {
+      turnTimers.push(
+        setTimeout(
+          () => {
+            const isLast = index === words.length - 1;
+            setAssistantContent(words.slice(0, index + 1).join(' '), !isLast);
+            if (isLast) {
+              turnTimers.push(setTimeout(runToolChips, 500));
+            }
+          },
+          (index + 1) * 45
+        )
+      );
+    });
+  };
+
+  const handleTraceSettled = (): void => {
+    turnTimers.push(setTimeout(streamReply, 350));
+  };
+
+  const appendFollowUpTurn = (text: string): void => {
+    const trimmed = text.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    turnFollowUpsVisible = false;
+    turnFollowUpCounter += 1;
+    turnMessages = [
+      ...turnMessages,
+      { id: `turn-follow-up-q${turnFollowUpCounter}`, role: 'sender', content: trimmed },
+      {
+        id: `turn-follow-up-r${turnFollowUpCounter}`,
+        role: 'responder',
+        content: "Got it — I'll start on that next."
+      }
+    ];
+    turnComposerValue = '';
+  };
+
+  const handleFollowUpSelect = (value: string): void => {
+    appendFollowUpTurn(value);
+  };
+
+  const handleTurnComposerSubmit = (value: string): void => {
+    appendFollowUpTurn(value);
+  };
+
+  const replayTurn = (): void => {
+    turnTimers.forEach(clearTimeout);
+    turnTimers = [];
+    turnMessages = createInitialTurnMessages();
+    turnThinkingBusy = true;
+    turnThinkingRows = [];
+    turnToolChips = [];
+    turnPlanRows = [];
+    turnPlanVisible = false;
+    turnFollowUpsVisible = false;
+    turnComposerValue = '';
+    turnFollowUpCounter = 0;
+
+    turnTimers.push(
+      setTimeout(() => {
+        turnThinkingRows = TURN_TRACE_ROWS.slice(0, 2);
+      }, 700)
+    );
+    turnTimers.push(
+      setTimeout(() => {
+        turnThinkingRows = TURN_TRACE_ROWS;
+      }, 1300)
+    );
+    turnTimers.push(
+      setTimeout(() => {
+        turnThinkingBusy = false;
+      }, 1900)
+    );
+  };
+
+  onMount(() => {
+    replayTurn();
+    return () => turnTimers.forEach(clearTimeout);
+  });
 </script>
 
 <div class="page-header">
@@ -161,6 +387,70 @@
   </Chat>
 </div>
 
+<h2>Full agent turn — thinking trace, tool calls, and a work plan land in the transcript</h2>
+<p class="demo-note">
+  Composed entirely from existing pieces, none of it built into <code>Chat</code>:
+  <code>ThinkingIndicator</code>'s own busy machine drives the search trace and settles into a
+  collapsed row on its own timer, <code>ToolCallLog</code> records the tools that produced the
+  reply, and a <code>TaskList</code> work plan appears once the turn is done. Follow-up
+  <code>ChatSuggestions</code> then take their real spot — above the composer, not floating alone.
+</p>
+<div class="turn-controls">
+  <Button text="Replay" onclick={replayTurn} testId="chat-turn-replay" />
+</div>
+<div class="chat-theme chat-card turn-frame">
+  <ChatMessageList messages={turnMessages} testId="chat-turn-list">
+    {#snippet message(msg)}
+      {#if msg.id === TURN_ASSISTANT_ID}
+        <div class="assistant-turn" data-pw="chat-turn-assistant-turn">
+          <ThinkingIndicator
+            label={turnThinkingLabel}
+            kind="search"
+            rows={turnThinkingRows}
+            busy={turnThinkingBusy}
+            query={TURN_QUERY}
+            moreLabel="+{TURN_TRACE_ROWS.length} more"
+            onsettled={handleTraceSettled}
+            testId="chat-turn-trace"
+          />
+          <ChatMessage
+            role={msg.role}
+            content={msg.content}
+            streaming={msg.streaming}
+            testId="chat-turn-assistant-message"
+          />
+          {#if turnToolChips.length > 0}
+            <ToolCallLog chips={turnToolChips} testId="chat-turn-tools" />
+          {/if}
+          {#if turnPlanVisible}
+            <div class="plan-host">
+              <p class="plan-label">Work plan</p>
+              <TaskList rows={turnPlanRows} testId="chat-turn-plan" />
+            </div>
+          {/if}
+        </div>
+      {:else}
+        <ChatMessage role={msg.role} content={msg.content} testId="chat-turn-message-{msg.id}" />
+      {/if}
+    {/snippet}
+  </ChatMessageList>
+  <div class="turn-footer">
+    {#if turnFollowUpsVisible}
+      <ChatSuggestions
+        items={FOLLOW_UP_SUGGESTIONS}
+        onselect={handleFollowUpSelect}
+        testId="chat-turn-suggestions"
+      />
+    {/if}
+    <ChatComposer
+      bind:value={turnComposerValue}
+      placeholder="Ask a follow-up…"
+      onsubmit={handleTurnComposerSubmit}
+      testId="chat-turn-composer"
+    />
+  </div>
+</div>
+
 <style>
   /* Cascades into the child Resizable, which animates width/height on expand
      (and disables it while drag-resizing / under reduced motion). */
@@ -219,5 +509,53 @@
     height: 100%;
     text-align: center;
     color: var(--doc-text-secondary);
+  }
+
+  .turn-controls {
+    margin: 0 0 14px;
+  }
+
+  .turn-frame {
+    display: flex;
+    flex-direction: column;
+    height: 640px;
+    max-width: 560px;
+    background: var(--doc-demo-bg);
+  }
+
+  .assistant-turn {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-self: flex-start;
+    max-width: 100%;
+    --chat-message-max-width: 100%;
+  }
+
+  .plan-host {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--doc-input-bg);
+    box-shadow: 0 0 0 1px var(--doc-border);
+  }
+
+  .plan-label {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--doc-text-muted);
+  }
+
+  .turn-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--doc-border);
   }
 </style>

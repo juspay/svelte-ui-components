@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
 
   let value = $state('');
@@ -10,12 +11,12 @@
   // (onopenrich*) a host app would wire to its own preview surface.
   const photo = {
     id: 'img-1',
-    thumbnailData: '/demo-media/sunset-beach-thumb.jpg',
+    thumbnailData: `${base}/demo-media/sunset-beach-thumb.jpg`,
     filename: 'sunset-beach.jpg'
   };
   const clip = {
     id: 'vid-1',
-    thumbnailData: '/demo-media/promo-clip-poster.jpg',
+    thumbnailData: `${base}/demo-media/promo-clip-poster.jpg`,
     filename: 'promo-clip.mp4'
   };
 
@@ -87,10 +88,10 @@
         </button>
       </figcaption>
       {#if preview.kind === 'image'}
-        <img class="lightbox-media" src="/demo-media/sunset-beach.jpg" alt={preview.title} />
+        <img class="lightbox-media" src="{base}/demo-media/sunset-beach.jpg" alt={preview.title} />
       {:else}
         <!-- svelte-ignore a11y_media_has_caption -->
-        <video class="lightbox-media" src="/demo-media/promo-clip.mp4" controls autoplay loop
+        <video class="lightbox-media" src="{base}/demo-media/promo-clip.mp4" controls autoplay loop
         ></video>
       {/if}
     </figure>

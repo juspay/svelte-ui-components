@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
 
   let expanded = $state(false);
@@ -18,7 +19,7 @@
 <div class="demo-row">
   <ThinkingIndicator label="Working on your refund summary…">
     {#snippet avatar()}
-      <img class="assistant-avatar" src="/demo-media/assistant-avatar.png" alt="" />
+      <img class="assistant-avatar" src="{base}/demo-media/assistant-avatar.png" alt="" />
     {/snippet}
   </ThinkingIndicator>
 </div>
@@ -40,7 +41,7 @@
     expanded={false}
   >
     {#snippet avatar()}
-      <img class="assistant-avatar" src="/demo-media/assistant-avatar.png" alt="" />
+      <img class="assistant-avatar" src="{base}/demo-media/assistant-avatar.png" alt="" />
     {/snippet}
   </ThinkingIndicator>
 </div>

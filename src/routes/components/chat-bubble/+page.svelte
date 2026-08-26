@@ -2,6 +2,7 @@
   import Chat from '$lib/Chat/Chat.svelte';
   import Button from '$lib/Button/Button.svelte';
   import ChatBubble from '$lib/ChatBubble/ChatBubble.svelte';
+  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
   import { ChatController } from '$lib/Chat/controller.svelte';
   import type { ChatTransport } from '$lib/Chat/types';
 
@@ -30,6 +31,7 @@
   let open = $state(false);
   let expanded = $state(false);
   let pillOpen = $state(false);
+  let shellOpen = $state(false);
 </script>
 
 <div class="page-header">
@@ -101,6 +103,38 @@
   </div>
 </ChatBubble>
 
+<h2>In context — anchored inside a page corner, not the whole viewport</h2>
+<p class="demo-note">
+  The two launchers above are pinned to the real browser window — that genuinely is where a
+  production bubble lives. This shrinks the same idea into a static page mock so you can see it
+  sitting in a corner of a real layout: <code>classes</code> overrides the library's
+  <code>position: fixed</code> to <code>absolute</code>, anchoring the bubble to this frame instead
+  of the window.
+</p>
+<div class="mini-shell">
+  <div class="mini-shell-bar"></div>
+  <div class="mini-shell-content">
+    <div class="mini-shell-line"></div>
+    <div class="mini-shell-line short"></div>
+  </div>
+  <ChatBubble
+    bind:open={shellOpen}
+    classes="mini-shell-bubble"
+    label="Chat with us"
+    panelWidth={220}
+    panelHeight={160}
+    testId="chat-bubble-shell"
+  >
+    <div class="mini-shell-panel">
+      <ChatMessage
+        role="responder"
+        content="Hi! Ask me anything about your order."
+        testId="chat-bubble-shell-message"
+      />
+    </div>
+  </ChatBubble>
+</div>
+
 <style>
   /* Theme the reused Button to match the site's controls (vars inherit into it). */
   .expand-control {
@@ -159,5 +193,60 @@
 
   .pill-panel p {
     margin: 0;
+  }
+
+  .mini-shell {
+    position: relative;
+    overflow: hidden;
+    width: 320px;
+    height: 260px;
+    margin-bottom: 24px;
+    border-radius: 10px;
+    background: var(--doc-demo-bg);
+    box-shadow: 0 0 0 1px var(--doc-border);
+  }
+
+  .mini-shell-bar {
+    height: 28px;
+    background: var(--doc-btn-bg);
+    border-bottom: 1px solid var(--doc-border);
+  }
+
+  .mini-shell-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .mini-shell-line {
+    width: 80%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--doc-border-light);
+  }
+
+  .mini-shell-line.short {
+    width: 50%;
+  }
+
+  /* Escape hatch, same pattern as `.pill-launcher` above: this instance needs
+     the launcher docked inside the mock frame instead of the real viewport,
+     which only a plain `position` override (not a themeable var) can do. */
+  :global(.mini-shell-bubble) {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    --chat-bubble-size: 40px;
+    --chat-bubble-panel-max-width: 220px;
+    --chat-bubble-panel-max-height: 160px;
+  }
+
+  .mini-shell-panel {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    overflow: auto;
   }
 </style>

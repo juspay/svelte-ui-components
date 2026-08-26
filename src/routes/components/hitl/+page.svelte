@@ -21,6 +21,7 @@
 <h2>Live — 10s countdown auto-approves, interacting pauses siblings</h2>
 <div class="demo-row">
   <button
+    class="toggle-btn"
     onclick={() => {
       liveKey += 1;
       lastEvent = null;
@@ -42,7 +43,7 @@
       testId="demo-confirmation"
     />
   {/key}
-  <p>Last event: {lastEvent ? JSON.stringify(lastEvent) : '—'}</p>
+  <p class="state-display">Last event: {lastEvent ? JSON.stringify(lastEvent) : '—'}</p>
 </div>
 
 <h2>Explicit sections, no countdown, 90s auto-cancel</h2>
@@ -124,10 +125,15 @@
 
 <h2>Voice flow — mic muted while the card is open</h2>
 <p class="demo-note">
-  Simulated mic state: <strong>{micMuted ? 'muted' : 'live'}</strong>. The card offers the toggle
-  while open and restores the mic when a decision lands.
+  Simulated mic state: <strong>{micMuted ? 'muted' : 'live'}</strong>. HITL only reports mic state
+  through <code>isMicMuted</code>/<code>onMicToggle</code> — it renders no toggle affordance of its own,
+  so this page supplies one below. The card still auto-mutes on open and restores the mic on a decision,
+  via the same handler.
 </p>
 <div class="demo-row">
+  <button class="toggle-btn" onclick={() => (micMuted = !micMuted)}>
+    {micMuted ? 'Unmute mic' : 'Mute mic'}
+  </button>
   <HITL
     confirmationId="demo-mic"
     title="Start voice checkout"
@@ -142,3 +148,17 @@
     }}
   />
 </div>
+
+<style>
+  /* Button's secondary variant hardcodes its resting text ink (#3a4550,
+     near-black) with no dark counterpart. HITL's Cancel button uses that
+     variant, so on the dark hitl-background card surface its label nearly
+     disappears. HITL has no prop to theme just the cancel action, so this
+     reaches its internal wrapper div (stable across every HITL instance on
+     this page) rather than the button's own class. The Confirm button is
+     untouched — it never adopts this override, so its own dark-bg/white-text
+     pairing keeps working in both themes. */
+  :global(.hitl .cancel-button) {
+    --button-text-color: var(--doc-text-primary);
+  }
+</style>

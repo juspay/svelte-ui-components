@@ -103,7 +103,8 @@ export const componentNav: NavGroup[] = [
       { name: 'Loader', slug: 'loader' },
       { name: 'BrandLoader', slug: 'brand-loader' },
       { name: 'LoadingDots', slug: 'loading-dots' },
-      { name: 'Shimmer', slug: 'shimmer' }
+      { name: 'Shimmer', slug: 'shimmer' },
+      { name: 'SoundKit', slug: 'sound-kit' }
     ]
   },
   {
@@ -135,11 +136,14 @@ export const componentNav: NavGroup[] = [
       { name: 'SpeechToText', slug: 'speech-to-text' },
       { name: 'ChatHeader', slug: 'chat-header' },
       { name: 'ChatToolStatus', slug: 'chat-tool-status' },
+      { name: 'ToolCallLog', slug: 'tool-call-log' },
       { name: 'ChatSuggestions', slug: 'chat-suggestions' },
       { name: 'ChatBubble', slug: 'chat-bubble' },
       { name: 'HITL', slug: 'hitl' },
       { name: 'ThinkingIndicator', slug: 'thinking-indicator' },
-      { name: 'TypewriterText', slug: 'typewriter-text' }
+      { name: 'TaskList', slug: 'task-list' },
+      { name: 'TypewriterText', slug: 'typewriter-text' },
+      { name: 'Chat compositions', slug: 'chat-compositions' }
     ]
   },
   {

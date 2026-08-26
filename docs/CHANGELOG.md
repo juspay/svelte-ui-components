@@ -2,30 +2,41 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.129.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.129.1)
 
-Three follow-ups to the inline table search shipped in #456, none of which
-change what the component does in the happy path.
+Two seams that let a host app move its hand-rolled message list onto the
+library without losing its rendering or its scroll behaviour:
 
-- The inline Input had both `bind:value={searchTerm}` and
-`onInput={updateSearch}`, so `searchTerm` had two write paths. Only
-`updateSearch` performs the side effects (page reset, `onSearchChange`),
-which meant a write through the binding could move the term without them.
-The prop is now one-way and `onInput` is the single entry point, matching
-how the toolbar variant already works.
+1. body/messageBody snippet — ChatMessage gains an opt-in body snippet that
+replaces the rendered text/html while keeping the whole message chrome
+(role styling, avatar, header, attachments, copy/retry/feedback actions).
+ChatMessageList threads it per message as messageBody(message); Chat passes
+it through. The existing message snippet replaces the entire ChatMessage,
+forfeiting the chrome, and messageAttachments only appends below the
+bubble — neither serves rich bubble bodies.
 
-- Collapsing the search unmounted the focused input with no focus restore,
-dropping keyboard users to the document. `expandInlineSearch` already
-focuses the input on the way in; `clearSearch` now mirrors it on the way
-out, but only when it was actually collapsing an expanded inline search.
+2. pin-sender-turn scroll policy — the conversational-AI pattern: a new sender
+message pins to the TOP of the viewport with headroom reserved below
+(min-height on a new inner wrapper) so the reply streams in beneath the
+question instead of yanking the reader to the bottom. The trigger is the
+last SENDER id changing, because hosts append the question together with a
+streaming reply placeholder. pinHold keeps the reservation while the host's
+turn is busy (streaming, tool runs, confirmations — host semantics the
+library cannot know); flipping it false collapses the headroom so short
+replies leave no blank gap. scrollToBottom() is exported as an instance
+method, onscrollstate reports {atBottom, scrollable} for hosts with their
+own jump affordance, and jump={false} hides the built-in button. A
+ResizeObserver on the inner wrapper keeps the near-bottom stick honest when
+a stateful custom body grows without changing message count or content
+length (review finding). Custom message snippets must render one root
+element per message for row↔message mapping.
 
-- Escape now closes the inline search, which is the expected exit for an
-expand-in-place control. It was previously reachable only via the close
-button or by blurring while already empty.
+Docs rows for all touched components (body documented as Snippet | null per
+review), wc wrappers expose the new props, and the demo gains two live
+sections: a metric card inside a responder bubble with working feedback, and a
+pin-sender-turn conversation with a streamed reply.
 
-`collapseInlineSearchIfEmpty` also gains an expanded guard: collapsing can
-fire blur on the unmounting input, which re-entered `clearSearch` and sent a
-second `onSearchChange('')` on the server-search path.
+## [2.129.1](https://github.com/juspay/svelte-ui-components/compare/2.129.1..2.129.0) - 26 August 2026
 
 ## [2.129.0](https://github.com/juspay/svelte-ui-components/compare/2.129.0..2.128.1) - 26 August 2026
 

@@ -2,15 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.127.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.128.0)
 
-Ports the speech-to-text lifecycle that apps hand-roll around the non-standard
-SpeechRecognition API into a reusable runes controller: support detection, a
-one-shot host permission hook (native-shell mic bridges), start-with-retry
-through a re-init, interim/final transcript assembly seeded from the composer
-value, and a self-hiding error toast with per-error-code copy. Renders nothing;
-pairs with ChatComposer voice control. The recognition constructor is
-injectable, so tests and demos run the full lifecycle without a microphone.
+The demo site deploys under BASE_PATH=/svelte-ui-components; the chat demo
+pages referenced their media root-relative (/demo-media/…), which the
+prerender crawl rejects with '404 … does not begin with base', failing the
+Deploy to GitHub Pages workflow on release since the chat-primitives merge.
+Every reference now goes through {base} from $app/paths. Verified locally:
+BASE_PATH=/svelte-ui-components pnpm build prerenders clean.
+
+## [2.128.0](https://github.com/juspay/svelte-ui-components/compare/2.128.0..2.127.0) - 25 August 2026
 
 ## [2.127.0](https://github.com/juspay/svelte-ui-components/compare/2.127.0..2.126.0) - 25 August 2026
 

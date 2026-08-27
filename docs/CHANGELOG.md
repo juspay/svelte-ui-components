@@ -2,39 +2,25 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.129.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.130.0)
 
-Two seams that let a host app move its hand-rolled message list onto the
-library without losing its rendering or its scroll behaviour:
+v2.7.1's bundled neurolink has no litellm entry in DEFAULT_TIMEOUTS.providers,
+so every litellm review died at the 30s global fallback regardless of the
+configured 15m timeout; v3.0.4 carries the fix (input-compatible action
+interface — v4's breaking pr/branch/config/vcs-token interface is a separate
+migration).
 
-1. body/messageBody snippet — ChatMessage gains an opt-in body snippet that
-replaces the rendered text/html while keeping the whole message chrome
-(role styling, avatar, header, attachments, copy/retry/feedback actions).
-ChatMessageList threads it per message as messageBody(message); Chat passes
-it through. The existing message snippet replaces the entire ChatMessage,
-forfeiting the chrome, and messageAttachments only appends below the
-bubble — neither serves rich bubble bodies.
+v3.0.4 also rejects the legacy flat mcpServers config shape at startup
+('Legacy mcpServers config detected'), which is exactly how both prior runs of
+this PR's own review failed. Migrated yama.config.yaml accordingly:
+- mcpServers.github -&gt; mcpServers.servers.github as a full definition (http
+transport to the hosted GitHub MCP, Bearer ${YAMA_GITHUB_TOKEN} — the
+non-reserved env name the action forwards specifically for MCP config —
+roles/modes, and a blockedTools denylist of repo-mutating tools).
+- Dropped mcpServers.jira: Jira support was removed end-to-end in v3.
+- Pinned ai.explore.temperature: 0.1 explicitly, since v3 no longer defaults it.
 
-2. pin-sender-turn scroll policy — the conversational-AI pattern: a new sender
-message pins to the TOP of the viewport with headroom reserved below
-(min-height on a new inner wrapper) so the reply streams in beneath the
-question instead of yanking the reader to the bottom. The trigger is the
-last SENDER id changing, because hosts append the question together with a
-streaming reply placeholder. pinHold keeps the reservation while the host's
-turn is busy (streaming, tool runs, confirmations — host semantics the
-library cannot know); flipping it false collapses the headroom so short
-replies leave no blank gap. scrollToBottom() is exported as an instance
-method, onscrollstate reports {atBottom, scrollable} for hosts with their
-own jump affordance, and jump={false} hides the built-in button. A
-ResizeObserver on the inner wrapper keeps the near-bottom stick honest when
-a stateful custom body grows without changing message count or content
-length (review finding). Custom message snippets must render one root
-element per message for row↔message mapping.
-
-Docs rows for all touched components (body documented as Snippet | null per
-review), wc wrappers expose the new props, and the demo gains two live
-sections: a metric card inside a responder bubble with working feedback, and a
-pin-sender-turn conversation with a streamed reply.
+## [2.130.0](https://github.com/juspay/svelte-ui-components/compare/2.130.0..2.129.1) - 26 August 2026
 
 ## [2.129.1](https://github.com/juspay/svelte-ui-components/compare/2.129.1..2.129.0) - 26 August 2026
 

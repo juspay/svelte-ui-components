@@ -2,23 +2,43 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.130.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.130.1)
 
-v2.7.1's bundled neurolink has no litellm entry in DEFAULT_TIMEOUTS.providers,
-so every litellm review died at the 30s global fallback regardless of the
-configured 15m timeout; v3.0.4 carries the fix (input-compatible action
-interface — v4's breaking pr/branch/config/vcs-token interface is a separate
-migration).
+One shared motion language (320ms fade-up entrances staggered 120ms batch-relative,
+cubic-bezier(0.23,1,0.32,1), tokens with literal fallbacks, reduced-motion blocks,
+host-driven state everywhere), composed from the library's own primitives.
 
-v3.0.4 also rejects the legacy flat mcpServers config shape at startup
-('Legacy mcpServers config detected'), which is exactly how both prior runs of
-this PR's own review failed. Migrated yama.config.yaml accordingly:
-- mcpServers.github -&gt; mcpServers.servers.github as a full definition (http
-transport to the hosted GitHub MCP, Bearer ${YAMA_GITHUB_TOKEN} — the
-non-reserved env name the action forwards specifically for MCP config —
-roles/modes, and a blockedTools denylist of repo-mutating tools).
-- Dropped mcpServers.jira: Jira support was removed end-to-end in v3.
-- Pinned ai.explore.temperature: 0.1 explicitly, since v3 no longer defaults it.
+- ThinkingIndicator absorbs the reasoning trace as a first-class capability (the
+separate ThinkingTrace of earlier revisions is merged away — it never shipped):
+optional rows/kind (steps / reasoning / search / coding), a host-driven busy
+machine (auto-open, once-only onsettled, post-settle auto-collapse a user toggle
+permanently overrides), search query chip (Pill) + moreLabel, selectable coding
+rows with diff stats, trace body inert while collapsed. Composed from Accordion +
+Button + Loader + Pill. Review alignment fixes on the released shapes too: label
+fully flush left (the avatar slot only renders when an avatar is given or the
+label is live), chevron hugs the label at --thinking-indicator-arrow-gap, elapsed
+counter sits with the cluster instead of margin-left:auto, Button's 16px default
+content gap overridden via --thinking-indicator-header-gap. Fixed a latent
+elapsed-reset bug on {#if} branch swaps and added the missing reduced-motion block.
+- ToolCallLog: persistent chip log of a turn's tool calls; detail popovers now
+portal to document.body with Menu's positioning (they escape clipping ancestors —
+a dedicated demo section proves it), spinner is the library Loader, and the docs
+record why chips stay real &lt;button&gt;s (Pill's root is non-interactive).
+- TaskList: per-row status machine (pending / running / failed+retry / done);
+spinner is the library Loader, retry is the library Button in its compact form.
+- SoundKit (module): five synthesized Web Audio recipes, opt-in + persisted,
+capture-phase semantic click mapping with data-sound overrides. SSR-safe.
+- In-situ examples everywhere the pieces are actually used: Chat carries a full
+agent turn (trace -&gt; reply -&gt; tool log -&gt; work plan, suggestions above the
+composer), ChatMessage shows the settled turn in history, ChatSuggestions and
+ChatBubble gained in-context placements, chat-compositions proves the
+recommendation-card (Card + Gauge) pattern; Gauge % and secondary-Button inks
+fixed for dark; the HITL page audited and repaired for dark.
+- Docs-site demo shell themes every new piece in both themes (demo.css dark token
+sets; pages use the site's --doc-* tokens); docs/_index.json entries updated;
+sui-thinking-indicator web component registered (it never was).
+
+## [2.130.1](https://github.com/juspay/svelte-ui-components/compare/2.130.1..2.130.0) - 27 August 2026
 
 ## [2.130.0](https://github.com/juspay/svelte-ui-components/compare/2.130.0..2.129.1) - 26 August 2026
 

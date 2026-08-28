@@ -69,6 +69,7 @@ import './components/Chat.wc.svelte';
 import './components/ChatHeader.wc.svelte';
 import './components/ChatMessage.wc.svelte';
 import './components/ChatMessageList.wc.svelte';
+import './components/MarkdownText.wc.svelte';
 import './components/ChatComposer.wc.svelte';
 import './components/ChatSuggestions.wc.svelte';
 import './components/ChatToolStatus.wc.svelte';

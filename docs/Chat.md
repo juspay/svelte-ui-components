@@ -2,7 +2,7 @@
 
 A full chat surface that composes `ChatHeader`, `ChatMessageList`, `ChatSuggestions`, `ThinkingIndicator` (as its `chip` variant), and `ChatComposer` into one drop-in component. It is **fully controlled** — you pass `messages` and handle `onsend`; the component owns no transport, so it works with any backend. For a batteries-included experience, pair it with the decoupled **`ChatController`** (below), which manages message state, streaming, and an optional typewriter reveal while delegating the actual network call to a pluggable transport.
 
-Markdown is intentionally not bundled: pass pre-sanitized HTML on a message's `html` field (e.g. the output of your own `marked` + `DOMPurify`) and it renders in the bubble.
+Markdown is bundled: set a message's `markdown` field and it renders in the bubble through the library's sanitized-by-construction pipeline (see `MarkdownText`) — no external `marked` + `DOMPurify` step needed. Pre-sanitized HTML on the `html` field still works for content you have already rendered and trust.
 
 ## Usage (controlled)
 

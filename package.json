@@ -54,11 +54,15 @@
   ],
   "peerDependencies": {
     "lottie-web": ">=5.0.0",
+    "marked": "^18.0.0",
     "svelte": "^5.41.2",
     "type-decoder": "^2.1.0"
   },
   "peerDependenciesMeta": {
     "lottie-web": {
+      "optional": true
+    },
+    "marked": {
       "optional": true
     }
   },

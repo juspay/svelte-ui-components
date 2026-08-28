@@ -9,6 +9,11 @@ export type ChatMessageData = {
   role: ChatRole;
   content: string;
   html?: string;
+  /**
+   * Markdown source rendered through the library's sanitized pipeline (see
+   * MarkdownText). Wins over `html` and `content` in the bubble.
+   */
+  markdown?: string;
   streaming?: boolean;
   status?: ChatMessageStatus;
   timestamp?: number;

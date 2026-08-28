@@ -301,7 +301,7 @@
   },
   {
     "name": "Chat",
-    "description": "A full chat surface composing ChatHeader, ChatMessageList, ChatSuggestions, ChatToolStatus, and ChatComposer. Fully controlled (pass `messages`, handle `onsend`) with no baked-in transport. Opt-in features: header image, stop-generation, voice mic, file attachments, prompt suggestions, smart autoscroll, and per-message copy/retry/feedback. Render your own UI below any bubble with the `messageAttachments` snippet. Pair with the decoupled `ChatController` runes class — message state, streaming, typewriter reveal, retry, and session threading — which delegates the network call to a pluggable `ChatTransport` (adapt SSE, WebSocket, or polling). Markdown is not bundled — pass pre-sanitized HTML on a message's `html` field."
+    "description": "A full chat surface composing ChatHeader, ChatMessageList, ChatSuggestions, ChatToolStatus, and ChatComposer. Fully controlled (pass `messages`, handle `onsend`) with no baked-in transport. Opt-in features: header image, stop-generation, voice mic, file attachments, prompt suggestions, smart autoscroll, and per-message copy/retry/feedback. Render your own UI below any bubble with the `messageAttachments` snippet. Pair with the decoupled `ChatController` runes class — message state, streaming, typewriter reveal, retry, and session threading — which delegates the network call to a pluggable `ChatTransport` (adapt SSE, WebSocket, or polling). Markdown is bundled — set a message's `markdown` field and it renders through the sanitized pipeline (see MarkdownText); pre-sanitized HTML on `html` still works."
   },
   {
     "name": "ChatHeader",
@@ -309,11 +309,15 @@
   },
   {
     "name": "ChatMessage",
-    "description": "A single chat bubble. The primitive is the two-party `role`: `sender` (right, accent bubble) or `responder` (left). `user`/`assistant`/`system` and any custom string are recognized extensions that map onto a party (sender/user → sender; everything else → responder), so LLM message arrays drop in unchanged; the exported `partyOf(role)` resolves a role to its party. Renders pre-sanitized `html` (e.g. rendered markdown) or plain `content`, shows a typing indicator (LoadingDots) while streaming with no content, and accepts avatar, header, and attachments snippets. Opt-in hover actions on responder messages: built-in copy (with checkmark feedback), retry (onretry), and 👍/👎 (onfeedback). Basic markdown elements are styled via :global."
+    "description": "A single chat bubble. The primitive is the two-party `role`: `sender` (right, accent bubble) or `responder` (left). `user`/`assistant`/`system` and any custom string are recognized extensions that map onto a party (sender/user → sender; everything else → responder), so LLM message arrays drop in unchanged; the exported `partyOf(role)` resolves a role to its party. Renders `markdown` through the library's sanitized-by-construction pipeline (see MarkdownText), else pre-sanitized `html`, else plain `content`; shows a typing indicator (LoadingDots) while streaming with no content, and accepts avatar, header, and attachments snippets. Opt-in hover actions on responder messages: built-in copy (with checkmark feedback), retry (onretry), and 👍/👎 (onfeedback). Basic markdown elements are styled via :global."
   },
   {
     "name": "ChatMessageList",
     "description": "A scrollable conversation container with smart auto-scroll: it sticks to the bottom only while you're already near it, and shows a jump-to-latest button when you've scrolled up. Renders each message with ChatMessage by default, adds your own UI below any bubble via the per-message `messageAttachments` snippet, or replaces a message entirely with the `message` snippet, shows an `empty` snippet when there are no messages, and forwards opt-in message actions (allowCopy, onretry, onfeedback). Uses a Svelte action (no effects), respecting reduced-motion."
+  },
+  {
+    "name": "MarkdownText",
+    "description": "Renders markdown as HTML through a sanitized-by-construction pipeline built for chat/agent content: raw HTML (block and inline) is escaped to visible text, and link/image URLs keep their href only on an allow-listed protocol (http/https/mailto/tel for links, http/https for images; relative URLs pass). GFM enabled; optional `breaks` mode renders single newlines as <br>. Pure string transform — SSR-identical, no DOM. The same pipeline is exported as `renderMarkdown(markdown, {breaks?})` and powers ChatMessage's `markdown` prop."
   },
   {
     "name": "ChatComposer",

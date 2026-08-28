@@ -300,6 +300,7 @@
           role={msg.role}
           content={msg.content}
           html={msg.html}
+          markdown={msg.markdown}
           body={typeof messageBody === 'function' ? bodyFor : null}
           streaming={msg.streaming}
           status={msg.status}

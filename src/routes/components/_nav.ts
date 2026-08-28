@@ -148,6 +148,7 @@ export const componentNav: NavGroup[] = [
       { name: 'ThinkingIndicator', slug: 'thinking-indicator' },
       { name: 'TaskList', slug: 'task-list' },
       { name: 'TypewriterText', slug: 'typewriter-text' },
+      { name: 'MarkdownText', slug: 'markdown-text' },
       { name: 'Chat compositions', slug: 'chat-compositions' }
     ]
   },

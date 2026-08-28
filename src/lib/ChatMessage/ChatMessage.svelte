@@ -6,6 +6,7 @@
   import retrySvg from '$lib/assets/retry.svg?raw';
   import thumbUpSvg from '$lib/assets/thumb-up.svg?raw';
   import thumbDownSvg from '$lib/assets/thumb-down.svg?raw';
+  import { onDestroy, onMount } from 'svelte';
   import { partyOf } from '../Chat/roles';
   import type { ChatMessageProperties } from './properties';
 
@@ -13,6 +14,7 @@
     role,
     content = '',
     html,
+    markdown,
     body,
     streaming = false,
     status,
@@ -37,7 +39,34 @@
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
-  let hasHtml = $derived(typeof html === 'string' && html.length > 0);
+  onDestroy(() => {
+    if (copyResetTimer !== null) {
+      clearTimeout(copyResetTimer);
+    }
+  });
+
+  let hasMarkdown = $derived(typeof markdown === 'string' && markdown.length > 0);
+
+  /* The pipeline loads dynamically at mount (the LottiePlayer pattern) so
+     `marked` — a peer dependency — is only pulled in at runtime, never during
+     SSR, and rendering `markdown` degrades to the `html`/`content` fallback
+     until the module resolves or when the peer is absent. */
+  let renderMarkdownFn = $state<((source: string) => string) | null>(null);
+
+  onMount(() => {
+    void import('../MarkdownText/markdown')
+      .then((module) => {
+        renderMarkdownFn = module.renderMarkdown;
+      })
+      .catch(() => {
+        renderMarkdownFn = null;
+      });
+  });
+
+  let effectiveHtml = $derived(
+    hasMarkdown && renderMarkdownFn !== null ? renderMarkdownFn(markdown ?? '') : html
+  );
+  let hasHtml = $derived(typeof effectiveHtml === 'string' && effectiveHtml.length > 0);
   let hasBody = $derived(typeof body === 'function');
   let hasContent = $derived(hasBody || hasHtml || content.length > 0);
   let showTyping = $derived(streaming && !hasContent);
@@ -55,7 +84,14 @@
   }
 
   async function copy(): Promise<void> {
-    const text = content.length > 0 ? content : typeof html === 'string' ? htmlToText(html) : '';
+    const text =
+      content.length > 0
+        ? content
+        : hasMarkdown
+          ? (markdown ?? '')
+          : typeof html === 'string'
+            ? htmlToText(html)
+            : '';
     if (typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function') {
       try {
         await navigator.clipboard.writeText(text);
@@ -97,7 +133,7 @@
           <div class="body">{@render body?.()}</div>
         {:else if hasHtml}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <div class="body">{@html html}</div>
+          <div class="body">{@html effectiveHtml}</div>
         {:else if content.length > 0}
           <div class="body text">{content}</div>
         {/if}
@@ -330,5 +366,80 @@
   .body :global(pre code) {
     background: transparent;
     padding: 0;
+  }
+
+  .body :global(ul),
+  .body :global(ol) {
+    margin: var(--chat-message-list-margin, 0.4em 0);
+    padding-left: var(--chat-message-list-padding, 1.4em);
+  }
+
+  .body :global(li) {
+    margin: 0.2em 0;
+  }
+
+  .body :global(h1),
+  .body :global(h2),
+  .body :global(h3),
+  .body :global(h4),
+  .body :global(h5),
+  .body :global(h6) {
+    margin: var(--chat-message-heading-margin, 0.8em 0 0.4em 0);
+    line-height: 1.3;
+  }
+
+  .body :global(h1) {
+    font-size: 1.35em;
+  }
+
+  .body :global(h2) {
+    font-size: 1.2em;
+  }
+
+  .body :global(h3) {
+    font-size: 1.1em;
+  }
+
+  .body :global(h4),
+  .body :global(h5),
+  .body :global(h6) {
+    font-size: 1em;
+  }
+
+  .body :global(blockquote) {
+    margin: 0.5em 0;
+    padding: 2px 0 2px 12px;
+    border-left: 3px solid var(--chat-message-blockquote-border-color, rgba(0, 0, 0, 0.15));
+    opacity: var(--chat-message-blockquote-opacity, 0.85);
+  }
+
+  .body :global(table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0.5em 0;
+  }
+
+  .body :global(th),
+  .body :global(td) {
+    padding: 5px 10px;
+    border: 1px solid var(--chat-message-table-border-color, rgba(0, 0, 0, 0.12));
+    text-align: left;
+  }
+
+  .body :global(th) {
+    background: var(--chat-message-table-header-background, rgba(0, 0, 0, 0.04));
+  }
+
+  .body :global(img) {
+    max-width: 100%;
+    border-radius: var(--chat-message-image-border-radius, 8px);
+  }
+
+  .body :global(hr) {
+    border: none;
+    border-top: 1px solid var(--chat-message-hr-color, rgba(0, 0, 0, 0.12));
+    margin: 0.8em 0;
   }
 </style>

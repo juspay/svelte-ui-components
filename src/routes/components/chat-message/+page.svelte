@@ -16,6 +16,9 @@
     { primary: 'Ranked by rating', secondary: '4★ and up' }
   ];
 
+  const markdownReply =
+    'Same thing from **markdown** — parsed and sanitized internally:\n\n- Wireless earbuds\n- A scented candle set';
+
   const settledToolChips: ToolCallChip[] = [
     { label: 'Fetch', meta: 'catalog.json', mono: true, state: 'done' },
     { label: 'Run', meta: 'price-filter', mono: true, state: 'done' }
@@ -33,6 +36,7 @@
     role="responder"
     html="<p>Sure! Here are a few <strong>great picks</strong> under $50:</p><ul><li>Wireless earbuds</li><li>A scented candle set</li></ul>"
   />
+  <ChatMessage role="responder" markdown={markdownReply} testId="chat-message-markdown" />
   <ChatMessage role="responder" content="" streaming={true} />
 </div>
 

@@ -15,6 +15,18 @@ export type OptionalChatMessageProperties = {
   content?: string;
   html?: string;
   /**
+   * Markdown source rendered through the library's sanitized-by-construction
+   * pipeline (raw HTML is escaped; unsafe link/image protocols are stripped) —
+   * unlike `html`, which must arrive pre-sanitized. Non-empty `markdown` takes
+   * precedence over `html` and `content`; a `body` snippet still wins. An
+   * empty string is treated as absent and falls through, exactly like `html`.
+   * Also serves as the copy text when `content` is empty. The pipeline loads
+   * on demand, so the `marked` peer is only needed when this prop is used;
+   * during SSR and while loading, `html`/`content` render as the fallback
+   * (for server-rendered markdown use `MarkdownText` or `renderMarkdown`).
+   */
+  markdown?: string;
+  /**
    * Replaces the rendered bubble body with arbitrary markup while keeping the
    * message chrome (role styling, avatar, header, attachments, copy/retry/
    * feedback actions). Keep `content` populated with the text form so the copy

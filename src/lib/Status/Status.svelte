@@ -11,6 +11,8 @@
     classes,
     onbuttonClick,
     icon,
+    descriptionSnippet,
+    children,
     testId
   }: StatusProperties = $props();
 </script>
@@ -30,11 +32,18 @@
     </div>
     <div class="status-text">{statusText}</div>
     <div class="status-description">
-      <!-- eslint-disable-next-line -->
-      {@html statusDescription}
+      {#if typeof descriptionSnippet === 'function'}
+        {@render descriptionSnippet()}
+      {:else}
+        <!-- eslint-disable-next-line -->
+        {@html statusDescription}
+      {/if}
     </div>
     {#if typeof buttonProperties === 'object'}
       <Button {...buttonProperties} onclick={onbuttonClick} />
+    {/if}
+    {#if typeof children === 'function'}
+      {@render children()}
     {/if}
   </div>
 </div>
@@ -75,9 +84,9 @@
   }
   @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
     .order-status {
-      background-color: rgba(255, 255, 255, 0.6);
-      -webkit-backdrop-filter: blur(60px);
-      backdrop-filter: blur(60px);
+      background-color: var(--status-panel-background, rgba(255, 255, 255, 0.6));
+      -webkit-backdrop-filter: var(--status-panel-backdrop-filter, blur(60px));
+      backdrop-filter: var(--status-panel-backdrop-filter, blur(60px));
     }
   }
 </style>

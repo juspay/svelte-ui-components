@@ -1,6 +1,9 @@
 # Toolbar
 
-A fixed-position header bar with a back button (left), center title text, and customizable left/center/right content areas via Snippet slots. The `additionalContent` snippet renders a second row below the main toolbar content. If `leftContent` snippet is provided, it replaces the default back button. If `centerContent` snippet is provided, it replaces the `text` prop.
+A header bar with a back button (left), center title text, and customizable left/center/right content areas via Snippet slots. It defaults to a **fixed** chrome bar, but every positioning and row-layout axis is a CSS
+variable, so the same component also serves an **in-flow page header** — see "Page-header
+shape" below. The `additionalContent` snippet renders a second row below the main toolbar
+content. If `leftContent` snippet is provided, it replaces the default back button. If `centerContent` snippet is provided, it replaces the `text` prop.
 
 ## Usage
 
@@ -115,3 +118,68 @@ The library Toolbar intentionally does not offer a `subheading` prop — string 
 | `center-content`     | `centerContent`     | Content in the center of the toolbar.          |
 | `right-content`      | `rightContent`      | Content on the right side of the toolbar.      |
 | `additional-content` | `additionalContent` | Additional content below the main toolbar row. |
+
+## Page-header shape
+
+The defaults describe a fixed chrome bar. The same component renders an in-flow page header
+with **no additional props** — only CSS variables and the snippets it already has:
+
+```svelte
+<Toolbar showBackButton onbackClick={goBack}>
+  {#snippet centerContent()}
+    <div class="heading-block">
+      <h2>Shipping profiles</h2>
+      <p>Set delivery rates and zones for this store</p>
+    </div>
+  {/snippet}
+  {#snippet rightContent()}
+    <div class="actions">…</div>
+  {/snippet}
+</Toolbar>
+```
+
+```css
+.page-header {
+  --toolbar-position: relative;
+  --toolbar-width: 100%;
+  --toolbar-background: transparent;
+  --toolbar-box-shadow: none;
+
+  /* Top-align the row so the back control sits on the title's first line rather than
+     centred against the whole two-line block. */
+  --toolbar-content-align-items: flex-start;
+  --toolbar-content-column-gap: 16px;
+
+  /* The title side yields and ellipsizes; the actions stay whole. */
+  --toolbar-center-flex: 1 1 auto;
+  --toolbar-center-min-width: 0;
+  --toolbar-right-flex-shrink: 0;
+}
+```
+
+Note what is **not** here. There is no `subheading`, `headingLevel` or `headingClasses` prop:
+the title block is the consumer's own markup in `centerContent`, so it keeps its semantic tags
+and its design system's type classes without the library restating them. That follows the same
+reasoning as "Subheading (consumer recipe)" above — presentational structure belongs in a
+Snippet, and how a title *looks* is reachable with ordinary CSS on the consumer's own elements.
+
+Responsive behaviour is the consumer's too. The component ships **no media queries** — it
+exposes the mechanism and the app picks the breakpoints, because "wrap the actions below 1024px"
+and "hide the subheading on a phone" are design decisions the library cannot make for everyone.
+
+### Additional CSS variables
+
+| Variable                                    | Default | Description                                                                                           |
+| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `--toolbar-content-align-items`             | `center` | Cross-axis alignment of the main row. `flex-start` top-aligns a title that has a subline under it.   |
+| `--toolbar-content-min-height`              | `auto`  | Floor for the main row's height — a fixed-height bar sets it here, not on the outer column.           |
+| `--toolbar-content-flex-wrap`               | `nowrap` | Lets the action side drop to its own line on a narrow viewport.                                      |
+| `--toolbar-content-row-gap` / `-column-gap` | `0`     | Gaps between the row's regions, and between wrapped lines.                                            |
+| `--toolbar-center-flex`                     | `1`     | `1 1 auto` lets the centre region grow from its CONTENT width, so a deficit is shared with the actions rather than collapsing the title. |
+| `--toolbar-center-min-width`                | `auto`  | Set `0` so a long title can shrink and ellipsize.                                                      |
+| `--toolbar-right-flex-shrink`               | `1`     | Set `0` so actions never get crushed by a long title.                                                  |
+| `--toolbar-right-min-width` / `-max-width` / `-width` | `auto` / `none` / `auto` | Action-region sizing as a flex item. Its INNER layout stays the snippet's own markup. |
+| `--toolbar-right-display`                   | `block` | Set `flex` only if you want the region itself to be the flex container.                                |
+
+Every default above resolves to the value the component already rendered, so adding them
+changes nothing for an existing consumer.

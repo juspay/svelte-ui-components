@@ -72,7 +72,7 @@
   .content {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: var(--toolbar-content-align-items, center);
     padding: var(--toolbar-content-padding, 0px);
     justify-content: var(--toolbar-justify-content, normal);
     visibility: var(--toolbar-content-visibility, visible);
@@ -83,8 +83,15 @@
        defaults reproduce the previous rendering exactly. */
     width: var(--toolbar-content-width, auto);
     height: var(--toolbar-content-height, auto);
+    min-height: var(--toolbar-content-min-height, auto);
     max-width: var(--toolbar-content-max-width, none);
     margin: var(--toolbar-content-margin, 0);
+
+    /* Row wrapping and gaps. An in-flow page header lets its action side drop to its own
+       line on a narrow viewport; the fixed bar never wraps, which is the default. */
+    flex-wrap: var(--toolbar-content-flex-wrap, nowrap);
+    row-gap: var(--toolbar-content-row-gap, 0);
+    column-gap: var(--toolbar-content-column-gap, 0);
   }
 
   .additional-content {
@@ -118,7 +125,22 @@
 
   .center-content {
     display: flex;
-    flex: 1;
+    /* `1 1 auto` rather than the default `1` (`1 1 0%`) lets a title region grow from its
+       CONTENT width, so a row deficit is shared with the action side instead of collapsing
+       the title to nothing. `min-width: 0` is what actually permits the shrink. */
+    flex: var(--toolbar-center-flex, 1);
+    min-width: var(--toolbar-center-min-width, auto);
+  }
+
+  /* The action region as a flex ITEM of the row. Its inner layout stays the consumer's —
+     the snippet's own markup — so there is no gap/justify/align token here. Every default
+     below is the property's initial value, i.e. what a bare div already rendered. */
+  .right-content {
+    display: var(--toolbar-right-display, block);
+    flex-shrink: var(--toolbar-right-flex-shrink, 1);
+    min-width: var(--toolbar-right-min-width, auto);
+    max-width: var(--toolbar-right-max-width, none);
+    width: var(--toolbar-right-width, auto);
   }
 
   .text {

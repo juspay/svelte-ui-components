@@ -2,41 +2,80 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.130.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.131.0)
 
-One shared motion language (320ms fade-up entrances staggered 120ms batch-relative,
-cubic-bezier(0.23,1,0.32,1), tokens with literal fallbacks, reduced-motion blocks,
-host-driven state everywhere), composed from the library's own primitives.
+Status could not be adopted by an inline consumer. Three separate reasons, all
+found while migrating Lighthouse's own local Status -- four onboarding and
+webhook screens -- onto this one. Each fix is additive and defaults to the
+previous behaviour.
 
-- ThinkingIndicator absorbs the reasoning trace as a first-class capability (the
-separate ThinkingTrace of earlier revisions is merged away — it never shipped):
-optional rows/kind (steps / reasoning / search / coding), a host-driven busy
-machine (auto-open, once-only onsettled, post-settle auto-collapse a user toggle
-permanently overrides), search query chip (Pill) + moreLabel, selectable coding
-rows with diff stats, trace body inert while collapsed. Composed from Accordion +
-Button + Loader + Pill. Review alignment fixes on the released shapes too: label
-fully flush left (the avatar slot only renders when an avatar is given or the
-label is live), chevron hugs the label at --thinking-indicator-arrow-gap, elapsed
-counter sits with the cluster instead of margin-left:auto, Button's 16px default
-content gap overridden via --thinking-indicator-header-gap. Fixed a latent
-elapsed-reset bug on {#if} branch swaps and added the missing reduced-motion block.
-- ToolCallLog: persistent chip log of a turn's tool calls; detail popovers now
-portal to document.body with Menu's positioning (they escape clipping ancestors —
-a dedicated demo section proves it), spinner is the library Loader, and the docs
-record why chips stay real &lt;button&gt;s (Pill's root is non-interactive).
-- TaskList: per-row status machine (pending / running / failed+retry / done);
-spinner is the library Loader, retry is the library Button in its compact form.
-- SoundKit (module): five synthesized Web Audio recipes, opt-in + persisted,
-capture-phase semantic click mapping with data-sound overrides. SSR-safe.
-- In-situ examples everywhere the pieces are actually used: Chat carries a full
-agent turn (trace -&gt; reply -&gt; tool log -&gt; work plan, suggestions above the
-composer), ChatMessage shows the settled turn in history, ChatSuggestions and
-ChatBubble gained in-context placements, chat-compositions proves the
-recommendation-card (Card + Gauge) pattern; Gauge % and secondary-Button inks
-fixed for dark; the HITL page audited and repaired for dark.
-- Docs-site demo shell themes every new piece in both themes (demo.css dark token
-sets; pages use the site's --doc-* tokens); docs/_index.json entries updated;
-sui-thinking-indicator web component registered (it never was).
+1. descriptionSnippet
+
+`statusDescription` is interpolated with `{@html}`. That is right for a caller
+passing its own trusted markup, and wrong for a message that arrives from an
+API, a user, or anywhere the caller does not control -- and there was no other
+option, so such a caller either accepted the sink or did not use the component.
+One of the four call sites assigns `stepMessage = action.message` straight from
+an API response. The snippet renders through ordinary Svelte interpolation,
+which escapes.
+
+2. children
+
+`.status-description` carries the component's own horizontal padding and bottom
+margin, so anything rendered through descriptionSnippet inherits a text box's
+geometry. That is right for the message and wrong for a control. There was
+nowhere else to put one: `buttonProperties` takes props, not content. `children`
+renders below the description, outside that box, where the button already does.
+
+3. --status-panel-background and --status-panel-backdrop-filter
+
+Status is styled as a standalone result screen: 100vh tall, with a translucent
+white frosted panel. `min-height` was already variable-backed; the panel was
+not, sitting behind an @supports block on an inner element that `classes` cannot
+reach. Rendered inside a page with its own heading and following content, the
+height pushes siblings below the fold and the white panel does not survive a
+dark theme -- and neither could be overridden from outside.
+
+All three mirror EmptyState, which already carries a description string beside a
+descriptionSnippet override and a `children` action area. The shapes are the
+library's own, not new conventions.
+
+Verified, with a negative control per behaviour:
+
+- 9 specs across four files. The description pair hands two demo instances the
+SAME string: one asserts the {@html} path still parses it as markup, the
+other that the snippet path renders it as text. Either alone would pass
+against a broken implementation.
+- Disabling the snippet branch fails exactly the escape assertion, line 29,
+and only that one.
+- Reverting the panel variables to their literals fails exactly the neutralise
+assertion -- rgba(255,255,255,0.6) received where rgba(0,0,0,0) was expected
+-- while "defaults keep the full-screen panel exactly as it was" STAYS
+GREEN. That is the backwards-compatibility proof: the defaults render
+identically to the code they replaced.
+- The children test asserts containment, not presence: content must be inside
+.order-status and NOT inside .status-description. Asserting only that it
+appears would pass with it nested in the wrong parent, which is the entire
+bug being fixed.
+- Both controls restored byte-identical and re-run green.
+- svelte-check 651 files, 0 errors. prettier --check and eslint clean.
+
+Measured against the real consumer, by computed style rather than screenshot --
+the route transitions on a timer, and the same build captured twice differs by
+1.273%, so a pixel diff cannot separate the change from the route's own noise.
+After adoption: min-height 0px, panel background rgba(0,0,0,0), backdrop-filter
+none, and the message colour rgb(82,82,82) -- byte-identical to what the
+pre-migration markup inherited.
+
+The web-component wrapper is unchanged: snippets do not cross the custom-element
+boundary, which is why the existing `icon` snippet is absent there too.
+
+docs/Status.md gains a Snippets section -- which also documents the pre-existing
+`icon` snippet, previously undocumented -- the two new CSS variables, the
+`testId` prop, and worked examples for the untrusted description, the
+description-vs-action split, and inline embedding.
+
+## [2.131.0](https://github.com/juspay/svelte-ui-components/compare/2.131.0..2.130.1) - 27 August 2026
 
 ## [2.130.1](https://github.com/juspay/svelte-ui-components/compare/2.130.1..2.130.0) - 27 August 2026
 

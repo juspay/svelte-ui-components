@@ -36,6 +36,7 @@ A free-text tag/chip input composed from `Input` and `Pill`. The user types into
 | Prop        | Type       | Required | Default        | Description                                                                                                        |
 | ----------- | ---------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | values      | `string[]` | Yes      | `[]`            | Bindable. The committed chips, in insertion order. Replaced with a new array by add/dismiss (`values` is reassigned, not mutated in place -- do not rely on array reference identity); also settable externally.        |
+| ariaLabel   | `string`   | No       | `-`             | Accessible name for the draft field; ChipInput renders no visible label of its own.                                  |
 | placeholder | `string`   | No       | `'Add value…'`  | Placeholder text shown in the empty draft field.                                                                     |
 | disabled    | `boolean`  | No       | `false`         | Disables the draft field and hides each chip's dismiss control (chips remain visible, but cannot be added or removed). |
 | testId      | `string`   | No       | `-`             | Value for the `data-pw`/native `testid` attributes on the container. Chips get `` `${testId}-chip` `` and the draft field gets `` `${testId}-input` ``. |
@@ -88,3 +89,30 @@ Override these custom properties to theme the component.
 
 - `Input` -- renders the draft text field that a user types a new chip's text into.
 - `Pill` -- renders each committed chip, in `dismissible` mode (except while `disabled`).
+
+### Naming the control
+
+ChipInput draws no label of its own, so a caption rendered beside it is not associated with the
+field -- it reads on screen and is absent from the accessibility tree. Give the control the same
+words:
+
+```svelte
+<span id="order-tags-caption">Blocked order tags</span>
+<ChipInput bind:values={orderTags} ariaLabel="Blocked order tags" testId="order-tags" />
+```
+
+Prefer the caption's own wording over a different phrase: when the visible label and the
+accessible name disagree, speech-input users cannot activate the control by saying what they
+see (WCAG 2.5.3, Label in Name).
+
+## Web component
+
+None. Like `SplitInput` and `FileDropzoneTrigger`, ChipInput is a simple presentational component
+consumed directly from Svelte; there is no `sui-chip-input` custom element and it is not
+registered in `src/wc/index.ts`.
+
+This is deliberate, and it is why `ariaLabel` has no kebab-case attribute mapping: there is no
+custom element for an attribute to map onto. Adding one would newly expose ChipInput as a web
+component rather than restore parity with an existing element. If ChipInput should be exposed,
+that is its own change — a new tag, a new shadow root, and the attribute-casing tests the other
+wrappers carry.

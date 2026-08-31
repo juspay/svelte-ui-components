@@ -11,6 +11,8 @@
   let scheduleTime = $state('09:30');
   let configJson = $state('{ "enabled": true }');
   let readonlySnapshot = $state('{"captured":"selector"}');
+  let invalidEmail = $state('not-an-email');
+  let helperOnly = $state('');
   let pastedInto = $state('');
   let pasteCount = $state(0);
 </script>
@@ -18,6 +20,38 @@
 <div class="page-header">
   <span class="category-badge">Form Controls</span>
   <h1>Input</h1>
+</div>
+
+<h3>Validation errors are announced</h3>
+<p>
+  When a field is invalid it carries <code>aria-invalid</code> and points at its message through
+  <code>aria-describedby</code>; the message itself is a <code>role="alert"</code> live region, so it
+  is spoken when it appears rather than only drawn on screen.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={invalidEmail}
+    label="Work email"
+    dataType="text"
+    forceError
+    onErrorMessage="Enter a valid email address"
+    infoMessage="Use your company address, not a personal one."
+    testId="input-announced-error"
+  />
+</div>
+
+<h3>Helper text is associated too</h3>
+<p>
+  <code>infoMessage</code> is part of the field's description, so it is referenced by
+  <code>aria-describedby</code> even when the field is valid.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={helperOnly}
+    label="Display name"
+    infoMessage="Shown to your teammates."
+    testId="input-helper-only"
+  />
 </div>
 
 <h3>Basic</h3>

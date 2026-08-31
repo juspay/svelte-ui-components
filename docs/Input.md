@@ -202,3 +202,28 @@ Tag: `<sui-input>`
 ```html
 <sui-input placeholder="Enter email" data-type="email" label="Email"></sui-input>
 ```
+
+### Validation errors are announced
+
+When a field is invalid, `Input` marks it `aria-invalid="true"` and links it to its message with
+`aria-describedby`; the message element is a `role="alert"` live region, so assistive technology
+speaks it as it appears instead of leaving it as pixels on screen. Both attributes are absent
+while the field is valid, so a healthy form does not announce every field as broken.
+
+```svelte
+<Input
+  bind:value={email}
+  label="Work email"
+  forceError={serverRejected}
+  onErrorMessage="Enter a valid email address"
+/>
+```
+
+`forceError` drives this from server-side or runtime validation; `validationPattern` drives it
+from the field's own contents. Either route produces the same announced message.
+
+`infoMessage` is treated the same way: helper text is part of the field's description, so it
+is referenced by `aria-describedby` whether or not the field is currently invalid. When both
+are shown the field references them in reading order — the error first, then the advice —
+since `aria-describedby` takes a space-separated id list and assistive technology announces
+them in the order given.

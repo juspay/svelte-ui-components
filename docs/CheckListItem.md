@@ -18,7 +18,7 @@ A checkbox list item with a text label. When clicked, toggles the `checked` stat
 | -------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | text     | `string`  | Yes      | `-`         | The label text for the checkbox item.                                                                                                                                  |
 | checked  | `boolean` | No       | `false`     | Bindable. The current checked state of the checkbox.                                                                                                                   |
-| disabled | `boolean` | No       | `false`     | When true, the checkbox item is non-interactive and visually dimmed.                                                                                                   |
+| disabled | `boolean` | No       | `false`     | When true, the checkbox control is non-interactive and visually dimmed while label content remains fully opaque.                                                       |
 | testId   | `string`  | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
 | classes  | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
@@ -40,18 +40,18 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                                | Default  | CSS Property | Description                                  |
-| --------------------------------------- | -------- | ------------ | -------------------------------------------- |
-| `--check-list-item-display`             | `flex`   | display      | Display mode of the checkbox item container. |
-| `--check-list-item-align-items`         | `center` | align-items  | Vertical alignment of checkbox and label.    |
-| `--check-list-item-width`               | `100%`   | width        | Width of the checkbox item.                  |
-| `--check-list-item-padding`             | `-`      | padding      | Inner padding of the checkbox item.          |
-| `--check-list-item-gap`                 | `8px`    | gap          | Gap between the checkbox and the label.      |
-| `--check-list-item-disabled-opacity`    | `0.4`    | opacity      | Opacity of the entire item when disabled.    |
-| `--check-list-item-text-size`           | `14px`   | font-size    | Font size of the label text.                 |
-| `--check-list-item-text-color`          | `-`      | color        | Color of the label text when unchecked.      |
-| `--check-list-item-checked-text-color`  | `-`      | color        | Color of the label text when checked.        |
-| `--check-list-item-checked-font-weight` | `-`      | font-weight  | Font weight of the label text when checked.  |
+| Variable                                | Default  | CSS Property | Description                                    |
+| --------------------------------------- | -------- | ------------ | ---------------------------------------------- |
+| `--check-list-item-display`             | `flex`   | display      | Display mode of the checkbox item container.   |
+| `--check-list-item-align-items`         | `center` | align-items  | Vertical alignment of checkbox and label.      |
+| `--check-list-item-width`               | `100%`   | width        | Width of the checkbox item.                    |
+| `--check-list-item-padding`             | `-`      | padding      | Inner padding of the checkbox item.            |
+| `--check-list-item-gap`                 | `8px`    | gap          | Gap between the checkbox and the label.        |
+| `--check-list-item-disabled-opacity`    | `0.4`    | opacity      | Opacity of the checkbox control when disabled. |
+| `--check-list-item-text-size`           | `14px`   | font-size    | Font size of the label text.                   |
+| `--check-list-item-text-color`          | `-`      | color        | Color of the label text when unchecked.        |
+| `--check-list-item-checked-text-color`  | `-`      | color        | Color of the label text when checked.          |
+| `--check-list-item-checked-font-weight` | `-`      | font-weight  | Font weight of the label text when checked.    |
 
 ## Internal Dependencies
 

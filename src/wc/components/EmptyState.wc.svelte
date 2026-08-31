@@ -5,7 +5,8 @@
     props: {
       title: { type: 'String', reflect: true },
       description: { type: 'String', reflect: true },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

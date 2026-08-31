@@ -1,6 +1,11 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import Menu from '$lib/Menu/Menu.svelte';
+
+  const svgIcon =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="12" r="8" fill="currentColor"/%3E%3C/svg%3E';
+  const transformIconSvg = (svg: string): string =>
+    svg.replace('<svg', '<svg data-transformed="true"');
 </script>
 
 <div class="page-header">
@@ -49,6 +54,19 @@
   >
     {#snippet trigger()}
       <Button text="Auto (roomy)" />
+    {/snippet}
+  </Menu>
+</div>
+
+<h3>SVG icon transforms</h3>
+<div class="demo-row">
+  <Menu
+    testId="menu-transform-svg"
+    items={[{ label: 'Transformed icon', value: 'transformed', icon: svgIcon }]}
+    transformSvg={transformIconSvg}
+  >
+    {#snippet trigger()}
+      <Button text="Transformed icon" />
     {/snippet}
   </Menu>
 </div>

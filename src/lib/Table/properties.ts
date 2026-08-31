@@ -235,6 +235,28 @@ export type TablePopupMenuCellData = {
  * the options, selection state, and filtering itself belong to the consumer.
  * Selecting the already-selected option clears the filter (emits `null`).
  */
+/**
+ * Customizes the generated `data-pw` suffixes of built-in cells for one
+ * column. Values replace only the named suffix; row and item indices remain
+ * appended where the default includes them. Cell-data `testId` values still
+ * take precedence for renderers that accept one.
+ */
+export type TableBuiltinCellTestIdSuffixes = {
+  icon?: string;
+  thumbnail?: string;
+  thumbnailPlaceholder?: string;
+  tag?: string;
+  trendUp?: string;
+  trendDown?: string;
+  menu?: string;
+  menuTrigger?: string;
+  popup?: string;
+  popupTrigger?: string;
+  link?: string;
+  copy?: string;
+  linkCopied?: string;
+};
+
 export type TableColumnFilterConfig = {
   options: Array<{ label: string; value: string }>;
   selectedValue?: string | null;
@@ -279,11 +301,18 @@ export type TableColumn = {
    * cells follow the table-wide `--table-text-align` (left by default).
    */
   align?: 'left' | 'center' | 'right';
+  /** Fixed/preferred column width (any CSS length), applied inline to its header and cells. */
+  width?: string;
   /**
    * Caps the column width (any CSS length). Overflowing scalar cell text
    * ellipsizes with the full value available on the native title tooltip.
    */
   maxWidth?: string;
+  /**
+   * Per-built-in generated `data-pw` suffix overrides for this column. Omitted
+   * entries preserve the existing suffixes exactly; row/item indices remain.
+   */
+  testIdSuffixes?: TableBuiltinCellTestIdSuffixes;
   /**
    * Paints this column's header and body cells with the highlight wash —
    * `--table-col-highlight-background` (body) and
@@ -377,12 +406,54 @@ export type TablePaginationConfig = {
   hasMore?: boolean;
   /** Disables the paginator and page-size selector during a fetch. */
   isLoading?: boolean;
+  /**
+   * Keeps the paginator footer (range text, page-size selector, steppers)
+   * visible even when the data fits on a single page. Default `false`
+   * matches DataGrid parity — a single page renders no footer at all.
+   */
+  showFooterOnSinglePage?: boolean;
+  /**
+   * Renders only the range summary text ("{from}-{to} of {total}") and
+   * suppresses the page-size selector and page steppers — for a bare
+   * "Showing X-Y of Z" affordance with no navigation controls. Implies
+   * `showFooterOnSinglePage`: a count-only footer has nothing to hide behind
+   * "already on the only page". Shorthand for `hidePageSizeSelector: true`
+   * plus `hideSteppers: true`; reach for those two directly when you only
+   * want to suppress one of the pair. Default `false`.
+   */
+  hideControls?: boolean;
+  /**
+   * Suppresses just the page-size Select, independently of the steppers —
+   * e.g. a fixed page size with no reason to expose the selector, while
+   * still keeping working page navigation. Default `false`.
+   */
+  hidePageSizeSelector?: boolean;
+  /**
+   * Suppresses just the Pagination steppers, independently of the page-size
+   * Select — for a call site with its own working paginator elsewhere that
+   * only wants Table's range text (and, optionally, its page-size selector).
+   * Default `false`.
+   */
+  hideSteppers?: boolean;
   /** Range text override; default "{from}-{to} of {total}". */
   rangeLabel?: (from: number, to: number, total: number) => string;
+  /**
+   * Explicit `data-pw`/`testID` for the range summary span. Wins over the
+   * derived id — the default derives from the table's own `testId`
+   * (`${testId}-paginator-range`), falling back to `${pagination.testId}-range`
+   * only when the table has none, so a call site whose table `testId` is
+   * already load-bearing (built-in cell ids derive from it) has no way to
+   * give the range span an independent locator without this.
+   */
+  rangeTestId?: string;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onLoadMore?: () => void;
   testId?: string;
+  /** Forwarded to Pagination's previous-page button without modification. */
+  prevButtonTestId?: string;
+  /** Forwarded to Pagination's next-page (or load-more) button without modification. */
+  nextButtonTestId?: string;
 };
 
 /**

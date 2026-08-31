@@ -10,6 +10,7 @@
   "src/lib/Chat/properties.ts::onattach",
   "src/lib/Chat/properties.ts::onfeedback",
   "src/lib/Chat/properties.ts::onretry",
+  "src/lib/Chat/properties.ts::onscrollstate",
   "src/lib/Chat/properties.ts::onsend",
   "src/lib/Chat/properties.ts::onstop",
   "src/lib/Chat/properties.ts::onsuggestion",
@@ -33,6 +34,7 @@
   "src/lib/ChatMessageList/properties.ts::onscrollstate",
   "src/lib/ChipInput/properties.ts::onadd",
   "src/lib/ChipInput/properties.ts::ondismiss",
+  "src/lib/ChipInput/properties.ts::onedit",
   "src/lib/Combobox/properties.ts::onClick",
   "src/lib/Combobox/properties.ts::onadd",
   "src/lib/Combobox/properties.ts::oncreate",
@@ -95,5 +97,6 @@
   "src/lib/ThinkingIndicator/properties.ts::onrowselect",
   "src/lib/ThinkingIndicator/properties.ts::onsettled",
   "src/lib/ToolCallLog/properties.ts::onchipclick",
-  "src/lib/Toolbar/properties.ts::onbackClick"
+  "src/lib/Toolbar/properties.ts::onbackClick",
+  "src/lib/TypewriterText/properties.ts::onProgress"
 ]

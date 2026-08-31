@@ -23,7 +23,11 @@
       {@render icon()}
     </div>
   {/if}
-  <div class="empty-state-title">
+  <div
+    class="empty-state-title"
+    data-pw={typeof testId === 'string' ? `${testId}-title` : null}
+    testID={typeof testId === 'string' ? `${testId}-title` : null}
+  >
     {#if typeof titleSnippet === 'function'}
       {@render titleSnippet()}
     {:else}
@@ -31,11 +35,21 @@
     {/if}
   </div>
   {#if typeof descriptionSnippet === 'function'}
-    <div class="empty-state-description">
+    <div
+      class="empty-state-description"
+      data-pw={typeof testId === 'string' ? `${testId}-description` : null}
+      testID={typeof testId === 'string' ? `${testId}-description` : null}
+    >
       {@render descriptionSnippet()}
     </div>
   {:else if typeof description === 'string' && description.length > 0}
-    <div class="empty-state-description">{description}</div>
+    <div
+      class="empty-state-description"
+      data-pw={typeof testId === 'string' ? `${testId}-description` : null}
+      testID={typeof testId === 'string' ? `${testId}-description` : null}
+    >
+      {description}
+    </div>
   {/if}
   {#if typeof children === 'function'}
     <div class="empty-state-actions">

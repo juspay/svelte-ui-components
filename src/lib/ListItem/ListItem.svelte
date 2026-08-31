@@ -20,6 +20,7 @@
     showRightContentLoader = false,
     expand = $bindable(false),
     preventFocus = false,
+    suppressRoleAndTabindex = false,
     leftContent,
     centerContent,
     rightContent,
@@ -31,6 +32,7 @@
     ontopSectionClick,
     onkeydown,
     classes,
+    transformSvg,
     role: itemRole,
     ariaSelected,
     id
@@ -68,8 +70,8 @@
       class:prevent-focus={preventFocus}
       onclick={handleItemClick}
       {onkeydown}
-      role={itemRole ?? 'button'}
-      tabindex={itemRole === 'option' ? -1 : 0}
+      role={suppressRoleAndTabindex ? null : (itemRole ?? 'button')}
+      tabindex={suppressRoleAndTabindex ? null : itemRole === 'option' ? -1 : 0}
       aria-selected={ariaSelected}
       {id}
       data-pw={testId}
@@ -80,8 +82,8 @@
         class:prevent-focus={preventFocus}
         onclick={handleTopSectionClick}
         {onkeydown}
-        role="button"
-        tabindex="0"
+        role={suppressRoleAndTabindex ? null : 'button'}
+        tabindex={suppressRoleAndTabindex ? null : 0}
         data-pw={topSectionTestId}
         testID={topSectionTestId}
       >
@@ -91,12 +93,12 @@
               class:prevent-focus={preventFocus}
               onclick={handleLeftImageClick}
               {onkeydown}
-              role="button"
-              tabindex="0"
+              role={suppressRoleAndTabindex ? null : 'button'}
+              tabindex={suppressRoleAndTabindex ? null : 0}
               data-pw={leftImageTestId}
               testID={leftImageTestId}
             >
-              <Img src={leftImageUrl} alt="" fallback={leftImageFallbackUrl} />
+              <Img src={leftImageUrl} alt="" fallback={leftImageFallbackUrl} {transformSvg} />
             </div>
           {/if}
           {#if typeof leftContent === 'function'}
@@ -110,8 +112,8 @@
               class:prevent-focus={preventFocus}
               onclick={handleCenterTextClick}
               {onkeydown}
-              role="button"
-              tabindex="0"
+              role={suppressRoleAndTabindex ? null : 'button'}
+              tabindex={suppressRoleAndTabindex ? null : 0}
               data-pw={centerTextTestId}
               testID={centerTextTestId}
             >
@@ -132,13 +134,13 @@
               class:prevent-focus={preventFocus}
               onclick={handleRightImageClick}
               {onkeydown}
-              role="button"
-              tabindex="0"
+              role={suppressRoleAndTabindex ? null : 'button'}
+              tabindex={suppressRoleAndTabindex ? null : 0}
               data-pw={rightImageTestId}
               testID={rightImageTestId}
             >
               <div class="right-img-wrapper">
-                <Img src={rightImageUrl} alt="" />
+                <Img src={rightImageUrl} alt="" {transformSvg} />
               </div>
             </div>
           {/if}

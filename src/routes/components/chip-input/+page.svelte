@@ -5,6 +5,8 @@
   let blockedEmails = $state<string[]>([]);
   let themedTags = $state(['urgent']);
   let inheritedTags = $state(['inherited']);
+  let editableTags = $state(['sale', 'featured', 'clearance']);
+  let editLog = $state<string[]>([]);
 </script>
 
 <div class="page-header">
@@ -50,6 +52,20 @@
     own theme would. The chips should follow that theme rather than the library's light-mode default.
   </p>
   <ChipInput bind:values={inheritedTags} testId="chip-input-inherited" />
+</div>
+
+<div class="demo-row" style="max-width: 400px;">
+  <h3>Editable (in-place edit)</h3>
+  <p>Click a chip to edit it. Enter commits, Escape cancels, the dismiss control still deletes.</p>
+  <ChipInput
+    bind:values={editableTags}
+    editable
+    testId="chip-input-editable"
+    onedit={(value, previousValue) => {
+      editLog = [...editLog, `${previousValue} → ${value}`];
+    }}
+  />
+  <p data-pw="chip-input-editable-log">Edits: {editLog.join(', ') || '(none)'}</p>
 </div>
 
 <style>

@@ -375,6 +375,14 @@
     return total > 0 ? `${from}-${to} of ${total}` : '';
   });
   let pageSizeOptions = $derived(pagination?.pageSizeOptions ?? [10, 25, 50, 100]);
+  // `hideControls` remains a shorthand for hiding both at once — existing
+  // consumers of it are unaffected. `hidePageSizeSelector`/`hideSteppers` let
+  // a consumer suppress either independently, e.g. a working external
+  // paginator that only wants Table's range text plus its own steppers.
+  let hidePageSizeSelector = $derived(
+    (pagination?.hideControls || pagination?.hidePageSizeSelector) ?? false
+  );
+  let hideSteppers = $derived((pagination?.hideControls || pagination?.hideSteppers) ?? false);
 
   const handlePageChange = (page: number): void => {
     pageOverride = page;
@@ -722,6 +730,7 @@
                   data-pw={headerColumn?.testId ?? null}
                   testID={headerColumn?.testId ?? null}
                   style:text-align={headerColumn?.align ?? null}
+                  style:width={headerColumn?.width ?? null}
                   style:max-width={headerColumn?.maxWidth ?? null}
                 >
                   <span
@@ -965,6 +974,7 @@
                         ? getCellTestId(row, cellValue, rowIndex)
                         : null}
                       style:text-align={keyedColumn?.align ?? null}
+                      style:width={keyedColumn?.width ?? null}
                       style:max-width={keyedColumn?.maxWidth ?? null}
                       title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
                     >
@@ -1007,10 +1017,15 @@
       <div class="table-footer">
         {@render paginatorSlot()}
       </div>
-    {:else if pagination && (paginationTotalPages > 1 || pagination.hasMore)}
+    {:else if pagination && (paginationTotalPages > 1 || pagination.hasMore || pagination.showFooterOnSinglePage || (hidePageSizeSelector && hideSteppers))}
       <!-- DataGrid parity: pagination chrome only renders when the data spans
            more than one page (or the server reports more chunks); a
-           single-page table shows no footer. -->
+           single-page table shows no footer. `showFooterOnSinglePage` opts
+           a consumer out of that default, e.g. to keep the page-size
+           selector reachable even for a one-page result. Suppressing BOTH
+           controls (via `hideControls`, or `hidePageSizeSelector` +
+           `hideSteppers` together) implies the same — a count-only footer
+           has nothing to hide behind "already on the only page". -->
       <div
         class="table-footer table-paginator"
         data-pw={pagination.testId ?? null}
@@ -1018,47 +1033,55 @@
       >
         <span
           class="table-paginator-range"
-          data-pw={typeof testId === 'string'
-            ? `${testId}-paginator-range`
-            : pagination?.testId
-              ? `${pagination.testId}-range`
-              : null}
-          testID={typeof testId === 'string'
-            ? `${testId}-paginator-range`
-            : pagination?.testId
-              ? `${pagination.testId}-range`
-              : null}>{paginationRangeText}</span
+          data-pw={pagination.rangeTestId ??
+            (typeof testId === 'string'
+              ? `${testId}-paginator-range`
+              : pagination?.testId
+                ? `${pagination.testId}-range`
+                : null)}
+          testID={pagination.rangeTestId ??
+            (typeof testId === 'string'
+              ? `${testId}-paginator-range`
+              : pagination?.testId
+                ? `${pagination.testId}-range`
+                : null)}>{paginationRangeText}</span
         >
-        <span class="table-paginator-controls">
-          {#if pageSizeOptions.length > 0}
-            <span class="table-paginator-size">
-              <Select
-                items={pageSizeOptions.map((sizeOption) => ({
-                  id: String(sizeOption),
-                  label: String(sizeOption)
-                }))}
-                value={[String(effectivePageSize)]}
+        {#if !hidePageSizeSelector || !hideSteppers}
+          <span class="table-paginator-controls">
+            {#if !hidePageSizeSelector && pageSizeOptions.length > 0}
+              <span class="table-paginator-size">
+                <Select
+                  items={pageSizeOptions.map((sizeOption) => ({
+                    id: String(sizeOption),
+                    label: String(sizeOption)
+                  }))}
+                  value={[String(effectivePageSize)]}
+                  disabled={pagination.isLoading ?? false}
+                  usePortal
+                  testId={pagination.testId && `${pagination.testId}-page-size`}
+                  onchange={(selectedSizes) => {
+                    if (selectedSizes.length > 0) {
+                      handlePageSizeChange(Number(selectedSizes[0]));
+                    }
+                  }}
+                />
+              </span>
+            {/if}
+            {#if !hideSteppers}
+              <Pagination
+                totalPages={paginationTotalPages}
+                currentPage={effectivePage}
+                hasMore={pagination.hasMore ?? false}
                 disabled={pagination.isLoading ?? false}
-                usePortal
-                testId={pagination.testId && `${pagination.testId}-page-size`}
-                onchange={(selectedSizes) => {
-                  if (selectedSizes.length > 0) {
-                    handlePageSizeChange(Number(selectedSizes[0]));
-                  }
-                }}
+                testId={pagination.testId && `${pagination.testId}-pages`}
+                prevButtonTestId={pagination.prevButtonTestId}
+                nextButtonTestId={pagination.nextButtonTestId}
+                onchange={handlePageChange}
+                onLoadMore={pagination.onLoadMore}
               />
-            </span>
-          {/if}
-          <Pagination
-            totalPages={paginationTotalPages}
-            currentPage={effectivePage}
-            hasMore={pagination.hasMore ?? false}
-            disabled={pagination.isLoading ?? false}
-            testId={pagination.testId && `${pagination.testId}-pages`}
-            onchange={handlePageChange}
-            onLoadMore={pagination.onLoadMore}
-          />
-        </span>
+            {/if}
+          </span>
+        {/if}
       </div>
     {/if}
   </div>

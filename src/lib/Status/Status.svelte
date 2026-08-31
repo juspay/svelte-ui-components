@@ -6,6 +6,7 @@
   let {
     statusIcon = 'icons/order-success-icon.svg',
     statusText = '',
+    statusTextTag = 'div',
     statusDescription = '',
     buttonProperties,
     classes,
@@ -30,7 +31,7 @@
         <Img inlineSvg src={statusIcon} alt="status" />
       {/if}
     </div>
-    <div class="status-text">{statusText}</div>
+    <svelte:element this={statusTextTag} class="status-text">{statusText}</svelte:element>
     <div class="status-description">
       {#if typeof descriptionSnippet === 'function'}
         {@render descriptionSnippet()}

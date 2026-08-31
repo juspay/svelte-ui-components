@@ -27,6 +27,11 @@
 </div>
 
 <div class="demo-row">
+  <Pill testId="pill-title" text="Hover for context" title="Pill tooltip" />
+  <Pill testId="pill-without-title" text="No tooltip" />
+</div>
+
+<div class="demo-row">
   <Pill text="Verified">
     {#snippet leadingIcon()}
       <svg

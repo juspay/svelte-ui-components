@@ -18,6 +18,11 @@
     streaming = false,
     recording = false,
     autoscroll = true,
+    scrollPolicy = 'near-bottom',
+    pinHold = false,
+    jump = true,
+    jumpLabel = 'Jump to latest',
+    jumpIcon,
     toolStatus = null,
     suggestions = [],
     attachments = $bindable([]),
@@ -46,6 +51,7 @@
     onattach,
     onretry,
     onfeedback,
+    onscrollstate,
     testId,
     classes
   }: ChatProperties = $props();
@@ -92,6 +98,11 @@
   <ChatMessageList
     {messages}
     {autoscroll}
+    {scrollPolicy}
+    {pinHold}
+    {jump}
+    {jumpLabel}
+    {jumpIcon}
     {message}
     {messageBody}
     {messageAttachments}
@@ -99,6 +110,7 @@
     {allowCopy}
     {onretry}
     {onfeedback}
+    {onscrollstate}
   />
 
   <div class="footer">

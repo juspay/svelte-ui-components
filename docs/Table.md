@@ -105,11 +105,11 @@ const rows: TableRow[] = [
 
 ### Per-Column Header Metadata
 
-Keyed columns carry their own header behavior: `tooltip` (hover text on the label), `align` (`'left' | 'center' | 'right'`, applied to header and body cells), `maxWidth` (caps the column; overflowing scalar cells ellipsize with the full value on the native title tooltip), `highlighted` (paints the column's header and body cells with the highlight wash — see `--table-col-highlight-background`; row hover and row selection still paint over it), and `filter` (a header dropdown — Table renders the Menu mechanics, the consumer owns options/selection/filtering; re-selecting the active option clears to `null`):
+Keyed columns carry their own header behavior: `tooltip` (hover text on the label), `align` (`'left' | 'center' | 'right'`, applied to header and body cells), `width` (an inline fixed/preferred CSS width on the header and every body cell), `maxWidth` (caps the column; overflowing scalar cells ellipsize with the full value on the native title tooltip), `highlighted` (paints the column's header and body cells with the highlight wash — see `--table-col-highlight-background`; row hover and row selection still paint over it), and `filter` (a header dropdown — Table renders the Menu mechanics, the consumer owns options/selection/filtering; re-selecting the active option clears to `null`):
 
 ```svelte
 const columns: TableColumn[] = [
-  { id: 'id', label: 'Order', maxWidth: '120px' },
+  { id: 'id', label: 'Order', width: '120px', maxWidth: '120px' },
   { id: 'name', label: 'Name', tooltip: 'Customer display name' },
   { id: 'amount', label: 'Amount', align: 'right', highlighted: true },
   {
@@ -133,16 +133,77 @@ The standalone `sortTableRows(rows, columnIndex, direction, options?)` export so
 
 `pagination` renders a footer paginator (range label, optional page-size selector, page controls). `'client'` mode slices the rows internally — search and page-size changes snap back to page 1; `'server'` mode leaves the supplied rows untouched (they are the current page) and drives the chrome from `page`/`totalItems`/`hasMore`, with `isLoading` disabling the controls during fetches. A consumer `paginatorSlot` takes precedence.
 
+`showFooterOnSinglePage` keeps that footer visible when the data fits on one page — the default hides it entirely, which is DataGrid parity but wrong for a call site whose page-size selector is how the merchant asks for more rows.
+
+`hideControls` renders the range summary alone, suppressing both the page-size selector and the steppers as a single unit; it implies `showFooterOnSinglePage`, since a count-only footer has nothing to hide behind "already on the only page". To suppress only one of the two, use `hidePageSizeSelector` or `hideSteppers` instead — each defaults to `false`, works independently of the other, and independently of `hideControls`. Setting both together behaves exactly like `hideControls` (including the same `showFooterOnSinglePage` implication once both are true); `hideControls` remains a plain shorthand for that combination and existing consumers of it are unaffected.
+
+```svelte
+<!-- A call site with its own working steppers elsewhere on the page: keep
+     Table's range text and steppers, drop the duplicate size selector. -->
+<Table
+  {columns}
+  {rows}
+  pagination={{
+    pageSize: 10,
+    hidePageSizeSelector: true,
+    testId: 'orders-paginator'
+  }}
+/>
+```
+
+The range span's `data-pw`/`testID` is derived as `` `${testId}-paginator-range` `` from the **table's** `testId`, falling back to `` `${pagination.testId}-range` `` only when the table has none. A table's `testId` is usually load-bearing (the built-in cell ids derive from it), so the derivation alone cannot give the range span an independent name — pass `pagination.rangeTestId` to do that; it wins over the derived id whenever it's set, and the derivation is unchanged when it's left unset:
+
+```svelte
+<Table
+  {columns}
+  {rows}
+  testId="orders-table"
+  pagination={{ testId: 'orders-paginator', rangeTestId: 'orders-range' }}
+/>
+<!-- range span emits data-pw="orders-range", not "orders-table-paginator-range" -->
+```
+
+The range text itself uses a plain hyphen by default (`"{from}-{to} of {total}"`) — override `rangeLabel` to use an en dash or any other format.
+
 ```svelte
 <Table
   {columns}
   {rows}
   rowNumberColumn
-  pagination={{ pageSize: 10, onPageChange: (page) => {}, testId: 'orders-paginator' }}
+  pagination={{
+    pageSize: 10,
+    onPageChange: (page) => {},
+    testId: 'orders-paginator',
+    prevButtonTestId: 'orders-previous',
+    nextButtonTestId: 'orders-next'
+  }}
 />
 ```
 
 `rowNumberColumn` prepends a 1-based, pagination-aware sequence column.
+
+`prevButtonTestId` and `nextButtonTestId` forward unchanged to the paginator's previous and next controls (the latter is also used by cursor-mode's load-more control). They are omitted by default, so existing paginator test IDs remain unchanged.
+
+### Built-in Cell Test-ID Suffixes
+
+A keyed column's `testIdSuffixes` customizes only the generated suffixes used by built-in renderers. The column's `testId` remains the prefix; suffixes that normally include a row or item index still append that index after the override. Omitted suffixes retain their exact existing defaults. Per-cell `testId` values remain authoritative for `tag`, `toggle`, `select`, `input`, and button renderers.
+
+```svelte
+<Table
+  {rows}
+  columns={[
+    {
+      id: 'docs',
+      label: 'Docs',
+      type: 'link',
+      testId: 'document',
+      testIdSuffixes: { link: 'resource', copy: 'clipboard', linkCopied: 'copied-notice' }
+    }
+  ]}
+/>
+```
+
+The link and copy controls above emit `document-resource-{rowIndex}` and `document-clipboard-{rowIndex}`. The transient copied message deliberately remains `document-copied-notice` with no row index, matching the existing `link-copied` behavior. Other defaults include `icon-{iconIndex}`, `thumb`, `thumb-placeholder`, `tag-{itemIndex}`, `trend-up`, `trend-down`, `menu-{rowIndex}`, `menu-trigger-{rowIndex}`, `popup-{rowIndex}`, and `popup-trigger-{rowIndex}`.
 
 `summaryRowIndex` marks one row (by its index in the consumer-supplied `rows`, pre-sort/pre-filter) as a summary/period-total row: it gets the `table-summary-row` class and a distinct background from `--table-summary-row-background` (falling back to the regular cell background when the token is unset). Because the row is matched by its original position, the highlight survives sorting, searching, and pagination. Pair it with `sortTableRows(..., { hasSummaryRow: true })` to also pin the row in place during client-side re-sorts.
 
@@ -392,29 +453,29 @@ Pass `searchConfig` to show a search input above the table. By default the table
 
 ## Props
 
-| Prop                | Type                                                                | Required | Default          | Description                                                                                                                                                                             |
-| ------------------- | ------------------------------------------------------------------- | -------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| tableTitle          | `string \| null`                                                    | No       | `''`             | Optional title text displayed above the table.                                                                                                                                          |
-| tableHeaders        | `string[]`                                                          | No       | `[]`             | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                   |
-| tableData           | `Array<JSONValue[]>`                                                | No       | `[]`             | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                     |
-| sortable            | `boolean`                                                           | No       | `true`           | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                   |
-| sortableColumns     | `number[]`                                                          | No       | `-`              | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                       |
-| stickyHeader        | `boolean`                                                           | No       | `false`          | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                       |
-| isTableScrollable   | `boolean`                                                           | No       | `false`          | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                        |
-| isContentScrollable | `boolean`                                                           | No       | `false`          | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                            |
-| testId              | `string`                                                            | No       | `-`              | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                          |
-| caption             | `string`                                                            | No       | `-`              | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                               |
+| Prop                | Type                                                                | Required | Default               | Description                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------- | -------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tableTitle          | `string \| null`                                                    | No       | `''`                  | Optional title text displayed above the table.                                                                                                                                          |
+| tableHeaders        | `string[]`                                                          | No       | `[]`                  | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                   |
+| tableData           | `Array<JSONValue[]>`                                                | No       | `[]`                  | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                     |
+| sortable            | `boolean`                                                           | No       | `true`                | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                   |
+| sortableColumns     | `number[]`                                                          | No       | `-`                   | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                       |
+| stickyHeader        | `boolean`                                                           | No       | `false`               | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                       |
+| isTableScrollable   | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                        |
+| isContentScrollable | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                            |
+| testId              | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                          |
+| caption             | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                               |
 | sortAscIcon         | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.    |
 | sortDescIcon        | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.   |
-| sortDefaultIcon     | `Snippet`                                                           | No       | SVG chevron pair | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                           |
-| cell                | `Snippet<[JSONValue, number, number]>`                              | No       | `-`              | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                    |
-| empty               | `Snippet`                                                           | No       | `-`              | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                      |
-| classes             | `string`                                                            | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                  |
-| paginatorSlot       | `Snippet`                                                           | No       | `-`              | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                   |
-| getRowTestId        | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`              | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                              |
-| getCellTestId       | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`              | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                  |
-| checkboxSelection   | `TableCheckboxSelectionConfig`                                      | No       | `-`              | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                    |
-| searchConfig        | `TableSearchConfig`                                                 | No       | `-`              | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onSearchChange` to delegate filtering to the server. See `TableSearchConfig` type below. |
+| sortDefaultIcon     | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                           |
+| cell                | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                    |
+| empty               | `Snippet`                                                           | No       | `-`                   | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                      |
+| classes             | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                  |
+| paginatorSlot       | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                   |
+| getRowTestId        | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                              |
+| getCellTestId       | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                  |
+| checkboxSelection   | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                    |
+| searchConfig        | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onSearchChange` to delegate filtering to the server. See `TableSearchConfig` type below. |
 
 ## Snippets
 
@@ -507,28 +568,28 @@ Override these custom properties to theme the component.
 
 ### Rows
 
-| Variable                          | Default   | CSS Property     | Description                                                                                                           |
-| --------------------------------- | --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `--table-row-background`          | `-`       | background-color | Background color of data rows.                                                                                        |
-| `--table-row-alt-background`      | `-`       | background-color | Background of even-numbered rows for striped effect. Falls back to `--table-row-background`.                          |
-| `--table-row-hover-background`    | `-`       | background-color | Background color of data rows on hover.                                                                               |
-| `--table-row-selected-background` | `#eff6ff` | background-color | Background of selected rows (when `checkboxSelection` is active). Applied to both the `<tr>` and its `<td>` children. |
+| Variable                          | Default                                    | CSS Property     | Description                                                                                                                           |
+| --------------------------------- | ------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-row-background`          | `-`                                        | background-color | Background color of data rows.                                                                                                        |
+| `--table-row-alt-background`      | `-`                                        | background-color | Background of even-numbered rows for striped effect. Falls back to `--table-row-background`.                                          |
+| `--table-row-hover-background`    | `-`                                        | background-color | Background color of data rows on hover.                                                                                               |
+| `--table-row-selected-background` | `#eff6ff`                                  | background-color | Background of selected rows (when `checkboxSelection` is active). Applied to both the `<tr>` and its `<td>` children.                 |
 | `--table-summary-row-background`  | falls back to `--table-content-background` | background-color | Background of the `summaryRowIndex` row. Applied to both the `<tr>` and its `<td>` children so it wins over a themed cell background. |
-| `--table-focus-outline-color`     | `#3b82f6` | outline          | Outline color for focused clickable rows and focused search inputs.                                                   |
+| `--table-focus-outline-color`     | `#3b82f6`                                  | outline          | Outline color for focused clickable rows and focused search inputs.                                                                   |
 
 ### Sort Controls
 
-| Variable                               | Default            | CSS Property     | Description                                                                 |
-| -------------------------------------- | ------------------ | ---------------- | --------------------------------------------------------------------------- |
-| `--table-sort-button-color`            | `inherit`          | color            | Color of the sort button icon — paints the ACTIVE (sorted) chevron half via `currentColor`. |
-| `--table-sort-button-hover-color`      | `-`                | color            | Color of the sort button icon on hover.                                     |
-| `--table-sort-button-hover-background` | `rgba(0,0,0,0.05)` | background-color | Background of the sort button on hover.                                     |
-| `--table-sort-icon-size`               | `14px`             | width, height    | Size of the sort indicator SVG icons.                                       |
-| `--table-sort-active-color`            | `#1B85FF`          | color            | Color of the active (sorted) chevron half.                                  |
-| `--table-sort-inactive-color`          | `#C7C7C7`          | fill             | Fill of the inactive chevron halves: both halves when unsorted, and the non-sorted direction when a column is sorted. |
-| `--table-sort-hover-color`             | `#797979`          | fill             | Fill the inactive halves step to while the sort button is hovered.          |
+| Variable                               | Default            | CSS Property     | Description                                                                                                                                                                                    |
+| -------------------------------------- | ------------------ | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-sort-button-color`            | `inherit`          | color            | Color of the sort button icon — paints the ACTIVE (sorted) chevron half via `currentColor`.                                                                                                    |
+| `--table-sort-button-hover-color`      | `-`                | color            | Color of the sort button icon on hover.                                                                                                                                                        |
+| `--table-sort-button-hover-background` | `rgba(0,0,0,0.05)` | background-color | Background of the sort button on hover.                                                                                                                                                        |
+| `--table-sort-icon-size`               | `14px`             | width, height    | Size of the sort indicator SVG icons.                                                                                                                                                          |
+| `--table-sort-active-color`            | `#1B85FF`          | color            | Color of the active (sorted) chevron half.                                                                                                                                                     |
+| `--table-sort-inactive-color`          | `#C7C7C7`          | fill             | Fill of the inactive chevron halves: both halves when unsorted, and the non-sorted direction when a column is sorted.                                                                          |
+| `--table-sort-hover-color`             | `#797979`          | fill             | Fill the inactive halves step to while the sort button is hovered.                                                                                                                             |
 | `--table-sort-idle-opacity`            | `1`                | opacity          | Opacity of the default (unsorted) sort indicator. The design system draws sort glyphs solid — faintness comes from `--table-sort-inactive-color`; set below 1 only to restore the legacy fade. |
-| `--table-sort-idle-hover-opacity`      | `1`                | opacity          | Opacity of the default sort indicator on hover (before a column is sorted). |
+| `--table-sort-idle-hover-opacity`      | `1`                | opacity          | Opacity of the default sort indicator on hover (before a column is sorted).                                                                                                                    |
 
 ### Empty State
 

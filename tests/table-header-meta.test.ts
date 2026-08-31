@@ -38,11 +38,16 @@ test.describe('Table — header metadata + controlled sort', () => {
   test('header tooltip renders on hover', async ({ page }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-header-meta');
-    await table.getByTestId('meta-name').hover();
+    const nameHeader = table.getByTestId('meta-name');
+    // Hover the tooltip's own trigger label, not the wider <th>: this column
+    // is sortable, so a sort button also lives inside the same header cell,
+    // and the <th>'s own padding surrounds both — hovering the cell's
+    // geometric center (Playwright's default target) lands on that padding
+    // or the sort button, never on the element Tooltip listens for
+    // mouseenter on.
+    await nameHeader.locator('.table-header-label').hover();
     // Scope to the header's own bubble — the docs code sample on the page repeats the text.
-    await expect(table.getByTestId('meta-name').getByRole('tooltip')).toContainText(
-      'Customer display name'
-    );
+    await expect(nameHeader.getByRole('tooltip')).toContainText('Customer display name');
   });
 
   test('filter dropdown filters via the consumer and clears on re-select', async ({ page }) => {

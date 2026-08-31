@@ -7,6 +7,7 @@
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
+      title: { type: 'String', reflect: true },
       leadingIcon: { type: 'Object' },
       dismissIcon: { type: 'Object' },
       classes: { type: 'String' },

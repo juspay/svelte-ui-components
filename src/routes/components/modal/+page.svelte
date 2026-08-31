@@ -19,6 +19,12 @@
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M15 18l-6-6 6-6'/%3E%3C/svg%3E";
   const closeIconSrc =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E";
+
+  // Nested-lock demo: two library Modals open at once, so the reference-counted
+  // body scroll lock can be exercised. Closing the inner one must not restore
+  // scrolling while the outer one is still mounted.
+  let nestedLockOuterOpen = $state(false);
+  let nestedLockInnerOpen = $state(false);
 </script>
 
 <div class="page-header">
@@ -276,6 +282,53 @@
     <p class="demo-note" data-pw="auto-dismiss-fired">Auto-dismissed.</p>
   {/if}
 </div>
+
+<h3>Nested modals — reference-counted body scroll lock</h3>
+<div class="demo-row">
+  <Button
+    text="Open outer"
+    testId="nested-lock-open-outer"
+    onclick={() => (nestedLockOuterOpen = true)}
+  />
+</div>
+{#if nestedLockOuterOpen}
+  <Modal
+    testId="nested-lock-outer-modal"
+    header={{ text: 'Outer' }}
+    onoverlayClick={() => (nestedLockOuterOpen = false)}
+  >
+    {#snippet content()}
+      <Button
+        text="Open inner"
+        testId="nested-lock-open-inner"
+        onclick={() => (nestedLockInnerOpen = true)}
+      />
+      <Button
+        text="Close outer"
+        testId="nested-lock-close-outer"
+        onclick={() => {
+          nestedLockInnerOpen = false;
+          nestedLockOuterOpen = false;
+        }}
+      />
+    {/snippet}
+  </Modal>
+{/if}
+{#if nestedLockInnerOpen}
+  <Modal
+    testId="nested-lock-inner-modal"
+    header={{ text: 'Inner' }}
+    onoverlayClick={() => (nestedLockInnerOpen = false)}
+  >
+    {#snippet content()}
+      <Button
+        text="Close inner"
+        testId="nested-lock-close-inner"
+        onclick={() => (nestedLockInnerOpen = false)}
+      />
+    {/snippet}
+  </Modal>
+{/if}
 
 <style>
   .demo-note {

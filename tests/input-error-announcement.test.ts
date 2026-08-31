@@ -85,13 +85,13 @@ test.describe('ChipInput — the draft field can be named', () => {
   test('ariaLabel names the draft field', async ({ page }) => {
     await page.goto('/components/chip-input');
 
-    await expect(page.getByTestId('chip-input-tags-input')).toHaveAttribute(
+    await expect(page.getByTestId('chip-input-tags-add')).toHaveAttribute(
       'aria-label',
       'Product tags'
     );
     await expect(page.getByLabel('Product tags')).toHaveAttribute(
       'data-pw',
-      'chip-input-tags-input'
+      'chip-input-tags-add'
     );
   });
 
@@ -100,7 +100,7 @@ test.describe('ChipInput — the draft field can be named', () => {
 
     // An empty aria-label is worse than none — it names the control the empty string, which
     // suppresses every other naming path an assistive technology would have fallen back to.
-    await expect(page.getByTestId('chip-input-accent-input')).not.toHaveAttribute(
+    await expect(page.getByTestId('chip-input-accent-add')).not.toHaveAttribute(
       'aria-label',
       /.*/
     );

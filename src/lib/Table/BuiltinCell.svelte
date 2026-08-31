@@ -58,6 +58,32 @@
         : ''
   );
 
+  const defaultTestIdSuffixes = {
+    icon: 'icon',
+    thumbnail: 'thumb',
+    thumbnailPlaceholder: 'thumb-placeholder',
+    tag: 'tag',
+    trendUp: 'trend-up',
+    trendDown: 'trend-down',
+    menu: 'menu',
+    menuTrigger: 'menu-trigger',
+    popup: 'popup',
+    popupTrigger: 'popup-trigger',
+    link: 'link',
+    copy: 'copy',
+    linkCopied: 'link-copied'
+  } as const;
+
+  const generatedTestId = (suffixName: keyof typeof defaultTestIdSuffixes, index?: number) => {
+    if (!column.testId) {
+      return;
+    }
+    const suffix = column.testIdSuffixes?.[suffixName] ?? defaultTestIdSuffixes[suffixName];
+    return typeof index === 'number'
+      ? `${column.testId}-${suffix}-${index}`
+      : `${column.testId}-${suffix}`;
+  };
+
   let copied = $state(false);
   let copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -143,8 +169,8 @@
     {#each icons as iconSrc, iconIndex (`${iconIndex}-${iconSrc}`)}
       <span
         class="builtin-icon-label-icon"
-        data-pw={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
-        testID={column.testId ? `${column.testId}-icon-${iconIndex}` : null}
+        data-pw={generatedTestId('icon', iconIndex)}
+        testID={generatedTestId('icon', iconIndex)}
       >
         <Img inlineSvg src={String(iconSrc)} alt="" fallback="" />
       </span>
@@ -157,8 +183,8 @@
     {#if typeof data.imageUrl === 'string' && data.imageUrl}
       <span
         class="builtin-thumb"
-        data-pw={column.testId ? `${column.testId}-thumb` : null}
-        testID={column.testId ? `${column.testId}-thumb` : null}
+        data-pw={generatedTestId('thumbnail')}
+        testID={generatedTestId('thumbnail')}
       >
         <Img
           src={data.imageUrl}
@@ -169,8 +195,8 @@
     {:else}
       <span
         class="builtin-thumb builtin-thumb-placeholder"
-        data-pw={column.testId ? `${column.testId}-thumb-placeholder` : null}
-        testID={column.testId ? `${column.testId}-thumb-placeholder` : null}
+        data-pw={generatedTestId('thumbnailPlaceholder')}
+        testID={generatedTestId('thumbnailPlaceholder')}
         >{typeof data.text1 === 'string' && data.text1
           ? data.text1.charAt(0).toUpperCase()
           : ''}</span
@@ -190,7 +216,7 @@
         <Pill
           text={tag.text}
           classes={tag.classes ?? ''}
-          testId={tag.testId ?? (column.testId && `${column.testId}-tag-${tagIndex}`)}
+          testId={tag.testId ?? generatedTestId('tag', tagIndex)}
         />
       {/each}
     </div>
@@ -227,8 +253,8 @@
           {#if compare.trendPercent > 0}
             <span
               class="builtin-trend builtin-trend-up"
-              data-pw={column.testId ? `${column.testId}-trend-up` : null}
-              testID={column.testId ? `${column.testId}-trend-up` : null}
+              data-pw={generatedTestId('trendUp')}
+              testID={generatedTestId('trendUp')}
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendUpSvg}</span>
@@ -237,8 +263,8 @@
           {:else if compare.trendPercent < 0}
             <span
               class="builtin-trend builtin-trend-down"
-              data-pw={column.testId ? `${column.testId}-trend-down` : null}
-              testID={column.testId ? `${column.testId}-trend-down` : null}
+              data-pw={generatedTestId('trendDown')}
+              testID={generatedTestId('trendDown')}
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendDownSvg}</span>
@@ -419,16 +445,13 @@
             danger: item.danger,
             separator: item.separator
           }))}
-          testId={column.testId && `${column.testId}-menu-${rowIndex}`}
+          testId={generatedTestId('menu', rowIndex)}
           {usePortal}
           onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
         >
           {#snippet trigger()}
             <span class="builtin-icon-button">
-              <Button
-                ariaLabel="More actions"
-                testId={column.testId && `${column.testId}-menu-trigger-${rowIndex}`}
-              >
+              <Button ariaLabel="More actions" testId={generatedTestId('menuTrigger', rowIndex)}>
                 {#snippet icon()}
                   <!-- eslint-disable svelte/no-at-html-tags -->
                   <span class="builtin-menu-dots">{@html dotsSvg}</span>
@@ -458,7 +481,7 @@
           danger: item.danger,
           separator: item.separator
         }))}
-        testId={column.testId && `${column.testId}-popup-${rowIndex}`}
+        testId={generatedTestId('popup', rowIndex)}
         {usePortal}
         onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
       >
@@ -466,7 +489,7 @@
           <span class="builtin-icon-button">
             <Button
               ariaLabel={popupData.ariaLabel ?? 'More actions'}
-              testId={column.testId && `${column.testId}-popup-trigger-${rowIndex}`}
+              testId={generatedTestId('popupTrigger', rowIndex)}
             >
               {#snippet icon()}
                 <!-- eslint-disable svelte/no-at-html-tags -->
@@ -490,8 +513,8 @@
         target="_blank"
         rel="noopener noreferrer"
         class="builtin-link-anchor"
-        data-pw={column.testId ? `${column.testId}-link-${rowIndex}` : null}
-        testID={column.testId ? `${column.testId}-link-${rowIndex}` : null}
+        data-pw={generatedTestId('link', rowIndex)}
+        testID={generatedTestId('link', rowIndex)}
       >
         {link.label ?? link.url}
       </a>
@@ -499,7 +522,7 @@
         <span class="builtin-link-copy">
           <Button
             ariaLabel={copied ? 'Link copied' : 'Copy link'}
-            testId={column.testId && `${column.testId}-copy-${rowIndex}`}
+            testId={generatedTestId('copy', rowIndex)}
             onclick={() => handleCopy(link.url)}
           >
             {#snippet icon()}
@@ -511,8 +534,8 @@
         {#if copied}
           <span
             class="builtin-link-copied"
-            data-pw={column.testId ? `${column.testId}-link-copied` : null}
-            testID={column.testId ? `${column.testId}-link-copied` : null}>Copied</span
+            data-pw={generatedTestId('linkCopied')}
+            testID={generatedTestId('linkCopied')}>Copied</span
           >
         {/if}
       {/if}

@@ -46,6 +46,39 @@
   let pinBusy = $state(false);
   let pinCounter = 0;
 
+  // pinHold is never set here and every reply is SHORTER than the frame. That is the case where
+  // releasing the reserved headroom immediately loses the pin: without the reservation the content
+  // no longer reaches the pinned offset, so the browser clamps scrollTop straight back.
+  let noHoldMessages = $state<ChatMessageData[]>([
+    { id: 'n1', role: 'sender', content: 'First question' },
+    {
+      id: 'n2',
+      role: 'responder',
+      content:
+        'A long first answer so the list already overflows its frame before the turn under test. ' +
+        'The pin only means anything in a real scroll container, and it is the NEXT reply -- the ' +
+        'short one -- that used to lose it.'
+    },
+    { id: 'n3', role: 'sender', content: 'Second question' },
+    {
+      id: 'n4',
+      role: 'responder',
+      content:
+        'Another long answer, for the same reason: the list has to be scrolled away from the top ' +
+        'when the new sender message arrives, or there is no pin to lose in the first place.'
+    }
+  ]);
+  let noHoldCounter = 0;
+
+  const sendNoHold = (): void => {
+    noHoldCounter += 1;
+    noHoldMessages = [
+      ...noHoldMessages,
+      { id: `nq${noHoldCounter}`, role: 'sender', content: `Question ${noHoldCounter}` },
+      { id: `nr${noHoldCounter}`, role: 'responder', content: 'Short reply.' }
+    ];
+  };
+
   const sendPinned = (): void => {
     const text = pinDraft.trim();
     if (text.length === 0 || pinBusy) {
@@ -163,6 +196,20 @@
   </form>
 </div>
 
+<h2>pin-sender-turn without pinHold — the pin must survive a short reply</h2>
+<p class="demo-note">
+  No <code>pinHold</code>, and each reply is shorter than the frame. The sender message must still
+  sit at the top of the viewport after sending.
+</p>
+<div class="chat-theme chat-card list-frame nohold-frame">
+  <ChatMessageList
+    messages={noHoldMessages}
+    scrollPolicy="pin-sender-turn"
+    testId="pin-nohold-list"
+  />
+</div>
+<button type="button" class="pin-send" onclick={sendNoHold} data-pw="pin-nohold-send">Send</button>
+
 <style>
   .list-frame {
     height: 360px;
@@ -173,6 +220,18 @@
   .pin-frame {
     display: flex;
     flex-direction: column;
+  }
+
+  /* The list has to be a real scroll container for the pin to mean anything: fix the frame's
+     height and let the list fill it, or it simply grows to fit and nothing ever scrolls. */
+  .nohold-frame {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nohold-frame :global(.chat-message-list) {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .pin-composer {

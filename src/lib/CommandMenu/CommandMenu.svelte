@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { CommandMenuProperties, CommandItem } from './properties';
   import { tick, onMount, onDestroy } from 'svelte';
+  import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '$lib/Img/Img.svelte';
   import searchSvg from '$lib/assets/search.svg?raw';
@@ -161,8 +162,12 @@
     }
   }
 
+  // Lock and unlock strictly in this action so the pairing is 1:1. Svelte destroys
+  // the action when the node goes away, including on component teardown, so the
+  // onDestroy below must NOT unlock as well: with a shared reference count a second
+  // decrement would release a lock another open surface still needs.
   function scrollLockAction(_node: HTMLElement) {
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     tick().then(() => {
       if (inputElement !== null) {
         inputElement.focus();
@@ -170,7 +175,7 @@
     });
     return {
       destroy() {
-        document.body.style.overflow = '';
+        unlockBodyScroll();
       }
     };
   }
@@ -181,7 +186,6 @@
 
   onDestroy(() => {
     if (typeof window !== 'undefined') {
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', handleGlobalKeyDown);
     }
   });

@@ -48,15 +48,57 @@ export type StatCardRow = {
   change?: number | null;
   /** Invert delta colors for lower-is-better metrics on this row. */
   invertChangeColors?: boolean;
-  /** Additional descriptive text rendered after the delta. */
+  /**
+   * Additional descriptive text rendered after the value/delta. By default it
+   * flows inline and only wraps if it does not fit (e.g. a short unit suffix
+   * like "%" or "ms"). Set `additionalContentBreak` to force it onto its own
+   * line regardless of available width.
+   */
   additionalContent?: string;
+  /**
+   * Forces `additionalContent` onto its own line below the value/delta,
+   * regardless of available width. Omit to keep the default inline flow.
+   */
+  additionalContentBreak?: boolean;
+  /** Tints this row's value text for a warning or success state. Omit for the default color. */
+  valueVariant?: 'success' | 'warning';
+  /**
+   * Secondary label rendered below this row's value line (e.g. a per-row
+   * comparison-period caption). Independent of the card-level `subtitle` —
+   * both may be set at once, e.g. when different rows compare against
+   * different baselines.
+   *
+   * Renders after the value line by default (heading → value → subtitle in
+   * markup order). A consumer that needs title → subtitle → value can
+   * reorder without touching markup via `--statcard-row-subtitle-order` /
+   * `--statcard-row-value-line-order` — see `testId` below.
+   */
+  subtitle?: string;
   /** Tooltip shown on the row heading. */
   tooltip?: StatCardTooltip;
   /** Heading rendered above the breakdown grid. */
   breakdownHeading?: string;
   /** Breakdown items rendered in a grid below the row value. */
   breakdown?: StatCardBreakdownItem[];
-  /** Test selector for the row root element. */
+  /**
+   * Test selector for the row root element, rendered as `data-pw`/`testID`.
+   * Also the CSS scoping anchor for per-row typography and layout: target
+   * `[data-pw="<testId>"]` to set `--statcard-row-value-font-size`,
+   * `--statcard-row-value-font-weight`, `--statcard-row-heading-font-size`,
+   * `--statcard-row-heading-font-weight`, or the row's flex `order` overrides
+   * (`--statcard-row-heading-order`, `--statcard-row-value-line-order`,
+   * `--statcard-row-subtitle-order`) for just this row, independent of its
+   * siblings — see the CSS Variables table in the component docs.
+   *
+   * The row's three sub-elements (heading wrap, value line, subtitle) render
+   * in that markup order and each default to `order: 0`, so an untouched row
+   * is byte-identical to today. Set the three order hooks to reorder them —
+   * e.g. subtitle before the value line for a title → subtitle → value
+   * layout — the same pattern the card-level `--statcard-subtitle-order` /
+   * `--statcard-value-row-order` hooks already use for the card's own
+   * sections. `.statcard-row` is a `display: flex; flex-direction: column`
+   * container, so `order` applies directly with no other CSS needed.
+   */
   testId?: string;
 };
 

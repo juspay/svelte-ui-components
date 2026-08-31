@@ -66,6 +66,26 @@
   </EmptyState>
 </div>
 
+<h3>Test attributes</h3>
+<div class="demo-row" style="flex-direction: column; max-width: 500px; gap: 24px;">
+  <EmptyState
+    testId="empty-state-attributes"
+    title="Fallback title"
+    description="Fallback description"
+  />
+
+  <EmptyState testId="empty-state-snippet-attributes" title="">
+    {#snippet titleSnippet()}
+      <strong>Snippet title</strong>
+    {/snippet}
+    {#snippet descriptionSnippet()}
+      <span>Snippet description</span>
+    {/snippet}
+  </EmptyState>
+
+  <EmptyState testId="empty-state-without-description" title="Title only" />
+</div>
+
 <h3>Title only (no description)</h3>
 <div class="demo-row" style="flex-direction: column; max-width: 500px; gap: 24px;">
   <EmptyState title="No items yet" />

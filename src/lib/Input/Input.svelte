@@ -571,6 +571,7 @@
 
   .input-icon-left {
     left: var(--input-icon-gap, 12px);
+    color: var(--input-left-icon-color, var(--input-icon-color, inherit));
   }
 
   .input-icon-right {

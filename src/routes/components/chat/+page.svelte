@@ -65,6 +65,34 @@
   let panelWidth = $state(420);
   let panelHeight = $state(600);
 
+  let scrollPolicyMessages = $state<ChatMessageData[]>(
+    Array.from({ length: 60 }, (_, index) => ({
+      id: `scroll-policy-${index}`,
+      role: index % 2 === 0 ? 'sender' : 'responder',
+      content: `Scroll policy transcript message ${index + 1}.`
+    }))
+  );
+  let scrollPolicyTurnCount = $state(0);
+  let scrollPolicyPinHold = $state(false);
+  let scrollPolicyState = $state({ atBottom: true, scrollable: false });
+
+  const sendScrollPolicyTurn = (): void => {
+    scrollPolicyTurnCount += 1;
+    scrollPolicyMessages.push(
+      {
+        id: `scroll-policy-sender-${scrollPolicyTurnCount}`,
+        role: 'sender',
+        content: `Pinned question ${scrollPolicyTurnCount}`
+      },
+      {
+        id: `scroll-policy-responder-${scrollPolicyTurnCount}`,
+        role: 'responder',
+        content: 'This reply stays beneath the pinned question while the turn is held.'
+      }
+    );
+    scrollPolicyPinHold = true;
+  };
+
   // Expand toggle: swap to a larger preset (animated by Resizable's transition),
   // restoring the prior size on collapse.
   let expanded = $state(false);
@@ -470,6 +498,47 @@
   />
 </div>
 
+<h2>Scroll policy controls — passed through Chat to the message list</h2>
+<div class="chat-theme chat-card scroll-policy-frame">
+  <Chat
+    messages={scrollPolicyMessages}
+    scrollPolicy="pin-sender-turn"
+    pinHold={scrollPolicyPinHold}
+    jump={false}
+    onscrollstate={(state) => {
+      scrollPolicyState = state;
+    }}
+    testId="chat-scroll-policy-pin"
+  />
+  <div class="scroll-policy-controls">
+    <Button
+      text="Send pinned turn"
+      onclick={sendScrollPolicyTurn}
+      testId="chat-scroll-policy-send"
+    />
+    <Button
+      text="Finish turn"
+      onclick={() => (scrollPolicyPinHold = false)}
+      testId="chat-scroll-policy-finish"
+    />
+    <span data-pw="chat-scroll-policy-state">
+      {scrollPolicyState.scrollable ? 'scrollable' : 'not-scrollable'}
+    </span>
+  </div>
+</div>
+
+<div class="chat-theme chat-card scroll-policy-frame">
+  <Chat
+    messages={scrollPolicyMessages}
+    jumpLabel="Show latest reply"
+    testId="chat-scroll-policy-jump"
+  >
+    {#snippet jumpIcon()}
+      <span data-pw="chat-scroll-policy-jump-icon">↓</span>
+    {/snippet}
+  </Chat>
+</div>
+
 <style>
   /* Deliberately overrides the OLD --chat-tool-status-* names, the same way a
      pre-existing consumer's theme CSS already would -- proves Chat's internal
@@ -548,6 +617,22 @@
 
   .turn-controls {
     margin: 0 0 14px;
+  }
+
+  .scroll-policy-frame {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    max-width: 560px;
+    margin-bottom: 16px;
+  }
+
+  .scroll-policy-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--doc-border);
   }
 
   .turn-frame {

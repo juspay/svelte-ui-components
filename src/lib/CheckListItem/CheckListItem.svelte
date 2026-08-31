@@ -45,12 +45,15 @@
   }
 
   .container.disabled {
-    opacity: var(--check-list-item-disabled-opacity, 0.4);
     cursor: not-allowed;
   }
 
   .checkbox-wrapper {
     flex-shrink: 0;
+  }
+
+  .container.disabled .checkbox-wrapper {
+    --checkbox-disabled-opacity: var(--check-list-item-disabled-opacity, 0.4);
   }
 
   .text {

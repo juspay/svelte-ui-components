@@ -51,7 +51,7 @@ A centered placeholder component for empty lists, search results, or views. Disp
 | titleSnippet       | `Snippet` | No       | `-`     | Optional snippet that replaces the `title` string at render time. Use for rich markup (e.g. formatted text, inline icons). Takes full rendering priority over `title`.              |
 | descriptionSnippet | `Snippet` | No       | `-`     | Optional snippet that replaces the `description` string at render time. Use for rich markup (e.g. links, emphasis). Takes full rendering priority over `description`.               |
 | classes            | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.              |
-| testId             | `string`  | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection.                                                                                                    |
+| testId             | `string`  | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection. When supplied, the title and rendered description wrappers receive `${testId}-title` and `${testId}-description` respectively; no description wrapper is added when no description is rendered. |
 
 ## Snippets
 

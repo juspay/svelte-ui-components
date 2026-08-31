@@ -17,7 +17,8 @@ test.describe('Table — built-in cell renderers', () => {
   test('two-line-text cells render primary and secondary lines', async ({ page }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-builtin-cells');
-    const firstPlanCell = table.getByRole('row').first().getByRole('cell').first();
+    const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
+    const firstPlanCell = bodyRows.first().getByRole('cell').first();
     await expect(firstPlanCell).toContainText('Growth Monthly');
     await expect(firstPlanCell).toContainText('PLN-0042');
   });
@@ -25,7 +26,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('avatar-stack caps at 4 chips and shows the +N overflow', async ({ page }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-builtin-cells');
-    const secondRow = table.getByRole('row').nth(1);
+    const secondRow = table.getByRole('rowgroup').last().getByRole('row').nth(1);
     await expect(secondRow).toContainText('+2');
   });
 
@@ -34,13 +35,14 @@ test.describe('Table — built-in cell renderers', () => {
   }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-builtin-cells');
-    const firstRevenue = table.getByRole('row').nth(0).getByRole('cell').nth(4);
+    const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
+    const firstRevenue = bodyRows.nth(0).getByRole('cell').nth(4);
     await expect(firstRevenue).toContainText('₹4,938.10');
     await expect(firstRevenue).toContainText('₹4,100.00');
     await expect(firstRevenue.getByTestId('builtin-revenue-trend-up')).toContainText('20%');
-    const secondRevenue = table.getByRole('row').nth(1).getByRole('cell').nth(4);
+    const secondRevenue = bodyRows.nth(1).getByRole('cell').nth(4);
     await expect(secondRevenue.getByTestId('builtin-revenue-trend-down')).toContainText('-20%');
-    const thirdRevenue = table.getByRole('row').nth(2).getByRole('cell').nth(4);
+    const thirdRevenue = bodyRows.nth(2).getByRole('cell').nth(4);
     await expect(thirdRevenue).toContainText('n/a');
   });
 
@@ -50,10 +52,13 @@ test.describe('Table — built-in cell renderers', () => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-builtin-cells');
     // Row 0 starts checked: true — flipping off must report the new state (false).
-    await table.getByTestId('builtin-toggle-0').getByRole('checkbox').click();
+    // Click the switch wrapper, not the checkbox role: the native input is
+    // visually hidden (width/height: 0) for the styled-slider pattern, so it
+    // has a zero-size bounding box and fails Playwright's actionability check.
+    await table.getByTestId('builtin-toggle-0').click();
     await expect(page.getByTestId('builtin-toggle-result')).toContainText('row 0 → false');
     // Row 1 starts checked: false — flipping on must report the new state (true).
-    await table.getByTestId('builtin-toggle-1').getByRole('checkbox').click();
+    await table.getByTestId('builtin-toggle-1').click();
     await expect(page.getByTestId('builtin-toggle-result')).toContainText('row 1 → true');
   });
 
@@ -97,11 +102,12 @@ test.describe('Table — built-in cell renderers', () => {
   }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-media-cells');
-    const firstGateway = table.getByRole('row').first().getByRole('cell').first();
+    const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
+    const firstGateway = bodyRows.first().getByRole('cell').first();
     await expect(firstGateway.getByTestId('builtin-gateway-icon-0')).toBeVisible();
     await expect(firstGateway.getByTestId('builtin-gateway-icon-1')).toBeVisible();
     await expect(firstGateway).toContainText('UPI + Card');
-    const secondGateway = table.getByRole('row').nth(1).getByRole('cell').first();
+    const secondGateway = bodyRows.nth(1).getByRole('cell').first();
     await expect(secondGateway.getByTestId('builtin-gateway-icon-0')).toHaveCount(0);
     await expect(secondGateway).toContainText('NetBanking');
   });
@@ -111,11 +117,12 @@ test.describe('Table — built-in cell renderers', () => {
   }) => {
     await page.goto('/components/table');
     const table = page.getByTestId('table-media-cells');
-    const firstProduct = table.getByRole('row').first().getByRole('cell').nth(1);
+    const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
+    const firstProduct = bodyRows.first().getByRole('cell').nth(1);
     await expect(firstProduct.getByTestId('builtin-product-thumb')).toBeVisible();
     await expect(firstProduct).toContainText('Silk Kurta');
     await expect(firstProduct).toContainText('SKU-1042');
-    const secondProduct = table.getByRole('row').nth(1).getByRole('cell').nth(1);
+    const secondProduct = bodyRows.nth(1).getByRole('cell').nth(1);
     await expect(secondProduct.getByTestId('builtin-product-thumb-placeholder')).toBeVisible();
     await expect(secondProduct).toContainText('Cotton Saree');
   });

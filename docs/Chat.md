@@ -170,6 +170,11 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 | streaming       | `boolean`                     | No       | `false` | A reply is streaming — the send button becomes a stop button.              |
 | recording       | `boolean`                     | No       | `false` | Visual active state for the composer voice button.                         |
 | autoscroll      | `boolean`                     | No       | `true`  | Auto-scroll to the latest message (only when already near the bottom).     |
+| scrollPolicy    | `'near-bottom' \| 'pin-sender-turn'` | No | `'near-bottom'` | Follow policy for new messages. `pin-sender-turn` pins each new sender message to the top so its reply streams beneath it. |
+| pinHold         | `boolean`                     | No       | `false` | With `pin-sender-turn`, retain the reserved reply headroom while the current turn is busy; set false when it finishes. |
+| jump            | `boolean`                     | No       | `true`  | Render the built-in jump-to-latest button. Set false when providing your own affordance. |
+| jumpLabel       | `string`                      | No       | `'Jump to latest'` | Accessible label for the built-in jump-to-latest button. |
+| jumpIcon        | `Snippet`                     | No       | `-`     | Custom icon for the built-in jump-to-latest button. |
 | toolStatus      | `ChatToolStatus \| null`      | No       | `null`  | Tool/typing status shown above the composer.                               |
 | suggestions     | `ChatSuggestion[]`            | No       | `[]`    | Prompt chips shown when the conversation is empty.                          |
 | attachments     | `File[]`                      | No       | `[]`    | Bindable. Pending composer attachments.                                    |
@@ -202,6 +207,7 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 | onattach     | `(files: File[]) => void`             | Enables the composer attach button.                                   |
 | onretry      | `() => void`                          | Enables retry on the latest assistant message (e.g. `chat.retry`).    |
 | onfeedback   | `(value: 'up' \| 'down', message: ChatMessageData) => void` | Enables 👍/👎 on assistant messages.            |
+| onscrollstate | `(state: { atBottom: boolean; scrollable: boolean }) => void` | Reports whether the reader is at the bottom and whether the list overflows, for an external jump-to-latest control. |
 
 ## CSS Variables
 
@@ -228,4 +234,4 @@ Tag: `<sui-chat>`
 <sui-chat title="Assistant"></sui-chat>
 ```
 
-Set `.messages`, `.onsend`, and other object/array props via JavaScript.
+Set `.messages`, `.onsend`, and other object/array props via JavaScript. Scroll controls map to `scroll-policy`, `pin-hold`, `jump`, `jump-label`, and the `.jumpIcon` / `.onscrollstate` properties; `onscrollstate` receives `{ atBottom, scrollable }`.

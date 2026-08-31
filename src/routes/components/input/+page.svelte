@@ -115,6 +115,48 @@
   <Input bind:value={resizableBoth} useTextArea resize="both" label="Both" rows={3} />
 </div>
 
+<h3>Independent leading icon colour</h3>
+<p>
+  <code>--input-left-icon-color</code> overrides only the leading icon. When it is unset, both icons
+  retain <code>--input-icon-color</code>.
+</p>
+<div class="demo-row input-icon-colour-independent">
+  {#snippet independentlyColouredLeftIcon()}
+    <svg data-pw="input-independent-left-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" fill="currentColor" />
+    </svg>
+  {/snippet}
+  {#snippet independentlyColouredRightIcon()}
+    <svg data-pw="input-independent-right-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" fill="currentColor" />
+    </svg>
+  {/snippet}
+  <Input
+    value=""
+    label="Independent leading icon"
+    leftIcon={independentlyColouredLeftIcon}
+    rightIcon={independentlyColouredRightIcon}
+  />
+</div>
+<div class="demo-row input-icon-colour-generic">
+  {#snippet genericallyColouredLeftIcon()}
+    <svg data-pw="input-generic-left-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" fill="currentColor" />
+    </svg>
+  {/snippet}
+  {#snippet genericallyColouredRightIcon()}
+    <svg data-pw="input-generic-right-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" fill="currentColor" />
+    </svg>
+  {/snippet}
+  <Input
+    value=""
+    label="Generic icon colour fallback"
+    leftIcon={genericallyColouredLeftIcon}
+    rightIcon={genericallyColouredRightIcon}
+  />
+</div>
+
 <h3>Native input types (dataType)</h3>
 <p>
   <code>dataType</code> is passed straight through as the native <code>type</code>. Beyond the
@@ -257,6 +299,15 @@
   /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */
   .resize-narrow :global(.input-container) {
     --input-width: 240px;
+  }
+
+  :global(.input-icon-colour-independent) {
+    --input-icon-color: #2563eb;
+    --input-left-icon-color: #dc2626;
+  }
+
+  :global(.input-icon-colour-generic) {
+    --input-icon-color: #2563eb;
   }
 
   :global(.lineheight-textarea) {

@@ -1,6 +1,6 @@
 # Toggle
 
-A labeled on/off switch with sliding ball animation. The `checked` prop controls the toggle state and the `onclick` event returns the new boolean state after toggling. The text label can be positioned relative to the switch using CSS order.
+A labeled on/off switch with sliding ball animation. The `checked` prop controls the toggle state and the `onclick` event returns the new boolean state after toggling. The text label can be positioned relative to the switch using CSS order. Strictly two-state — for tri-state selection (checked/unchecked/indeterminate, e.g. a "select all" row with mixed children), use `Checkbox` instead.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # Loader
 
-A rotating circular spinner with a gradient foreground that transitions from `--loader-foreground` to `--loader-foreground-end`. The center is cut out using an `::after` pseudo-element with `--loader-background` color, creating a ring/donut shape. Spins continuously with a 1.4s linear animation.
+A rotating circular spinner with a gradient foreground that transitions from `--loader-foreground` to `--loader-foreground-end`. The center is cut out using an `::after` pseudo-element with `--loader-background` color, creating a ring/donut shape. Spins continuously with a 1.4s linear animation. A standalone shape, not designed to sit inline in running text — for a spinner that flows naturally inside text or a button label, use `LoadingDots` instead.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # KeyValue
 
-A read-only label/value grid for rendering detail views — offer summaries, customer profiles, order metadata, and similar "field: value" layouts. Pairs flow row-major across a configurable number of columns, collapsing to a single column on narrow screens. Empty values are skipped by default (so optional fields disappear cleanly), and either side can be fully customised with a snippet for rendering tags, links, avatars, or formatted values.
+A read-only label/value grid for rendering detail views — offer summaries, customer profiles, order metadata, and similar "field: value" layouts. Pairs flow row-major across a configurable number of columns, collapsing to a single column on narrow screens. Empty values are skipped by default (so optional fields disappear cleanly), and either side can be fully customised with a snippet for rendering tags, links, avatars, or formatted values. For a single prominent metric with a delta badge and dashboard framing, use `StatCard` instead.
 
 ## Usage
 

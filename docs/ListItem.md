@@ -1,6 +1,6 @@
 # ListItem
 
-A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts.
+A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts. Has no selection/checkbox concept at all — for a checkbox-driven selectable row, use `CheckListItem` instead.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # LoadingDots
 
-Animated dot sequence for inline loading indication. Three dots animate in sequence to indicate background activity. Displays inline so it works naturally within text, buttons, or any other container.
+Animated dot sequence for inline loading indication. Three dots animate in sequence to indicate background activity. Displays inline so it works naturally within text, buttons, or any other container. For a standalone ring/donut spinner rather than an inline sequence, use `Loader` instead.
 
 ## Usage
 

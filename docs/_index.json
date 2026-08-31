@@ -340,6 +340,22 @@
     "description": "A wrapper that makes its content user-resizable via drag handles on chosen edges/corners (`handles`). Dragging updates the bindable `width`/`height` (clamped to min/max) so size is observable and persistable; `onresize`/`onresizestart`/`onresizeend` fire too. Each handle is a focusable WAI-ARIA splitter — arrow keys resize by `step`, with role=separator and aria-valuenow/min/max. Resize changes size only (not position), so pick handle edges that match how the element is anchored. Layout-agnostic: wrap a Chat panel, Modal, image, or card."
   },
   {
+    "name": "Draggable",
+    "description": "A wrapper that makes its content user-movable via pointer drag or arrow keys, applied as a transform (never affects layout flow). Dragging updates the bindable `x`/`y` offset, optionally constrained to one `axis`, a `handle` sub-selector, or the viewport (`bounds=\"viewport\"`); `onMoveStart`/`onMove`/`onMoveEnd` fire too. The root is a focusable, aria-labelled region; without a `handle`, pointer-downs on nested native controls (input, button, a, ...) never start a drag. Position only, not size — pair with `Resizable` for a panel that's both movable and resizable."
+  },
+  {
+    "name": "MediaPlayer",
+    "description": "An image or video player with a hover-revealed control overlay, reusing Img (image type, with fallback) and Button (video controls). Video shows a centered play/pause and bottom-aligned mute/unmute on hover; the video element itself is a focusable role=button that toggles playback directly. `playing`/`muted` are bindable; `onplay`/`onpause`/`onvolumechange` relay the video's native events. Set `controls` to fall back to native browser controls. Built-in play/pause/volume/mute icons are swappable via snippet props. Fully CSS-variable driven."
+  },
+  {
+    "name": "MediaUpload",
+    "description": "A file picker: a grid of thumbnail cards for staged files plus a drop tile, with drag-and-drop, per-file validation (type/size/count via `accept`/`maxFileSize`/`maxLength`), and a bindable `files` array. Image files get a lazy data-URL thumbnail (via Img, Shimmer placeholder while it loads); non-images get a generic file icon. Each card has a hover-revealed remove button (Button). A rejected selection drops only the offending files and shows one summary error (role=alert) — already-staged files are untouched. Events are onFilesChange/onRemove/onRejected (not onchange/onremove/onerror — none relay a native event, so they're camelCase per DESIGN_PRINCIPLES.md)."
+  },
+  {
+    "name": "Gallery",
+    "description": "An image gallery with grid or list layout and an optional full-screen lightbox (previous/next nav, counter, caption, focus-trapped keyboard control - arrows, Home/End, Escape, Tab). open/activeIndex are bindable. Optional per-item edit/delete actions appear only when their handler prop (onEditClick/onDeleteClick) is provided - no separate show flags. Grid items can render fully custom content via the itemFooter snippet. Events are onImageClick/onEditClick/onDeleteClick/onOpen/onDismiss/onIndexChange (camelCase, synthesized) plus onkeydown (lowercase, a genuine native KeyboardEvent relay) - onDismiss specifically avoids onClose since no real <dialog> element is involved."
+  },
+  {
     "name": "ThinkingIndicator",
     "description": "An AI status line for chat turns: a shimmering label while the model works, an optional expandable detail — either a plain reasoning paragraph or a kind-aware trace (steps checklist with a live frontier spinner, prose reasoning, linked search sources with toned badges, or selectable file edits with diff stats) — plus a host-driven busy machine (auto-open, once-only `onsettled`, post-settle auto-collapse a user toggle overrides) and an opt-in live elapsed-seconds counter that ticks while busy and freezes on settle."
   },

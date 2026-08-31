@@ -21,16 +21,17 @@
   "homepage": "https://github.com/juspay/svelte-ui-components",
   "scripts": {
     "dev": "vite dev --host",
-    "build": "vite build && npm run package",
-    "build:wc": "vite build --config vite.config.wc.ts",
+    "build": "vite build && npm run build:wc && npm run package",
+    "build:wc": "vite build --config vite.config.wc.ts && echo 'export {};' > dist-wc/index.d.ts",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
-    "prepublishOnly": "npm run package",
+    "prepublishOnly": "npm run build:wc && npm run package",
     "test": "npm run test:integration && npm run test:unit",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "prettier --check src && eslint src",
+    "lint": "prettier --check src && eslint src && npm run lint:event-casing",
+    "lint:event-casing": "node scripts/check-event-casing.js",
     "format": "prettier --write src",
     "test:integration": "playwright test",
     "test:unit": "vitest"
@@ -39,17 +40,22 @@
     ".": {
       "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js"
+    },
+    "./wc": {
+      "types": "./dist-wc/index.d.ts",
+      "default": "./dist-wc/index.js"
     }
   },
   "files": [
     "dist",
     "!dist/**/*.test.*",
-    "!dist/**/*.spec.*"
+    "!dist/**/*.spec.*",
+    "dist-wc"
   ],
   "peerDependencies": {
+    "lottie-web": ">=5.0.0",
     "svelte": "^5.41.2",
-    "type-decoder": "^2.1.0",
-    "lottie-web": ">=5.0.0"
+    "type-decoder": "^2.1.0"
   },
   "peerDependenciesMeta": {
     "lottie-web": {
@@ -67,6 +73,7 @@
     "@sveltejs/kit": "^2.63.1",
     "@sveltejs/package": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@types/node": "^22.20.1",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
     "eslint": "^10.4.1",
@@ -75,6 +82,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
+    "lottie-web": "^5.13.0",
     "marked": "^18.0.5",
     "prettier": "^3.8.3",
     "prettier-plugin-svelte": "^4.1.0",
@@ -85,7 +93,6 @@
     "type-decoder": "^2.3.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1",
-    "lottie-web": "^5.13.0",
     "vite": "^8.0.16",
     "vitest": "^4.1.8"
   },

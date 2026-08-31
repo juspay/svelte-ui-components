@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [release]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint (prettier, eslint, event-casing)
+        run: pnpm lint
+
+      - name: Type-check
+        run: pnpm check
+
+      - name: Unit tests (vitest)
+        run: pnpm run test:unit -- --run
+
+      # Not a merge gate yet: this suite currently has ~130 failing specs
+      # (verified 2026-08-31) that need triage — some may be real
+      # regressions, some may be environment-sensitive (hover/portal
+      # timing in headless Chromium). Runs on every PR so failures are
+      # visible and trend-trackable; flip continue-on-error off once the
+      # baseline is triaged down to genuinely zero.
+      - name: Integration tests (playwright) — advisory, not blocking
+        continue-on-error: true
+        run: pnpm run test:integration
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

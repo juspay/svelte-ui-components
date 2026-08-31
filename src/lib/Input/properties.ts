@@ -70,6 +70,12 @@ export type OptionalInputProperties = {
    */
   inputMode?: HTMLInputAttributes['inputmode'];
   name?: string;
+  /** Field id, applied to the rendered `<input>`/`<textarea>` so the visible
+   *  `<label>` can reference it. Wins over the auto-derived id. Omitting it is
+   *  safe: the fallback appends a per-instance suffix from `$props.id()`, so
+   *  fields that share a `name` (radio groups, repeated rows) still get unique
+   *  ids. Note this names the FIELD, not the wrapper `<div>`. */
+  id?: string;
   textTransformers?: TextTransformer[];
   textViewPresentation?: TextTransformer[];
   testId?: string;

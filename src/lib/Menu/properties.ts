@@ -65,6 +65,11 @@ export type OptionalMenuProperties = {
   selectedValue?: string | null;
   role?: 'menu' | 'listbox';
   ariaLabel?: string;
+  /** Accessible name for the TRIGGER — the element that actually takes focus.
+   *  `ariaLabel` names the dropdown, which is portaled to <body>, so it cannot
+   *  name the control the user tabs to. Applies only when `interactiveTrigger`
+   *  is false; when true the snippet's own control owns its name. */
+  triggerAriaLabel?: string;
   id?: string;
   /** Dropdown anchoring relative to the trigger. Defaults to `'bottom-left'`,
    * which preserves the existing behavior (including the `--menu-dropdown-top`

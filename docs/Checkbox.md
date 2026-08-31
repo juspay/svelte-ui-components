@@ -23,6 +23,7 @@ A customizable checkbox control with optional label text. Supports checked, unch
 | testId        | `string`  | No       | `undefined` | Value for the `data-pw` attribute used in Playwright test selectors.                                                                                                   |
 | classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 | ariaControls  | `string`  | No       | `undefined` | Identifies the element(s) whose contents are controlled by this checkbox. Sets `aria-controls` on the checkbox element for accessibility.                              |
+| ariaLabel     | `string`  | No       | `undefined` | Accessible name for the checkbox. Set it whenever the visible `text` label isn't enough or sits outside this component (a table header cell, an icon-only row control) — since name-from-content can't reach it. Ignored when `text` is non-empty, so a visible label is never overridden (WCAG 2.5.3). |
 
 ## Snippets
 

@@ -1,6 +1,6 @@
 # CheckListItem
 
-A checkbox list item with a text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet to replace the default text display. The checked state is bindable for two-way binding.
+A checkbox list item with a text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet to replace the default text display. The checked state is bindable for two-way binding. Purpose-built for a single checkbox + label row — for a richer multi-section row (image, expandable detail, several independent click targets) with no selection semantics, use `ListItem` instead.
 
 ## Usage
 

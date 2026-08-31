@@ -1,6 +1,6 @@
 # Gauge
 
-A circular visual indicator for displaying values against a configurable maximum. Uses an SVG ring where the filled arc represents the current value divided by `max`. The `value` prop is a raw number; the filled percentage is computed as `(value / max) * 100`. An optional centered label displays the rounded percentage (or a custom string via `labelFormatter`). The fill arc animates smoothly when the value changes.
+A circular visual indicator for displaying values against a configurable maximum. Uses an SVG ring where the filled arc represents the current value divided by `max`. The `value` prop is a raw number; the filled percentage is computed as `(value / max) * 100`. An optional centered label displays the rounded percentage (or a custom string via `labelFormatter`). The fill arc animates smoothly when the value changes. Has no indeterminate/unknown-duration mode — for a linear bar with that capability, use `Progress` instead.
 
 ## Usage
 

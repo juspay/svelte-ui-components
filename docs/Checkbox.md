@@ -1,6 +1,6 @@
 # Checkbox
 
-A customizable checkbox control with optional label text. Supports checked, unchecked, indeterminate, and disabled states. The `checked` prop is bindable and the `onclick` event fires with the new state after toggling. All visual aspects are controlled via CSS custom properties.
+A customizable checkbox control with optional label text. Supports checked, unchecked, indeterminate, and disabled states. The `checked` prop is bindable and the `onclick` event fires with the new state after toggling. All visual aspects are controlled via CSS custom properties. `indeterminate` has no equivalent on `Toggle` — it only makes sense for select-some-of-many semantics — so reach for `Toggle` instead for a plain two-state on/off switch.
 
 ## Usage
 

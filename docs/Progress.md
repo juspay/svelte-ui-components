@@ -1,6 +1,6 @@
 # Progress
 
-A linear progress bar showing task completion or usage. The `value` prop controls the filled portion relative to `max`. When `showLabel` is true, a percentage text is displayed next to the bar. Setting `value` to a negative number activates an indeterminate sliding animation for unknown-duration tasks.
+A linear progress bar showing task completion or usage. The `value` prop controls the filled portion relative to `max`. When `showLabel` is true, a percentage text is displayed next to the bar. Setting `value` to a negative number activates an indeterminate sliding animation for unknown-duration tasks. For a circular ring instead of a linear bar — e.g. a compact dashboard stat tile — use `Gauge` instead (it has no indeterminate mode, since a ring reads awkwardly as "unknown duration").
 
 ## Usage
 

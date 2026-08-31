@@ -122,6 +122,26 @@
   // forceError lets consumers drive the error border from server/runtime validation,
   // independent of validationPattern.
   const showError = $derived(showErrorMessage || forceError);
+  // The error text has to be reachable FROM the field it describes and announced when it
+  // appears. Without both, a screen-reader user submits, hears nothing, and is left on a form
+  // that did not move -- the message is on screen and absent from the accessibility tree.
+  const errorMessageId = $derived(`${effectiveId}-error`);
+  // `onErrorMessage` is `string | null`, so null has to be excluded explicitly: `null !== ''`
+  // is true, which would describe the field by an alert element carrying no message.
+  const isShowingError = $derived(
+    onErrorMessage != null && onErrorMessage !== '' && showError && !actionInput
+  );
+  const infoMessageId = $derived(`${effectiveId}-info`);
+  const isShowingInfo = $derived(infoMessage !== '' && !actionInput);
+  // Helper text is part of the field's description, not decoration: a consumer's `infoMessage`
+  // ("Enter a percentage between 1 and 100") is exactly the guidance a screen-reader user needs
+  // BEFORE they trip an error. Reference both, in reading order, so the field is described by
+  // everything visibly attached to it rather than only by its failure.
+  const describedBy = $derived(
+    [isShowingError ? errorMessageId : null, isShowingInfo ? infoMessageId : null]
+      .filter(Boolean)
+      .join(' ')
+  );
   const hasLeftIcon = $derived(typeof leftIcon === 'function');
   const hasRightIcon = $derived(typeof rightIcon === 'function');
 
@@ -301,6 +321,8 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={mandatory || null}
+        aria-invalid={showError ? 'true' : null}
+        aria-describedby={describedBy || null}
         required={mandatory || null}
         onfocus={onFocus}
         onfocusout={_onFocusOut}
@@ -337,6 +359,8 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={mandatory || null}
+        aria-invalid={showError ? 'true' : null}
+        aria-describedby={describedBy || null}
         required={mandatory || null}
         onfocus={onFocus}
         onfocusout={_onFocusOut}
@@ -399,8 +423,10 @@
     {@render fieldElement()}
   {/if}
 
-  {#if onErrorMessage !== '' && showError && !actionInput}
+  {#if isShowingError}
     <div
+      id={errorMessageId}
+      role="alert"
       class="error-message"
       data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
       testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
@@ -408,8 +434,8 @@
       {onErrorMessage}
     </div>
   {/if}
-  {#if infoMessage !== '' && !actionInput}
-    <div class="info-message">
+  {#if isShowingInfo}
+    <div id={infoMessageId} class="info-message">
       {infoMessage}
     </div>
   {/if}

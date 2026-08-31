@@ -14,7 +14,12 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>Product tags</h3>
-  <ChipInput bind:values={productTags} placeholder="Add tag…" testId="chip-input-tags" />
+  <ChipInput
+    bind:values={productTags}
+    placeholder="Add tag…"
+    ariaLabel="Product tags"
+    testId="chip-input-tags"
+  />
   <p>Values: {productTags.join(', ') || '(empty)'}</p>
 </div>
 

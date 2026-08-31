@@ -13,6 +13,12 @@ export type MandatoryChipInputProperties = {
 };
 
 export type OptionalChipInputProperties = {
+  /**
+   * Names the draft field for assistive technology. ChipInput renders no visible label of its
+   * own, so without this the control reaches the accessibility tree unnamed however the caption
+   * beside it reads on screen. Pass the same words as that caption.
+   */
+  ariaLabel?: string;
   placeholder?: string;
   disabled?: boolean;
   testId?: string;

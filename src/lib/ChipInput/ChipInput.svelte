@@ -5,6 +5,7 @@
 
   let {
     values = $bindable([]),
+    ariaLabel,
     placeholder = 'Add value…',
     disabled = false,
     testId,
@@ -66,6 +67,7 @@
       {placeholder}
       dataType="text"
       name=""
+      {ariaLabel}
       autoComplete="off"
       actionInput={false}
       disable={disabled}

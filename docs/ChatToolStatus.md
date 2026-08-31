@@ -1,5 +1,13 @@
 # ChatToolStatus
 
+> **Deprecated.** `ThinkingIndicator`'s `chip` variant (`<ThinkingIndicator variant="chip" ... />`)
+> is a superset of this component — same pill layout and static-by-default label, plus optional
+> expandable reasoning, an elapsed-time counter, and reasoning traces if you ever need them. `Chat`
+> itself now renders `ThinkingIndicator variant="chip"` for its built-in tool-status row instead of
+> this component. `ChatToolStatus` still works and isn't going away outright (this is a published
+> package — removing the export is its own breaking-change decision), but new code should reach for
+> `ThinkingIndicator` instead.
+
 A compact status pill that shows what the assistant is doing — "Searching the catalog…", "Calling a tool…", "Thinking…". It pairs a spinner (the `Loader` component) with a label, and the leading indicator can be replaced with a snippet. Render it above the composer or floating over the conversation while `toolStatus` is non-null.
 
 ## Usage

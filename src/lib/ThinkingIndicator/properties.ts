@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte';
 
-export type ThinkingIndicatorVariant = 'default' | 'bare';
+export type ThinkingIndicatorVariant = 'default' | 'bare' | 'chip';
 
 export type ThinkingIndicatorKind = 'steps' | 'reasoning' | 'search' | 'coding';
 
@@ -36,14 +36,18 @@ export type OptionalThinkingIndicatorProperties = {
   expanded?: boolean;
   /**
    * `bare` renders only the shimmering label — for chat bubbles where the surrounding
-   * UI already supplies the avatar and layout. It never becomes expandable.
+   * UI already supplies the avatar and layout. `chip` renders a self-contained pill
+   * (bordered, shadowed, its own background) for a live status floating above other
+   * content, e.g. a tool-call indicator above a composer — pass `busy={false}` for a
+   * static (non-shimmering) label, matching a plain status badge. Neither `bare` nor
+   * `chip` ever becomes expandable.
    */
   variant?: ThinkingIndicatorVariant;
   /**
    * Renders an elapsed `Ns` counter while the label is live. Starts at 0 when a busy
    * phase begins, ticks every second, and freezes at its final value once the label
    * settles (driven by `busy` when set, otherwise by the legacy status-line/detail
-   * shape). No effect on the `bare` variant.
+   * shape). No effect on the `bare` or `chip` variants.
    */
   showElapsed?: boolean;
   onToggle?: () => void;

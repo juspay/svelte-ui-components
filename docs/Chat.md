@@ -1,6 +1,6 @@
 # Chat
 
-A full chat surface that composes `ChatHeader`, `ChatMessageList`, `ChatSuggestions`, `ChatToolStatus`, and `ChatComposer` into one drop-in component. It is **fully controlled** — you pass `messages` and handle `onsend`; the component owns no transport, so it works with any backend. For a batteries-included experience, pair it with the decoupled **`ChatController`** (below), which manages message state, streaming, and an optional typewriter reveal while delegating the actual network call to a pluggable transport.
+A full chat surface that composes `ChatHeader`, `ChatMessageList`, `ChatSuggestions`, `ThinkingIndicator` (as its `chip` variant), and `ChatComposer` into one drop-in component. It is **fully controlled** — you pass `messages` and handle `onsend`; the component owns no transport, so it works with any backend. For a batteries-included experience, pair it with the decoupled **`ChatController`** (below), which manages message state, streaming, and an optional typewriter reveal while delegating the actual network call to a pluggable transport.
 
 Markdown is intentionally not bundled: pass pre-sanitized HTML on a message's `html` field (e.g. the output of your own `marked` + `DOMPurify`) and it renders in the bubble.
 
@@ -218,7 +218,7 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 | `--chat-footer-border-top`    | `none`        | border-top       | Border above the footer.             |
 | `--chat-tool-status-justify`  | `center`      | justify-content  | Alignment of the tool-status row.    |
 
-Child components (`ChatHeader`, `ChatMessageList`, `ChatComposer`, `ChatToolStatus`, `ChatSuggestions`, `ChatMessage`) are themed through their own CSS variables, which cascade into `Chat`.
+Child components (`ChatHeader`, `ChatMessageList`, `ChatComposer`, `ThinkingIndicator`, `ChatSuggestions`, `ChatMessage`) are themed through their own CSS variables, which cascade into `Chat`. The tool-status row's pill itself is `ThinkingIndicator`'s `chip` variant internally, not the deprecated `ChatToolStatus` component — but its public theming contract is unchanged: every `--chat-tool-status-*` variable still controls it (mapped internally onto the chip's own `--thinking-indicator-chip-*` variables), so existing overrides keep working exactly as before. Reach for `--thinking-indicator-chip-*` directly only when using `<ThinkingIndicator variant="chip">` outside of `Chat`.
 
 ## Web Component
 

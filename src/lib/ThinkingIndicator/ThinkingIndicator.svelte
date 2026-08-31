@@ -40,16 +40,20 @@
 
   // A detail string or a trace is what makes the indicator expandable. Without either
   // there is nothing to reveal, so it renders as a plain live status line instead of a
-  // disclosure control. `bare` overrides that entirely.
+  // disclosure control. `bare` and `chip` both override that entirely — neither has
+  // room (or a documented reason) to expand.
   const isExpandable = $derived(
-    variant !== 'bare' && (hasTraceMode || (typeof detail === 'string' && detail.length > 0))
+    variant === 'default' && (hasTraceMode || (typeof detail === 'string' && detail.length > 0))
   );
 
   // Backward-compatible shimmer rule: without an explicit `busy`, the expandable
   // summary holds still (settled) and every other shape shimmers (live) — exactly
-  // today's released behaviour. Passing `busy` takes direct control of the shimmer
-  // in every shape, including `bare`.
-  const labelIsBusy = $derived(busy ?? !isExpandable);
+  // today's released behaviour. `chip` is the one exception, defaulting to static:
+  // it exists to be a drop-in for ChatToolStatus, which never shimmered, so a
+  // caller porting that usage 1:1 shouldn't have to also learn `busy={false}` just
+  // to avoid an unexpected shimmer. Passing `busy` takes direct control of the
+  // shimmer in every shape, including `bare` and `chip`.
+  const labelIsBusy = $derived(busy ?? (variant === 'chip' ? false : !isExpandable));
 
   // Set once a person clicks the disclosure open/closed — from then on the automatic
   // busy-driven machine below leaves `expanded` alone for the rest of this mount.
@@ -406,6 +410,21 @@
         >{label}</span
       >{:else}{label}{/if}</span
   >
+{:else if variant === 'chip'}
+  <div
+    class="thinking-indicator-chip {classes ?? ''}"
+    aria-live="polite"
+    aria-atomic="true"
+    data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
+  >
+    <span class="chip-icon">
+      {#if avatar}{@render avatar()}{:else}<Loader />{/if}
+    </span>
+    <span class="chip-label" class:static-label={!labelIsBusy} data-pw={labelTestId ?? null}
+      >{label}</span
+    >
+  </div>
 {:else}
   <div
     class="thinking-indicator status-host {classes ?? ''}"
@@ -556,6 +575,69 @@
   .static-label {
     animation: none;
     -webkit-text-fill-color: var(--thinking-indicator-label-color, #858585);
+  }
+
+  /* ---- chip variant: a self-contained floating pill (no ancestor supplies
+     background/layout, unlike bare) — deliberately not `width: 100%`/box-sizing
+     from `.thinking-indicator`, since a pill hugs its content. */
+  .thinking-indicator-chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--thinking-indicator-chip-gap, 8px);
+    width: fit-content;
+    padding: var(--thinking-indicator-chip-padding, 8px 14px);
+    background: var(--thinking-indicator-chip-background, #ffffff);
+    border: var(--thinking-indicator-chip-border, 1px solid #e4e4e7);
+    border-radius: var(--thinking-indicator-chip-border-radius, 999px);
+    box-shadow: var(--thinking-indicator-chip-box-shadow, 0 6px 20px rgba(0, 0, 0, 0.08));
+    max-width: var(--thinking-indicator-chip-max-width, 100%);
+  }
+
+  .chip-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--thinking-indicator-chip-icon-color, currentColor);
+    --loader-foreground: var(--thinking-indicator-chip-spinner-color, currentColor);
+    --loader-foreground-end: var(--thinking-indicator-chip-spinner-color-end, transparent);
+    --loader-width: var(--thinking-indicator-chip-spinner-size, 14px);
+    --loader-height: var(--thinking-indicator-chip-spinner-size, 14px);
+    --loader-before-width: 7px;
+    --loader-before-height: 7px;
+    --loader-after-width: 11px;
+    --loader-after-height: 11px;
+    --loader-background: var(--thinking-indicator-chip-background, #ffffff);
+  }
+
+  .chip-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--thinking-indicator-chip-font-size, 0.85rem);
+    font-weight: var(--thinking-indicator-chip-font-weight, 500);
+    color: var(--thinking-indicator-chip-color, #52525b);
+    background: var(
+      --thinking-indicator-chip-shimmer-gradient,
+      linear-gradient(90deg, #52525b 0%, #a0a0a0 50%, #52525b 100%)
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: thinking-indicator-shimmer var(--thinking-indicator-chip-shimmer-duration, 2s) linear
+      infinite;
+  }
+
+  /* Chip defaults to a static label (unlike the default/bare variants) since it
+     mirrors ChatToolStatus, which never shimmered — pass `busy` explicitly to
+     opt in. Higher specificity than the generic `.static-label` rule above, so
+     it correctly overrides with the chip's own color token, not the default
+     variant's. */
+  .chip-label.static-label {
+    animation: none;
+    -webkit-text-fill-color: var(--thinking-indicator-chip-color, #52525b);
   }
 
   .arrow {
@@ -784,6 +866,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .status-label,
+    .chip-label,
     .trace-row,
     .trace-more {
       animation-duration: 0.001s;
@@ -798,6 +881,11 @@
     .status-label {
       animation: none;
       -webkit-text-fill-color: var(--thinking-indicator-label-color, #858585);
+    }
+
+    .chip-label {
+      animation: none;
+      -webkit-text-fill-color: var(--thinking-indicator-chip-color, #52525b);
     }
   }
 </style>

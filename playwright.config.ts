@@ -18,10 +18,19 @@ const config: PlaywrightTestConfig = {
   testDir: 'tests',
   testMatch: /(.+\.)?(test|spec)\.[jt]s/,
   timeout: 30_000,
+  // No reporter was ever configured, so CI's "Upload Playwright report" step
+  // (ci.yml) had nothing to upload -- playwright-report/ was never written,
+  // in CI or locally (verified: absent after a full local run). 'list' keeps
+  // today's console output; 'html' is what actually gets attached as a real,
+  // openable artifact.
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: `http://localhost:${port}`,
     // This repo's demo pages expose data-pw hooks; getByTestId must target them.
-    testIdAttribute: 'data-pw'
+    testIdAttribute: 'data-pw',
+    // Real proof, not just a pass/fail assertion: a playable recording of every
+    // test, embedded into the html report so it travels with the CI artifact.
+    video: 'on'
   },
   projects: [
     {

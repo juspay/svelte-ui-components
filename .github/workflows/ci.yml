@@ -37,12 +37,18 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm run test:unit -- --run
 
-      # Not a merge gate yet: this suite currently has ~130 failing specs
-      # (verified 2026-08-31) that need triage — some may be real
-      # regressions, some may be environment-sensitive (hover/portal
-      # timing in headless Chromium). Runs on every PR so failures are
-      # visible and trend-trackable; flip continue-on-error off once the
-      # baseline is triaged down to genuinely zero.
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Not a merge gate yet: every prior run of this job failed every single
+      # spec with "browserType.launch: Executable doesn't exist" (verified
+      # 2026-08-31 via the raw job log) -- this step was missing entirely, so
+      # the ~130-failing-specs baseline this comment used to cite was never a
+      # real regression count, just however many specs don't need a browser
+      # launch to reach their own assertion. Real triage starts now that the
+      # job can actually run. Runs on every PR so failures are visible and
+      # trend-trackable; flip continue-on-error off once a genuine baseline
+      # is triaged down to zero.
       - name: Integration tests (playwright) — advisory, not blocking
         continue-on-error: true
         run: pnpm run test:integration

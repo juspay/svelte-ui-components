@@ -5,6 +5,16 @@ export type StatusProperties = StatusEventProperties & {
   statusIcon?: string;
   statusText: string;
   statusDescription: string;
+  /**
+   * Element `statusText` renders as. Defaults to `'div'`, matching every existing
+   * consumer's render output exactly. Reach for `'h1'`..`'h6'` when `statusText`
+   * carries a real page/section heading: an app that wires typography to semantic
+   * tags (rather than setting `font-size` in component styles) can only pick up
+   * that tag's size, weight and colour, and only a heading tag joins the
+   * document outline for assistive tech — a `div` does neither, no matter what
+   * CSS targets it.
+   */
+  statusTextTag?: 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   buttonProperties?: ButtonProperties;
   classes?: string;
   /**

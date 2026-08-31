@@ -10,6 +10,7 @@ export type OptionalPillProperties = {
   dismissible?: boolean;
   disabled?: boolean;
   testId?: string;
+  title?: string;
   dismissIcon?: Snippet;
   /**
    * A Svelte snippet rendered immediately before the text label inside a

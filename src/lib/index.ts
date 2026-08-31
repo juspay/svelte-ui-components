@@ -122,6 +122,10 @@ export type * from './Table/properties';
 export type { NormalizedColumns } from './Table/normalizeColumns';
 export type { SortTableRowsOptions, TableSortType } from './Table/sortEngine';
 export type * from './Stepper/properties';
+// `Step` is exported above as a COMPONENT, which shadows the same-named type from
+// Stepper/properties — so a consumer typing a `steps` array could not name it at all and
+// got the component's own instance type instead. Aliased so it is reachable.
+export type { Step as StepperStep } from './Stepper/properties';
 export type * from './Toast/properties';
 export type * from './IconStack/properties';
 export type * from './Img/properties';
@@ -201,5 +205,5 @@ export type * from './MediaUpload/properties';
 export type * from './Gallery/properties';
 
 export { createSoundKit } from './soundKit/soundKit';
-export { validateInput } from './utils';
+export { validateInput, lockBodyScroll, unlockBodyScroll } from './utils';
 export { formatNumberIndian } from './_chart/format';

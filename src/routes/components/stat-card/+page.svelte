@@ -32,6 +32,61 @@
     }
   ];
 
+  const rowsWithPerRowSubtitle = [
+    {
+      testId: 'per-row-subtitle-row-0',
+      heading: 'Gross Revenue',
+      value: '₹12.4Cr',
+      change: 8.2,
+      subtitle: 'Today vs Yesterday'
+    },
+    {
+      testId: 'per-row-subtitle-row-1',
+      heading: 'Net Revenue',
+      value: '₹10.9Cr',
+      change: 5.7,
+      subtitle: 'This Week vs Last Week'
+    }
+  ];
+
+  const rowOrderRows = [
+    {
+      testId: 'row-order-reordered-row',
+      heading: 'Gross Revenue',
+      value: '₹12.4Cr',
+      change: 8.2,
+      subtitle: 'Today vs Yesterday'
+    },
+    {
+      testId: 'row-order-default-row',
+      heading: 'Net Revenue',
+      value: '₹10.9Cr',
+      change: 5.7,
+      subtitle: 'This Week vs Last Week'
+    }
+  ];
+
+  const rowTypographyRows = [
+    {
+      testId: 'value-typography-primary-row',
+      heading: 'Primary KPI',
+      value: '₹1.23Cr',
+      change: 8.2
+    },
+    {
+      testId: 'value-typography-secondary-row',
+      heading: 'Secondary Metric',
+      value: '₹340k',
+      change: 3.4
+    },
+    {
+      testId: 'value-typography-default-row',
+      heading: 'Untouched Row',
+      value: '₹98k',
+      change: -1.1
+    }
+  ];
+
   const conversionRow = [
     {
       heading: 'Checkout Conversion',
@@ -178,6 +233,104 @@
   />
 </div>
 
+<h3>Multi-Row With Per-Row Subtitles</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  Each row can carry its own comparison-period label, independent of the card-level
+  <code>subtitle</code> — e.g. when different rows compare against different baselines.
+</p>
+<div class="demo-row">
+  <StatCard title="Revenue Overview" rows={rowsWithPerRowSubtitle} testId="per-row-subtitle" />
+</div>
+
+<h3>Row Additional Content Stays Inline By Default</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  By default, <code>additionalContent</code> renders inline alongside the value/delta, wrapping only if
+  it does not fit — e.g. a short unit suffix like the ones this card renders.
+</p>
+<div class="demo-row" style="max-width: 900px;">
+  <StatCard
+    title="Success Rate"
+    rows={[
+      {
+        testId: 'inline-additional-row',
+        value: '--',
+        additionalContent: '%'
+      }
+    ]}
+    testId="inline-additional"
+  />
+</div>
+
+<h3>Row Additional Content Forces Its Own Line (additionalContentBreak)</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  Setting <code>additionalContentBreak</code> forces <code>additionalContent</code> onto its own line
+  below the value/delta, even with plenty of horizontal room to fit inline.
+</p>
+<div class="demo-row" style="max-width: 900px;">
+  <StatCard
+    title="Wide Row"
+    rows={[
+      {
+        testId: 'wide-additional-row',
+        heading: 'Revenue',
+        value: '₹12.4Cr',
+        change: 8.2,
+        additionalContent: 'short',
+        additionalContentBreak: true
+      }
+    ]}
+    testId="wide-additional"
+  />
+</div>
+
+<h3>Row Value Tint (valueVariant)</h3>
+<div class="demo-row">
+  <StatCard
+    title="Order Health"
+    rows={[
+      {
+        testId: 'value-tint-success-row',
+        heading: 'Delivered',
+        value: '98.4%',
+        valueVariant: 'success'
+      },
+      {
+        testId: 'value-tint-warning-row',
+        heading: 'RTO Risk',
+        value: '12.1%',
+        valueVariant: 'warning'
+      }
+    ]}
+    testId="value-tint"
+  />
+</div>
+
+<h3>Row Value & Heading Typography Override</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  <code>--statcard-row-value-font-size</code>/<code>--statcard-row-value-font-weight</code> and
+  <code>--statcard-row-heading-font-size</code>/<code>--statcard-row-heading-font-weight</code> let
+  a single row's value and heading render at a size/weight that differs from the card-level default
+  and from its sibling rows — scoped via the row's own <code>testId</code>. The third row sets no
+  override and keeps today's shared card-level typography.
+</p>
+<div class="demo-row">
+  <StatCard title="Mixed Weight Rows" rows={rowTypographyRows} testId="value-typography" />
+</div>
+
+<h3>Row Order Override (title → subtitle → value)</h3>
+<p class="intro" style="margin-bottom: 12px;">
+  A row's heading, value line, and subtitle render in that markup order by default.
+  <code>--statcard-row-heading-order</code>, <code>--statcard-row-subtitle-order</code>, and
+  <code>--statcard-row-value-line-order</code> let a single row rearrange its own sub-elements —
+  e.g. title → subtitle → value — scoped via the row's own <code>testId</code>, mirroring the
+  card-level <code>--statcard-header-order</code>/<code>--statcard-subtitle-order</code>/
+  <code>--statcard-value-row-order</code> pattern. The second row sets no override and keeps today's default
+  heading → value → subtitle order.
+</p>
+<div class="demo-row">
+  <StatCard title="Reordered Rows" rows={rowOrderRows} testId="row-order" />
+</div>
+
 <h3>With Custom Children (ProportionBar)</h3>
 <div class="demo-row">
   <StatCard title="Payment Methods" value="8,610 orders" testId="with-children">
@@ -210,5 +363,30 @@
     color: var(--doc-text-secondary);
     margin-bottom: 24px;
     max-width: 640px;
+  }
+
+  /* Row Value & Heading Typography Override demo: scoped per-row via the
+     row's own testId (rendered as data-pw on .statcard-row). The third row
+     (value-typography-default-row) intentionally has no matching selector
+     here, so it keeps the card-level default typography. */
+  :global([data-pw='value-typography-primary-row']) {
+    --statcard-row-value-font-size: 20px;
+    --statcard-row-value-font-weight: 700;
+    --statcard-row-heading-font-size: 18px;
+  }
+
+  :global([data-pw='value-typography-secondary-row']) {
+    --statcard-row-value-font-size: 30px;
+    --statcard-row-value-font-weight: 600;
+  }
+
+  /* Row Order Override demo: scoped per-row via the row's own testId. Moves
+     the subtitle above the value line for a title -> subtitle -> value
+     reading order (heading stays at its default order 0). The second row
+     (row-order-default-row) sets no matching selector, so it keeps today's
+     default heading -> value -> subtitle markup order. */
+  :global([data-pw='row-order-reordered-row']) {
+    --statcard-row-subtitle-order: 1;
+    --statcard-row-value-line-order: 2;
   }
 </style>

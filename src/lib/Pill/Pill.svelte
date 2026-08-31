@@ -8,6 +8,7 @@
     dismissible = false,
     disabled = false,
     testId,
+    title,
     dismissIcon,
     leadingIcon,
     onclick,
@@ -52,6 +53,7 @@
   tabindex={interactive ? 0 : null}
   aria-disabled={interactive && disabled ? true : null}
   data-pw={typeof testId === 'string' ? testId : null}
+  title={title ?? null}
   testID={typeof testId === 'string' ? testId : null}
 >
   {#if typeof leadingIcon === 'function'}

@@ -35,6 +35,11 @@
   let atBottom = $state(true);
   let scrollable = $state(false);
   let pinActive = false;
+  // Set when a turn without pinHold has asked for its reservation back, but the reply is not yet
+  // tall enough to hold the pinned position without it. Cleared by tryReleasePin.
+  let pinReleasePending = false;
+  // The scroll offset the pin put the sender message at, so a later release can restore it.
+  let pinnedScrollTop = 0;
 
   let scrollKey = $derived(`${messages.length}:${messages.at(-1)?.content.length ?? 0}`);
   let showJump = $derived(!atBottom && messages.length > 0);
@@ -133,7 +138,13 @@
     pinActive = true;
     const listRect = listEl.getBoundingClientRect();
     const paddingTop = Number.parseFloat(getComputedStyle(listEl).paddingTop) || 0;
-    listEl.scrollTop += targetRect.top - listRect.top - paddingTop;
+    // This is a layout correction, not a reader-initiated scroll, so it must land instantly.
+    // .chat-message-list sets scroll-behavior: smooth, under which `scrollTop = x` starts an
+    // ANIMATION: scrollTop still reads its old value on the next line, and anything that shrinks
+    // the scrollable range before the animation finishes clamps it partway. Releasing the
+    // reservation does exactly that, which is how the pin was being lost.
+    pinnedScrollTop = listEl.scrollTop + (targetRect.top - listRect.top - paddingTop);
+    listEl.scrollTo({ top: pinnedScrollTop, behavior: 'instant' });
     reportScrollState(listEl);
   }
 
@@ -142,9 +153,43 @@
       innerEl.style.minHeight = '';
     }
     pinActive = false;
+    pinReleasePending = false;
     if (listEl !== null) {
       reportScrollState(listEl);
     }
+  }
+
+  /**
+   * Give the reserved headroom back only once the turn's own content can hold the pinned position.
+   *
+   * The reservation is what makes the sender message able to sit at the top at all. Clearing it
+   * while the reply is still shorter than the frame shrinks the scrollable range below the pinned
+   * offset, the browser clamps, and the question slides back down -- on short answers, which is
+   * where pinning matters most. So measure rather than assume: lift the reservation, check whether
+   * the natural content still reaches the pinned offset, and put it straight back if it does not.
+   * Reply growth re-runs this through the resize observer, so the reservation disappears by itself
+   * the moment it stops being load-bearing.
+   */
+  function tryReleasePin(): void {
+    if (!pinReleasePending || listEl === null || innerEl === null) {
+      return;
+    }
+    const reserved = innerEl.style.minHeight;
+    // Lifting the reservation to measure also shrinks the scrollable range, and the browser
+    // clamps scrollTop to the smaller maximum the moment it does. Putting the reservation back
+    // does NOT undo that clamp, so the probe would silently destroy the very position it is
+    // checking. Restore the offset explicitly on both paths.
+    innerEl.style.minHeight = '';
+    const naturalMaxScroll = listEl.scrollHeight - listEl.clientHeight;
+    if (naturalMaxScroll >= pinnedScrollTop) {
+      listEl.scrollTo({ top: pinnedScrollTop, behavior: 'instant' });
+      pinActive = false;
+      pinReleasePending = false;
+      reportScrollState(listEl);
+      return;
+    }
+    innerEl.style.minHeight = reserved;
+    listEl.scrollTo({ top: pinnedScrollTop, behavior: 'instant' });
   }
 
   const pinToBottom: Action<HTMLElement, string> = (node) => {
@@ -162,6 +207,13 @@
         if (newMessage && senderId !== null && senderId !== previousSenderId) {
           queueMicrotask(() => {
             pinLatestSenderMessage();
+            // A host opts into reserved reply headroom with pinHold. Without it the reservation
+            // is still doing work until the reply itself can hold the pin, so mark it for release
+            // and let tryReleasePin decide when that is actually true.
+            if (!pinHold) {
+              pinReleasePending = true;
+              tryReleasePin();
+            }
           });
         }
         previousSenderId = senderId;
@@ -194,6 +246,7 @@
       if (scrollPolicy === 'near-bottom' && autoscroll && atBottom) {
         listEl.scrollTop = listEl.scrollHeight;
       }
+      tryReleasePin();
       reportScrollState(listEl);
     });
     observer.observe(node);

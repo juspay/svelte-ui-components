@@ -66,4 +66,11 @@
       <div data-pw="status-children-content">Action area</div>
     </Status>
   </div>
+  <div data-pw="status-heading-tag">
+    <Status
+      statusText="Order Confirmed"
+      statusTextTag="h2"
+      statusDescription="Renders statusText as an h2."
+    />
+  </div>
 </div>

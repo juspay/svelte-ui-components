@@ -185,6 +185,8 @@
           <div class="statcard-row-value-line">
             <div
               class="statcard-value"
+              class:statcard-value-success={row.valueVariant === 'success'}
+              class:statcard-value-warning={row.valueVariant === 'warning'}
               data-pw={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
               testID={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
             >
@@ -217,9 +219,25 @@
               </div>
             {/if}
             {#if typeof row.additionalContent === 'string' && row.additionalContent.length > 0}
-              <div class="statcard-row-additional">{row.additionalContent}</div>
+              <div
+                class="statcard-row-additional"
+                class:statcard-row-additional-break={row.additionalContentBreak === true}
+                data-pw={typeof testId === 'string' ? `${testId}-additional-${rowIndex}` : null}
+                testID={typeof testId === 'string' ? `${testId}-additional-${rowIndex}` : null}
+              >
+                {row.additionalContent}
+              </div>
             {/if}
           </div>
+          {#if typeof row.subtitle === 'string' && row.subtitle.length > 0}
+            <div
+              class="statcard-row-subtitle"
+              data-pw={typeof testId === 'string' ? `${testId}-subtitle-${rowIndex}` : null}
+              testID={typeof testId === 'string' ? `${testId}-subtitle-${rowIndex}` : null}
+            >
+              {row.subtitle}
+            </div>
+          {/if}
           {#if Array.isArray(row.breakdown) && row.breakdown.length > 0}
             {#if typeof row.breakdownHeading === 'string' && row.breakdownHeading.length > 0}
               <div class="statcard-breakdown-heading">{row.breakdownHeading}</div>
@@ -421,6 +439,24 @@
     line-height: var(--statcard-value-line-height, 1.2);
   }
 
+  .statcard-value-success {
+    color: var(--statcard-value-success-color, #16a34a);
+  }
+
+  .statcard-value-warning {
+    color: var(--statcard-value-warning-color, #f59e0b);
+  }
+
+  /* Per-row value typography override — falls back to the card-level value
+     tokens so an unset row matches today's shared appearance exactly, then to
+     the same literals as the last resort. Scoped to the row's value line so
+     the single (non-rows) card value is unaffected. Mirrors the fallback
+     shape of --statcard-row-subtitle-font-size below. */
+  .statcard-row-value-line .statcard-value {
+    font-size: var(--statcard-row-value-font-size, var(--statcard-value-font-size, 24px));
+    font-weight: var(--statcard-row-value-font-weight, var(--statcard-value-font-weight, 600));
+  }
+
   .statcard-delta {
     font-size: var(--statcard-delta-font-size, 13px);
     font-weight: var(--statcard-delta-font-weight, 500);
@@ -456,6 +492,23 @@
     font-weight: var(--statcard-subtitle-font-weight, 400);
     color: var(--statcard-subtitle-color, #9ca3af);
     line-height: var(--statcard-subtitle-line-height, 1.4);
+  }
+
+  /* Per-row subtitle — falls back to the card-level subtitle tokens so a
+     consumer that already themes `.statcard-subtitle` gets a matching look
+     with no extra wiring, then to the same literals as the last resort. */
+  .statcard-row-subtitle {
+    order: var(--statcard-row-subtitle-order, 0);
+    font-size: var(--statcard-row-subtitle-font-size, var(--statcard-subtitle-font-size, 12px));
+    font-weight: var(
+      --statcard-row-subtitle-font-weight,
+      var(--statcard-subtitle-font-weight, 400)
+    );
+    color: var(--statcard-row-subtitle-color, var(--statcard-subtitle-color, #9ca3af));
+    line-height: var(
+      --statcard-row-subtitle-line-height,
+      var(--statcard-subtitle-line-height, 1.4)
+    );
   }
 
   /* Multi-row layout */
@@ -498,6 +551,7 @@
   }
 
   .statcard-row-heading-wrap {
+    order: var(--statcard-row-heading-order, 0);
     display: flex;
     align-items: center;
   }
@@ -516,6 +570,7 @@
   }
 
   .statcard-row-value-line {
+    order: var(--statcard-row-value-line-order, 0);
     display: flex;
     align-items: baseline;
     gap: var(--statcard-row-value-gap, 8px);
@@ -523,10 +578,18 @@
   }
 
   .statcard-row-additional {
+    /* Default: flows inline in the wrapping flex row and only breaks if it
+       does not fit — matches short unit suffixes like "%" or "ms". */
     font-size: var(--statcard-row-additional-font-size, 12px);
     font-weight: var(--statcard-row-additional-font-weight, 400);
     color: var(--statcard-row-additional-color, #9ca3af);
     line-height: 1.4;
+  }
+
+  .statcard-row-additional-break {
+    /* Opt-in: forces its own line regardless of available width, for
+       descriptive text that should never sit beside the value/delta. */
+    flex-basis: var(--statcard-row-additional-flex-basis, 100%);
   }
 
   /* Breakdown grid */

@@ -1,27 +1,7 @@
-<script lang="ts" module>
-  // Reference-counted so two Sheets open at once (or a Sheet nested inside
-  // another scroll-locking surface) don't have the second one's close clobber
-  // the first one's still-needed lock.
-  let scrollLockCount = 0;
-
-  function lockScroll() {
-    if (scrollLockCount === 0) {
-      document.body.style.overflow = 'hidden';
-    }
-    scrollLockCount += 1;
-  }
-
-  function unlockScroll() {
-    scrollLockCount = Math.max(0, scrollLockCount - 1);
-    if (scrollLockCount === 0) {
-      document.body.style.overflow = '';
-    }
-  }
-</script>
-
 <script lang="ts">
   import type { SheetProperties } from './properties';
   import { fly, fade } from 'svelte/transition';
+  import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
 
@@ -97,7 +77,7 @@
   }
 
   function scrollLockAction(_node: HTMLElement) {
-    lockScroll();
+    lockBodyScroll();
     tick().then(() => {
       if (sheetPanel !== null) {
         sheetPanel.focus();
@@ -105,7 +85,7 @@
     });
     return {
       destroy() {
-        unlockScroll();
+        unlockBodyScroll();
       }
     };
   }

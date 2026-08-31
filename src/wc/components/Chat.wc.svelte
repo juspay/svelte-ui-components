@@ -14,6 +14,11 @@
       streaming: { type: 'Boolean', reflect: true },
       recording: { type: 'Boolean', reflect: true },
       autoscroll: { type: 'Boolean', reflect: true },
+      scrollPolicy: { type: 'String', attribute: 'scroll-policy' },
+      pinHold: { type: 'Boolean', attribute: 'pin-hold' },
+      jump: { type: 'Boolean', reflect: true },
+      jumpLabel: { type: 'String', attribute: 'jump-label' },
+      jumpIcon: { type: 'Object' },
       toolStatus: { type: 'Object', attribute: 'tool-status' },
       suggestions: { type: 'Object' },
       attachments: { type: 'Object' },
@@ -42,7 +47,8 @@
       onvoice: { type: 'Object' },
       onattach: { type: 'Object' },
       onretry: { type: 'Object' },
-      onfeedback: { type: 'Object' }
+      onfeedback: { type: 'Object' },
+      onscrollstate: { type: 'Object' }
     }
   }}
 />

@@ -3,7 +3,7 @@
   import { onMount, onDestroy } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
-  import { createDebouncer } from '../utils';
+  import { createDebouncer, lockBodyScroll, unlockBodyScroll } from '../utils';
   import Button from '$lib/Button/Button.svelte';
   import Img from '$lib/Img/Img.svelte';
 
@@ -122,7 +122,7 @@
 
   onMount(() => {
     if (lockScroll) {
-      document.body.style.overflow = 'hidden';
+      lockBodyScroll();
     }
     if (typeof autoDismissAfter === 'number') {
       dismissTimer = setTimeout(() => onclose?.(), autoDismissAfter);
@@ -139,7 +139,7 @@
     }
     if (typeof window !== 'undefined') {
       if (lockScroll) {
-        document.body.style.overflow = '';
+        unlockBodyScroll();
       }
       if (supportHardwareBackPress) {
         if (!backPressed) {

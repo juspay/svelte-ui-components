@@ -58,6 +58,8 @@ export type OptionalMenuProperties = {
    */
   interactiveTrigger?: boolean;
   classes?: string;
+  /** Rewrites each item icon's SVG markup before it is inlined. */
+  transformSvg?: (svg: string) => string;
   /** Value of the currently selected item. When set, opening the menu focuses the
    * selected option instead of the first item, the matching item gets the
    * `menu-item-selected` class (stylable via --menu-item-selected-*), and

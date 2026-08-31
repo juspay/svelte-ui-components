@@ -21,6 +21,18 @@ export type OptionalChipInputProperties = {
   ariaLabel?: string;
   placeholder?: string;
   disabled?: boolean;
+  /**
+   * Reach for this when a consumer's chips are prone to being ALMOST right -- a misspelled tag,
+   * a near-correct email -- and forcing a delete-and-retype round trip for every small correction
+   * would be annoying. When `true`, activating a committed chip (click, or Enter/Space once
+   * tabbed to it) swaps it for an inline text field pre-filled with its current value: Enter or
+   * blurring the field commits the edit back into `values`, Escape restores the original text and
+   * leaves `values` untouched. An edit that comes back blank or duplicates another chip is
+   * silently discarded, same as a blank/duplicate draft on add. Defaults to `false` -- chips stay
+   * display-only and the only way to change one is still to delete it and retype it, unchanged
+   * from before this prop existed.
+   */
+  editable?: boolean;
   testId?: string;
   classes?: string;
 };
@@ -28,6 +40,11 @@ export type OptionalChipInputProperties = {
 export type ChipInputEventProperties = {
   onadd?: (value: string) => void;
   ondismiss?: (value: string) => void;
-  /** Fires alongside `onadd`/`ondismiss`, after either has already updated `values`. */
+  /**
+   * Fires after an in-place edit (see `editable`) commits a value that actually changed. Not
+   * fired when the edit is cancelled (Escape) or committed with the text unchanged.
+   */
+  onedit?: (value: string, previousValue: string) => void;
+  /** Fires alongside `onadd`/`ondismiss`/`onedit`, after any of them has already updated `values`. */
   onchange?: (values: string[]) => void;
 };

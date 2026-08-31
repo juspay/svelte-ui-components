@@ -1,6 +1,7 @@
 import type { Snippet } from 'svelte';
 import type { ChatMessageData, ChatToolStatus } from './types';
 import type { ChatMessageFeedback } from '../ChatMessage/properties';
+import type { ChatMessageListProperties } from '../ChatMessageList/properties';
 import type { ChatSuggestion } from '../ChatSuggestions/properties';
 
 export type ChatProperties = OptionalChatProperties & ChatEventProperties & MandatoryChatProperties;
@@ -20,6 +21,11 @@ export type OptionalChatProperties = {
   streaming?: boolean;
   recording?: boolean;
   autoscroll?: boolean;
+  scrollPolicy?: ChatMessageListProperties['scrollPolicy'];
+  pinHold?: ChatMessageListProperties['pinHold'];
+  jump?: ChatMessageListProperties['jump'];
+  jumpLabel?: ChatMessageListProperties['jumpLabel'];
+  jumpIcon?: ChatMessageListProperties['jumpIcon'];
   toolStatus?: ChatToolStatus | null;
   suggestions?: ChatSuggestion[];
   attachments?: File[];
@@ -54,4 +60,5 @@ export type ChatEventProperties = {
   onattach?: (files: File[]) => void;
   onretry?: () => void;
   onfeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
+  onscrollstate?: ChatMessageListProperties['onscrollstate'];
 };

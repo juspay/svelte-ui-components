@@ -8,14 +8,25 @@
     ariaLabel,
     placeholder = 'Add value…',
     disabled = false,
+    editable = false,
     testId,
     classes,
     onadd,
     ondismiss,
+    onedit,
     onchange
   }: ChipInputProperties = $props();
 
   let draft = $state('');
+
+  // The chip currently swapped for an inline edit field, held by VALUE rather than by slot
+  // index. `values` is dedup-only by construction, so the text is a stable identity, and it is
+  // already what the {#each} is keyed by. An index is only a position: if the parent reorders or
+  // removes entries while an edit is open, the same index points at a different chip and the
+  // commit lands on the wrong one. Only one chip can be mid-edit at a time.
+  let editingChip = $state<string | null>(null);
+  let editDraft = $state('');
+  let editInputRef = $state<{ focus: () => void } | null>(null);
 
   function addChip(): void {
     const trimmed = draft.trim();
@@ -38,6 +49,11 @@
       return;
     }
     values = [...values.slice(0, chipIndex), ...values.slice(chipIndex + 1)];
+    // Identity survives a delete elsewhere in the list, so only the edited chip's own removal
+    // has to close the field. No index fix-up is needed.
+    if (editingChip === chip) {
+      cancelEdit();
+    }
     ondismiss?.(chip);
     onchange?.([...values]);
   }
@@ -48,18 +64,106 @@
       addChip();
     }
   }
+
+  function startEdit(chip: string): void {
+    if (disabled) {
+      return;
+    }
+    editingChip = chip;
+    editDraft = chip;
+    queueMicrotask(() => editInputRef?.focus());
+  }
+
+  function cancelEdit(): void {
+    editingChip = null;
+    editDraft = '';
+  }
+
+  // A commit is only ever valid while the component is enabled and the chip it started on is
+  // still present. `disabled` can flip mid-edit, and a pending blur can arrive after it does.
+  //
+  // Together with the `!disabled` guard on the edit field's {#if}, this is what makes disabling
+  // mid-edit safe without an $effect: the field stops rendering, and any Enter or blur already in
+  // flight is refused here rather than writing to `values` behind a disabled control.
+  function commitEdit(chip: string): void {
+    if (disabled) {
+      cancelEdit();
+      return;
+    }
+    const index = values.indexOf(chip);
+    if (index === -1) {
+      cancelEdit();
+      return;
+    }
+    const original = chip;
+    const trimmed = editDraft.trim();
+    const isUnchanged = trimmed === original;
+    // Mirrors addChip's dedup-only contract: a blank edit or one that collides with a
+    // DIFFERENT existing chip is silently discarded rather than surfaced as an error.
+    const isBlankOrDuplicate = trimmed.length === 0 || (!isUnchanged && values.includes(trimmed));
+    if (isUnchanged || isBlankOrDuplicate) {
+      cancelEdit();
+      return;
+    }
+    values = values.map((value, valueIndex) => (valueIndex === index ? trimmed : value));
+    onedit?.(trimmed, original);
+    onchange?.([...values]);
+    cancelEdit();
+  }
+
+  function handleEditKeyDown(event: KeyboardEvent, chip: string): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitEdit(chip);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelEdit();
+    }
+  }
+
+  function handleEditBlur(chip: string): void {
+    if (editingChip !== chip) {
+      // Already resolved (Escape, or the chip removed) before this trailing blur arrived --
+      // committing again would act on an edit that is no longer open.
+      return;
+    }
+    commitEdit(chip);
+  }
 </script>
 
 <div class="chip-input {classes ?? ''}" data-pw={testId} testID={testId}>
-  {#each values as chip (chip)}
-    <Pill
-      text={chip}
-      classes="chip-input-pill"
-      dismissible={!disabled}
-      {disabled}
-      ondismiss={() => removeChip(chip)}
-      {...typeof testId === 'string' ? { testId: `${testId}-chip` } : {}}
-    />
+  {#each values as chip, index (chip)}
+    {#if editable && editingChip === chip && !disabled}
+      <div class="chip-input-edit-wrap">
+        <Input
+          value={editDraft}
+          dataType="text"
+          name=""
+          autoComplete="off"
+          actionInput={false}
+          classes="chip-input-edit"
+          bind:this={editInputRef}
+          onInput={(nextValue) => {
+            editDraft = nextValue;
+          }}
+          onKeyDown={(event) => handleEditKeyDown(event, chip)}
+          onBlur={() => handleEditBlur(chip)}
+          {...typeof testId === 'string' ? { testId: `${testId}-item-${index}-edit` } : {}}
+        />
+      </div>
+    {:else}
+      <Pill
+        text={chip}
+        classes="chip-input-pill"
+        dismissible={!disabled}
+        {disabled}
+        ondismiss={() => removeChip(chip)}
+        {...editable && !disabled
+          ? { title: `Edit "${chip}"`, onclick: () => startEdit(chip) }
+          : {}}
+        {...typeof testId === 'string' ? { testId: `${testId}-item-${index}` } : {}}
+      />
+    {/if}
   {/each}
   <div class="chip-input-draft-wrap">
     <Input
@@ -77,7 +181,7 @@
       }}
       onKeyDown={handleKeyDown}
       onBlur={addChip}
-      {...typeof testId === 'string' ? { testId: `${testId}-input` } : {}}
+      {...typeof testId === 'string' ? { testId: `${testId}-add` } : {}}
     />
   </div>
 </div>
@@ -126,6 +230,10 @@
     flex: var(--chip-input-draft-flex, 0 1 auto);
   }
 
+  .chip-input-edit-wrap {
+    flex: var(--chip-input-edit-flex, 0 1 auto);
+  }
+
   .chip-input :global(.chip-input-pill) {
     --pill-gap: var(--chip-input-pill-gap, var(--chip-input-pill-gap-default));
     --pill-background: var(--chip-input-pill-background, var(--chip-input-pill-background-default));
@@ -167,6 +275,38 @@
        tight padding and no margin or shadow regardless of how the app themes Input elsewhere.
        Override them per-instance via --chip-input-draft-* if a layout genuinely needs it. */
     --input-padding: var(--chip-input-draft-padding, 0 2px);
+    --input-margin: 0;
+    --input-box-shadow: none;
+  }
+
+  /* The in-place edit field replaces a Pill for the duration of one edit, so it reuses the same
+     captured --input-* cascade (--chip-input-draft-*-default, above) the draft field maps from --
+     an app that themes Input app-wide gets a matching edit field for free. Only sizing/padding
+     get their own --chip-input-edit-* tokens: the field holds an EXISTING (often longer) value
+     rather than a short in-progress draft, so it defaults wider. */
+  .chip-input-edit-wrap :global(.chip-input-edit) {
+    --input-width: var(--chip-input-edit-width, 110px);
+    --input-height: var(--chip-input-edit-height, 28px);
+    /* Fall through the DRAFT token before the captured default: the edit field is the same
+       control as the draft field, wearing the same clothes, so a consumer who themed the draft
+       with --chip-input-draft-* must get a matching edit field without naming it twice. */
+    --input-border: var(
+      --chip-input-edit-border,
+      var(--chip-input-draft-border, var(--chip-input-draft-border-default))
+    );
+    --input-radius: var(
+      --chip-input-edit-radius,
+      var(--chip-input-draft-radius, var(--chip-input-draft-radius-default))
+    );
+    --input-focus-border: var(
+      --chip-input-edit-focus-border,
+      var(--chip-input-draft-focus-border, var(--chip-input-draft-focus-border-default))
+    );
+    --input-font-size: var(
+      --chip-input-edit-font-size,
+      var(--chip-input-draft-font-size, var(--chip-input-draft-font-size-default))
+    );
+    --input-padding: var(--chip-input-edit-padding, 0 8px);
     --input-margin: 0;
     --input-box-shadow: none;
   }

@@ -1,6 +1,13 @@
 import type { Snippet } from 'svelte';
 
-export type StepStatus = 'completed' | 'active' | 'pending' | 'failure' | 'in-progress';
+/**
+ * `muted` is an opt-in, purely additive status: a smaller, subtly-tinted circle
+ * for a de-emphasized or supplementary step (e.g. an informational marker
+ * riding alongside a primary rail). It is only ever reached by setting a
+ * step's `status` explicitly — `resolveStatus` in Stepper.svelte never derives
+ * it from `currentStepIndex` — so no existing step changes how it renders.
+ */
+export type StepStatus = 'completed' | 'active' | 'pending' | 'failure' | 'in-progress' | 'muted';
 
 export type Step = {
   label: string;
@@ -17,6 +24,13 @@ export type Step = {
    * "New" label.
    */
   badge?: Snippet;
+  /**
+   * Test selector for this step's root element, rendered as `data-pw`. When
+   * omitted and the Stepper itself has a `testId`, falls back to
+   * `${stepperTestId}-step-${n}` (1-based). When neither is set, no attribute
+   * is rendered.
+   */
+  testId?: string;
 };
 
 export type MandatoryStepperProperties = {
@@ -28,6 +42,18 @@ export type OptionalStepperProperties = {
   orientation?: 'horizontal' | 'vertical';
   classes?: string;
   testId?: string;
+  /**
+   * Removes every Step's synthetic role and tab stop while retaining its mouse handlers.
+   * Opt in when an ancestor or consumer supplies the semantic interactive control.
+   */
+  suppressRoleAndTabindex?: boolean;
+  /**
+   * Stops the Stepper's own root element from rendering `testId` as `data-pw`/`testID`,
+   * while per-step ids still derive from `testId` (`${testId}-step-${n}`) exactly as
+   * before. Opt in when the element wrapping the Stepper already carries the same
+   * `data-pw` value, which would otherwise leave two elements matching that selector.
+   */
+  suppressContainerTestId?: boolean;
 };
 
 export type StepperEventProperties = {
@@ -45,6 +71,13 @@ export type OptionalStepProperties = {
   status?: StepStatus;
   badge?: Snippet;
   classes?: string;
+  /** Test selector for the step's root element, rendered as `data-pw`. */
+  testId?: string | null;
+  /**
+   * Removes Step's synthetic role and tab stop while retaining its mouse handlers.
+   * Opt in when an ancestor or consumer supplies the semantic interactive control.
+   */
+  suppressRoleAndTabindex?: boolean;
 };
 
 export type StepEventProperties = {

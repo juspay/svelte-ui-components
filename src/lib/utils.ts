@@ -325,3 +325,36 @@ export function createDebouncer(delay: number) {
     }
   };
 }
+
+/**
+ * Body scroll lock, reference counted.
+ *
+ * Modal, Sheet and CommandMenu each hide body overflow while they are open. Doing
+ * that with a bare assignment means the FIRST of them to unmount restores
+ * scrolling for all of them, so closing a confirmation dialog inside a still-open
+ * modal silently lets the page behind it scroll again. Counting the holders keeps
+ * the lock until the last one releases it.
+ *
+ * Callers must pair every lock with exactly one unlock.
+ */
+let bodyScrollLockCount = 0;
+
+export function lockBodyScroll(): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  if (bodyScrollLockCount === 0) {
+    document.body.style.overflow = 'hidden';
+  }
+  bodyScrollLockCount += 1;
+}
+
+export function unlockBodyScroll(): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+  if (bodyScrollLockCount === 0) {
+    document.body.style.overflow = '';
+  }
+}

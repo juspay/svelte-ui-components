@@ -51,7 +51,10 @@ test.describe('Table — built-in pagination + row numbers', () => {
 
     const sizeSelect = table.getByTestId('paged-page-size');
     await sizeSelect.getByRole('combobox').click();
-    await sizeSelect.getByRole('listbox').getByText('10', { exact: true }).click();
+    // The page-size dropdown portals its listbox to <body> (BZ-4623, so the
+    // panel escapes the table wrapper's overflow:hidden clipping) — it is no
+    // longer a descendant of sizeSelect, so it must be found from the page root.
+    await page.getByRole('listbox').getByText('10', { exact: true }).click();
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(10);
     await expect(table.getByTestId('table-paginated-paginator-range')).toContainText('1-10 of 23');
   });
@@ -71,6 +74,39 @@ test.describe('Table — built-in pagination + row numbers', () => {
     // Clearing the search restores multi-page data and the paginator with it.
     await page.getByTestId('paged-search').fill('');
     await expect(table.getByTestId('table-paginated-paginator-range')).toContainText('1-5 of 23');
+  });
+});
+
+test.describe('Table — pagination footer on a single page (showFooterOnSinglePage)', () => {
+  test('showFooterOnSinglePage keeps the footer (incl. page-size selector) visible', async ({
+    page
+  }) => {
+    await page.goto('/components/table');
+    const table = page.getByTestId('table-single-page-pagination');
+    await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(3);
+    const footer = table.getByTestId('single-page-paged');
+    await expect(footer).toBeVisible();
+    await expect(table.getByTestId('single-page-paged-page-size')).toBeVisible();
+    await expect(table.getByTestId('table-single-page-pagination-paginator-range')).toContainText(
+      '1-3 of 3'
+    );
+  });
+});
+
+test.describe('Table — count-only pagination footer (pagination.hideControls)', () => {
+  test('hideControls renders the range text with no page-size selector or steppers', async ({
+    page
+  }) => {
+    await page.goto('/components/table');
+    const table = page.getByTestId('table-count-only-pagination');
+    const footer = table.getByTestId('count-only-paged');
+    await expect(footer).toBeVisible();
+    await expect(table.getByTestId('table-count-only-pagination-paginator-range')).toContainText(
+      '1-6 of 6'
+    );
+    await expect(table.getByTestId('count-only-paged-page-size')).toHaveCount(0);
+    await expect(footer.getByRole('navigation')).toHaveCount(0);
+    await expect(footer.getByRole('button')).toHaveCount(0);
   });
 });
 

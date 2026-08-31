@@ -92,6 +92,9 @@ export const asTagArrayItems = (value: TableCellValue): TableTagArrayCellItem[] 
     if (typeof record.classes === 'string') {
       item.classes = record.classes;
     }
+    if (typeof record.testId === 'string') {
+      item.testId = record.testId;
+    }
     items.push(item);
   }
   return items;

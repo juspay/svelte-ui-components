@@ -15,4 +15,11 @@
   <CheckListItem text="Set up project" bind:checked={checklistItem1} />
   <CheckListItem text="Install dependencies" bind:checked={checklistItem2} />
   <CheckListItem text="Write tests" bind:checked={checklistItem3} />
+  <CheckListItem text="Required business details" disabled testId="check-list-item-disabled">
+    {#snippet checkboxLabel()}
+      <span data-pw="check-list-item-disabled-content">
+        Required business details <strong>Required</strong>
+      </span>
+    {/snippet}
+  </CheckListItem>
 </div>

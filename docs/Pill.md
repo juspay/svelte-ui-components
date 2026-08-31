@@ -58,6 +58,7 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 | dismissible | `boolean` | No       | `false` | When true, shows a small X button after the text that triggers the ondismiss event when clicked.                                                                       |
 | disabled    | `boolean` | No       | `false` | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                          |
 | testId      | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                |
+| title       | `string`  | No       | `-`     | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                                             |
 | classes     | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets

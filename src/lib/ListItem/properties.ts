@@ -4,6 +4,8 @@ export type ListItemProperties = ListItemEventProperties & {
   leftImageUrl?: string | null;
   leftImageFallbackUrl?: string | null;
   rightImageUrl?: string | null;
+  /** Rewrites SVG markup before either image is inlined. Providing it enables SVG inlining. */
+  transformSvg?: (svg: string) => string;
   label?: string | null;
   useAccordion?: boolean;
   rightContentText?: string | null;
@@ -16,6 +18,11 @@ export type ListItemProperties = ListItemEventProperties & {
   showRightContentLoader?: boolean;
   expand?: boolean;
   preventFocus?: boolean;
+  /**
+   * Removes ListItem's synthetic roles and tab stops while retaining its mouse handlers.
+   * Opt in when an ancestor or consumer supplies the semantic interactive control.
+   */
+  suppressRoleAndTabindex?: boolean;
   leftContent?: Snippet;
   centerContent?: Snippet;
   rightContent?: Snippet;

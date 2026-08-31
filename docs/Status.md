@@ -16,17 +16,18 @@ The `statusDescription` string is rendered with `{@html}`, so a caller can pass 
 
 ## Props
 
-| Prop               | Type               | Required | Default                          | Description                                                                                                                                                            |
-| ------------------ | ------------------ | -------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| statusIcon         | `string`           | No       | `'icons/order-success-icon.svg'` | URL of the status icon image displayed at the center (e.g., success checkmark, error cross).                                                                           |
-| statusText         | `string`           | No       | `''`                             | Main status title text (e.g., 'Order Successful', 'Payment Failed').                                                                                                   |
-| statusDescription  | `string`           | No       | `''`                             | Description text below the title. Supports HTML content (rendered via {@html}).                                                                                        |
-| buttonProperties   | `ButtonProperties` | No       | `-`                              | Optional ButtonProperties object for an action button below the description (e.g., 'Try Again', 'Go Home').                                                            |
-| classes            | `string`           | No       | `-`                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| icon               | `Snippet`          | No       | `-`                              | Custom media rendered in place of the `statusIcon` image. Takes priority over `statusIcon`.                                                                            |
-| descriptionSnippet | `Snippet`          | No       | `-`                              | Replaces the `statusDescription` string at render time and escapes its content. Takes priority over `statusDescription`.                                               |
-| children           | `Snippet`          | No       | `-`                              | Action area rendered below the description, outside `.status-description` and its padding.                                                                             |
-| testId             | `string`           | No       | `-`                              | Value applied to the `data-pw` attribute on the root element for test selection.                                                                                       |
+| Prop               | Type                                                    | Required | Default                          | Description                                                                                                                                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------- | -------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| statusIcon         | `string`                                                | No       | `'icons/order-success-icon.svg'` | URL of the status icon image displayed at the center (e.g., success checkmark, error cross).                                                                                                                                                                                              |
+| statusText         | `string`                                                | No       | `''`                             | Main status title text (e.g., 'Order Successful', 'Payment Failed').                                                                                                                                                                                                                      |
+| statusTextTag      | `'div' \| 'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6'` | No       | `'div'`                          | Element `statusText` renders as. Set to a heading tag when `statusText` is a real page/section heading — only then does it pick up an app's semantic-tag typography (size, weight, colour) and join the document outline for assistive tech. The default `div` renders exactly as before. |
+| statusDescription  | `string`                                                | No       | `''`                             | Description text below the title. Supports HTML content (rendered via {@html}).                                                                                                                                                                                                           |
+| buttonProperties   | `ButtonProperties`                                      | No       | `-`                              | Optional ButtonProperties object for an action button below the description (e.g., 'Try Again', 'Go Home').                                                                                                                                                                               |
+| classes            | `string`                                                | No       | `-`                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                    |
+| icon               | `Snippet`                                               | No       | `-`                              | Custom media rendered in place of the `statusIcon` image. Takes priority over `statusIcon`.                                                                                                                                                                                               |
+| descriptionSnippet | `Snippet`                                               | No       | `-`                              | Replaces the `statusDescription` string at render time and escapes its content. Takes priority over `statusDescription`.                                                                                                                                                                  |
+| children           | `Snippet`                                               | No       | `-`                              | Action area rendered below the description, outside `.status-description` and its padding.                                                                                                                                                                                                |
+| testId             | `string`                                                | No       | `-`                              | Value applied to the `data-pw` attribute on the root element for test selection.                                                                                                                                                                                                          |
 
 ## Events
 
@@ -68,15 +69,49 @@ value through ordinary Svelte interpolation, which escapes it:
 
 Override these custom properties to theme the component.
 
-| Variable                          | Default                    | CSS Property     | Description                                                                                                                                                         |
-| --------------------------------- | -------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--status-min-height`             | `100vh`                    | min-height       | Minimum height of the `.background` container. Controls the overall height of the status screen.                                                                    |
-| `--status-font-weight`            | `600`                      | font-weight      | Font weight of the status title text. Used with different fallbacks: `600` on status text and `400` on description.                                                 |
-| `--status-description-font-color` | `#2f3841`                  | color            | Color of the description text. Used with different fallbacks: `#2f3841` on status text and `#436484cc` on the description paragraph.                                |
-| `--order-font`                    | `inherit`                  | font-family      | Font family for the status text.                                                                                                                                    |
-| `--order-font-size`               | `14px`                     | font-size        | Font size for the status text.                                                                                                                                      |
-| `--status-panel-background`       | `rgba(255, 255, 255, 0.6)` | background-color | Background of the inner status panel, applied only where `backdrop-filter` is supported. Set to `transparent` when embedding the component inside an existing page. |
-| `--status-panel-backdrop-filter`  | `blur(60px)`               | backdrop-filter  | Backdrop filter on the inner status panel. Set to `none` alongside `--status-panel-background` to remove the frosted panel entirely.                                |
+| Variable                          | Default                    | CSS Property     | Description                                                                                                                                                            |
+| --------------------------------- | -------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--status-min-height`             | `100vh`                    | min-height       | Minimum height of the `.background` container. Controls the overall height of the status screen.                                                                       |
+| `--status-font-weight`            | `600`                      | font-weight      | Font weight of the status title text. Used with different fallbacks: `600` on status text and `400` on description.                                                    |
+| `--status-description-font-color` | `#2f3841`                  | color            | Color of the description text. Used with different fallbacks: `#2f3841` on status text and `#436484cc` on the description paragraph.                                   |
+| `--status-icon-color`             | `inherit`                  | color            | Color applied to `.status-image`, the container around the status icon (`icon` snippet or the default `<Img>`). Inline SVG content using `currentColor` picks this up. |
+| `--order-font`                    | `inherit`                  | font-family      | Font family for the status text.                                                                                                                                       |
+| `--order-font-size`               | `14px`                     | font-size        | Font size for the status text.                                                                                                                                         |
+| `--status-panel-background`       | `rgba(255, 255, 255, 0.6)` | background-color | Background of the inner status panel, applied only where `backdrop-filter` is supported. Set to `transparent` when embedding the component inside an existing page.    |
+| `--status-panel-backdrop-filter`  | `blur(60px)`               | backdrop-filter  | Backdrop filter on the inner status panel. Set to `none` alongside `--status-panel-background` to remove the frosted panel entirely.                                   |
+
+### Dark theme
+
+`--status-description-font-color` and `--status-panel-background` default to fixed
+light-mode literals (a dark-on-light text color, a translucent white panel).
+`--status-icon-color` defaults to `inherit`, which is not theme-neutral either —
+with no ancestor setting `color`, it resolves to the browser's default black text
+color. None of the three defaults adapts to a surrounding dark theme, and nothing
+fails when they don't: an app that defines none of them gets light-themed status
+text, icon, and panel inside a dark UI with no error, warning, or visual glitch to
+flag it. **An app with a dark theme must define all three explicitly** — there is
+no way for the component to detect the theme around it.
+
+### Rendering statusText as a real heading
+
+`statusText` renders inside a plain `<div class="status-text">` by default, so it
+carries no heading semantics — it doesn't join the document outline, and an app
+whose design system wires typography to semantic tags (`h1`–`h6`) rather than
+setting `font-size` in component styles has no tag to target. `.status-text`
+itself only sets `font-weight` and `color` — it never sets `font-size` — so
+switching the tag via `statusTextTag` lets the surrounding app's own heading
+styles size it, with no change to `Status`'s own CSS:
+
+```svelte
+<Status
+  statusText="Payment Successful"
+  statusTextTag="h1"
+  statusDescription="Your order has been confirmed"
+/>
+```
+
+Omit `statusTextTag` (or pass `'div'`) and rendering is byte-identical to before
+this prop existed.
 
 ### Description text vs. action content
 

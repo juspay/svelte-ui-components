@@ -401,6 +401,65 @@
     qty: (index * 3) % 17
   }));
 
+  // ── Pagination footer forced visible on a single page (showFooterOnSinglePage) ──
+  const singlePageColumns: TableColumn[] = [
+    { id: 'item', label: 'Item', testId: 'single-page-item' },
+    { id: 'qty', label: 'Qty', align: 'right', testId: 'single-page-qty' }
+  ];
+
+  const singlePageRows: TableRow[] = Array.from({ length: 3 }, (_, index) => ({
+    item: `Item ${index + 1}`,
+    qty: index + 1
+  }));
+
+  // ── Count-only pagination footer (pagination.hideControls) ──
+  const countOnlyColumns: TableColumn[] = [
+    { id: 'item', label: 'Item', testId: 'count-only-item' },
+    { id: 'qty', label: 'Qty', align: 'right', testId: 'count-only-qty' }
+  ];
+
+  const countOnlyRows: TableRow[] = Array.from({ length: 6 }, (_, index) => ({
+    item: `Item ${index + 1}`,
+    qty: index + 1
+  }));
+
+  // ── Independent control suppression (hidePageSizeSelector / hideSteppers) ──
+  const controlSplitColumns: TableColumn[] = [
+    { id: 'item', label: 'Item', testId: 'control-split-item' },
+    { id: 'qty', label: 'Qty', align: 'right', testId: 'control-split-qty' }
+  ];
+
+  const controlSplitRows: TableRow[] = Array.from({ length: 6 }, (_, index) => ({
+    item: `Item ${index + 1}`,
+    qty: index + 1
+  }));
+
+  const followupColumns: TableColumn[] = [
+    { id: 'name', label: 'Name', width: '176px', testId: 'followup-name' },
+    {
+      id: 'docs',
+      label: 'Docs',
+      type: 'link',
+      sortable: false,
+      testId: 'followup-docs',
+      testIdSuffixes: { link: 'resource', copy: 'clipboard', linkCopied: 'copied-notice' }
+    },
+    {
+      id: 'provider',
+      label: 'Provider',
+      type: 'icon-label',
+      sortable: false,
+      testId: 'followup-provider',
+      testIdSuffixes: { icon: 'brand' }
+    }
+  ];
+
+  const followupRows: TableRow[] = Array.from({ length: 4 }, (_, index) => ({
+    name: `Follow-up ${index + 1}`,
+    docs: { url: `https://example.com/follow-up/${index + 1}`, label: `Document ${index + 1}` },
+    provider: { icons: [demoDotIcon], label: 'Breeze' }
+  }));
+
   // ── Controlled selection + toolbar demo ──────────────────────────────────────
   let controlledSelection = $state<Set<string>>(new Set());
   let lastBulkAction = $state('none');
@@ -631,6 +690,87 @@
     pagination={{ pageSize: 5, pageSizeOptions: [5, 10], testId: 'paged' }}
     getRowTestId={(_row, rowIndex) => `paged-idx-${rowIndex}`}
     testId="table-paginated"
+  />
+</div>
+
+<!-- Single-page dataset with the paginator footer forced visible -->
+<h3>Pagination Footer on a Single Page (showFooterOnSinglePage)</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <Table
+    columns={singlePageColumns}
+    rows={singlePageRows}
+    pagination={{
+      pageSize: 5,
+      pageSizeOptions: [5, 10],
+      showFooterOnSinglePage: true,
+      testId: 'single-page-paged'
+    }}
+    testId="table-single-page-pagination"
+  />
+</div>
+
+<!-- Count-only "Showing X-Y of Z" footer with no steppers/page-size selector -->
+<h3>Count-Only Pagination Footer (pagination.hideControls)</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <Table
+    columns={countOnlyColumns}
+    rows={countOnlyRows}
+    pagination={{
+      pageSize: 6,
+      hideControls: true,
+      testId: 'count-only-paged'
+    }}
+    testId="table-count-only-pagination"
+  />
+</div>
+
+<!-- Follow-up API fixture: inline widths, forwarded paginator ids, built-in suffix overrides -->
+<h3>Table Follow-up API</h3>
+<div class="demo-row" style="max-width: 760px;">
+  <Table
+    columns={followupColumns}
+    rows={followupRows}
+    pagination={{
+      pageSize: 2,
+      pageSizeOptions: [],
+      testId: 'followup-pages',
+      prevButtonTestId: 'followup-previous',
+      nextButtonTestId: 'followup-next',
+      rangeTestId: 'followup-range'
+    }}
+    testId="table-followups"
+  />
+</div>
+
+<!-- Independent control suppression: page-size selector hidden, steppers kept -->
+<h3>Pagination — Page-Size Selector Hidden (pagination.hidePageSizeSelector)</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <Table
+    columns={controlSplitColumns}
+    rows={controlSplitRows}
+    pagination={{
+      pageSize: 2,
+      pageSizeOptions: [2, 3],
+      hidePageSizeSelector: true,
+      testId: 'split-selector-hidden'
+    }}
+    testId="table-split-selector-hidden"
+  />
+</div>
+
+<!-- Independent control suppression: steppers hidden, page-size selector kept -->
+<h3>Pagination — Steppers Hidden (pagination.hideSteppers)</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <Table
+    columns={controlSplitColumns}
+    rows={controlSplitRows}
+    pagination={{
+      pageSize: 2,
+      pageSizeOptions: [2, 3],
+      hideSteppers: true,
+      testId: 'split-steppers-hidden'
+    }}
+    testId="table-split-steppers-hidden"
   />
 </div>
 

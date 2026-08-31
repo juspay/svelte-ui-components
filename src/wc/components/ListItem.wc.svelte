@@ -18,6 +18,8 @@
       showRightContentLoader: { type: 'Boolean', attribute: 'show-right-content-loader' },
       expand: { type: 'Boolean', reflect: true },
       preventFocus: { type: 'Boolean', attribute: 'prevent-focus' },
+      suppressRoleAndTabindex: { type: 'Boolean', attribute: 'suppress-role-and-tabindex' },
+      transformSvg: { type: 'Object' },
       classes: { type: 'String' },
       onleftImageClick: { type: 'Object' },
       onrightImageClick: { type: 'Object' },

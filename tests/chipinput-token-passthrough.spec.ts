@@ -10,11 +10,16 @@ import { expect, test } from '@playwright/test';
 //
 // The three precedence levels below are the whole contract: explicit component token > inherited
 // app theme > library default.
+//
+// Locators below use the per-chip `-item-<index>` / draft `-add` test ids (see
+// chipinput-testids-and-editing.test.ts) rather than the old flat `-chip`/`-input` ids every
+// chip and the draft field used to share -- each demo row below commits exactly one chip, at
+// index 0, before these run.
 test.describe('ChipInput token passthrough', () => {
   test('falls back to the library default when nothing is themed', async ({ page }) => {
     await page.goto('/components/chip-input');
 
-    const pill = page.getByTestId('chip-input-tags-chip').first();
+    const pill = page.getByTestId('chip-input-tags-item-0');
     await expect(pill).toBeVisible();
 
     await expect(pill).toHaveCSS('background-color', 'rgb(224, 224, 224)');
@@ -24,7 +29,7 @@ test.describe('ChipInput token passthrough', () => {
   test('an explicit --chip-input-pill-* override still wins', async ({ page }) => {
     await page.goto('/components/chip-input');
 
-    const pill = page.getByTestId('chip-input-accent-chip').first();
+    const pill = page.getByTestId('chip-input-accent-item-0');
     await expect(pill).toBeVisible();
 
     // #d1ecf1 / #0c5460 from the demo's .chip-input-accent recipe.
@@ -35,7 +40,7 @@ test.describe('ChipInput token passthrough', () => {
   test("inherits the app's own Pill theme when no component override is set", async ({ page }) => {
     await page.goto('/components/chip-input');
 
-    const pill = page.getByTestId('chip-input-inherited-chip').first();
+    const pill = page.getByTestId('chip-input-inherited-item-0');
     await expect(pill).toBeVisible();
 
     // #2f3542 / #f1f2f6 are set as --pill-background/--pill-color on an ancestor, exactly as a
@@ -50,7 +55,7 @@ test.describe('ChipInput token passthrough', () => {
   test("inherits the app's Pill size and shape, not just its colours", async ({ page }) => {
     await page.goto('/components/chip-input');
 
-    const pill = page.getByTestId('chip-input-inherited-chip').first();
+    const pill = page.getByTestId('chip-input-inherited-item-0');
     await expect(pill).toBeVisible();
 
     await expect(pill).toHaveCSS('font-size', '17px');
@@ -65,7 +70,7 @@ test.describe('ChipInput token passthrough', () => {
   }) => {
     await page.goto('/components/chip-input');
 
-    const draft = page.getByTestId('chip-input-inherited-input');
+    const draft = page.getByTestId('chip-input-inherited-add');
     await expect(draft).toBeVisible();
 
     await expect(draft).toHaveCSS('padding', '0px 2px');

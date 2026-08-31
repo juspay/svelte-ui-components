@@ -15,6 +15,7 @@
     onopen,
     onclose,
     classes,
+    transformSvg,
     selectedValue = null,
     role: menuRole = 'menu',
     ariaLabel: menuAriaLabel,
@@ -474,7 +475,7 @@
                 <!-- Inline the SVG so currentColor strokes/fills inherit the item's
                      text colour (danger items tint their icon red, dark theme works);
                      non-SVG URLs fall back to the plain <img> render automatically. -->
-                <Img inlineSvg src={item.icon} alt="" fallback="" />
+                <Img inlineSvg src={item.icon} alt="" fallback="" {transformSvg} />
               </span>
             {/if}
             <span class="menu-item-label">{item.label}</span>

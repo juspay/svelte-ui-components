@@ -146,7 +146,8 @@ Override these custom properties to theme the component.
 | `--input-mandatory-gap`             | `2px`                                                  | margin-left      | Gap between the label text and the mandatory asterisk.                      |
 | `--input-icon-size`                 | `20px`                                                 | width / height   | Box size of the leftIcon / rightIcon.                                       |
 | `--input-icon-gap`                  | `12px`                                                 | left / right     | Icon inset from the field edge (also drives the field's icon-side padding). |
-| `--input-icon-color`                | `inherit`                                              | color            | Color of the rendered icons.                                                |
+| `--input-icon-color`                | `inherit`                                              | color            | Color of both rendered icons unless the leading icon has its own override.  |
+| `--input-left-icon-color`           | `var(--input-icon-color, inherit)`                     | color            | Leading-icon-only colour override; takes precedence over `--input-icon-color`. |
 | `--input-icon-focus-outline`        | `2px solid var(--input-focus-border-color, #005fcc)`   | outline          | Outline shown on icon buttons when focused via keyboard (`:focus-visible`). |
 | `--input-icon-focus-outline-offset` | `2px`                                                  | outline-offset   | Offset of the focus outline from the icon button edge.                      |
 | `--input-icon-focus-radius`         | `2px`                                                  | border-radius    | Border-radius of the focus outline on icon buttons.                         |

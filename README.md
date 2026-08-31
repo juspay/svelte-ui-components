@@ -153,6 +153,36 @@ This library takes a different approach: **components are unstyled by default** 
 
 ---
 
+## Web Components
+
+Every component also ships as a real Custom Element (Svelte 5's native `customElement`
+compiler output, shadow DOM), tagged `sui-*` — usable from React, Vue, Angular, or plain
+HTML, no separate Svelte installation required; the runtime is bundled with each
+component.
+
+```html
+<!-- Always the latest release, via GitHub Pages -->
+<script type="module" src="https://juspay.github.io/svelte-ui-components/wc/index.js"></script>
+
+<!-- Pinned to an npm version, via jsDelivr or unpkg -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@juspay/svelte-ui-components@latest/dist-wc/index.js"></script>
+<script type="module" src="https://unpkg.com/@juspay/svelte-ui-components@latest/dist-wc/index.js"></script>
+
+<sui-button>Click me</sui-button>
+<sui-input placeholder="Type here"></sui-input>
+```
+
+Or from npm directly, via the package's `./wc` export:
+
+```ts
+import '@juspay/svelte-ui-components/wc';
+```
+
+Theming works identically to the Svelte components — the same `--{component}-{element}-{property}`
+CSS custom properties apply across the shadow DOM boundary.
+
+---
+
 ## Theming
 
 ### How It Works

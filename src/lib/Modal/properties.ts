@@ -51,6 +51,10 @@ export type OptionalModalProperties = {
   overlayFadeIn?: boolean;
   /** When true, mounts the overlay at document.body to escape clipping/stacking contexts. Default: false. */
   usePortal?: boolean;
+  /** When true, locks document.body scroll while the modal is mounted, restoring it on unmount. Default: true (matches prior unconditional behavior). Set false for a non-blocking modal that should allow background scroll. */
+  lockScroll?: boolean;
+  /** Milliseconds after mount to automatically fire onclose, e.g. for a transient success/confirmation modal. null (default) disables auto-dismiss. */
+  autoDismissAfter?: number | null;
 };
 
 export type ModalEventProperties = {

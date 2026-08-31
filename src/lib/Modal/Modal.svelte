@@ -36,8 +36,12 @@
     classes,
     overlayBackdropFilter,
     overlayFadeIn = false,
-    usePortal = false
+    usePortal = false,
+    lockScroll = true,
+    autoDismissAfter = null
   }: ModalProperties = $props();
+
+  let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Fix [major]: plain const so the debouncer closure retains its internal lastCallTime state
   // across re-renders. $derived would recreate the debouncer on every reactive re-evaluation,
@@ -117,7 +121,12 @@
   };
 
   onMount(() => {
-    document.body.style.overflow = 'hidden';
+    if (lockScroll) {
+      document.body.style.overflow = 'hidden';
+    }
+    if (typeof autoDismissAfter === 'number') {
+      dismissTimer = setTimeout(() => onclose?.(), autoDismissAfter);
+    }
     if (supportHardwareBackPress) {
       history.pushState(null, '', window.location.href);
       window.addEventListener('popstate', handlePopstate);
@@ -125,8 +134,13 @@
   });
 
   onDestroy(() => {
+    if (dismissTimer !== null) {
+      clearTimeout(dismissTimer);
+    }
     if (typeof window !== 'undefined') {
-      document.body.style.overflow = '';
+      if (lockScroll) {
+        document.body.style.overflow = '';
+      }
       if (supportHardwareBackPress) {
         if (!backPressed) {
           history.back();

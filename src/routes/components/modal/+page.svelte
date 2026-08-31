@@ -9,6 +9,9 @@
   let showBackButtonModal = $state(false);
   let backButtonClickCount = $state(0);
   let showSlideUpModal = $state(false);
+  let showNoScrollLockModal = $state(false);
+  let showAutoDismissModal = $state(false);
+  let autoDismissFired = $state(false);
 
   // Inline data-URI so the demo has no external asset dependency; exercises
   // the Img component's `inlineSvg` currentColor path used by the header.
@@ -213,7 +216,73 @@
   {/if}
 </div>
 
+<div class="demo-row">
+  <Button
+    text="Open Modal (lockScroll=false)"
+    testId="open-no-scroll-lock-modal"
+    onclick={() => (showNoScrollLockModal = true)}
+  />
+  {#if showNoScrollLockModal}
+    <Modal
+      size="small"
+      align="center"
+      showOverlay
+      lockScroll={false}
+      testId="no-scroll-lock-modal"
+      header={{ text: 'Background still scrolls' }}
+      onclose={() => (showNoScrollLockModal = false)}
+      onoverlayClick={() => (showNoScrollLockModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p><code>lockScroll={false}</code> — the page behind this modal can still scroll.</p>
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+</div>
+
+<div class="demo-row">
+  <Button
+    text="Open Modal (autoDismissAfter=1000)"
+    testId="open-auto-dismiss-modal"
+    onclick={() => {
+      autoDismissFired = false;
+      showAutoDismissModal = true;
+    }}
+  />
+  {#if showAutoDismissModal}
+    <Modal
+      size="small"
+      align="center"
+      showOverlay
+      autoDismissAfter={1000}
+      testId="auto-dismiss-modal"
+      header={{ text: 'Closing in 1s' }}
+      onclose={() => {
+        showAutoDismissModal = false;
+        autoDismissFired = true;
+      }}
+      onoverlayClick={() => (showAutoDismissModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p>This modal closes itself after 1 second — no button needed.</p>
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+  {#if autoDismissFired}
+    <p class="demo-note" data-pw="auto-dismiss-fired">Auto-dismissed.</p>
+  {/if}
+</div>
+
 <style>
+  .demo-note {
+    font-size: 13px;
+    color: #6b7280;
+  }
+
   .modal-top-aligned {
     --modal-header-align-items: flex-start;
   }

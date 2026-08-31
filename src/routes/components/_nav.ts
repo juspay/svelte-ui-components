@@ -17,7 +17,8 @@ export const componentNav: NavGroup[] = [
       { name: 'Phone', slug: 'phone' },
       { name: 'IframeViewer', slug: 'iframe-viewer' },
       { name: 'Book', slug: 'book' },
-      { name: 'Resizable', slug: 'resizable' }
+      { name: 'Resizable', slug: 'resizable' },
+      { name: 'Draggable', slug: 'draggable' }
     ]
   },
   {
@@ -123,7 +124,10 @@ export const componentNav: NavGroup[] = [
     items: [
       { name: 'Avatar', slug: 'avatar' },
       { name: 'Icon', slug: 'icon' },
-      { name: 'Img', slug: 'img' }
+      { name: 'Img', slug: 'img' },
+      { name: 'MediaPlayer', slug: 'media-player' },
+      { name: 'MediaUpload', slug: 'media-upload' },
+      { name: 'Gallery', slug: 'gallery' }
     ]
   },
   {

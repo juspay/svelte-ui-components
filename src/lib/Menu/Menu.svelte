@@ -18,6 +18,7 @@
     selectedValue = null,
     role: menuRole = 'menu',
     ariaLabel: menuAriaLabel,
+    triggerAriaLabel,
     id: menuId,
     placement = 'bottom-left',
     usePortal = false
@@ -410,6 +411,7 @@
       tabindex="0"
       aria-haspopup="menu"
       aria-expanded={open}
+      aria-label={triggerAriaLabel ?? null}
     >
       {#if typeof trigger === 'function'}
         {@render trigger({

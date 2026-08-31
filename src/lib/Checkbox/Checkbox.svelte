@@ -13,7 +13,8 @@
     indeterminateIcon,
     onclick,
     classes,
-    ariaControls
+    ariaControls,
+    ariaLabel
   }: CheckboxProperties = $props();
 
   function handleClick(): void {
@@ -71,6 +72,7 @@
     aria-checked={indeterminate ? 'mixed' : checked}
     aria-disabled={disabled}
     aria-controls={ariaControls ?? null}
+    aria-label={text.length === 0 ? (ariaLabel ?? null) : null}
     onkeydown={handleKeyDown}
     data-pw={typeof testId === 'string' ? `${testId}-box` : null}
     testID={typeof testId === 'string' ? `${testId}-box` : null}

@@ -26,6 +26,7 @@
     autoComplete = 'on',
     inputMode,
     name = '',
+    id,
     testId = '',
     textTransformers = [],
     textViewPresentation = [],
@@ -59,6 +60,16 @@
     resize = 'none',
     showCount = false
   }: InputProperties = $props();
+
+  /* `for` on a <label> resolves against an element's id, never its name. The label
+     was emitted with for={name} while the field itself carried only name={name},
+     so the association never completed for any caller. Derive the id from name so
+     every existing caller that already passes label + name becomes correctly
+     labelled with no change on their part; an explicit id wins, for callers who
+     need uniqueness across repeated rows or who set no name. */
+  const uid = $props.id();
+  const effectiveId = $derived(id || (name !== '' ? `${name}-${uid}` : uid));
+  const hasVisibleLabel = $derived(typeof label === 'string' && label !== '' && !actionInput);
 
   export function focus() {
     try {
@@ -268,8 +279,8 @@
 </script>
 
 <div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
-  {#if typeof label === 'string' && label !== '' && !actionInput}
-    <label class="label" for={name}>
+  {#if hasVisibleLabel}
+    <label class="label" for={effectiveId}>
       {label}{#if mandatory}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
     </label>
   {/if}
@@ -277,9 +288,10 @@
   {#snippet fieldElement()}
     {#if useTextArea}
       <textarea
+        id={effectiveId}
         {value}
         {placeholder}
-        aria-label={ariaLabel}
+        aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
         autocomplete={autoComplete}
         inputmode={inputMode}
         {name}
@@ -311,10 +323,11 @@
       ></textarea>
     {:else}
       <input
+        id={effectiveId}
         type={dataType}
         {value}
         {placeholder}
-        aria-label={ariaLabel}
+        aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
         autocomplete={autoComplete}
         inputmode={inputMode}
         {name}

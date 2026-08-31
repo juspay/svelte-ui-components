@@ -21,6 +21,8 @@
       autoComplete: { type: 'String', attribute: 'auto-complete' },
       inputMode: { type: 'String', attribute: 'input-mode' },
       name: { type: 'String', reflect: true },
+      id: { type: 'String' },
+      ariaLabel: { type: 'String', attribute: 'aria-label' },
       textTransformers: { type: 'Object' },
       textViewPresentation: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },

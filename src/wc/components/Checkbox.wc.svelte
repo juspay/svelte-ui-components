@@ -11,6 +11,8 @@
       checkedIcon: { type: 'Object' },
       indeterminateIcon: { type: 'Object' },
       classes: { type: 'String' },
+      ariaLabel: { type: 'String', attribute: 'aria-label' },
+      ariaControls: { type: 'String', attribute: 'aria-controls' },
       onclick: { type: 'Object' }
     }
   }}

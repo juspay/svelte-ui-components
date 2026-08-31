@@ -3,7 +3,7 @@
   import ChatMessageList from '../ChatMessageList/ChatMessageList.svelte';
   import ChatComposer from '../ChatComposer/ChatComposer.svelte';
   import ChatSuggestions from '../ChatSuggestions/ChatSuggestions.svelte';
-  import ChatToolStatus from '../ChatToolStatus/ChatToolStatus.svelte';
+  import ThinkingIndicator from '../ThinkingIndicator/ThinkingIndicator.svelte';
   import type { ChatProperties } from './properties';
 
   let {
@@ -106,7 +106,7 @@
       <ChatSuggestions items={suggestions} {disabled} onselect={handleSuggestion} />
     {/if}
     {#if toolStatus !== null}
-      <div class="tool-status"><ChatToolStatus label={toolStatus.label} /></div>
+      <div class="tool-status"><ThinkingIndicator label={toolStatus.label} variant="chip" /></div>
     {/if}
     <ChatComposer
       bind:value
@@ -156,5 +156,29 @@
   .tool-status {
     display: flex;
     justify-content: var(--chat-tool-status-justify, center);
+    /* This row is ThinkingIndicator's chip variant internally now, not the standalone
+       ChatToolStatus component -- but its public theming contract stays
+       --chat-tool-status-*, unchanged, so an existing consumer's overrides keep working
+       exactly as before. Defaults below match ChatToolStatus's own byte for byte. */
+    --thinking-indicator-chip-gap: var(--chat-tool-status-gap, 8px);
+    --thinking-indicator-chip-padding: var(--chat-tool-status-padding, 8px 14px);
+    --thinking-indicator-chip-background: var(--chat-tool-status-background, #ffffff);
+    --thinking-indicator-chip-border: var(--chat-tool-status-border, 1px solid #e4e4e7);
+    --thinking-indicator-chip-border-radius: var(--chat-tool-status-border-radius, 999px);
+    --thinking-indicator-chip-box-shadow: var(
+      --chat-tool-status-box-shadow,
+      0 6px 20px rgba(0, 0, 0, 0.08)
+    );
+    --thinking-indicator-chip-max-width: var(--chat-tool-status-max-width, 100%);
+    --thinking-indicator-chip-color: var(--chat-tool-status-color, #52525b);
+    --thinking-indicator-chip-font-size: var(--chat-tool-status-font-size, 0.85rem);
+    --thinking-indicator-chip-font-weight: var(--chat-tool-status-font-weight, 500);
+    --thinking-indicator-chip-icon-color: var(--chat-tool-status-indicator-color, currentColor);
+    --thinking-indicator-chip-spinner-color: var(--chat-tool-status-spinner-color, currentColor);
+    --thinking-indicator-chip-spinner-color-end: var(
+      --chat-tool-status-spinner-color-end,
+      transparent
+    );
+    --thinking-indicator-chip-spinner-size: var(--chat-tool-status-spinner-size, 14px);
   }
 </style>

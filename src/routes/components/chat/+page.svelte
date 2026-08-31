@@ -451,7 +451,42 @@
   </div>
 </div>
 
+<h2>Tool-status theming — backward compatible with the deprecated ChatToolStatus</h2>
+<p class="demo-note">
+  The built-in tool-status row is <code>ThinkingIndicator</code>'s <code>chip</code> variant
+  internally now, not the deprecated <code>ChatToolStatus</code> component — but every
+  <code>--chat-tool-status-*</code> variable still themes it (mapped onto the chip's own
+  <code>--thinking-indicator-chip-*</code> variables), so an existing consumer's overrides keep
+  working unchanged. The instance below overrides <code>--chat-tool-status-background</code>,
+  <code>--chat-tool-status-color</code>, and <code>--chat-tool-status-border</code> the same way a pre-existing
+  consumer already would; if the mapping works, the pill picks them up.
+</p>
+<div class="demo-row backcompat-demo" data-pw="chat-backcompat-demo">
+  <Chat
+    messages={[]}
+    toolStatus={{ label: 'Verifying backward-compatible theming…' }}
+    title="Backward-compat check"
+    classes="backcompat-chat"
+  />
+</div>
+
 <style>
+  /* Deliberately overrides the OLD --chat-tool-status-* names, the same way a
+     pre-existing consumer's theme CSS already would -- proves Chat's internal
+     switch to ThinkingIndicator's chip variant stayed a backward-compatible
+     drop-in rather than silently orphaning these variables. */
+  .backcompat-demo {
+    height: 260px;
+    --chat-tool-status-background: rgb(20, 30, 200);
+    --chat-tool-status-color: rgb(255, 255, 255);
+    --chat-tool-status-border: 2px solid rgb(255, 200, 0);
+  }
+
+  .backcompat-demo :global(.backcompat-chat) {
+    height: 100%;
+    width: 100%;
+  }
+
   /* Cascades into the child Resizable, which animates width/height on expand
      (and disables it while drag-resizing / under reduced motion). */
   .chat-stage {

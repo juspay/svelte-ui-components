@@ -8,9 +8,9 @@ open at a time. The popover portals to `document.body` (reusing Menu's `usePorta
 and repositions itself on scroll/resize, so an `overflow: hidden` or scrolling ancestor — a chat
 bubble, a narrow card — can never clip it.
 
-Unlike `ChatToolStatus` (a single one-line "using a tool now" status that disappears when the turn
-settles), `ToolCallLog` is the persistent, multi-call record: it stays in the transcript after the
-turn, showing every tool the model called in order.
+Unlike `Chat`'s tool-status row (a `ThinkingIndicator` `chip` showing "using a tool now," cleared by
+the host once the turn settles), `ToolCallLog` is the persistent, multi-call record: it stays in the
+transcript after the turn, showing every tool the model called in order.
 
 ## Usage
 

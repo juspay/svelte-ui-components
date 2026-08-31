@@ -148,6 +148,13 @@
   --thinking-indicator-arrow-color: #9ca3af;
   --thinking-indicator-border-bottom: 1px solid #2a2a3c;
 
+  /* ThinkingIndicator — chip variant (mirrors ChatToolStatus above; Chat's built-in
+     tool-status row now renders this instead of ChatToolStatus) */
+  --thinking-indicator-chip-background: #1e1e2e;
+  --thinking-indicator-chip-border: 1px solid #2a2a3c;
+  --thinking-indicator-chip-color: #9ca3af;
+  --thinking-indicator-chip-box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+
   /* AttachmentChipRow */
   --attachment-chip-row-chip-background: #1e1e2e;
   --attachment-chip-row-file-tile-background: #252535;

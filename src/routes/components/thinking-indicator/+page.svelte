@@ -200,6 +200,29 @@
   whose surrounding UI already supplies the avatar and layout.
 </p>
 
+<h2>Chip — self-contained floating pill, static label by default</h2>
+<div class="demo-row">
+  <ThinkingIndicator
+    label="Searching the catalog…"
+    variant="chip"
+    testId="thinking-indicator-chip-static-demo"
+  />
+</div>
+<div class="demo-row">
+  <ThinkingIndicator
+    label="Searching the catalog…"
+    variant="chip"
+    busy
+    testId="thinking-indicator-chip-busy-demo"
+  />
+</div>
+
+<p class="demo-note">
+  What <code>Chat</code> renders internally for its <code>toolStatus</code> prop, replacing the
+  deprecated <code>ChatToolStatus</code>. Unlike every other variant, <code>chip</code> defaults to
+  a static label — pass <code>busy</code> to shimmer it (second example above).
+</p>
+
 <h2>Custom avatar snippet</h2>
 <div class="demo-row">
   <ThinkingIndicator label="Calling the catalog tool…">

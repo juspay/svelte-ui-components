@@ -2,114 +2,85 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.133.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.133.1)
 
-Three components could not be given an accessible name by any caller. Found
-while auditing a consuming app, where they accounted for ~84 unnamed-control and
-unlabelled-field findings that no app-side change could close.
+Comparison against polymorph-ui-components (a fork of this codebase) surfaced
+a gap list of components/props/infrastructure it had that SUI didn't. This
+closes Phase 1 of that list.
 
-Input — &lt;label for={name}&gt;, but the field never had an id
+New components (the 4 polymorph had that SUI didn't; built to SUI's own
+conventions -- properties.ts split, classes/testId, CSS-variable theming,
+composing existing components like Button/Img/Icon/Shimmer per
+GUIDELINES.md #4/#6 -- not ported byte-for-byte):
+- Draggable: pointer/keyboard-draggable wrapper (axis constraint,
+handle-scoped drag start, viewport bounds clamping, arrow-key movement)
+- MediaPlayer: image/video player with hover-revealed play/pause and
+mute/unmute controls, bindable playing/muted, snippet-overridable icons,
+native-controls fallback
+- MediaUpload: drag-and-drop file picker with per-file validation (type,
+size, count), lazy thumbnails via FileReader, bindable files
+- Gallery: grid/list gallery with a full keyboard-accessible lightbox
+(focus trap, focus restoration, arrow/Home/End/Escape navigation),
+optional per-item edit/delete actions
 
-The label was emitted as `&lt;label class="label" for={name}&gt;` while the rendered
-&lt;input&gt;/&lt;textarea&gt; carried only `name={name}` and no id anywhere. `for` resolves
-against an id, never a name, so the association could not complete for ANY
-caller, however they called it. Every labelled field reported as unlabelled to
-assistive tech and was unreachable via getByLabel.
+Modal gained its last 2 Phase 0 gap-list props: lockScroll (default true,
+preserves prior unconditional scroll-lock behavior) and autoDismissAfter
+(fires onclose after N ms, timer cleared on unmount).
 
-Now an `effectiveId` is derived from `name` and applied to the label's `for` and
-to both rendered field variants. Existing callers that already pass `label` +
-`name` become correctly labelled with no change on their part. A new optional
-`id` prop wins over the derived value, for callers whose `name` repeats across
-rows or who pass no name at all. Backwards compatible. The fallback is `null`
-rather than `undefined` to satisfy the repo's no-restricted-syntax rule; Svelte
-treats the two identically for id/for attribute binding.
+Event names deliberately diverge from polymorph in a few places per
+DESIGN_PRINCIPLES.md's casing rule (native DOM events stay lowercase,
+synthesized events are camelCase) -- e.g. Draggable's onMoveStart/onMove/
+onMoveEnd (not onDragStart/onDrag/onDragEnd, which would collide with the
+native HTML5 drag-and-drop API), Gallery's onDismiss (not onClose, which
+would collide with native &lt;dialog&gt;'s close event despite no &lt;dialog&gt;
+being involved).
 
-Checkbox — no way to pass a name
+Infrastructure:
+- DESIGN_PRINCIPLES.md written down (5 principles checked against actual
+codebase behavior) plus scripts/check-event-casing.js enforcing the
+casing rule, wired into `npm run lint`, with a 97-violation baseline
+grandfathering pre-existing prop names (renaming any is a breaking
+change, not a lint fix)
+- .github/workflows/ci.yml: lint/svelte-check/vitest now actually run on
+pull_request (previously only Yama's AI review and the Pages build ran);
+Playwright stays continue-on-error pending a real flakiness-vs-regression
+triage of its current baseline; workflow-level `contents: read`
+permissions added per a CodeQL finding
+- The wc custom-element build (dist-wc) is now actually shipped through
+npm (added to `files`, new "./wc" export with a generated
+dist-wc/index.d.ts for TypeScript consumers) and documented in
+README.md -- it worked and was GitHub-Pages-deployed already, but
+wasn't reachable via `import '@juspay/svelte-ui-components/wc'`
 
-There was no `ariaLabel` prop and no rest-prop spread, so an icon-only or
-externally-labelled checkbox simply could not be named. Adds `ariaLabel`, applied
-to the `role="checkbox"` element — the tabbable control that already receives
-`aria-controls`, so it follows the existing precedent rather than inventing a
-placement. Not a rest spread: with three rendered elements (label, native input,
-box) an arbitrary attribute has no unambiguous home.
+Docs: ROADMAP.md regenerated against docs/_index.json (was last updated
+before 27 components shipped in BZ-49010 alone; 44/54 tracked items are
+now available, was 14/54) plus fixes to its component count and a
+TaskList indexing note; README's web-components runtime claim reworded
+for clarity (bundled into the build, not "no runtime" as it read before).
 
-Menu — ariaLabel named the dropdown, not the trigger
+Review-fix rounds (CodeRabbit/Yama/CodeQL findings on this PR, each
+verified against source before fixing, not taken at face value):
+- ROADMAP's "shipped since" count corrected (37 -&gt; 36; the higher count
+was matching backticked non-component tokens in the intro prose)
+- FileDropzoneTrigger and KeyValue were missing their .wc.svelte wrapper
+despite README claiming full custom-element coverage -- added both
+- MediaPlayer: overlay controls got a :focus-within fallback (were
+hover-only, so visibility:hidden removed them from the tab order for
+keyboard users); role="button"/tabindex/handlers scoped to !controls so
+they stop fighting native browser controls' own keyboard operability;
+the playing bindable is now genuinely bidirectional (a host setting it
+externally calls play()/pause(), not just video state writing back to
+it); the captions &lt;track&gt; now only renders when real captionsSrc data
+is supplied instead of always rendering an empty, non-functional one
 
-`ariaLabel` lands on the dropdown, which is `use:portalToBody` and therefore
-mounted at &lt;body&gt;. The element the user tabs to is the trigger wrapper, which
-carries role="button" and tabindex="0" and had no aria-label at all. Callers
-passing ariaLabel got a silent no-op on the control and a name on a portaled
-container.
+Verified throughout: pnpm run check (0 errors), pnpm run lint (clean,
+including the event-casing checker), and each new/changed component's
+own Playwright suite passing (Draggable 4/4, MediaPlayer 11/11 after the
+review-fix round, MediaUpload 5/5, Gallery 6/6, Modal's 2 new-prop cases
+plus both pre-existing Modal test files unmodified); `pnpm run build`
+succeeds end to end and produces a working dist-wc with types.
 
-Adds `triggerAriaLabel` on the focusable trigger. The existing `ariaLabel` and
-its placement are untouched, so nothing that relies on the dropdown's name
-changes. It applies only to the non-interactive branch; with
-`interactiveTrigger` the snippet's own control owns its name.
-
-Custom-element wrappers
-
-Checkbox.wc.svelte, Input.wc.svelte and Menu.wc.svelte whitelist their
-custom-element props explicitly, so all three new props would have been invisible
-to &lt;sui-checkbox&gt;/&lt;sui-input&gt;/&lt;sui-menu&gt; consumers. Each wrapper now forwards its
-prop, and the three property.ts files and docs/{Checkbox,Input,Menu}.md document
-them. `pnpm run check:wc` still reports exactly the 3 pre-existing LottiePlayer
-errors and nothing new.
-
-Review also flagged three parity gaps that pre-date this change: Input.ariaLabel,
-Menu.ariaLabel and Checkbox.ariaControls exist on the Svelte components but were
-never exposed on the custom elements (origin/release exposes none of the three).
-Added alongside the new props, since the convention is that every camelCase prop
-gets an explicit kebab-case attribute and leaving three behind would keep the
-wrappers out of lock-step for the next reader.
-
-Verification
-
-tests/input-label-association.test.ts asserts the field carries an id, that a
-label points at that exact id, that the accessible-name path resolves, and that
-clicking the label moves focus. Negative-controlled: reverting ONLY the id
-emission -- keeping the prop and the derived value, so the control isolates the
-exact mechanism rather than the whole change -- fails with "the field must carry
-an id for a label to reference", Received: null. The file was then restored and
-confirmed byte-identical.
-
-Review round
-
-- effectiveId no longer falls back to the raw `name`. Inputs that legitimately
-share a name (radio groups, repeated rows) collided on a single id, which
-pointed every later label at the first field. It now appends a per-instance
-suffix from Svelte's own $props.id(), so callers need do nothing and an
-explicit `id` still wins.
-- A visible label now always wins the accessible name. Emitting aria-label
-alongside a rendered &lt;label&gt; replaced the visible text for assistive tech,
-which is a WCAG 2.5.3 (Label in Name) hazard rather than a documentation gap.
-Input gates aria-label on a single `hasVisibleLabel` derived that the &lt;label&gt;
-block itself renders from, so the two cannot drift; Checkbox applies ariaLabel
-only when `text` is empty. Both keep working for the icon-only and
-externally-labelled cases the props were added for.
-
-Verification
-
-svelte-check 654 files, 0 errors. prettier + eslint clean. check:wc reports 3
-LottiePlayer errors and exits 1 — pristine origin/release reports the identical
-3 and the identical exit, so this adds none.
-
-Full suite run twice in ONE worktree, same invocation, swapping only the file
-contents: origin/release content 15 failed / 198 passed, this branch 15 failed /
-198 passed. The nine table failures are identical in both arms and pre-exist on
-release. The status-* difference (4 vs 6) sits inside the run-to-run variance
-measured on unchanged code — /components/status takes ~21s to load against a 30s
-goto timeout because of a 404 on order-success-icon.svg that occurs 49 times on
-release and 48 here, so which of those tests trips the limit is a coin flip.
-
-The remaining difference is the point: with the fix reverted but the new spec
-still present, tests/input-label-association.test.ts fails both of its cases; with
-the fix, both pass. That is the negative control, and it is the only test whose
-result actually tracks the change.
-
-An earlier draft of this message credited the change with fixing
-"row checkboxes expose DataGrid-parity aria-labels". That was wrong and is
-withdrawn: Table.svelte does not use the library Checkbox at all — it renders its
-own &lt;span role="checkbox"&gt; and imports only checkmark.svg.
+## [2.133.1](https://github.com/juspay/svelte-ui-components/compare/2.133.1..2.133.0) - 31 August 2026
 
 ## [2.133.0](https://github.com/juspay/svelte-ui-components/compare/2.133.0..2.132.0) - 31 August 2026
 

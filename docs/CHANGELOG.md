@@ -2,78 +2,50 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.131.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.132.0)
 
-Status could not be adopted by an inline consumer. Three separate reasons, all
-found while migrating Lighthouse's own local Status -- four onboarding and
-webhook screens -- onto this one. Each fix is additive and defaults to the
-previous behaviour.
+Toolbar is authored as a fixed chrome bar — position:fixed, 100vw, a drop shadow,
+a back arrow. Lighthouse separately hand-rolled an in-flow page title block used
+by 76 call sites. Structurally they are the same component: left/centre/right
+regions over an optional second row.
 
-1. descriptionSnippet
+This adds no props. The first revision of this change added subheading,
+headingLevel, subheadingLevel, headingClasses and subheadingClasses, and that was
+wrong on three counts:
 
-`statusDescription` is interpolated with `{@html}`. That is right for a caller
-passing its own trusted markup, and wrong for a message that arrives from an
-API, a user, or anywhere the caller does not control -- and there was no other
-option, so such a caller either accepted the sink or did not use the component.
-One of the four call sites assigns `stepMessage = action.message` straight from
-an API response. The snippet renders through ordinary Svelte interpolation,
-which escapes.
+- Toolbar's own docs already reject it. "String props that carry presentational
+structure are rejected in favour of Snippets" — a title with a subline is
+centerContent, and has been all along.
+- A class name is inert in the web-component build. sui-toolbar is shadow:'open',
+so a class passed as heading-classes lands inside the shadow root where the
+consumer's stylesheet cannot reach it, with nothing reporting the failure.
+- It swapped the default back icon for an inline glyph, changing the rendering
+of every existing consumer that never asked for it. Reverted; backIcon still
+defaults to the same URL and still renders the same &lt;img&gt;.
 
-2. children
+What is left is CSS variables only, on the three region elements:
 
-`.status-description` carries the component's own horizontal padding and bottom
-margin, so anything rendered through descriptionSnippet inherits a text box's
-geometry. That is right for the message and wrong for a control. There was
-nowhere else to put one: `buttonProperties` takes props, not content. `children`
-renders below the description, outside that box, where the button already does.
+--toolbar-content-align-items / -min-height / -flex-wrap / -row-gap / -column-gap
+--toolbar-center-flex / -min-width
+--toolbar-right-display / -flex-shrink / -min-width / -max-width / -width
 
-3. --status-panel-background and --status-panel-backdrop-filter
+Every default is the value the component already rendered, so an existing consumer
+is untouched — the markup, the props and the TypeScript are byte-identical to
+release. The action region's INNER layout is deliberately not tokenised: that is
+the consumer's own snippet markup, which it can style directly.
 
-Status is styled as a standalone result screen: 100vh tall, with a translucent
-white frosted panel. `min-height` was already variable-backed; the panel was
-not, sitting behind an @supports block on an inner element that `classes` cannot
-reach. Rendered inside a page with its own heading and following content, the
-height pushes siblings below the fold and the white panel does not survive a
-dark theme -- and neither could be overridden from outside.
+Also makes the Playwright port configurable (PW_PORT, default 43199). The fixed
+port plus reuseExistingServer made this checkout's suite bind to a sibling
+worktree's preview server and assert against the wrong build — it reported
+failures naming properties that are correct here, then 45+ ERR_CONNECTION_REFUSED.
 
-All three mirror EmptyState, which already carries a description string beside a
-descriptionSnippet override and a `children` action area. The shapes are the
-library's own, not new conventions.
+Tests: 5 new Toolbar cases covering an unconfigured toolbar (DOM, default back
+image, 18px title, and every new declaration resolving to its previous value),
+the tokens producing the page-header shape, and the consumer's own markup keeping
+its tags and type scale. Full suite: 201 passed; the 15 failures are pre-existing
+Status/Table cases failing on a missing static asset that is not in the repo.
 
-Verified, with a negative control per behaviour:
-
-- 9 specs across four files. The description pair hands two demo instances the
-SAME string: one asserts the {@html} path still parses it as markup, the
-other that the snippet path renders it as text. Either alone would pass
-against a broken implementation.
-- Disabling the snippet branch fails exactly the escape assertion, line 29,
-and only that one.
-- Reverting the panel variables to their literals fails exactly the neutralise
-assertion -- rgba(255,255,255,0.6) received where rgba(0,0,0,0) was expected
--- while "defaults keep the full-screen panel exactly as it was" STAYS
-GREEN. That is the backwards-compatibility proof: the defaults render
-identically to the code they replaced.
-- The children test asserts containment, not presence: content must be inside
-.order-status and NOT inside .status-description. Asserting only that it
-appears would pass with it nested in the wrong parent, which is the entire
-bug being fixed.
-- Both controls restored byte-identical and re-run green.
-- svelte-check 651 files, 0 errors. prettier --check and eslint clean.
-
-Measured against the real consumer, by computed style rather than screenshot --
-the route transitions on a timer, and the same build captured twice differs by
-1.273%, so a pixel diff cannot separate the change from the route's own noise.
-After adoption: min-height 0px, panel background rgba(0,0,0,0), backdrop-filter
-none, and the message colour rgb(82,82,82) -- byte-identical to what the
-pre-migration markup inherited.
-
-The web-component wrapper is unchanged: snippets do not cross the custom-element
-boundary, which is why the existing `icon` snippet is absent there too.
-
-docs/Status.md gains a Snippets section -- which also documents the pre-existing
-`icon` snippet, previously undocumented -- the two new CSS variables, the
-`testId` prop, and worked examples for the untrusted description, the
-description-vs-action split, and inline embedding.
+## [2.132.0](https://github.com/juspay/svelte-ui-components/compare/2.132.0..2.131.0) - 30 August 2026
 
 ## [2.131.0](https://github.com/juspay/svelte-ui-components/compare/2.131.0..2.130.1) - 27 August 2026
 

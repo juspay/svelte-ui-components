@@ -15,16 +15,25 @@ content. If `leftContent` snippet is provided, it replaces the default back butt
 <Toolbar />
 ```
 
+> **3.0.0 — the default back control changed.** With no `backIcon`, Toolbar used to render
+> `<div role="button"><img src="https://sdk.breeze.in/gallery/icons/back.svg"></div>`; it now renders
+> `<button aria-label="Back"><svg></svg></button>` with an inline `currentColor` chevron and no network
+> request. Anything that selected `.back img`, asserted the old `src`, or themed the image needs updating:
+> size it with the unchanged `--toolbar-back-image-height` / `-width` tokens (they apply to the `svg` too),
+> colour it with `--toolbar-back-icon-color`, and pass your own `backIcon` URL if you need the image back.
+> `backIcon={null}` still renders no control at all.
+
 ## Props
 
-| Prop           | Type             | Required | Default                                          | Description                                                                                                                                                            |
-| -------------- | ---------------- | -------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| showBackButton | `boolean`        | No       | `true`                                           | Whether to show the default back button on the left side. Only shown when leftContent snippet is not provided.                                                         |
-| text           | `string \| null` | No       | `-`                                              | Title text displayed in the center of the toolbar. Only shown when centerContent snippet is not provided.                                                              |
-| backIcon       | `string \| null` | No       | `'https://sdk.breeze.in/gallery/icons/back.svg'` | URL for the back button icon image. Defaults to a back-arrow SVG from sdk.breeze.in.                                                                                   |
-| classes        | `string`         | No       | `-`                                              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| testId         | `string`         | No       | `-`                                              | `data-pw` attribute on the toolbar's root element for Playwright selectors.                                                                                            |
-| headingTestId  | `string`         | No       | `-`                                              | `data-pw` attribute on the heading text element for Playwright selectors.                                                                                              |
+| Prop           | Type             | Required | Default                                              | Description                                                                                                                                                                               |
+| -------------- | ---------------- | -------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| showBackButton | `boolean`        | No       | `true`                                               | Whether to show the default back button on the left side. Only shown when leftContent snippet is not provided.                                                                            |
+| text           | `string \| null` | No       | `-`                                                  | Title text displayed in the center of the toolbar. Only shown when centerContent snippet is not provided.                                                                                 |
+| backIcon       | `string \| null` | No       | _none_ — an inline chevron drawn with `currentColor` | Custom image URL for the back button. Omit it for the built-in inline icon; pass `null` (or `''`) to render no back control at all. The component ships no network dependency of its own. |
+| backLabel      | `string`         | No       | `'Back'`                                             | Accessible name of the back button (`aria-label`). The icon itself is decorative; an empty or whitespace-only value falls back to `'Back'`.                                               |
+| classes        | `string`         | No       | `-`                                                  | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                    |
+| testId         | `string`         | No       | `-`                                                  | `data-pw` attribute on the toolbar's root element for Playwright selectors.                                                                                                               |
+| headingTestId  | `string`         | No       | `-`                                                  | `data-pw` attribute on the heading text element for Playwright selectors.                                                                                                                 |
 
 ## Snippets
 
@@ -39,51 +48,54 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event       | Type                             | Description                                                                                                                       |
-| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| onbackClick | `() => void`                     | Fires when the default back button is clicked. Only relevant when showBackButton is true and leftContent snippet is not provided. |
-| onkeydown   | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the back button has focus.                                                                      |
+| Event       | Type                             | Description                                                                                                                                                      |
+| ----------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onbackClick | `() => void`                     | Fires when the default back button is clicked. Only relevant when showBackButton is true and leftContent snippet is not provided.                                |
+| onkeydown   | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the back button has focus. The control is a native `<button>`, so Enter and Space already activate `onbackClick` without this. |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                                  | Default                  | CSS Property    | Description                                                                                                                           |
-| ----------------------------------------- | ------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `--toolbar-padding`                       | `0px`                    | padding         | Inner padding of the toolbar container.                                                                                               |
-| `--toolbar-height`                        | `fit-content`            | height          | Height of the toolbar.                                                                                                                |
-| `--toolbar-width`                         | `100vw`                  | width           | Width of the toolbar.                                                                                                                 |
-| `--toolbar-position`                      | `fixed`                  | position        | CSS position (fixed by default, sticks to viewport).                                                                                  |
-| `--toolbar-top`                           | `0`                      | top             | Top position of the toolbar.                                                                                                          |
-| `--toolbar-left`                          | `0`                      | left            | Left position of the toolbar.                                                                                                         |
-| `--toolbar-right`                         | `0`                      | right           | Right position of the toolbar.                                                                                                        |
-| `--toolbar-background`                    | `#ffffff`                | background      | Background color of the toolbar.                                                                                                      |
-| `--toolbar-box-shadow`                    | `0px 2px 12px #55687c1a` | box-shadow      | Box shadow of the toolbar.                                                                                                            |
-| `--toolbar-z-index`                       | `10`                     | z-index         | Z-index stacking order of the toolbar.                                                                                                |
-| `--toolbar-border-radius`                 | `0px`                    | border-radius   | Corner rounding of the toolbar.                                                                                                       |
-| `--toolbar-content-padding`               | `0px`                    | padding         | Padding inside the main content row.                                                                                                  |
-| `--toolbar-justify-content`               | `normal`                 | justify-content | Horizontal alignment of toolbar content.                                                                                              |
-| `--toolbar-content-visibility`            | `visible`                | visibility      | Visibility of the main content row.                                                                                                   |
-| `--toolbar-content-width`                 | `auto`                   | width           | Width of the main content row.                                                                                                        |
-| `--toolbar-content-height`                | `auto`                   | height          | Height of the main content row. Set to `100%` to vertically fill a fixed-height toolbar.                                              |
-| `--toolbar-content-max-width`             | `none`                   | max-width       | Maximum width of the main content row. Combine with `--toolbar-content-margin: 0 auto` to clamp and center content on wide viewports. |
-| `--toolbar-content-margin`                | `0`                      | margin          | Margin around the main content row.                                                                                                   |
-| `--toolbar-text-font-size`                | `18px`                   | font-size       | Font size of the default `text` title (when `centerContent` is not provided).                                                         |
-| `--toolbar-text-font-weight`              | `normal`                 | font-weight     | Font weight of the default `text` title.                                                                                              |
-| `--toolbar-text-color`                    | `-`                      | color           | Text color of the default `text` title.                                                                                               |
-| `--toolbar-text-padding`                  | `0px`                    | padding         | Padding around the default `text` title.                                                                                              |
-| `--toolbar-text-margin`                   | `0px`                    | margin          | Margin around the default `text` title.                                                                                               |
-| `--toolbar-text-flex`                     | `1`                      | flex            | Flex value of the default `text` title within the content row.                                                                        |
-| `--toolbar-additional-content-padding`    | `0px`                    | padding         | Padding inside the additional content row.                                                                                            |
-| `--toolbar-additional-content-height`     | `fit-content`            | height          | Height of the additional content row.                                                                                                 |
-| `--toolbar-justify-additional-content`    | `normal`                 | justify-content | Horizontal alignment of additional content.                                                                                           |
-| `--toolbar-additional-content-visibility` | `visible`                | visibility      | Visibility of the additional content row.                                                                                             |
-| `--toolbar-back-button-height`            | `20px`                   | height          | Height of the back button container.                                                                                                  |
-| `--toolbar-back-button-width`             | `20px`                   | width           | Width of the back button container.                                                                                                   |
-| `--toolbar-back-button-padding`           | `20px 14px`              | padding         | Padding around the back button.                                                                                                       |
-| `--toolbar-back-button-cursor`            | `pointer`                | cursor          | Cursor style for the back button.                                                                                                     |
-| `--toolbar-back-image-height`             | `16px`                   | height          | Height of the back button icon image.                                                                                                 |
-| `--toolbar-back-image-width`              | `16px`                   | width           | Width of the back button icon image.                                                                                                  |
+| Variable                                     | Default                  | CSS Property    | Description                                                                                                                           |
+| -------------------------------------------- | ------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--toolbar-padding`                          | `0px`                    | padding         | Inner padding of the toolbar container.                                                                                               |
+| `--toolbar-height`                           | `fit-content`            | height          | Height of the toolbar.                                                                                                                |
+| `--toolbar-width`                            | `100vw`                  | width           | Width of the toolbar.                                                                                                                 |
+| `--toolbar-position`                         | `fixed`                  | position        | CSS position (fixed by default, sticks to viewport).                                                                                  |
+| `--toolbar-top`                              | `0`                      | top             | Top position of the toolbar.                                                                                                          |
+| `--toolbar-left`                             | `0`                      | left            | Left position of the toolbar.                                                                                                         |
+| `--toolbar-right`                            | `0`                      | right           | Right position of the toolbar.                                                                                                        |
+| `--toolbar-background`                       | `#ffffff`                | background      | Background color of the toolbar.                                                                                                      |
+| `--toolbar-box-shadow`                       | `0px 2px 12px #55687c1a` | box-shadow      | Box shadow of the toolbar.                                                                                                            |
+| `--toolbar-z-index`                          | `10`                     | z-index         | Z-index stacking order of the toolbar.                                                                                                |
+| `--toolbar-border-radius`                    | `0px`                    | border-radius   | Corner rounding of the toolbar.                                                                                                       |
+| `--toolbar-content-padding`                  | `0px`                    | padding         | Padding inside the main content row.                                                                                                  |
+| `--toolbar-justify-content`                  | `normal`                 | justify-content | Horizontal alignment of toolbar content.                                                                                              |
+| `--toolbar-content-visibility`               | `visible`                | visibility      | Visibility of the main content row.                                                                                                   |
+| `--toolbar-content-width`                    | `auto`                   | width           | Width of the main content row.                                                                                                        |
+| `--toolbar-content-height`                   | `auto`                   | height          | Height of the main content row. Set to `100%` to vertically fill a fixed-height toolbar.                                              |
+| `--toolbar-content-max-width`                | `none`                   | max-width       | Maximum width of the main content row. Combine with `--toolbar-content-margin: 0 auto` to clamp and center content on wide viewports. |
+| `--toolbar-content-margin`                   | `0`                      | margin          | Margin around the main content row.                                                                                                   |
+| `--toolbar-text-font-size`                   | `18px`                   | font-size       | Font size of the default `text` title (when `centerContent` is not provided).                                                         |
+| `--toolbar-text-font-weight`                 | `normal`                 | font-weight     | Font weight of the default `text` title.                                                                                              |
+| `--toolbar-text-color`                       | `-`                      | color           | Text color of the default `text` title.                                                                                               |
+| `--toolbar-text-padding`                     | `0px`                    | padding         | Padding around the default `text` title.                                                                                              |
+| `--toolbar-text-margin`                      | `0px`                    | margin          | Margin around the default `text` title.                                                                                               |
+| `--toolbar-text-flex`                        | `1`                      | flex            | Flex value of the default `text` title within the content row.                                                                        |
+| `--toolbar-additional-content-padding`       | `0px`                    | padding         | Padding inside the additional content row.                                                                                            |
+| `--toolbar-additional-content-height`        | `fit-content`            | height          | Height of the additional content row.                                                                                                 |
+| `--toolbar-justify-additional-content`       | `normal`                 | justify-content | Horizontal alignment of additional content.                                                                                           |
+| `--toolbar-additional-content-visibility`    | `visible`                | visibility      | Visibility of the additional content row.                                                                                             |
+| `--toolbar-back-button-height`               | `20px`                   | height          | Height of the back button container.                                                                                                  |
+| `--toolbar-back-button-width`                | `20px`                   | width           | Width of the back button container.                                                                                                   |
+| `--toolbar-back-button-padding`              | `20px 14px`              | padding         | Padding around the back button.                                                                                                       |
+| `--toolbar-back-button-cursor`               | `pointer`                | cursor          | Cursor style for the back button.                                                                                                     |
+| `--toolbar-back-image-height`                | `16px`                   | height          | Height of the back button icon image.                                                                                                 |
+| `--toolbar-back-image-width`                 | `16px`                   | width           | Width of the back button icon image.                                                                                                  |
+| `--toolbar-back-icon-color`                  | `inherit`                | color           | Colour of the built-in inline icon (it is drawn with `currentColor`).                                                                 |
+| `--toolbar-back-button-focus-outline`        | `2px solid currentColor` | outline         | Focus ring of the back button, shown for keyboard focus only.                                                                         |
+| `--toolbar-back-button-focus-outline-offset` | `-2px`                   | outline-offset  | Inset of that focus ring.                                                                                                             |
 
 ## Web Component
 
@@ -93,6 +105,7 @@ Tag: `<sui-toolbar>`
 <sui-toolbar
   text="Page Title"
   show-back-button
+  back-label="Back"
   test-id="toolbar-root"
   heading-test-id="toolbar-heading"
 >

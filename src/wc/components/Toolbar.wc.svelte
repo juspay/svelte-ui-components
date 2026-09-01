@@ -6,6 +6,7 @@
       showBackButton: { type: 'Boolean', reflect: true, attribute: 'show-back-button' },
       text: { type: 'String', reflect: true },
       backIcon: { type: 'String', attribute: 'back-icon' },
+      backLabel: { type: 'String', attribute: 'back-label' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       headingTestId: { type: 'String', attribute: 'heading-test-id' },

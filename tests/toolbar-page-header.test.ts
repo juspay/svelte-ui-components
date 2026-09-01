@@ -11,16 +11,20 @@ test.describe('Toolbar page-header shape', () => {
     const root = page.getByTestId('toolbar-root');
     await expect(root).toBeVisible();
 
-    // The title is still a div carrying the library's own type, and the back control is still
-    // the image it has always been, from the same URL.
+    // The title is still a div carrying the library's own type.
     const heading = page.getByTestId('toolbar-heading');
     expect(await heading.evaluate((element) => element.tagName.toLowerCase())).toBe('div');
     await expect(heading).toHaveCSS('font-size', '18px');
     await expect(heading).toHaveCSS('font-weight', '400');
 
-    const backImage = root.locator('.back img');
-    await expect(backImage).toHaveCount(1);
-    await expect(backImage).toHaveAttribute('src', 'https://sdk.breeze.in/gallery/icons/back.svg');
+    // The back control is a real button carrying an inline icon: no image, no network request,
+    // and an accessible name of its own.
+    const back = root.locator('.back');
+    expect(await back.evaluate((element) => element.tagName.toLowerCase())).toBe('button');
+    await expect(back).toHaveAttribute('aria-label', 'Back');
+    await expect(back.locator('svg')).toHaveCount(1);
+    await expect(back.locator('img')).toHaveCount(0);
+    expect(await back.locator('svg path').getAttribute('stroke')).toBe('currentColor');
 
     // Every new declaration resolves to the value the row already rendered.
     const content = root.locator('.content');
@@ -37,6 +41,51 @@ test.describe('Toolbar page-header shape', () => {
     const root = page.getByTestId('toolbar-no-back-icon');
     await expect(root).toBeVisible();
     await expect(root.locator('.back')).toHaveCount(0);
+  });
+
+  test('a consumer-supplied backIcon still renders as an image', async ({ page }) => {
+    await page.goto('/components/toolbar');
+
+    const back = page.getByTestId('toolbar-custom-back-icon').locator('.back');
+    await expect(back.locator('img')).toHaveCount(1);
+    await expect(back.locator('svg')).toHaveCount(0);
+    // Decorative: the button's aria-label is the name, so the image carries none.
+    await expect(back.locator('img')).toHaveAttribute('alt', '');
+  });
+
+  test('an empty backLabel falls back to the default accessible name', async ({ page }) => {
+    await page.goto('/components/toolbar');
+
+    const back = page.getByTestId('toolbar-empty-back-label').locator('.back');
+    await expect(back).toHaveAttribute('aria-label', 'Back');
+  });
+
+  test('the button occupies the same box the div did', async ({ page }) => {
+    await page.goto('/components/toolbar');
+
+    // 20px content + 14px/20px padding per side, content-box: 48 wide, 60 tall — the div's box.
+    const box = await page.getByTestId('toolbar-root').locator('.back').boundingBox();
+    expect(box).not.toBeNull();
+    expect(Math.round(box!.width)).toBe(48);
+    expect(Math.round(box!.height)).toBe(60);
+  });
+
+  test('the back button activates from the keyboard', async ({ page }) => {
+    await page.goto('/components/toolbar');
+
+    const back = page.getByTestId('toolbar-root').locator('.back');
+    const activations: string[] = [];
+    page.on('dialog', async (dialog) => {
+      activations.push(dialog.message());
+      await dialog.dismiss();
+    });
+
+    await back.focus();
+    await expect(back).toBeFocused();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    await expect.poll(() => activations.length).toBe(2);
+    expect(activations).toEqual(['Back clicked', 'Back clicked']);
   });
 
   test('tokens turn the fixed bar into an in-flow page header', async ({ page }) => {

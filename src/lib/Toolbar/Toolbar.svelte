@@ -4,7 +4,8 @@
   let {
     showBackButton = true,
     text,
-    backIcon = 'https://sdk.breeze.in/gallery/icons/back.svg',
+    backIcon,
+    backLabel = 'Back',
     leftContent,
     centerContent,
     rightContent,
@@ -15,6 +16,13 @@
     testId,
     headingTestId
   }: ToolbarProperties = $props();
+
+  // `backIcon={null}` (or '') has always meant "render no back control at all", and consumers
+  // rely on it; only the DEFAULT changes, from a CDN image to the inline icon.
+  const showBackControl = $derived(showBackButton && backIcon !== null && backIcon !== '');
+  // The icon is decorative, so the label is the button's only accessible name — an empty or
+  // whitespace-only value must not strip it.
+  const backAccessibleName = $derived(backLabel.trim().length > 0 ? backLabel : 'Back');
 </script>
 
 <div class="toolbar {classes ?? ''}" data-pw={testId} testID={testId}>
@@ -25,10 +33,30 @@
   >
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
-    {:else if showBackButton && typeof backIcon === 'string' && backIcon.length > 0}
-      <div class="back" onclick={onbackClick} {onkeydown} role="button" tabindex="0">
-        <img src={backIcon} alt="Back" />
-      </div>
+    {:else if showBackControl}
+      <button
+        type="button"
+        class="back"
+        aria-label={backAccessibleName}
+        onclick={onbackClick}
+        {onkeydown}
+      >
+        {#if typeof backIcon === 'string'}
+          <img src={backIcon} alt="" />
+        {:else}
+          <!-- Inline so the component ships no network dependency; currentColor so it follows the
+               consumer's text colour in both themes without a filter. -->
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+            <path
+              d="M10 3 5 8l5 5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        {/if}
+      </button>
     {/if}
     {#if typeof centerContent === 'function'}
       <div class="center-content">
@@ -109,6 +137,14 @@
   }
 
   .back {
+    /* A native button so Enter/Space and the accessible name come for free; the reset keeps
+       the box identical to the div it replaces. */
+    appearance: none;
+    background: none;
+    border: 0;
+    margin: 0;
+    box-sizing: content-box;
+    color: var(--toolbar-back-icon-color, inherit);
     height: var(--toolbar-back-button-height, 20px);
     width: var(--toolbar-back-button-width, 20px);
     padding: var(--toolbar-back-button-padding, 20px 14px);
@@ -118,9 +154,16 @@
     align-items: center;
   }
 
-  .back img {
+  .back:focus-visible {
+    outline: var(--toolbar-back-button-focus-outline, 2px solid currentColor);
+    outline-offset: var(--toolbar-back-button-focus-outline-offset, -2px);
+  }
+
+  .back img,
+  .back svg {
     height: var(--toolbar-back-image-height, 16px);
     width: var(--toolbar-back-image-width, 16px);
+    flex: none;
   }
 
   .center-content {

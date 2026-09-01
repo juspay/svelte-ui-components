@@ -157,7 +157,7 @@ export type * from './ThemeSwitcher/properties';
 export type * from './ThinkingIndicator/properties';
 export type * from './ToolCallLog/properties';
 export type * from './TaskList/properties';
-export type * from './soundKit/properties';
+export type * from './SoundKit/properties';
 export type * from './Book/properties';
 export type * from './Browser/properties';
 export type * from './Phone/properties';
@@ -204,6 +204,6 @@ export type * from './MediaPlayer/properties';
 export type * from './MediaUpload/properties';
 export type * from './Gallery/properties';
 
-export { createSoundKit } from './soundKit/soundKit';
+export { createSoundKit } from './SoundKit/SoundKit';
 export { validateInput, lockBodyScroll, unlockBodyScroll } from './utils';
 export { formatNumberIndian } from './_chart/format';

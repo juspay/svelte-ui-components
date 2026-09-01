@@ -1,6 +1,6 @@
 # Book
 
-A page-flip presentation component that displays content in a book-like format with page navigation. Pages are provided as an array of `BookPage` objects. Supports previous/next arrow navigation, clickable page indicator dots, keyboard navigation (ArrowLeft/ArrowRight), and optional swipe/drag gestures. The `currentPage` prop is bindable for two-way page tracking. Transitions between pages can be "slide" (default), "fade", or "none".
+A page-flip presentation component that displays content in a book-like format with page navigation. Pages are provided as an array of `BookPage` objects. Supports previous/next arrow navigation, clickable page indicator dots, keyboard navigation (ArrowLeft/ArrowRight), and optional swipe/drag gestures. The `currentPage` prop is bindable for two-way page tracking. Transitions between pages can be "slide" (default), "fade", or "none". Built for a reading or onboarding flow — pages turn only on user action, never automatically (as opposed to `Carousel`, which auto-plays and is aimed at rotating promotional content rather than something someone reads through).
 
 ## Usage
 

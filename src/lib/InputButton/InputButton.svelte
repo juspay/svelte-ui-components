@@ -193,14 +193,18 @@
   .error-message {
     font-weight: var(--input-error-msg-text-weight, 400);
     font-size: var(--input-error-msg-text-size, 12px);
-    color: var(--input-error-msg-text-color, #fa1405);
+    /* Shares --input-error-msg-text-color with Input.svelte -- kept in sync with its
+       #c5120a default (6.06:1 AA) so the same token means the same color everywhere. */
+    color: var(--input-error-msg-text-color, #c5120a);
     margin: var(--input-btn-error-msg-margin, 12px 0px 0px 0px);
   }
 
   .info-message {
     font-weight: var(--input-info-msg-text-weight, 400);
     font-size: var(--input-info-msg-text-size, 12px);
-    color: var(--input-info-msg-text-color, #fa1405);
+    /* Shares --input-info-msg-text-color with Input.svelte -- see its .info-message
+       for why this is a neutral #52525b rather than the error red. */
+    color: var(--input-info-msg-text-color, #52525b);
     margin: var(--input-btn-info-msg-margin, 12px 0px 0px 0px);
   }
 
@@ -224,7 +228,7 @@
   }
 
   .external-error-message {
-    color: var(--inputbutton-external-error-color, #fa1405);
+    color: var(--inputbutton-external-error-color, #c5120a);
     margin: var(--inputbutton-external-error-margin, 6px 0px 0px 0px);
   }
 

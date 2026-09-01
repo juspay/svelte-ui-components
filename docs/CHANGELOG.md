@@ -2,87 +2,29 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.135.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.0)
 
-An audit of 124 sites where Lighthouse hand-rolls markup this library already
-provides found the adoption blocked, over and over, by small missing hooks
-rather than by missing components. This adds them, plus the fixes that adopting
-them surfaced.
+Every demo route that showed an image pulled it from picsum.photos, so the
+page's load event waited on a third-party host over the public internet. That
+is not cosmetic: Playwright navigates with waitUntil: 'load', and five specs
+across /components/status and /components/chat failed a full suite run at the
+30s timeout with picsum as the only request still outstanding when load never
+fired. The same tests take ~1.3s when picsum answers quickly and ~20s when it
+is slow, so the suite's pass rate tracked a stranger's CDN.
 
-New APIs
---------
-ChipInput      editable in-place edit, onedit, per-chip test ids
-Stepper/Step   muted status, per-step testId, suppressRoleAndTabindex,
-suppressContainerTestId, border/label/wrap hooks, growable
-separator, Step usable on its own outside a Stepper
-StatCard       per-row subtitle, value variants, row sub-element ordering,
-opt-in line break for additionalContent, per-row typography
-Table          single-page footer suppression, count-only footer, an
-independent pagination range test id, tag-array cell testId
-TypewriterText variable pacing, resolveDelay, progress callback, per-character
-render hook
-Status         semantic heading tag and themed colour tokens
-Chat           scroll policy, pin hold, jump controls and scroll-state
-forwarding to its message list
+Replaces all 17 references across eight demo routes with local assets under
+static/demo-media -- two new SVG placeholders plus the avatar and photo
+already vendored there. The eight specs that navigate to the two affected
+routes pass 45/45 with three repeats each.
 
-Fixes found while adopting them
--------------------------------
-Modal, Sheet and CommandMenu now share a reference-counted body scroll lock, so
-closing a nested surface no longer releases a lock another open surface still
-needs. Modal keeps honouring its public lockScroll prop: lock and unlock are
-guarded symmetrically, so &lt;Modal lockScroll={false}&gt; does not lock and the count
-stays balanced.
+Note this does NOT make the demo pages fully offline: +layout.svelte still
+loads Nunito Sans from fonts.googleapis.com, which also blocks load. That is
+left alone here because vendoring a variable font is a separate change, but
+it is the same failure mode and the same fix applies if it starts costing
+runs. Instrumenting the observed failures showed picsum, not fonts, as the
+blocking request, so this addresses what actually broke.
 
-The muted Stepper status shipped illegible -- white numerals on a pale circle at
-1.53:1 and a label at 2.10:1. Now 5.01:1 and 7.79:1, asserted as a contrast
-RATIO so a future palette change cannot quietly undo it.
-
-ChipInput tracked the chip being edited by slot index. An index is only a
-position: if the parent reorders or removes entries mid-edit, the same index
-points at a different chip and Enter lands on the wrong one. It now holds the
-chip by value -- unique by construction, and already what the {#each} keys on --
-and resolves the index at commit time. Disabling mid-edit is safe without an
-$effect: the field stops rendering and commitEdit refuses, so nothing in flight
-can write behind a disabled control.
-
-ChatMessageList: pin-sender-turn lost the pin whenever the reply was shorter
-than the frame, which is when pinning matters most. Three faults, only visible
-by instrumenting. scroll-behavior: smooth makes `scrollTop = x` an ANIMATION --
-the pin asked for 333px against a 357px maximum and read back 0. releasePin()
-then shrank the range to 80 mid-animation and the browser clamped the
-half-finished scroll to exactly that. And probing "is it safe to release?" by
-clearing min-height to measure ALSO shrinks the range, so the probe destroyed
-the position it was checking. The pin now scrolls instantly, keeps its
-reservation until the reply can hold the offset alone, and restores the offset
-around the probe. Measured: 253-265px below the top before, 12px after -- the
-row's own margin, matching the pinHold demo.
-
-Deliberately not renamed
-------------------------
-The event-casing check that arrived with release flags onedit, onProgress and
-onscrollstate. All three ship in 2.132.0, so renaming them is a breaking change
-for every consumer already on that release; they read as new only because the
-baseline predates their release. They are baselined with that reasoning rather
-than silenced, and Chat's onscrollstate is doubly so -- it is typed as
-ChatMessageListProperties['onscrollstate'] and forwarded by shorthand, so
-renaming one side desynchronises the forward. Fixing the names is a deprecation
-with a release note, not a drive-by inside a migration PR.
-
-Verification
-------------
-Authoritative suite 318 passed, 1 failed, on a private port with
-reuseExistingServer:false and workers:1 on a fresh build of the committed tree.
-The one failure, chat-scroll-policy-passthrough, is pre-existing flake: isolated
-with three repeats it fails 1-of-3 both with the pin fix and with it reverted.
-
-pnpm lint exits 0; event casing reports 100 known, 0 new. The two svelte-check
-errors (node:path / node:url in tests/media-upload.test.ts) are present
-identically on release and untouched here.
-
-Proof of testing: six videos, one per API, recorded against this branch's own
-build of the real demo routes, on branch proof/bz-5721-component-reuse. Each
-clip asserts while it records, so a broken demo fails the recording instead of
-producing a video of an empty state.
+## [2.136.0](https://github.com/juspay/svelte-ui-components/compare/2.136.0..2.135.0) - 1 September 2026
 
 ## [2.135.0](https://github.com/juspay/svelte-ui-components/compare/2.135.0..2.134.1) - 1 September 2026
 

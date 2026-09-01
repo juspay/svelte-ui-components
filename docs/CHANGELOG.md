@@ -2,27 +2,19 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.1)
 
-Every demo route that showed an image pulled it from picsum.photos, so the
-page's load event waited on a third-party host over the public internet. That
-is not cosmetic: Playwright navigates with waitUntil: 'load', and five specs
-across /components/status and /components/chat failed a full suite run at the
-30s timeout with picsum as the only request still outstanding when load never
-fired. The same tests take ~1.3s when picsum answers quickly and ~20s when it
-is slow, so the suite's pass rate tracked a stranger's CDN.
+Checkbox&lt;-&gt;Toggle, ListItem&lt;-&gt;CheckListItem, StatCard&lt;-&gt;KeyValue,
+Gauge&lt;-&gt;Progress, Loader&lt;-&gt;LoadingDots. Each pair has a real, verifiable
+distinction that wasn't written down anywhere: Checkbox's indeterminate
+state has no Toggle equivalent; ListItem has no selection concept vs.
+CheckListItem's checkbox semantics; StatCard is metric+delta dashboard
+framing vs. KeyValue's plain field grid; Progress has an indeterminate
+mode Gauge lacks; LoadingDots is built to sit inline in text/buttons vs.
+Loader's standalone ring shape. Same treatment as the Select/Combobox and
+Carousel/Book pairs in #477.
 
-Replaces all 17 references across eight demo routes with local assets under
-static/demo-media -- two new SVG placeholders plus the avatar and photo
-already vendored there. The eight specs that navigate to the two affected
-routes pass 45/45 with three repeats each.
-
-Note this does NOT make the demo pages fully offline: +layout.svelte still
-loads Nunito Sans from fonts.googleapis.com, which also blocks load. That is
-left alone here because vendoring a variable font is a separate change, but
-it is the same failure mode and the same fix applies if it starts costing
-runs. Instrumenting the observed failures showed picsum, not fonts, as the
-blocking request, so this addresses what actually broke.
+## [2.136.1](https://github.com/juspay/svelte-ui-components/compare/2.136.1..2.136.0) - 1 September 2026
 
 ## [2.136.0](https://github.com/juspay/svelte-ui-components/compare/2.136.0..2.135.0) - 1 September 2026
 

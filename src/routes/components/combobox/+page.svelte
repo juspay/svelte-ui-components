@@ -15,6 +15,11 @@
   let selected = $state('');
   let inputText = $state('');
 
+  let comboboxRef: ReturnType<typeof Combobox> | null = $state(null);
+  function focusInput(): void {
+    comboboxRef?.getInputRef()?.focus();
+  }
+
   // multi-select
   let picked = $state<string[]>([]);
 
@@ -47,6 +52,18 @@
     placeholder="Search fruits..."
   />
   <p class="demo-info">Selected: {selected || 'none'} | Input: {inputText || 'empty'}</p>
+</div>
+
+<h3>Accessing the input element</h3>
+<p>
+  <code>bind:this</code> on the component instance, then <code>getInputRef()</code> — Combobox has
+  no bindable <code>inputElement</code> prop.
+</p>
+<div class="demo-row" style="max-width: 320px;">
+  <Combobox items={fruits} bind:this={comboboxRef} testId="combobox-input-ref-demo" />
+  <button type="button" data-pw="combobox-focus-button" onclick={focusInput}>
+    Focus the combobox
+  </button>
 </div>
 
 <h3>Multi select (pills)</h3>

@@ -9,8 +9,17 @@
     triggerClasses,
     classes,
     testId,
-    disabled = false
+    disabled = false,
+    panelId
   }: AccordionProperties = $props();
+
+  /* The trigger and the panel are siblings, not ancestor/descendant, so nothing in the
+     markup tells assistive technology which region the trigger's aria-expanded refers to.
+     A generated id keeps that link automatic -- consumers pass no id and get correct
+     wiring -- while `panelId` lets a caller supply their own when they need to reference
+     the panel from elsewhere too. */
+  const uid = $props.id();
+  const effectivePanelId = $derived(panelId ?? `accordion-panel-${uid}`);
 
   function handleTriggerClick(): void {
     if (disabled) {
@@ -28,6 +37,7 @@
     role="button"
     tabindex={disabled ? -1 : 0}
     aria-expanded={expand}
+    aria-controls={effectivePanelId}
     aria-disabled={disabled}
     onclick={handleTriggerClick}
     onkeydown={(event) => {
@@ -42,6 +52,7 @@
 {/if}
 
 <div
+  id={effectivePanelId}
   class="accordion {classes ?? ''}"
   class:expanded={expand}
   data-pw={typeof testId === 'string' ? testId : null}

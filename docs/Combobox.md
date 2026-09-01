@@ -205,16 +205,18 @@ TypeScript's structural typing lets you pass items with extra properties. Cast i
 
 ### Accessing the Input Element
 
+Combobox doesn't expose the input as a bindable prop — like every other component in this library, DOM/instance access goes through `bind:this` plus an exported method (see Methods below).
+
 ```svelte
 <script>
-  let inputRef = $state(null);
+  let comboboxRef = $state(null);
 
   function focusInput() {
-    inputRef?.focus();
+    comboboxRef?.getInputRef()?.focus();
   }
 </script>
 
-<Combobox items={fruits} bind:inputElement={inputRef} />
+<Combobox items={fruits} bind:this={comboboxRef} />
 <button onclick={focusInput}>Focus the combobox</button>
 ```
 
@@ -253,7 +255,6 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | classes          | `string`                                                    | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 | noResultsText    | `string`                                                    | No       | `'No results'`   | Text shown in the dropdown when no items match the current input value. Ignored when `emptySnippet` is provided.                                                       |
 | ariaLabel        | `string`                                                    | No       | `-`              | Sets `aria-label` on the listbox dropdown. Provides an accessible name for screen readers (e.g., `"Search results"`).                                                  |
-| inputElement     | `HTMLInputElement \| null`                                  | No       | `null`           | Bindable. A reference to the underlying `<input>` DOM element. Use `bind:inputElement` for custom focus management, measurements, or third-party library integration.  |
 | inputProperties  | `OptionalInputProperties`                                   | No       | `-`              | Pass-through props for the internal Input component. Use for validation (`validators`, `validationPattern`, `inProgressPattern`), text formatting (`textTransformers`, `textViewPresentation`), `dataType`, `maxLength`, `minLength`, `useTextArea`, `label`, `onErrorMessage`, `infoMessage`, etc. See Input component docs for the full list. |
 | inputEventProperties | `InputEventProperties`                                  | No       | `-`              | Pass-through event handlers for the internal Input component. Use for `onPaste`, `onStateChange`, `onClick`, etc. Note: `onInput`, `onFocus`, `onBlur`, and `onKeyDown` are managed by Combobox and forwarded — use Combobox's own events for these. |
 | filterFn         | `(item: ComboboxItem, query: string) => boolean`            | No       | case-insensitive `includes` | Custom filter function called for each item when `inputValue` is non-empty. Return `true` to include the item. Use for startsWith, fuzzy matching, or server-side filtering (always return `true` and update `items` externally). |
@@ -264,6 +265,14 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | allowCreate      | `boolean`                                                   | No       | `false`          | Show a "Create …" row when the query has no exact match. Fires `oncreate`; in multi-select the value is also added to `selected`.                                      |
 | createLabel      | `(query: string) => string`                                 | No       | `Create "{query}"` | Builds the create-row label from the current query.                                                                                                                 |
 | action           | `ComboboxAction`                                            | No       | `-`              | A persistent custom action row at the foot of the dropdown: `{ label, onClick, keepOpen? }`.                                                                           |
+
+## Methods
+
+Exported methods that can be called via `bind:this` on the component instance.
+
+| Method          | Signature                                               | Description                                                                                                             |
+| --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `getInputRef()` | `() => HTMLInputElement \| HTMLTextAreaElement \| null` | Returns a reference to the underlying `<input>` DOM element. Use for custom focus management or third-party library integration. |
 
 ## Snippets
 

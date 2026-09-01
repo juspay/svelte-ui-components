@@ -1,0 +1,49 @@
+name: Visual Regression
+
+on:
+  pull_request:
+    branches: [release]
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    # The job runs INSIDE the same image `scripts/visual-test.sh` uses locally.
+    # This is the whole design: baselines are only comparable when the renderer
+    # is identical, and a bare ubuntu-latest runner does not ship the same fonts
+    # or freetype build as this image. Running here rather than on the host is
+    # what lets a developer regenerate a baseline on a laptop and have CI agree.
+    # Keep this tag and the IMAGE in scripts/visual-test.sh in lockstep with the
+    # @playwright/test version in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Visual regression
+        run: pnpm exec playwright test --config playwright.visual.config.ts
+
+      - name: Upload diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-report
+          # Contains expected/actual/diff PNG triplets for every mismatch, which
+          # is the only practical way to judge whether a diff is a regression or
+          # an intended redesign.
+          path: |
+            playwright-report-visual/
+            test-results/
+          retention-days: 14

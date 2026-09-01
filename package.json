@@ -36,7 +36,9 @@
     "lint:event-casing": "node scripts/check-event-casing.js",
     "format": "prettier --write src",
     "test:integration": "playwright test",
-    "test:unit": "vitest"
+    "test:unit": "vitest",
+    "test:visual": "scripts/visual-test.sh",
+    "test:visual:update": "scripts/visual-test.sh --update-snapshots"
   },
   "exports": {
     ".": {

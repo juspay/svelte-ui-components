@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import Chat from '$lib/Chat/Chat.svelte';
   import Button from '$lib/Button/Button.svelte';
@@ -355,7 +356,7 @@
       messages={chat.messages}
       bind:value
       bind:attachments
-      image="/demo-media/assistant-avatar.png"
+      image="{base}/demo-media/assistant-avatar.png"
       title="Shopping Assistant"
       subtitle="Online"
       placeholder="Ask anything…"

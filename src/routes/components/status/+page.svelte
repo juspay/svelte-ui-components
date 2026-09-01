@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import Status from '$lib/Status/Status.svelte';
   import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
 
@@ -31,7 +32,7 @@
 <div class="demo-row">
   <div data-pw="status-default-icon">
     <Status
-      statusIcon="/demo-media/status-success.svg"
+      statusIcon="{base}/demo-media/status-success.svg"
       statusText="Payment Successful"
       statusDescription="Your order has been confirmed"
     />

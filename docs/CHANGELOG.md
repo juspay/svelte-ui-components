@@ -2,22 +2,41 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.6)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.7)
 
-`release` has been failing `pnpm lint` since ff24661d6, which blocks the
-release job at step 6 -- before the version bump, before the tag, and before
-`npm publish`. No release can complete until this passes, which is why npm
-is still serving 2.136.1 while the repo carries tags up to 2.136.6.
+docs/Combobox.md documented a bind:inputElement prop and built a usage
+example on it. Combobox.svelte never declares that prop -- confirmed via
+svelte-check against the exact documented example:
 
-prettier wants the element on one line; it was split across seven:
+error TS2353: Object literal may only specify known properties, and
+'inputElement' does not exist in type 'MandatoryComboboxProperties &
+OptionalComboboxProperties & ComboboxEventProperties'.
+error: Cannot use 'bind:' with this property. It is declared as
+non-bindable inside the component.
 
-&lt;Combobox {...rest} bind:value bind:inputValue bind:open bind:highlightedIndex bind:selected /&gt;
+A consumer who copy-pasted the documented example would get a compile
+error, not a working focus-management hook.
 
-Formatting only -- `prettier --write` on the single file, no semantic change.
+The real, already-implemented mechanism is bind:this on the component
+instance plus the exported getInputRef() method -- the same pattern
+Input itself documents under a "## Methods" section. Combobox had no
+such section at all. Fixed docs/Combobox.md:
+- Removed the fictional inputElement prop row from the Props table.
+- Added a Methods section documenting getInputRef(), matching Input.md's
+established format exactly.
+- Rewrote the "Accessing the Input Element" example to the real,
+working pattern.
 
-Verified: `pnpm lint` exits 0 on this tree and 1 on `release` (ce60499,
-clean checkout), and `tests/wc-custom-elements.spec.ts` -- the spec that
-covers these wrappers -- passes 5/5 on a private PW_PORT.
+Added a demo section (testId="combobox-input-ref-demo") and
+tests/combobox-input-ref.test.ts, which exercises the corrected
+example verbatim: click a button wired to
+comboboxRef.getInputRef()?.focus(), assert the real &lt;input&gt; receives
+focus. Verified with a real Playwright video recording (VP8, 37 real
+decoded frames, clean ffmpeg decode pass, frame-extracted and visually
+confirmed) showing the click producing a focused input with a visible
+focus ring.
+
+## [2.136.7](https://github.com/juspay/svelte-ui-components/compare/2.136.7..2.136.6) - 1 September 2026
 
 ## [2.136.6](https://github.com/juspay/svelte-ui-components/compare/2.136.6..2.136.5) - 1 September 2026
 

@@ -2,39 +2,40 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.7)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.8)
 
-docs/Combobox.md documented a bind:inputElement prop and built a usage
-example on it. Combobox.svelte never declares that prop -- confirmed via
-svelte-check against the exact documented example:
+Yama's review of the documentation-accuracy PR surfaced a real,
+pre-existing accessibility gap: Accordion's built-in trigger had
+role="button" and aria-expanded but no aria-controls. The trigger and
+collapsible panel are sibling elements, so aria-expanded announced a
+state without identifying WHICH region it governed -- a screen-reader
+user could hear "expanded" but had no linked destination to reach.
 
-error TS2353: Object literal may only specify known properties, and
-'inputElement' does not exist in type 'MandatoryComboboxProperties &
-OptionalComboboxProperties & ComboboxEventProperties'.
-error: Cannot use 'bind:' with this property. It is declared as
-non-bindable inside the component.
+Added automatic trigger/panel wiring:
+- Each Accordion generates a per-instance panel id via $props.id().
+- The built-in trigger now has aria-controls={effectivePanelId}.
+- The accordion panel itself carries id={effectivePanelId}.
+- panelId lets callers supply the id if something external must reference
+the panel too; otherwise the generated id avoids collisions between
+multiple accordions on a page.
 
-A consumer who copy-pasted the documented example would get a compile
-error, not a working focus-management hook.
+Web-component parity: added panel-id -&gt; panelId to Accordion.wc.svelte
+and docs/Accordion.md's HTML-attribute table. The Svelte docs now explain
+both the generated default and why this linkage matters for accessibility.
 
-The real, already-implemented mechanism is bind:this on the component
-instance plus the exported getInputRef() method -- the same pattern
-Input itself documents under a "## Methods" section. Combobox had no
-such section at all. Fixed docs/Combobox.md:
-- Removed the fictional inputElement prop row from the Props table.
-- Added a Methods section documenting getInputRef(), matching Input.md's
-established format exactly.
-- Rewrote the "Accessing the Input Element" example to the real,
-working pattern.
+Added a trigger-based docs demo and tests/accordion-aria-controls.test.ts:
+1. aria-controls resolves to the panel's actual id -- not merely a
+present-but-dangling attribute.
+2. aria-expanded tracks the panel's real .expanded state.
+3. two instances generate distinct ids.
+4. explicit panelId reaches both the panel and trigger reference.
 
-Added a demo section (testId="combobox-input-ref-demo") and
-tests/combobox-input-ref.test.ts, which exercises the corrected
-example verbatim: click a button wired to
-comboboxRef.getInputRef()?.focus(), assert the real &lt;input&gt; receives
-focus. Verified with a real Playwright video recording (VP8, 37 real
-decoded frames, clean ffmpeg decode pass, frame-extracted and visually
-confirmed) showing the click producing a focused input with a visible
-focus ring.
+Verified: pnpm run check (0 errors), pnpm run lint (clean), full serial
+Playwright suite 354/354 passing. Real video proof combines all 4 tests:
+valid VP8, 160 decoded frames (exact parity with all source clips), clean
+ffmpeg decode, frame-extracted and visually inspected.
+
+## [2.136.8](https://github.com/juspay/svelte-ui-components/compare/2.136.8..2.136.7) - 1 September 2026
 
 ## [2.136.7](https://github.com/juspay/svelte-ui-components/compare/2.136.7..2.136.6) - 1 September 2026
 

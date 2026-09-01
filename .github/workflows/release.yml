@@ -223,6 +223,45 @@ jobs:
             echo "No changes to commit"
           fi
 
+      - name: Verify build artifacts
+        run: |
+          echo "Checking if dist directory exists..."
+          if [ -d "dist" ]; then
+            echo "✅ dist directory exists"
+            echo "Contents of dist directory:"
+            find dist -type f | head -20
+            echo "Total files in dist: $(find dist -type f | wc -l)"
+          else
+            echo "❌ dist directory does not exist"
+            echo "Current directory contents:"
+            ls -la
+            exit 1
+          fi
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
+
+      - name: Publish to NPM
+        run: |
+          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
+          # short-lived publish credential itself, via the trusted-publisher
+          # config on npmjs.com for this repo + this workflow file.
+
+          # Check if this version already exists on NPM
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Publish to NPM (with organization scope support)
+          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
+          npm publish --access public --provenance
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+
       - name: Push changes (without tags)
         run: |
           # Pull latest changes to avoid conflicts
@@ -261,21 +300,6 @@ jobs:
 
           echo "Successfully created and pushed tag $TAG_NAME"
 
-      - name: Verify build artifacts
-        run: |
-          echo "Checking if dist directory exists..."
-          if [ -d "dist" ]; then
-            echo "✅ dist directory exists"
-            echo "Contents of dist directory:"
-            find dist -type f | head -20
-            echo "Total files in dist: $(find dist -type f | wc -l)"
-          else
-            echo "❌ dist directory does not exist"
-            echo "Current directory contents:"
-            ls -la
-            exit 1
-          fi
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         id: create_release
@@ -303,30 +327,6 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
-
-      - name: Publish to NPM
-        run: |
-          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
-          # short-lived publish credential itself, via the trusted-publisher
-          # config on npmjs.com for this repo + this workflow file.
-
-          # Check if this version already exists on NPM
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
-
-          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
-          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
-            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
-            exit 0
-          fi
-
-          # Publish to NPM (with organization scope support)
-          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public --provenance
-          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
 
   publish-mcp:
     needs: [detect-changes, release]

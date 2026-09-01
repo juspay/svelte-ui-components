@@ -135,6 +135,12 @@
   });
 
   onDestroy(() => {
+    if (carouselDiv) {
+      carouselDiv.removeEventListener('touchstart', handleTouchStart);
+      carouselDiv.removeEventListener('touchend', handleTouchEnd);
+      carouselDiv.removeEventListener('mousedown', handleMouseDown);
+      carouselDiv.removeEventListener('mouseup', handeMouseUp);
+    }
     if (autoplay) {
       clearInterval(intervalId);
     }
@@ -151,11 +157,15 @@
       <div class="slidesDiv" bind:this={slidesDiv}>
         {#each views as view, index (index)}
           <div class="current-slide">
-            {#if typeof view.properties === 'object'}
-              <view.component properties={view.properties} />
-            {:else}
-              <view.component />
-            {/if}
+            <!-- Spread is the real fix: every component in this library takes named
+                 props, so passing the bag under a single `properties` key meant a
+                 normal slide rendered empty. `properties` is ALSO still passed so
+                 that a consumer who built a purpose-made wrapper around the old
+                 behaviour keeps working -- that wrapper was the only shape this
+                 component was usable with before, and breaking it would force a
+                 major bump for a fix that is otherwise additive. Deprecated: read
+                 the named props, not `properties`. -->
+            <view.component {...view.properties} properties={view.properties} />
           </div>
         {/each}
       </div>
@@ -172,7 +182,13 @@
         <div
           class={activeSlideIndex == index ? 'active-dot' : 'dot'}
           onclick={() => moveSlideToIndex(index)}
-          {onkeydown}
+          onkeydown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              moveSlideToIndex(index);
+            }
+            onkeydown?.(event);
+          }}
           role="button"
           tabindex="0"
           aria-label={`Go to slide ${index + 1}`}
@@ -182,6 +198,13 @@
       {/each}
     </div>
   {/if}
+  <!-- Slide changes are silent to assistive tech otherwise: the dots announce
+       where they GO, but nothing announces where the carousel ARRIVED, whether
+       the move came from autoplay, a swipe or a dot. polite so it never
+       interrupts, and atomic so the whole position is read as one phrase. -->
+  <div class="carousel-live-region" aria-live="polite" aria-atomic="true">
+    {#if views.length > 0}Slide {activeSlideIndex + 1} of {views.length}{/if}
+  </div>
 </div>
 
 <style>
@@ -231,6 +254,12 @@
     background: var(--carousel-dot-active-color, #000000);
     transition: 0.3s ease;
   }
+
+  .dot:focus-visible,
+  .active-dot:focus-visible {
+    outline: var(--dot-focus-outline, 2px solid #000000);
+    outline-offset: var(--dot-focus-outline-offset, 2px);
+  }
   /*
   @media only screen and (max-width: 324px) {
 
@@ -258,4 +287,19 @@
     }
 
   } */
+
+  /* Visually hidden but readable by assistive tech -- the standard clip pattern
+     rather than display:none, which would remove it from the a11y tree. */
+  .carousel-live-region {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
 </style>

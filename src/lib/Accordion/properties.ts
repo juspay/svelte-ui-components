@@ -17,6 +17,13 @@ export type OptionalAccordionProperties = {
    * can be shown open or closed under external (controlled) state.
    */
   disabled?: boolean;
+  /**
+   * `id` for the collapsible panel, which the built-in trigger references via
+   * `aria-controls`. Defaults to a generated, per-instance id, so the trigger and
+   * panel are always linked without any caller involvement. Supply one only when
+   * something else needs to reference the panel by a known id.
+   */
+  panelId?: string;
 };
 
 export type AccordionEventProperties = {

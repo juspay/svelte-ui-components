@@ -6,7 +6,8 @@
       expand: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
       triggerClasses: { type: 'String', attribute: 'trigger-classes' },
-      testId: { type: 'String', attribute: 'test-id' }
+      testId: { type: 'String', attribute: 'test-id' },
+      panelId: { type: 'String', attribute: 'panel-id' }
     }
   }}
 />

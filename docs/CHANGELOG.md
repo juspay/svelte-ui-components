@@ -2,29 +2,115 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.134.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.134.1)
 
-Two findings from a cross-surface UI audit, both of which make a control
-correct on screen and absent from the accessibility tree.
+ChatToolStatus and ThinkingIndicator were near-duplicates: same job (a
+live tool-status line), different visual treatment (solid bordered pill
+vs a borderless shimmering row) and no shared code. Rather than pick one
+arbitrarily, ThinkingIndicator gains a `chip` variant that reproduces
+ChatToolStatus's exact pill look under its own --thinking-indicator-chip-*
+tokens, with a static (non-shimmering) label by default so it's a safe
+drop-in — pass `busy` to opt into shimmer.
 
-Input rendered its validation message as a plain &lt;div class="error-message"&gt;
-with no id, no role, and nothing tying it to the field it described. Every
-audited form surface scored zero error nodes carrying role="alert" or sitting
-in an aria-live region, so a screen-reader user submitted, heard nothing, and
-was left on a form that had not moved. The field now carries aria-invalid while
-it is in error and points at the message through aria-describedby, and the
-message is a role="alert" live region so it is spoken as it appears. Both
-attributes stay absent while the field is valid -- otherwise a healthy form
-announces every field as broken.
+Chat.svelte now renders &lt;ThinkingIndicator variant="chip"&gt; for its
+built-in toolStatus row instead of &lt;ChatToolStatus&gt;. ChatToolStatus
+itself is untouched and still exported — deprecating a public export
+outright is its own breaking-change decision on a published package, so
+its docs page now just points at the replacement.
 
-ChipInput draws no label of its own and exposed no way to supply one:
-ChipInputProperties had placeholder, disabled, testId and classes, so a caption
-rendered beside it could not reach the control and the draft field arrived
-unnamed however the page read visually. It now accepts ariaLabel and forwards
-it to the Input it wraps.
+Yama's review on this branch raised 3 MAJOR + 7 MINOR findings, each
+verified against source before acting:
 
-Both are verified by reverting the source and confirming the new specs fail on
-the right assertions, then restoring to a byte-identical tree.
+- MAJOR, real: the chip variant's root had no aria-live region. The
+deprecated ChatToolStatus it replaces inside Chat had aria-live="polite",
+so screen-reader users lost the "Searching the catalog..." announcement
+entirely. Restored aria-live="polite" aria-atomic="true" on the chip root.
+- MAJOR, false positive: the claimed loss of an icon snippet prop confuses
+two different same-named declarations. ChatToolStatusProperties.icon
+belongs to the deprecated standalone &lt;ChatToolStatus&gt; component; Chat's
+own toolStatus prop is typed via the unrelated ChatToolStatus type in
+Chat/types.ts ({ tool?, label, state? }), which has never had an icon
+field — confirmed unchanged by this PR via git diff against release.
+Nothing regressed; no code change made.
+- MINOR: showElapsed silently no-ops on chip (no elapsedWatcher mounted)
+but was only documented as a bare exception. Documented chip alongside
+bare in both the JSDoc and docs/ThinkingIndicator.md, matching actual
+behavior rather than adding a new UI element under review pressure.
+- MINOR: .chip-label's shimmer wasn't covered by the reduced-motion query,
+unlike .status-label. Added the same animation-none + static-color
+treatment.
+- MINOR: no test coverage existed for the chip variant at all. Added
+tests/thinking-indicator-chip-variant.test.ts (static default, busy
+shimmer, aria-live on both) against two newly-testId'd demo rows.
+- MINOR: docs/Chat.md's CSS variable section contradicted its own table —
+claimed all --chat-tool-status-* vars only apply to the deprecated
+component directly, while the table lists --chat-tool-status-justify as
+Chat's own tool-status row alignment. Chat.svelte's .tool-status rule
+does read that var directly (verified) — documented it as the one
+Chat-level exception.
+- MINOR: docs/ToolCallLog.md overclaimed ThinkingIndicator as always
+single-line and as itself "disappearing" when settled. Reworded to
+describe specifically Chat's chip usage, which Chat clears — not a
+general ThinkingIndicator behavior.
+
+This PR's own testing claims were initially unbacked by anything checkable
+on the PR itself. Pulling the actual CI job log (not trusting the local
+run) surfaced two pre-existing, repo-wide CI gaps, both fixed here since
+they're the only way to back the above with something real:
+
+- ci.yml never had a `playwright install` step, so every Playwright spec
+in the suite -- not just this PR's -- failed on every run with
+"browserType.launch: Executable doesn't exist". The old ~130-failing
+baseline comment was never a real regression count under that
+condition. Added the install step.
+- playwright.config.ts had no `reporter` configured, so CI's "Upload
+Playwright report" step had nothing to upload -- confirmed 0 artifacts
+on every past run of this PR, and playwright-report/ absent after a
+full local run too. Added the html reporter alongside list, so local
+console output is unchanged.
+
+Verified: pixel-for-pixel against ChatToolStatus in the live demo site in
+both light and dark theme; a full Chat send cycle with no console errors;
+pnpm run check (0 errors, same 3 pre-existing warnings); pnpm run lint
+(clean); pnpm run build succeeds end to end; the new chip-variant
+Playwright suite (3/3) alongside the pre-existing unit suite (128/128);
+and, with both CI gaps fixed, a real playwright-report/index.html now
+generated locally on a full run -- the actual artifact this PR's CI run
+will attach.
+
+Rebased onto latest release (was several releases behind, including this
+repo's own PR #473 which is where ci.yml first landed on release) to
+resolve real merge conflicts -- worth noting since the DIRTY mergeable
+state turned out to be why CI/Yama had stopped triggering on this branch
+at all after ci.yml was first added here: GitHub couldn't compute a merge
+preview to resolve which workflow files should run. Confirmed once
+rebased: both fired immediately for the first time since that point.
+
+Added video: 'on' so CI's report artifact carries an actual playable
+recording of every test, not just a pass/fail line -- verified locally:
+real, valid WebM files (confirmed via `file`), and the html reporter
+copies them into playwright-report/data/ automatically, so the existing
+artifact upload is self-contained.
+
+Yama's own follow-up review then flagged a real, verified breaking-change
+regression: Chat's built-in tool-status row reads a completely different
+CSS variable set than the deprecated ChatToolStatus it replaced
+(--thinking-indicator-chip-* vs --chat-tool-status-*, confirmed no overlap),
+so a consumer's existing theming overrides would silently stop applying.
+Fixed by mapping every --thinking-indicator-chip-* variable the chip uses
+onto its --chat-tool-status-* equivalent, scoped to Chat's own .tool-status
+wrapper only -- old overrides keep working exactly as before, defaults
+match ChatToolStatus byte for byte. Added a dedicated demo instance +
+Playwright test proving it (overrides the OLD variable names, asserts the
+computed style picked them up).
+
+Every test's video recording was independently verified, not just asserted
+green: decoded with ffprobe (valid VP8, real non-zero frame counts), and
+visually inspected via extracted frames -- including confirming the
+backward-compat fix's pill actually renders with the overridden blue
+background and gold border, not its own defaults.
+
+## [2.134.1](https://github.com/juspay/svelte-ui-components/compare/2.134.1..2.134.0) - 1 September 2026
 
 ## [2.134.0](https://github.com/juspay/svelte-ui-components/compare/2.134.0..2.133.1) - 31 August 2026
 

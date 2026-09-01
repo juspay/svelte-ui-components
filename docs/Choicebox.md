@@ -71,6 +71,19 @@ Tag: `<sui-choicebox>`
 </sui-choicebox>
 ```
 
+### Props (HTML Attributes)
+
+| Attribute        | Maps to Prop    | Type    | Description                                                                                                                                              |
+| ---------------- | --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selected`       | `selected`      | Boolean | Reflects the selection state.                                                                                                                            |
+| `mode`           | `mode`          | String  | `radio` or `checkbox` indicator style.                                                                                                                   |
+| `disabled`       | `disabled`      | Boolean | Disables interaction and dims the card.                                                                                                                  |
+| `show-indicator` | `showIndicator` | Boolean | Whether to render the radio dot / checkbox tick (default `true`). Boolean attributes are presence-based, so to hide the indicator set the `showIndicator` property to `false` from JS. |
+| `test-id`        | `testId`        | String  | Sets `data-pw` on the card for Playwright selectors.                                                                                                     |
+| `classes`        | `classes`       | String  | CSS classes applied to the card element.                                                                                                                 |
+
+`onclick` is a function prop — set it as a property from JS, not as an attribute.
+
 ### Indicator
 
 The indicator is decorative — the card itself carries `role` and `aria-checked`, so the mark is

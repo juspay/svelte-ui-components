@@ -2,30 +2,58 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.5)
 
-#477 changed slide rendering from `properties={view.properties}` to
-`{...view.properties}` and merged without the compatibility half. The spread
-is the right fix -- every component in this library takes named props, so the
-old form meant a normal slide rendered empty -- but it is a runtime contract
-change on a published component, and it shipped in 2.136.4.
+Closes #481. Two related defects in Input, both filed by a prior
+accessibility-audit pass rather than silently patched, since changing
+either default is a visual change every consumer inherits:
 
-The consumers it can break are specific: anyone who wrote a purpose-built
-wrapper declaring a `properties` prop, which was the only shape Carousel was
-usable with before. They now receive nothing under that key.
+- .info-message defaulted to the exact same red as .error-message
+(#fa1405), so infoMessage -- neutral guidance like "Use your company
+address, not a personal one" -- rendered in the color of a validation
+failure. A field with helper text and no error looked like a field
+that failed validation, and since color was the only thing
+distinguishing the two, this was color-alone signalling (WCAG 1.4.1).
+--input-info-msg-text-color now defaults to #52525b -- a neutral,
+already used elsewhere in this library (ChatToolStatus/
+ThinkingIndicator's muted status text) -- at 7.73:1 on white.
 
-`properties` is passed alongside the spread again, so both shapes work and no
-major bump is required. Reading it is documented as deprecated in favour of
-the named props. Covered by LegacyPropertiesSlide, a slide of exactly the old
-shape, so the guarantee fails a test rather than quietly regressing.
+- #fa1405 itself was only 4.06:1 on white / 3.82:1 on #f6f8fa, below
+the 4.5:1 AA floor for the 12px text both messages use -- so the
+error message was not reliably legible to the user who needed it
+most. --input-error-msg-text-color now defaults to #c5120a, 6.06:1
+on white.
 
-Also adds the aria-live region two review threads on #477 asked for: the dots
-carry an aria-label saying where they GO, but nothing announced where the
-carousel ARRIVED, which also left autoplay and swipe silent. A visually
-hidden polite/atomic region now reads "Slide N of M".
+Verified the existing label color (#637c95) could not be reused as the
+new neutral default -- it is itself only 4.33:1, below AA -- before
+picking #52525b from this library's own existing muted-text convention.
 
-Verified: reverting the compat prop and the live region fails exactly the two
-new specs and nothing else; restoring gives 5/5 and a byte-identical tree.
+--input-error-msg-text-color's fallback is spelled out in five places
+across Input.svelte (error text, error border x2, mandatory asterisk,
+char-count-at-limit) and had to be updated consistently in all of them,
+or the border and text would visibly mismatch. InputButton.svelte
+independently hardcodes the same two shared variable names plus its
+own --inputbutton-external-error-color (all previously #fa1405 too) --
+fixed there as well so the same token means the same color in both
+components, not just in Input.
+
+Added a data-pw/testID hook to Input's info-message div, mirroring the
+existing error-message one, so both are independently addressable in
+tests (previously only the error message had one).
+
+New coverage: tests/input-helper-error-colors.test.ts asserts the error
+and helper messages render in different, exact expected colors on both
+Input (the existing forceError + infoMessage demo instance) and
+InputButton (a new demo section pairing the error prop with
+infoMessage). Ran the full existing suite (342 specs) against these
+changes -- all pass, no regressions from the shared-token update.
+
+Verified with real Playwright video recordings, each decoded with
+ffprobe (valid VP8, real non-zero frame counts) and visually inspected
+via extracted frames: error and helper text render as clearly distinct
+colors in both components.
+
+## [2.136.5](https://github.com/juspay/svelte-ui-components/compare/2.136.5..2.136.4) - 1 September 2026
 
 ## [2.136.4](https://github.com/juspay/svelte-ui-components/compare/2.136.4..2.136.3) - 1 September 2026
 

@@ -2,83 +2,31 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.133.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.134.0)
 
-Comparison against polymorph-ui-components (a fork of this codebase) surfaced
-a gap list of components/props/infrastructure it had that SUI didn't. This
-closes Phase 1 of that list.
+Two findings from a cross-surface UI audit, both of which make a control
+correct on screen and absent from the accessibility tree.
 
-New components (the 4 polymorph had that SUI didn't; built to SUI's own
-conventions -- properties.ts split, classes/testId, CSS-variable theming,
-composing existing components like Button/Img/Icon/Shimmer per
-GUIDELINES.md #4/#6 -- not ported byte-for-byte):
-- Draggable: pointer/keyboard-draggable wrapper (axis constraint,
-handle-scoped drag start, viewport bounds clamping, arrow-key movement)
-- MediaPlayer: image/video player with hover-revealed play/pause and
-mute/unmute controls, bindable playing/muted, snippet-overridable icons,
-native-controls fallback
-- MediaUpload: drag-and-drop file picker with per-file validation (type,
-size, count), lazy thumbnails via FileReader, bindable files
-- Gallery: grid/list gallery with a full keyboard-accessible lightbox
-(focus trap, focus restoration, arrow/Home/End/Escape navigation),
-optional per-item edit/delete actions
+Input rendered its validation message as a plain &lt;div class="error-message"&gt;
+with no id, no role, and nothing tying it to the field it described. Every
+audited form surface scored zero error nodes carrying role="alert" or sitting
+in an aria-live region, so a screen-reader user submitted, heard nothing, and
+was left on a form that had not moved. The field now carries aria-invalid while
+it is in error and points at the message through aria-describedby, and the
+message is a role="alert" live region so it is spoken as it appears. Both
+attributes stay absent while the field is valid -- otherwise a healthy form
+announces every field as broken.
 
-Modal gained its last 2 Phase 0 gap-list props: lockScroll (default true,
-preserves prior unconditional scroll-lock behavior) and autoDismissAfter
-(fires onclose after N ms, timer cleared on unmount).
+ChipInput draws no label of its own and exposed no way to supply one:
+ChipInputProperties had placeholder, disabled, testId and classes, so a caption
+rendered beside it could not reach the control and the draft field arrived
+unnamed however the page read visually. It now accepts ariaLabel and forwards
+it to the Input it wraps.
 
-Event names deliberately diverge from polymorph in a few places per
-DESIGN_PRINCIPLES.md's casing rule (native DOM events stay lowercase,
-synthesized events are camelCase) -- e.g. Draggable's onMoveStart/onMove/
-onMoveEnd (not onDragStart/onDrag/onDragEnd, which would collide with the
-native HTML5 drag-and-drop API), Gallery's onDismiss (not onClose, which
-would collide with native &lt;dialog&gt;'s close event despite no &lt;dialog&gt;
-being involved).
+Both are verified by reverting the source and confirming the new specs fail on
+the right assertions, then restoring to a byte-identical tree.
 
-Infrastructure:
-- DESIGN_PRINCIPLES.md written down (5 principles checked against actual
-codebase behavior) plus scripts/check-event-casing.js enforcing the
-casing rule, wired into `npm run lint`, with a 97-violation baseline
-grandfathering pre-existing prop names (renaming any is a breaking
-change, not a lint fix)
-- .github/workflows/ci.yml: lint/svelte-check/vitest now actually run on
-pull_request (previously only Yama's AI review and the Pages build ran);
-Playwright stays continue-on-error pending a real flakiness-vs-regression
-triage of its current baseline; workflow-level `contents: read`
-permissions added per a CodeQL finding
-- The wc custom-element build (dist-wc) is now actually shipped through
-npm (added to `files`, new "./wc" export with a generated
-dist-wc/index.d.ts for TypeScript consumers) and documented in
-README.md -- it worked and was GitHub-Pages-deployed already, but
-wasn't reachable via `import '@juspay/svelte-ui-components/wc'`
-
-Docs: ROADMAP.md regenerated against docs/_index.json (was last updated
-before 27 components shipped in BZ-49010 alone; 44/54 tracked items are
-now available, was 14/54) plus fixes to its component count and a
-TaskList indexing note; README's web-components runtime claim reworded
-for clarity (bundled into the build, not "no runtime" as it read before).
-
-Review-fix rounds (CodeRabbit/Yama/CodeQL findings on this PR, each
-verified against source before fixing, not taken at face value):
-- ROADMAP's "shipped since" count corrected (37 -&gt; 36; the higher count
-was matching backticked non-component tokens in the intro prose)
-- FileDropzoneTrigger and KeyValue were missing their .wc.svelte wrapper
-despite README claiming full custom-element coverage -- added both
-- MediaPlayer: overlay controls got a :focus-within fallback (were
-hover-only, so visibility:hidden removed them from the tab order for
-keyboard users); role="button"/tabindex/handlers scoped to !controls so
-they stop fighting native browser controls' own keyboard operability;
-the playing bindable is now genuinely bidirectional (a host setting it
-externally calls play()/pause(), not just video state writing back to
-it); the captions &lt;track&gt; now only renders when real captionsSrc data
-is supplied instead of always rendering an empty, non-functional one
-
-Verified throughout: pnpm run check (0 errors), pnpm run lint (clean,
-including the event-casing checker), and each new/changed component's
-own Playwright suite passing (Draggable 4/4, MediaPlayer 11/11 after the
-review-fix round, MediaUpload 5/5, Gallery 6/6, Modal's 2 new-prop cases
-plus both pre-existing Modal test files unmodified); `pnpm run build`
-succeeds end to end and produces a working dist-wc with types.
+## [2.134.0](https://github.com/juspay/svelte-ui-components/compare/2.134.0..2.133.1) - 31 August 2026
 
 ## [2.133.1](https://github.com/juspay/svelte-ui-components/compare/2.133.1..2.133.0) - 31 August 2026
 

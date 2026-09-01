@@ -66,3 +66,28 @@ test.describe('Carousel', () => {
       .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   });
 });
+
+test.describe('Carousel backward compatibility and announcements', () => {
+  test('a wrapper that declares `properties` still receives the bag', async ({ page }) => {
+    await page.goto('/components/carousel');
+    const legacy = page.getByTestId('carousel-legacy-demo');
+    await expect(legacy).toBeVisible();
+    // Spreading the bag was the fix, but the pre-existing wrapper shape has to
+    // keep working or the fix is a breaking change to a published component.
+    await expect(legacy.getByTestId('carousel-legacy-slide')).toHaveText(
+      'legacy wrapper still receives its bag'
+    );
+  });
+
+  test('the active slide position is announced to assistive technology', async ({ page }) => {
+    await page.goto('/components/carousel');
+    const carousel = page.getByTestId('carousel-manual-demo');
+    const live = carousel.locator('[aria-live="polite"]');
+    await expect(live).toHaveText('Slide 1 of 3');
+
+    await page.getByTestId('carousel-manual-dot-2').click();
+    // The dots say where they GO; without this region nothing says where the
+    // carousel ARRIVED, including for autoplay and swipe.
+    await expect(live).toHaveText('Slide 2 of 3');
+  });
+});

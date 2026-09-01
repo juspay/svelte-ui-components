@@ -57,6 +57,34 @@
     </Toolbar>
   </div>
 
+  <!-- A consumer-supplied image still renders as an <img>; only the default is inline. -->
+  <div
+    style="position: relative; width: 100%;
+           --toolbar-position: relative;
+           --toolbar-width: 100%;
+           --toolbar-background: transparent;
+           --toolbar-box-shadow: none;"
+  >
+    <Toolbar
+      text="Custom back icon"
+      testId="toolbar-custom-back-icon"
+      showBackButton
+      backIcon="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M10 3 5 8l5 5' stroke='%23000' stroke-width='2' fill='none'/></svg>"
+      onbackClick={() => alert('Back clicked')}
+    />
+  </div>
+
+  <!-- An empty label must not strip the button's accessible name. -->
+  <div
+    style="position: relative; width: 100%;
+           --toolbar-position: relative;
+           --toolbar-width: 100%;
+           --toolbar-background: transparent;
+           --toolbar-box-shadow: none;"
+  >
+    <Toolbar text="Empty label" testId="toolbar-empty-back-label" showBackButton backLabel="  " />
+  </div>
+
   <!-- backIcon={null} keeps its historical meaning: render no icon at all. -->
   <div
     style="position: relative; width: 100%;

@@ -4,6 +4,7 @@ export type ToolbarProperties = ToolbarEventProperties & {
   showBackButton?: boolean;
   text?: string | null;
   backIcon?: string | null;
+  backLabel?: string;
   leftContent?: Snippet;
   centerContent?: Snippet;
   rightContent?: Snippet;

@@ -232,6 +232,7 @@ Override these custom properties to theme the component.
 | `--barchart-bar-dimmed-opacity`      | `0.3`                       | opacity          | Opacity of non-highlighted / non-hovered bars when a highlight is active. |
 | `--barchart-value-color`             | `#333`                      | fill             | Color of value labels.                                                    |
 | `--barchart-value-font-size`         | `11px`                      | font-size        | Font size of value labels.                                                |
+| `--barchart-value-font-weight`       | `600`                       | font-weight      | Font weight of value labels.                                              |
 | `--barchart-scroll-area-height`      | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`.              |
 
 ## Dark mode

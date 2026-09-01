@@ -150,6 +150,7 @@ Override these custom properties to theme the component.
 | `--command-menu-item-active-color`      | `#0f172a`   | color            | Text color of the currently highlighted/active item.         |
 | `--command-menu-item-disabled-opacity`  | `0.4`       | opacity          | Opacity of disabled command items.                           |
 | `--command-menu-item-icon-size`         | `20px`      | width, height    | Size of item icon images (when using icon URL, not Snippet). |
+| `--command-menu-item-icon-color`        | `inherit`   | color            | Colour of item icons.                                        |
 
 ### Keyboard Shortcut Badges
 

@@ -33,10 +33,7 @@ A horizontal funnel chart built entirely from pure SVG — no external charting 
 ### Custom Value Format
 
 ```svelte
-<FunnelChart
-  data={stages}
-  valueFormat={(value) => value.toLocaleString()}
-/>
+<FunnelChart data={stages} valueFormat={(value) => value.toLocaleString()} />
 ```
 
 ### Hide Value Labels
@@ -79,60 +76,68 @@ A horizontal funnel chart built entirely from pure SVG — no external charting 
 
 ## Props
 
-| Prop            | Type                                              | Required | Default                               | Description                                                                                                                                       |
-| --------------- | ------------------------------------------------- | -------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| data            | `FunnelStage[]`                                   | Yes      | –                                     | Ordered array of `{ category, value }` stage objects. Stages are rendered left-to-right; the tallest bar corresponds to the maximum value.         |
-| stageColors     | `string[]`                                        | No       | chart palette                         | Fill color for each stage bar, index-matched to `data`. Unspecified entries fall back to the shared chart palette.                                 |
-| connectorColor  | `string`                                          | No       | `light-dark(#BDFFFB, #164e4a)`        | Fill color for the trapezoidal connector shapes between consecutive stages. The default resolves per color scheme via CSS `light-dark()`.          |
-| slopeWidth      | `number`                                          | No       | `10`                                  | Horizontal width (SVG units) of each slope connector. Larger values produce steeper visual drops.                                                  |
-| onHoverExpand   | `number`                                          | No       | `10`                                  | Extra vertical pixels added symmetrically to the hovered stage bar. Set to `0` to disable.                                                        |
-| showValueLabels | `boolean`                                         | No       | `true`                                | Whether to render the value and percentage label centred inside each stage bar.                                                                    |
-| valueFormat     | `(value: number, max: number) => string`          | No       | `"<value>  \|  <pct>%"`              | Custom formatter for in-bar labels. Receives the stage value and the maximum value across all stages.                                              |
-| aspectRatio     | `number`                                          | No       | `16 / 9`                              | Width-to-height ratio passed to `ChartContainer`. Controls the chart's height relative to its container width.                                     |
-| testId          | `string`                                          | No       | –                                     | Value for the `data-pw` attribute on the chart root element.                                                                                      |
-| classes         | `string`                                          | No       | –                                     | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                                     |
-| empty           | `Snippet`                                         | No       | –                                     | Content rendered when `data` is empty or all values are zero.                                                                                     |
-| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
+| Prop            | Type                                     | Required | Default                        | Description                                                                                                                                |
+| --------------- | ---------------------------------------- | -------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| data            | `FunnelStage[]`                          | Yes      | –                              | Ordered array of `{ category, value }` stage objects. Stages are rendered left-to-right; the tallest bar corresponds to the maximum value. |
+| stageColors     | `string[]`                               | No       | chart palette                  | Fill color for each stage bar, index-matched to `data`. Unspecified entries fall back to the shared chart palette.                         |
+| connectorColor  | `string`                                 | No       | `light-dark(#BDFFFB, #164e4a)` | Fill color for the trapezoidal connector shapes between consecutive stages. The default resolves per color scheme via CSS `light-dark()`.  |
+| slopeWidth      | `number`                                 | No       | `10`                           | Horizontal width (SVG units) of each slope connector. Larger values produce steeper visual drops.                                          |
+| onHoverExpand   | `number`                                 | No       | `10`                           | Extra vertical pixels added symmetrically to the hovered stage bar. Set to `0` to disable.                                                 |
+| radius          | `number`                                 | No       | `4`                            | Corner radius on each stage bar in pixels.                                                                                                 |
+| maxHeight       | `number`                                 | No       | `420`                          | Upper bound (px) on the rendered chart height.                                                                                             |
+| minHeight       | `number`                                 | No       | `0`                            | Lower bound (px) on the rendered chart height.                                                                                             |
+| showValueLabels | `boolean`                                | No       | `true`                         | Whether to render the value and percentage label centred inside each stage bar.                                                            |
+| valueFormat     | `(value: number, max: number) => string` | No       | `"<value>  \|  <pct>%"`        | Custom formatter for in-bar labels. Receives the stage value and the maximum value across all stages.                                      |
+| aspectRatio     | `number`                                 | No       | `16 / 9`                       | Width-to-height ratio passed to `ChartContainer`. Controls the chart's height relative to its container width.                             |
+| testId          | `string`                                 | No       | –                              | Value for the `data-pw` attribute on the chart root element.                                                                               |
+| classes         | `string`                                 | No       | –                              | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                             |
+| empty           | `Snippet`                                | No       | –                              | Content rendered when `data` is empty or all values are zero.                                                                              |
+| tooltipPortal   | `boolean`                                | No       | `false`                        | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it.                                    |
 
 ## Events
 
-| Event        | Type                                                                   | Description                                                                 |
-| ------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| onstageclick | `(event: { index: number; stage: FunnelStage }) => void`               | Fires when the user clicks a stage bar. Receives the index and stage data.  |
-| onstagehover | `(event: { index: number; stage: FunnelStage } \| null) => void`       | Fires on stage hover and leave. Receives `null` when the pointer leaves.    |
+| Event        | Type                                                             | Description                                                                |
+| ------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| onstageclick | `(event: { index: number; stage: FunnelStage }) => void`         | Fires when the user clicks a stage bar. Receives the index and stage data. |
+| onstagehover | `(event: { index: number; stage: FunnelStage } \| null) => void` | Fires on stage hover and leave. Receives `null` when the pointer leaves.   |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                               | Default                     | CSS Property     | Description                                                   |
-| -------------------------------------- | --------------------------- | ---------------- | ------------------------------------------------------------- |
-| `--chart-background`                   | `transparent`               | background       | Background color of the chart container.                      |
-| `--chart-font-family`                  | `inherit`                   | font-family      | Font family for all chart text.                               |
-| `--chart-transition-duration`          | `0.2s`                      | transition       | Duration of hover and expand transitions.                     |
-| `--chart-tooltip-background`           | `rgba(0,0,0,0.85)`          | background       | Background of the default tooltip.                            |
-| `--chart-tooltip-color`                | `#fff`                      | color            | Text color of the default tooltip.                            |
-| `--chart-tooltip-font-size`            | `12px`                      | font-size        | Font size of tooltip content.                                 |
-| `--chart-tooltip-padding`              | `8px 12px`                  | padding          | Inner padding of the tooltip.                                 |
-| `--chart-tooltip-border-radius`        | `4px`                       | border-radius    | Border radius of the tooltip.                                 |
-| `--chart-tooltip-shadow`               | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                        |
-| `--chart-empty-padding`                | `32px 24px`                 | padding          | Padding around the empty state content.                       |
-| `--chart-empty-color`                  | `#9ca3af`                   | color            | Text color of the empty state.                                |
-| `--funnel-chart-connector-color`       | `light-dark(#BDFFFB, #164e4a)` | fill          | Default fill for trapezoidal connector shapes.                |
-| `--funnel-chart-label-color`           | `#666`                      | fill             | Color of the category labels above each stage bar.            |
-| `--funnel-chart-label-font-size`       | `11px`                      | font-size        | Font size of category labels.                                 |
-| `--funnel-chart-value-color`           | auto (contrast)             | fill             | Overrides the automatic per-stage contrast color of the value/percentage labels inside bars. |
-| `--funnel-chart-value-font-size`       | `11px`                      | font-size        | Font size of in-bar value labels.                             |
-| `--funnel-chart-bar-hover-opacity`     | `1`                         | opacity          | Opacity of the hovered stage bar.                             |
-| `--funnel-chart-bar-dimmed-opacity`    | `0.35`                      | opacity          | Opacity of non-hovered bars when another stage is hovered.    |
+| Variable                            | Default                        | CSS Property  | Description                                                                                  |
+| ----------------------------------- | ------------------------------ | ------------- | -------------------------------------------------------------------------------------------- |
+| `--chart-background`                | `transparent`                  | background    | Background color of the chart container.                                                     |
+| `--chart-font-family`               | `inherit`                      | font-family   | Font family for all chart text.                                                              |
+| `--chart-transition-duration`       | `0.2s`                         | transition    | Duration of hover and expand transitions.                                                    |
+| `--chart-tooltip-background`        | `rgba(0,0,0,0.85)`             | background    | Background of the default tooltip.                                                           |
+| `--chart-tooltip-color`             | `#fff`                         | color         | Text color of the default tooltip.                                                           |
+| `--chart-tooltip-font-size`         | `12px`                         | font-size     | Font size of tooltip content.                                                                |
+| `--chart-tooltip-padding`           | `8px 12px`                     | padding       | Inner padding of the tooltip.                                                                |
+| `--chart-tooltip-border-radius`     | `4px`                          | border-radius | Border radius of the tooltip.                                                                |
+| `--chart-tooltip-shadow`            | `0 2px 8px rgba(0,0,0,0.2)`    | box-shadow    | Shadow on the tooltip.                                                                       |
+| `--chart-empty-padding`             | `32px 24px`                    | padding       | Padding around the empty state content.                                                      |
+| `--chart-axis-label-color`          | `light-dark(#333, #e5e7eb)`    | outline       | Focus outline colour on a keyboard-focused stage bar.                                        |
+| `--chart-empty-color`               | `#9ca3af`                      | color         | Text color of the empty state.                                                               |
+| `--funnel-chart-connector-color`    | `light-dark(#BDFFFB, #164e4a)` | fill          | Default fill for trapezoidal connector shapes.                                               |
+| `--funnel-chart-label-color`        | `#666`                         | fill          | Color of the category labels above each stage bar.                                           |
+| `--funnel-chart-label-font-size`    | `11px`                         | font-size     | Font size of category labels.                                                                |
+| `--funnel-chart-value-color`        | auto (contrast)                | fill          | Overrides the automatic per-stage contrast color of the value/percentage labels inside bars. |
+| `--funnel-chart-value-font-size`    | `11px`                         | font-size     | Font size of in-bar value labels.                                                            |
+| `--funnel-chart-bar-hover-opacity`  | `1`                            | opacity       | Opacity of the hovered stage bar.                                                            |
+| `--funnel-chart-bar-dimmed-opacity` | `0.35`                         | opacity       | Opacity of non-hovered bars when another stage is hovered.                                   |
 
 ## Dark mode
 
 Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
 
 ```css
-:root { color-scheme: light; }
-[data-theme='dark'] { color-scheme: dark; }
+:root {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
 ```
 
 Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.

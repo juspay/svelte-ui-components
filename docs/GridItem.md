@@ -21,6 +21,7 @@ A square grid cell with a header icon (top-right), centered main icon, and text 
 | headerIcon | `string \| null` | No       | `''`    | URL of a small icon displayed in the top-right corner of the grid cell (e.g., an offer tag or badge).                                                                  |
 | showLoader | `boolean`        | No       | `false` | Bindable. When true, shows a rotating clip-path animation overlay on the icon area. Toggles on each click.                                                             |
 | classes    | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| testId     | `string`         | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                          |
 
 ## Events
 

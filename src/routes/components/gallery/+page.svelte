@@ -47,9 +47,24 @@
   <p class="demo-note">Delete clicked for: {removed.join(', ')}</p>
 {/if}
 
+<h3>Themed grid</h3>
+<p class="demo-note">
+  <code>--gallery-columns</code>, <code>--gallery-gap</code>, and
+  <code>--gallery-item-border-radius</code> control the grid layout.
+</p>
+<div class="demo-row themed-gallery">
+  <Gallery {images} view="grid" testId="gallery-themed-demo" />
+</div>
+
 <style>
   .demo-note {
     font-size: 13px;
     color: #6b7280;
+  }
+
+  .themed-gallery {
+    --gallery-columns: 2;
+    --gallery-gap: 24px;
+    --gallery-item-border-radius: 16px;
   }
 </style>

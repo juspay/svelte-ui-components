@@ -8,7 +8,7 @@
 </div>
 
 <div class="demo-row" style="align-items: center;">
-  <Gauge value={25} showLabel />
+  <Gauge value={25} showLabel ariaLabel="Storage used, 25 percent" testId="gauge-with-arialabel" />
   <Gauge value={50} showLabel />
   <Gauge value={75} showLabel />
   <Gauge value={100} showLabel />

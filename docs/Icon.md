@@ -13,17 +13,21 @@ A clickable icon component that displays an image or inline SVG with an optional
 <Icon icon="/icons/home.svg" text="Home" />
 
 <!-- Inline SVG icon -->
-<Icon svg={'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'} text="Star" />
+<Icon
+  svg={'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'}
+  text="Star"
+/>
 ```
 
 ## Props
 
-| Prop    | Type             | Required | Default | Description                                                                                                                                                            |
-| ------- | ---------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| icon    | `string`         | No       | `-`     | URL of the icon image to display. Rendered as `<img src>`.                                                                                                             |
+| Prop    | Type             | Required | Default | Description                                                                                                                                                                                                                      |
+| ------- | ---------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| icon    | `string`         | No       | `-`     | URL of the icon image to display. Rendered as `<img src>`.                                                                                                                                                                       |
 | svg     | `string`         | No       | `-`     | Raw SVG markup string to render inline via `{@html}`. When provided, takes priority over `icon`. Inherits `currentColor` for styling. **Must be trusted content** — never pass unsanitized user input (see Security note below). |
-| text    | `string \| null` | No       | `-`     | Optional text label displayed below the icon.                                                                                                                          |
-| classes | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| text    | `string \| null` | No       | `-`     | Optional text label displayed below the icon.                                                                                                                                                                                    |
+| classes | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                           |
+| testId  | `string`         | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                                                                                    |
 
 > **Note:** At least one of `icon` or `svg` should be provided. If both are provided, `svg` takes priority.
 
@@ -61,5 +65,8 @@ Tag: `<sui-icon>`
 <sui-icon icon="/icons/home.svg" text="Home"></sui-icon>
 
 <!-- Inline SVG -->
-<sui-icon svg="<svg viewBox='0 0 24 24' fill='currentColor'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/></svg>" text="Star"></sui-icon>
+<sui-icon
+  svg="<svg viewBox='0 0 24 24' fill='currentColor'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/></svg>"
+  text="Star"
+></sui-icon>
 ```

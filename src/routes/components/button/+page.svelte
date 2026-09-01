@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
+  import Menu from '$lib/Menu/Menu.svelte';
 
   let loadingDemo = $state(false);
 
@@ -155,6 +156,27 @@
       ariaBusy
       testId="button-title-busy"
     />
+  </div>
+
+  <h3>ariaHaspopup</h3>
+  <p>
+    <code>aria-haspopup</code> is a promise that activating the control opens a popup, so it belongs
+    on a button that really has one. <code>Menu</code> hands exactly this value to its
+    <code>trigger</code> snippet — spread it rather than hardcoding the attribute.
+  </p>
+  <div class="demo-row">
+    <Menu
+      items={[
+        { label: 'Newest first', value: 'newest' },
+        { label: 'Oldest first', value: 'oldest' }
+      ]}
+      interactiveTrigger
+      testId="button-haspopup-menu"
+    >
+      {#snippet trigger(triggerProps)}
+        <Button {...triggerProps} text="Sort" testId="button-haspopup" />
+      {/snippet}
+    </Menu>
   </div>
 </div>
 

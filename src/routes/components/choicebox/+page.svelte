@@ -41,6 +41,17 @@
   </Choicebox>
 </div>
 
+<h3>Themed indicator</h3>
+<p class="demo-note">
+  <code>--choicebox-indicator-*</code> variables theme the radio dot / checkmark box independently of
+  the card itself.
+</p>
+<div class="demo-row themed-indicator">
+  <Choicebox mode="radio" selected testId="choicebox-themed-indicator">
+    <span class="choice-title">Themed indicator</span>
+  </Choicebox>
+</div>
+
 <style>
   .choice-title {
     font-weight: 600;
@@ -50,5 +61,16 @@
   .choice-desc {
     font-size: 14px;
     opacity: 0.6;
+  }
+
+  .demo-note {
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .themed-indicator {
+    --choicebox-indicator-selected-background: rgb(20, 130, 40);
+    --choicebox-indicator-selected-border: 2px solid rgb(20, 130, 40);
+    --choicebox-indicator-size: 28px;
   }
 </style>

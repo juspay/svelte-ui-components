@@ -94,9 +94,9 @@ Each column is normalized so series values sum to 100%.
 | empty          | `Snippet`                                                   | No       | `-`          | Content rendered when all series are empty.                                                                                           |
 | testId         | `string`                                                    | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                               |
 | classes        | `string`                                                    | No       | `-`          | CSS class string applied to the top-level element.                                                                                    |
-| minHeight | `number` | No | `0` | Lower bound (px) on the rendered chart height. |
-| maxHeight | `number` | No | `420` | Upper bound (px) on the rendered chart height. |
-| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
+| minHeight      | `number`                                                    | No       | `0`          | Lower bound (px) on the rendered chart height.                                                                                        |
+| maxHeight      | `number`                                                    | No       | `420`        | Upper bound (px) on the rendered chart height.                                                                                        |
+| tooltipPortal  | `boolean`                                                   | No       | `false`      | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it.                               |
 
 ## Events
 
@@ -109,19 +109,25 @@ Each column is normalized so series values sum to 100%.
 
 In addition to the shared `--chart-*` variables (see BarChart docs), AreaChart exposes:
 
-| Variable                      | Default | CSS Property | Description                                  |
-| ----------------------------- | ------- | ------------ | -------------------------------------------- |
-| `--areachart-dimmed-opacity`  | `0.1`   | opacity      | Opacity of non-hovered series when hovering. |
-| `--areachart-value-color`     | `#333`  | fill         | Color of point value labels.                 |
-| `--areachart-value-font-size` | `11px`  | font-size    | Font size of point value labels.             |
+| Variable                       | Default | CSS Property     | Description                                                                                                        |
+| ------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `--areachart-dimmed-opacity`   | `0.1`   | opacity          | Opacity of non-hovered series when hovering.                                                                       |
+| `--areachart-value-color`      | `#333`  | fill             | Color of point value labels.                                                                                       |
+| `--areachart-value-font-size`  | `11px`  | font-size        | Font size of point value labels.                                                                                   |
+| `--areachart-hover-line-color` | `-`     | stroke           | Color of the hover crosshair line. Falls back to `--linechart-hover-line-color`, then `light-dark(#ccc, #4b5563)`. |
+| `--areachart-hover-line-dash`  | `-`     | stroke-dasharray | Dash pattern for the hover crosshair line. Falls back to `--linechart-hover-line-dash`, then `4 4`.                |
 
 ## Dark mode
 
 Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
 
 ```css
-:root { color-scheme: light; }
-[data-theme='dark'] { color-scheme: dark; }
+:root {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
 ```
 
 Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.

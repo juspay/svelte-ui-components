@@ -32,11 +32,15 @@ A responsive SVG line chart for visualizing trends over continuous data. Support
   const series = [
     {
       name: 'Product A',
-      data: [/* ... */]
+      data: [
+        /* ... */
+      ]
     },
     {
       name: 'Product B',
-      data: [/* ... */]
+      data: [
+        /* ... */
+      ]
     }
   ];
 </script>
@@ -225,70 +229,76 @@ on narrow charts. Y-axis ticks were already capped at 6.
 
 ## Props
 
-| Prop              | Type                                                         | Required | Default      | Description                                                                                                                                                                                                                         |
-| ----------------- | ------------------------------------------------------------ | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| series            | `LineChartSeries[]`                                          | Yes      | `-`          | Array of `{name, data, color?}`. Each series renders as a separate line.                                                                                                                                                            |
-| curve             | `'linear' \| 'monotone' \| 'spline' \| 'step' \| 'natural'` | No       | `'monotone'` | Interpolation between points. `'spline'` is an alias for `'monotone'`.                                                                                                                                                              |
-| gradientFill      | `boolean`                                                    | No       | `false`      | Legacy gradient fill: renders a per-series gradient using the series colour, from `fillOpacity+0.3` at top to transparent. Superseded by `showArea` + `areaGradient` for new usage.                                                 |
-| fillOpacity       | `number`                                                     | No       | `0.3`        | Base opacity of the `gradientFill` area (0–1). Hovered series gets `+0.2` boost.                                                                                                                                                    |
-| showArea          | `boolean`                                                    | No       | `false`      | Fill the area under each line. Uses `areaGradient` colours when provided; otherwise derives a vertical gradient from the series colour (0.35 opacity at top, transparent at bottom).                                                |
-| areaGradient      | `{ from: string; to: string }`                               | No       | `-`          | Custom CSS colour stops for the `showArea` fill. `from` is the colour at the top (near the line), `to` is the colour at the baseline. Any valid CSS colour string is accepted.                                                      |
-| showDots          | `boolean`                                                    | No       | `true`       | Whether to render dots at each data point. Hover still works via overlay when `false`.                                                                                                                                              |
-| showValues        | `boolean`                                                    | No       | `false`      | Whether to render text labels with the y-value at each data point.                                                                                                                                                                  |
-| dotRadius         | `number`                                                     | No       | `4`          | Radius of data point dots in pixels. Hovered or highlighted dot is 1.5× this.                                                                                                                                                       |
-| strokeWidth       | `number`                                                     | No       | `2`          | Width of line strokes in pixels.                                                                                                                                                                                                    |
-| showGridlines     | `boolean`                                                    | No       | `true`       | Whether to show dashed gridlines across the Y axis.                                                                                                                                                                                 |
-| showXAxis         | `boolean`                                                    | No       | `true`       | Whether to render the X axis.                                                                                                                                                                                                       |
-| showYAxis         | `boolean`                                                    | No       | `true`       | Whether to render the Y axis.                                                                                                                                                                                                       |
-| showLegend        | `boolean`                                                    | No       | `false`      | Whether to render the legend. Only shown when there are multiple series.                                                                                                                                                            |
-| xDomain           | `[number, number]`                                           | No       | auto         | Fixed `[min, max]` for the X axis.                                                                                                                                                                                                  |
-| yDomain           | `[number, number]`                                           | No       | auto         | Fixed `[min, max]` for the Y axis.                                                                                                                                                                                                  |
-| xAxisLabel        | `string`                                                     | No       | `-`          | Text label below the X axis.                                                                                                                                                                                                        |
-| yAxisLabel        | `string`                                                     | No       | `-`          | Text label beside the Y axis (rotated).                                                                                                                                                                                             |
-| xAxisCategories   | `string[]`                                                   | No       | `-`          | String category labels, one per x-index (parallel array). Index 0 maps to `x=1`, index 1 to `x=2`, and so on. When provided, these labels replace raw numeric x values on tick labels, the tooltip title, and `getCategories()`. |
-| xTickFormat       | `(value: number \| string) => string`                        | No       | abbreviated  | Formatter for X axis tick labels. When provided, overrides the `xAxisCategories` tick formatter.                                                                                                                                    |
-| yTickFormat       | `(value: number \| string) => string`                        | No       | abbreviated  | Formatter for Y axis tick labels.                                                                                                                                                                                                   |
-| yIntegerTicks | `boolean` | No | `false` | Snap Y-axis ticks to whole numbers. Use for discrete count metrics (orders, sessions) where a small domain would otherwise produce fractional ticks (0, 0.5, 1, 1.5, 2). |
-| aspectRatio       | `number`                                                     | No       | `16/9`       | Width-to-height ratio.                                                                                                                                                                                                              |
-| highlightedIndex  | `number \| null`                                             | No       | `null`       | Zero-based point index to highlight declaratively. Enlarges the dot at that index, draws the crosshair, and dims all other dots. Set `null` to clear.                                                                              |
-| tooltipSnippet    | `Snippet<[LineChartTooltipContext]>`                         | No       | `-`          | Custom tooltip. Receives `{x, points: [{name, y, color, label?}]}` with values for all series at the hovered X.                                                                                                                    |
-| empty             | `Snippet`                                                    | No       | `-`          | Content rendered when all series are empty.                                                                                                                                                                                         |
-| testId            | `string`                                                     | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                             |
-| classes           | `string`                                                     | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                  |
-| sharedTooltip | `boolean` | No | auto | One anchored tooltip listing every visible series at the hovered x position. Defaults to `true` for multi-series charts, `false` for single-series. |
-| interactiveLegend | `boolean` | No | `false` | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data. |
-| hideLegendBelow | `number` | No | `360` | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior. |
-| tooltipPortal | `boolean` | No | `false` | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it. |
+| Prop              | Type                                                        | Required | Default      | Description                                                                                                                                                                                                                      |
+| ----------------- | ----------------------------------------------------------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| series            | `LineChartSeries[]`                                         | Yes      | `-`          | Array of `{name, data, color?}`. Each series renders as a separate line.                                                                                                                                                         |
+| curve             | `'linear' \| 'monotone' \| 'spline' \| 'step' \| 'natural'` | No       | `'monotone'` | Interpolation between points. `'spline'` is an alias for `'monotone'`.                                                                                                                                                           |
+| gradientFill      | `boolean`                                                   | No       | `false`      | Legacy gradient fill: renders a per-series gradient using the series colour, from `fillOpacity+0.3` at top to transparent. Superseded by `showArea` + `areaGradient` for new usage.                                              |
+| fillOpacity       | `number`                                                    | No       | `0.3`        | Base opacity of the `gradientFill` area (0–1). Hovered series gets `+0.2` boost.                                                                                                                                                 |
+| showArea          | `boolean`                                                   | No       | `false`      | Fill the area under each line. Uses `areaGradient` colours when provided; otherwise derives a vertical gradient from the series colour (0.35 opacity at top, transparent at bottom).                                             |
+| areaGradient      | `{ from: string; to: string }`                              | No       | `-`          | Custom CSS colour stops for the `showArea` fill. `from` is the colour at the top (near the line), `to` is the colour at the baseline. Any valid CSS colour string is accepted.                                                   |
+| showDots          | `boolean`                                                   | No       | `true`       | Whether to render dots at each data point. Hover still works via overlay when `false`.                                                                                                                                           |
+| showValues        | `boolean`                                                   | No       | `false`      | Whether to render text labels with the y-value at each data point.                                                                                                                                                               |
+| dotRadius         | `number`                                                    | No       | `4`          | Radius of data point dots in pixels. Hovered or highlighted dot is 1.5× this.                                                                                                                                                    |
+| strokeWidth       | `number`                                                    | No       | `2`          | Width of line strokes in pixels.                                                                                                                                                                                                 |
+| showGridlines     | `boolean`                                                   | No       | `true`       | Whether to show dashed gridlines across the Y axis.                                                                                                                                                                              |
+| showXAxis         | `boolean`                                                   | No       | `true`       | Whether to render the X axis.                                                                                                                                                                                                    |
+| showYAxis         | `boolean`                                                   | No       | `true`       | Whether to render the Y axis.                                                                                                                                                                                                    |
+| showLegend        | `boolean`                                                   | No       | `false`      | Whether to render the legend. Only shown when there are multiple series.                                                                                                                                                         |
+| xDomain           | `[number, number]`                                          | No       | auto         | Fixed `[min, max]` for the X axis.                                                                                                                                                                                               |
+| yDomain           | `[number, number]`                                          | No       | auto         | Fixed `[min, max]` for the Y axis.                                                                                                                                                                                               |
+| xAxisLabel        | `string`                                                    | No       | `-`          | Text label below the X axis.                                                                                                                                                                                                     |
+| yAxisLabel        | `string`                                                    | No       | `-`          | Text label beside the Y axis (rotated).                                                                                                                                                                                          |
+| xAxisCategories   | `string[]`                                                  | No       | `-`          | String category labels, one per x-index (parallel array). Index 0 maps to `x=1`, index 1 to `x=2`, and so on. When provided, these labels replace raw numeric x values on tick labels, the tooltip title, and `getCategories()`. |
+| xTickFormat       | `(value: number \| string) => string`                       | No       | abbreviated  | Formatter for X axis tick labels. When provided, overrides the `xAxisCategories` tick formatter.                                                                                                                                 |
+| yTickFormat       | `(value: number \| string) => string`                       | No       | abbreviated  | Formatter for Y axis tick labels.                                                                                                                                                                                                |
+| yIntegerTicks     | `boolean`                                                   | No       | `false`      | Snap Y-axis ticks to whole numbers. Use for discrete count metrics (orders, sessions) where a small domain would otherwise produce fractional ticks (0, 0.5, 1, 1.5, 2).                                                         |
+| aspectRatio       | `number`                                                    | No       | `16/9`       | Width-to-height ratio.                                                                                                                                                                                                           |
+| minHeight         | `number`                                                    | No       | `-`          | Minimum chart height in pixels, regardless of computed aspect-ratio height.                                                                                                                                                      |
+| maxHeight         | `number`                                                    | No       | `-`          | Maximum chart height in pixels, regardless of computed aspect-ratio height.                                                                                                                                                      |
+| highlightedIndex  | `number \| null`                                            | No       | `null`       | Zero-based point index to highlight declaratively. Enlarges the dot at that index, draws the crosshair, and dims all other dots. Set `null` to clear.                                                                            |
+| tooltipSnippet    | `Snippet<[LineChartTooltipContext]>`                        | No       | `-`          | Custom tooltip. Receives `{x, points: [{name, y, color, label?}]}` with values for all series at the hovered X.                                                                                                                  |
+| empty             | `Snippet`                                                   | No       | `-`          | Content rendered when all series are empty.                                                                                                                                                                                      |
+| testId            | `string`                                                    | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                          |
+| classes           | `string`                                                    | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                               |
+| sharedTooltip     | `boolean`                                                   | No       | auto         | One anchored tooltip listing every visible series at the hovered x position. Defaults to `true` for multi-series charts, `false` for single-series.                                                                              |
+| interactiveLegend | `boolean`                                                   | No       | `false`      | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data.                                                                          |
+| hideLegendBelow   | `number`                                                    | No       | `360`        | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior.                                                                                                                              |
+| tooltipPortal     | `boolean`                                                   | No       | `false`      | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it.                                                                                                                          |
 
 ## Events
 
-| Event        | Type                                                                                              | Description                                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| onpointclick | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint }) => void`         | Fires when the plot area is clicked with a hovered point.                                                               |
-| onpointhover | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint } \| null) => void` | Fires when hover moves to a new point or leaves the chart. `null` on leave.                                             |
+| Event        | Type                                                                                              | Description                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| onpointclick | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint }) => void`         | Fires when the plot area is clicked with a hovered point.                                                              |
+| onpointhover | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint } \| null) => void` | Fires when hover moves to a new point or leaves the chart. `null` on leave.                                            |
 | onChartReady | `(api: ChartHighlightAPI) => void`                                                                | Called once after mount. Provides a `ChartHighlightAPI` for imperative `highlight(index\|null)` and `getCategories()`. |
 
 ## CSS Variables
 
 In addition to the shared `--chart-*` variables (see BarChart docs), LineChart exposes:
 
-| Variable                            | Default | CSS Property     | Description                                                        |
-| ----------------------------------- | ------- | ---------------- | ------------------------------------------------------------------ |
-| `--linechart-dimmed-opacity`        | `0.2`   | opacity          | Opacity of non-hovered / non-highlighted series/points.            |
-| `--linechart-hover-line-color`      | `#ccc`  | stroke           | Color of the vertical crosshair line (hover and highlight).        |
-| `--linechart-hover-line-dash`       | `4 4`   | stroke-dasharray | Dash pattern of the crosshair.                                     |
-| `--linechart-value-color`           | `#333`  | fill             | Color of point value labels.                                       |
-| `--linechart-value-font-size`       | `11px`  | font-size        | Font size of point value labels.                                   |
-| `--linechart-highlight-ring-color`  | `#fff`  | stroke           | Ring (outline) stroke colour of an actively highlighted dot.       |
-| `--linechart-highlight-ring-width`  | `2.5`   | stroke-width     | Ring stroke width of an actively highlighted dot.                  |
+| Variable                           | Default | CSS Property     | Description                                                  |
+| ---------------------------------- | ------- | ---------------- | ------------------------------------------------------------ |
+| `--linechart-dimmed-opacity`       | `0.2`   | opacity          | Opacity of non-hovered / non-highlighted series/points.      |
+| `--linechart-hover-line-color`     | `#ccc`  | stroke           | Color of the vertical crosshair line (hover and highlight).  |
+| `--linechart-hover-line-dash`      | `4 4`   | stroke-dasharray | Dash pattern of the crosshair.                               |
+| `--linechart-value-color`          | `#333`  | fill             | Color of point value labels.                                 |
+| `--linechart-value-font-size`      | `11px`  | font-size        | Font size of point value labels.                             |
+| `--linechart-highlight-ring-color` | `#fff`  | stroke           | Ring (outline) stroke colour of an actively highlighted dot. |
+| `--linechart-highlight-ring-width` | `2.5`   | stroke-width     | Ring stroke width of an actively highlighted dot.            |
 
 ## Dark mode
 
 Chart colors resolve through CSS `light-dark()`. Set `color-scheme` on the chart's ancestor (or `:root`) so the correct side is chosen:
 
 ```css
-:root { color-scheme: light; }
-[data-theme='dark'] { color-scheme: dark; }
+:root {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
 ```
 
 Every `--chart-*` / component token can still be overridden per theme; overrides always win over the built-in `light-dark()` fallbacks.

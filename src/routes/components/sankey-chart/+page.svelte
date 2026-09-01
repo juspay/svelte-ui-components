@@ -166,3 +166,19 @@
     showValues
   />
 </div>
+
+<h3>radius + maxHeight — squared-off nodes, capped chart height</h3>
+<p>
+  <code>radius</code> sets the corner radius on each node rect (SVG <code>rx</code>/<code>ry</code>
+  cannot read CSS <code>var()</code>, so this is a prop). <code>maxHeight</code> caps the rendered
+  height regardless of <code>aspectRatio</code>.
+</p>
+<div class="demo-row">
+  <SankeyChart
+    nodes={simpleNodes}
+    links={simpleLinks}
+    radius={0}
+    maxHeight={180}
+    testId="sankey-radius-demo"
+  />
+</div>

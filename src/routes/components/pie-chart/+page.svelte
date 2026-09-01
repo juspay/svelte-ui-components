@@ -92,6 +92,17 @@
   <PieChart data={expenses} innerRadius={0.5} showLegend />
 </div>
 
+<h3>With Legend — themed</h3>
+<div class="demo-row" style="max-width: 400px;">
+  <PieChart
+    data={expenses}
+    innerRadius={0.5}
+    showLegend
+    classes="pie-legend-themed"
+    testId="pie-legend-themed"
+  />
+</div>
+
 <h3>
   Crowded — 24 sources with long labels and sliver slices (labels measure, truncate, de-collide;
   every value stays on the hover tooltip)
@@ -114,6 +125,7 @@
       { label: 'B', value: 0 }
     ]}
     testId="pie-all-zero"
+    classes="pie-empty-themed"
   >
     {#snippet empty()}
       <p>No distribution data yet.</p>
@@ -192,5 +204,16 @@
     background: #3b82f6;
     color: #fff;
     border-color: #3b82f6;
+  }
+
+  :global(.pie-legend-themed) {
+    --chart-legend-color: rgb(150, 30, 30);
+    --chart-legend-font-size: 15px;
+    --chart-legend-swatch-size: 20px;
+  }
+
+  :global(.pie-empty-themed) {
+    --chart-empty-color: rgb(150, 30, 30);
+    --chart-empty-padding: 60px 24px;
   }
 </style>

@@ -52,7 +52,7 @@ Override these custom properties to theme the component.
 | `--checkbox-container-cursor`         | `pointer`                           | cursor             | Cursor when hovering the checkbox container.                          |
 | `--checkbox-size`                     | `20px`                              | width, height      | Width and height of the checkbox box.                                 |
 | `--checkbox-border`                   | `2px solid #757575`                 | border             | Border of the checkbox box in its unchecked state.                    |
-| `--checkbox-border-radius`            | `3px`                               | border-radius      | Corner rounding of the checkbox box.                                  |
+| `--checkbox-border-radius`            | `var(--radius, 4px)`                | border-radius      | Corner rounding of the checkbox box. Falls back to the shared `--radius` token, then `4px`. |
 | `--checkbox-background`               | `transparent`                       | background-color   | Background color of the checkbox box when unchecked.                  |
 | `--checkbox-checked-background`       | `#2196f3`                           | background-color   | Background color of the checkbox box when checked.                    |
 | `--checkbox-checked-border`           | `2px solid #2196f3`                 | border             | Border of the checkbox box when checked.                              |
@@ -69,6 +69,7 @@ Override these custom properties to theme the component.
 | `--checkbox-label-font-size`          | `14px`                              | font-size          | Font size of the label text.                                          |
 | `--checkbox-label-font-weight`        | `400`                               | font-weight        | Font weight of the label text.                                        |
 | `--checkbox-label-color`              | `#212121`                           | color              | Color of the label text.                                              |
+| `--radius`                            | `4px`                               | border-radius      | Shared corner-radius token read by several components. Only takes effect on Checkbox when `--checkbox-border-radius` is unset. |
 
 ## Web Component
 

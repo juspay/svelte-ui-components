@@ -99,9 +99,22 @@ partyOf(role: ChatRole): ChatParty; // 'sender' | 'user' → 'sender'; everythin
 | `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background    | Inline code background.                                 |
 | `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background    | Code-block background.                                  |
 | `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin        | Paragraph spacing inside rendered HTML.                 |
+| `--chat-message-list-margin`                   | `0.4em 0`                 | margin        | Margin around a rendered `<ul>`/`<ol>` list.             |
+| `--chat-message-list-padding`                  | `1.4em`                   | padding-left  | Indent of a rendered `<ul>`/`<ol>` list.                 |
+| `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin        | Margin around a rendered heading.                        |
+| `--chat-message-blockquote-border-color`       | `rgba(0,0,0,0.15)`        | border-color  | Left border color of a rendered blockquote.              |
+| `--chat-message-blockquote-opacity`            | `0.85`                    | opacity       | Opacity of rendered blockquote text.                     |
+| `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color  | Border color of a rendered table and its cells.          |
+| `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background    | Background of a rendered table's header row.             |
+| `--chat-message-image-border-radius`           | `8px`                     | border-radius | Corner rounding of a rendered image.                     |
+| `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top    | Color of a rendered horizontal rule.                     |
 | `--chat-message-actions-gap`                   | `2px`                     | gap           | Gap between action buttons.                             |
 | `--chat-message-actions-opacity`               | `0`                       | opacity       | Resting opacity of the actions row (revealed on hover). |
+| `--chat-message-actions-transition`            | `opacity 0.15s ease`      | transition    | Transition for the actions row's hover reveal.           |
 | `--chat-message-action-size`                   | `28px`                    | height/width  | Size of each action button.                             |
+| `--chat-message-action-padding`                | `6px`                     | padding       | Padding of each action button.                           |
+| `--chat-message-action-border-radius`          | `6px`                     | border-radius | Corner rounding of each action button.                   |
+| `--chat-message-action-background-color`       | `transparent`             | background    | Resting background of each action button.                |
 | `--chat-message-action-color`                  | `#71717a`                 | color         | Icon color of action buttons.                           |
 | `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background    | Action button hover background.                         |
 

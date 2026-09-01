@@ -271,7 +271,7 @@ Override these custom properties to theme the component.
 | --------------------------------- | ------------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--card-background`               | `inherit`                | background      | Background color of the card.                                                                                                                |
 | `--card-border`                   | `1px solid currentColor` | border          | Border of the card. Inherits text color by default.                                                                                          |
-| `--card-border-radius`            | `8px`                    | border-radius   | Corner radius of the card.                                                                                                                   |
+| `--card-border-radius`            | `var(--radius, 4px)`     | border-radius   | Corner radius of the card. Falls back to the shared `--radius` token, then `4px`.                                                            |
 | `--card-overflow`                 | `hidden`                 | overflow        | Overflow behavior of the card content.                                                                                                       |
 | `--card-box-shadow`               | `none`                   | box-shadow      | Box shadow of the card. Set to a shadow value (e.g. `0 2px 8px rgba(0,0,0,0.1)`) or `none`.                                                  |
 | `--card-width`                    | `auto`                   | width           | Width of the card. Set to a fixed value (e.g. `600px`) or leave as `auto` for natural sizing.                                                |
@@ -291,6 +291,7 @@ Override these custom properties to theme the component.
 | `--card-description-font-size`    | `14px`                   | font-size       | Font size of the description text.                                                                                                           |
 | `--card-description-color`        | `inherit`                | color           | Color of the description text. Inherits from parent by default.                                                                              |
 | `--card-description-opacity`      | `0.6`                    | opacity         | Opacity of the description text for visual hierarchy.                                                                                        |
+| `--card-description-margin-top`   | `4px`                    | margin-top      | Space between the title and description.                                                                                                     |
 | `--card-content-padding`          | `16px`                   | padding         | Padding of the content body.                                                                                                                 |
 | `--card-stretch-height`           | `100%`                   | height          | Height of the card root when `stretch=true`. Set to a fixed value or `100%` for full-height layouts.                                         |
 | `--card-content-flex`             | `1`                      | flex            | Flex grow/shrink/basis shorthand for the content area when `stretch=true`, allowing it to fill remaining height.                             |
@@ -302,6 +303,7 @@ Override these custom properties to theme the component.
 | `--card-footer-padding`           | `12px 16px`              | padding         | Padding of the footer element.                                                                                                               |
 | `--card-footer-border-top`        | `none`                   | border-top      | Optional top border for the footer. Set to a border value (e.g. `1px solid #e5e7eb`) to visually separate the footer.                        |
 | `--card-footer-background`        | `inherit`                | background      | Background color of the footer element. Inherits from the card by default.                                                                   |
+| `--radius`                        | `4px`                    | border-radius   | Shared corner-radius token read by several components. Only takes effect on Card when `--card-border-radius` is unset.                       |
 
 ## Web Component
 

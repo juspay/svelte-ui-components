@@ -17,6 +17,7 @@ A rotating circular spinner with a gradient foreground that transitions from `--
 | Prop    | Type     | Required | Default | Description                                                                                                                                                            |
 | ------- | -------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | classes | `string` | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| testId  | `string` | No       | `-`     | `data-pw`/`testID` on the root element.                                                                                                                                |
 
 ## CSS Variables
 

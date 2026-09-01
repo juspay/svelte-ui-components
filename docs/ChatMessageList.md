@@ -54,9 +54,13 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 | `--chat-message-list-jump-size`       | `36px`         | height/width    | Size of the jump-to-latest button.   |
 | `--chat-message-list-jump-bottom`     | `8px`          | bottom          | Sticky offset of the jump button.    |
 | `--chat-message-list-jump-background-color` | `#ffffff` | background      | Jump button background.              |
+| `--chat-message-list-jump-hover-background-color` | `#f4f4f5` | background | Jump button hover background.       |
 | `--chat-message-list-jump-color`      | `#52525b`      | color           | Jump button icon color.              |
 | `--chat-message-list-jump-border`     | `1px solid #e4e4e7` | border     | Jump button border.                  |
+| `--chat-message-list-jump-border-radius` | `50%`       | border-radius   | Corner rounding of the jump button.  |
 | `--chat-message-list-jump-box-shadow` | `0 4px 12px rgba(0,0,0,0.12)` | box-shadow | Jump button shadow.          |
+| `--chat-message-list-jump-padding`    | `8px`          | padding         | Padding inside the jump button.      |
+| `--chat-message-list-jump-margin-top` | `4px`          | margin-top      | Space above the jump button.         |
 
 ## Web Component
 

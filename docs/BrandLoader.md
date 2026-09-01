@@ -19,6 +19,7 @@ A full-screen loading screen that displays a brand logo image, main text, option
 | brandLogoURL | `string`         | Yes      | `-`     | URL of the brand logo image displayed at the center.                                                                                                                                                                       |
 | brandText    | `string`         | Yes      | `-`     | Main text displayed below the logo (e.g., brand name or loading message).                                                                                                                                                  |
 | subText      | `string \| null` | No       | `-`     | Optional smaller text displayed below the main text.                                                                                                                                                                       |
+| testId       | `string`         | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                                                                              |
 | classes      | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
 
 ## CSS Variables

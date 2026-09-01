@@ -114,6 +114,9 @@ Override these custom properties to theme the component.
 | ----------------------------------- | -------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `--banner-width`                    | `100%`               | width            | Width of the banner.                                                                                                           |
 | `--banner-height`                   | `-`                  | height           | Height of the banner.                                                                                                          |
+| `--banner-text-overflow`            | `hidden`             | overflow         | Overflow behaviour of the banner text.                                                                                         |
+| `--banner-text-ellipsis`            | `ellipsis`           | text-overflow    | Text truncation style of the banner text.                                                                                      |
+| `--banner-white-space`              | `nowrap`             | white-space      | Whether the banner text wraps.                                                                                                 |
 | `--banner-padding`                  | `10px 12px`          | padding          | Inner padding of the banner.                                                                                                   |
 | `--banner-gap`                      | `8px`                | gap              | Gap between banner content elements (icon, text, right content, dismiss).                                                      |
 | `--banner-justify-content`          | `center`             | justify-content  | Horizontal alignment of banner content.                                                                                        |

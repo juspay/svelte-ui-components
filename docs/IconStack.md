@@ -18,6 +18,7 @@ A horizontal stack of circular icons/avatars with negative margin layering (each
 | ------- | ----------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | icons   | `IconStackItem[]` | Yes      | `-`     | Array of IconStackItem objects. Each item has a `type` ('image' or 'text') and a `content` string (URL for images, display text for text items).                       |
 | classes | `string`          | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| testId  | `string`          | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                          |
 
 ## CSS Variables
 

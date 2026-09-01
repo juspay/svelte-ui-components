@@ -68,6 +68,12 @@ Override these custom properties to theme the component.
 | `--toolbar-content-height`                | `auto`                   | height          | Height of the main content row. Set to `100%` to vertically fill a fixed-height toolbar.                                              |
 | `--toolbar-content-max-width`             | `none`                   | max-width       | Maximum width of the main content row. Combine with `--toolbar-content-margin: 0 auto` to clamp and center content on wide viewports. |
 | `--toolbar-content-margin`                | `0`                      | margin          | Margin around the main content row.                                                                                                   |
+| `--toolbar-text-font-size`                | `18px`                   | font-size       | Font size of the default `text` title (when `centerContent` is not provided).                                                         |
+| `--toolbar-text-font-weight`              | `normal`                 | font-weight     | Font weight of the default `text` title.                                                                                              |
+| `--toolbar-text-color`                    | `-`                      | color           | Text color of the default `text` title.                                                                                               |
+| `--toolbar-text-padding`                  | `0px`                    | padding         | Padding around the default `text` title.                                                                                              |
+| `--toolbar-text-margin`                   | `0px`                    | margin          | Margin around the default `text` title.                                                                                               |
+| `--toolbar-text-flex`                     | `1`                      | flex            | Flex value of the default `text` title within the content row.                                                                        |
 | `--toolbar-additional-content-padding`    | `0px`                    | padding         | Padding inside the additional content row.                                                                                            |
 | `--toolbar-additional-content-height`     | `fit-content`            | height          | Height of the additional content row.                                                                                                 |
 | `--toolbar-justify-additional-content`    | `normal`                 | justify-content | Horizontal alignment of additional content.                                                                                           |
@@ -161,7 +167,7 @@ Note what is **not** here. There is no `subheading`, `headingLevel` or `headingC
 the title block is the consumer's own markup in `centerContent`, so it keeps its semantic tags
 and its design system's type classes without the library restating them. That follows the same
 reasoning as "Subheading (consumer recipe)" above — presentational structure belongs in a
-Snippet, and how a title *looks* is reachable with ordinary CSS on the consumer's own elements.
+Snippet, and how a title _looks_ is reachable with ordinary CSS on the consumer's own elements.
 
 Responsive behaviour is the consumer's too. The component ships **no media queries** — it
 exposes the mechanism and the app picks the breakpoints, because "wrap the actions below 1024px"
@@ -169,17 +175,17 @@ and "hide the subheading on a phone" are design decisions the library cannot mak
 
 ### Additional CSS variables
 
-| Variable                                    | Default | Description                                                                                           |
-| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `--toolbar-content-align-items`             | `center` | Cross-axis alignment of the main row. `flex-start` top-aligns a title that has a subline under it.   |
-| `--toolbar-content-min-height`              | `auto`  | Floor for the main row's height — a fixed-height bar sets it here, not on the outer column.           |
-| `--toolbar-content-flex-wrap`               | `nowrap` | Lets the action side drop to its own line on a narrow viewport.                                      |
-| `--toolbar-content-row-gap` / `-column-gap` | `0`     | Gaps between the row's regions, and between wrapped lines.                                            |
-| `--toolbar-center-flex`                     | `1`     | `1 1 auto` lets the centre region grow from its CONTENT width, so a deficit is shared with the actions rather than collapsing the title. |
-| `--toolbar-center-min-width`                | `auto`  | Set `0` so a long title can shrink and ellipsize.                                                      |
-| `--toolbar-right-flex-shrink`               | `1`     | Set `0` so actions never get crushed by a long title.                                                  |
-| `--toolbar-right-min-width` / `-max-width` / `-width` | `auto` / `none` / `auto` | Action-region sizing as a flex item. Its INNER layout stays the snippet's own markup. |
-| `--toolbar-right-display`                   | `block` | Set `flex` only if you want the region itself to be the flex container.                                |
+| Variable                                              | Default                  | Description                                                                                                                              |
+| ----------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `--toolbar-content-align-items`                       | `center`                 | Cross-axis alignment of the main row. `flex-start` top-aligns a title that has a subline under it.                                       |
+| `--toolbar-content-min-height`                        | `auto`                   | Floor for the main row's height — a fixed-height bar sets it here, not on the outer column.                                              |
+| `--toolbar-content-flex-wrap`                         | `nowrap`                 | Lets the action side drop to its own line on a narrow viewport.                                                                          |
+| `--toolbar-content-row-gap` / `-column-gap`           | `0`                      | Gaps between the row's regions, and between wrapped lines.                                                                               |
+| `--toolbar-center-flex`                               | `1`                      | `1 1 auto` lets the centre region grow from its CONTENT width, so a deficit is shared with the actions rather than collapsing the title. |
+| `--toolbar-center-min-width`                          | `auto`                   | Set `0` so a long title can shrink and ellipsize.                                                                                        |
+| `--toolbar-right-flex-shrink`                         | `1`                      | Set `0` so actions never get crushed by a long title.                                                                                    |
+| `--toolbar-right-min-width` / `-max-width` / `-width` | `auto` / `none` / `auto` | Action-region sizing as a flex item. Its INNER layout stays the snippet's own markup.                                                    |
+| `--toolbar-right-display`                             | `block`                  | Set `flex` only if you want the region itself to be the flex container.                                                                  |
 
 Every default above resolves to the value the component already rendered, so adding them
 changes nothing for an existing consumer.

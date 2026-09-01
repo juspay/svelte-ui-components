@@ -140,6 +140,23 @@
   the snippet onto that control — one Tab stop instead of two, and no interactive element nested inside
   another.
 </p>
+<h3>selectedValue — themed selected item</h3>
+<div class="demo-row">
+  <Menu
+    testId="menu-selected-demo"
+    items={[
+      { label: 'Newest first', value: 'new' },
+      { label: 'Oldest first', value: 'old' }
+    ]}
+    selectedValue="old"
+    classes="menu-selected-themed"
+  >
+    {#snippet trigger()}
+      <Button text="Sort (themed selection)" />
+    {/snippet}
+  </Menu>
+</div>
+
 <div class="demo-row">
   <Menu
     testId="menu-interactive-trigger"
@@ -185,5 +202,10 @@
     margin-bottom: 8px;
     font-size: 12px;
     color: #888;
+  }
+
+  :global(.menu-selected-themed) {
+    --menu-item-selected-background-color: rgb(220, 235, 255);
+    --menu-item-selected-color: rgb(10, 60, 160);
   }
 </style>

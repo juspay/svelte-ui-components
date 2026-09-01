@@ -281,6 +281,7 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 | maxDate             | `Date \| null`                        | No       | `null`          | Latest selectable date.                                                                                                                                                                                                                                                                                                                                            |
 | disabledDates       | `Date[] \| ((date: Date) => boolean)` | No       | `[]`            | Dates that cannot be selected. Pass an array or a predicate function.                                                                                                                                                                                                                                                                                              |
 | presets             | `DateRangePreset[] \| null`           | No       | `null`          | Preset options shown in the sidebar. Omit or pass null to hide the sidebar.                                                                                                                                                                                                                                                                                        |
+| maxRangeDays        | `number \| null`                      | No       | `null`          | Maximum number of days a selected range may span, inclusive of both endpoints (range mode only). Once a start date is picked, dates that would exceed this span are disabled until the range is completed. `null` means no limit.                                                                                                                                  |
 | showDateInputs      | `boolean`                             | No       | `false`         | Range mode only. Show typeable start/end date boxes at the top of the calendar area, seeded from the current draft selection. Typing a date and blurring or pressing Enter parses and commits it (accepts the display format, `M/D/YYYY`, or ISO `YYYY-MM-DD`); unparseable, out-of-range, disabled, or boundary-crossing input is rejected and the field reverts. |
 | showTimeSelection   | `boolean`                             | No       | `false`         | Range mode only. Show a clock toggle in the date-input row that reveals start/end time inputs (`HH:MM AM/PM`); the entered times are folded onto the committed range's start/end on Apply. Implies the date-input row, and blocks Apply while a time is malformed or (same day) the start time is after the end time.                                              |
 | timeSelectionLayout | `'toggle' \| 'inline'`                | No       | `'toggle'`      | How the time inputs are presented when `showTimeSelection` is on (range mode). `'toggle'` shows a clock button that reveals a collapsible start/end time row below the dates; `'inline'` renders each time input beside its date input on the same row, always visible, with no toggle. No effect unless `showTimeSelection` is true.                              |
@@ -288,6 +289,7 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 | presetToggle        | `boolean`                             | No       | `false`         | Make presets toggle instead of one-way: clicking the already-selected preset deselects it and reverts the draft to the committed selection (so a preset like "No Comparison" can be switched back off without picking a calendar date).                                                                                                                            |
 | placeholder         | `string`                              | No       | `'Select date'` | Text shown on the trigger when no date is selected.                                                                                                                                                                                                                                                                                                                |
 | dualMonth           | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override.                                                                                                                                                                                                                                             |
+| align               | `'left' \| 'right'`                   | No       | `'left'`        | Aligns the dropdown panel to the left or right edge of the trigger.                                                                                                                                                                                                                                                                                                |
 | timePicker          | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.                                                                                                                                                                                                                                            |
 | compareStart        | `Date \| null`                        | No       | `null`          | Bindable. Start of the compare range. Meaningful when `compareCalendar` snippet is provided and `onapplycompare` commits it.                                                                                                                                                                                                                                       |
 | compareEnd          | `Date \| null`                        | No       | `null`          | Bindable. End of the compare range.                                                                                                                                                                                                                                                                                                                                |
@@ -335,7 +337,7 @@ Override these custom properties to theme the component.
 | `--drp-trigger-padding`                | `8px 12px`                    | Trigger button inner padding.                                                |
 | `--drp-trigger-min-width`              | `200px`                       | Minimum width of the trigger button.                                         |
 | `--drp-trigger-gap`                    | `8px`                         | Gap between label and icon in the trigger.                                   |
-| `--drp-trigger-hover-border-color`     | `currentColor`                | Trigger border color on hover.                                               |
+| `--drp-trigger-hover-border`           | `1px solid currentColor`      | Trigger border on hover. Falls back through `--drp-trigger-border`.          |
 | `--drp-trigger-open-border-color`      | `#000000`                     | Trigger border color when the panel is open.                                 |
 | `--drp-trigger-open-shadow`            | `0 0 0 2px rgba(0,0,0,0.1)`   | Trigger box-shadow when the panel is open.                                   |
 | `--drp-trigger-icon-color`             | `inherit`                     | Color of the trigger chevron icon.                                           |
@@ -345,6 +347,7 @@ Override these custom properties to theme the component.
 | `--drp-panel-border`                   | `1px solid #e0e0e0`           | Panel border.                                                                |
 | `--drp-panel-border-radius`            | `10px`                        | Panel corner rounding.                                                       |
 | `--drp-panel-shadow`                   | `0 8px 24px rgba(0,0,0,0.12)` | Panel drop shadow.                                                           |
+| `--drp-panel-max-height`               | `calc(100dvh - 80px)`         | Maximum height of the dropdown panel before its contents scroll.             |
 | `--drp-panel-min-width`                | `320px`                       | Minimum width of the panel.                                                  |
 | `--drp-panel-max-width`                | `760px`                       | Maximum width of the panel.                                                  |
 | `--drp-sidebar-padding`                | `12px 8px`                    | Padding inside the presets sidebar.                                          |
@@ -389,6 +392,11 @@ Override these custom properties to theme the component.
 | `--drp-preset-divider-border`          | `1px solid #e8e8e8`           | Border style for the preset group divider line.                              |
 | `--drp-preset-divider-gap`             | `6px`                         | Gap between the divider line and the group label.                            |
 | `--drp-preset-divider-margin`          | `4px 0`                       | Vertical margin above and below each preset group divider.                   |
+| `--drp-preset-padding-left`            | `12px`                        | Left padding of the preset sidebar list.                                     |
+| `--drp-preset-padding-right`           | `12px`                        | Right padding of the preset sidebar list.                                    |
+| `--drp-preset-check-size`              | `16px`                        | Width/height of the trailing checkmark shown when `presetCheckmark` is true. |
+| `--drp-preset-check-color`             | `inherit`                     | Colour of the trailing checkmark.                                            |
+| `--drp-preset-check-gap`               | `8px`                         | Gap between a preset's label and its trailing checkmark.                     |
 | `--drp-preset-group-label-color`       | `#999999`                     | Text color of the preset group label rendered beside the divider.            |
 | `--drp-preset-divider-leader-width`    | `8px`                         | Width of the leading line segment before the group label.                    |
 | `--drp-compare-trigger-background`     | `inherit`                     | Compare trigger button background.                                           |
@@ -400,18 +408,36 @@ Override these custom properties to theme the component.
 | `--drp-compare-panel-left`             | `0`                           | Left offset of the standalone compare panel relative to its trigger.         |
 | `--drp-compare-panel-min-width`        | `280px`                       | Minimum width of the standalone compare panel.                               |
 | `--drp-datetime-divider`               | `1px solid #e8e8e8`           | Divider below the date + time header (`showDateInputs`/`showTimeSelection`). |
+| `--drp-datetime-gap`                   | `8px`                         | Gap between the date-input row's own elements.                               |
+| `--drp-datetime-padding-bottom`        | `12px`                        | Padding below the date + time header row.                                    |
+| `--drp-datetime-margin-bottom`         | `4px`                         | Margin below the date + time header row.                                     |
+| `--drp-datetime-arrow-size`            | `16px`                        | Width/height of the arrow icon between the start and end date boxes.         |
+| `--drp-datetime-arrow-color`           | `#888888`                     | Colour of the arrow icon between the start and end date boxes.               |
 | `--drp-date-input-border`              | `1px solid #d4d4d4`           | Border of the typeable date boxes.                                           |
 | `--drp-date-input-background`          | `#ffffff`                     | Background of the typeable date boxes.                                       |
 | `--drp-date-input-color`               | `#333333`                     | Text color of the typeable date boxes.                                       |
 | `--drp-date-input-invalid-border`      | `#e5484d`                     | Border of a date box holding text that can't resolve to a selectable date.   |
 | `--drp-date-input-placeholder-color`   | `#aaaaaa`                     | Placeholder text color of the date boxes (shown when empty).                 |
 | `--drp-date-input-font-size`           | `13px`                        | Font size of the date box input text.                                        |
+| `--drp-date-input-radius`              | `var(--radius, 4px)`          | Corner rounding of the typeable date boxes.                                  |
 | `--drp-time-toggle-background`         | `#f6f7f9`                     | Background of the clock toggle button.                                       |
 | `--drp-time-toggle-border`             | `1px solid #d4d4d4`           | Border of the clock toggle button.                                           |
 | `--drp-time-toggle-active-color`       | `#1b85ff`                     | Clock toggle icon/border color when the time row is open.                    |
+| `--drp-time-toggle-active-border`      | `currentColor`                | Clock toggle border colour when the time row is open.                        |
+| `--drp-time-toggle-size`               | `40px`                        | Width/height of the clock toggle button.                                     |
+| `--drp-time-toggle-radius`             | `var(--radius, 4px)`          | Corner rounding of the clock toggle button.                                  |
+| `--drp-time-toggle-icon-size`          | `16px`                        | Width/height of the clock icon inside the toggle button.                     |
 | `--drp-time-input-border`              | `1px solid #d4d4d4`           | Border of the time inputs.                                                   |
 | `--drp-time-input-invalid-border`      | `#e5484d`                     | Border of a time input holding an invalid value.                             |
+| `--drp-time-input-background`          | `#ffffff`                     | Background of the time inputs.                                               |
+| `--drp-time-input-radius`              | `var(--radius, 4px)`          | Corner rounding of the time inputs.                                          |
+| `--drp-time-input-icon-size`           | `16px`                        | Width/height of the clock icon inside each time input.                       |
+| `--drp-time-input-icon-gap`            | `12px`                        | Left margin between a time input's text and its icon.                        |
+| `--drp-time-input-icon-color`          | `#888888`                     | Colour of the icon inside each time input.                                   |
 | `--drp-time-field-color`               | `#333333`                     | Text color of the time inputs.                                               |
+| `--drp-time-field-padding`             | `10px 14px 10px 8px`          | Inner padding of the time inputs.                                            |
+| `--drp-time-field-font-size`           | `13px`                        | Font size of the time input text.                                            |
+| `--drp-time-field-placeholder-color`   | `#aaaaaa`                     | Placeholder text color of the time inputs.                                   |
 | `--drp-time-inline-width`              | `116px`                       | Width of each inline time input (`timeSelectionLayout="inline"`).            |
 | `--drp-datetime-inline-gap`            | `8px`                         | Gap between a date input and its time input in the inline layout.            |
 

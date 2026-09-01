@@ -13,7 +13,7 @@
 </div>
 
 <div class="demo-row" style="align-items: center;">
-  <Icon icon="{base}/demo-media/placeholder-square.svg" text="Home" />
+  <Icon icon="{base}/demo-media/placeholder-square.svg" text="Home" testId="icon-home" />
   <Icon icon="{base}/demo-media/placeholder-square.svg" text="Settings" />
   <Icon icon="{base}/demo-media/placeholder-square.svg" text="Profile" />
 </div>

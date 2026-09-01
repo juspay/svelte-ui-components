@@ -16,14 +16,15 @@ A floating tooltip that appears on hover or focus of a trigger element. The tool
 
 ## Props
 
-| Prop      | Type                                                       | Required | Default | Description                                                                                                                                                                                           |
-| --------- | ---------------------------------------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text      | `string`                                                   | Yes      | -       | The text content displayed inside the tooltip bubble.                                                                                                                                                 |
-| position  | `TooltipPosition = 'top' \| 'bottom' \| 'left' \| 'right'` | No       | `'top'` | Where the tooltip bubble appears relative to the trigger element.                                                                                                                                     |
-| delay     | `number`                                                   | No       | `0`     | Time in milliseconds to wait before showing the tooltip after hover/focus. A value of 0 shows the tooltip immediately.                                                                                |
-| testId    | `string \| null`                                           | No       | `-`     | Value for data-pw on the tooltip container element for Playwright testing.                                                                                                                            |
-| classes   | `string`                                                   | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
-| usePortal | `boolean`                                                  | No       | `false` | When true, mounts the tooltip bubble directly on `document.body` using `position: fixed` coordinates. Prevents clipping inside `overflow: hidden` or stacking-context ancestors (e.g. toolbar items). |
+| Prop         | Type                                                       | Required | Default     | Description                                                                                                                                                                                           |
+| ------------ | ---------------------------------------------------------- | -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text         | `string`                                                   | Yes      | -           | The text content displayed inside the tooltip bubble.                                                                                                                                                 |
+| position     | `TooltipPosition = 'top' \| 'bottom' \| 'left' \| 'right'` | No       | `'top'`     | Where the tooltip bubble appears relative to the trigger element.                                                                                                                                     |
+| delay        | `number`                                                   | No       | `0`         | Time in milliseconds to wait before showing the tooltip after hover/focus. A value of 0 shows the tooltip immediately.                                                                                |
+| testId       | `string \| null`                                           | No       | `-`         | Value for data-pw on the tooltip container element for Playwright testing.                                                                                                                            |
+| classes      | `string`                                                   | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |
+| usePortal    | `boolean`                                                  | No       | `false`     | When true, mounts the tooltip bubble directly on `document.body` using `position: fixed` coordinates. Prevents clipping inside `overflow: hidden` or stacking-context ancestors (e.g. toolbar items). |
+| iconPosition | `'leading' \| 'trailing'`                                  | No       | `'leading'` | Which side of `children` the `icon` snippet renders on.                                                                                                                                               |
 
 ## Snippets
 
@@ -32,7 +33,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | Snippet  | Type      | Description                                                                                                                                               |
 | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | children | `Snippet` | The trigger element(s) that the tooltip wraps. The tooltip appears when hovering or focusing this content.                                                |
-| icon     | `Snippet` | Optional leading icon rendered in the trigger wrapper before `children`. No default glyph is provided — consumers supply their own SVG or icon component. |
+| icon     | `Snippet` | Optional icon rendered in the trigger wrapper beside `children` — before it by default, after it when `iconPosition="trailing"`. No default glyph is provided — consumers supply their own SVG or icon component. |
 | content  | `Snippet` | Optional bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. Use for rich multi-line or interactive bubble content.   |
 
 ## Events
@@ -43,25 +44,26 @@ This component does not emit any events.
 
 Override these custom properties to theme the component.
 
-| Variable                      | Default                              | CSS Property        | Description                                                                    |
-| ----------------------------- | ------------------------------------ | ------------------- | ------------------------------------------------------------------------------ |
-| `--tooltip-container-display` | `inline-flex`                        | display             | Display mode of the wrapper element around the trigger and tooltip.            |
-| `--tooltip-z-index`           | `1000`                               | z-index             | Stacking order of the tooltip bubble.                                          |
-| `--tooltip-max-width`         | `200px`                              | max-width           | Maximum width of the tooltip bubble before text wraps.                         |
-| `--tooltip-background`        | `#333333`                            | background          | Background color of the tooltip bubble.                                        |
-| `--tooltip-color`             | `#ffffff`                            | color               | Text color inside the tooltip bubble.                                          |
-| `--tooltip-font-size`         | `12px`                               | font-size           | Font size of the tooltip text.                                                 |
-| `--tooltip-font-weight`       | `400`                                | font-weight         | Font weight of the tooltip text.                                               |
-| `--tooltip-font-family`       | `-`                                  | font-family         | Font family of the tooltip text.                                               |
-| `--tooltip-padding`           | `6px 10px`                           | padding             | Inner padding of the tooltip bubble.                                           |
-| `--tooltip-border-radius`     | `4px`                                | border-radius       | Corner rounding of the tooltip bubble.                                         |
-| `--tooltip-border`            | `none`                               | border              | Border of the tooltip bubble.                                                  |
-| `--tooltip-box-shadow`        | `0 2px 6px rgba(0, 0, 0, 0.15)`      | box-shadow          | Shadow effect around the tooltip bubble.                                       |
-| `--tooltip-opacity-duration`  | `0.15s`                              | transition duration | Duration of the tooltip opacity fade transition.                               |
-| `--tooltip-offset`            | `8px`                                | calc offset         | Distance between the tooltip bubble and the trigger element.                   |
-| `--tooltip-arrow-size`        | `5px`                                | border-width        | Size of the directional arrow pointing from the tooltip toward the trigger.    |
-| `--tooltip-arrow-color`       | `var(--tooltip-background, #333333)` | border-color        | Color of the directional arrow. Defaults to match the tooltip background.      |
-| `--tooltip-icon-color`        | `currentColor`                       | color               | Color of the icon snippet rendered in the trigger wrapper via the `icon` slot. |
+| Variable                      | Default                              | CSS Property          | Description                                                                                                           |
+| ----------------------------- | ------------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--tooltip-container-display` | `inline-flex`                        | display               | Display mode of the wrapper element around the trigger and tooltip.                                                   |
+| `--tooltip-z-index`           | `1000`                               | z-index               | Stacking order of the tooltip bubble.                                                                                 |
+| `--tooltip-max-width`         | `200px`                              | max-width             | Maximum width of the tooltip bubble before text wraps.                                                                |
+| `--tooltip-background`        | `#333333`                            | background            | Background color of the tooltip bubble.                                                                               |
+| `--tooltip-color`             | `#ffffff`                            | color                 | Text color inside the tooltip bubble.                                                                                 |
+| `--tooltip-font-size`         | `12px`                               | font-size             | Font size of the tooltip text.                                                                                        |
+| `--tooltip-font-weight`       | `400`                                | font-weight           | Font weight of the tooltip text.                                                                                      |
+| `--tooltip-font-family`       | `-`                                  | font-family           | Font family of the tooltip text.                                                                                      |
+| `--tooltip-padding`           | `6px 10px`                           | padding               | Inner padding of the tooltip bubble.                                                                                  |
+| `--tooltip-border-radius`     | `4px`                                | border-radius         | Corner rounding of the tooltip bubble.                                                                                |
+| `--tooltip-border`            | `none`                               | border                | Border of the tooltip bubble.                                                                                         |
+| `--tooltip-box-shadow`        | `0 2px 6px rgba(0, 0, 0, 0.15)`      | box-shadow            | Shadow effect around the tooltip bubble.                                                                              |
+| `--tooltip-opacity-duration`  | `0.15s`                              | transition duration   | Duration of the tooltip opacity fade transition.                                                                      |
+| `--tooltip-offset`            | `8px`                                | calc offset           | Distance between the tooltip bubble and the trigger element.                                                          |
+| `--tooltip-arrow-size`        | `5px`                                | border-width          | Size of the directional arrow pointing from the tooltip toward the trigger.                                           |
+| `--tooltip-arrow-color`       | `var(--tooltip-background, #333333)` | border-color          | Color of the directional arrow. Defaults to match the tooltip background.                                             |
+| `--tooltip-icon-color`        | `currentColor`                       | color                 | Color of the icon snippet rendered in the trigger wrapper via the `icon` slot.                                        |
+| `--tooltip-shift`             | `0px`                                | transform (translate) | Fine-tune offset shifting the bubble along its trigger-parallel axis, on top of the automatic viewport-edge clamping. |
 
 ## Tooltip Action
 

@@ -15,5 +15,6 @@
       { type: 'image', content: `${base}/demo-media/placeholder-square.svg` },
       { type: 'text', content: '+3' }
     ]}
+    testId="icon-stack-demo"
   />
 </div>

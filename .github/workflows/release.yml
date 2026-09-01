@@ -4,6 +4,11 @@ on:
   push:
     branches: [release]
 
+# Pinned so both publish jobs upgrade to the same npm, which is what supports
+# OIDC trusted publishing. Bump in one place.
+env:
+  NPM_CLI_VERSION: '11.19.0'
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
@@ -70,6 +75,7 @@ jobs:
       contents: write
       packages: write
       pull-requests: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -82,7 +88,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -299,17 +304,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
+
       - name: Publish to NPM
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Create .npmrc file for authentication
-          cat > ~/.npmrc << EOF
-          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
-          registry=https://registry.npmjs.org/
-          always-auth=true
-          EOF
+          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
+          # short-lived publish credential itself, via the trusted-publisher
+          # config on npmjs.com for this repo + this workflow file.
 
           # Check if this version already exists on NPM
           PACKAGE_NAME=$(node -p "require('./package.json').name")
@@ -323,7 +325,7 @@ jobs:
 
           # Publish to NPM (with organization scope support)
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public
+          npm publish --access public --provenance
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
 
   publish-mcp:
@@ -341,6 +343,7 @@ jobs:
       contents: write
       packages: write
       pull-requests: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -353,7 +356,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Configure Git
         run: |
@@ -442,19 +444,16 @@ jobs:
         working-directory: mcp
         run: npm run build
 
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
+
       - name: Publish MCP to NPM
         id: npm-publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: mcp
         run: |
-          # Create .npmrc file for authentication
-          cat > ~/.npmrc << EOF
-          //registry.npmjs.org/:_authToken=${NPM_TOKEN}
-          registry=https://registry.npmjs.org/
-          always-auth=true
-          EOF
+          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
+          # short-lived publish credential itself, via the trusted-publisher
+          # config on npmjs.com for this repo + this workflow file.
 
           PACKAGE_NAME=$(node -p "require('./package.json').name")
           NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
@@ -467,7 +466,7 @@ jobs:
 
           # Scoped package -> publish publicly
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public
+          npm publish --access public --provenance
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
 
       - name: Commit and tag MCP release

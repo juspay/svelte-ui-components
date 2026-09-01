@@ -18,6 +18,13 @@ const config: PlaywrightTestConfig = {
   testDir: 'tests',
   testMatch: /(.+\.)?(test|spec)\.[jt]s/,
   timeout: 30_000,
+  // This suite became a merge gate (ci.yml), so a single timing hiccup on a
+  // shared runner would now block an unrelated PR. Retries are not here to hide
+  // that: Playwright reports a test that failed then passed as "flaky", a status
+  // distinct from "passed", so the signal stays visible in the uploaded report
+  // while only genuinely reproducible failures stop a merge. Local runs keep 0
+  // retries -- a flake you can reproduce is a flake you can fix.
+  retries: process.env.CI ? 2 : 0,
   // No reporter was ever configured, so CI's "Upload Playwright report" step
   // (ci.yml) had nothing to upload -- playwright-report/ was never written,
   // in CI or locally (verified: absent after a full local run). 'list' keeps

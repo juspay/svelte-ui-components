@@ -40,17 +40,20 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      # Not a merge gate yet: every prior run of this job failed every single
-      # spec with "browserType.launch: Executable doesn't exist" (verified
-      # 2026-08-31 via the raw job log) -- this step was missing entirely, so
-      # the ~130-failing-specs baseline this comment used to cite was never a
-      # real regression count, just however many specs don't need a browser
-      # launch to reach their own assertion. Real triage starts now that the
-      # job can actually run. Runs on every PR so failures are visible and
-      # trend-trackable; flip continue-on-error off once a genuine baseline
-      # is triaged down to zero.
-      - name: Integration tests (playwright) — advisory, not blocking
-        continue-on-error: true
+      # A merge gate as of this commit. History, so the next reader doesn't have
+      # to reconstruct it: this step was advisory because every run of the job
+      # failed every spec with "browserType.launch: Executable doesn't exist" --
+      # the browser-install step above simply didn't exist. The "~130 failing
+      # specs" that justified continue-on-error was therefore never a regression
+      # count; it was an artifact of a missing binary. Once the install landed,
+      # the suite went green and has stayed green for 11 consecutive runs across
+      # 8 different branches (verified 2026-09-02 by reading this step's own
+      # conclusion in the jobs API, not the job's -- which continue-on-error
+      # forces to "success" regardless and so proves nothing).
+      #
+      # That is the "genuine baseline triaged to zero" the old comment was
+      # waiting on, so the gate is now real: a failing spec fails the PR.
+      - name: Integration tests (playwright)
         run: pnpm run test:integration
 
       - name: Upload Playwright report

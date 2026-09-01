@@ -2,56 +2,24 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.5)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.6)
 
-Closes #481. Two related defects in Input, both filed by a prior
-accessibility-audit pass rather than silently patched, since changing
-either default is a visual change every consumer inherits:
+`release` has been failing `pnpm lint` since ff24661d6, which blocks the
+release job at step 6 -- before the version bump, before the tag, and before
+`npm publish`. No release can complete until this passes, which is why npm
+is still serving 2.136.1 while the repo carries tags up to 2.136.6.
 
-- .info-message defaulted to the exact same red as .error-message
-(#fa1405), so infoMessage -- neutral guidance like "Use your company
-address, not a personal one" -- rendered in the color of a validation
-failure. A field with helper text and no error looked like a field
-that failed validation, and since color was the only thing
-distinguishing the two, this was color-alone signalling (WCAG 1.4.1).
---input-info-msg-text-color now defaults to #52525b -- a neutral,
-already used elsewhere in this library (ChatToolStatus/
-ThinkingIndicator's muted status text) -- at 7.73:1 on white.
+prettier wants the element on one line; it was split across seven:
 
-- #fa1405 itself was only 4.06:1 on white / 3.82:1 on #f6f8fa, below
-the 4.5:1 AA floor for the 12px text both messages use -- so the
-error message was not reliably legible to the user who needed it
-most. --input-error-msg-text-color now defaults to #c5120a, 6.06:1
-on white.
+&lt;Combobox {...rest} bind:value bind:inputValue bind:open bind:highlightedIndex bind:selected /&gt;
 
-Verified the existing label color (#637c95) could not be reused as the
-new neutral default -- it is itself only 4.33:1, below AA -- before
-picking #52525b from this library's own existing muted-text convention.
+Formatting only -- `prettier --write` on the single file, no semantic change.
 
---input-error-msg-text-color's fallback is spelled out in five places
-across Input.svelte (error text, error border x2, mandatory asterisk,
-char-count-at-limit) and had to be updated consistently in all of them,
-or the border and text would visibly mismatch. InputButton.svelte
-independently hardcodes the same two shared variable names plus its
-own --inputbutton-external-error-color (all previously #fa1405 too) --
-fixed there as well so the same token means the same color in both
-components, not just in Input.
+Verified: `pnpm lint` exits 0 on this tree and 1 on `release` (ce60499,
+clean checkout), and `tests/wc-custom-elements.spec.ts` -- the spec that
+covers these wrappers -- passes 5/5 on a private PW_PORT.
 
-Added a data-pw/testID hook to Input's info-message div, mirroring the
-existing error-message one, so both are independently addressable in
-tests (previously only the error message had one).
-
-New coverage: tests/input-helper-error-colors.test.ts asserts the error
-and helper messages render in different, exact expected colors on both
-Input (the existing forceError + infoMessage demo instance) and
-InputButton (a new demo section pairing the error prop with
-infoMessage). Ran the full existing suite (342 specs) against these
-changes -- all pass, no regressions from the shared-token update.
-
-Verified with real Playwright video recordings, each decoded with
-ffprobe (valid VP8, real non-zero frame counts) and visually inspected
-via extracted frames: error and helper text render as clearly distinct
-colors in both components.
+## [2.136.6](https://github.com/juspay/svelte-ui-components/compare/2.136.6..2.136.5) - 1 September 2026
 
 ## [2.136.5](https://github.com/juspay/svelte-ui-components/compare/2.136.5..2.136.4) - 1 September 2026
 

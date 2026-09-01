@@ -2,113 +2,89 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.134.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.135.0)
 
-ChatToolStatus and ThinkingIndicator were near-duplicates: same job (a
-live tool-status line), different visual treatment (solid bordered pill
-vs a borderless shimmering row) and no shared code. Rather than pick one
-arbitrarily, ThinkingIndicator gains a `chip` variant that reproduces
-ChatToolStatus's exact pill look under its own --thinking-indicator-chip-*
-tokens, with a static (non-shimmering) label by default so it's a safe
-drop-in — pass `busy` to opt into shimmer.
+An audit of 124 sites where Lighthouse hand-rolls markup this library already
+provides found the adoption blocked, over and over, by small missing hooks
+rather than by missing components. This adds them, plus the fixes that adopting
+them surfaced.
 
-Chat.svelte now renders &lt;ThinkingIndicator variant="chip"&gt; for its
-built-in toolStatus row instead of &lt;ChatToolStatus&gt;. ChatToolStatus
-itself is untouched and still exported — deprecating a public export
-outright is its own breaking-change decision on a published package, so
-its docs page now just points at the replacement.
+New APIs
+--------
+ChipInput      editable in-place edit, onedit, per-chip test ids
+Stepper/Step   muted status, per-step testId, suppressRoleAndTabindex,
+suppressContainerTestId, border/label/wrap hooks, growable
+separator, Step usable on its own outside a Stepper
+StatCard       per-row subtitle, value variants, row sub-element ordering,
+opt-in line break for additionalContent, per-row typography
+Table          single-page footer suppression, count-only footer, an
+independent pagination range test id, tag-array cell testId
+TypewriterText variable pacing, resolveDelay, progress callback, per-character
+render hook
+Status         semantic heading tag and themed colour tokens
+Chat           scroll policy, pin hold, jump controls and scroll-state
+forwarding to its message list
 
-Yama's review on this branch raised 3 MAJOR + 7 MINOR findings, each
-verified against source before acting:
+Fixes found while adopting them
+-------------------------------
+Modal, Sheet and CommandMenu now share a reference-counted body scroll lock, so
+closing a nested surface no longer releases a lock another open surface still
+needs. Modal keeps honouring its public lockScroll prop: lock and unlock are
+guarded symmetrically, so &lt;Modal lockScroll={false}&gt; does not lock and the count
+stays balanced.
 
-- MAJOR, real: the chip variant's root had no aria-live region. The
-deprecated ChatToolStatus it replaces inside Chat had aria-live="polite",
-so screen-reader users lost the "Searching the catalog..." announcement
-entirely. Restored aria-live="polite" aria-atomic="true" on the chip root.
-- MAJOR, false positive: the claimed loss of an icon snippet prop confuses
-two different same-named declarations. ChatToolStatusProperties.icon
-belongs to the deprecated standalone &lt;ChatToolStatus&gt; component; Chat's
-own toolStatus prop is typed via the unrelated ChatToolStatus type in
-Chat/types.ts ({ tool?, label, state? }), which has never had an icon
-field — confirmed unchanged by this PR via git diff against release.
-Nothing regressed; no code change made.
-- MINOR: showElapsed silently no-ops on chip (no elapsedWatcher mounted)
-but was only documented as a bare exception. Documented chip alongside
-bare in both the JSDoc and docs/ThinkingIndicator.md, matching actual
-behavior rather than adding a new UI element under review pressure.
-- MINOR: .chip-label's shimmer wasn't covered by the reduced-motion query,
-unlike .status-label. Added the same animation-none + static-color
-treatment.
-- MINOR: no test coverage existed for the chip variant at all. Added
-tests/thinking-indicator-chip-variant.test.ts (static default, busy
-shimmer, aria-live on both) against two newly-testId'd demo rows.
-- MINOR: docs/Chat.md's CSS variable section contradicted its own table —
-claimed all --chat-tool-status-* vars only apply to the deprecated
-component directly, while the table lists --chat-tool-status-justify as
-Chat's own tool-status row alignment. Chat.svelte's .tool-status rule
-does read that var directly (verified) — documented it as the one
-Chat-level exception.
-- MINOR: docs/ToolCallLog.md overclaimed ThinkingIndicator as always
-single-line and as itself "disappearing" when settled. Reworded to
-describe specifically Chat's chip usage, which Chat clears — not a
-general ThinkingIndicator behavior.
+The muted Stepper status shipped illegible -- white numerals on a pale circle at
+1.53:1 and a label at 2.10:1. Now 5.01:1 and 7.79:1, asserted as a contrast
+RATIO so a future palette change cannot quietly undo it.
 
-This PR's own testing claims were initially unbacked by anything checkable
-on the PR itself. Pulling the actual CI job log (not trusting the local
-run) surfaced two pre-existing, repo-wide CI gaps, both fixed here since
-they're the only way to back the above with something real:
+ChipInput tracked the chip being edited by slot index. An index is only a
+position: if the parent reorders or removes entries mid-edit, the same index
+points at a different chip and Enter lands on the wrong one. It now holds the
+chip by value -- unique by construction, and already what the {#each} keys on --
+and resolves the index at commit time. Disabling mid-edit is safe without an
+$effect: the field stops rendering and commitEdit refuses, so nothing in flight
+can write behind a disabled control.
 
-- ci.yml never had a `playwright install` step, so every Playwright spec
-in the suite -- not just this PR's -- failed on every run with
-"browserType.launch: Executable doesn't exist". The old ~130-failing
-baseline comment was never a real regression count under that
-condition. Added the install step.
-- playwright.config.ts had no `reporter` configured, so CI's "Upload
-Playwright report" step had nothing to upload -- confirmed 0 artifacts
-on every past run of this PR, and playwright-report/ absent after a
-full local run too. Added the html reporter alongside list, so local
-console output is unchanged.
+ChatMessageList: pin-sender-turn lost the pin whenever the reply was shorter
+than the frame, which is when pinning matters most. Three faults, only visible
+by instrumenting. scroll-behavior: smooth makes `scrollTop = x` an ANIMATION --
+the pin asked for 333px against a 357px maximum and read back 0. releasePin()
+then shrank the range to 80 mid-animation and the browser clamped the
+half-finished scroll to exactly that. And probing "is it safe to release?" by
+clearing min-height to measure ALSO shrinks the range, so the probe destroyed
+the position it was checking. The pin now scrolls instantly, keeps its
+reservation until the reply can hold the offset alone, and restores the offset
+around the probe. Measured: 253-265px below the top before, 12px after -- the
+row's own margin, matching the pinHold demo.
 
-Verified: pixel-for-pixel against ChatToolStatus in the live demo site in
-both light and dark theme; a full Chat send cycle with no console errors;
-pnpm run check (0 errors, same 3 pre-existing warnings); pnpm run lint
-(clean); pnpm run build succeeds end to end; the new chip-variant
-Playwright suite (3/3) alongside the pre-existing unit suite (128/128);
-and, with both CI gaps fixed, a real playwright-report/index.html now
-generated locally on a full run -- the actual artifact this PR's CI run
-will attach.
+Deliberately not renamed
+------------------------
+The event-casing check that arrived with release flags onedit, onProgress and
+onscrollstate. All three ship in 2.132.0, so renaming them is a breaking change
+for every consumer already on that release; they read as new only because the
+baseline predates their release. They are baselined with that reasoning rather
+than silenced, and Chat's onscrollstate is doubly so -- it is typed as
+ChatMessageListProperties['onscrollstate'] and forwarded by shorthand, so
+renaming one side desynchronises the forward. Fixing the names is a deprecation
+with a release note, not a drive-by inside a migration PR.
 
-Rebased onto latest release (was several releases behind, including this
-repo's own PR #473 which is where ci.yml first landed on release) to
-resolve real merge conflicts -- worth noting since the DIRTY mergeable
-state turned out to be why CI/Yama had stopped triggering on this branch
-at all after ci.yml was first added here: GitHub couldn't compute a merge
-preview to resolve which workflow files should run. Confirmed once
-rebased: both fired immediately for the first time since that point.
+Verification
+------------
+Authoritative suite 318 passed, 1 failed, on a private port with
+reuseExistingServer:false and workers:1 on a fresh build of the committed tree.
+The one failure, chat-scroll-policy-passthrough, is pre-existing flake: isolated
+with three repeats it fails 1-of-3 both with the pin fix and with it reverted.
 
-Added video: 'on' so CI's report artifact carries an actual playable
-recording of every test, not just a pass/fail line -- verified locally:
-real, valid WebM files (confirmed via `file`), and the html reporter
-copies them into playwright-report/data/ automatically, so the existing
-artifact upload is self-contained.
+pnpm lint exits 0; event casing reports 100 known, 0 new. The two svelte-check
+errors (node:path / node:url in tests/media-upload.test.ts) are present
+identically on release and untouched here.
 
-Yama's own follow-up review then flagged a real, verified breaking-change
-regression: Chat's built-in tool-status row reads a completely different
-CSS variable set than the deprecated ChatToolStatus it replaced
-(--thinking-indicator-chip-* vs --chat-tool-status-*, confirmed no overlap),
-so a consumer's existing theming overrides would silently stop applying.
-Fixed by mapping every --thinking-indicator-chip-* variable the chip uses
-onto its --chat-tool-status-* equivalent, scoped to Chat's own .tool-status
-wrapper only -- old overrides keep working exactly as before, defaults
-match ChatToolStatus byte for byte. Added a dedicated demo instance +
-Playwright test proving it (overrides the OLD variable names, asserts the
-computed style picked them up).
+Proof of testing: six videos, one per API, recorded against this branch's own
+build of the real demo routes, on branch proof/bz-5721-component-reuse. Each
+clip asserts while it records, so a broken demo fails the recording instead of
+producing a video of an empty state.
 
-Every test's video recording was independently verified, not just asserted
-green: decoded with ffprobe (valid VP8, real non-zero frame counts), and
-visually inspected via extracted frames -- including confirming the
-backward-compat fix's pill actually renders with the overridden blue
-background and gold border, not its own defaults.
+## [2.135.0](https://github.com/juspay/svelte-ui-components/compare/2.135.0..2.134.1) - 1 September 2026
 
 ## [2.134.1](https://github.com/juspay/svelte-ui-components/compare/2.134.1..2.134.0) - 1 September 2026
 

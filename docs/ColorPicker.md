@@ -75,3 +75,13 @@ Override these custom properties to theme the component.
 - **Input** — used for the inline HEX text input (when `showValue` is true) and the HEX/RGB/HSL input fields in the popover.
 - **Slider** — used for the hue gradient slider in the popover.
 - **swap-vertical.svg** — SVG icon used inside the mode toggle button to indicate cycling between HEX, RGB, and HSL input modes.
+
+## Web component
+
+Available as `<sui-color-picker>`.
+
+```html
+<sui-color-picker value="#2f81f7" label="Brand colour" show-value test-id="brand-colour"></sui-color-picker>
+```
+
+Attributes are kebab-case: `show-value`, `test-id`. `onchange` / `oninput` are set as properties.

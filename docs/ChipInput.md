@@ -148,12 +148,23 @@ see (WCAG 2.5.3, Label in Name).
 
 ## Web component
 
-None. Like `SplitInput` and `FileDropzoneTrigger`, ChipInput is a simple presentational component
-consumed directly from Svelte; there is no `sui-chip-input` custom element and it is not
-registered in `src/wc/index.ts`.
+Available as `<sui-chip-input>`. Import the web component build separately:
 
-This is deliberate, and it is why `ariaLabel` has no kebab-case attribute mapping: there is no
-custom element for an attribute to map onto. Adding one would newly expose ChipInput as a web
-component rather than restore parity with an existing element. If ChipInput should be exposed,
-that is its own change — a new tag, a new shadow root, and the attribute-casing tests the other
-wrappers carry.
+```html
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-chip-input aria-label="Product tags" placeholder="Add tag…" test-id="product-tags"></sui-chip-input>
+```
+
+`values` and `selected`-style array props are set as properties, not attributes:
+
+```js
+document.querySelector('sui-chip-input').values = ['sale', 'featured'];
+```
+
+Attribute names are kebab-case: `aria-label`, `test-id`. `ariaLabel` is the one worth calling
+out — ChipInput draws no label of its own, so without it the control reaches the accessibility
+tree named only by its placeholder.
+
+> Superseded: an earlier revision of this document stated ChipInput was deliberately Svelte-only
+> with no custom element. That was accurate when written and is no longer true.

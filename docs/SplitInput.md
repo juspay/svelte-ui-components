@@ -143,3 +143,18 @@ type CustomValidator = (
 ```typescript
 type ValidationState = 'Valid' | 'InProgress' | 'Invalid';
 ```
+
+## Web component
+
+Available as `<sui-split-input>`.
+
+```html
+<sui-split-input length="6" auto-advance separator="-" test-id="otp"></sui-split-input>
+```
+
+```js
+document.querySelector('sui-split-input').values = ['1', '2', '3', '4', '5', '6'];
+```
+
+Attributes are kebab-case: `auto-advance`, `test-id`. `values`, `fields` and the `on*` handlers
+are set as properties.

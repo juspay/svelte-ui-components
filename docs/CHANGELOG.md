@@ -2,17 +2,35 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.2)
 
-Checkbox&lt;-&gt;Toggle, ListItem&lt;-&gt;CheckListItem, StatCard&lt;-&gt;KeyValue,
-Gauge&lt;-&gt;Progress, Loader&lt;-&gt;LoadingDots. Each pair has a real, verifiable
-distinction that wasn't written down anywhere: Checkbox's indeterminate
-state has no Toggle equivalent; ListItem has no selection concept vs.
-CheckListItem's checkbox semantics; StatCard is metric+delta dashboard
-framing vs. KeyValue's plain field grid; Progress has an indeterminate
-mode Gauge lacks; LoadingDots is built to sit inline in text/buttons vs.
-Loader's standalone ring shape. Same treatment as the Select/Combobox and
-Carousel/Book pairs in #477.
+BarChartDataPoint.valueLabel (per-bar value-label override) shipped to
+release separately via 633e5a3 while this branch still carried its own
+copy of the same implementation commit. Rebasing onto release correctly
+dropped the now-redundant implementation hunks in BarChart.svelte and
+properties.ts (already satisfied upstream, byte-identical).
+
+What's left, and still genuinely missing from release, is the docs and
+test debt Tara-ag flagged in review:
+- docs/BarChart.md: Props table `data` row and the BarChartDataPoint
+type-reference block now mention `valueLabel`.
+- tests/chart-behaviors.spec.ts: new coverage asserting a data point
+with `valueLabel` renders that exact text, and a point without it
+still goes through the default `valueFormat` path. Backed by a new
+demo fixture on the BarChart docs route.
+
+CodeRabbit separately flagged that `getDisplayValue` (BarChart.svelte:252,
+out of scope here — see above) treats an empty-string `valueLabel` as
+absent rather than rendering it verbatim, and the docs didn't say so.
+Rather than touch that already-shipped runtime behavior from a
+docs/tests-only PR, documented and pinned the actual contract instead:
+- docs/BarChart.md: `valueLabel` description now states a non-empty
+string overrides `valueFormat(value)`; an empty string is treated the
+same as an absent field.
+- tests/chart-behaviors.spec.ts + demo fixture: added a `valueLabel: ''`
+case asserting it falls back to the formatted value, not a blank label.
+
+## [2.136.2](https://github.com/juspay/svelte-ui-components/compare/2.136.2..2.136.1) - 1 September 2026
 
 ## [2.136.1](https://github.com/juspay/svelte-ui-components/compare/2.136.1..2.136.0) - 1 September 2026
 

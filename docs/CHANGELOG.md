@@ -2,33 +2,144 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.3)
 
-BarChartDataPoint.valueLabel (per-bar value-label override) shipped to
-release separately via 633e5a3 while this branch still carried its own
-copy of the same implementation commit. Rebasing onto release correctly
-dropped the now-redundant implementation hunks in BarChart.svelte and
-properties.ts (already satisfied upstream, byte-identical).
+Follow-up to a component-redundancy audit across the library. Most findings
+were false alarms or already well-documented, but four small, independent
+items were worth closing:
 
-What's left, and still genuinely missing from release, is the docs and
-test debt Tara-ag flagged in review:
-- docs/BarChart.md: Props table `data` row and the BarChartDataPoint
-type-reference block now mention `valueLabel`.
-- tests/chart-behaviors.spec.ts: new coverage asserting a data point
-with `valueLabel` renders that exact text, and a point without it
-still goes through the default `valueFormat` path. Backed by a new
-demo fixture on the BarChart docs route.
+- fix(Carousel): Carousel.svelte rendered each slide as
+&lt;view.component properties={view.properties} /&gt; -- passing the whole
+properties object under a single `properties` prop key instead of
+spreading it. Every real component in this library takes individual
+named props (title, description, ...), not a single properties bag, so
+no normal component could actually receive its properties this way;
+Carousel was only usable with a purpose-built wrapper. Found while
+building a demo page (Carousel had none, despite existing since before
+this component set was audited): Card's title/description silently
+rendered empty until this fix. Now spreads correctly.
+- Carousel demo page + _nav.ts entry (both previously missing -- the
+component existed and was documented in docs/Carousel.md, but was
+undiscoverable on the actual docs site).
+- docs: cross-reference notes on Select/Combobox and Carousel/Book -- two
+pairs that solve similar-looking problems with a real but previously
+undocumented distinction (browse-a-list vs type-to-search; auto-play vs
+manual pagination). Every other near-pair in the library already does
+this (ChipInput/SplitInput, DateRangePicker/Calendar, Resizable/Draggable)
+-- these two were the gaps.
+- chore(SoundKit): renamed src/lib/soundKit/soundKit.ts -&gt;
+src/lib/SoundKit/SoundKit.ts to match every other module's Name/Name.ext
+convention. Pure rename + import-path updates -- no public export name
+changed (createSoundKit, SoundKit type are unaffected).
 
-CodeRabbit separately flagged that `getDisplayValue` (BarChart.svelte:252,
-out of scope here — see above) treats an empty-string `valueLabel` as
-absent rather than rendering it verbatim, and the docs didn't say so.
-Rather than touch that already-shipped runtime behavior from a
-docs/tests-only PR, documented and pinned the actual contract instead:
-- docs/BarChart.md: `valueLabel` description now states a non-empty
-string overrides `valueFormat(value)`; an empty string is treated the
-same as an absent field.
-- tests/chart-behaviors.spec.ts + demo fixture: added a `valueLabel: ''`
-case asserting it falls back to the formatted value, not a blank label.
+No test coverage existed for Carousel at all. Added tests/carousel.test.ts:
+one asserting a slide's spread properties actually render (the exact
+regression this PR fixes), one asserting dot navigation renders the
+newly-active slide's own spread properties. Added testId/dotTestId/
+dotsWrapperTestId to the demo page's two instances so the tests have
+stable hooks.
+
+Rebased onto latest release (was several releases behind -- this branch
+predated ci.yml existing on release at all, which is why CI never ran a
+single check on it; confirmed no runs of any kind for this branch prior to
+rebasing). Resolved one real conflict in _nav.ts (both this branch and
+release's intervening history added entries to the same category).
+
+Verified: pnpm run check (0 errors, same pre-existing warnings only),
+pnpm run lint (clean, 0 new event-casing violations), and both Carousel
+tests pass -- confirmed via real Playwright video recordings, each decoded
+with ffprobe (valid VP8, real non-zero frame counts) and visually
+inspected frame by frame, including fixing a video-capture-only issue (the
+dot-click test's recording ended before the slide's 0.5s CSS transition
+visually settled; added a deliberate wait so the video actually shows the
+navigated state, not just the passing assertion).
+
+Yama's follow-up review raised 2 more real findings, both verified against
+source before fixing:
+
+- tests/carousel.test.ts: the dot-click test asserted the destination
+slide's text via toBeVisible(), which does not account for ancestor
+overflow:hidden clipping. Every slide stays mounted inside .slidesDiv
+the whole time (.carousel just clips + transforms which one shows) --
+confirmed empirically that 'New Arrivals' reports visible=true even
+before ever clicking the dot, so the assertion could pass regardless of
+whether navigation actually worked. Rewrote to assert the dot's
+active-dot class instead (confirmed via the same diagnostic: it
+reliably tracks activeSlideIndex, moving from dot 1 to dot 2 exactly on
+click), then the content check on top of that as a secondary signal.
+- docs/Carousel.md: opened by calling Carousel an "auto-playing
+slideshow" that "auto-plays", but autoplay defaults to false --
+misleading for anyone rendering &lt;Carousel /&gt; without enabling it.
+Reworded to describe autoplay as opt-in.
+
+Yama's second follow-up review raised one real MAJOR finding plus two MINOR
+ones, all pre-existing (not introduced by this PR, but in a file it already
+touches), all verified against source before fixing:
+
+- MAJOR: dots are role="button" + tabindex="0" -- assistive tech and
+keyboard users are told these are activatable buttons -- but only
+onclick was wired to moveSlideToIndex; the only onkeydown was a bare
+passthrough of the consumer's own prop. Enter/Space did nothing by
+default, breaking the role's own promise. Now the dot's onkeydown
+handles Enter/Space internally (calling moveSlideToIndex), then still
+invokes the consumer's onkeydown afterward -- existing consumers who
+relied on that prop firing are unaffected.
+- MINOR: docs/Carousel.md claimed dots use role="none"; the actual
+markup is role="button" and has been since before this PR. Corrected,
+and rewrote the accessibility section now that Enter/Space genuinely
+works instead of requiring a consumer workaround.
+- MINOR: the four touch/mouse listeners added to carouselDiv in onMount
+were never removed; onDestroy only cleared the autoplay interval.
+Added the matching removeEventListener calls.
+
+Also addressed a SUGGESTION carried over from the previous round:
+tests/carousel.test.ts's navigation tests now wait on
+slidesDiv.getAnimations()[...].finished (confirmed empirically that the
+CSS transition is tracked) instead of a fixed waitForTimeout. Added a
+third test: pressing Enter on a focused dot navigates to that slide, the
+direct regression guard for the accessibility fix.
+
+On the review's separate semver claim (spreading view.properties instead
+of nesting it under a single prop is a "breaking runtime contract" needing
+a major bump): this is a fix: for behavior that made Carousel unusable
+with any real component in this library's own set (none accept a single
+properties-bag prop), had no demo page until this PR, and has no internal
+precedent of anything consuming the old shape on purpose. Fixed as a
+semver-appropriate patch, not treated as a breaking change to something
+that was never usable as intended.
+
+Yama's third review pass raised 2 more real, concrete findings, verified
+against source before fixing:
+
+- MAJOR: keyboard focus on a dot had no visible indicator at all -- a
+natural gap from the previous round's fix (dots became keyboard-
+activatable, but nothing showed which one was focused before
+activating). Added :focus-visible styling, CSS-variable-driven to match
+the rest of this component's theming (--dot-focus-outline,
+--dot-focus-outline-offset). Verified empirically that .focus() actually
+applies it (outlineStyle: solid), then added the assertion to the
+existing keyboard test rather than a new one.
+- MINOR: docs/Carousel.md's Props table never listed testId,
+dotsWrapperTestId, or dotTestId, despite them being real, pre-existing
+props (this PR is just the first thing to actually use them, in the
+demo and tests). Added rows for all three, plus the two new focus CSS
+variables, plus a line in the Accessibility section.
+
+That same review pass repeated the semver objection from the previous
+round (spreading view.properties treated as a breaking change needing a
+major bump) without engaging the reasoning already given twice, and added
+a test-architecture suggestion (mount Carousel in isolation instead of via
+the demo page) that doesn't match this repo's actual, consistent testing
+convention -- every Playwright test in this codebase navigates a demo
+page and selects by data-pw; there is no component-isolation testing
+precedent anywhere in the project to be consistent with. Not implementing
+either; both addressed with reasoning in the PR reply rather than
+re-litigated indefinitely with an automated reviewer.
+
+Verified: pnpm run check (0 errors), pnpm run lint (clean), all 3
+Carousel tests pass.
+
+## [2.136.3](https://github.com/juspay/svelte-ui-components/compare/2.136.3..2.136.2) - 1 September 2026
 
 ## [2.136.2](https://github.com/juspay/svelte-ui-components/compare/2.136.2..2.136.1) - 1 September 2026
 

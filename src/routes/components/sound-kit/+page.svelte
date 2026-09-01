@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import Toggle from '$lib/Toggle/Toggle.svelte';
   import Button from '$lib/Button/Button.svelte';
-  import { createSoundKit } from '$lib/soundKit/soundKit';
-  import type { SoundKit, SoundName } from '$lib/soundKit/properties';
+  import { createSoundKit } from '$lib/SoundKit/SoundKit';
+  import type { SoundKit, SoundName } from '$lib/SoundKit/properties';
 
   const recipes: { name: SoundName; label: string; description: string }[] = [
     { name: 'press', label: 'Press', description: 'noise crack + 680Hz sine body' },

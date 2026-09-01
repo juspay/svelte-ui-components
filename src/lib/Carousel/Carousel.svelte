@@ -135,6 +135,12 @@
   });
 
   onDestroy(() => {
+    if (carouselDiv) {
+      carouselDiv.removeEventListener('touchstart', handleTouchStart);
+      carouselDiv.removeEventListener('touchend', handleTouchEnd);
+      carouselDiv.removeEventListener('mousedown', handleMouseDown);
+      carouselDiv.removeEventListener('mouseup', handeMouseUp);
+    }
     if (autoplay) {
       clearInterval(intervalId);
     }
@@ -151,11 +157,7 @@
       <div class="slidesDiv" bind:this={slidesDiv}>
         {#each views as view, index (index)}
           <div class="current-slide">
-            {#if typeof view.properties === 'object'}
-              <view.component properties={view.properties} />
-            {:else}
-              <view.component />
-            {/if}
+            <view.component {...view.properties} />
           </div>
         {/each}
       </div>
@@ -172,7 +174,13 @@
         <div
           class={activeSlideIndex == index ? 'active-dot' : 'dot'}
           onclick={() => moveSlideToIndex(index)}
-          {onkeydown}
+          onkeydown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              moveSlideToIndex(index);
+            }
+            onkeydown?.(event);
+          }}
           role="button"
           tabindex="0"
           aria-label={`Go to slide ${index + 1}`}
@@ -230,6 +238,12 @@
     cursor: pointer;
     background: var(--carousel-dot-active-color, #000000);
     transition: 0.3s ease;
+  }
+
+  .dot:focus-visible,
+  .active-dot:focus-visible {
+    outline: var(--dot-focus-outline, 2px solid #000000);
+    outline-offset: var(--dot-focus-outline-offset, 2px);
   }
   /*
   @media only screen and (max-width: 324px) {

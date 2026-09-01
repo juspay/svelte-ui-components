@@ -381,3 +381,20 @@ type ComboboxAction = {
 This component uses the following library components internally:
 
 - Input (for the text input field — inherits validation, text transformers, and ARIA support)
+
+## Web component
+
+Available as `<sui-combobox>`.
+
+```html
+<sui-combobox placeholder="Search…" aria-label="Country" test-id="country"></sui-combobox>
+```
+
+```js
+document.querySelector('sui-combobox').items = [{ id: 'in', label: 'India' }];
+```
+
+Attributes are kebab-case: `aria-label`, `test-id`, `input-value`, `highlighted-index`,
+`no-results-text`, `max-selected`, `max-selected-text`. `items`, `selected`, `filterFn`, the
+snippet props and every `on*` handler are set as properties, since they are not serialisable
+as attributes.

@@ -66,11 +66,4 @@
   } = $props();
 </script>
 
-<Combobox
-  {...rest}
-  bind:value
-  bind:inputValue
-  bind:open
-  bind:highlightedIndex
-  bind:selected
-/>
+<Combobox {...rest} bind:value bind:inputValue bind:open bind:highlightedIndex bind:selected />

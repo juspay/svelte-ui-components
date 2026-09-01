@@ -98,7 +98,12 @@
 
 <h2>chipClasses — a consumer's own class on every chip</h2>
 <div class="demo-row">
-  <ChatSuggestions items={analytics} chipClasses="demo-chip-hook" onselect={record} />
+  <ChatSuggestions
+    items={analytics}
+    chipClasses="demo-chip-hook"
+    onselect={record}
+    testId="chat-suggestions-chip-classes"
+  />
 </div>
 
 <h2>In context — placed above a composer inside a chat shell</h2>

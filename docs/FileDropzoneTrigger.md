@@ -35,40 +35,46 @@ Compact, for inline/dense placements (relies on `FileInput`'s own whole-area cli
 
 <FileInput accept="image/*" onfiles={(files) => console.log(files)}>
   {#snippet trigger()}
-    <FileDropzoneTrigger icon={uploadIcon} heading="Choose image" compact testId="jsonform-file-trigger-image" />
+    <FileDropzoneTrigger
+      icon={uploadIcon}
+      heading="Choose image"
+      compact
+      testId="jsonform-file-trigger-image"
+    />
   {/snippet}
 </FileInput>
 ```
 
 ## Props
 
-| Prop    | Type         | Required | Default | Description                                                                                                                                       |
-| ------- | ------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| icon    | `string`     | Yes      | —       | Upload icon asset, rendered through the library `Img` component.                                                                                 |
-| heading | `string`     | Yes      | —       | Primary call-to-action text (static copy, or a dynamic file name once selected).                                                                |
-| caption | `string`     | No       | —       | Secondary line below the heading (accepted file type / size limit). Non-compact only — ignored in the compact layout.                           |
-| compact | `boolean`    | No       | `false` | Renders a bare icon-sm + heading with no `Button` wrapper or caption, for inline/dense trigger placements.                                       |
-| onclick | `() => void` | No       | —       | Wire to `FileInput`'s `openFilePicker`. Non-compact only — compact relies on `FileInput`'s own whole-area click/drop handling.                   |
-| testId  | `string`     | No       | —       | Non-compact: forwarded to the inner `Button` (emits `data-pw` + `testID`). Compact: applied to the heading `<span>` (emits `data-pw` + `testID`). |
+| Prop    | Type         | Required | Default | Description                                                                                                                                         |
+| ------- | ------------ | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| icon    | `string`     | Yes      | —       | Upload icon asset, rendered through the library `Img` component.                                                                                    |
+| heading | `string`     | Yes      | —       | Primary call-to-action text (static copy, or a dynamic file name once selected).                                                                    |
+| caption | `string`     | No       | —       | Secondary line below the heading (accepted file type / size limit). Non-compact only — ignored in the compact layout.                               |
+| compact | `boolean`    | No       | `false` | Renders a bare icon-sm + heading with no `Button` wrapper or caption, for inline/dense trigger placements.                                          |
+| onclick | `() => void` | No       | —       | Wire to `FileInput`'s `openFilePicker`. Non-compact only — compact relies on `FileInput`'s own whole-area click/drop handling.                      |
+| testId  | `string`     | No       | —       | Non-compact: forwarded to the inner `Button` (emits `data-pw` + `testID`). Compact: applied to the heading `<span>` (emits `data-pw` + `testID`).   |
 | classes | `string`     | No       | —       | CSS class applied to the root element — the inner `Button` in non-compact, the icon+heading wrapper in compact. Use to set the CSS variables below. |
 
 ## CSS Variables
 
 Override these custom properties (e.g. via the `classes` prop) to theme the trigger.
 
-| Variable                                        | Default  | CSS Property   | Description                                                                    |
-| ------------------------------------------------ | -------- | -------------- | -------------------------------------------------------------------------------- |
-| `--file-dropzone-trigger-compact-flex-direction` | `row`    | flex-direction | Layout direction of the compact icon+heading row.                                |
-| `--file-dropzone-trigger-compact-align-items`    | `center` | align-items    | Cross-axis alignment of the compact row.                                         |
-| `--file-dropzone-trigger-compact-gap`            | `8px`    | gap            | Gap between the icon and heading in the compact row.                             |
-| `--file-dropzone-trigger-icon-sm-size`           | `16px`   | width, height  | Icon size in the compact variant.                                                |
-| `--file-dropzone-trigger-icon-size`              | `24px`   | width, height  | Icon size in the non-compact variant.                                            |
-| `--file-dropzone-trigger-heading-color`          | `inherit`| color          | Heading text color, both variants.                                               |
-| `--file-dropzone-trigger-heading-font-weight`    | `600`    | font-weight    | Heading font weight, both variants.                                              |
-| `--file-dropzone-trigger-heading-margin`         | `0`      | margin         | Margin on the heading's wrapping `<p>` (non-compact only).                       |
-| `--file-dropzone-trigger-caption-margin`         | `0`      | margin         | Margin on the caption `<p>`.                                                     |
-| `--file-dropzone-trigger-caption-color`          | `#64748b`| color          | Caption text color — set this to mute/tint the caption instead of a boolean prop. |
-| `--file-dropzone-trigger-caption-font-size`      | `0.85em` | font-size      | Caption font size, relative to the heading.                                      |
+| Variable                                         | Default   | CSS Property   | Description                                                                       |
+| ------------------------------------------------ | --------- | -------------- | --------------------------------------------------------------------------------- |
+| `--file-dropzone-trigger-compact-flex-direction` | `row`     | flex-direction | Layout direction of the compact icon+heading row.                                 |
+| `--file-dropzone-trigger-compact-align-items`    | `center`  | align-items    | Cross-axis alignment of the compact row.                                          |
+| `--file-dropzone-trigger-compact-gap`            | `8px`     | gap            | Gap between the icon and heading in the compact row.                              |
+| `--file-dropzone-trigger-icon-sm-size`           | `16px`    | width, height  | Icon size in the compact variant.                                                 |
+| `--file-dropzone-trigger-icon-size`              | `24px`    | width, height  | Icon size in the non-compact variant.                                             |
+| `--file-dropzone-trigger-icon-color`             | `inherit` | color          | Colour of the icon, in both variants.                                             |
+| `--file-dropzone-trigger-heading-color`          | `inherit` | color          | Heading text color, both variants.                                                |
+| `--file-dropzone-trigger-heading-font-weight`    | `600`     | font-weight    | Heading font weight, both variants.                                               |
+| `--file-dropzone-trigger-heading-margin`         | `0`       | margin         | Margin on the heading's wrapping `<p>` (non-compact only).                        |
+| `--file-dropzone-trigger-caption-margin`         | `0`       | margin         | Margin on the caption `<p>`.                                                      |
+| `--file-dropzone-trigger-caption-color`          | `#64748b` | color          | Caption text color — set this to mute/tint the caption instead of a boolean prop. |
+| `--file-dropzone-trigger-caption-font-size`      | `0.85em`  | font-size      | Caption font size, relative to the heading.                                       |
 
 ### Muted caption recipe
 

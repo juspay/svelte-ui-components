@@ -57,3 +57,19 @@
     </div>
   </Accordion>
 </div>
+
+<h3>Disabled trigger</h3>
+<p>
+  <code>disabled</code> locks the built-in trigger: clicks and Enter/Space no longer toggle, it
+  leaves the tab order, and <code>aria-disabled="true"</code> is set.
+</p>
+<div class="demo-row" style="flex-direction: column; max-width: 500px;">
+  <Accordion expand={false} disabled testId="accordion-disabled">
+    {#snippet trigger({ expanded })}
+      <span data-pw="accordion-disabled-trigger-label">{expanded ? 'Collapse' : 'Expand'}</span>
+    {/snippet}
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+      <p>This content stays collapsed — the trigger above is disabled.</p>
+    </div>
+  </Accordion>
+</div>

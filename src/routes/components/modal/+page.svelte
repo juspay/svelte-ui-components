@@ -25,6 +25,7 @@
   // scrolling while the outer one is still mounted.
   let nestedLockOuterOpen = $state(false);
   let nestedLockInnerOpen = $state(false);
+  let showDisabledFooterModal = $state(false);
 </script>
 
 <div class="page-header">
@@ -283,6 +284,38 @@
   {/if}
 </div>
 
+<h3>Disabled footer buttons</h3>
+<div class="demo-row">
+  <Button
+    text="Open modal with disabled footer buttons"
+    testId="open-disabled-footer-modal"
+    onclick={() => (showDisabledFooterModal = true)}
+  />
+  {#if showDisabledFooterModal}
+    <div class="modal-disabled-footer-demo">
+      <Modal
+        size="small"
+        align="center"
+        showOverlay
+        testId="disabled-footer-modal"
+        header={{ text: 'Disabled footer buttons' }}
+        footer={{
+          primaryButton: { text: 'Save', disabled: true, testId: 'disabled-footer-primary' },
+          secondaryButton: { text: 'Cancel', disabled: true, testId: 'disabled-footer-secondary' }
+        }}
+        onclose={() => (showDisabledFooterModal = false)}
+        onoverlayClick={() => (showDisabledFooterModal = false)}
+      >
+        {#snippet content()}
+          <div style="padding: 16px;">
+            <p>Both footer buttons are disabled via their own <code>disabled</code> field.</p>
+          </div>
+        {/snippet}
+      </Modal>
+    </div>
+  {/if}
+</div>
+
 <h3>Nested modals — reference-counted body scroll lock</h3>
 <div class="demo-row">
   <Button
@@ -344,5 +377,11 @@
     /* Reproduces the app override that used to break containment: a medium
        modal sized to its content instead of the 50vh default. */
     --modal-medium-height: fit-content;
+  }
+
+  .modal-disabled-footer-demo {
+    --modal-footer-primary-button-disabled-color: rgb(210, 210, 214);
+    --modal-footer-primary-button-disabled-text-color: rgb(120, 120, 128);
+    --modal-footer-secondary-button-disabled-opacity: 0.15;
   }
 </style>

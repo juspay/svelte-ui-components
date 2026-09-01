@@ -123,8 +123,11 @@ its lists are fed:
 | `--chat-composer-send-hover-background-color`      | `#27272a`           | background    | Send button hover background.                   |
 | `--chat-composer-stack-gap`                        | `8px`               | gap           | Gap between attachment chips and the input row. |
 | `--chat-composer-attachments-gap`                  | `6px`               | gap           | Gap between attachment chips.                   |
+| `--chat-composer-attachments-padding`              | `2px 4px 0`         | padding       | Padding around the attachment chip strip.       |
 | `--chat-composer-action-size`                      | `36px`              | height/width  | Size of the attach/voice buttons.               |
 | `--chat-composer-action-padding`                   | `8px`               | padding       | Padding of the attach/voice buttons.            |
+| `--chat-composer-action-background-color`          | `transparent`       | background    | Resting background of the attach/voice buttons. |
+| `--chat-composer-action-border-radius`             | `50%`               | border-radius | Corner rounding of the attach/voice buttons.    |
 | `--chat-composer-action-color`                     | `#52525b`           | color         | Icon color of the attach/voice buttons.         |
 | `--chat-composer-action-hover-background-color`    | `#f4f4f5`           | background    | Attach/voice hover background.                  |
 | `--chat-composer-voice-recording-background-color` | `#fee2e2`           | background    | Voice button background while recording.        |

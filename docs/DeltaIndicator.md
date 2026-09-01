@@ -77,29 +77,30 @@ Define a class in your CSS that sets DeltaIndicator CSS variables and pass it vi
 
 ## Props
 
-| Prop             | Type                       | Required | Default                        | Description                                                                                                                                       |
-| ---------------- | -------------------------- | -------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value            | `number`                   | Yes      | `-`                            | The change amount. Its sign determines direction: positive → up, negative → down. When the absolute value is ≤ `neutralThreshold`, direction is neutral. |
-| format           | `(value: number) => string` | No       | `v => Math.round(Math.abs(v)) + '%'` | Custom formatter for the displayed text. Receives the raw signed value. Default shows the rounded absolute value followed by a percent sign.      |
-| invertColors     | `boolean`                  | No       | `false`                        | Swaps the up/down color tone for lower-is-better metrics. When `true`, an upward change renders in red and a downward change renders in green.    |
-| hideArrow        | `boolean`                  | No       | `false`                        | Hides the directional triangle arrow, rendering only the formatted text string.                                                                   |
-| neutralThreshold | `number`                   | No       | `0`                            | Absolute values at or below this threshold are classified as neutral (muted color, no arrow). Useful for suppressing noise on near-zero changes.  |
-| testId           | `string`                   | No       | `-`                            | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                    |
-| classes          | `string`                   | No       | `-`                            | CSS class string applied to the root element. Useful for theming via class-scoped CSS variable overrides.                                        |
+| Prop             | Type                        | Required | Default                              | Description                                                                                                                                              |
+| ---------------- | --------------------------- | -------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| value            | `number`                    | Yes      | `-`                                  | The change amount. Its sign determines direction: positive → up, negative → down. When the absolute value is ≤ `neutralThreshold`, direction is neutral. |
+| format           | `(value: number) => string` | No       | `v => Math.round(Math.abs(v)) + '%'` | Custom formatter for the displayed text. Receives the raw signed value. Default shows the rounded absolute value followed by a percent sign.             |
+| invertColors     | `boolean`                   | No       | `false`                              | Swaps the up/down color tone for lower-is-better metrics. When `true`, an upward change renders in red and a downward change renders in green.           |
+| hideArrow        | `boolean`                   | No       | `false`                              | Hides the directional triangle arrow, rendering only the formatted text string.                                                                          |
+| neutralThreshold | `number`                    | No       | `0`                                  | Absolute values at or below this threshold are classified as neutral (muted color, no arrow). Useful for suppressing noise on near-zero changes.         |
+| testId           | `string`                    | No       | `-`                                  | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                            |
+| classes          | `string`                    | No       | `-`                                  | CSS class string applied to the root element. Useful for theming via class-scoped CSS variable overrides.                                                |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                           | Default    | CSS Property | Description                                                                 |
-| ---------------------------------- | ---------- | ------------ | --------------------------------------------------------------------------- |
-| `--delta-indicator-gap`            | `2px`      | gap          | Space between the arrow icon and the text label.                            |
-| `--delta-indicator-font-size`      | `13px`     | font-size    | Font size of the indicator text.                                            |
-| `--delta-indicator-font-weight`    | `600`      | font-weight  | Font weight of the indicator text.                                          |
-| `--delta-indicator-positive-color` | `#1a9d6f`  | color        | Color used when the tone is positive (value up, or value down + invertColors). |
-| `--delta-indicator-negative-color` | `#e5484d`  | color        | Color used when the tone is negative (value down, or value up + invertColors). |
-| `--delta-indicator-neutral-color`  | `#8a8a8a`  | color        | Color used when the value is within the neutral threshold.                  |
-| `--delta-indicator-arrow-size`     | `9px`      | width, height | Size of the directional triangle arrow SVG.                               |
+| Variable                               | Default   | CSS Property  | Description                                                                    |
+| -------------------------------------- | --------- | ------------- | ------------------------------------------------------------------------------ |
+| `--delta-indicator-gap`                | `2px`     | gap           | Space between the arrow icon and the text label.                               |
+| `--delta-indicator-font-size`          | `13px`    | font-size     | Font size of the indicator text.                                               |
+| `--delta-indicator-font-weight`        | `600`     | font-weight   | Font weight of the indicator text.                                             |
+| `--delta-indicator-positive-color`     | `#1a9d6f` | color         | Color used when the tone is positive (value up, or value down + invertColors). |
+| `--delta-indicator-negative-color`     | `#e5484d` | color         | Color used when the tone is negative (value down, or value up + invertColors). |
+| `--delta-indicator-neutral-color`      | `#8a8a8a` | color         | Color used when the value is within the neutral threshold.                     |
+| `--delta-indicator-arrow-size`         | `9px`     | width, height | Size of the directional triangle arrow SVG.                                    |
+| `--delta-indicator-arrow-stroke-width` | `2`       | stroke-width  | Stroke width of the arrow SVG.                                                 |
 
 ## Web Component
 

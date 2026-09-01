@@ -107,7 +107,13 @@ Use `onChartReady` to receive a `ChartHighlightAPI` handle. Call `api.highlight(
   let chartApi: ChartHighlightAPI | null = $state(null);
 </script>
 
-<PieChart {data} innerRadius={0.6} onChartReady={(api) => { chartApi = api; }} />
+<PieChart
+  {data}
+  innerRadius={0.6}
+  onChartReady={(api) => {
+    chartApi = api;
+  }}
+/>
 
 <button onclick={() => chartApi?.highlight(0)}>Highlight Chrome</button>
 <button onclick={() => chartApi?.highlight(null)}>Clear</button>
@@ -142,26 +148,26 @@ overlapping text:
 
 | Prop               | Type                               | Required | Default      | Description                                                                                                                                                                              |
 | ------------------ | ---------------------------------- | -------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| data               | `PieChartSlice[]`                  | Yes      | `-`          | Array of `{label, value, color?}`. Each item becomes one slice. Slice angle is proportional to value.                                                                                   |
-| innerRadius        | `number`                           | No       | `0`          | Inner radius as a fraction of outer radius (0-1). `0` renders a pie; `>0` renders a donut.                                                                                              |
+| data               | `PieChartSlice[]`                  | Yes      | `-`          | Array of `{label, value, color?}`. Each item becomes one slice. Slice angle is proportional to value.                                                                                    |
+| innerRadius        | `number`                           | No       | `0`          | Inner radius as a fraction of outer radius (0-1). `0` renders a pie; `>0` renders a donut.                                                                                               |
 | padAngle           | `number`                           | No       | `0.02`       | Angular gap between slices in radians.                                                                                                                                                   |
 | showLabels         | `boolean`                          | No       | `false`      | Whether to render slice labels (either inside or outside depending on `labelPosition`).                                                                                                  |
 | showValues         | `boolean`                          | No       | `false`      | Whether to render the slice percentage as a label.                                                                                                                                       |
 | labelPosition      | `'inside' \| 'outside'`            | No       | `'outside'`  | Where to render slice labels.                                                                                                                                                            |
 | showLegend         | `boolean`                          | No       | `false`      | Whether to render a legend above the chart.                                                                                                                                              |
-| startAngle         | `number`                           | No       | `-Math.PI/2` | Starting angle in radians. Default starts at 12 o'clock position.                                                                                                                       |
+| startAngle         | `number`                           | No       | `-Math.PI/2` | Starting angle in radians. Default starts at 12 o'clock position.                                                                                                                        |
 | aspectRatio        | `number`                           | No       | `1`          | Width-to-height ratio. `1` produces a circular container.                                                                                                                                |
 | valueFormat        | `(value: number) => string`        | No       | abbreviated  | Formatter for slice values in the default tooltip.                                                                                                                                       |
 | tooltipSnippet     | `Snippet<[PieChartSlice, number]>` | No       | `-`          | Custom tooltip content. Receives the hovered slice and its index.                                                                                                                        |
-| center             | `Snippet`                          | No       | `-`          | Content rendered inside the donut hole (only when `innerRadius > 0`). Rendered via SVG `foreignObject`.                                                                                 |
+| center             | `Snippet`                          | No       | `-`          | Content rendered inside the donut hole (only when `innerRadius > 0`). Rendered via SVG `foreignObject`.                                                                                  |
 | empty              | `Snippet`                          | No       | `-`          | Content rendered when `data` is empty or all values are zero.                                                                                                                            |
-| semiCircle         | `boolean`                          | No       | `false`      | Render as a semi-circle (half-pie/donut). Arc spans the top 180°. Aspect ratio defaults to 2:1.                                                                                         |
+| semiCircle         | `boolean`                          | No       | `false`      | Render as a semi-circle (half-pie/donut). Arc spans the top 180°. Aspect ratio defaults to 2:1.                                                                                          |
 | legendShowValues   | `boolean`                          | No       | `false`      | When `showLegend` is also true, renders a tabular legend with formatted values and percentages per slice.                                                                                |
 | percentDecimals    | `number`                           | No       | `0`          | Decimal places used for percentage formatting in on-arc labels (`showValues`) and the legend value column.                                                                               |
-| onChartReady       | `(api: ChartHighlightAPI) => void` | No       | `-`          | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.       |
+| onChartReady       | `(api: ChartHighlightAPI) => void` | No       | `-`          | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.        |
 | highlightedIndex   | `number \| null`                   | No       | `null`       | Declarative highlight: the index of the slice to highlight. The highlighted slice scales out and all others dim. Pass `null` or omit to clear. Mouse hover takes priority when active.   |
 | changePercentage   | `number`                           | No       | `-`          | When provided, renders a `DeltaIndicator` badge at the top-right of the chart container showing the percentage change. Positive values appear green ↑, negative appear red ↓ by default. |
-| changeInvertColors | `boolean`                          | No       | `false`      | Swap the up/down colors on the delta badge for lower-is-better metrics (e.g. RTO rate, bounce rate).                                                                                    |
+| changeInvertColors | `boolean`                          | No       | `false`      | Swap the up/down colors on the delta badge for lower-is-better metrics (e.g. RTO rate, bounce rate).                                                                                     |
 | testId             | `string`                           | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                  |
 | classes            | `string`                           | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                       |
 
@@ -176,25 +182,32 @@ overlapping text:
 
 In addition to the shared `--chart-*` variables (see BarChart docs), PieChart exposes:
 
-| Variable                            | Default      | CSS Property  | Description                                                                                          |
-| ----------------------------------- | ------------ | ------------- | ---------------------------------------------------------------------------------------------------- |
-| `--piechart-stroke-color`           | `#fff`       | stroke        | Color of the stroke between slices.                                                                  |
-| `--piechart-stroke-width`           | `2`          | stroke-width  | Width of the stroke between slices.                                                                  |
-| `--piechart-hover-scale`            | `1.05`       | transform     | Scale factor applied to the highlighted (hovered or programmatic) slice.                             |
-| `--piechart-dimmed-opacity`         | `0.3`        | opacity       | Opacity of non-highlighted slices when any slice is active.                                          |
-| `--piechart-label-color`            | `#333`       | fill          | Color of slice labels.                                                                               |
-| `--piechart-label-font-size`        | `12px`       | font-size     | Font size of slice labels.                                                                           |
-| `--piechart-semi-aspect-ratio`      | `2`          | —             | Aspect ratio (width÷height) used when `semiCircle` is true and `aspectRatio` prop is not set.        |
-| `--piechart-delta-top`              | `8px`        | top           | Top offset of the delta badge overlay.                                                               |
-| `--piechart-delta-right`            | `8px`        | right         | Right offset of the delta badge overlay.                                                             |
-| `--piechart-legend-gap`             | `8px`        | gap           | Row gap in the `legendShowValues` table.                                                             |
-| `--piechart-legend-padding`         | `12px 0 0 0` | padding       | Padding on the `legendShowValues` container.                                                         |
-| `--piechart-legend-label-min-width` | `120px`      | min-width     | Minimum width of the label column in the `legendShowValues` table; aligns value columns across rows. |
-| `--piechart-legend-value-min-width` | `60px`       | min-width     | Minimum width of the value column; combined with `text-align: right` for tabular alignment.          |
-| `--piechart-legend-value-font-size` | `12px`       | font-size     | Font size of the value column text in the `legendShowValues` table.                                  |
-| `--piechart-legend-value-color`     | `#333`       | color         | Text color of the value column in the `legendShowValues` table.                                      |
-| `--piechart-legend-row-gap`         | `6px`        | gap           | Inline gap between swatch, label, and value within each legend row.                                  |
-| `--piechart-legend-swatch-radius`   | `2px`        | border-radius | Border radius of the color swatch in each legend row.                                                |
+| Variable                            | Default      | CSS Property   | Description                                                                                                        |
+| ----------------------------------- | ------------ | -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `--piechart-stroke-color`           | `#fff`       | stroke         | Color of the stroke between slices.                                                                                |
+| `--piechart-stroke-width`           | `2`          | stroke-width   | Width of the stroke between slices.                                                                                |
+| `--chart-transition-duration`       | `0.2s`       | transition     | Duration of the slice transform/opacity transitions (hover, highlight). Shared across this library's chart family. |
+| `--chart-font-family`               | `inherit`    | font-family    | Font family for chart text (empty-state message and legend). Shared across the chart family.                       |
+| `--chart-empty-padding`             | `32px 24px`  | padding        | Padding around the empty-state message shown when `data` has no slices.                                            |
+| `--chart-empty-color`               | `#9ca3af`    | color          | Text color of the empty-state message.                                                                             |
+| `--chart-legend-swatch-size`        | `12px`       | width / height | Size of each legend row's color swatch.                                                                            |
+| `--chart-legend-font-size`          | `12px`       | font-size      | Font size of legend labels.                                                                                        |
+| `--chart-legend-color`              | `#333`       | color          | Text color of legend labels.                                                                                       |
+| `--piechart-hover-scale`            | `1.05`       | transform      | Scale factor applied to the highlighted (hovered or programmatic) slice.                                           |
+| `--piechart-dimmed-opacity`         | `0.3`        | opacity        | Opacity of non-highlighted slices when any slice is active.                                                        |
+| `--piechart-label-color`            | `#333`       | fill           | Color of slice labels.                                                                                             |
+| `--piechart-label-font-size`        | `12px`       | font-size      | Font size of slice labels.                                                                                         |
+| `--piechart-semi-aspect-ratio`      | `2`          | —              | Aspect ratio (width÷height) used when `semiCircle` is true and `aspectRatio` prop is not set.                      |
+| `--piechart-delta-top`              | `8px`        | top            | Top offset of the delta badge overlay.                                                                             |
+| `--piechart-delta-right`            | `8px`        | right          | Right offset of the delta badge overlay.                                                                           |
+| `--piechart-legend-gap`             | `8px`        | gap            | Row gap in the `legendShowValues` table.                                                                           |
+| `--piechart-legend-padding`         | `12px 0 0 0` | padding        | Padding on the `legendShowValues` container.                                                                       |
+| `--piechart-legend-label-min-width` | `120px`      | min-width      | Minimum width of the label column in the `legendShowValues` table; aligns value columns across rows.               |
+| `--piechart-legend-value-min-width` | `60px`       | min-width      | Minimum width of the value column; combined with `text-align: right` for tabular alignment.                        |
+| `--piechart-legend-value-font-size` | `12px`       | font-size      | Font size of the value column text in the `legendShowValues` table.                                                |
+| `--piechart-legend-value-color`     | `#333`       | color          | Text color of the value column in the `legendShowValues` table.                                                    |
+| `--piechart-legend-row-gap`         | `6px`        | gap            | Inline gap between swatch, label, and value within each legend row.                                                |
+| `--piechart-legend-swatch-radius`   | `2px`        | border-radius  | Border radius of the color swatch in each legend row.                                                              |
 
 The delta badge is themeable via the `DeltaIndicator` CSS variables (e.g. `--delta-indicator-positive-color`, `--delta-indicator-negative-color`, `--delta-indicator-font-size`).
 

@@ -13,6 +13,25 @@ test.describe('Button — title and ariaBusy', () => {
     await expect(button).toHaveAttribute('aria-label', 'Filters, 2 selected');
   });
 
+  // ariaHaspopup was undocumented until now. It is asserted against a Button that is a
+  // real Menu trigger rather than a standalone button: aria-haspopup promises assistive
+  // technology that activating the control opens a popup, so a demo that sets it without
+  // one would document a contract the page does not honour.
+  test('ariaHaspopup round-trips from Menu onto a Button trigger, and tracks expansion', async ({
+    page
+  }) => {
+    await page.goto('/components/button');
+
+    const trigger = page.getByTestId('button-haspopup');
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await trigger.click();
+
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByText('Newest first')).toBeVisible();
+  });
+
   test('ariaBusy leaves the button enabled — unlike loading', async ({ page }) => {
     await page.goto('/components/button');
 

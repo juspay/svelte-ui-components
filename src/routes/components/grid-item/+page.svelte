@@ -9,7 +9,11 @@
 </div>
 
 <div class="demo-row">
-  <GridItem icon="{base}/demo-media/placeholder-square.svg" text="Photos" />
+  <GridItem
+    icon="{base}/demo-media/placeholder-square.svg"
+    text="Photos"
+    testId="grid-item-photos"
+  />
   <GridItem icon="{base}/demo-media/placeholder-square.svg" text="Videos" />
   <GridItem icon="{base}/demo-media/placeholder-square.svg" text="Music" />
 </div>

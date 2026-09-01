@@ -20,13 +20,14 @@ An expandable/collapsible container that uses CSS grid row animation for smooth 
 
 ## Props
 
-| Prop           | Type      | Required | Default   | Description                                                                                                                                                                                                                                                                             |
-| -------------- | --------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| expand         | `boolean` | No       | `false`   | Controls whether the accordion content is expanded (visible) or collapsed (hidden). Supports two-way binding (`bind:expand`).                                                                                                                                                           |
-| classes        | `string`  | No       | `-`       | CSS class string applied to the accordion content wrapper element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                              |
-| triggerClasses | `string`  | No       | `-`       | CSS class string applied to the `accordion-trigger` wrapper div. Use to style the trigger area independently of the content panel.                                                                                                                                                      |
-| testId         | `string`  | No       | `-`       | Value written to `data-pw` on the accordion content wrapper. Enables Playwright locators (`page.getByTestId(testId)`).                                                                                                                                                                  |
-| panelId        | `string`  | No       | generated | `id` for the collapsible panel, which the built-in trigger references via `aria-controls`. Defaults to a generated per-instance id, so the trigger and panel are linked without any caller involvement. Supply one only when something else needs to reference the panel by a known id. |
+| Prop           | Type      | Required | Default   | Description                                                                                                                                                                                                                                                                                                                                          |
+| -------------- | --------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| expand         | `boolean` | No       | `false`   | Controls whether the accordion content is expanded (visible) or collapsed (hidden). Supports two-way binding (`bind:expand`).                                                                                                                                                                                                                        |
+| classes        | `string`  | No       | `-`       | CSS class string applied to the accordion content wrapper element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                           |
+| triggerClasses | `string`  | No       | `-`       | CSS class string applied to the `accordion-trigger` wrapper div. Use to style the trigger area independently of the content panel.                                                                                                                                                                                                                   |
+| testId         | `string`  | No       | `-`       | Value written to `data-pw` on the accordion content wrapper. Enables Playwright locators (`page.getByTestId(testId)`).                                                                                                                                                                                                                               |
+| disabled       | `boolean` | No       | `false`   | Disables the built-in trigger: clicks and Enter/Space no longer toggle, the trigger is removed from the tab order (`tabindex="-1"`), and `aria-disabled="true"` is emitted. The trigger also gets a `disabled` class for styling. `expand` is still honoured, so a disabled accordion can be shown open or closed under external (controlled) state. |
+| panelId        | `string`  | No       | generated | `id` for the collapsible panel, which the built-in trigger references via `aria-controls`. Defaults to a generated per-instance id, so the trigger and panel are linked without any caller involvement. Supply one only when something else needs to reference the panel by a known id.                                                              |
 
 ## Events
 
@@ -38,10 +39,10 @@ An expandable/collapsible container that uses CSS grid row animation for smooth 
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet  | Parameters              | Description                                                                                                                                                                                                                                                                       |
-| -------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children | _(none)_                | Content rendered inside the accordion panel (the collapsible region).                                                                                                                                                                                                             |
-| trigger  | `{ expanded: boolean }` | When provided, renders a keyboard-accessible toggle header (`role="button"`, `tabindex="0"`, `aria-expanded`, and `aria-controls` pointing at the panel it opens). The `expanded` parameter reflects the current open/closed state so you can render different UI for each state. |
+| Snippet  | Parameters              | Description                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children | _(none)_                | Content rendered inside the accordion panel (the collapsible region).                                                                                                                                                                                                                                                                                                                                                  |
+| trigger  | `{ expanded: boolean }` | When provided, renders a keyboard-accessible toggle header (`role="button"`, `tabindex="0"`, `aria-expanded`, and `aria-controls` pointing at the panel it opens). When `disabled` is set, the trigger keeps `role="button"` but drops to `tabindex="-1"` and stops toggling — see the `disabled` prop. The `expanded` parameter reflects the current open/closed state so you can render different UI for each state. |
 
 ## Accessibility
 
@@ -50,10 +51,11 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## CSS Variables
 
-| Variable                     | Default         | Description                                              |
-| ---------------------------- | --------------- | -------------------------------------------------------- |
-| `--accordion-trigger-cursor` | `pointer`       | Cursor style for the trigger element.                    |
-| `--accordion-transition`     | `0.2s ease-out` | Transition value for the `grid-template-rows` animation. |
+| Variable                              | Default         | Description                                                   |
+| ------------------------------------- | --------------- | ------------------------------------------------------------- |
+| `--accordion-trigger-cursor`          | `pointer`       | Cursor style for the trigger element.                         |
+| `--accordion-trigger-disabled-cursor` | `not-allowed`   | Cursor style for the trigger element when `disabled` is true. |
+| `--accordion-transition`              | `0.2s ease-out` | Transition value for the `grid-template-rows` animation.      |
 
 ## Web Component
 

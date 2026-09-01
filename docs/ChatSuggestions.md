@@ -32,6 +32,7 @@ Two layouts: `wrap` (default) flows chips onto as many lines as needed, for a ro
 | icon       | `Snippet<[string \| null, number]>`      | No       | `-`            | Custom mark per chip; receives the item's icon (or null) and index.                                                                                                                                        |
 | testId     | `string`                                 | No       | `-`            | `data-pw` on the root element.                                                                                                                                                                   |
 | classes    | `string`                                 | No       | `-`            | Class string on the root element.                                                                                                                                                                |
+| chipClasses | `string`                                | No       | `-`            | Class string placed on every chip wrapper. Without it, a consuming app's centrally-styled chip rules have nothing in the tree to match, and chips silently fall back to the library defaults.  |
 
 ## Events
 

@@ -67,7 +67,8 @@ export type OptionalFunnelChartProperties = {
   aspectRatio?: number;
   /**
    * Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height
-   * can't balloon on wide surfaces. Defaults to `Infinity` (uncapped).
+   * can't balloon on wide surfaces. Defaults to `DEFAULT_CHART_MAX_HEIGHT` (420), the
+   * same cap every other chart in this library applies.
    */
   maxHeight?: number;
   /** Lower bound (px) on the rendered chart height (defaults to `0`). */

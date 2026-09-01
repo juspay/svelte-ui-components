@@ -11,6 +11,6 @@
   <div
     style="--loader-foreground: #4f46e5; --loader-foreground-end: transparent; --loader-background: white;"
   >
-    <Loader />
+    <Loader testId="loader-demo" />
   </div>
 </div>

@@ -453,29 +453,40 @@ Pass `searchConfig` to show a search input above the table. By default the table
 
 ## Props
 
-| Prop                | Type                                                                | Required | Default               | Description                                                                                                                                                                             |
-| ------------------- | ------------------------------------------------------------------- | -------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| tableTitle          | `string \| null`                                                    | No       | `''`                  | Optional title text displayed above the table.                                                                                                                                          |
-| tableHeaders        | `string[]`                                                          | No       | `[]`                  | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                   |
-| tableData           | `Array<JSONValue[]>`                                                | No       | `[]`                  | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                     |
-| sortable            | `boolean`                                                           | No       | `true`                | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                   |
-| sortableColumns     | `number[]`                                                          | No       | `-`                   | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                       |
-| stickyHeader        | `boolean`                                                           | No       | `false`               | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                       |
-| isTableScrollable   | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                        |
-| isContentScrollable | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                            |
-| testId              | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                          |
-| caption             | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                               |
-| sortAscIcon         | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.    |
-| sortDescIcon        | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.   |
-| sortDefaultIcon     | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                           |
-| cell                | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                    |
-| empty               | `Snippet`                                                           | No       | `-`                   | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                      |
-| classes             | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                  |
-| paginatorSlot       | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                   |
-| getRowTestId        | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                              |
-| getCellTestId       | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                  |
-| checkboxSelection   | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                    |
-| searchConfig        | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onSearchChange` to delegate filtering to the server. See `TableSearchConfig` type below. |
+| Prop                  | Type                                                                | Required | Default               | Description                                                                                                                                                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------- | -------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tableTitle            | `string \| null`                                                    | No       | `''`                  | Optional title text displayed above the table.                                                                                                                                                                                                                              |
+| tableHeaders          | `string[]`                                                          | No       | `[]`                  | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                                                                                                       |
+| tableData             | `Array<JSONValue[]>`                                                | No       | `[]`                  | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                                                                                                         |
+| sortable              | `boolean`                                                           | No       | `true`                | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                                                                                                       |
+| sortableColumns       | `number[]`                                                          | No       | `-`                   | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                                                                                                           |
+| stickyHeader          | `boolean`                                                           | No       | `false`               | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                                                                                                           |
+| isTableScrollable     | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                                                                                                            |
+| isContentScrollable   | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                                                                                                                |
+| testId                | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                                                                                                              |
+| caption               | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                                                                                                                   |
+| sortAscIcon           | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.                                                                                        |
+| sortDescIcon          | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.                                                                                       |
+| sortDefaultIcon       | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                                                                                                               |
+| cell                  | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                                                                                                        |
+| empty                 | `Snippet`                                                           | No       | `-`                   | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                                                                                                          |
+| classes               | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                      |
+| paginatorSlot         | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                                                                                                       |
+| getRowTestId          | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                                                                                                                  |
+| getCellTestId         | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                                                                                                      |
+| checkboxSelection     | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                                                                                                        |
+| searchConfig          | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onSearchChange` to delegate filtering to the server. See `TableSearchConfig` type below.                                                                                     |
+| columns               | `TableColumn[]`                                                     | No       | `-`                   | Keyed column model (preferred). When provided, `columns`/`rows` are normalized internally onto the same engine as `tableHeaders`/`tableData`, which are then ignored for that instance. See `TableColumn` type below and "Usage" above.                                     |
+| rows                  | `TableRow[]`                                                        | No       | `-`                   | Keyed row data, addressed by `TableColumn.id`. Used with `columns`. Missing keys render as empty cells. See `TableRow` type below.                                                                                                                                          |
+| sortMode              | `'client' \| 'server'`                                              | No       | `'client'`            | `'client'` sorts rows internally on header click. `'server'` keeps the header sort UI and `onSort` callback but skips the internal reorder — the consumer re-orders the data itself.                                                                                        |
+| pagination            | `TablePaginationConfig`                                             | No       | `-`                   | Built-in footer paginator (range label, optional page-size selector, page controls). See `TablePaginationConfig` type below and "Built-in Pagination" above.                                                                                                                |
+| toolbarSlot           | `Snippet<[{ selectedIds: Set<string> }]>`                           | No       | `-`                   | Bulk-action bar rendered above the table while the checkbox selection is non-empty. The library owns only placement — content is entirely consumer-rendered. See "Controlled Selection + Bulk Toolbar" above.                                                               |
+| rowNumberColumn       | `boolean`                                                           | No       | `false`               | Prepends a sequential row-number column (1-based, pagination-aware).                                                                                                                                                                                                        |
+| rowNumberLabel        | `string`                                                            | No       | `'#'`                 | Header label for the row-number column.                                                                                                                                                                                                                                     |
+| summaryRowIndex       | `number \| null`                                                    | No       | `null`                | Index (into the consumer-supplied `rows`, pre-sort/pre-filter) of a summary/period-total row that renders with a distinct background (`--table-summary-row-background`). Matched by original position, so it survives sort/search/pagination.                               |
+| headerTooltipIcon     | `Snippet`                                                           | No       | `-`                   | Icon snippet shown after each header label that has a `tooltip`. When set, the default underline affordance on those labels is dropped.                                                                                                                                     |
+| headerTooltipPosition | `TooltipPosition`                                                   | No       | `'top'`               | Placement of every header tooltip bubble.                                                                                                                                                                                                                                   |
+| usePortal             | `boolean`                                                           | No       | `false`               | When true, in-cell `Select` dropdowns and `Menu` popovers (`action-group`/`popup-menu` columns) are portaled to `document.body` and positioned `fixed`, so the table's own scroll/overflow container cannot clip them. Set on tables whose rows can sit near a scroll edge. |
 
 ## Snippets
 
@@ -503,25 +514,28 @@ Override these custom properties to theme the component.
 
 ### Title
 
-| Variable                    | Default      | CSS Property | Description                     |
-| --------------------------- | ------------ | ------------ | ------------------------------- |
-| `--table-title-margin`      | `0 0 12px 0` | margin       | Margin around the table title.  |
-| `--table-title-font-size`   | `18px`       | font-size    | Font size of the table title.   |
-| `--table-title-font-weight` | `600`        | font-weight  | Font weight of the table title. |
-| `--table-title-color`       | `#111827`    | color        | Text color of the table title.  |
-| `--table-title-font-family` | `-`          | font-family  | Font family of the table title. |
-| `--table-title-padding`     | `-`          | padding      | Padding of the table title.     |
+| Variable                    | Default      | CSS Property | Description                                                                                                                                                                                                |
+| --------------------------- | ------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-title-margin`      | `0 0 12px 0` | margin       | Margin around the table title.                                                                                                                                                                             |
+| `--table-title-font-size`   | `18px`       | font-size    | Font size of the table title.                                                                                                                                                                              |
+| `--table-title-font-weight` | `600`        | font-weight  | Font weight of the table title.                                                                                                                                                                            |
+| `--table-title-color`       | `#111827`    | color        | Text color of the table title.                                                                                                                                                                             |
+| `--table-title-font-family` | `-`          | font-family  | Font family of the table title.                                                                                                                                                                            |
+| `--table-title-padding`     | `-`          | padding      | Padding of the table title.                                                                                                                                                                                |
+| `--table-tile-font-size`    | `18px`       | font-size    | Secondary fallback for the title font size — `--table-title-font-size` falls back to this before the `18px` literal. Kept for backward compatibility; set `--table-title-font-size` directly for new code. |
 
 ### Container & Layout
 
-| Variable                   | Default             | CSS Property    | Description                                                        |
-| -------------------------- | ------------------- | --------------- | ------------------------------------------------------------------ |
-| `--table-border`           | `1px solid #e5e7eb` | border          | Border of the table container.                                     |
-| `--table-border-radius`    | `8px`               | border-radius   | Border radius of the table container.                              |
-| `--table-container-width`  | `100%`              | width           | Width of the table container.                                      |
-| `--table-container-height` | `143px`             | height          | Height of the scrollable table container (when isTableScrollable). |
-| `--table-width`            | `100%`              | width           | Width of the table element.                                        |
-| `--table-border-collapse`  | `collapse`          | border-collapse | Border collapse mode of the table.                                 |
+| Variable                     | Default             | CSS Property          | Description                                                                                                |
+| ---------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `--table-border`             | `1px solid #e5e7eb` | border                | Border of the table container.                                                                             |
+| `--table-border-radius`      | `8px`               | border-radius         | Border radius of the table container.                                                                      |
+| `--table-container-width`    | `100%`              | width                 | Width of the table container.                                                                              |
+| `--table-container-height`   | `143px`             | height                | Height of the scrollable table container (when isTableScrollable).                                         |
+| `--table-width`              | `100%`              | width                 | Width of the table element.                                                                                |
+| `--table-border-collapse`    | `collapse`          | border-collapse       | Border collapse mode of the table.                                                                         |
+| `--table-scroll-scrim-width` | `32px`              | width                 | Width of the fade-out gradient hint shown at the leading/trailing edge of a horizontally scrollable table. |
+| `--table-scroll-scrim-color` | `#ffffff`           | background (gradient) | Color the scroll scrim fades from — set to match the table's background when it isn't white.               |
 
 ### Cell Grid
 
@@ -534,19 +548,27 @@ Override these custom properties to theme the component.
 | `--table-text-align`         | `left`              | text-align    | Text alignment inside table cells.                                                  |
 | `--table-column-width`       | `-`                 | width         | Sets a uniform width for all table columns. Unset lets the table auto-size columns. |
 | `--scrollable-column-height` | `20px`              | height        | Height of scrollable cell content (when isContentScrollable).                       |
+| `--table-overflow-wrap`      | `-`                 | overflow-wrap | Overflow-wrap behavior for cell text.                                               |
+| `--table-word-break`         | `-`                 | word-break    | Word-break behavior for cell text.                                                  |
 
 ### Header Cells
 
-| Variable                        | Default   | CSS Property     | Description                                                                      |
-| ------------------------------- | --------- | ---------------- | -------------------------------------------------------------------------------- |
-| `--table-header-background`     | `#f9fafb` | background-color | Background color of header cells. Falls back to `--table-header-border-bgcolor`. |
-| `--table-header-font-size`      | `13px`    | font-size        | Font size of header cells.                                                       |
-| `--table-header-font-family`    | `-`       | font-family      | Font family of header cells.                                                     |
-| `--table-header-font-weight`    | `600`     | font-weight      | Font weight of header cells.                                                     |
-| `--table-header-letter-spacing` | `0.02em`  | letter-spacing   | Letter spacing of header text.                                                   |
-| `--table-header-text-transform` | `-`       | text-transform   | Text transform of header cells (e.g. `uppercase`, `capitalize`).                 |
-| `--table-header-color`          | `#6b7280` | color            | Text color of header cells. Falls back to `--table-header-font-color`.           |
-| `--table-header-sticky-top`     | `0`       | top              | Top offset for sticky headers. Use when a fixed navbar is above the table.       |
+| Variable                           | Default   | CSS Property     | Description                                                                                       |
+| ---------------------------------- | --------- | ---------------- | ------------------------------------------------------------------------------------------------- |
+| `--table-header-background`        | `#f9fafb` | background-color | Background color of header cells. Falls back to `--table-header-border-bgcolor`.                  |
+| `--table-header-font-size`         | `13px`    | font-size        | Font size of header cells.                                                                        |
+| `--table-header-font-family`       | `-`       | font-family      | Font family of header cells.                                                                      |
+| `--table-header-font-weight`       | `600`     | font-weight      | Font weight of header cells.                                                                      |
+| `--table-header-letter-spacing`    | `0.02em`  | letter-spacing   | Letter spacing of header text.                                                                    |
+| `--table-header-text-transform`    | `-`       | text-transform   | Text transform of header cells (e.g. `uppercase`, `capitalize`).                                  |
+| `--table-header-color`             | `#6b7280` | color            | Text color of header cells. Falls back to `--table-header-font-color`.                            |
+| `--table-header-sticky-top`        | `0`       | top              | Top offset for sticky headers. Use when a fixed navbar is above the table.                        |
+| `--table-header-border`            | `-`       | border           | Border on header cells.                                                                           |
+| `--table-header-border-bgcolor`    | `-`       | background-color | Fallback background for header cells when `--table-header-background` is unset.                   |
+| `--table-header-font-color`        | `-`       | color            | Fallback text color for header cells when `--table-header-color` is unset.                        |
+| `--table-header-justify`           | `-`       | justify-content  | Horizontal alignment of a header cell's label + sort-icon + tooltip-icon group.                   |
+| `--table-header-tooltip-underline` | `-`       | text-decoration  | Underline style on header labels that carry a `tooltip`, when `headerTooltipIcon` is not set.     |
+| `--table-filter-active-color`      | `-`       | color            | Header label/icon color while that column's `filter` dropdown is active (a selection is applied). |
 
 ### Data Cells
 
@@ -558,13 +580,78 @@ Override these custom properties to theme the component.
 | `--table-content-color`                   | `#111827`                                        | color            | Text color of data cells. Falls back to `--table-content-font-color`.                       |
 | `--table-col-highlight-background`        | `#f3f9ff`                                        | background-color | Background of a `highlighted: true` column's body cells. Row hover/selection paint over it. |
 | `--table-col-highlight-header-background` | falls back to `--table-col-highlight-background` | background-color | Background of a `highlighted: true` column's header cell.                                   |
+| `--table-content-border-bgcolor`          | `-`                                              | background-color | Fallback background for data cells when `--table-content-background` is unset.              |
+| `--table-content-font-color`              | `-`                                              | color            | Fallback text color for data cells when `--table-content-color` is unset.                   |
 
 ### Built-in Cells
 
-| Variable                       | Default | CSS Property  | Description                                                          |
-| ------------------------------ | ------- | ------------- | -------------------------------------------------------------------- |
-| `--table-cell-icon-size`       | `16px`  | width, height | Size of icons in `icon-label` cells and icon-capable `button` cells. |
-| `--table-cell-input-icon-size` | `16px`  | width, height | Size of the leading icon inside an `input` cell (`iconUrl`).         |
+| Variable                                    | Default                          | CSS Property     | Description                                                                                                                   |
+| ------------------------------------------- | -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `--table-cell-icon-size`                    | `16px`                           | width, height    | Size of icons in `icon-label` cells and icon-capable `button` cells.                                                          |
+| `--table-cell-input-icon-size`              | `16px`                           | width, height    | Size of the leading icon inside an `input` cell (`iconUrl`).                                                                  |
+| `--table-interactive-width`                 | `auto`                           | width            | Width of the wrapper around interactive built-in cells (`toggle`, `select`, `input`, `button`, `action-group`, `popup-menu`). |
+| `--table-cell-icon-color`                   | `-`                              | color            | Color of icons in `icon-label` cells and icon-capable `button` cells.                                                         |
+| `--table-cell-icon-button-color`            | `-`                              | color            | Color of an icon-only `button` cell's ghost control.                                                                          |
+| `--table-cell-icon-button-hover-background` | `-`                              | background-color | Hover background of an icon-only `button` cell's ghost control.                                                               |
+| `--table-cell-primary-color`                | `-`                              | color            | Ink of the primary line in `two-line-text` / `image-two-line-text` cells.                                                     |
+| `--table-cell-primary-font-size`            | `-`                              | font-size        | Font size of the primary line in `two-line-text` / `image-two-line-text` cells.                                               |
+| `--table-cell-secondary-color`              | `-`                              | color            | Ink of the secondary line in `two-line-text` / `image-two-line-text` cells.                                                   |
+| `--table-cell-secondary-font-size`          | `-`                              | font-size        | Font size of the secondary line in `two-line-text` / `image-two-line-text` cells.                                             |
+| `--table-cell-inline-gap`                   | `-`                              | gap              | Horizontal gap between a leading icon/thumbnail and its label/text in a built-in cell.                                        |
+| `--table-cell-line-gap`                     | `-`                              | gap              | Vertical gap between the primary and secondary lines in a two-line cell.                                                      |
+| `--table-cell-thumb-size`                   | `32px`                           | width, height    | Size of the `image-two-line-text` cell's thumbnail image.                                                                     |
+| `--table-cell-thumb-radius`                 | falls back to `--radius` (`4px`) | border-radius    | Corner rounding of the thumbnail image.                                                                                       |
+| `--table-cell-thumb-placeholder-background` | `-`                              | background-color | Background of the thumbnail placeholder shown when `imageUrl` is unset or fails to load.                                      |
+| `--table-cell-thumb-placeholder-color`      | `-`                              | color            | Ink/icon color of the thumbnail placeholder.                                                                                  |
+| `--table-cell-thumb-placeholder-font-size`  | `-`                              | font-size        | Font size of the thumbnail placeholder's fallback glyph.                                                                      |
+| `--table-tag-array-gap`                     | `-`                              | gap              | Gap between chips in a `tag-array` cell.                                                                                      |
+| `--table-link-color`                        | `-`                              | color            | Text color of a `link` cell's anchor.                                                                                         |
+| `--table-link-decoration`                   | `-`                              | text-decoration  | Text decoration of a `link` cell's anchor.                                                                                    |
+| `--table-link-copy-color`                   | `-`                              | color            | Color of a `link` cell's copy-to-clipboard icon.                                                                              |
+| `--table-link-copy-hover-background`        | `-`                              | background-color | Hover background of a `link` cell's copy-to-clipboard icon.                                                                   |
+| `--table-trend-up-color`                    | `-`                              | color            | Ink of a `compare` cell's trend row when the trend is positive.                                                               |
+| `--table-trend-down-color`                  | `-`                              | color            | Ink of a `compare` cell's trend row when the trend is negative.                                                               |
+| `--table-trend-flat-color`                  | `-`                              | color            | Ink of a `compare` cell's trend row when `trendPercent` is 0 or only `trendLabel` is set.                                     |
+| `--table-trend-gap`                         | `-`                              | gap              | Gap between the trend arrow/icon and its text.                                                                                |
+| `--table-trend-icon-size`                   | `-`                              | width, height    | Size of the trend up/down arrow icon.                                                                                         |
+
+### Row Numbers
+
+Style the leading sequence column shown when `rowNumberColumn` is true.
+
+| Variable                       | Default | CSS Property | Description                                    |
+| ------------------------------ | ------- | ------------ | ---------------------------------------------- |
+| `--table-row-number-col-width` | `-`     | width        | Width of the row-number header and data cells. |
+| `--table-row-number-align`     | `-`     | text-align   | Text alignment of the row number.              |
+| `--table-row-number-color`     | `-`     | color        | Text color of the row number.                  |
+
+### Bulk Toolbar
+
+Style the bar rendered above the table by `toolbarSlot` while `checkboxSelection` is non-empty.
+
+| Variable                        | Default                          | CSS Property     | Description                                                                                      |
+| ------------------------------- | -------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `--table-toolbar-background`    | `#f9fafb`                        | background-color | Background of the toolbar bar.                                                                   |
+| `--table-toolbar-border`        | `1px solid #e5e7eb`              | border           | Border of the toolbar bar.                                                                       |
+| `--table-toolbar-border-radius` | falls back to `--radius` (`4px`) | border-radius    | Corner rounding of the toolbar bar.                                                              |
+| `--table-toolbar-padding`       | `8px 12px`                       | padding          | Inner padding of the toolbar bar.                                                                |
+| `--table-toolbar-gap`           | `-`                              | gap              | Gap between the toolbar's own content and the table below it, or within `toolbarSlot`'s content. |
+| `--table-toolbar-margin-bottom` | `-`                              | margin-bottom    | Space between the toolbar and the table.                                                         |
+
+### Inline Search
+
+A second search-input mode (`searchConfig.displayMode: 'inline'`) — a trigger icon that expands into a text field, styled independently of the toolbar Search Bar above.
+
+| Variable                                | Default | CSS Property  | Description                                       |
+| --------------------------------------- | ------- | ------------- | ------------------------------------------------- |
+| `--table-inline-search-trigger-padding` | `-`     | padding       | Padding of the collapsed search trigger icon.     |
+| `--table-inline-search-icon-color`      | `-`     | color         | Color of the search icon.                         |
+| `--table-inline-search-icon-size`       | `-`     | width, height | Size of the search icon.                          |
+| `--table-inline-search-input-width`     | `-`     | width         | Width of the expanded text field.                 |
+| `--table-inline-search-gap`             | `-`     | gap           | Gap between the icon and the expanded text field. |
+| `--table-inline-search-clear-color`     | `-`     | color         | Color of the clear (✕) button icon.               |
+| `--table-inline-search-clear-icon-size` | `-`     | width, height | Size of the clear button icon.                    |
+| `--table-inline-search-clear-padding`   | `-`     | padding       | Padding of the clear button's hit area.           |
 
 ### Rows
 
@@ -600,11 +687,15 @@ Override these custom properties to theme the component.
 
 ### Footer
 
-| Variable                    | Default             | CSS Property     | Description                                                  |
-| --------------------------- | ------------------- | ---------------- | ------------------------------------------------------------ |
-| `--table-footer-border`     | `1px solid #e5e7eb` | border-top       | Top border of the footer region rendered by `paginatorSlot`. |
-| `--table-footer-padding`    | `8px 16px`          | padding          | Padding inside the footer region.                            |
-| `--table-footer-background` | `transparent`       | background-color | Background color of the footer region.                       |
+| Variable                            | Default             | CSS Property     | Description                                                                                            |
+| ----------------------------------- | ------------------- | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `--table-footer-border`             | `1px solid #e5e7eb` | border-top       | Top border of the footer region rendered by `paginatorSlot`.                                           |
+| `--table-footer-padding`            | `8px 16px`          | padding          | Padding inside the footer region.                                                                      |
+| `--table-footer-background`         | `transparent`       | background-color | Background color of the footer region.                                                                 |
+| `--table-paginator-gap`             | `-`                 | gap              | Gap between the range text, page-size selector, and steppers in the built-in paginator (`pagination`). |
+| `--table-paginator-range-color`     | `-`                 | color            | Text color of the "{from}-{to} of {total}" range summary.                                              |
+| `--table-paginator-range-font-size` | `-`                 | font-size        | Font size of the range summary.                                                                        |
+| `--table-paginator-size-width`      | `-`                 | width            | Width of the page-size `Select`.                                                                       |
 
 ### Checkbox Selection
 
@@ -679,6 +770,116 @@ type TableSearchConfig = {
   searchableColumnIndices?: number[];
   /** Value for the data-pw attribute on the search input element. */
   testId?: string;
+};
+
+// Helper aliases the two declarations below build on. All are exported from
+// the package alongside TableRow/TableColumn.
+type TableCellValue = JSONValue;
+
+type TableColumnType =
+  | 'text'
+  | 'tag'
+  | 'text-tag'
+  | 'two-line-text'
+  | 'icon-label'
+  | 'image-two-line-text'
+  | 'tag-array'
+  | 'avatar-stack'
+  | 'compare'
+  | 'toggle'
+  | 'link'
+  | 'select'
+  | 'input'
+  | 'button'
+  | 'action-group'
+  | 'popup-menu'
+  | 'custom';
+
+// Per-column overrides for the data-pw suffixes built-in renderers emit.
+type TableBuiltinCellTestIdSuffixes = {
+  icon?: string;
+  thumbnail?: string;
+  thumbnailPlaceholder?: string;
+  tag?: string;
+  trendUp?: string;
+  trendDown?: string;
+  menu?: string;
+  menuTrigger?: string;
+  popup?: string;
+  popupTrigger?: string;
+  link?: string;
+  copy?: string;
+  linkCopied?: string;
+};
+
+type TableColumnFilterConfig = {
+  options: Array<{ label: string; value: string }>;
+  selectedValue?: string | null;
+  onFilterChange?: (value: string | null) => void;
+};
+
+// Keyed row shape for the keyed column model: cell values addressed by
+// TableColumn.id instead of array position.
+type TableRow = Record<string, TableCellValue>;
+
+type TableColumn = {
+  id: string;
+  label: string;
+  /** Built-in renderer selection; defaults to 'text'. */
+  type?: TableColumnType;
+  /** Per-column sort opt-out; defaults to the table-wide `sortable` prop. */
+  sortable?: boolean;
+  testId?: string;
+  /** Column-scoped renderer, receiving (row, displayIndex, originalIndex). Required when type is 'custom'. */
+  cell?: Snippet<[TableRow, number, number]>;
+  tooltip?: string;
+  align?: 'left' | 'center' | 'right';
+  width?: string;
+  maxWidth?: string;
+  testIdSuffixes?: TableBuiltinCellTestIdSuffixes;
+  /** Paints this column's header/body cells with the highlight wash. */
+  highlighted?: boolean;
+  filter?: TableColumnFilterConfig;
+  /** Extracts the comparable value for client-side sorting (currency/date parsing stays in the consumer). */
+  getSortValue?: (row: TableRow, rowIndex: number) => string | number | boolean;
+  onToggle?: (rowIndex: number, checked: boolean, originalIndex: number) => void;
+  onSelect?: (rowIndex: number, selectedId: string, originalIndex: number) => void;
+  onInput?: (rowIndex: number, value: string, originalIndex: number) => void;
+  onButtonClick?: (rowIndex: number, originalIndex: number) => void;
+  onPrimaryAction?: (rowIndex: number, originalIndex: number) => void;
+  onMenuAction?: (rowIndex: number, itemId: string, originalIndex: number) => void;
+};
+
+type TablePaginationConfig = {
+  /** 'client' slices rows internally. 'server' leaves rows untouched and drives chrome from page/totalItems/hasMore. */
+  mode?: 'client' | 'server';
+  /** 1-indexed current page. Server mode: controlled by the consumer. */
+  page?: number;
+  /** Rows per page. Default 10. */
+  pageSize?: number;
+  /** Page-size selector options. Default [10, 25, 50, 100]; [] hides the selector. */
+  pageSizeOptions?: number[];
+  /** Total row count (server mode). Client mode derives it from the data. */
+  totalItems?: number;
+  hasMore?: boolean;
+  /** Disables the paginator and page-size selector during a fetch. */
+  isLoading?: boolean;
+  /** Keeps the footer visible even on a single page. Default false. */
+  showFooterOnSinglePage?: boolean;
+  /** Range-summary-only footer; suppresses the page-size selector and steppers. Implies showFooterOnSinglePage. */
+  hideControls?: boolean;
+  hidePageSizeSelector?: boolean;
+  hideSteppers?: boolean;
+  /** Range text override; default "{from}-{to} of {total}". */
+  rangeLabel?: (from: number, to: number, total: number) => string;
+  /** Explicit data-pw for the range span; wins over the testId-derived default. */
+  rangeTestId?: string;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  onLoadMore?: () => void;
+  testId?: string;
+  prevButtonTestId?: string;
+  nextButtonTestId?: string;
 };
 ```
 

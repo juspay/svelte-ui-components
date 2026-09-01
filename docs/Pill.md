@@ -58,7 +58,7 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 | dismissible | `boolean` | No       | `false` | When true, shows a small X button after the text that triggers the ondismiss event when clicked.                                                                       |
 | disabled    | `boolean` | No       | `false` | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                          |
 | testId      | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                |
-| title       | `string`  | No       | `-`     | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                                             |
+| title       | `string`  | No       | `-`     | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                          |
 | classes     | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets
@@ -100,6 +100,7 @@ Override these custom properties to theme the component.
 | `--pill-max-width`           | `-`                                       | max-width        | Maximum width of the pill. Text is truncated with ellipsis when exceeded. |
 | `--pill-flex-shrink`         | `-`                                       | flex-shrink      | Flex shrink behavior of the pill.                                         |
 | `--pill-text-overflow`       | `ellipsis`                                | text-overflow    | How overflowing text is displayed (e.g., ellipsis or clip).               |
+| `--pill-text-white-space`    | `nowrap`                                  | white-space      | Whether the pill's text wraps.                                            |
 | `--pill-hover-background`    | `var(--pill-background, #d0d0d0)`         | background-color | Background color when hovering over the pill.                             |
 | `--pill-hover-color`         | `var(--pill-color, #333333)`              | color            | Text color when hovering over the pill.                                   |
 | `--pill-disabled-opacity`    | `0.4`                                     | opacity          | Opacity of the pill when disabled.                                        |

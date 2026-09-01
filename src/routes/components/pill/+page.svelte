@@ -98,6 +98,10 @@
   />
 </div>
 
+<div class="demo-row" style="max-width: 140px;">
+  <Pill text="Wrapping pill text demo" classes="pill-wrap" testId="pill-wrap-demo" />
+</div>
+
 <style>
   :global(.pill-info) {
     --pill-background: #d1ecf1;
@@ -114,5 +118,9 @@
   /* --pill-line-height override demo: the pill's own line-height, not its wrapping row's. */
   :global(.pill-relaxed-line-height) {
     --pill-line-height: 1.4;
+  }
+
+  :global(.pill-wrap) {
+    --pill-text-white-space: normal;
   }
 </style>

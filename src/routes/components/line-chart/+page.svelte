@@ -317,6 +317,22 @@
   />
 </div>
 
+<h3>minHeight / maxHeight bounds</h3>
+<p>
+  <code>minHeight</code>/<code>maxHeight</code> clamp the chart's rendered height regardless of the computed
+  aspect-ratio height — this one is forced to exactly 260px despite a wide aspect ratio that would otherwise
+  render much shorter.
+</p>
+<div class="demo-row">
+  <LineChart
+    series={singleSeries}
+    aspectRatio={16 / 3}
+    minHeight={260}
+    maxHeight={260}
+    testId="line-height-bounds-chart"
+  />
+</div>
+
 <style>
   .highlight-controls {
     display: flex;

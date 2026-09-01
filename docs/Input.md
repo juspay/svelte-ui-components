@@ -141,8 +141,8 @@ Override these custom properties to theme the component.
 | `--input-label-msg-padding`         | `-`                                                    | padding          | Padding inside the label.                                                   |
 | `--input-error-msg-text-weight`     | `400`                                                  | font-weight      | Font weight of the error message.                                           |
 | `--input-error-msg-text-size`       | `12px`                                                 | font-size        | Font size of the error message.                                             |
-| `--input-error-msg-text-color`      | `#fa1405`                                              | color            | Color used for the error border and error message text.                     |
-| `--input-mandatory-color`           | `var(--input-error-msg-text-color, #fa1405)`           | color            | Color of the mandatory asterisk.                                            |
+| `--input-error-msg-text-color`      | `#c5120a`                                              | color            | Color used for the error border and error message text (6.06:1 on white, AA). |
+| `--input-mandatory-color`           | `var(--input-error-msg-text-color, #c5120a)`           | color            | Color of the mandatory asterisk.                                            |
 | `--input-mandatory-gap`             | `2px`                                                  | margin-left      | Gap between the label text and the mandatory asterisk.                      |
 | `--input-icon-size`                 | `20px`                                                 | width / height   | Box size of the leftIcon / rightIcon.                                       |
 | `--input-icon-gap`                  | `12px`                                                 | left / right     | Icon inset from the field edge (also drives the field's icon-side padding). |
@@ -155,15 +155,21 @@ Override these custom properties to theme the component.
 | `--input-error-msg-padding`         | `-`                                                    | padding          | Padding inside the error message.                                           |
 | `--input-info-msg-text-weight`      | `400`                                                  | font-weight      | Font weight of the info message.                                            |
 | `--input-info-msg-text-size`        | `12px`                                                 | font-size        | Font size of the info message.                                              |
-| `--input-info-msg-text-color`       | `#fa1405`                                              | color            | Color of the info message text.                                             |
+| `--input-info-msg-text-color`       | `#52525b`                                              | color            | Color of the info message text. Deliberately neutral, not the error color — see Accessibility. |
 | `--input-info-msg-margin`           | `-`                                                    | margin           | Margin around the info message.                                             |
 | `--input-info-msg-padding`          | `-`                                                    | padding          | Padding inside the info message.                                            |
 | `--input-placeholder-color`         | `-`                                                    | color            | Color of placeholder text.                                                  |
-| `--input-error-border`              | `1px solid var(--input-error-msg-text-color, #fa1405)` | border           | Border of the input when in error state.                                    |
+| `--input-error-border`              | `1px solid var(--input-error-msg-text-color, #c5120a)` | border           | Border of the input when in error state.                                    |
 | `--input-char-count-size`           | `12px`                                                 | font-size        | Font size of the textarea character counter.                                |
 | `--input-char-count-color`          | `#98a2b3`                                              | color            | Color of the character counter.                                             |
-| `--input-char-count-limit-color`    | `#fa1405`                                              | color            | Counter color when the value reaches `maxLength`.                           |
+| `--input-char-count-limit-color`    | `#c5120a`                                              | color            | Counter color when the value reaches `maxLength`.                           |
 | `--input-char-count-margin`         | `4px 0 0`                                              | margin           | Margin around the character counter.                                        |
+
+## Accessibility
+
+- The error message is a `role="alert"` live region, and both it and `infoMessage` are referenced by the field's `aria-describedby` (error first, then helper text) — a screen-reader user hears the same description a sighted user sees, in the same order.
+- `infoMessage` renders in a neutral color (`--input-info-msg-text-color`), distinct from the error message's red (`--input-error-msg-text-color`). They used to share the same default, so helper text with no error present visually read as a failed field — color was the only thing telling them apart, which is what WCAG 1.4.1 (Use of Color) exists to prevent. Consumers who want helper text to look red can still set `--input-info-msg-text-color` themselves.
+- Both message colors default to values that clear WCAG AA contrast (4.5:1) against a white background at their 12px size.
 
 ## Type Reference
 

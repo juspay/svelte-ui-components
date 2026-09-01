@@ -435,7 +435,12 @@
     </div>
   {/if}
   {#if isShowingInfo}
-    <div id={infoMessageId} class="info-message">
+    <div
+      id={infoMessageId}
+      class="info-message"
+      data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
+      testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
+    >
       {infoMessage}
     </div>
   {/if}
@@ -492,11 +497,11 @@
   .input-error {
     --input-focus-border: var(
       --input-error-border,
-      1px solid var(--input-error-msg-text-color, #fa1405)
+      1px solid var(--input-error-msg-text-color, #c5120a)
     ) !important;
     --input-border: var(
       --input-error-border,
-      1px solid var(--input-error-msg-text-color, #fa1405)
+      1px solid var(--input-error-msg-text-color, #c5120a)
     ) !important;
   }
 
@@ -523,7 +528,7 @@
   }
 
   .input-mandatory-asterisk {
-    color: var(--input-mandatory-color, var(--input-error-msg-text-color, #fa1405));
+    color: var(--input-mandatory-color, var(--input-error-msg-text-color, #c5120a));
     margin-left: var(--input-mandatory-gap, 2px);
   }
 
@@ -591,7 +596,9 @@
   .error-message {
     font-weight: var(--input-error-msg-text-weight, 400);
     font-size: var(--input-error-msg-text-size, 12px);
-    color: var(--input-error-msg-text-color, #fa1405);
+    /* #c5120a clears WCAG AA (6.06:1 on white) at this 12px size; the prior #fa1405
+       default was only 4.06:1, so the error message itself failed to be legible. */
+    color: var(--input-error-msg-text-color, #c5120a);
     margin: var(--input-error-msg-margin);
     padding: var(--input-error-msg-padding);
   }
@@ -599,7 +606,11 @@
   .info-message {
     font-weight: var(--input-info-msg-text-weight, 400);
     font-size: var(--input-info-msg-text-size, 12px);
-    color: var(--input-info-msg-text-color, #fa1405);
+    /* Neutral on purpose -- this used to default to the same red as .error-message,
+       so helper text with no error visually read as a failed field (color-alone
+       signalling, WCAG 1.4.1). #52525b is the muted-text tone already used for
+       ChatToolStatus/ThinkingIndicator elsewhere in this library, at 7.73:1. */
+    color: var(--input-info-msg-text-color, #52525b);
     margin: var(--input-info-msg-margin);
     padding: var(--input-info-msg-padding);
   }
@@ -613,7 +624,7 @@
   }
 
   .input-char-count.at-limit {
-    color: var(--input-char-count-limit-color, var(--input-error-msg-text-color, #fa1405));
+    color: var(--input-char-count-limit-color, var(--input-error-msg-text-color, #c5120a));
   }
 
   ::placeholder {

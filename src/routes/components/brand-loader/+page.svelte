@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import BrandLoader from '$lib/BrandLoader/BrandLoader.svelte';
 </script>
 
@@ -9,7 +10,7 @@
 
 <div class="demo-row">
   <BrandLoader
-    brandLogoURL="/demo-media/placeholder-square.svg"
+    brandLogoURL="{base}/demo-media/placeholder-square.svg"
     brandText="Loading"
     subText="Please wait..."
     testId="brand-loader-default-demo"

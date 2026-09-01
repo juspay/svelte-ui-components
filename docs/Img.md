@@ -22,7 +22,7 @@ An image component with automatic fallback. If the primary `src` fails to load (
 | testId   | `string`         | No       | `-`     | Test identifier applied as `data-pw` attribute on the `<img>` element for Playwright test selectors.                                                                  |
 | classes  | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 | inlineSvg | `boolean`       | No       | `false` | Fetch `.svg` / `data:image/svg+xml` sources and inline their markup into an `<svg>` host so page CSS (`currentColor`, fill/stroke overrides) applies. Non-SVG sources always render the plain `<img>`. If fetching or parsing fails, the component falls back to the plain `<img>` (and from there to the regular `fallback`/`onerror` chain). |
-| transformSvg | `(svg: string) => string` | No | `-` | Hook to rewrite the fetched SVG markup before it is inlined (e.g. recolour hardcoded fills). Providing a transform implies `inlineSvg`. The inlining effect re-runs when the prop identity changes, so a closure over reactive state (e.g. a theme colour) re-renders live. JS-only prop (not exposed as a web-component attribute). |
+| transformSvg | `(svg: string) => string` | No | `-` | Hook to rewrite the fetched SVG markup before it is inlined (e.g. recolour hardcoded fills). Providing a transform implies `inlineSvg`. The inlining effect re-runs when the prop identity changes, so a closure over reactive state (e.g. a theme colour) re-renders live. Root attributes the transform adds are treated as caller intent and copied to the host even when outside the fetched-attribute allowlist (see SVG inlining below). JS-only prop (not exposed as a web-component attribute). |
 
 ## SVG inlining
 
@@ -44,6 +44,8 @@ Behaviour notes:
 
 - Non-SVG sources ignore both props and always render the plain `<img>`.
 - A failed fetch/parse for a given URL falls back to the plain `<img>` for that URL (which then drives the normal `fallback`/`onerror` chain); a changed `src` gets a fresh inlining attempt.
+- The fetched document is treated as untrusted content: only an allowlist of presentational, geometry, and accessibility attributes is copied from its root onto the live `<svg>` host — `xmlns`, `xmlns:xlink`, `viewBox`, `width`, `height`, `x`, `y`, `preserveAspectRatio`, `fill`/`fill-*`, `stroke`/`stroke-*`, `clip-rule`, `color`, `opacity`, `overflow`, `role`, `focusable`, and `aria-*`. Anything else from the fetched file — event handlers (`onload`, `onclick`, …), `id`, `style`, `class`, `data-*` — never reaches the live element, so a hostile SVG cannot inject script or clobber the `data-pw` test hook. Child elements are inlined as-is.
+- Root attributes that your own `transformSvg` hook **adds** (names not present on the fetched root) are caller intent and pass through unfiltered — e.g. a transform can stamp a `data-*` marker on the host.
 - Accessibility: the `<svg>` host gets `role="img"` + `aria-label` when `alt` is non-empty, and `aria-hidden="true"` when `alt` is empty (decorative).
 - All CSS variables below apply to the inlined `<svg>` host exactly as they do to the `<img>`.
 

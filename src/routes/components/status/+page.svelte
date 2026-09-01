@@ -31,7 +31,7 @@
 <div class="demo-row">
   <div data-pw="status-default-icon">
     <Status
-      statusIcon="https://picsum.photos/48/48?random=20"
+      statusIcon="/demo-media/status-success.svg"
       statusText="Payment Successful"
       statusDescription="Your order has been confirmed"
     />

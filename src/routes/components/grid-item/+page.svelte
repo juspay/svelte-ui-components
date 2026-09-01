@@ -8,7 +8,7 @@
 </div>
 
 <div class="demo-row">
-  <GridItem icon="https://picsum.photos/40/40?random=1" text="Photos" />
-  <GridItem icon="https://picsum.photos/40/40?random=2" text="Videos" />
-  <GridItem icon="https://picsum.photos/40/40?random=3" text="Music" />
+  <GridItem icon="/demo-media/placeholder-square.svg" text="Photos" />
+  <GridItem icon="/demo-media/placeholder-square.svg" text="Videos" />
+  <GridItem icon="/demo-media/placeholder-square.svg" text="Music" />
 </div>

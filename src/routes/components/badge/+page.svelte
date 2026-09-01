@@ -8,6 +8,6 @@
 </div>
 
 <div class="demo-row" style="align-items: center;">
-  <Badge image="https://picsum.photos/24/24?random=10" value="5" />
-  <Badge image="https://picsum.photos/24/24?random=11" value="12" />
+  <Badge image="/demo-media/placeholder-square.svg" value="5" />
+  <Badge image="/demo-media/placeholder-square.svg" value="12" />
 </div>

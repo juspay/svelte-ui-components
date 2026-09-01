@@ -355,7 +355,7 @@
       messages={chat.messages}
       bind:value
       bind:attachments
-      image="https://picsum.photos/64?random=7"
+      image="/demo-media/assistant-avatar.png"
       title="Shopping Assistant"
       subtitle="Online"
       placeholder="Ask anything…"

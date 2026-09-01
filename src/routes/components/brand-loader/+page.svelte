@@ -9,7 +9,7 @@
 
 <div class="demo-row">
   <BrandLoader
-    brandLogoURL="https://picsum.photos/64/64?random=40"
+    brandLogoURL="/demo-media/placeholder-square.svg"
     brandText="Loading"
     subText="Please wait..."
   />

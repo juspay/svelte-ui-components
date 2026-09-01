@@ -10,8 +10,8 @@
 <div class="demo-row">
   <IconStack
     icons={[
-      { type: 'image', content: 'https://picsum.photos/32/32?random=30' },
-      { type: 'image', content: 'https://picsum.photos/32/32?random=31' },
+      { type: 'image', content: '/demo-media/placeholder-square.svg' },
+      { type: 'image', content: '/demo-media/placeholder-square.svg' },
       { type: 'text', content: '+3' }
     ]}
   />

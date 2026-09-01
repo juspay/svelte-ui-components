@@ -2,6 +2,7 @@
   import Carousel from '$lib/Carousel/Carousel.svelte';
   import Card from '$lib/Card/Card.svelte';
   import type { CarouselView } from '$lib/Carousel/properties';
+  import LegacyPropertiesSlide from './LegacyPropertiesSlide.svelte';
 
   const promoViews: CarouselView[] = [
     {
@@ -15,6 +16,15 @@
     {
       component: Card,
       properties: { title: 'Free Shipping', description: 'On every order over $50.' }
+    }
+  ];
+
+  // A wrapper of the shape that was the ONLY way to use Carousel before slide
+  // properties were spread: it declares `properties` and reads the bag itself.
+  const legacyViews: CarouselView[] = [
+    {
+      component: LegacyPropertiesSlide,
+      properties: { label: 'legacy wrapper still receives its bag' }
     }
   ];
 </script>
@@ -51,6 +61,16 @@
     dotsWrapperTestId="carousel-manual-dots"
     dotTestId="carousel-manual-dot"
   />
+</div>
+
+<h2>Backward compatibility: a wrapper that reads <code>properties</code></h2>
+<p>
+  Before slide properties were spread, the only usable shape was a purpose-built wrapper that
+  declared a <code>properties</code> prop itself. Those wrappers still receive it, so the fix is not a
+  breaking change.
+</p>
+<div class="demo-row">
+  <Carousel views={legacyViews} testId="carousel-legacy-demo" />
 </div>
 
 <style>

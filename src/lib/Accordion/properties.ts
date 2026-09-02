@@ -28,4 +28,5 @@ export type OptionalAccordionProperties = {
 
 export type AccordionEventProperties = {
   ontoggle?: (expanded: boolean) => void;
+  onToggle?: (expanded: boolean) => void;
 };

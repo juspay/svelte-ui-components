@@ -33,7 +33,8 @@
     statusDescription = '',
     buttonProperties,
     classes,
-    onbuttonClick,
+    onbuttonClick: onbuttonClickLegacy,
+    onButtonClick,
     icon,
     descriptionSnippet,
     children,
@@ -45,6 +46,9 @@
   const statusIconFallback = $derived(
     statusIcon === LEGACY_DEFAULT_STATUS_ICON ? BUILTIN_STATUS_ICON : null
   );
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onbuttonClick = $derived(onButtonClick ?? onbuttonClickLegacy);
 </script>
 
 <div

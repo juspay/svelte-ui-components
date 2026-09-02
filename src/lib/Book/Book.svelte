@@ -14,9 +14,13 @@
     testId,
     previousIcon,
     nextIcon,
-    onpagechange,
+    onpagechange: onpagechangeLegacy,
+    onPageChange,
     classes
   }: BookProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onpagechange = $derived(onPageChange ?? onpagechangeLegacy);
 
   let startX = 0;
   let isDragging = false;

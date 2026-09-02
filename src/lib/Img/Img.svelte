@@ -1,8 +1,20 @@
 <script lang="ts">
   import type { ImgProperties } from './properties';
 
-  let { src, alt, fallback, onerror, classes, inlineSvg, transformSvg, testId }: ImgProperties =
-    $props();
+  let {
+    src,
+    alt,
+    fallback,
+    onerror: onerrorLegacy,
+    onError,
+    classes,
+    inlineSvg,
+    transformSvg,
+    testId
+  }: ImgProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onerror = $derived(onError ?? onerrorLegacy);
 
   let currentSrc = $derived(src);
   // Per-source failure marker: when inlining a given URL fails we fall back to

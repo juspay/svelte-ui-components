@@ -13,8 +13,12 @@
     dropdownIcon,
     classes,
     onclick,
-    onselect
+    onselect: onselectLegacy,
+    onSelect
   }: SplitButtonProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   let menuOpen = $state(false);
 

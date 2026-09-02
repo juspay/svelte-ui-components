@@ -58,8 +58,10 @@ export type OptionalStepperProperties = {
 
 export type StepperEventProperties = {
   onstepclick?: (event: { selectedIndex: number }) => void;
+  onStepClick?: (event: { selectedIndex: number }) => void;
   /** @deprecated Use `onstepclick` instead. */
   onhandleStepClick?: (event: { selectedIndex: number }) => void;
+  onHandleStepClick?: (event: { selectedIndex: number }) => void;
 };
 
 export type StepperProperties = MandatoryStepperProperties &
@@ -82,6 +84,7 @@ export type OptionalStepProperties = {
 
 export type StepEventProperties = {
   onclick?: (event: { selectedIndex: number }) => void;
+  onClick?: (event: { selectedIndex: number }) => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };
 

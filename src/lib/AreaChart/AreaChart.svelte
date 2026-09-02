@@ -51,11 +51,17 @@
     tooltipSnippet,
     empty,
     tooltipPortal = false,
-    onpointhover,
-    onpointclick,
+    onpointhover: onpointhoverLegacy,
+    onPointHover,
+    onpointclick: onpointclickLegacy,
+    onPointClick,
     testId,
     classes
   }: AreaChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onpointclick = $derived(onPointClick ?? onpointclickLegacy);
+  const onpointhover = $derived(onPointHover ?? onpointhoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

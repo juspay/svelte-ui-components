@@ -27,10 +27,16 @@
     moreLabel,
     selectable = false,
     selected = $bindable(null),
-    onrowselect,
-    onsettled,
+    onrowselect: onrowselectLegacy,
+    onRowSelect,
+    onsettled: onsettledLegacy,
+    onSettled,
     collapseDelayMs = 2600
   }: ThinkingIndicatorProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onrowselect = $derived(onRowSelect ?? onrowselectLegacy);
+  const onsettled = $derived(onSettled ?? onsettledLegacy);
 
   // `rows` being present at all (even `[]`) puts the indicator into trace mode: the
   // Accordion body renders the kind-aware trace instead of the `detail` paragraph,

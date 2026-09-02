@@ -95,6 +95,9 @@ export type OptionalMenuProperties = {
 
 export type MenuEventProperties = {
   onselect?: (item: MenuItem) => void;
+  onSelect?: (item: MenuItem) => void;
   onopen?: () => void;
+  onOpen?: () => void;
   onclose?: () => void;
+  onClose?: () => void;
 };

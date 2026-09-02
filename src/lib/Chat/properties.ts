@@ -53,12 +53,21 @@ export type OptionalChatProperties = {
 
 export type ChatEventProperties = {
   onsend?: (value: string, attachments: File[]) => void;
+  onSend?: (value: string, attachments: File[]) => void;
   onsuggestion?: (value: string, index: number) => void;
+  onSuggestion?: (value: string, index: number) => void;
   onclose?: () => void;
+  onClose?: () => void;
   onstop?: () => void;
+  onStop?: () => void;
   onvoice?: () => void;
+  onVoice?: () => void;
   onattach?: (files: File[]) => void;
+  onAttach?: (files: File[]) => void;
   onretry?: () => void;
+  onRetry?: () => void;
   onfeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
+  onFeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
   onscrollstate?: ChatMessageListProperties['onscrollstate'];
+  onScrollState?: ChatMessageListProperties['onscrollstate'];
 };

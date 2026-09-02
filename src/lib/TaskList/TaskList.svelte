@@ -4,7 +4,10 @@
   import Button from '../Button/Button.svelte';
   import type { TaskListProperties } from './properties';
 
-  let { rows, onretry, testId, classes }: TaskListProperties = $props();
+  let { rows, onretry: onretryLegacy, onRetry, testId, classes }: TaskListProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onretry = $derived(onRetry ?? onretryLegacy);
 
   // Rows appended in one update stagger relative to the batch, not the list start —
   // mirrors ThinkingTrace's growthWatcher so a host that streams rows in gets the

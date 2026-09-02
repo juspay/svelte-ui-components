@@ -38,4 +38,5 @@ export type MediaPlayerEventProperties = {
   onplay?: (event: Event) => void;
   onpause?: (event: Event) => void;
   onvolumechange?: (muted: boolean) => void;
+  onVolumeChange?: (muted: boolean) => void;
 };

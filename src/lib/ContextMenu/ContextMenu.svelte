@@ -8,11 +8,19 @@
     maxHeight = '240px',
     testId,
     children,
-    onselect,
-    onopen,
-    onclose,
+    onselect: onselectLegacy,
+    onSelect,
+    onopen: onopenLegacy,
+    onOpen,
+    onclose: oncloseLegacy,
+    onClose,
     classes
   }: ContextMenuProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onopen = $derived(onOpen ?? onopenLegacy);
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   let menuEl: HTMLDivElement | null = $state(null);
   let containerEl: HTMLDivElement | null = $state(null);

@@ -5,13 +5,17 @@
     expand = $bindable(false),
     children,
     trigger,
-    ontoggle,
+    ontoggle: ontoggleLegacy,
+    onToggle,
     triggerClasses,
     classes,
     testId,
     disabled = false,
     panelId
   }: AccordionProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const ontoggle = $derived(onToggle ?? ontoggleLegacy);
 
   /* The trigger and the panel are siblings, not ancestor/descendant, so nothing in the
      markup tells assistive technology which region the trigger's aria-expanded refers to.

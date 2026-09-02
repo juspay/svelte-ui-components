@@ -53,10 +53,14 @@
     interactiveLegend = false,
     hideLegendBelow = 360,
     tooltipSnippet,
-    onbarclick,
+    onbarclick: onbarclickLegacy,
+    onBarClick,
     testId,
     classes
   }: DualAxisBarChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onbarclick = $derived(onBarClick ?? onbarclickLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

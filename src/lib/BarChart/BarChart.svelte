@@ -91,11 +91,17 @@
     interactiveLegend = false,
     hideLegendBelow = 360,
     tooltipPortal = false,
-    onbarclick,
-    onbarhover,
+    onbarclick: onbarclickLegacy,
+    onBarClick,
+    onbarhover: onbarhoverLegacy,
+    onBarHover,
     testId,
     classes
   }: BarChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onbarclick = $derived(onBarClick ?? onbarclickLegacy);
+  const onbarhover = $derived(onBarHover ?? onbarhoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

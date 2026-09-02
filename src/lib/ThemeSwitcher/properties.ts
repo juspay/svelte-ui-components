@@ -22,4 +22,5 @@ export type OptionalThemeSwitcherProperties = {
 
 export type ThemeSwitcherEventProperties = {
   onchange?: (value: string, resolvedValue: string) => void;
+  onChange?: (value: string, resolvedValue: string) => void;
 };

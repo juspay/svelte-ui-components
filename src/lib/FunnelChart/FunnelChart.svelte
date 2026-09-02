@@ -28,9 +28,15 @@
     testId,
     classes,
     empty,
-    onstageclick,
-    onstagehover
+    onstageclick: onstageclickLegacy,
+    onStageClick,
+    onstagehover: onstagehoverLegacy,
+    onStageHover
   }: FunnelChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onstageclick = $derived(onStageClick ?? onstageclickLegacy);
+  const onstagehover = $derived(onStageHover ?? onstagehoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

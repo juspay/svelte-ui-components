@@ -44,6 +44,9 @@ export type OptionalChatBubbleProperties = {
 
 export type ChatBubbleEventProperties = {
   onopen?: () => void;
+  onOpen?: () => void;
   onclose?: () => void;
+  onClose?: () => void;
   ontoggle?: (open: boolean) => void;
+  onToggle?: (open: boolean) => void;
 };

@@ -27,12 +27,20 @@
     expanded = $bindable(false),
     expandedPanelWidth = $bindable(600),
     expandedPanelHeight = $bindable(760),
-    onopen,
-    onclose,
-    ontoggle,
+    onopen: onopenLegacy,
+    onOpen,
+    onclose: oncloseLegacy,
+    onClose,
+    ontoggle: ontoggleLegacy,
+    onToggle,
     testId,
     classes
   }: ChatBubbleProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onopen = $derived(onOpen ?? onopenLegacy);
+  const ontoggle = $derived(onToggle ?? ontoggleLegacy);
 
   const DRAG_THRESHOLD = 4;
 

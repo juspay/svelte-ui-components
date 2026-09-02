@@ -14,11 +14,15 @@
     rightContent,
     dismissIcon,
     onclick,
-    ondismiss,
+    ondismiss: ondismissLegacy,
+    onDismiss,
     classes,
     title,
     role = null
   }: BannerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const ondismiss = $derived(onDismiss ?? ondismissLegacy);
 
   let interactive = $derived(typeof onclick === 'function');
 

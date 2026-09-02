@@ -99,6 +99,9 @@ export type OptionalSelectProperties = {
 
 export type SelectEventProperties = {
   onchange?: (value: string[]) => void;
+  onChange?: (value: string[]) => void;
   onopen?: () => void;
+  onOpen?: () => void;
   onclose?: () => void;
+  onClose?: () => void;
 };

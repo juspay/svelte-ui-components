@@ -10,9 +10,15 @@
     testId,
     suppressRoleAndTabindex,
     suppressContainerTestId,
-    onstepclick,
-    onhandleStepClick
+    onstepclick: onstepclickLegacy,
+    onStepClick,
+    onhandleStepClick: onhandleStepClickLegacy,
+    onHandleStepClick
   }: StepperProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onhandleStepClick = $derived(onHandleStepClick ?? onhandleStepClickLegacy);
+  const onstepclick = $derived(onStepClick ?? onstepclickLegacy);
 
   const resolveStatus = (stepIndex: number, explicitStatus: StepStatus | null): StepStatus => {
     if (explicitStatus !== null) {

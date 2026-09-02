@@ -27,4 +27,5 @@ export type OptionalBookProperties = {
 
 export type BookEventProperties = {
   onpagechange?: (page: number) => void;
+  onPageChange?: (page: number) => void;
 };

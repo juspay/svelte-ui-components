@@ -69,5 +69,7 @@ export type OptionalPieChartProperties = {
 
 export type PieChartEventProperties = {
   onsliceclick?: (event: { index: number; slice: PieChartSlice }) => void;
+  onSliceClick?: (event: { index: number; slice: PieChartSlice }) => void;
   onslicehover?: (event: { index: number; slice: PieChartSlice } | null) => void;
+  onSliceHover?: (event: { index: number; slice: PieChartSlice } | null) => void;
 };

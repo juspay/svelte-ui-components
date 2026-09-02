@@ -18,4 +18,5 @@ export type OptionalSnippetProperties = {
 
 export type SnippetEventProperties = {
   oncopy?: () => void;
+  onCopy?: () => void;
 };

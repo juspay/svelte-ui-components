@@ -8,9 +8,13 @@
     disabled = false,
     checkboxLabel,
     testId,
-    onclick,
+    onclick: onclickLegacy,
+    onClick,
     classes
   }: CheckListItemProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclick = $derived(onClick ?? onclickLegacy);
 
   function handleClick(value: boolean): void {
     checked = value;

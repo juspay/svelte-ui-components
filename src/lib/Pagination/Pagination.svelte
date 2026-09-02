@@ -7,13 +7,17 @@
     siblingCount = 1,
     disabled = false,
     testId,
-    onchange,
+    onchange: onchangeLegacy,
+    onChange,
     classes,
     hasMore = false,
     prevButtonTestId,
     nextButtonTestId,
     onLoadMore
   }: PaginationProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
 
   function generatePages(total: number, current: number, siblings: number): (number | '...')[] {
     const pages: (number | '...')[] = [];

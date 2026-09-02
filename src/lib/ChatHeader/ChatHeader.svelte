@@ -14,11 +14,15 @@
     closeIcon,
     closeLabel = 'Close',
     showClose,
-    onclose,
+    onclose: oncloseLegacy,
+    onClose,
     children,
     testId,
     classes
   }: ChatHeaderProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
 
   let displayClose = $derived(showClose ?? typeof onclose === 'function');
 </script>

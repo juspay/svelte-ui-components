@@ -21,9 +21,13 @@
     testId,
     arrowPrevious,
     arrowNext,
-    onscrollposition,
+    onscrollposition: onscrollpositionLegacy,
+    onScrollPosition,
     classes
   }: ScrollerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onscrollposition = $derived(onScrollPosition ?? onscrollpositionLegacy);
 
   let containerEl: HTMLDivElement | null = $state(null);
   let canScrollPrev = $state(false);

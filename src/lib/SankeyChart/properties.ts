@@ -117,7 +117,11 @@ export type OptionalSankeyChartProperties = {
 
 export type SankeyChartEventProperties = {
   onnodeclick?: (event: { node: SankeyNode }) => void;
+  onNodeClick?: (event: { node: SankeyNode }) => void;
   onlinkclick?: (event: { link: SankeyLink }) => void;
+  onLinkClick?: (event: { link: SankeyLink }) => void;
   onnodehover?: (event: { node: SankeyNode } | null) => void;
+  onNodeHover?: (event: { node: SankeyNode } | null) => void;
   onlinkhover?: (event: { link: SankeyLink } | null) => void;
+  onLinkHover?: (event: { link: SankeyLink } | null) => void;
 };

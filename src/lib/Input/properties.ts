@@ -107,11 +107,18 @@ export type OptionalInputProperties = {
 
 export type InputEventProperties = {
   onInput?: (value: string, event: Event) => void;
+  oninput?: (value: string, event: Event) => void;
   onFocus?: (event: FocusEvent) => void;
+  onfocus?: (event: FocusEvent) => void;
   onFocusout?: (event: FocusEvent) => void;
+  onfocusout?: (event: FocusEvent) => void;
   onBlur?: (event: FocusEvent) => void;
+  onblur?: (event: FocusEvent) => void;
   onPaste?: (event: ClipboardEvent) => void;
+  onpaste?: (event: ClipboardEvent) => void;
   onClick?: (event: MouseEvent) => void;
+  onclick?: (event: MouseEvent) => void;
   onStateChange?: (state: ValidationState) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
+  onkeydown?: (event: KeyboardEvent) => void;
 };

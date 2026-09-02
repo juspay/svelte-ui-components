@@ -34,8 +34,10 @@
     tooltipSnippet,
     center,
     empty,
-    onsliceclick,
-    onslicehover,
+    onsliceclick: onsliceclickLegacy,
+    onSliceClick,
+    onslicehover: onslicehoverLegacy,
+    onSliceHover,
     testId,
     classes,
     semiCircle = false,
@@ -46,6 +48,10 @@
     changePercentage,
     changeInvertColors = false
   }: PieChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onsliceclick = $derived(onSliceClick ?? onsliceclickLegacy);
+  const onslicehover = $derived(onSliceHover ?? onslicehoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

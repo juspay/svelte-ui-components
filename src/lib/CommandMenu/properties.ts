@@ -29,5 +29,7 @@ export type OptionalCommandMenuProperties = {
 
 export type CommandMenuEventProperties = {
   onselect?: (item: CommandItem) => void;
+  onSelect?: (item: CommandItem) => void;
   onclose?: () => void;
+  onClose?: () => void;
 };

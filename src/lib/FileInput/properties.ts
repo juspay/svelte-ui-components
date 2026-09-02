@@ -16,5 +16,7 @@ export type FileInputProperties = {
   testId?: string;
   classes?: string;
   onfiles?: (files: File[]) => void;
+  onFiles?: (files: File[]) => void;
   onerror?: (message: string) => void;
+  onError?: (message: string) => void;
 };

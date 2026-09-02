@@ -13,12 +13,20 @@
     disabled = false,
     handleLabel = 'Resize',
     children,
-    onresize,
-    onresizestart,
-    onresizeend,
+    onresize: onresizeLegacy,
+    onResize,
+    onresizestart: onresizestartLegacy,
+    onResizeStart,
+    onresizeend: onresizeendLegacy,
+    onResizeEnd,
     testId,
     classes
   }: ResizableProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onresize = $derived(onResize ?? onresizeLegacy);
+  const onresizeend = $derived(onResizeEnd ?? onresizeendLegacy);
+  const onresizestart = $derived(onResizeStart ?? onresizestartLegacy);
 
   const DIRS: Record<ResizeEdge, { x: -1 | 0 | 1; y: -1 | 0 | 1 }> = {
     top: { x: 0, y: -1 },

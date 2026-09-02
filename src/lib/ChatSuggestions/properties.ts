@@ -66,4 +66,5 @@ export type OptionalChatSuggestionsProperties = {
 
 export type ChatSuggestionsEventProperties = {
   onselect?: (value: string, index: number) => void;
+  onSelect?: (value: string, index: number) => void;
 };

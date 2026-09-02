@@ -19,12 +19,20 @@
     testId,
     previousMonthIcon,
     nextMonthIcon,
-    onselect,
-    onrangeselect,
-    onmonthchange,
+    onselect: onselectLegacy,
+    onSelect,
+    onrangeselect: onrangeselectLegacy,
+    onRangeSelect,
+    onmonthchange: onmonthchangeLegacy,
+    onMonthChange,
     classes,
     initialMonth = null
   }: CalendarProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onmonthchange = $derived(onMonthChange ?? onmonthchangeLegacy);
+  const onrangeselect = $derived(onRangeSelect ?? onrangeselectLegacy);
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   const now = new SvelteDate();
   // Intentionally read initialMonth once (untracked) — it seeds the display month at mount

@@ -62,5 +62,7 @@ export type OptionalTabsProperties = {
 
 export type TabsEventProperties = {
   onchange?: (index: number, label: string) => void;
+  onChange?: (index: number, label: string) => void;
   onkeychange?: (key: string) => void;
+  onKeyChange?: (key: string) => void;
 };

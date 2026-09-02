@@ -26,12 +26,18 @@
     testId,
     content,
     footerSnippet,
-    onclose,
-    onheaderRightImageClick,
-    onheaderLeftImageClick,
-    onprimaryButtonClick,
-    onsecondaryButtonClick,
-    onoverlayClick,
+    onclose: oncloseLegacy,
+    onClose,
+    onheaderRightImageClick: onheaderRightImageClickLegacy,
+    onHeaderRightImageClick,
+    onheaderLeftImageClick: onheaderLeftImageClickLegacy,
+    onHeaderLeftImageClick,
+    onprimaryButtonClick: onprimaryButtonClickLegacy,
+    onPrimaryButtonClick,
+    onsecondaryButtonClick: onsecondaryButtonClickLegacy,
+    onSecondaryButtonClick,
+    onoverlayClick: onoverlayClickLegacy,
+    onOverlayClick,
     onkeydown,
     classes,
     overlayBackdropFilter,
@@ -40,6 +46,16 @@
     lockScroll = true,
     autoDismissAfter = null
   }: ModalProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onheaderLeftImageClick = $derived(onHeaderLeftImageClick ?? onheaderLeftImageClickLegacy);
+  const onheaderRightImageClick = $derived(
+    onHeaderRightImageClick ?? onheaderRightImageClickLegacy
+  );
+  const onoverlayClick = $derived(onOverlayClick ?? onoverlayClickLegacy);
+  const onprimaryButtonClick = $derived(onPrimaryButtonClick ?? onprimaryButtonClickLegacy);
+  const onsecondaryButtonClick = $derived(onSecondaryButtonClick ?? onsecondaryButtonClickLegacy);
 
   let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 

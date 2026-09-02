@@ -13,10 +13,14 @@
     loading = false,
     icon,
     chipClasses,
-    onselect,
+    onselect: onselectLegacy,
+    onSelect,
     testId,
     classes
   }: ChatSuggestionsProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   const labelOf = (item: ChatSuggestion): string => (typeof item === 'string' ? item : item.label);
 

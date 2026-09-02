@@ -80,8 +80,13 @@ describe('the real baseline', () => {
     expect(unresolved.map((u) => u.prop)).toEqual([]);
   });
 
-  it('never derives a target that collides with an existing prop on the component', () => {
-    const collisions: string[] = [];
+  it('declares each derived target exactly once on its component', () => {
+    // Before phase 1 this asserted the target was absent, which is what made
+    // the rename safe to plan. Phase 1 added every one of them, so absence is
+    // no longer the property worth holding — a *duplicate* is. Two declarations
+    // of the same prop is the shape a re-run of the generator would leave, and
+    // the one TypeScript would not necessarily reject.
+    const duplicated: string[] = [];
     for (const entry of baseline) {
       const [file, prop] = entry.split('::');
       const result = deriveEventName(prop, readSignature(join(process.cwd(), file), prop));
@@ -89,11 +94,12 @@ describe('the real baseline', () => {
         continue;
       }
       const source = readFileSync(join(process.cwd(), file), 'utf8');
-      const declared = new RegExp(`^\\s*${result.target}\\??:`, 'm');
-      if (declared.test(source)) {
-        collisions.push(`${file}::${prop} -> ${result.target}`);
+      const declared = new RegExp(`^\\s*${result.target}\\??\\s*:`, 'gm');
+      const count = source.match(declared)?.length ?? 0;
+      if (count !== 1) {
+        duplicated.push(`${file}::${result.target} declared ${count} time(s)`);
       }
     }
-    expect(collisions).toEqual([]);
+    expect(duplicated).toEqual([]);
   });
 });

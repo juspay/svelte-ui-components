@@ -8,10 +8,14 @@
     heading,
     caption,
     compact = false,
-    onclick,
+    onclick: onclickLegacy,
+    onClick,
     testId,
     classes
   }: FileDropzoneTriggerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclick = $derived(onClick ?? onclickLegacy);
 </script>
 
 {#if compact}

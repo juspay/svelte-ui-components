@@ -26,6 +26,7 @@ export type MandatoryToolCallLogProperties = {
 
 export type OptionalToolCallLogProperties = {
   onchipclick?: (index: number, chip: ToolCallChip) => void;
+  onChipClick?: (index: number, chip: ToolCallChip) => void;
   testId?: string;
   classes?: string;
 };

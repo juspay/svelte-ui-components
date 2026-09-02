@@ -73,18 +73,26 @@ export type OptionalComboboxProperties = {
 
 export type ComboboxEventProperties = {
   onselect?: (item: ComboboxItem) => void;
+  onSelect?: (item: ComboboxItem) => void;
   oninput?: (value: string) => void;
+  onInput?: (value: string) => void;
   onopen?: () => void;
+  onOpen?: () => void;
   onclose?: () => void;
+  onClose?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onfocus?: (event: FocusEvent) => void;
   onblur?: (event: FocusEvent) => void;
   /** Multi-select: fires whenever the selection changes (add, remove, or create). */
   onchange?: (selected: string[]) => void;
+  onChange?: (selected: string[]) => void;
   /** Multi-select: fires when a value is added. */
   onadd?: (value: string) => void;
+  onAdd?: (value: string) => void;
   /** Multi-select: fires when a value is removed. */
   onremove?: (value: string) => void;
+  onRemove?: (value: string) => void;
   /** Fires when the create row is chosen, with the trimmed query. */
   oncreate?: (value: string) => void;
+  onCreate?: (value: string) => void;
 };

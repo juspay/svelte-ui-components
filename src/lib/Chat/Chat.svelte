@@ -43,18 +43,38 @@
     stopIcon,
     voiceIcon,
     attachIcon,
-    onsend,
-    onsuggestion,
-    onclose,
-    onstop,
-    onvoice,
-    onattach,
-    onretry,
-    onfeedback,
-    onscrollstate,
+    onsend: onsendLegacy,
+    onSend,
+    onsuggestion: onsuggestionLegacy,
+    onSuggestion,
+    onclose: oncloseLegacy,
+    onClose,
+    onstop: onstopLegacy,
+    onStop,
+    onvoice: onvoiceLegacy,
+    onVoice,
+    onattach: onattachLegacy,
+    onAttach,
+    onretry: onretryLegacy,
+    onRetry,
+    onfeedback: onfeedbackLegacy,
+    onFeedback,
+    onscrollstate: onscrollstateLegacy,
+    onScrollState,
     testId,
     classes
   }: ChatProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onattach = $derived(onAttach ?? onattachLegacy);
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
+  const onretry = $derived(onRetry ?? onretryLegacy);
+  const onscrollstate = $derived(onScrollState ?? onscrollstateLegacy);
+  const onsend = $derived(onSend ?? onsendLegacy);
+  const onstop = $derived(onStop ?? onstopLegacy);
+  const onsuggestion = $derived(onSuggestion ?? onsuggestionLegacy);
+  const onvoice = $derived(onVoice ?? onvoiceLegacy);
 
   let showHeader = $derived(
     title.length > 0 ||

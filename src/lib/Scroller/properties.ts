@@ -35,4 +35,5 @@ export type OptionalScrollerProperties = {
 
 export type ScrollerEventProperties = {
   onscrollposition?: (position: ScrollPosition) => void;
+  onScrollPosition?: (position: ScrollPosition) => void;
 };

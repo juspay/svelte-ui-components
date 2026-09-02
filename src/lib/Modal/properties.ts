@@ -59,10 +59,16 @@ export type OptionalModalProperties = {
 
 export type ModalEventProperties = {
   onclose?: () => void;
+  onClose?: () => void;
   onheaderRightImageClick?: (event: MouseEvent) => void;
+  onHeaderRightImageClick?: (event: MouseEvent) => void;
   onheaderLeftImageClick?: (event: MouseEvent) => void;
+  onHeaderLeftImageClick?: (event: MouseEvent) => void;
   onprimaryButtonClick?: (event: MouseEvent) => void;
+  onPrimaryButtonClick?: (event: MouseEvent) => void;
   onsecondaryButtonClick?: (event: MouseEvent) => void;
+  onSecondaryButtonClick?: (event: MouseEvent) => void;
   onoverlayClick?: () => void;
+  onOverlayClick?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

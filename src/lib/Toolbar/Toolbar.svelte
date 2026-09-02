@@ -11,11 +11,15 @@
     rightContent,
     additionalContent,
     classes,
-    onbackClick,
+    onbackClick: onbackClickLegacy,
+    onBackClick,
     onkeydown,
     testId,
     headingTestId
   }: ToolbarProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onbackClick = $derived(onBackClick ?? onbackClickLegacy);
 
   // `backIcon={null}` (or '') has always meant "render no back control at all", and consumers
   // rely on it; only the DEFAULT changes, from a CDN image to the inline icon.

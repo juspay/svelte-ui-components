@@ -35,6 +35,9 @@ export type OptionalSplitInputProperties = {
 
 export type SplitInputEventProperties = {
   onchange?: (values: string[]) => void;
+  onChange?: (values: string[]) => void;
   oninput?: (values: string[]) => void;
+  onInput?: (values: string[]) => void;
   oncomplete?: (values: string[]) => void;
+  onComplete?: (values: string[]) => void;
 };

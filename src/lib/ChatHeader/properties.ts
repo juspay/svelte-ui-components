@@ -19,4 +19,5 @@ export type OptionalChatHeaderProperties = {
 
 export type ChatHeaderEventProperties = {
   onclose?: () => void;
+  onClose?: () => void;
 };

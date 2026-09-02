@@ -10,4 +10,5 @@ export type OptionalToggleProperties = {
 
 export type ToggleEventProperties = {
   onclick?: (checked: boolean) => void;
+  onClick?: (checked: boolean) => void;
 };

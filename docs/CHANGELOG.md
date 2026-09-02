@@ -2,43 +2,35 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.10)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.11)
 
-Img's inlineSvg path fetches remote markup and adopts it into the live
-document. Two ways that let a fetched file run script in the host page.
+The integration step has been advisory since it was added, carrying the note
+"flip continue-on-error off once a genuine baseline is triaged down to zero".
+That precondition is now met, so this removes it.
 
-Root attributes were copied wholesale, so a payload could plant onload/onclick,
-clobber the data-pw test hook, set an id (DOM clobbering) or override sizing
-via inline style. Root attributes now face an allowlist -- geometry, paint,
-and a11y metadata, the set real icon pipelines actually emit and that this
-repo's own assets carry.
+Why the old baseline was never real: every run of the job failed every spec
+with "browserType.launch: Executable doesn't exist" -- the browser-install
+step did not exist. The ~130-failing-specs count that justified
+continue-on-error was an artifact of a missing binary, not a regression count.
+Once the install landed the suite went green and has stayed green for 11
+consecutive runs across 8 branches. That was verified by reading the *step's*
+conclusion out of the jobs API rather than the job's, because
+continue-on-error forces the job to "success" no matter what the step did --
+so a green CI badge on these runs proved nothing on its own.
 
-Descendants were adopted wholesale too, which left the same vector open one
-element deeper: an event-handler content attribute becomes a live handler the
-moment its element is adopted, so &lt;image onerror&gt; inside the payload runs
-exactly like onerror on the root would. Guarding only the root would have
-looked like a fix while the hole stayed open -- verified by a test that fires
-a child handler for real rather than only asserting an attribute is absent.
-Descendants are now stripped of scripting elements, on* handlers, and
-javascript: URLs before adoption. A denylist there rather than an allowlist,
-because descendants legitimately carry the whole SVG geometry and paint
-vocabulary and enumerating it would break real artwork.
+Verified the gate actually gates, rather than assuming it: a deliberately
+failing spec exits `pnpm run test:integration` with code 1, which now fails
+the step and therefore the job. The full suite passes 354/354 on this branch.
 
-transformSvg's contract is preserved: when a transform is present the raw
-payload is parsed separately, and root attribute names absent from it were
-added by the caller's hook and pass through. Fetched names always face the
-allowlist, so an attacker's onload can never ride a transform. If the raw
-payload does not parse alone, nothing is attributable to the caller and the
-allowlist applies to everything.
+Also adds `retries: 2` under CI only. This is not there to hide failures --
+Playwright reports a test that failed then passed as "flaky", a status
+distinct from "passed", so the signal stays visible in the uploaded report
+while only reproducible failures block a merge. Confirmed it does not launder
+a real failure: the same deliberately-failing spec run with CI=true retried
+twice and still exited 1. Local runs keep 0 retries, since a flake you can
+reproduce is a flake you can fix.
 
-Separately: showIndicator shipped on Choicebox in #428 but never reached
-&lt;sui-choicebox&gt;, so web-component consumers could not use it. Added following
-the wrapper pattern used by the file's other booleans.
-
-Verified: tests fail for the right reasons before the fix (onload/onclick/
-data-pw landing on the host; child onerror surviving), 17 passed after across
-the new specs plus the existing Img/Choicebox/icon-slot suites. lint and check
-both exit 0.
+## [2.136.11](https://github.com/juspay/svelte-ui-components/compare/2.136.11..2.136.10) - 2 September 2026
 
 ## [2.136.10](https://github.com/juspay/svelte-ui-components/compare/2.136.10..2.136.9) - 2 September 2026
 

@@ -27,7 +27,7 @@
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run build:wc && npm run package",
     "test": "npm run test:integration && npm run test:unit",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod && npm run check:migrate",
     "check:codemod": "tsc -p scripts/codemod/tsconfig.json",
     "codemod": "node scripts/codemod/cli.ts",
     "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",
@@ -38,7 +38,9 @@
     "test:integration": "playwright test",
     "test:unit": "vitest",
     "test:visual": "scripts/visual-test.sh",
-    "test:visual:update": "scripts/visual-test.sh --update-snapshots"
+    "test:visual:update": "scripts/visual-test.sh --update-snapshots",
+    "migrate": "node scripts/migrate/cli.ts",
+    "check:migrate": "tsc -p scripts/migrate/tsconfig.json"
   },
   "exports": {
     ".": {

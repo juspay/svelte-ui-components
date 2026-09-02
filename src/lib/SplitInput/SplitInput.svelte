@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import Input from '$lib/Input/Input.svelte';
   import type { FieldConfig, SplitInputProperties } from './properties';
 
@@ -35,6 +36,31 @@
 
   function getFieldValue(index: number): string {
     return values.at(index) ?? '';
+  }
+
+  /**
+   * Writes the resolved state back onto the DOM element.
+   *
+   * Needed because the element can hold a value the state never had. Typing
+   * into a filled field produces a two-character string in the DOM, and when
+   * the character we resolve out of it happens to equal what was already
+   * stored -- overtyping 2 with another 2 -- the assignment is a no-op, Svelte
+   * sees no change, and nothing re-renders. The field is then left displaying
+   * "22" indefinitely while the state says "2".
+   */
+  async function syncFieldElement(index: number) {
+    // After the pending render, not before it: writing during the input handler
+    // is undone when Svelte flushes, and when the resolved value is unchanged
+    // there is no flush to piggyback on -- so the correction has to come last.
+    await tick();
+    const element = inputRefs.at(index)?.getInputRef();
+    if (element === null || typeof element === 'undefined') {
+      return;
+    }
+    const resolved = getFieldValue(index);
+    if (element.value !== resolved) {
+      element.value = resolved;
+    }
   }
 
   function commitValues() {
@@ -104,7 +130,19 @@
       } else {
         // Overtyping an already-filled field: keep the newest character and
         // advance, mirroring single-char entry.
-        values[index] = chars.slice(-1);
+        //
+        // Which character is "newest" cannot be assumed to be the last one.
+        // The browser inserts at the caret, and where the caret sits after a
+        // click on a filled single-character field is platform-dependent:
+        // Chromium on macOS puts it after the character, Chromium on Linux
+        // before it. So typing 7 into a field holding 2 yields "27" on one and
+        // "72" on the other, and slice(-1) silently picks the *old* digit on
+        // Linux. Removing one occurrence of the previous value identifies the
+        // newly typed character wherever it landed.
+        const previous = getFieldValue(index);
+        const remainder = previous.length === 1 ? chars.replace(previous, '') : '';
+        values[index] = remainder.length > 0 ? remainder.slice(-1) : chars.slice(-1);
+        void syncFieldElement(index);
         if (index < fieldCount - 1) {
           focusField(index + 1);
         }

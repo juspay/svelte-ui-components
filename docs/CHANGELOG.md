@@ -2,33 +2,45 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.9)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.10)
 
-Overtyping a filled single-character field took `chars.slice(-1)` -- "keep the
-newest character". But the browser inserts at the caret, and where the caret
-lands after clicking a filled field is platform-dependent: Chromium on macOS
-puts it after the character, on Linux before it. Typing 7 into a field holding
-2 therefore yields "27" on macOS and "72" on Linux, and slice(-1) silently
-kept the OLD digit on Linux.
+Img's inlineSvg path fetches remote markup and adopts it into the live
+document. Two ways that let a fetched file run script in the host page.
 
-This is why tests/splitinput-autofill-distribute.spec.ts passed locally on
-macOS and failed on CI. It was not a flake -- it failed all three attempts
-there, and reproduces deterministically in the Linux Playwright container.
-continue-on-error on the integration step is what kept it invisible.
+Root attributes were copied wholesale, so a payload could plant onload/onclick,
+clobber the data-pw test hook, set an id (DOM clobbering) or override sizing
+via inline style. Root attributes now face an allowlist -- geometry, paint,
+and a11y metadata, the set real icon pipelines actually emit and that this
+repo's own assets carry.
 
-Resolving the new character by removing one occurrence of the previous value
-identifies it wherever the browser inserted it.
+Descendants were adopted wholesale too, which left the same vector open one
+element deeper: an event-handler content attribute becomes a live handler the
+moment its element is adopted, so &lt;image onerror&gt; inside the payload runs
+exactly like onerror on the root would. Guarding only the root would have
+looked like a fix while the hole stayed open -- verified by a test that fires
+a child handler for real rather than only asserting an attribute is absent.
+Descendants are now stripped of scripting elements, on* handlers, and
+javascript: URLs before adoption. A denylist there rather than an allowlist,
+because descendants legitimately carry the whole SVG geometry and paint
+vocabulary and enumerating it would break real artwork.
 
-Second, related defect: when the resolved character equals what was already
-stored -- overtyping 2 with another 2 -- the assignment is a no-op, Svelte
-re-renders nothing, and the element is left displaying "22" while state says
-"2". The DOM is now resynced after tick(); writing during the input handler
-is undone by the pending flush, and when state does not change there is no
-flush to piggyback on, so the correction has to come last.
+transformSvg's contract is preserved: when a transform is present the raw
+payload is parsed separately, and root attribute names absent from it were
+added by the caller's hook and pass through. Fetched names always face the
+allowlist, so an attacker's onload can never ride a transform. If the raw
+payload does not parse alone, nothing is attributable to the caller and the
+allowlist applies to everything.
 
-Verified 7/7 on macOS and 7/7 in the Linux container. New tests pin the caret
-explicitly rather than inheriting the platform's choice, and fail for the right
-reasons against the unfixed component ("72" and "22").
+Separately: showIndicator shipped on Choicebox in #428 but never reached
+&lt;sui-choicebox&gt;, so web-component consumers could not use it. Added following
+the wrapper pattern used by the file's other booleans.
+
+Verified: tests fail for the right reasons before the fix (onload/onclick/
+data-pw landing on the host; child onerror surviving), 17 passed after across
+the new specs plus the existing Img/Choicebox/icon-slot suites. lint and check
+both exit 0.
+
+## [2.136.10](https://github.com/juspay/svelte-ui-components/compare/2.136.10..2.136.9) - 2 September 2026
 
 ## [2.136.9](https://github.com/juspay/svelte-ui-components/compare/2.136.9..2.136.8) - 1 September 2026
 

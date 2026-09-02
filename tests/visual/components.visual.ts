@@ -34,18 +34,24 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
  * excluded route is a known coverage hole, and the next person deserves to
  * find it here instead of discovering it when a regression ships.
  *
- * Both of these pass reliably when run on their own and fail intermittently
- * inside the full suite at any worker count, which points at load sensitivity
- * in how much work settles before capture rather than at anything in the
- * components. Everything that worked for the rest of the suite was tried on
- * them -- manual clock, longer settles, per-route viewport fitting, stripped
- * animations, stubbed network. Shipping them flaky would block unrelated PRs
- * at random, which is worse than admitting the gap.
+ * One route remains. Everything that worked for the rest of the suite was
+ * tried on it -- manual clock, longer settles, per-route viewport fitting,
+ * stripped animations, stubbed network -- and its height still moves between
+ * capture attempts. Shipping it flaky would block unrelated PRs at random,
+ * which is worse than admitting the gap.
+ *
+ * `task-list` used to sit here too. Its instability was the viewport-fitting
+ * problem, fixed since, and it is baselined now: re-check an entry here before
+ * assuming the reason still holds.
  */
 const EXCLUDED: Readonly<Record<string, string>> = {
+  // Measured across full-suite runs rather than assumed: the captured height
+  // walks 2029 -> 2035 -> 2121 -> 2150 -> 2059px within a single test's own
+  // retries, so no baseline is stable. The animated dots are pinned by the
+  // stylesheet, but the per-second elapsed counter changes the text on a real
+  // timer that the manual clock does not drive.
   'thinking-indicator':
-    'animated dots plus a per-second elapsed counter; unstable under suite load',
-  'task-list': 'one of the tallest demos with staged reveals; unstable under suite load'
+    'elapsed counter retimes the layout mid-capture; height varies 2029-2150px between attempts'
 };
 
 const FIXED_TIME = new Date('2026-01-15T09:30:00.000Z');

@@ -7,9 +7,7 @@ test.describe('Combobox — accessing the underlying input element', () => {
   // The real, working mechanism -- already implemented, just undocumented -- is `bind:this` on
   // the component instance plus the exported `getInputRef()` method, the same pattern Input
   // itself documents. This test proves the corrected docs' example is real, not just plausible.
-  test('getInputRef() returns the real DOM node, usable for focus management', async ({
-    page
-  }) => {
+  test('getInputRef() returns the real DOM node, usable for focus management', async ({ page }) => {
     await page.goto('/components/combobox');
 
     const combobox = page.getByTestId('combobox-input-ref-demo');

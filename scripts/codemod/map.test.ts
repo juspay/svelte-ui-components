@@ -9,13 +9,13 @@ import { PROP_PAIRS, directionConfig } from './map.ts';
  * The block sits immediately above the declaration, so walk upwards over the
  * contiguous comment lines and stop at the first line that is not one.
  */
-function docBlockFor(source: string, prop: string): string | undefined {
+function docBlockFor(source: string, prop: string): string | null {
   const lines = source.split('\n');
   const escaped = prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const declaration = new RegExp(`^\\s*${escaped}\\??\\s*:`);
   const index = lines.findIndex((line) => declaration.test(line));
   if (index === -1) {
-    return undefined;
+    return null;
   }
   const block: string[] = [];
   for (let i = index - 1; i >= 0; i--) {
@@ -34,7 +34,7 @@ const propertiesOf = (component: string): string =>
 describe('the prop map', () => {
   it('names a prop that the component really declares', () => {
     const missing = PROP_PAIRS.filter(
-      (pair) => docBlockFor(propertiesOf(pair.component), pair.sui) === undefined
+      (pair) => docBlockFor(propertiesOf(pair.component), pair.sui) === null
     ).map((pair) => `${pair.component}.${pair.sui}`);
 
     expect(missing).toEqual([]);
@@ -76,7 +76,7 @@ describe('the prop map', () => {
     for (const pair of PROP_PAIRS) {
       for (const alias of pair.suiDeprecatedAliases ?? []) {
         const block = docBlockFor(propertiesOf(pair.component), alias);
-        if (block === undefined) {
+        if (block === null) {
           wrong.push(`${pair.component}.${alias} is not declared`);
         } else if (!block.includes('@deprecated')) {
           wrong.push(`${pair.component}.${alias} is not marked @deprecated`);

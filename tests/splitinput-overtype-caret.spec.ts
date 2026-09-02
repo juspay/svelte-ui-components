@@ -7,10 +7,7 @@ import { expect, test } from '@playwright/test';
 // choice, so the behaviour is asserted rather than the environment.
 
 const inject = (element: HTMLInputElement, value: string) => {
-  const setter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
-    'value'
-  )?.set;
+  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
   setter?.call(element, value);
   element.dispatchEvent(new Event('input', { bubbles: true }));
 };

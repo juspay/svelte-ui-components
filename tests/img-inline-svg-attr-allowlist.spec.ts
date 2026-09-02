@@ -134,7 +134,7 @@ test.describe('Img — inlineSvg strips executable content from fetched descenda
       "<a href=\"javascript:document.documentElement.setAttribute('data-child-js-href', '1')\">" +
       '<circle cx="12" cy="12" r="8" onclick="document.documentElement.setAttribute(\'data-child-onclick-ran\', \'1\')" fill="currentColor" />' +
       '</a>' +
-      '<script>document.documentElement.setAttribute("data-child-script-ran", "1")<\/script>' +
+      '<script>document.documentElement.setAttribute("data-child-script-ran", "1")</script>' +
       '</svg>';
     await serveSvg(page, INLINE_DEMO_URL, hostile);
     await page.goto('/components/img');

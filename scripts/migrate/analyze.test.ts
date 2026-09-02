@@ -119,6 +119,22 @@ describe('review findings', () => {
     expect(report.blockers).toHaveLength(1);
   });
 
+  it('does not read dependencies smuggled in through __proto__', () => {
+    // JSON.parse makes `__proto__` an ordinary own key, but assigning it while
+    // copying re-points the copy's prototype instead of adding a field. The
+    // dependencies would then be found through the prototype chain and the
+    // manifest would look like it declares svelte and the library when it
+    // declares neither.
+    const manifest: unknown = JSON.parse(
+      '{"__proto__":{"dependencies":{"svelte":"^5.55.9","@juspay/svelte-ui-components":"2.136.0"}}}'
+    );
+
+    const report = analyzeManifest(manifest);
+
+    expect(report.svelteRange).toBeNull();
+    expect(report.blockers.length).toBeGreaterThan(0);
+  });
+
   it('resolves prerelease ranges the same way loose parsing does', () => {
     // Pins the one property `loose` is suspected of changing. It does not: both
     // of these intersect the peer under strict parsing too. The mode is kept

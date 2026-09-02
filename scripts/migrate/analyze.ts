@@ -26,8 +26,39 @@ export type ManifestReport = {
 
 type UnknownRecord = Record<string, unknown>;
 
+/**
+ * Reads an unknown value as a record of unknown fields.
+ *
+ * Copies the own enumerable keys rather than asserting the type. Assertions are
+ * banned repo-wide and so are type predicates, so there is no way to tell the
+ * compiler that a narrowed `object` really is keyed by string. The copy is
+ * shallow, so nested nodes keep their identity and traversal is unaffected.
+ *
+ * `Reflect.get` rather than `value[key]`, because indexing a value typed
+ * `object` is itself an error without an assertion — the very thing being
+ * avoided. `defineProperty` rather than assignment, because one input here is a
+ * consumer's `package.json`: `JSON.parse` turns `__proto__` into an ordinary
+ * own key, and assigning it would re-point this copy's prototype instead of
+ * adding a field, so a manifest declaring nothing could still answer for
+ * `dependencies` through the chain.
+ *
+ * Only string keys are copied. The Svelte AST and `package.json` have no
+ * symbol-keyed fields, and reading one is never the question being asked here.
+ */
 function asRecord(value: unknown): UnknownRecord {
-  return typeof value === 'object' && value !== null ? (value as UnknownRecord) : {};
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+  const record: UnknownRecord = {};
+  for (const key of Object.keys(value)) {
+    Object.defineProperty(record, key, {
+      value: Reflect.get(value, key),
+      enumerable: true,
+      writable: true,
+      configurable: true
+    });
+  }
+  return record;
 }
 
 function readDependency(manifest: unknown, name: string): string | null {

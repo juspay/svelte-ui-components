@@ -217,11 +217,11 @@ const DOM_EVENT_TYPE =
  * props into wrong ones. `Input.onBlur?: (event: FocusEvent) => void` is the
  * real thing, and the signature is what says so.
  */
-export function forwardsDomEvent(signature: string | undefined): boolean {
+export function forwardsDomEvent(signature: unknown): boolean {
   return typeof signature === 'string' && DOM_EVENT_TYPE.test(signature);
 }
 
-export function deriveEventName(prop: string, signature?: string): DerivedName {
+export function deriveEventName(prop: string, signature?: unknown): DerivedName {
   if (!prop.startsWith('on') || prop.length <= 2) {
     return { kind: 'unresolved', candidates: [] };
   }

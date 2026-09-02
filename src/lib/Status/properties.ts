@@ -3,6 +3,13 @@ import type { ButtonProperties } from '$lib/Button/properties';
 
 export type StatusProperties = StatusEventProperties & {
   statusIcon?: string;
+  /**
+   * Accessible name for the `statusIcon` image. Defaults to `'status'`, which
+   * is deliberately generic because the icon is the same shape on a success and
+   * a failure screen. Set it to something the screen actually means, or to `''`
+   * to mark the icon decorative when `statusText` already carries the meaning.
+   */
+  statusIconAlt?: string;
   statusText: string;
   statusDescription: string;
   /**

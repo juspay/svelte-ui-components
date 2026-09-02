@@ -4,6 +4,7 @@
     shadow: 'open',
     props: {
       statusIcon: { type: 'String', reflect: true, attribute: 'status-icon' },
+      statusIconAlt: { type: 'String', reflect: true, attribute: 'status-icon-alt' },
       statusText: { type: 'String', reflect: true, attribute: 'status-text' },
       statusDescription: { type: 'String', reflect: true, attribute: 'status-description' },
       statusTextTag: { type: 'String', reflect: true, attribute: 'status-text-tag' },

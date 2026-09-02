@@ -67,6 +67,22 @@
       <div data-pw="status-children-content">Action area</div>
     </Status>
   </div>
+  <div data-pw="status-alt-named">
+    <Status
+      statusText="Named icon"
+      statusIconAlt="Payment confirmed"
+      statusDescription="statusIconAlt sets the accessible name."
+    />
+  </div>
+
+  <div data-pw="status-alt-decorative">
+    <Status
+      statusText="Decorative icon"
+      statusIconAlt=""
+      statusDescription="An empty statusIconAlt marks the icon decorative."
+    />
+  </div>
+
   <div data-pw="status-heading-tag">
     <Status
       statusText="Order Confirmed"

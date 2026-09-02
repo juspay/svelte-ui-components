@@ -94,3 +94,75 @@ describe('analyzeSvelte — Toolbar back control', () => {
     expect(analyzeSvelte('<div>hello</div>', 'a.svelte')).toEqual([]);
   });
 });
+
+// Regression coverage for the review findings on PR #499.
+describe('review findings', () => {
+  it('rejects a range that shares the major but cannot satisfy the peer', () => {
+    // 5.0.0 is a Svelte 5, but it is below ^5.41.2.
+    const report = analyzeManifest({
+      dependencies: { [LIB]: '2.136.0', svelte: '5.0.0' }
+    });
+    expect(report.blockers).toHaveLength(1);
+  });
+
+  it('accepts a disjunction that intersects the peer even though it starts at 4', () => {
+    const report = analyzeManifest({
+      dependencies: { [LIB]: '2.136.0', svelte: '^4 || ^5' }
+    });
+    expect(report.blockers).toEqual([]);
+  });
+
+  it('treats an unparseable range as not satisfying the peer', () => {
+    const report = analyzeManifest({
+      dependencies: { [LIB]: '2.136.0', svelte: 'workspace:*' }
+    });
+    expect(report.blockers).toHaveLength(1);
+  });
+
+  it('resolves prerelease ranges the same way loose parsing does', () => {
+    // Pins the one property `loose` is suspected of changing. It does not: both
+    // of these intersect the peer under strict parsing too. The mode is kept
+    // for leading-zero versions, which strict parsing rejects outright.
+    for (const svelte of ['^5.41.2-alpha', '>=5.0.0-0', '^05.41.2']) {
+      const report = analyzeManifest({ dependencies: { [LIB]: '2.136.0', svelte } });
+      expect(report.blockers, svelte).toEqual([]);
+    }
+  });
+
+  it('only the Boolean literal false disables the control', () => {
+    const cases: readonly [string, number][] = [
+      ['showBackButton={false}', 0],
+      // A member expression carries "computed":false in its AST, which a
+      // substring match on the serialised node wrongly read as disabled.
+      ['showBackButton={cfg.showBack}', 1],
+      ['showBackButton="false"', 1],
+      ['showBackButton={true}', 1],
+      ['showBackButton={isVisible}', 1],
+      // Quoting a single expression parses to a one-element array rather than a
+      // bare ExpressionTag, so reading only the bare shape reports a Toolbar
+      // that is genuinely disabled.
+      ['showBackButton="{false}"', 0],
+      ['showBackButton="{cfg.showBack}"', 1]
+    ];
+    for (const [attrs, expected] of cases) {
+      const source = `<script>import { Toolbar } from '${LIB}';</script><Toolbar ${attrs} />`;
+      expect(analyzeSvelte(source, 'a.svelte'), attrs).toHaveLength(expected);
+    }
+  });
+
+  it('reports the line of the offending selector, not the <style> tag', () => {
+    const source = [
+      `<script>import { Toolbar } from '${LIB}';</script>`,
+      '<Toolbar showBackButton={false} />',
+      '<style>',
+      '  .unrelated { color: red; }',
+      '',
+      '  .back img { width: 12px; }',
+      '</style>'
+    ].join('\n');
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.line).toBe(6);
+  });
+});

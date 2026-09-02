@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { pathToFileURL } from 'node:url';
 import { analyzeManifest, analyzeSvelte, LIBRARY, type Finding } from './analyze.ts';
 
 const TARGET_RANGE = '^3.0.0';
@@ -136,11 +137,20 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
         applied: false
       };
     }
-    // Rewritten as text, not via JSON.stringify: reserialising would reorder
-    // nothing but would drop the file's own formatting and comments-in-JSON
-    // tolerated by some tooling.
+    // Rewritten as text, not via JSON.stringify of the whole manifest: that
+    // would drop the file's own formatting. The VALUE is still serialised
+    // properly, because splicing raw text in would let a target containing a
+    // quote corrupt the manifest or inject sibling properties.
+    const target = parsed.values.target;
+    if (typeof target !== 'string') {
+      log('error: --target requires a value');
+      return { exitCode: 2, filesScanned: files.length, findings, blockers: [], applied: false };
+    }
     const pattern = new RegExp(`("${LIBRARY.replace('/', '\\/')}"\\s*:\\s*)"[^"]*"`);
-    const next = manifestText.replace(pattern, `$1"${parsed.values.target}"`);
+    const next = manifestText.replace(
+      pattern,
+      (_match, prefix: string) => `${prefix}${JSON.stringify(target)}`
+    );
     if (next === manifestText) {
       log('');
       log('Could not locate the dependency entry to rewrite; package.json untouched.');
@@ -172,8 +182,12 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
   };
 }
 
+// Comparing against a basename split on '/' fails on Windows, where argv[1]
+// uses backslashes and the split yields the whole path -- the CLI then silently
+// declines to run. Normalising both sides to a file URL is platform-agnostic.
+const entrypoint = process.argv[1];
 const invokedDirectly =
-  process.argv[1] !== undefined && import.meta.url.endsWith(process.argv[1].split('/').pop() ?? '');
+  typeof entrypoint === 'string' && import.meta.url === pathToFileURL(resolve(entrypoint)).href;
 
 if (invokedDirectly) {
   const summary = run(process.argv.slice(2), (line) => console.log(line));

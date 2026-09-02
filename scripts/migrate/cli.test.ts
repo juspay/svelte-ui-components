@@ -81,3 +81,35 @@ describe('migrate cli', () => {
     expect(run([], silent).exitCode).toBe(2);
   });
 });
+
+describe('review findings', () => {
+  it('serializes --target so a quote cannot corrupt or extend the manifest', () => {
+    const root = project({
+      name: 'consumer',
+      dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' }
+    });
+
+    // Splicing this in raw would close the string and inject a sibling key.
+    const summary = run([root, '--apply', '--target', '^3.0.0", "evil": "yes'], silent);
+    const raw = readFileSync(join(root, 'package.json'), 'utf8');
+
+    // Asserted so an uncorrupted manifest cannot be the result of the apply
+    // having been refused outright, which would pass every check below.
+    expect(summary.exitCode).toBe(0);
+    expect(summary.applied).toBe(true);
+    expect(() => JSON.parse(raw)).not.toThrow();
+    const manifest = JSON.parse(raw) as { dependencies: Record<string, string> };
+    expect(manifest).not.toHaveProperty('evil');
+    expect(manifest.dependencies).not.toHaveProperty('evil');
+    expect(manifest.dependencies[LIB]).toBe('^3.0.0", "evil": "yes');
+  });
+
+  it('blocks a svelte range that shares the major but misses the peer', () => {
+    const root = project({ dependencies: { [LIB]: '2.136.0', svelte: '5.0.0' } });
+
+    const summary = run([root, '--apply'], silent);
+
+    expect(summary.exitCode).toBe(1);
+    expect(summary.applied).toBe(false);
+  });
+});

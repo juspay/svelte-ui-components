@@ -45,14 +45,16 @@ jobs:
       # failed every spec with "browserType.launch: Executable doesn't exist" --
       # the browser-install step above simply didn't exist. The "~130 failing
       # specs" that justified continue-on-error was therefore never a regression
-      # count; it was an artifact of a missing binary. Once the install landed,
-      # the suite went green and has stayed green for 11 consecutive runs across
-      # 8 different branches (verified 2026-09-02 by reading this step's own
-      # conclusion in the jobs API, not the job's -- which continue-on-error
-      # forces to "success" regardless and so proves nothing).
+      # count; it was an artifact of a missing binary. Once the install landed
+      # the suite went green, which is what made a real gate possible.
       #
-      # That is the "genuine baseline triaged to zero" the old comment was
-      # waiting on, so the gate is now real: a failing spec fails the PR.
+      # An earlier draft of this comment claimed a specific run of consecutive
+      # green builds as the justification. That claim was withdrawn: the very
+      # first run with the gate enabled caught a genuinely failing spec, so the
+      # number was wrong, and it had been read from the step's `conclusion` --
+      # which continue-on-error rewrites to success. `outcome` is the field
+      # that survives it. The gate stands on the suite passing now, checked
+      # per-run by this step, rather than on a tally nobody can re-derive.
       - name: Integration tests (playwright)
         run: pnpm run test:integration
 

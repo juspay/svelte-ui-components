@@ -32,6 +32,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Deliberately a check, not `playwright install`. Installing here would
+      # download whatever browser the npm package wants and shadow the one the
+      # image pins -- turning a loud version mismatch into CI silently
+      # rasterising differently from every laptop, which is the exact failure
+      # these pinned baselines exist to prevent. The browser must come from the
+      # image, so a drift has to fail rather than self-heal.
+      - name: Verify the image ships the browser this Playwright expects
+        run: |
+          location="$(pnpm exec playwright install --dry-run chromium | awk '/Install location/ { print $3; exit }')"
+          if [ ! -d "$location" ]; then
+            version="$(node -p "require('@playwright/test/package.json').version")"
+            echo "::error::@playwright/test $version expects a browser at $location, which this image does not ship. Update the container image tag here, IMAGE in scripts/visual-test.sh, and @playwright/test in package.json together."
+            exit 1
+          fi
+
       - name: Visual regression
         run: pnpm exec playwright test --config playwright.visual.config.ts
 

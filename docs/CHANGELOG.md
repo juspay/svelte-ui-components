@@ -2,159 +2,85 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.1)
 
-Review comments that arrived on #494-#499 after I reported each PR done, and
-were never addressed before merge. All verified against the merged code before
-anything was changed; three turned out not to hold and are left alone.
+`lint` ran `prettier --check src && eslint src`, so `scripts/` and `tests/`
+were never checked at all. That gap was reported on #495 and is the reason a
+banned `undefined` reached review on #500 instead of failing locally. Extending
+the script to `src scripts tests` surfaced 31 real violations of rules this
+repo already enforces everywhere else.
 
-Fixed:
+Lint coverage:
 
-1. The codemod rewrote Stepper consumers onto a deprecated prop (#495, MAJOR).
-`StepperProperties` marks `onhandleStepClick` "@deprecated Use onstepclick
-instead", and the map targeted it. The cause is in the map's derivation
-rule: pairs were accepted when lower(sui) === lower(poly), which is
-deprecation-blind, so an alias whose lowercase spelling matches the fork's
-outranks the canonical prop and wins the pair. A consumer running the
-codemod landed on the one spelling of that event scheduled for removal.
-Stepper is the only affected pair of the 28. The target is now `onstepclick`,
-with `onhandleStepClick` still recognised as a source in the to-poly
-direction so a SUI consumer on either spelling converts.
+- analyze.ts asserted `value as UnknownRecord`, which `consistent-type-assertions`
+bans outside test files. Type predicates are banned too, so there is no way to
+tell the compiler a narrowed `object` is keyed by string. `asRecord` now copies
+the own enumerable keys instead. The copy is shallow, so nested nodes keep
+their identity and the AST walk is unchanged -- verified against lighthouse
+below.
+- `undefined` is banned repo-wide; signatures.ts returned `string | undefined`,
+casing.ts took `string | undefined`, and map.test.ts (added last change) used
+it in four places. readSignature returns `string | null`; forwardsDomEvent and
+deriveEventName take `unknown`, which is what their bodies already narrowed.
+- check-event-casing.js was missing `curly` braces in four places and was not
+Prettier-formatted.
+- tests/ had six unformatted files, six more `undefined` comparisons, an
+unnecessary escape, and an unused locator.
 
-map.ts had no test at all, which is how this got through. map.test.ts now
-asserts no target is @deprecated, every target is really declared, and a
-pair may only differ by more than case in order to step over a deprecated
-alias. It fails on the old map.
+Three findings from #495, all still open:
 
-2. Two visual-suite stabilisers gave up silently (#496, MAJOR). This one found
-a real bug underneath it:
+- transformModuleSpecifiers matched with a context-anchored regex, reasoning
+that a specifier only follows `from`, `import`, `import(` or `require(`. True,
+but those words appear just as readily in a comment or inside a quoted string,
+and the regex rewrote those too: a fixture with the package named in a line
+comment, a block comment, a string literal and one real import rewrote all
+four. It now parses with TypeScript, which is already a devDependency and
+already type-checks this directory, and replaces only the literal's interior
+so the quote style survives. Static, re-export, dynamic, `require` and
+`import()`-in-type-position are all covered by tests.
+- cli.test.ts kept `dir` and `lines` as module-level mutable state. Each test
+now builds its own project, cleaned up through `onTestFinished` so removal
+happens whether the test passes or throws. (The reported reason -- that
+afterEach would not run on a throw -- is not accurate; vitest runs it either
+way. The shared mutable state was worth removing on its own.)
+- Both script tsconfigs included `./*.ts`, so a nested file would have escaped
+`check:codemod` / `check:migrate`. Now `./**/*.ts`.
 
-- fitViewportToContent returned after 4 attempts whether or not the height
-had settled. Two demos never settle, because the shell is min-height:100vh
-and they add their own full-height element -- every pixel the viewport
-gains comes back as content. Measured: `table` is 36388px at every
-viewport, `brand-loader` grows 1x the viewport gain, `status` grows 3x.
-The loop was running out of attempts and capturing at whatever size the
-budget left, which is why brand-loader kept flaking. status was the
-clearest symptom: its baseline had inflated to 60209px, ~92% stretched
-empty space. Growth that tracks the viewport is now detected and the page
-pinned to the default viewport. Anything moving for a third reason throws
-instead of being captured mid-scroll.
-
-Both baselines are regenerated. status drops to 2609px, 84% smaller, with
-all seven demo variants still in frame (checked by eye, not by size).
-
-- waitForImages snapshotted document.images once, so an image appended while
-the first batch settled was never awaited. It rescans each round.
-
-3. docs/Img.md claimed child elements are "inlined as-is" (#498). True before
-that PR, false after it -- sanitizeInlinedSubtree was added precisely
-because the root allowlist alone was bypassable, and the sentence describing
-the old behaviour was left behind. Documentation understating a security
-boundary is worth more than the minor it was filed as: a reader deciding
-whether to inline a third-party SVG would have concluded it is not safe. Now
-states what is actually stripped.
-
-4. The ci.yml comment still asserted the "11 consecutive green runs" figure
-(#494). That was withdrawn during review of #494 itself, when the first run
-with the gate enabled caught a failing spec -- but only the PR body was
-corrected, and the workflow is the copy that outlives the PR. The field was
-backwards too: continue-on-error rewrites the step's `conclusion` to
-success, so `outcome` is what survives it.
-
-5. scripts/visual-test.sh documented `--update` in its own usage block (#496).
-`playwright test --update` exits with "unknown option". package.json already
-used --update-snapshots, so only the path through the script's header was
-broken.
-
-6. Nothing enforced the container/package lockstep in CI (#496). visual.yml
-only asked for it in a comment. It now checks that the image ships the
-browser Playwright expects and names the three files to update. Deliberately
-a check and not `playwright install`, which was the suggested fix: installing
-inside the container shadows the image's pinned browser, so CI would
-silently rasterise differently from every laptop -- the exact drift these
-pinned baselines exist to catch.
-
-Not changed, having checked:
-
-- The image tag version parse handles the tag shape it was reported to break
-on: %%-* strips from the first hyphen, so v1.60.0-jammy-amd64 yields 1.60.0.
-- Route discovery was reported to miss demos against a 97-directory tree with a
-SKIP_SLUGS filter. There are 94 directories and no such constant; the filter
-is EXCLUDED, which emits visible skipped tests. 92 baselined + 2 excluded
-accounts for all 94. Deriving the list from _nav.ts instead would weaken the
-guarantee, since a demo on disk but missing from the nav would go
-unscreenshotted.
-- A workflow-level env for the pnpm version is per-workflow, so it cannot
-deduplicate a version pinned in both ci.yml and visual.yml, and would make
-visual.yml diverge from ci.yml. The fix that would collapse both is a
-packageManager field, which changes local resolution for everyone and is not
-a review-sweep edit.
-
-Also carries the five findings from #499 that opened this PR: semver range
-intersection for the peer check, AST-literal detection for showBackButton
-(JSON.stringify matched "computed":false on any MemberExpression, so a bound
-guard read as disabled and its affected usage went unreported), the CSS
-selector line offset, JSON.stringify on --target, and file-URL entrypoint
-detection for Windows.
-
-Verified: 97/97 in scripts/codemod (was 96, and map.ts had no test file),
-36/36 in scripts/migrate, 285/285 unit, lint and check clean. Visual suite run
-in the pinned container twice end to end.
+Verified: 288/288 unit, 136/136 across scripts/ (was 133), lint and check clean
+under the widened scope. The migrate CLI re-run against lighthouse reports 385
+.svelte files, 0 blockers, 0 findings -- identical to before the asRecord
+rewrite. Checked against a control, since a zero from a broken detector looks
+the same: a fixture with `showBackButton={false}`, `showBackButton="{false}"`,
+a bound guard and a bare Toolbar flags exactly the last two.
 
 ---
 
-Second round: seven review comments on this PR itself, all verified.
+Review on this PR found four more, including a regression this PR introduced.
 
-7. isFalseLiteral read only the bare ExpressionTag shape (MAJOR). Svelte types
-an attribute value as `true | ExpressionTag | Array&lt;Text | ExpressionTag&gt;`,
-and quoting a single expression -- showBackButton="{false}" -- produces the
-one-element array. So a Toolbar whose control genuinely never renders was
-reported as affected. This one errs the safe way, unlike the false negative
-it replaced: it over-reports rather than under-reports. Test written first
-and watched fail.
+- `import X = require('x')` stopped being rewritten. Its specifier hangs off an
+ExternalModuleReference rather than a call expression, and the regex being
+replaced had matched it by accident through the bare `require(` context. The
+parser walk did not look for it, so switching to a parser silently dropped
+syntax that used to work. Handled now, with a test.
 
-8. The viewport-relative heuristic could misclassify legitimate growth, on code
-added earlier in this same PR. `height - previousHeight &gt;= viewportGain - 1`
-treats any growth past the viewport gain as viewport-relative, so a page
-that reveals a large section when given room would be pinned to the default
-viewport and lose everything below the fold.
+- asRecord could be fed dependencies through `__proto__`. `JSON.parse` makes it
+an ordinary own key, and assigning it re-points the copy's prototype instead
+of adding a field, so a manifest declaring neither svelte nor the library
+still answered for `dependencies` through the chain -- reported as satisfying
+the peer when nothing was declared. Copied with `defineProperty` now, which
+creates an own data property instead of invoking the setter.
 
-The suggested fix was an allowlist of the two known routes. Not taken: that
-hardcodes the answer, so a future viewport-relative demo regresses silently
-to the old behaviour. The classification is now confirmed rather than
-inferred -- shrink the viewport and check the content follows it down.
-Content sized against the viewport shrinks with it; content that was merely
-revealed does not. Pinned routes are logged, which was the good half of the
-suggestion.
+- readSignature interpolated the prop name into a regex unescaped, the same
+hole already fixed in map.test.ts. Escaped.
 
-Verified: the full suite pins exactly 2 routes and leaves the other 90
-alone. A single delta could not have told those apart.
+- Documented why `Reflect.get` and `defineProperty` are used rather than plain
+indexing and assignment, and that only string keys are copied.
 
-9. The entrypoint guard used `undefined`, which the repo's ESLint config bans.
-It only escaped because `lint` covers `src` alone -- the same gap reported
-on #495 and still open.
+Verified after: 290/290 unit, 138/138 across scripts/, lint and check clean.
+lighthouse unchanged at 385 files / 0 findings, and the four-case control still
+flags exactly the bound and bare Toolbars.
 
-10. The --target injection test asserted the manifest was uncorrupted but never
-that the apply happened, so a refusal would have satisfied every assertion
-in it. Now asserts exitCode and applied.
-
-11. waitForImages re-added listeners to an image still pending on the next
-round. Watches are memoised in a WeakMap.
-
-12. docBlockFor interpolated a prop name into a regex unescaped. Every current
-name is a plain identifier, and the first test in the file asserts each one
-resolves, so a miss would already fail loudly -- escaped anyway.
-
-Kept, with evidence: `intersects(..., { loose: true })` was reported as
-possibly accepting prereleases unexpectedly. Measured across 18 ranges, loose
-changes the answer for exactly one -- ^05.41.2, where strict parsing throws and
-would report a blocker that does not exist. Both prerelease examples named in
-the review resolve identically either way. The mode is safer, not looser; now
-documented and pinned by a test.
-
-Final: 286/286 unit, 134/134 across scripts/, lint and check clean, visual 92
-passed / 2 skipped / 0 failed in the pinned container.
+## [3.1.1](https://github.com/juspay/svelte-ui-components/compare/3.1.1..3.1.0) - 2 September 2026
 
 ## [3.1.0](https://github.com/juspay/svelte-ui-components/compare/3.1.0..3.0.0) - 2 September 2026
 

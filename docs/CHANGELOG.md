@@ -2,55 +2,77 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.12)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.0.0)
 
-Toolbar was the only component in the library whose default rendering made a
-network request: `backIcon` defaulted to
-`https://sdk.breeze.in/gallery/icons/back.svg`. A default that fetches will
-hang or 404 offline, cannot follow `currentColor`, and pins a first-party
-component to a CDN path nobody in this repo controls. Twelve other components
-already inline their SVGs; this brings Toolbar in line.
+Three related pieces of the same job: getting a consumer from where it is onto
+the next major without hand-editing.
 
-The control itself was a `&lt;div role="button" tabindex="0"&gt;`, so Enter and
-Space did nothing unless the consumer wired `onkeydown` themselves, and the
-only accessible name was the image's alt text. It is now a native `&lt;button&gt;`
-with `aria-label` from the new `backLabel` prop (default 'Back'; an empty or
-whitespace-only value falls back to the default so the name is never
-stripped). Keyboard activation and the name come for free; the icon is
-decorative. `box-sizing: content-box` keeps the outer box identical to the
-div it replaces regardless of the UA button stylesheet.
+CONSUMER MIGRATION SCRIPT (scripts/migrate)
 
-What does NOT change:
-- `backIcon={null}` (or '') still renders no back control at all — a contract
-the existing test pins and consumers rely on.
-- A consumer-supplied `backIcon` URL still renders as an `&lt;img&gt;`.
-- Every existing token keeps its value.
-- The title's typography tokens are untouched: `--toolbar-text-font-size` /
-`-weight` with their 18px/normal defaults are the correct library pattern
-and overridable per consumer.
+Audits a project against 3.x, reports what blocks the upgrade, and applies the
+dependency bump when nothing does. Reports by default; nothing is written
+without --apply.
 
-New: `backLabel` prop (also `back-label` on the web component),
-`--toolbar-back-icon-color` (default inherit), and a keyboard-only focus ring
-via `--toolbar-back-button-focus-outline` / `-offset`. `playwright-report/`
-and `playwright-report-visual/` are now gitignored beside `test-results/`.
+3.0.0's breaking surface is one thing: with no backIcon, Toolbar's default back
+control moved from &lt;div role="button"&gt;&lt;img&gt;&lt;/div&gt; to &lt;button aria-label&gt;&lt;svg&gt;.
+Usages passing showBackButton={false} or their own backIcon are unaffected. Only
+a literal false counts as disabling -- a bound expression could be either, and a
+spread hides the props -- so both are surfaced for review rather than assumed.
 
-Tests: the "unconfigured toolbar" test now asserts a `&lt;button&gt;` carrying an
-inline `svg` with `stroke="currentColor"`, no `img`, and `aria-label="Back"`;
-new tests cover a consumer-supplied image, Enter/Space activation, the
-empty-label fallback and the 48x60 box. Negative control: restoring the old
-`&lt;div&gt;` markup fails exactly the tag and activation assertions and nothing
-else. The container-pinned visual baseline for the toolbar demo route is
-regenerated (1,577 px: the chevron glyphs and the two new demo instances;
-91 other baselines unchanged, 92/92 after).
+Reads the manifest, never node_modules: an installed tree can be stale relative
+to what a project declares. A checkout here reported svelte 4.2.8 and library
+1.34.0 while its own package.json asked for svelte ^5.55.9 and 2.19.2, and
+trusting the former would have produced a confident, wrong answer about which
+framework the project is on. Refuses to --apply while a blocker stands, since
+bumping past an unsatisfied peer produces a tree that cannot install.
 
-BREAKING CHANGE: with no `backIcon`, Toolbar renders
-`&lt;button aria-label="Back"&gt;&lt;svg/&gt;&lt;/button&gt;` instead of
-`&lt;div role="button"&gt;&lt;img src="https://sdk.breeze.in/..."/&gt;&lt;/div&gt;`. Consumers
-that selected `.back img`, asserted the old `src`, or themed the image must
-size the icon with the unchanged `--toolbar-back-image-height`/`-width`
-tokens (they now apply to the `svg` too), colour it with
-`--toolbar-back-icon-color`, or pass their own `backIcon` URL to keep an
-image. `backIcon={null}` still renders no control. See docs/Toolbar.md.
+Verified against lighthouse: 385 .svelte files, no blockers, no affected usage
+-- its one Toolbar passes showBackButton={false}. Checked against a negative
+control: removing that guard from the same real file flags it at the exact
+Toolbar line, so the zero is a real absence, not a detector that finds nothing.
+
+EVENT-CASING CHECKER FIX
+
+The checker decided a prop forwards a native DOM event by matching its NAME.
+That is wrong for props whose names collide with a DOM event but which hand
+back domain data: TypewriterText's onProgress passes a TypewriterProgress,
+Table's onToggle passes (rowIndex, checked, originalIndex), ThinkingIndicator's
+onToggle takes nothing. Six such props were baselined as violations, and
+lowercasing them would have renamed correct props into wrong ones.
+
+Classification now reads the declared type. Verified no prop declares its DOM
+event type on a line other than its own, so the line-based test is sound.
+
+The stricter rule also removes an unintended excuse: a prop whose name matched
+a DOM event was previously never checked at all. That surfaced 48 real
+violations the old checker never reported -- Accordion.ontoggle,
+Checkbox.onclick, Img.onerror, Slider.oninput and so on. The baseline goes
+100 -&gt; 142: six false positives out, 48 previously-invisible violations in.
+No prop is renamed and the check still reports 0 new.
+
+RENAME MAP FOR 4.0.0 (scripts/migrate/casing.ts, docs/EVENT_CASING_MIGRATION.md)
+
+All 142 have a mechanically derivable target; none needs a human to pick a
+name. The hard-looking group is the synthetic events written entirely in
+lowercase, where the word boundaries are no longer in the name -- but
+segmenting against a closed domain vocabulary resolves every one of them
+exactly one way: onbarclick -&gt; onBarClick, onopenrichfile -&gt; onOpenRichFile,
+onafterclose -&gt; onAfterClose. Where a body ever segments two ways, every
+candidate is reported rather than one being silently chosen.
+
+casing.test.ts asserts this against the real baseline: 142 resolved, 0
+unresolved, and no derived target collides with an existing prop on its
+component. That test is the guard -- a future violation whose name cannot be
+derived fails it, which is what keeps the eventual rename mechanical.
+
+The plan sequences the rest: additive aliases for all 142 (a 3.x minor), a
+dev-only deprecation warning, then removal in 4.0.0 once the aliases have
+shipped. Consumers migrate through the existing scripts/codemod transform,
+whose rename map is data.
+
+vitest 29/29 in scripts/migrate, full unit suite green, lint and check clean.
+
+## [3.0.0](https://github.com/juspay/svelte-ui-components/compare/3.0.0..2.136.12) - 2 September 2026
 
 ## [2.136.12](https://github.com/juspay/svelte-ui-components/compare/2.136.12..2.136.11) - 2 September 2026
 

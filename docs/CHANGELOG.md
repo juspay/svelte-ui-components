@@ -2,38 +2,35 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.8)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.9)
 
-Yama's review of the documentation-accuracy PR surfaced a real,
-pre-existing accessibility gap: Accordion's built-in trigger had
-role="button" and aria-expanded but no aria-controls. The trigger and
-collapsible panel are sibling elements, so aria-expanded announced a
-state without identifying WHICH region it governed -- a screen-reader
-user could hear "expanded" but had no linked destination to reach.
+Overtyping a filled single-character field took `chars.slice(-1)` -- "keep the
+newest character". But the browser inserts at the caret, and where the caret
+lands after clicking a filled field is platform-dependent: Chromium on macOS
+puts it after the character, on Linux before it. Typing 7 into a field holding
+2 therefore yields "27" on macOS and "72" on Linux, and slice(-1) silently
+kept the OLD digit on Linux.
 
-Added automatic trigger/panel wiring:
-- Each Accordion generates a per-instance panel id via $props.id().
-- The built-in trigger now has aria-controls={effectivePanelId}.
-- The accordion panel itself carries id={effectivePanelId}.
-- panelId lets callers supply the id if something external must reference
-the panel too; otherwise the generated id avoids collisions between
-multiple accordions on a page.
+This is why tests/splitinput-autofill-distribute.spec.ts passed locally on
+macOS and failed on CI. It was not a flake -- it failed all three attempts
+there, and reproduces deterministically in the Linux Playwright container.
+continue-on-error on the integration step is what kept it invisible.
 
-Web-component parity: added panel-id -&gt; panelId to Accordion.wc.svelte
-and docs/Accordion.md's HTML-attribute table. The Svelte docs now explain
-both the generated default and why this linkage matters for accessibility.
+Resolving the new character by removing one occurrence of the previous value
+identifies it wherever the browser inserted it.
 
-Added a trigger-based docs demo and tests/accordion-aria-controls.test.ts:
-1. aria-controls resolves to the panel's actual id -- not merely a
-present-but-dangling attribute.
-2. aria-expanded tracks the panel's real .expanded state.
-3. two instances generate distinct ids.
-4. explicit panelId reaches both the panel and trigger reference.
+Second, related defect: when the resolved character equals what was already
+stored -- overtyping 2 with another 2 -- the assignment is a no-op, Svelte
+re-renders nothing, and the element is left displaying "22" while state says
+"2". The DOM is now resynced after tick(); writing during the input handler
+is undone by the pending flush, and when state does not change there is no
+flush to piggyback on, so the correction has to come last.
 
-Verified: pnpm run check (0 errors), pnpm run lint (clean), full serial
-Playwright suite 354/354 passing. Real video proof combines all 4 tests:
-valid VP8, 160 decoded frames (exact parity with all source clips), clean
-ffmpeg decode, frame-extracted and visually inspected.
+Verified 7/7 on macOS and 7/7 in the Linux container. New tests pin the caret
+explicitly rather than inheriting the platform's choice, and fail for the right
+reasons against the unfixed component ("72" and "22").
+
+## [2.136.9](https://github.com/juspay/svelte-ui-components/compare/2.136.9..2.136.8) - 1 September 2026
 
 ## [2.136.8](https://github.com/juspay/svelte-ui-components/compare/2.136.8..2.136.7) - 1 September 2026
 

@@ -2,75 +2,161 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.0.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.0)
 
-Three related pieces of the same job: getting a consumer from where it is onto
-the next major without hand-editing.
+Review comments that arrived on #494-#499 after I reported each PR done, and
+were never addressed before merge. All verified against the merged code before
+anything was changed; three turned out not to hold and are left alone.
 
-CONSUMER MIGRATION SCRIPT (scripts/migrate)
+Fixed:
 
-Audits a project against 3.x, reports what blocks the upgrade, and applies the
-dependency bump when nothing does. Reports by default; nothing is written
-without --apply.
+1. The codemod rewrote Stepper consumers onto a deprecated prop (#495, MAJOR).
+`StepperProperties` marks `onhandleStepClick` "@deprecated Use onstepclick
+instead", and the map targeted it. The cause is in the map's derivation
+rule: pairs were accepted when lower(sui) === lower(poly), which is
+deprecation-blind, so an alias whose lowercase spelling matches the fork's
+outranks the canonical prop and wins the pair. A consumer running the
+codemod landed on the one spelling of that event scheduled for removal.
+Stepper is the only affected pair of the 28. The target is now `onstepclick`,
+with `onhandleStepClick` still recognised as a source in the to-poly
+direction so a SUI consumer on either spelling converts.
 
-3.0.0's breaking surface is one thing: with no backIcon, Toolbar's default back
-control moved from &lt;div role="button"&gt;&lt;img&gt;&lt;/div&gt; to &lt;button aria-label&gt;&lt;svg&gt;.
-Usages passing showBackButton={false} or their own backIcon are unaffected. Only
-a literal false counts as disabling -- a bound expression could be either, and a
-spread hides the props -- so both are surfaced for review rather than assumed.
+map.ts had no test at all, which is how this got through. map.test.ts now
+asserts no target is @deprecated, every target is really declared, and a
+pair may only differ by more than case in order to step over a deprecated
+alias. It fails on the old map.
 
-Reads the manifest, never node_modules: an installed tree can be stale relative
-to what a project declares. A checkout here reported svelte 4.2.8 and library
-1.34.0 while its own package.json asked for svelte ^5.55.9 and 2.19.2, and
-trusting the former would have produced a confident, wrong answer about which
-framework the project is on. Refuses to --apply while a blocker stands, since
-bumping past an unsatisfied peer produces a tree that cannot install.
+2. Two visual-suite stabilisers gave up silently (#496, MAJOR). This one found
+a real bug underneath it:
 
-Verified against lighthouse: 385 .svelte files, no blockers, no affected usage
--- its one Toolbar passes showBackButton={false}. Checked against a negative
-control: removing that guard from the same real file flags it at the exact
-Toolbar line, so the zero is a real absence, not a detector that finds nothing.
+- fitViewportToContent returned after 4 attempts whether or not the height
+had settled. Two demos never settle, because the shell is min-height:100vh
+and they add their own full-height element -- every pixel the viewport
+gains comes back as content. Measured: `table` is 36388px at every
+viewport, `brand-loader` grows 1x the viewport gain, `status` grows 3x.
+The loop was running out of attempts and capturing at whatever size the
+budget left, which is why brand-loader kept flaking. status was the
+clearest symptom: its baseline had inflated to 60209px, ~92% stretched
+empty space. Growth that tracks the viewport is now detected and the page
+pinned to the default viewport. Anything moving for a third reason throws
+instead of being captured mid-scroll.
 
-EVENT-CASING CHECKER FIX
+Both baselines are regenerated. status drops to 2609px, 84% smaller, with
+all seven demo variants still in frame (checked by eye, not by size).
 
-The checker decided a prop forwards a native DOM event by matching its NAME.
-That is wrong for props whose names collide with a DOM event but which hand
-back domain data: TypewriterText's onProgress passes a TypewriterProgress,
-Table's onToggle passes (rowIndex, checked, originalIndex), ThinkingIndicator's
-onToggle takes nothing. Six such props were baselined as violations, and
-lowercasing them would have renamed correct props into wrong ones.
+- waitForImages snapshotted document.images once, so an image appended while
+the first batch settled was never awaited. It rescans each round.
 
-Classification now reads the declared type. Verified no prop declares its DOM
-event type on a line other than its own, so the line-based test is sound.
+3. docs/Img.md claimed child elements are "inlined as-is" (#498). True before
+that PR, false after it -- sanitizeInlinedSubtree was added precisely
+because the root allowlist alone was bypassable, and the sentence describing
+the old behaviour was left behind. Documentation understating a security
+boundary is worth more than the minor it was filed as: a reader deciding
+whether to inline a third-party SVG would have concluded it is not safe. Now
+states what is actually stripped.
 
-The stricter rule also removes an unintended excuse: a prop whose name matched
-a DOM event was previously never checked at all. That surfaced 48 real
-violations the old checker never reported -- Accordion.ontoggle,
-Checkbox.onclick, Img.onerror, Slider.oninput and so on. The baseline goes
-100 -&gt; 142: six false positives out, 48 previously-invisible violations in.
-No prop is renamed and the check still reports 0 new.
+4. The ci.yml comment still asserted the "11 consecutive green runs" figure
+(#494). That was withdrawn during review of #494 itself, when the first run
+with the gate enabled caught a failing spec -- but only the PR body was
+corrected, and the workflow is the copy that outlives the PR. The field was
+backwards too: continue-on-error rewrites the step's `conclusion` to
+success, so `outcome` is what survives it.
 
-RENAME MAP FOR 4.0.0 (scripts/migrate/casing.ts, docs/EVENT_CASING_MIGRATION.md)
+5. scripts/visual-test.sh documented `--update` in its own usage block (#496).
+`playwright test --update` exits with "unknown option". package.json already
+used --update-snapshots, so only the path through the script's header was
+broken.
 
-All 142 have a mechanically derivable target; none needs a human to pick a
-name. The hard-looking group is the synthetic events written entirely in
-lowercase, where the word boundaries are no longer in the name -- but
-segmenting against a closed domain vocabulary resolves every one of them
-exactly one way: onbarclick -&gt; onBarClick, onopenrichfile -&gt; onOpenRichFile,
-onafterclose -&gt; onAfterClose. Where a body ever segments two ways, every
-candidate is reported rather than one being silently chosen.
+6. Nothing enforced the container/package lockstep in CI (#496). visual.yml
+only asked for it in a comment. It now checks that the image ships the
+browser Playwright expects and names the three files to update. Deliberately
+a check and not `playwright install`, which was the suggested fix: installing
+inside the container shadows the image's pinned browser, so CI would
+silently rasterise differently from every laptop -- the exact drift these
+pinned baselines exist to catch.
 
-casing.test.ts asserts this against the real baseline: 142 resolved, 0
-unresolved, and no derived target collides with an existing prop on its
-component. That test is the guard -- a future violation whose name cannot be
-derived fails it, which is what keeps the eventual rename mechanical.
+Not changed, having checked:
 
-The plan sequences the rest: additive aliases for all 142 (a 3.x minor), a
-dev-only deprecation warning, then removal in 4.0.0 once the aliases have
-shipped. Consumers migrate through the existing scripts/codemod transform,
-whose rename map is data.
+- The image tag version parse handles the tag shape it was reported to break
+on: %%-* strips from the first hyphen, so v1.60.0-jammy-amd64 yields 1.60.0.
+- Route discovery was reported to miss demos against a 97-directory tree with a
+SKIP_SLUGS filter. There are 94 directories and no such constant; the filter
+is EXCLUDED, which emits visible skipped tests. 92 baselined + 2 excluded
+accounts for all 94. Deriving the list from _nav.ts instead would weaken the
+guarantee, since a demo on disk but missing from the nav would go
+unscreenshotted.
+- A workflow-level env for the pnpm version is per-workflow, so it cannot
+deduplicate a version pinned in both ci.yml and visual.yml, and would make
+visual.yml diverge from ci.yml. The fix that would collapse both is a
+packageManager field, which changes local resolution for everyone and is not
+a review-sweep edit.
 
-vitest 29/29 in scripts/migrate, full unit suite green, lint and check clean.
+Also carries the five findings from #499 that opened this PR: semver range
+intersection for the peer check, AST-literal detection for showBackButton
+(JSON.stringify matched "computed":false on any MemberExpression, so a bound
+guard read as disabled and its affected usage went unreported), the CSS
+selector line offset, JSON.stringify on --target, and file-URL entrypoint
+detection for Windows.
+
+Verified: 97/97 in scripts/codemod (was 96, and map.ts had no test file),
+36/36 in scripts/migrate, 285/285 unit, lint and check clean. Visual suite run
+in the pinned container twice end to end.
+
+---
+
+Second round: seven review comments on this PR itself, all verified.
+
+7. isFalseLiteral read only the bare ExpressionTag shape (MAJOR). Svelte types
+an attribute value as `true | ExpressionTag | Array&lt;Text | ExpressionTag&gt;`,
+and quoting a single expression -- showBackButton="{false}" -- produces the
+one-element array. So a Toolbar whose control genuinely never renders was
+reported as affected. This one errs the safe way, unlike the false negative
+it replaced: it over-reports rather than under-reports. Test written first
+and watched fail.
+
+8. The viewport-relative heuristic could misclassify legitimate growth, on code
+added earlier in this same PR. `height - previousHeight &gt;= viewportGain - 1`
+treats any growth past the viewport gain as viewport-relative, so a page
+that reveals a large section when given room would be pinned to the default
+viewport and lose everything below the fold.
+
+The suggested fix was an allowlist of the two known routes. Not taken: that
+hardcodes the answer, so a future viewport-relative demo regresses silently
+to the old behaviour. The classification is now confirmed rather than
+inferred -- shrink the viewport and check the content follows it down.
+Content sized against the viewport shrinks with it; content that was merely
+revealed does not. Pinned routes are logged, which was the good half of the
+suggestion.
+
+Verified: the full suite pins exactly 2 routes and leaves the other 90
+alone. A single delta could not have told those apart.
+
+9. The entrypoint guard used `undefined`, which the repo's ESLint config bans.
+It only escaped because `lint` covers `src` alone -- the same gap reported
+on #495 and still open.
+
+10. The --target injection test asserted the manifest was uncorrupted but never
+that the apply happened, so a refusal would have satisfied every assertion
+in it. Now asserts exitCode and applied.
+
+11. waitForImages re-added listeners to an image still pending on the next
+round. Watches are memoised in a WeakMap.
+
+12. docBlockFor interpolated a prop name into a regex unescaped. Every current
+name is a plain identifier, and the first test in the file asserts each one
+resolves, so a miss would already fail loudly -- escaped anyway.
+
+Kept, with evidence: `intersects(..., { loose: true })` was reported as
+possibly accepting prereleases unexpectedly. Measured across 18 ranges, loose
+changes the answer for exactly one -- ^05.41.2, where strict parsing throws and
+would report a blocker that does not exist. Both prerelease examples named in
+the review resolve identically either way. The mode is safer, not looser; now
+documented and pinned by a test.
+
+Final: 286/286 unit, 134/134 across scripts/, lint and check clean, visual 92
+passed / 2 skipped / 0 failed in the pinned container.
+
+## [3.1.0](https://github.com/juspay/svelte-ui-components/compare/3.1.0..3.0.0) - 2 September 2026
 
 ## [3.0.0](https://github.com/juspay/svelte-ui-components/compare/3.0.0..2.136.12) - 2 September 2026
 

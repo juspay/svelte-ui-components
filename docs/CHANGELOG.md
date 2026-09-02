@@ -2,33 +2,57 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.11)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..2.136.12)
 
-The integration step has been advisory since it was added, carrying the note
-"flip continue-on-error off once a genuine baseline is triaged down to zero".
-That precondition is now met, so this removes it.
+Toolbar was the only component in the library whose default rendering made a
+network request: `backIcon` defaulted to
+`https://sdk.breeze.in/gallery/icons/back.svg`. A default that fetches will
+hang or 404 offline, cannot follow `currentColor`, and pins a first-party
+component to a CDN path nobody in this repo controls. Twelve other components
+already inline their SVGs; this brings Toolbar in line.
 
-Why the old baseline was never real: every run of the job failed every spec
-with "browserType.launch: Executable doesn't exist" -- the browser-install
-step did not exist. The ~130-failing-specs count that justified
-continue-on-error was an artifact of a missing binary, not a regression count.
-Once the install landed the suite went green and has stayed green for 11
-consecutive runs across 8 branches. That was verified by reading the *step's*
-conclusion out of the jobs API rather than the job's, because
-continue-on-error forces the job to "success" no matter what the step did --
-so a green CI badge on these runs proved nothing on its own.
+The control itself was a `&lt;div role="button" tabindex="0"&gt;`, so Enter and
+Space did nothing unless the consumer wired `onkeydown` themselves, and the
+only accessible name was the image's alt text. It is now a native `&lt;button&gt;`
+with `aria-label` from the new `backLabel` prop (default 'Back'; an empty or
+whitespace-only value falls back to the default so the name is never
+stripped). Keyboard activation and the name come for free; the icon is
+decorative. `box-sizing: content-box` keeps the outer box identical to the
+div it replaces regardless of the UA button stylesheet.
 
-Verified the gate actually gates, rather than assuming it: a deliberately
-failing spec exits `pnpm run test:integration` with code 1, which now fails
-the step and therefore the job. The full suite passes 354/354 on this branch.
+What does NOT change:
+- `backIcon={null}` (or '') still renders no back control at all — a contract
+the existing test pins and consumers rely on.
+- A consumer-supplied `backIcon` URL still renders as an `&lt;img&gt;`.
+- Every existing token keeps its value.
+- The title's typography tokens are untouched: `--toolbar-text-font-size` /
+`-weight` with their 18px/normal defaults are the correct library pattern
+and overridable per consumer.
 
-Also adds `retries: 2` under CI only. This is not there to hide failures --
-Playwright reports a test that failed then passed as "flaky", a status
-distinct from "passed", so the signal stays visible in the uploaded report
-while only reproducible failures block a merge. Confirmed it does not launder
-a real failure: the same deliberately-failing spec run with CI=true retried
-twice and still exited 1. Local runs keep 0 retries, since a flake you can
-reproduce is a flake you can fix.
+New: `backLabel` prop (also `back-label` on the web component),
+`--toolbar-back-icon-color` (default inherit), and a keyboard-only focus ring
+via `--toolbar-back-button-focus-outline` / `-offset`. `playwright-report/`
+and `playwright-report-visual/` are now gitignored beside `test-results/`.
+
+Tests: the "unconfigured toolbar" test now asserts a `&lt;button&gt;` carrying an
+inline `svg` with `stroke="currentColor"`, no `img`, and `aria-label="Back"`;
+new tests cover a consumer-supplied image, Enter/Space activation, the
+empty-label fallback and the 48x60 box. Negative control: restoring the old
+`&lt;div&gt;` markup fails exactly the tag and activation assertions and nothing
+else. The container-pinned visual baseline for the toolbar demo route is
+regenerated (1,577 px: the chevron glyphs and the two new demo instances;
+91 other baselines unchanged, 92/92 after).
+
+BREAKING CHANGE: with no `backIcon`, Toolbar renders
+`&lt;button aria-label="Back"&gt;&lt;svg/&gt;&lt;/button&gt;` instead of
+`&lt;div role="button"&gt;&lt;img src="https://sdk.breeze.in/..."/&gt;&lt;/div&gt;`. Consumers
+that selected `.back img`, asserted the old `src`, or themed the image must
+size the icon with the unchanged `--toolbar-back-image-height`/`-width`
+tokens (they now apply to the `svg` too), colour it with
+`--toolbar-back-icon-color`, or pass their own `backIcon` URL to keep an
+image. `backIcon={null}` still renders no control. See docs/Toolbar.md.
+
+## [2.136.12](https://github.com/juspay/svelte-ui-components/compare/2.136.12..2.136.11) - 2 September 2026
 
 ## [2.136.11](https://github.com/juspay/svelte-ui-components/compare/2.136.11..2.136.10) - 2 September 2026
 

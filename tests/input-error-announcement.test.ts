@@ -62,6 +62,18 @@ test.describe('Input — validation messages reach the accessibility tree', () =
     );
   });
 
+  test('an actionInput field in error state is not marked invalid, matching its hidden styling', async ({
+    page
+  }) => {
+    await page.goto('/components/input');
+    // actionInput hides the error border, the message and the label. If aria-invalid stayed on,
+    // a screen reader would announce an error the field gives no other sign of.
+    const field = page.getByTestId('input-action-error');
+    await expect(field).toBeVisible();
+    await expect(field).not.toHaveAttribute('aria-invalid', /.*/);
+    await expect(field).not.toHaveAttribute('aria-describedby', /.*/);
+  });
+
   test('a valid field with no helper text is not marked invalid and describes nothing', async ({
     page
   }) => {

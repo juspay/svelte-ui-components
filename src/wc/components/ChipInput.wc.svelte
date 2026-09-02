@@ -7,10 +7,12 @@
       ariaLabel: { type: 'String', attribute: 'aria-label' },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
+      editable: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onadd: { type: 'Object' },
       ondismiss: { type: 'Object' },
+      onedit: { type: 'Object' },
       onchange: { type: 'Object' }
     }
   }}

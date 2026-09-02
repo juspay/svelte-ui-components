@@ -28,4 +28,17 @@ test.describe('Status statusTextTag', () => {
     const tagName = await statusText.evaluate((el) => el.tagName.toLowerCase());
     expect(tagName).toBe('h2');
   });
+
+  test('a heading tag is left to the application typography; only the div takes the defaults', async ({
+    page
+  }) => {
+    await page.goto('/components/status');
+
+    // The component's weight/colour defaults live on .status-text-default, which only the plain
+    // div receives. A heading must not carry them, or the app's h2 rules could never win.
+    const asDiv = page.getByTestId('status-default-icon').locator('.status-text');
+    const asHeading = page.getByTestId('status-heading-tag').locator('.status-text');
+    await expect(asDiv).toHaveClass(/status-text-default/);
+    await expect(asHeading).not.toHaveClass(/status-text-default/);
+  });
 });

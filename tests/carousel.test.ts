@@ -45,6 +45,25 @@ test.describe('Carousel', () => {
       .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   });
 
+  test('the active dot is exposed as aria-current, and only that one', async ({ page }) => {
+    await page.goto('/components/carousel');
+    const dot1 = page.getByTestId('carousel-manual-dot-1');
+    const dot2 = page.getByTestId('carousel-manual-dot-2');
+
+    // Sighted users read the active-dot class; a screen-reader user querying the dots hears
+    // only "Go to slide N" unless the current one is marked. aria-current is that mark.
+    await expect(dot1).toHaveAttribute('aria-current', 'true');
+    await expect(dot2).not.toHaveAttribute('aria-current', /.*/);
+
+    await dot2.click();
+    await expect(dot2).toHaveAttribute('aria-current', 'true');
+    await expect(dot1).not.toHaveAttribute('aria-current', /.*/);
+    // Exactly one dot in the whole strip is current, so a stale mark on any other dot fails.
+    await expect(
+      page.getByTestId('carousel-manual-dots').locator('[aria-current="true"]')
+    ).toHaveCount(1);
+  });
+
   test('pressing Enter on a focused dot navigates to that slide', async ({ page }) => {
     await page.goto('/components/carousel');
 

@@ -38,4 +38,28 @@ test.describe('Body scroll lock — reference counted across surfaces', () => {
     await expect(outer).toHaveCount(0);
     await expect.poll(overflow).toBe('');
   });
+
+  test('the last release hands back the inline overflow the host had set, not an empty string', async ({
+    page
+  }) => {
+    await page.goto('/components/modal');
+    const overflow = () => page.evaluate(() => document.body.style.overflow);
+    const outer = page.locator('[data-pw="nested-lock-outer-modal"]');
+
+    // A host that runs its own `overflow: clip` on body must get it back when the lock ends.
+    await page.evaluate(() => {
+      document.body.style.overflow = 'clip';
+    });
+    await page.getByTestId('nested-lock-open-outer').click();
+    await expect(outer).toBeVisible();
+    await expect.poll(overflow).toBe('hidden');
+
+    await page.getByTestId('nested-lock-close-outer').click();
+    await expect(outer).toHaveCount(0);
+    await expect.poll(overflow).toBe('clip');
+
+    await page.evaluate(() => {
+      document.body.style.overflow = '';
+    });
+  });
 });

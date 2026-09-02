@@ -74,6 +74,12 @@ Every chip, its dismiss control, and the draft/add field carry an id derived fro
 | That chip's in-place edit field (`editable`) | `` `${testId}-item-${index}-edit` ``                                              |
 | The draft/add field                          | `` `${testId}-add` ``                                                             |
 
+These ids changed in 2.136.0. Before it the chip carried `${testId}-chip` and the draft field
+`${testId}-input`; the positional `-item-${index}` form arrived with in-place editing so that a
+chip and its edit field can be addressed individually. There is no alias for the old names, so a
+consumer test suite upgrading across 2.136.0 repoints those two locators. 3.0.0 has since shipped,
+so the rename sits behind a major boundary as well.
+
 `index` is the chip's current position in `values`, so an id follows a chip's slot, not the chip's text -- deleting or editing an earlier chip shifts every later id down. Nothing is rendered when `testId` is unset (matches every other component in this library).
 
 ## Events
@@ -151,7 +157,7 @@ see (WCAG 2.5.3, Label in Name).
 Available as `<sui-chip-input>`. Import the web component build separately:
 
 ```html
-<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+<script type="module" src="https://juspay.github.io/svelte-ui-components/wc/index.js"></script>
 
 <sui-chip-input aria-label="Product tags" placeholder="Add tag…" test-id="product-tags"></sui-chip-input>
 ```
@@ -161,6 +167,9 @@ Available as `<sui-chip-input>`. Import the web component build separately:
 ```js
 document.querySelector('sui-chip-input').values = ['sale', 'featured'];
 ```
+
+`editable` is a boolean attribute (`<sui-chip-input editable>`); `onedit`, like `onadd`, `ondismiss`
+and `onchange`, is a callback and is set as a property.
 
 Attribute names are kebab-case: `aria-label`, `test-id`. `ariaLabel` is the one worth calling
 out — ChipInput draws no label of its own, so without it the control reaches the accessibility

@@ -13,6 +13,7 @@
   let readonlySnapshot = $state('{"captured":"selector"}');
   let invalidEmail = $state('not-an-email');
   let helperOnly = $state('');
+  let actionStyle = $state('9,999');
   let pastedInto = $state('');
   let pasteCount = $state(0);
 </script>
@@ -37,6 +38,23 @@
     onErrorMessage="Enter a valid email address"
     infoMessage="Use your company address, not a personal one."
     testId="input-announced-error"
+  />
+</div>
+
+<h3>An action-style field never announces an error it does not show</h3>
+<p>
+  <code>actionInput</code> hides the label, the error message and the error styling so the field can
+  sit inside a composite control. <code>aria-invalid</code> follows that same gate: a field that shows
+  no error must not announce one.
+</p>
+<div class="demo-row" style="max-width: 400px;">
+  <Input
+    bind:value={actionStyle}
+    actionInput
+    ariaLabel="Order value"
+    forceError
+    onErrorMessage="Hidden by actionInput"
+    testId="input-action-error"
   />
 </div>
 

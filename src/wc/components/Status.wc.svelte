@@ -6,6 +6,7 @@
       statusIcon: { type: 'String', reflect: true, attribute: 'status-icon' },
       statusText: { type: 'String', reflect: true, attribute: 'status-text' },
       statusDescription: { type: 'String', reflect: true, attribute: 'status-description' },
+      statusTextTag: { type: 'String', reflect: true, attribute: 'status-text-tag' },
       buttonProperties: { type: 'Object' },
       classes: { type: 'String' },
       onbuttonClick: { type: 'Object' }

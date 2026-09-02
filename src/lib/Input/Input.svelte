@@ -321,7 +321,7 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={mandatory || null}
-        aria-invalid={showError ? 'true' : null}
+        aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
         required={mandatory || null}
         onfocus={onFocus}
@@ -359,7 +359,7 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={mandatory || null}
-        aria-invalid={showError ? 'true' : null}
+        aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
         required={mandatory || null}
         onfocus={onFocus}

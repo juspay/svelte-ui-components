@@ -2,83 +2,55 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.2)
 
-`lint` ran `prettier --check src && eslint src`, so `scripts/` and `tests/`
-were never checked at all. That gap was reported on #495 and is the reason a
-banned `undefined` reached review on #500 instead of failing locally. Extending
-the script to `src scripts tests` surfaced 31 real violations of rules this
-repo already enforces everywhere else.
+The 2 September sweep of review threads on the merged component-reuse PRs
+answered all 107 unresolved threads against release 3.1.0; fifteen were
+genuinely open. This lands all of them.
 
-Lint coverage:
+Accessibility: Carousel marks the active dot aria-current; ListItem drops
+aria-selected together with role/tabindex under suppressRoleAndTabindex;
+Input gates aria-invalid on !actionInput exactly as the visible error state
+already is; Accordion gives the trigger an id and makes the panel a region
+labelled by it.
 
-- analyze.ts asserted `value as UnknownRecord`, which `consistent-type-assertions`
-bans outside test files. Type predicates are banned too, so there is no way to
-tell the compiler a narrowed `object` is keyed by string. `asRecord` now copies
-the own enumerable keys instead. The copy is shallow, so nested nodes keep
-their identity and the AST walk is unchanged -- verified against lighthouse
-below.
-- `undefined` is banned repo-wide; signatures.ts returned `string | undefined`,
-casing.ts took `string | undefined`, and map.test.ts (added last change) used
-it in four places. readSignature returns `string | null`; forwardsDomEvent and
-deriveEventName take `unknown`, which is what their bodies already narrowed.
-- check-event-casing.js was missing `curly` braces in four places and was not
-Prettier-formatted.
-- tests/ had six unformatted files, six more `undefined` comparisons, an
-unnecessary escape, and an unused locator.
+Behaviour: Status applies its weight/colour defaults only to the plain div
+so a heading statusTextTag takes the application's typography;
+TypewriterText resyncs revealedWordCount after a bulk reveal;
+lockBodyScroll/unlockBodyScroll restore the host's prior inline overflow
+instead of clearing it.
 
-Three findings from #495, all still open:
+Web components: sui-status exposes status-text-tag; sui-chip-input exposes
+editable (attribute) and onedit (property).
 
-- transformModuleSpecifiers matched with a context-anchored regex, reasoning
-that a specifier only follows `from`, `import`, `import(` or `require(`. True,
-but those words appear just as readily in a comment or inside a quoted string,
-and the regex rewrote those too: a fixture with the package named in a line
-comment, a block comment, a string literal and one real import rewrote all
-four. It now parses with TypeScript, which is already a devDependency and
-already type-checks this directory, and replaces only the literal's interior
-so the quote style survives. Static, re-export, dynamic, `require` and
-`import()`-in-type-position are all covered by tests.
-- cli.test.ts kept `dir` and `lines` as module-level mutable state. Each test
-now builds its own project, cleaned up through `onTestFinished` so removal
-happens whether the test passes or throws. (The reported reason -- that
-afterEach would not run on a throw -- is not accurate; vitest runs it either
-way. The shared mutable state was worth removing on its own.)
-- Both script tsconfigs included `./*.ts`, so a nested file would have escaped
-`check:codemod` / `check:migrate`. Now `./**/*.ts`.
+Docs: browser-resolvable bundle URL in the ChipInput and DateRangePicker
+pages; the 2.136.0 ChipInput test-id rename recorded as a migration note;
+Combobox notes that aria-label names the listbox, shows inputProperties.label
+for the input, and lists allow-create; the Pill spec comment describes the
+regression guard it actually is.
 
-Verified: 288/288 unit, 136/136 across scripts/ (was 133), lint and check clean
-under the widened scope. The migrate CLI re-run against lighthouse reports 385
-.svelte files, 0 blockers, 0 findings -- identical to before the asRecord
-rewrite. Checked against a control, since a zero from a broken detector looks
-the same: a fixture with `showBackButton={false}`, `showBackButton="{false}"`,
-a bound guard and a bare Toolbar flags exactly the last two.
+Every behavioural change is pinned by a demo-route Playwright test; two demo
+pages gained a case for that purpose. check:wc stays red on four untouched
+files (pre-existing, not run by CI).
 
----
+The /components/input visual baseline is regenerated in the pinned Playwright
+container for the new demo section (980x4362 -&gt; 980x4561; only that page changed).
 
-Review on this PR found four more, including a regression this PR introduced.
+Review follow-ups: the actionInput demo field is named through ariaLabel so it
+keeps an accessible name with its label hidden, and the Carousel test asserts
+exactly one aria-current dot across the strip after navigation.
 
-- `import X = require('x')` stopped being rewritten. Its specifier hangs off an
-ExternalModuleReference rather than a call expression, and the regex being
-replaced had matched it by accident through the bare `require(` context. The
-parser walk did not look for it, so switching to a parser silently dropped
-syntax that used to work. Handled now, with a test.
+Yama's review of 959c3ca3e: the Accordion trigger id is derived from the
+per-instance uid rather than effectivePanelId, so a panelId assigned after
+mount moves the panel's id without renaming the trigger (pinned by a
+demo-route test that assigns panelId late and asserts the trigger id and
+aria-labelledby hold); Carousel's dot expressions use strict equality;
+docs/Accordion.md records the region/aria-labelledby wiring and that an
+icon-only trigger snippet needs text or an aria-label on the icon for its
+accessible name. The /components/accordion visual baseline is regenerated in
+the pinned container for the new demo section (980x800 -&gt; 980x1029).
 
-- asRecord could be fed dependencies through `__proto__`. `JSON.parse` makes it
-an ordinary own key, and assigning it re-points the copy's prototype instead
-of adding a field, so a manifest declaring neither svelte nor the library
-still answered for `dependencies` through the chain -- reported as satisfying
-the peer when nothing was declared. Copied with `defineProperty` now, which
-creates an own data property instead of invoking the setter.
-
-- readSignature interpolated the prop name into a regex unescaped, the same
-hole already fixed in map.test.ts. Escaped.
-
-- Documented why `Reflect.get` and `defineProperty` are used rather than plain
-indexing and assignment, and that only string keys are copied.
-
-Verified after: 290/290 unit, 138/138 across scripts/, lint and check clean.
-lighthouse unchanged at 385 files / 0 findings, and the four-case control still
-flags exactly the bound and bare Toolbars.
+## [3.1.2](https://github.com/juspay/svelte-ui-components/compare/3.1.2..3.1.1) - 2 September 2026
 
 ## [3.1.1](https://github.com/juspay/svelte-ui-components/compare/3.1.1..3.1.0) - 2 September 2026
 

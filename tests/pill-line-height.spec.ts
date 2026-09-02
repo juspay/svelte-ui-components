@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-// Pill hardcoded line-height: 1 with no CSS-variable hook, the only typographic property in the
-// component's style block that wasn't hookable (--pill-font-size, --pill-font-weight, and
-// --pill-font-family all already were). --pill-line-height closes that gap; the fallback is the
-// existing literal, so unset consumers see no change.
+// Regression test: --pill-line-height is documented and implemented in Pill.svelte (it shipped in
+// 5b7dc9d, before this spec). This spec guards against the hook being removed or falling out of
+// sync with the default (line-height: 1 at --pill-font-size: 13px).
 test.describe('Pill line-height hook', () => {
   test('defaults to line-height: 1 when --pill-line-height is unset', async ({ page }) => {
     await page.goto('/components/pill');

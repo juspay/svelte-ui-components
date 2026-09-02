@@ -72,7 +72,7 @@
       {onkeydown}
       role={suppressRoleAndTabindex ? null : (itemRole ?? 'button')}
       tabindex={suppressRoleAndTabindex ? null : itemRole === 'option' ? -1 : 0}
-      aria-selected={ariaSelected}
+      aria-selected={suppressRoleAndTabindex ? null : ariaSelected}
       {id}
       data-pw={testId}
       testID={testId}

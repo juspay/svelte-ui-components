@@ -450,7 +450,7 @@ The `.drp-trigger` global class selector was tightened to `.drp-trigger-wrapper 
 The `DateRangePicker` is also available as a native web component via the `sui-date-range-picker` custom element tag. Import the web component build separately:
 
 ```html
-<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+<script type="module" src="https://juspay.github.io/svelte-ui-components/wc/index.js"></script>
 
 <sui-date-range-picker
   mode="range"

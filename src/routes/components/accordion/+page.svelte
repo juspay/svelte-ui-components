@@ -2,6 +2,7 @@
   import Accordion from '$lib/Accordion/Accordion.svelte';
 
   let accordionExpanded = $state(false);
+  let latePanelId = $state<string>();
 </script>
 
 <div class="page-header">
@@ -70,6 +71,30 @@
     {/snippet}
     <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
       <p>This content stays collapsed — the trigger above is disabled.</p>
+    </div>
+  </Accordion>
+</div>
+
+<h3>Stable trigger id</h3>
+<p>
+  The trigger's <code>id</code> is generated per instance and never changes, even when
+  <code>panelId</code> is assigned later, so the panel's <code>aria-labelledby</code> and anything else
+  holding a reference to the trigger stay valid.
+</p>
+<div class="demo-row" style="flex-direction: column; max-width: 500px;">
+  <button
+    class="toggle-btn"
+    data-pw="accordion-late-id-assign"
+    onclick={() => (latePanelId = 'late-panel')}
+  >
+    Assign panelId
+  </button>
+  <Accordion testId="accordion-late-id" panelId={latePanelId}>
+    {#snippet trigger({ expanded })}
+      <span data-pw="accordion-late-id-trigger-label">Warranty {expanded ? '▲' : '▼'}</span>
+    {/snippet}
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+      <p>Two-year manufacturer warranty.</p>
     </div>
   </Accordion>
 </div>

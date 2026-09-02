@@ -31,7 +31,11 @@
         <Img inlineSvg src={statusIcon} alt="status" />
       {/if}
     </div>
-    <svelte:element this={statusTextTag} class="status-text">{statusText}</svelte:element>
+    <svelte:element
+      this={statusTextTag}
+      class="status-text"
+      class:status-text-default={statusTextTag === 'div'}>{statusText}</svelte:element
+    >
     <div class="status-description">
       {#if typeof descriptionSnippet === 'function'}
         {@render descriptionSnippet()}
@@ -51,9 +55,15 @@
 
 <style>
   .status-text {
+    margin-bottom: 8px;
+  }
+
+  /* The weight and colour defaults belong to the plain div only. When a consumer asks for a
+     heading tag (statusTextTag h1-h6) the whole point is that the application's own heading
+     typography applies, so those two declarations must not sit on the element and win. */
+  .status-text-default {
     font-weight: var(--status-font-weight, 600);
     color: var(--status-description-font-color, #2f3841);
-    margin-bottom: 8px;
   }
 
   .status-description {

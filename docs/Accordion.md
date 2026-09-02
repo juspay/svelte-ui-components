@@ -48,6 +48,8 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 - The built-in trigger is `role="button"` with `tabindex="0"` and toggles on Enter or Space.
 - `aria-expanded` reflects the panel's real open state, and `aria-controls` references the panel's `id` — the two elements are siblings rather than nested, so without that reference assistive technology has no way to reach the region the trigger governs. The id is generated per instance, so two accordions on one page never collide.
+- The panel is `role="region"` with `aria-labelledby` pointing at the trigger, so screen readers announce the expanded content as a landmark named by its header. The trigger's `id` is generated per instance and never changes, even if `panelId` is assigned later.
+- The trigger's accessible name is computed from its content. An icon-only `trigger` snippet therefore has no name: include text (visually hidden is fine) or put an `aria-label` on the icon element, which name-from-content picks up.
 
 ## CSS Variables
 

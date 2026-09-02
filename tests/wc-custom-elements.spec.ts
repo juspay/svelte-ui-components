@@ -156,3 +156,50 @@ test.describe('web-component wrappers', () => {
     expect(missing).toEqual([]);
   });
 });
+
+test.describe('web-component wrappers — props added after the first cut', () => {
+  test('sui-chip-input exposes editable as an attribute and onedit as a property', async ({
+    page
+  }) => {
+    await loadBundle(page);
+    await page.evaluate(() => {
+      const chip = document.createElement('sui-chip-input') as HTMLElement & {
+        values: string[];
+        onedit: (value: string, previousValue: string) => void;
+      };
+      chip.setAttribute('test-id', 'wc-edit');
+      chip.setAttribute('editable', '');
+      chip.values = ['sale'];
+      (window as Window & { __edits?: [string, string][] }).__edits = [];
+      chip.onedit = (value, previousValue) => {
+        (window as Window & { __edits?: [string, string][] }).__edits?.push([value, previousValue]);
+      };
+      document.body.append(chip);
+    });
+
+    // Without the prop declared, clicking a chip is inert: no edit field ever renders.
+    await page.locator('sui-chip-input [data-pw="wc-edit-item-0"]').click();
+    const editField = page.locator('sui-chip-input [data-pw="wc-edit-item-0-edit"]');
+    await expect(editField).toBeVisible();
+    await editField.fill('clearance');
+    await editField.press('Enter');
+
+    await expect
+      .poll(() => page.evaluate(() => (window as Window & { __edits?: unknown }).__edits))
+      .toEqual([['clearance', 'sale']]);
+  });
+
+  test('sui-status renders statusText as the tag named by status-text-tag', async ({ page }) => {
+    await loadBundle(page);
+    await page.evaluate(() => {
+      const status = document.createElement('sui-status');
+      status.setAttribute('status-text', 'Order confirmed');
+      status.setAttribute('status-description', 'Thanks for shopping');
+      status.setAttribute('status-text-tag', 'h2');
+      document.body.append(status);
+    });
+    const heading = page.locator('sui-status h2.status-text');
+    await expect(heading).toHaveText('Order confirmed');
+    await expect(heading).not.toHaveClass(/status-text-default/);
+  });
+});

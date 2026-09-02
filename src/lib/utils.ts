@@ -338,12 +338,16 @@ export function createDebouncer(delay: number) {
  * Callers must pair every lock with exactly one unlock.
  */
 let bodyScrollLockCount = 0;
+// Whatever inline overflow the host page had set before the first lock, so the last unlock
+// hands it back instead of clearing it: a host running `overflow: clip` on its body keeps it.
+let bodyScrollPreviousOverflow = '';
 
 export function lockBodyScroll(): void {
   if (typeof document === 'undefined') {
     return;
   }
   if (bodyScrollLockCount === 0) {
+    bodyScrollPreviousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
   }
   bodyScrollLockCount += 1;
@@ -355,6 +359,7 @@ export function unlockBodyScroll(): void {
   }
   bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
   if (bodyScrollLockCount === 0) {
-    document.body.style.overflow = '';
+    document.body.style.overflow = bodyScrollPreviousOverflow;
+    bodyScrollPreviousOverflow = '';
   }
 }

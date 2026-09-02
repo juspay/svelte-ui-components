@@ -28,6 +28,19 @@
   let revealedWordCount = $state(0);
 
   const WHITESPACE_CHARACTERS = new Set([' ', '\n']);
+
+  // The bulk-reveal path below discloses text without typing it, so the running whitespace
+  // count has to be rebuilt from the text itself or a later continuation would resume from a
+  // count that never saw the revealed suffix.
+  const countWhitespace = (value: string): number => {
+    let count = 0;
+    for (const character of value) {
+      if (WHITESPACE_CHARACTERS.has(character)) {
+        count += 1;
+      }
+    }
+    return count;
+  };
   const PUNCTUATION_CHARACTERS = new Set([',', '.', '?', '!']);
   const DIGIT_PATTERN = /\d/;
 
@@ -126,6 +139,7 @@
       const hadRemainingText = currentIndex < text.length;
       displayedText = text;
       currentIndex = text.length;
+      revealedWordCount = countWhitespace(text);
       if (hadRemainingText) {
         onProgress?.({ index: currentIndex, total: text.length, displayedText });
       }

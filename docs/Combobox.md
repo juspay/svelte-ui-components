@@ -403,7 +403,15 @@ Available as `<sui-combobox>`.
 document.querySelector('sui-combobox').items = [{ id: 'in', label: 'India' }];
 ```
 
+`aria-label` names the dropdown listbox (the `role="listbox"` element), not the text input, so
+the example above leaves the input without an accessible name of its own. Name the input through
+`inputProperties`, whose `label` renders the visible label the field is named by:
+
+```js
+document.querySelector('sui-combobox').inputProperties = { label: 'Country' };
+```
+
 Attributes are kebab-case: `aria-label`, `test-id`, `input-value`, `highlighted-index`,
-`no-results-text`, `max-selected`, `max-selected-text`. `items`, `selected`, `filterFn`, the
+`no-results-text`, `max-selected`, `max-selected-text`, `allow-create`. `items`, `selected`, `filterFn`, the
 snippet props and every `on*` handler are set as properties, since they are not serialisable
 as attributes.

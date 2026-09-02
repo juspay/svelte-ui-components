@@ -180,7 +180,7 @@
       <!-- eslint-disable-next-line -->
       {#each views as _, index}
         <div
-          class={activeSlideIndex == index ? 'active-dot' : 'dot'}
+          class={activeSlideIndex === index ? 'active-dot' : 'dot'}
           onclick={() => moveSlideToIndex(index)}
           onkeydown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -192,6 +192,7 @@
           role="button"
           tabindex="0"
           aria-label={`Go to slide ${index + 1}`}
+          aria-current={activeSlideIndex === index ? 'true' : null}
           data-pw={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
           testID={typeof dotTestId === 'string' ? `${dotTestId}-${index + 1}` : null}
         ></div>

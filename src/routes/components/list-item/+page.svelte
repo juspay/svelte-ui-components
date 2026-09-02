@@ -43,6 +43,7 @@
     rightImageTestId="list-item-suppressed-right"
     centerTextTestId="list-item-suppressed-center"
     suppressRoleAndTabindex
+    ariaSelected={true}
     onitemClick={handleSuppressedItemClick}
   />
   <output data-pw="list-item-suppressed-clicks">{suppressedItemClicks}</output>

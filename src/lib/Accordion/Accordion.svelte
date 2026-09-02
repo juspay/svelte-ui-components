@@ -20,6 +20,10 @@
      the panel from elsewhere too. */
   const uid = $props.id();
   const effectivePanelId = $derived(panelId ?? `accordion-panel-${uid}`);
+  /* The trigger id comes from the same per-instance uid, not from effectivePanelId: a caller
+     assigning `panelId` after mount must move the panel's id, not rename the trigger, so the
+     control's id stays stable for assistive technology and anything else referencing it. */
+  const triggerId = `accordion-trigger-${uid}`;
 
   function handleTriggerClick(): void {
     if (disabled) {
@@ -34,6 +38,7 @@
   <div
     class="accordion-trigger {triggerClasses ?? ''}"
     class:disabled
+    id={triggerId}
     role="button"
     tabindex={disabled ? -1 : 0}
     aria-expanded={expand}
@@ -53,6 +58,8 @@
 
 <div
   id={effectivePanelId}
+  role={trigger ? 'region' : null}
+  aria-labelledby={trigger ? triggerId : null}
   class="accordion {classes ?? ''}"
   class:expanded={expand}
   data-pw={typeof testId === 'string' ? testId : null}

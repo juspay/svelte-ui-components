@@ -100,6 +100,30 @@ those stayed flaky. Each test now grows the viewport to its own page height
 first, looping until the height stops changing, since growing the viewport can
 itself reveal more content.
 
+**Two demos can never be fitted, and are pinned instead.** The demo shell is
+`min-height: 100vh`, so a page that adds its own full-height element grows by
+exactly what the viewport gains — fitting it is an infinite loop. Measured
+against a fixed control:
+
+| Route          | Content height vs viewport | Sized against |
+| -------------- | -------------------------- | ------------- |
+| `table`        | 36388px at every viewport  | its content   |
+| `brand-loader` | grows 1× the viewport gain | the viewport  |
+| `status`       | grows 3× the viewport gain | the viewport  |
+
+The loop used to run out of attempts on those two and capture at whatever size
+the attempt budget happened to leave, which is why `brand-loader` was one of the
+routes that kept flaking. `status` was the clearest symptom: its baseline had
+grown to 60209px, of which roughly 92% was stretched empty space, because each
+attempt inflated the viewport and the page inflated to match. Growth that tracks
+the viewport is now detected and the page is captured at the default viewport —
+a size somebody chose rather than one the loop ran out of patience at. The
+`status` baseline is 2609px and 84% smaller as a result, with all seven of its
+demo variants still in frame.
+
+A page that is neither fitted nor viewport-relative fails, rather than being
+captured mid-scroll.
+
 **CSS animations are removed via a stylesheet.** `animation: none` on every
 element and pseudo-element. Playwright's `animations: 'disabled'` alone left
 ThinkingIndicator oscillating between two heights. Tagging animating elements

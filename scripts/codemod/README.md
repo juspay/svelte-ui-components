@@ -5,8 +5,11 @@ Mechanically migrates a consumer codebase from `polymorph-ui-components` to
 
 - rewrites import/export/dynamic-import specifiers (subpaths like `/wc` are
   preserved), in `.svelte`, `.ts` and `.js` files;
-- renames the 28 casing-only synthetic event props (see `map.ts`) on library
-  components in `.svelte` markup — component-aware: `onsort` is renamed on a
+- renames the 28 synthetic event props (see `map.ts`) on library components in
+  `.svelte` markup. All but one differ from the fork only in case; Stepper's
+  `onhandlestepclick` becomes `onstepclick`, stepping over the deprecated
+  `onhandleStepClick` alias that the casing match would otherwise have picked.
+  Renaming is component-aware: `onsort` is renamed on a
   `<Table>` imported from the library (through aliases,
   `import { Table as DataTable }`, namespace imports and
   `<svelte:component this={Table}>`), and left alone on your own components

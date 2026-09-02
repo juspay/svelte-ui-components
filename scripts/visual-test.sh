@@ -12,7 +12,7 @@
 #
 # Usage:
 #   scripts/visual-test.sh              # compare against committed baselines
-#   scripts/visual-test.sh --update     # regenerate baselines
+#   scripts/visual-test.sh --update-snapshots   # regenerate baselines
 #   scripts/visual-test.sh <extra args> # forwarded to `playwright test`
 set -euo pipefail
 

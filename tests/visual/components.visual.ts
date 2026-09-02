@@ -110,19 +110,42 @@ async function stubExternalRequests(page: Page): Promise<void> {
  * height.
  */
 async function waitForImages(page: Page): Promise<void> {
-  await page.evaluate(async () => {
-    await Promise.all(
-      Array.from(document.images)
-        .filter((image) => !image.complete)
-        .map(
-          (image) =>
-            new Promise<void>((resolve) => {
-              image.addEventListener('load', () => resolve(), { once: true });
-              image.addEventListener('error', () => resolve(), { once: true });
-            })
-        )
-    );
+  const settled = await page.evaluate(async () => {
+    // Rescanned each round rather than snapshotted once: settling one image can
+    // append another (a gallery that loads its full-size asset once the
+    // thumbnail is in), and a single pass would return with that one in flight.
+    // Watches are memoised so an image still pending on the next round is not
+    // given a second pair of listeners.
+    const watched = new WeakMap<HTMLImageElement, Promise<void>>();
+    const watch = (image: HTMLImageElement): Promise<void> => {
+      const existing = watched.get(image);
+      if (existing !== undefined) {
+        return existing;
+      }
+      const settled = new Promise<void>((resolve) => {
+        image.addEventListener('load', () => resolve(), { once: true });
+        image.addEventListener('error', () => resolve(), { once: true });
+      });
+      watched.set(image, settled);
+      return settled;
+    };
+
+    for (let round = 0; round < 5; round++) {
+      const pending = Array.from(document.images).filter((image) => !image.complete);
+      if (pending.length === 0) {
+        return true;
+      }
+      await Promise.all(pending.map(watch));
+    }
+    return Array.from(document.images).every((image) => image.complete);
   });
+
+  if (!settled) {
+    throw new Error(
+      'images were still loading after 5 rounds; capturing now would bake in whichever ' +
+        'ones happened to have arrived'
+    );
+  }
 }
 
 const VIEWPORT_WIDTH = 1280;
@@ -137,22 +160,91 @@ const MAX_VIEWPORT_HEIGHT = 20_000;
  * Repeats because growing the viewport can reveal content that was not
  * rendered before -- the page gets taller as a result of being measured. Two
  * passes settle every demo here; the loop stops as soon as the height holds.
+ *
+ * Some demos can never fit, because their content is sized against the viewport
+ * rather than against itself: the layout is `min-height: 100vh` and the demo
+ * adds its own full-height element, so every pixel the viewport gains comes
+ * straight back as content. Growing into that is an infinite loop, and the
+ * previous fixed attempt budget hid it -- the loop simply ran out, leaving a
+ * viewport whose final size was decided by the iteration count rather than by
+ * the page. Those are pinned to the default viewport instead, which is at
+ * least a size somebody chose.
+ *
+ * Anything that is neither fitted nor viewport-relative is a page still moving
+ * for some third reason, and throws rather than being captured mid-scroll.
  */
+/**
+ * Confirms that content really is sized against the viewport, by shrinking the
+ * viewport and checking the content follows it down.
+ *
+ * A single growth step cannot tell the two apart: a page that reveals a large
+ * section when given room grows by more than the viewport did, and inferring
+ * from that one delta would pin a perfectly fittable demo to the default size
+ * and quietly drop everything below the fold. Content that tracks the viewport
+ * shrinks when it shrinks; content that was merely revealed does not.
+ */
+async function confirmViewportRelative(
+  page: Page,
+  viewport: number,
+  height: number
+): Promise<boolean> {
+  const probe = Math.max(Math.round(viewport / 2), MIN_VIEWPORT_HEIGHT);
+  if (probe >= viewport) {
+    return false;
+  }
+
+  await page.setViewportSize({ width: VIEWPORT_WIDTH, height: probe });
+  const probed = await page.evaluate(() =>
+    Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+  );
+  await page.setViewportSize({ width: VIEWPORT_WIDTH, height: viewport });
+
+  // Shrinking by N must give back at least most of N. A fittable page barely
+  // moves, since its height comes from its own content.
+  return height - probed >= (viewport - probe) * 0.9;
+}
+
 async function fitViewportToContent(page: Page): Promise<void> {
-  let previous = 0;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  const seen: number[] = [];
+  let viewport = MIN_VIEWPORT_HEIGHT;
+  let previousViewport = MIN_VIEWPORT_HEIGHT;
+
+  for (let attempt = 0; attempt < 6; attempt++) {
     const height = await page.evaluate(() =>
       Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
     );
-    if (height === previous) {
+    const previousHeight = seen.at(-1);
+    if (height === previousHeight) {
       return;
     }
-    previous = height;
-    await page.setViewportSize({
-      width: VIEWPORT_WIDTH,
-      height: Math.min(Math.max(height, MIN_VIEWPORT_HEIGHT), MAX_VIEWPORT_HEIGHT)
-    });
+
+    if (previousHeight !== undefined) {
+      const viewportGain = viewport - previousViewport;
+      // Off by one to absorb sub-pixel rounding in the layout.
+      const looksViewportRelative = viewportGain > 0 && height - previousHeight >= viewportGain - 1;
+      if (looksViewportRelative && (await confirmViewportRelative(page, viewport, height))) {
+        // Surfaced in the report so a newly viewport-relative demo is visible
+        // rather than silently captured at a different size than its neighbours.
+        console.log('  pinned to the default viewport (content is viewport-relative)');
+        await page.setViewportSize({ width: VIEWPORT_WIDTH, height: MIN_VIEWPORT_HEIGHT });
+        return;
+      }
+    }
+
+    seen.push(height);
+    previousViewport = viewport;
+    // Clamped, not rejected: a demo past the cap is captured by scrolling, the
+    // same as before. The cap is here so a runaway page cannot ask for a buffer
+    // large enough to exhaust the container's memory.
+    viewport = Math.min(Math.max(height, MIN_VIEWPORT_HEIGHT), MAX_VIEWPORT_HEIGHT);
+    await page.setViewportSize({ width: VIEWPORT_WIDTH, height: viewport });
   }
+
+  throw new Error(
+    `page height never settled: ${seen.join(' -> ')}px, and the growth does not track the ` +
+      'viewport. Content is still reacting to something else, so any screenshot would be ' +
+      'taken mid-scroll.'
+  );
 }
 
 async function prepare(page: Page, slug: string): Promise<void> {

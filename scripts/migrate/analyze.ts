@@ -1,9 +1,10 @@
+import { intersects } from 'semver';
 import { parse } from 'svelte/compiler';
 
 export const LIBRARY = '@juspay/svelte-ui-components';
 
 /** Peer requirement of the 3.x line, from its published package.json. */
-export const SVELTE_PEER_MAJOR = 5;
+export const SVELTE_PEER_RANGE = '^5.41.2';
 
 export type FindingReason =
   | 'default-back-control'
@@ -40,10 +41,27 @@ function readDependency(manifest: unknown, name: string): string | null {
   return null;
 }
 
-/** First major version mentioned in a range, or null when none can be read. */
-function majorOf(range: string): number | null {
-  const match = /(\d+)\./.exec(range);
-  return match === null ? null : Number(match[1]);
+/**
+ * Whether a declared range permits any version satisfying the 3.x peer.
+ *
+ * Comparing major numbers is not enough in either direction: an exact `5.0.0`
+ * shares the major but does not satisfy `^5.41.2`, and `^4 || ^5` looks like a
+ * 4 to a first-number read while genuinely intersecting. Range intersection is
+ * the actual question being asked.
+ */
+function satisfiesPeer(range: string): boolean {
+  try {
+    // `loose` changes the answer for exactly one shape worth having: a version
+    // written with a leading zero (`^05.41.2`), which strict parsing throws on
+    // and would therefore report as a blocker it is not. It does not loosen
+    // prerelease handling -- `^5.41.2-alpha` and `>=5.0.0-0` resolve the same
+    // either way -- and genuinely unparseable ranges still throw.
+    return intersects(range, SVELTE_PEER_RANGE, { loose: true });
+  } catch {
+    // An unparseable range (a git URL, a workspace protocol) cannot be shown to
+    // satisfy the peer, and silently passing it would be the wrong default.
+    return false;
+  }
 }
 
 /**
@@ -65,10 +83,9 @@ export function analyzeManifest(manifest: unknown): ManifestReport {
   if (svelteRange === null) {
     blockers.push('svelte is not a dependency; 3.x requires svelte ^5.41.2');
   } else {
-    const major = majorOf(svelteRange);
-    if (major !== null && major < SVELTE_PEER_MAJOR) {
+    if (!satisfiesPeer(svelteRange)) {
       blockers.push(
-        `svelte ${svelteRange} is below the 3.x peer requirement of ^5.41.2 — migrate to Svelte 5 first`
+        `svelte ${svelteRange} does not satisfy the 3.x peer requirement of ${SVELTE_PEER_RANGE}`
       );
     }
   }
@@ -104,6 +121,21 @@ type AttributeSummary = {
   readonly hasSpread: boolean;
 };
 
+/** True only for `{false}` — not for a bound expression or the string "false". */
+function isFalseLiteral(value: unknown): boolean {
+  // Svelte types an attribute value as `true | ExpressionTag | Array<Text |
+  // ExpressionTag>`, and quoting a single expression (`="{false}"`) produces
+  // the one-element array rather than the bare tag. Reading only the bare shape
+  // reports a Toolbar whose control genuinely never renders.
+  const single = Array.isArray(value) && value.length === 1 ? value[0] : value;
+  const tag = asRecord(single);
+  if (tag.type !== 'ExpressionTag') {
+    return false;
+  }
+  const expression = asRecord(tag.expression);
+  return expression.type === 'Literal' && expression.value === false;
+}
+
 function summarize(node: UnknownRecord): AttributeSummary {
   const attributes = Array.isArray(node.attributes) ? node.attributes : [];
   let explicitlyDisabled = false;
@@ -117,10 +149,12 @@ function summarize(node: UnknownRecord): AttributeSummary {
       continue;
     }
     if (attribute.name === 'showBackButton') {
-      // Only a literal false is treated as disabling; a bound expression could
-      // be either, and guessing would produce a silently wrong report.
-      const rendered = JSON.stringify(attribute.value ?? '');
-      explicitlyDisabled = rendered.includes('false');
+      // Only the Boolean literal `false` disables the control. This used to
+      // test `JSON.stringify(value).includes('false')`, which matched unrelated
+      // AST properties -- a MemberExpression carries `"computed":false`, so
+      // `showBackButton={cfg.showBack}` read as disabled and its affected
+      // Toolbar went unreported. A false negative is the worst outcome here.
+      explicitlyDisabled = isFalseLiteral(attribute.value);
     }
     if (attribute.name === 'backIcon') {
       hasOwnIcon = true;
@@ -212,9 +246,13 @@ export function analyzeSvelte(source: string, file: string): readonly Finding[] 
   for (const match of source.matchAll(styleMatch)) {
     const legacy = /\.back[^{}]*\bimg\b/.exec(match[1]);
     if (legacy !== null) {
+      // legacy.index is an offset into the style CONTENT, while match.index
+      // points at the opening <style> tag, so the two must be bridged by the
+      // tag's own length or a multiline block reports the tag's line instead.
+      const contentStart = match.index + match[0].indexOf(match[1]);
       findings.push({
         file,
-        line: lineOf(source, match.index + legacy.index),
+        line: lineOf(source, contentStart + legacy.index),
         reason: 'legacy-back-selector',
         detail:
           'selector targets an <img> inside the back control; the default control now renders an inline <svg>'

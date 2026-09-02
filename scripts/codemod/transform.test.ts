@@ -32,14 +32,28 @@ describe('verified pair map', () => {
     expect(PROP_PAIRS).toHaveLength(28);
   });
 
-  it('is casing-only and unambiguous in both directions', () => {
+  it('renames every pair to a spelling that differs from the source', () => {
+    // Whether a pair may differ by more than case is asserted in `map.test.ts`,
+    // which knows about the deprecated aliases that license the exception.
     for (const pair of PROP_PAIRS) {
-      expect(pair.sui.toLowerCase()).toBe(pair.poly.toLowerCase());
       expect(pair.sui).not.toBe(pair.poly);
     }
+  });
+
+  it('never lands two distinct events on one target prop', () => {
     for (const direction of ['to-sui', 'to-poly'] as ReadonlyArray<'to-sui' | 'to-poly'>) {
       for (const [component, table] of directionConfig(direction).renames) {
-        const targets = [...table.values()];
+        // Aliases are excluded: several SUI spellings of the SAME event
+        // collapsing onto the fork's single name is the intent, not a
+        // collision. Two different events sharing a target would be.
+        const aliases = new Set(
+          PROP_PAIRS.filter((pair) => pair.component === component).flatMap(
+            (pair) => pair.suiDeprecatedAliases ?? []
+          )
+        );
+        const targets = [...table.entries()]
+          .filter(([from]) => !aliases.has(from))
+          .map(([, to]) => to);
         expect(new Set(targets).size, `${direction} ${component}`).toBe(targets.length);
       }
     }

@@ -42,6 +42,9 @@ const NATIVE_EVENTS = new Set([
 ]);
 
 const PROP_LINE = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\??:/;
+// DOM event types a genuine forward would hand straight to the caller.
+const DOM_EVENT_TYPE =
+  /\b(?:Event|UIEvent|MouseEvent|KeyboardEvent|FocusEvent|InputEvent|ClipboardEvent|PointerEvent|TouchEvent|DragEvent|WheelEvent|SubmitEvent|AnimationEvent|TransitionEvent|ProgressEvent)\b/;
 const root = join(import.meta.dirname, '..');
 
 function findPropertiesFiles(dir) {
@@ -66,7 +69,14 @@ function checkFile(path) {
 
     const rest = name.slice(2);
     const restLower = rest.toLowerCase();
-    const isNative = NATIVE_EVENTS.has(restLower);
+    // A prop only forwards a native event if it hands the caller a DOM event.
+    // Matching on the NAME alone mis-flagged six correct props whose names
+    // collide with a DOM event but which pass domain data instead:
+    // TypewriterText's onProgress passes a TypewriterProgress, Table's onToggle
+    // passes (rowIndex, checked, originalIndex), ThinkingIndicator's onToggle
+    // takes nothing. Lowercasing those would rename correct props into wrong
+    // ones, so the declared type decides, not the spelling.
+    const isNative = NATIVE_EVENTS.has(restLower) && DOM_EVENT_TYPE.test(line);
 
     if (isNative) {
       if (rest !== restLower) {

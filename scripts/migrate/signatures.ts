@@ -7,8 +7,11 @@ import { readFileSync } from 'node:fs';
  * `name?: type;` line by repo convention, and the only thing needed here is
  * enough of the type to tell a DOM event from a domain object.
  */
-export function readSignature(file: string, prop: string): string | undefined {
+export function readSignature(file: string, prop: string): string | null {
   const source = readFileSync(file, 'utf8');
-  const match = new RegExp(`^\\s*${prop}\\??:\\s*([^;]+);`, 'm').exec(source);
-  return match?.[1]?.replace(/\s+/g, ' ').trim();
+  // Escaped so a prop name is matched literally rather than as a pattern.
+  const escaped = prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(`^\\s*${escaped}\\??:\\s*([^;]+);`, 'm').exec(source);
+  const captured = match === null ? null : match[1];
+  return typeof captured === 'string' ? captured.replace(/\s+/g, ' ').trim() : null;
 }

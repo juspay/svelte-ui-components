@@ -20,9 +20,7 @@ test.describe('Progress ARIA', () => {
     await expect(bar).toHaveAttribute('aria-label', 'File upload progress');
   });
 
-  test('aria-valuenow tracks the visible label for whole-number percentages', async ({
-    page
-  }) => {
+  test('aria-valuenow tracks the visible label for whole-number percentages', async ({ page }) => {
     await page.goto('/components/progress');
 
     const bar = page.getByTestId('progress-determinate-demo');

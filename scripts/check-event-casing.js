@@ -22,23 +22,86 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const NATIVE_EVENTS = new Set([
-  'click', 'dblclick', 'auxclick', 'contextmenu',
-  'mousedown', 'mouseup', 'mousemove', 'mouseenter', 'mouseleave', 'mouseover', 'mouseout',
-  'keydown', 'keyup', 'keypress',
-  'focus', 'blur', 'focusin', 'focusout',
-  'input', 'change', 'submit', 'reset', 'select', 'invalid',
-  'scroll', 'wheel', 'resize',
-  'drag', 'dragstart', 'dragend', 'dragenter', 'dragleave', 'dragover', 'drop',
-  'touchstart', 'touchend', 'touchmove', 'touchcancel',
-  'pointerdown', 'pointerup', 'pointermove', 'pointerenter', 'pointerleave', 'pointerover', 'pointerout', 'pointercancel',
-  'copy', 'cut', 'paste',
-  'load', 'error', 'abort',
-  'animationstart', 'animationend', 'animationiteration', 'transitionend', 'transitionstart',
-  'toggle', 'close', 'cancel',
+  'click',
+  'dblclick',
+  'auxclick',
+  'contextmenu',
+  'mousedown',
+  'mouseup',
+  'mousemove',
+  'mouseenter',
+  'mouseleave',
+  'mouseover',
+  'mouseout',
+  'keydown',
+  'keyup',
+  'keypress',
+  'focus',
+  'blur',
+  'focusin',
+  'focusout',
+  'input',
+  'change',
+  'submit',
+  'reset',
+  'select',
+  'invalid',
+  'scroll',
+  'wheel',
+  'resize',
+  'drag',
+  'dragstart',
+  'dragend',
+  'dragenter',
+  'dragleave',
+  'dragover',
+  'drop',
+  'touchstart',
+  'touchend',
+  'touchmove',
+  'touchcancel',
+  'pointerdown',
+  'pointerup',
+  'pointermove',
+  'pointerenter',
+  'pointerleave',
+  'pointerover',
+  'pointerout',
+  'pointercancel',
+  'copy',
+  'cut',
+  'paste',
+  'load',
+  'error',
+  'abort',
+  'animationstart',
+  'animationend',
+  'animationiteration',
+  'transitionend',
+  'transitionstart',
+  'toggle',
+  'close',
+  'cancel',
   // HTMLMediaElement (audio/video)
-  'play', 'pause', 'ended', 'volumechange', 'timeupdate', 'loadstart', 'loadeddata',
-  'loadedmetadata', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'waiting',
-  'stalled', 'suspend', 'progress', 'ratechange', 'durationchange', 'emptied'
+  'play',
+  'pause',
+  'ended',
+  'volumechange',
+  'timeupdate',
+  'loadstart',
+  'loadeddata',
+  'loadedmetadata',
+  'canplay',
+  'canplaythrough',
+  'seeking',
+  'seeked',
+  'waiting',
+  'stalled',
+  'suspend',
+  'progress',
+  'ratechange',
+  'durationchange',
+  'emptied'
 ]);
 
 const PROP_LINE = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\??:/;
@@ -52,8 +115,11 @@ function findPropertiesFiles(dir) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     const st = statSync(full);
-    if (st.isDirectory()) out.push(...findPropertiesFiles(full));
-    else if (entry === 'properties.ts') out.push(full);
+    if (st.isDirectory()) {
+      out.push(...findPropertiesFiles(full));
+    } else if (entry === 'properties.ts') {
+      out.push(full);
+    }
   }
   return out;
 }
@@ -63,9 +129,13 @@ function checkFile(path) {
   const lines = readFileSync(path, 'utf8').split('\n');
   lines.forEach((line, i) => {
     const m = line.match(PROP_LINE);
-    if (!m) return;
+    if (!m) {
+      return;
+    }
     const name = m[1];
-    if (!/^on[a-zA-Z]/.test(name)) return;
+    if (!/^on[a-zA-Z]/.test(name)) {
+      return;
+    }
 
     const rest = name.slice(2);
     const restLower = rest.toLowerCase();
@@ -80,17 +150,27 @@ function checkFile(path) {
 
     if (isNative) {
       if (rest !== restLower) {
-        violations.push({ line: i + 1, name, reason: `native DOM event "${restLower}" should stay lowercase: on${restLower}` });
+        violations.push({
+          line: i + 1,
+          name,
+          reason: `native DOM event "${restLower}" should stay lowercase: on${restLower}`
+        });
       }
     } else if (/^[a-z]/.test(rest)) {
       const fixed = 'on' + rest[0].toUpperCase() + rest.slice(1);
-      violations.push({ line: i + 1, name, reason: `synthesized event should be camelCase: ${fixed} (word boundaries beyond the first may need a manual pass)` });
+      violations.push({
+        line: i + 1,
+        name,
+        reason: `synthesized event should be camelCase: ${fixed} (word boundaries beyond the first may need a manual pass)`
+      });
     }
   });
   return violations;
 }
 
-const baseline = new Set(JSON.parse(readFileSync(join(import.meta.dirname, 'event-casing-baseline.json'), 'utf8')));
+const baseline = new Set(
+  JSON.parse(readFileSync(join(import.meta.dirname, 'event-casing-baseline.json'), 'utf8'))
+);
 const files = findPropertiesFiles(join(root, 'src', 'lib'));
 
 let newCount = 0;
@@ -110,9 +190,13 @@ for (const file of files) {
   }
 }
 
-console.log(`\n${knownCount} known (grandfathered) violation(s), ${newCount} new violation(s), across ${files.length} properties.ts files.`);
+console.log(
+  `\n${knownCount} known (grandfathered) violation(s), ${newCount} new violation(s), across ${files.length} properties.ts files.`
+);
 
 if (newCount > 0) {
-  console.log('New event-casing violations found. Either fix the name, or if it is genuinely a native DOM event this list is missing, add it to NATIVE_EVENTS.');
+  console.log(
+    'New event-casing violations found. Either fix the name, or if it is genuinely a native DOM event this list is missing, add it to NATIVE_EVENTS.'
+  );
   process.exit(1);
 }

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { runCodemod } from './cli.ts';
 
 const POLY_APP = [
@@ -29,28 +29,44 @@ const SUI_APP = [
 const PLAIN = '<h1>untouched</h1>\n';
 const BARREL = `export { Table } from 'polymorph-ui-components';\n`;
 
-let dir = '';
-let lines: string[] = [];
-const log = (line: string) => {
-  lines.push(line);
+type Fixture = {
+  readonly dir: string;
+  readonly lines: string[];
+  readonly log: (line: string) => void;
 };
 
-beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'sui-codemod-'));
-  lines = [];
+/**
+ * Builds a throwaway project for one test.
+ *
+ * Per-test rather than shared module state, so no test can observe another
+ * one's directory or captured output, and the tree is removed through
+ * `onTestFinished` whether the test passes or throws.
+ */
+function project(): Fixture {
+  const dir = mkdtempSync(join(tmpdir(), 'sui-codemod-'));
+  onTestFinished(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
   writeFileSync(join(dir, 'App.svelte'), POLY_APP);
   writeFileSync(join(dir, 'Plain.svelte'), PLAIN);
   writeFileSync(join(dir, 'barrel.ts'), BARREL);
   mkdirSync(join(dir, 'node_modules', 'dep'), { recursive: true });
   writeFileSync(join(dir, 'node_modules', 'dep', 'Skip.svelte'), POLY_APP);
-});
 
-afterEach(() => {
-  rmSync(dir, { recursive: true, force: true });
-});
+  const lines: string[] = [];
+  return {
+    dir,
+    lines,
+    log: (line: string) => {
+      lines.push(line);
+    }
+  };
+}
 
 describe('runCodemod', () => {
   it('rewrites files in place and reports accurate counts', () => {
+    const { dir, lines, log } = project();
     const summary = runCodemod([dir], log);
     expect(summary.exitCode).toBe(0);
     expect(summary.filesScanned).toBe(3);
@@ -73,6 +89,7 @@ describe('runCodemod', () => {
   });
 
   it('--dry-run prints a diff and writes nothing', () => {
+    const { dir, lines, log } = project();
     const summary = runCodemod(['--dry-run', dir], log);
     expect(summary.exitCode).toBe(0);
     expect(summary.filesChanged).toBe(2);
@@ -86,6 +103,7 @@ describe('runCodemod', () => {
   });
 
   it('--reverse migrates SUI form back to poly form', () => {
+    const { dir, lines, log } = project();
     writeFileSync(join(dir, 'App.svelte'), SUI_APP);
     const summary = runCodemod(['--reverse', join(dir, 'App.svelte')], log);
     expect(summary.exitCode).toBe(0);
@@ -96,6 +114,7 @@ describe('runCodemod', () => {
   });
 
   it('is a no-op when run twice', () => {
+    const { dir, lines, log } = project();
     runCodemod([dir], log);
     const second = runCodemod([dir], log);
     expect(second.filesChanged).toBe(0);
@@ -104,17 +123,20 @@ describe('runCodemod', () => {
   });
 
   it('fails usage when no paths are given', () => {
+    const { dir, lines, log } = project();
     const summary = runCodemod([], log);
     expect(summary.exitCode).toBe(2);
     expect(lines.join('\n')).toContain('Usage');
   });
 
   it('fails usage on an unknown flag', () => {
+    const { dir, lines, log } = project();
     const summary = runCodemod(['--nope', dir], log);
     expect(summary.exitCode).toBe(2);
   });
 
   it('fails usage on a nonexistent path', () => {
+    const { dir, lines, log } = project();
     const summary = runCodemod([join(dir, 'missing')], log);
     expect(summary.exitCode).toBe(2);
   });

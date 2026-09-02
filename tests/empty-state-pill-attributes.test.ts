@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('EmptyState and Pill native attributes', () => {
-  test('EmptyState exposes stable title and description locators for text and snippets', async ({ page }) => {
+  test('EmptyState exposes stable title and description locators for text and snippets', async ({
+    page
+  }) => {
     await page.goto('/components/empty-state');
 
     await expect(page.getByTestId('empty-state-attributes-title')).toHaveText('Fallback title');
@@ -16,10 +18,14 @@ test.describe('EmptyState and Pill native attributes', () => {
     );
   });
 
-  test('EmptyState does not render a description locator when no description is rendered', async ({ page }) => {
+  test('EmptyState does not render a description locator when no description is rendered', async ({
+    page
+  }) => {
     await page.goto('/components/empty-state');
 
-    await expect(page.getByTestId('empty-state-without-description-title')).toHaveText('Title only');
+    await expect(page.getByTestId('empty-state-without-description-title')).toHaveText(
+      'Title only'
+    );
     await expect(page.getByTestId('empty-state-without-description-description')).toHaveCount(0);
   });
 

@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import { parse } from 'svelte/compiler';
 import type { AST } from 'svelte/compiler';
 import { directionConfig } from './map.ts';
@@ -435,40 +436,114 @@ export function transformSvelte(
   };
 }
 
-/**
- * Import-specifier rewrite for plain .ts/.js files (barrels, utilities). The
- * one regex-based path in this codemod: module specifiers are string literals
- * in a fixed syntactic position (after `from`, `import`, `import(`, or
- * `require(`), so a context-anchored regex cannot touch arbitrary strings; a
- * full TS parser would add a dependency without adding safety here.
- */
-const SPECIFIER_CONTEXT =
-  /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*)(['"])([^'"\n]+)\2/g;
+function scriptKindFor(file: string): ts.ScriptKind {
+  if (file.endsWith('.tsx')) {
+    return ts.ScriptKind.TSX;
+  }
+  if (file.endsWith('.jsx')) {
+    return ts.ScriptKind.JSX;
+  }
+  if (file.endsWith('.js') || file.endsWith('.mjs') || file.endsWith('.cjs')) {
+    return ts.ScriptKind.JS;
+  }
+  return ts.ScriptKind.TS;
+}
 
+/** The module specifier a node carries, or null if it is not an import site. */
+function specifierOf(node: ts.Node): ts.StringLiteralLike | null {
+  if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
+    return node.moduleSpecifier;
+  }
+  if (ts.isExportDeclaration(node)) {
+    const specifier = node.moduleSpecifier;
+    if (typeof specifier !== 'undefined' && ts.isStringLiteralLike(specifier)) {
+      return specifier;
+    }
+    return null;
+  }
+  // `import('x')` and `require('x')`.
+  if (ts.isCallExpression(node) && node.arguments.length > 0) {
+    const callee = node.expression;
+    const isImport = callee.kind === ts.SyntaxKind.ImportKeyword;
+    const isRequire = ts.isIdentifier(callee) && callee.text === 'require';
+    const first = node.arguments[0];
+    if ((isImport || isRequire) && ts.isStringLiteralLike(first)) {
+      return first;
+    }
+    return null;
+  }
+  // `import X = require('x')`. TS-only syntax whose specifier hangs off an
+  // ExternalModuleReference rather than a call expression.
+  if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
+    const expression = node.moduleReference.expression;
+    if (ts.isStringLiteralLike(expression)) {
+      return expression;
+    }
+    return null;
+  }
+  // `import('x').Foo` in type position.
+  if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+    const literal = node.argument.literal;
+    if (ts.isStringLiteralLike(literal)) {
+      return literal;
+    }
+  }
+  return null;
+}
+
+/**
+ * Import-specifier rewrite for plain .ts/.js files (barrels, utilities).
+ *
+ * Parsed rather than matched. This was a context-anchored regex on the
+ * reasoning that a specifier only appears after `from`, `import`, `import(` or
+ * `require(` -- true, but those words appear just as readily in a comment or
+ * inside a quoted string, and the regex rewrote all of them. TypeScript is
+ * already a devDependency and already type-checks this directory, so the exact
+ * answer costs nothing here. Only the literal's interior is replaced, so the
+ * original quote style survives.
+ */
 export function transformModuleSpecifiers(
   source: string,
   file: string,
   direction: Direction
 ): TransformResult {
-  void file;
   const config = directionConfig(direction);
-  let importsRewritten = 0;
-  const code = source.replace(
-    SPECIFIER_CONTEXT,
-    (match, context: string, quote: string, specifier: string) => {
-      const subpath = packageSubpath(specifier, config.fromPackage);
-      if (subpath === null) {
-        return match;
-      }
-      importsRewritten += 1;
-      return `${context}${quote}${config.toPackage}${subpath}${quote}`;
-    }
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.ESNext,
+    true,
+    scriptKindFor(file)
   );
+
+  const edits: { readonly start: number; readonly end: number; readonly text: string }[] = [];
+  const visit = (node: ts.Node): void => {
+    const specifier = specifierOf(node);
+    if (specifier !== null) {
+      const subpath = packageSubpath(specifier.text, config.fromPackage);
+      if (subpath !== null) {
+        edits.push({
+          start: specifier.getStart(sourceFile) + 1,
+          end: specifier.getEnd() - 1,
+          text: `${config.toPackage}${subpath}`
+        });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+
+  // Applied back to front so earlier offsets stay valid.
+  let code = source;
+  for (const edit of [...edits].reverse()) {
+    code = code.slice(0, edit.start) + edit.text + code.slice(edit.end);
+  }
+
   return {
     code,
     changed: code !== source,
     propsRenamed: 0,
-    importsRewritten,
+    importsRewritten: edits.length,
     warnings: []
   };
 }

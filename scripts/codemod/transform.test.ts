@@ -483,4 +483,52 @@ describe('module specifier rewrite for .ts/.js files', () => {
     expect(result.code).toBe(source);
     expect(result.changed).toBe(false);
   });
+
+  it('leaves the package name alone inside comments and string literals', () => {
+    // A context-anchored regex has no idea what a comment is: the words that
+    // anchor it appear just as readily in prose and in quoted text.
+    const source = [
+      `// import { Table } from 'polymorph-ui-components';  <- the old way`,
+      `/* migrate with: import x from 'polymorph-ui-components' */`,
+      `const help = "run: import { Table } from 'polymorph-ui-components'";`,
+      `import { Table } from 'polymorph-ui-components';`,
+      ''
+    ].join('\n');
+
+    const result = transformModuleSpecifiers(source, 'barrel.ts', 'to-sui');
+
+    expect(result.importsRewritten).toBe(1);
+    expect(result.code).toContain(`// import { Table } from 'polymorph-ui-components';`);
+    expect(result.code).toContain(`/* migrate with: import x from 'polymorph-ui-components' */`);
+    expect(result.code).toContain(
+      `const help = "run: import { Table } from 'polymorph-ui-components'"`
+    );
+    expect(result.code).toContain(`import { Table } from '@juspay/svelte-ui-components';`);
+  });
+
+  it('rewrites an import-equals require', () => {
+    // TS-only syntax, and its specifier hangs off an ExternalModuleReference
+    // rather than a call expression. The regex this replaced matched it by
+    // accident, through the bare `require(` context.
+    const source = [`import Table = require('polymorph-ui-components');`, ''].join('\n');
+
+    const result = transformModuleSpecifiers(source, 'barrel.ts', 'to-sui');
+
+    expect(result.code).toContain(`import Table = require('@juspay/svelte-ui-components');`);
+    expect(result.importsRewritten).toBe(1);
+  });
+
+  it('rewrites a require call and an import type', () => {
+    const source = [
+      `const { Table } = require('polymorph-ui-components');`,
+      `type T = import('polymorph-ui-components').TableProperties;`,
+      ''
+    ].join('\n');
+
+    const result = transformModuleSpecifiers(source, 'barrel.ts', 'to-sui');
+
+    expect(result.code).toContain(`require('@juspay/svelte-ui-components')`);
+    expect(result.code).toContain(`import('@juspay/svelte-ui-components').TableProperties`);
+    expect(result.importsRewritten).toBe(2);
+  });
 });

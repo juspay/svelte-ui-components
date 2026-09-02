@@ -11,9 +11,13 @@ import { expect, test } from '@playwright/test';
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
   await page.goto('/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
-  await page.waitForFunction(() => customElements.get('sui-choicebox') !== undefined, undefined, {
-    timeout: 15_000
-  });
+  await page.waitForFunction(
+    () => typeof customElements.get('sui-choicebox') !== 'undefined',
+    null,
+    {
+      timeout: 15_000
+    }
+  );
 };
 
 test.describe('sui-choicebox — show-indicator', () => {

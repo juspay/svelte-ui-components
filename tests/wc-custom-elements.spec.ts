@@ -14,7 +14,7 @@ const loadBundle = async (page: import('@playwright/test').Page): Promise<void> 
   await page.goto('/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(
-    (tags) => tags.every((tag) => customElements.get(tag) !== undefined),
+    (tags) => tags.every((tag) => typeof customElements.get(tag) !== 'undefined'),
     TAGS as unknown as string[],
     { timeout: 15_000 }
   );
@@ -24,7 +24,7 @@ test.describe('web-component wrappers', () => {
   test('all four tags register as custom elements', async ({ page }) => {
     await loadBundle(page);
     const defined = await page.evaluate(
-      (tags) => tags.map((tag) => [tag, customElements.get(tag) !== undefined]),
+      (tags) => tags.map((tag) => [tag, typeof customElements.get(tag) !== 'undefined']),
       TAGS as unknown as string[]
     );
     expect(defined).toEqual(TAGS.map((tag) => [tag, true]));
@@ -41,11 +41,15 @@ test.describe('web-component wrappers', () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
       const deep = (root: ShadowRoot | Element, selector: string): Element | null => {
         const direct = root.querySelector(selector);
-        if (direct) return direct;
+        if (direct) {
+          return direct;
+        }
         for (const child of root.querySelectorAll('*')) {
           if (child.shadowRoot) {
             const found = deep(child.shadowRoot, selector);
-            if (found) return found;
+            if (found) {
+              return found;
+            }
           }
         }
         return null;
@@ -131,7 +135,9 @@ test.describe('web-component wrappers', () => {
       const hasAccessor = (name: string): boolean => {
         let proto: object | null = Object.getPrototypeOf(combobox);
         while (proto) {
-          if (Object.getOwnPropertyDescriptor(proto, name)) return true;
+          if (Object.getOwnPropertyDescriptor(proto, name)) {
+            return true;
+          }
           proto = Object.getPrototypeOf(proto);
         }
         return false;

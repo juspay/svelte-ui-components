@@ -221,7 +221,6 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
     await expect(page.getByTestId('drp-typeable-maxrange-demo-panel')).toBeVisible();
 
     const startDateInput = page.getByTestId('drp-typeable-maxrange-demo-start-date');
-    const endDateInput = page.getByTestId('drp-typeable-maxrange-demo-end-date');
 
     // Seeded from "Today", so both boundaries are already set — the range is complete
     // and the grid's own span guard is therefore inactive.

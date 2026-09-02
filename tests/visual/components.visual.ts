@@ -119,7 +119,7 @@ async function waitForImages(page: Page): Promise<void> {
     const watched = new WeakMap<HTMLImageElement, Promise<void>>();
     const watch = (image: HTMLImageElement): Promise<void> => {
       const existing = watched.get(image);
-      if (existing !== undefined) {
+      if (typeof existing !== 'undefined') {
         return existing;
       }
       const settled = new Promise<void>((resolve) => {
@@ -218,7 +218,7 @@ async function fitViewportToContent(page: Page): Promise<void> {
       return;
     }
 
-    if (previousHeight !== undefined) {
+    if (typeof previousHeight !== 'undefined') {
       const viewportGain = viewport - previousViewport;
       // Off by one to absorb sub-pixel rounding in the layout.
       const looksViewportRelative = viewportGain > 0 && height - previousHeight >= viewportGain - 1;

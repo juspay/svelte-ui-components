@@ -16,4 +16,5 @@ export type OptionalChoiceboxProperties = {
 
 export type ChoiceboxEventProperties = {
   onclick?: (selected: boolean) => void;
+  onClick?: (selected: boolean) => void;
 };

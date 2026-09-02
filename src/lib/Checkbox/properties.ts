@@ -26,4 +26,5 @@ export type OptionalCheckboxProperties = {
 
 export type CheckboxEventProperties = {
   onclick?: (checked: boolean) => void;
+  onClick?: (checked: boolean) => void;
 };

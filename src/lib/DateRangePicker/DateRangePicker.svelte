@@ -54,13 +54,27 @@
     initialPresetLabel,
     compareTrigger,
     openCompare = $bindable(false),
-    onapply,
-    onapplysingle,
-    onapplycompare,
-    oncancel,
-    onopentoggle,
-    onclear
+    onapply: onapplyLegacy,
+    onApply,
+    onapplysingle: onapplysingleLegacy,
+    onApplySingle,
+    onapplycompare: onapplycompareLegacy,
+    onApplyCompare,
+    oncancel: oncancelLegacy,
+    onCancel,
+    onopentoggle: onopentoggleLegacy,
+    onOpenToggle,
+    onclear: onclearLegacy,
+    onClear
   }: DateRangePickerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onapply = $derived(onApply ?? onapplyLegacy);
+  const onapplycompare = $derived(onApplyCompare ?? onapplycompareLegacy);
+  const onapplysingle = $derived(onApplySingle ?? onapplysingleLegacy);
+  const oncancel = $derived(onCancel ?? oncancelLegacy);
+  const onclear = $derived(onClear ?? onclearLegacy);
+  const onopentoggle = $derived(onOpenToggle ?? onopentoggleLegacy);
 
   const isDualMonth: boolean = $derived(
     typeof dualMonth === 'boolean' ? dualMonth : mode === 'range'

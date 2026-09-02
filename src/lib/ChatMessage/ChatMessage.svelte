@@ -27,12 +27,20 @@
     retryLabel = 'Retry',
     feedbackUpLabel = 'Good response',
     feedbackDownLabel = 'Bad response',
-    onretry,
-    onfeedback,
-    oncopy,
+    onretry: onretryLegacy,
+    onRetry,
+    onfeedback: onfeedbackLegacy,
+    onFeedback,
+    oncopy: oncopyLegacy,
+    onCopy,
     testId,
     classes
   }: ChatMessageProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const oncopy = $derived(onCopy ?? oncopyLegacy);
+  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
+  const onretry = $derived(onRetry ?? onretryLegacy);
 
   let party = $derived(partyOf(role));
 

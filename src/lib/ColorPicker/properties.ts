@@ -16,5 +16,7 @@ export type OptionalColorPickerProperties = {
 
 export type ColorPickerEventProperties = {
   onchange?: (value: string) => void;
+  onChange?: (value: string) => void;
   oninput?: (value: string) => void;
+  onInput?: (value: string) => void;
 };

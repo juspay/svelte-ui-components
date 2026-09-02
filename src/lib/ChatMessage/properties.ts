@@ -50,6 +50,9 @@ export type OptionalChatMessageProperties = {
 
 export type ChatMessageEventProperties = {
   onretry?: (() => void) | null;
+  onRetry?: (() => void) | null;
   onfeedback?: ((value: ChatMessageFeedback) => void) | null;
+  onFeedback?: ((value: ChatMessageFeedback) => void) | null;
   oncopy?: (text: string) => void;
+  onCopy?: (text: string) => void;
 };

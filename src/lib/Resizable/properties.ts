@@ -35,6 +35,9 @@ export type OptionalResizableProperties = {
 
 export type ResizableEventProperties = {
   onresize?: (size: ResizeSize) => void;
+  onResize?: (size: ResizeSize) => void;
   onresizestart?: (size: ResizeSize) => void;
+  onResizeStart?: (size: ResizeSize) => void;
   onresizeend?: (size: ResizeSize) => void;
+  onResizeEnd?: (size: ResizeSize) => void;
 };

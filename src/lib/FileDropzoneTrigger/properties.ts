@@ -26,4 +26,5 @@ export type OptionalFileDropzoneTriggerProperties = {
 export type FileDropzoneTriggerEventProperties = {
   /** Wire to `FileInput`'s `openFilePicker`. Non-compact only — compact relies on `FileInput`'s own whole-area click/drop handling. */
   onclick?: () => void;
+  onClick?: () => void;
 };

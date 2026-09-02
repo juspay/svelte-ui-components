@@ -91,8 +91,10 @@ export type OptionalThinkingIndicatorProperties = {
   /** Bindable index of the selected coding row (`null` = none). */
   selected?: number | null;
   onrowselect?: (index: number | null) => void;
+  onRowSelect?: (index: number | null) => void;
   /** Fires exactly once, the moment `busy` flips false. No effect while `busy` is never set. */
   onsettled?: () => void;
+  onSettled?: () => void;
   /**
    * Delay (ms) before the automatic post-settle collapse fires once `busy` flips
    * false. `null` disables the automatic collapse. Has no effect while `busy` is

@@ -12,9 +12,13 @@
     dismissIcon,
     leadingIcon,
     onclick,
-    ondismiss,
+    ondismiss: ondismissLegacy,
+    onDismiss,
     classes
   }: PillProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const ondismiss = $derived(onDismiss ?? ondismissLegacy);
 
   let interactive = $derived(typeof onclick === 'function');
 

@@ -40,18 +40,36 @@
     createLabel = (query: string) => `Create "${query}"`,
     action,
     actionIcon,
-    onselect,
-    oninput,
-    onopen,
-    onclose,
+    onselect: onselectLegacy,
+    onSelect,
+    oninput: oninputLegacy,
+    onInput,
+    onopen: onopenLegacy,
+    onOpen,
+    onclose: oncloseLegacy,
+    onClose,
     onkeydown,
     onfocus,
     onblur,
-    onchange,
-    onadd,
-    onremove,
-    oncreate
+    onchange: onchangeLegacy,
+    onChange,
+    onadd: onaddLegacy,
+    onAdd,
+    onremove: onremoveLegacy,
+    onRemove,
+    oncreate: oncreateLegacy,
+    onCreate
   }: ComboboxProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onadd = $derived(onAdd ?? onaddLegacy);
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const oncreate = $derived(onCreate ?? oncreateLegacy);
+  const oninput = $derived(onInput ?? oninputLegacy);
+  const onopen = $derived(onOpen ?? onopenLegacy);
+  const onremove = $derived(onRemove ?? onremoveLegacy);
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   let containerEl: HTMLDivElement | null = $state(null);
   let inputRef: ReturnType<typeof Input> | null = $state(null);

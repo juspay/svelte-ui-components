@@ -24,4 +24,5 @@ export type OptionalBannerProperties = {
 export type BannerEventProperties = {
   onclick?: (event: MouseEvent) => void;
   ondismiss?: () => void;
+  onDismiss?: () => void;
 };

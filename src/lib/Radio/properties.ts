@@ -17,4 +17,5 @@ export type OptionalRadioProperties = {
 
 export type RadioEventProperties = {
   onchange?: (value: string) => void;
+  onChange?: (value: string) => void;
 };

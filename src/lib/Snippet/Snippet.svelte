@@ -9,9 +9,13 @@
     showCopyButton = true,
     testId,
     copyIcon,
-    oncopy,
+    oncopy: oncopyLegacy,
+    onCopy,
     classes
   }: SnippetProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const oncopy = $derived(onCopy ?? oncopyLegacy);
 
   let copied = $state(false);
 

@@ -18,9 +18,15 @@
     scrollRightIcon,
     tab,
     classes,
-    onchange,
-    onkeychange
+    onchange: onchangeLegacy,
+    onChange,
+    onkeychange: onkeychangeLegacy,
+    onKeyChange
   }: TabsProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const onkeychange = $derived(onKeyChange ?? onkeychangeLegacy);
 
   const isVertical = $derived(orientation === 'vertical');
 

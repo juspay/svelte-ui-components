@@ -7,8 +7,12 @@
     disabled = false,
     testId,
     classes,
-    onclick
+    onclick: onclickLegacy,
+    onClick
   }: ToggleProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclick = $derived(onClick ?? onclickLegacy);
 
   const handleCheckboxClick = (e: MouseEvent): void => {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {

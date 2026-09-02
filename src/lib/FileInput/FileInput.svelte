@@ -9,9 +9,15 @@
     disabled = false,
     testId,
     classes,
-    onfiles,
-    onerror
+    onfiles: onfilesLegacy,
+    onFiles,
+    onerror: onerrorLegacy,
+    onError
   }: FileInputProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onerror = $derived(onError ?? onerrorLegacy);
+  const onfiles = $derived(onFiles ?? onfilesLegacy);
 
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);

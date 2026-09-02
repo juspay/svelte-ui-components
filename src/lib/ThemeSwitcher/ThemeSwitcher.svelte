@@ -30,8 +30,12 @@
     storageKey = 'theme-preference',
     testId,
     classes,
-    onchange
+    onchange: onchangeLegacy,
+    onChange
   }: ThemeSwitcherProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
 
   let currentValue: string = $state(value ?? 'system');
   let systemPreference: string = $state('light');

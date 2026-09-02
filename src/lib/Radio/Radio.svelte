@@ -8,9 +8,13 @@
     text = '',
     disabled = false,
     testId,
-    onchange,
+    onchange: onchangeLegacy,
+    onChange,
     classes
   }: RadioProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
 
   let checked = $derived(selectedValue === value);
 

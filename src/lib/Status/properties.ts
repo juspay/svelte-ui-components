@@ -58,4 +58,5 @@ export type StatusProperties = StatusEventProperties & {
 
 export type StatusEventProperties = {
   onbuttonClick?: () => void;
+  onButtonClick?: () => void;
 };

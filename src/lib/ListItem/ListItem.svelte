@@ -25,11 +25,16 @@
     centerContent,
     rightContent,
     bottomContent,
-    onleftImageClick,
-    onrightImageClick,
-    oncenterTextClick,
-    onitemClick,
-    ontopSectionClick,
+    onleftImageClick: onleftImageClickLegacy,
+    onLeftImageClick,
+    onrightImageClick: onrightImageClickLegacy,
+    onRightImageClick,
+    oncenterTextClick: oncenterTextClickLegacy,
+    onCenterTextClick,
+    onitemClick: onitemClickLegacy,
+    onItemClick,
+    ontopSectionClick: ontopSectionClickLegacy,
+    onTopSectionClick,
     onkeydown,
     classes,
     transformSvg,
@@ -37,6 +42,13 @@
     ariaSelected,
     id
   }: ListItemProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const oncenterTextClick = $derived(onCenterTextClick ?? oncenterTextClickLegacy);
+  const onitemClick = $derived(onItemClick ?? onitemClickLegacy);
+  const onleftImageClick = $derived(onLeftImageClick ?? onleftImageClickLegacy);
+  const onrightImageClick = $derived(onRightImageClick ?? onrightImageClickLegacy);
+  const ontopSectionClick = $derived(onTopSectionClick ?? ontopSectionClickLegacy);
 
   function handleLeftImageClick(event: MouseEvent): void {
     onleftImageClick?.(event);

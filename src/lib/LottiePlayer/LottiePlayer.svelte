@@ -18,9 +18,15 @@
     ariaHidden = true,
     testId,
     classes,
-    oncomplete,
-    onerror
+    oncomplete: oncompleteLegacy,
+    onComplete,
+    onerror: onerrorLegacy,
+    onError
   }: LottiePlayerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const oncomplete = $derived(onComplete ?? oncompleteLegacy);
+  const onerror = $derived(onError ?? onerrorLegacy);
 
   let containerEl: HTMLDivElement | null = $state(null);
   let animationItem: LocalAnimationItem | null = $state(null);

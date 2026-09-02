@@ -14,10 +14,16 @@
     testId,
     itemIcon,
     searchIcon,
-    onselect,
-    onclose,
+    onselect: onselectLegacy,
+    onSelect,
+    onclose: oncloseLegacy,
+    onClose,
     classes
   }: CommandMenuProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   let query = $state('');
   let activeIndex = $state(0);

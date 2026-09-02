@@ -86,6 +86,8 @@ export type OptionalFunnelChartProperties = {
 export type FunnelChartEventProperties = {
   /** Fires when the user clicks a stage bar. Receives the stage index and its data. */
   onstageclick?: (event: { index: number; stage: FunnelStage }) => void;
+  onStageClick?: (event: { index: number; stage: FunnelStage }) => void;
   /** Fires when the user hovers over or leaves a stage bar. `null` on leave. */
   onstagehover?: (event: { index: number; stage: FunnelStage } | null) => void;
+  onStageHover?: (event: { index: number; stage: FunnelStage } | null) => void;
 };

@@ -12,10 +12,18 @@
     separator,
     testId,
     classes,
-    onchange,
-    oninput,
-    oncomplete
+    onchange: onchangeLegacy,
+    onChange,
+    oninput: oninputLegacy,
+    onInput,
+    oncomplete: oncompleteLegacy,
+    onComplete
   }: SplitInputProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const oncomplete = $derived(onComplete ?? oncompleteLegacy);
+  const oninput = $derived(onInput ?? oninputLegacy);
 
   let fieldCount = $derived(typeof fields !== 'undefined' ? fields.length : length);
 

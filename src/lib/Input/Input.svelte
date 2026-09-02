@@ -30,14 +30,21 @@
     testId = '',
     textTransformers = [],
     textViewPresentation = [],
-    onFocus = () => {},
-    onFocusout = () => {},
-    onBlur = () => {},
-    onInput = () => {},
-    onPaste = () => {},
+    onFocus: onFocusLegacy = () => {},
+    onfocus,
+    onFocusout: onFocusoutLegacy = () => {},
+    onfocusout,
+    onBlur: onBlurLegacy = () => {},
+    onblur,
+    onInput: onInputLegacy = () => {},
+    oninput,
+    onPaste: onPasteLegacy = () => {},
+    onpaste,
     onStateChange = () => {},
-    onClick = () => {},
-    onKeyDown = () => {},
+    onClick: onClickLegacy = () => {},
+    onclick,
+    onKeyDown: onKeyDownLegacy = () => {},
+    onkeydown,
     classes,
     role,
     ariaLabel,
@@ -60,6 +67,15 @@
     resize = 'none',
     showCount = false
   }: InputProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onBlur = $derived(onblur ?? onBlurLegacy);
+  const onClick = $derived(onclick ?? onClickLegacy);
+  const onFocus = $derived(onfocus ?? onFocusLegacy);
+  const onFocusout = $derived(onfocusout ?? onFocusoutLegacy);
+  const onInput = $derived(oninput ?? onInputLegacy);
+  const onKeyDown = $derived(onkeydown ?? onKeyDownLegacy);
+  const onPaste = $derived(onpaste ?? onPasteLegacy);
 
   /* `for` on a <label> resolves against an element's id, never its name. The label
      was emitted with for={name} while the field itself carried only name={name},

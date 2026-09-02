@@ -26,10 +26,14 @@
     valueFormat,
     tooltipSnippet,
     empty,
-    onnodeclick,
-    onlinkclick,
-    onnodehover,
-    onlinkhover,
+    onnodeclick: onnodeclickLegacy,
+    onNodeClick,
+    onlinkclick: onlinkclickLegacy,
+    onLinkClick,
+    onnodehover: onnodehoverLegacy,
+    onNodeHover,
+    onlinkhover: onlinkhoverLegacy,
+    onLinkHover,
     testId,
     classes,
     columnLabels,
@@ -41,6 +45,12 @@
     lastColumnLabelSide = 'right',
     marginX = 40
   }: SankeyChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onlinkclick = $derived(onLinkClick ?? onlinkclickLegacy);
+  const onlinkhover = $derived(onLinkHover ?? onlinkhoverLegacy);
+  const onnodeclick = $derived(onNodeClick ?? onnodeclickLegacy);
+  const onnodehover = $derived(onNodeHover ?? onnodehoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

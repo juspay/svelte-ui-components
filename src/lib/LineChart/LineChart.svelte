@@ -60,11 +60,17 @@
     tooltipPortal = false,
     highlightedIndex = null,
     onChartReady,
-    onpointclick,
-    onpointhover,
+    onpointclick: onpointclickLegacy,
+    onPointClick,
+    onpointhover: onpointhoverLegacy,
+    onPointHover,
     testId,
     classes
   }: LineChartProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onpointclick = $derived(onPointClick ?? onpointclickLegacy);
+  const onpointhover = $derived(onPointHover ?? onpointhoverLegacy);
 
   // ── State ──────────────────────────────────────────────────────
 

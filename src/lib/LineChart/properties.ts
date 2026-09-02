@@ -147,7 +147,19 @@ export type LineChartEventProperties = {
     pointIndex: number;
     point: LineChartDataPoint;
   }) => void;
+  onPointClick?: (event: {
+    seriesIndex: number;
+    pointIndex: number;
+    point: LineChartDataPoint;
+  }) => void;
   onpointhover?: (
+    event: {
+      seriesIndex: number;
+      pointIndex: number;
+      point: LineChartDataPoint;
+    } | null
+  ) => void;
+  onPointHover?: (
     event: {
       seriesIndex: number;
       pointIndex: number;

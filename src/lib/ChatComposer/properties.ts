@@ -80,37 +80,49 @@ export type OptionalChatComposerProperties = {
 
 export type ChatComposerEventProperties = {
   onsubmit?: (value: string, attachments: File[]) => void;
+  onSubmit?: (value: string, attachments: File[]) => void;
   oninput?: (value: string, event: Event) => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onpaste?: (event: ClipboardEvent) => void;
   onstop?: () => void;
+  onStop?: () => void;
   onvoice?: () => void;
+  onVoice?: () => void;
   onattach?: (files: File[]) => void;
+  onAttach?: (files: File[]) => void;
   /**
    * Intercepts the attach button: when provided, clicking it calls this instead of
    * opening the built-in file picker — for apps with their own chooser (camera /
    * gallery / files).
    */
   onattachclick?: () => void;
+  onAttachClick?: () => void;
   /**
    * Removal callbacks for the rich strip's chips. Omit them to render the rich
    * chips read-only (no remove buttons), mirroring AttachmentChipRow.
    */
   onremoverichimage?: (id: string) => void;
+  onRemoveRichImage?: (id: string) => void;
   onremoverichfile?: (id: string) => void;
+  onRemoveRichFile?: (id: string) => void;
   onremoverichvideo?: (id: string) => void;
+  onRemoveRichVideo?: (id: string) => void;
   /**
    * Open/preview callbacks for the rich strip's chips — when provided, a chip's
    * tile becomes a real button and clicking it fires with the attachment (e.g.
    * open a lightbox, play the video).
    */
   onopenrichimage?: (image: AttachmentChipImage) => void;
+  onOpenRichImage?: (image: AttachmentChipImage) => void;
   onopenrichvideo?: (video: AttachmentChipVideo) => void;
+  onOpenRichVideo?: (video: AttachmentChipVideo) => void;
   onopenrichfile?: (file: AttachmentChipFile) => void;
+  onOpenRichFile?: (file: AttachmentChipFile) => void;
   /**
    * The composer's idle action (e.g. voice conversation mode). While the value is
    * empty, nothing is sendable and no reply is streaming, the send button gives way
    * to an action button that fires this.
    */
   onaction?: () => void;
+  onAction?: () => void;
 };

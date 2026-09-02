@@ -22,9 +22,12 @@
     triggerSummary,
     testId,
     itemTestId,
-    onchange,
-    onopen,
-    onclose,
+    onchange: onchangeLegacy,
+    onChange,
+    onopen: onopenLegacy,
+    onOpen,
+    onclose: oncloseLegacy,
+    onClose,
     classes,
     open = $bindable(false),
     dropdownAlign = 'left',
@@ -33,6 +36,11 @@
     leftIconTestId,
     usePortal = false
   }: SelectProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onopen = $derived(onOpen ?? onopenLegacy);
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
     return source.map((entry) => (typeof entry === 'string' ? { id: entry, label: entry } : entry));

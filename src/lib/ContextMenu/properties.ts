@@ -28,6 +28,9 @@ export type OptionalContextMenuProperties = {
 
 export type ContextMenuEventProperties = {
   onselect?: (item: ContextMenuItem) => void;
+  onSelect?: (item: ContextMenuItem) => void;
   onopen?: () => void;
+  onOpen?: () => void;
   onclose?: () => void;
+  onClose?: () => void;
 };

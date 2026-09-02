@@ -11,11 +11,21 @@
     editable = false,
     testId,
     classes,
-    onadd,
-    ondismiss,
-    onedit,
-    onchange
+    onadd: onaddLegacy,
+    onAdd,
+    ondismiss: ondismissLegacy,
+    onDismiss,
+    onedit: oneditLegacy,
+    onEdit,
+    onchange: onchangeLegacy,
+    onChange
   }: ChipInputProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onadd = $derived(onAdd ?? onaddLegacy);
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const ondismiss = $derived(onDismiss ?? ondismissLegacy);
+  const onedit = $derived(onEdit ?? oneditLegacy);
 
   let draft = $state('');
 

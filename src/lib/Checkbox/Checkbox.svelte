@@ -11,11 +11,15 @@
     testId,
     checkedIcon,
     indeterminateIcon,
-    onclick,
+    onclick: onclickLegacy,
+    onClick,
     classes,
     ariaControls,
     ariaLabel
   }: CheckboxProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclick = $derived(onClick ?? onclickLegacy);
 
   function handleClick(): void {
     if (disabled) {

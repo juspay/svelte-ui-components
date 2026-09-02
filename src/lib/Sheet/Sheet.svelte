@@ -15,11 +15,19 @@
     testId,
     content,
     footer,
-    onclose,
-    onafteropen,
-    onafterclose,
+    onclose: oncloseLegacy,
+    onClose,
+    onafteropen: onafteropenLegacy,
+    onAfterOpen,
+    onafterclose: onaftercloseLegacy,
+    onAfterClose,
     classes
   }: SheetProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onafterclose = $derived(onAfterClose ?? onaftercloseLegacy);
+  const onafteropen = $derived(onAfterOpen ?? onafteropenLegacy);
+  const onclose = $derived(onClose ?? oncloseLegacy);
 
   let overlayDiv: HTMLDivElement | null = $state(null);
   let sheetPanel: HTMLDivElement | null = $state(null);

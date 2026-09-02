@@ -26,12 +26,18 @@
     richVideoTooltip,
     richRemoveIcon,
     richFileIcon,
-    onremoverichimage,
-    onremoverichfile,
-    onremoverichvideo,
-    onopenrichimage,
-    onopenrichvideo,
-    onopenrichfile,
+    onremoverichimage: onremoverichimageLegacy,
+    onRemoveRichImage,
+    onremoverichfile: onremoverichfileLegacy,
+    onRemoveRichFile,
+    onremoverichvideo: onremoverichvideoLegacy,
+    onRemoveRichVideo,
+    onopenrichimage: onopenrichimageLegacy,
+    onOpenRichImage,
+    onopenrichvideo: onopenrichvideoLegacy,
+    onOpenRichVideo,
+    onopenrichfile: onopenrichfileLegacy,
+    onOpenRichFile,
     sendable = null,
     accept = '',
     multiple = false,
@@ -46,15 +52,21 @@
     actionIcon,
     actionLabel = 'Voice conversation',
     leading,
-    onsubmit,
+    onsubmit: onsubmitLegacy,
+    onSubmit,
     oninput,
     onkeydown,
     onpaste,
-    onstop,
-    onvoice,
-    onattach,
-    onattachclick,
-    onaction,
+    onstop: onstopLegacy,
+    onStop,
+    onvoice: onvoiceLegacy,
+    onVoice,
+    onattach: onattachLegacy,
+    onAttach,
+    onattachclick: onattachclickLegacy,
+    onAttachClick,
+    onaction: onactionLegacy,
+    onAction,
     testId,
     inputTestId,
     inputAriaLabel,
@@ -66,6 +78,20 @@
     actionTestId,
     classes
   }: ChatComposerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onaction = $derived(onAction ?? onactionLegacy);
+  const onattach = $derived(onAttach ?? onattachLegacy);
+  const onattachclick = $derived(onAttachClick ?? onattachclickLegacy);
+  const onopenrichfile = $derived(onOpenRichFile ?? onopenrichfileLegacy);
+  const onopenrichimage = $derived(onOpenRichImage ?? onopenrichimageLegacy);
+  const onopenrichvideo = $derived(onOpenRichVideo ?? onopenrichvideoLegacy);
+  const onremoverichfile = $derived(onRemoveRichFile ?? onremoverichfileLegacy);
+  const onremoverichimage = $derived(onRemoveRichImage ?? onremoverichimageLegacy);
+  const onremoverichvideo = $derived(onRemoveRichVideo ?? onremoverichvideoLegacy);
+  const onstop = $derived(onStop ?? onstopLegacy);
+  const onsubmit = $derived(onSubmit ?? onsubmitLegacy);
+  const onvoice = $derived(onVoice ?? onvoiceLegacy);
 
   let fileInput: HTMLInputElement | null = $state(null);
 

@@ -23,12 +23,20 @@
     jumpLabel = 'Jump to latest',
     jumpIcon,
     allowCopy = false,
-    onscrollstate,
-    onretry,
-    onfeedback,
+    onscrollstate: onscrollstateLegacy,
+    onScrollState,
+    onretry: onretryLegacy,
+    onRetry,
+    onfeedback: onfeedbackLegacy,
+    onFeedback,
     testId,
     classes
   }: ChatMessageListProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
+  const onretry = $derived(onRetry ?? onretryLegacy);
+  const onscrollstate = $derived(onScrollState ?? onscrollstateLegacy);
 
   let listEl: HTMLElement | null = $state(null);
   let innerEl: HTMLElement | null = $state(null);

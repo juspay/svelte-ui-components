@@ -35,9 +35,14 @@ export type ListItemProperties = ListItemEventProperties & {
 
 export type ListItemEventProperties = {
   onleftImageClick?: (event: MouseEvent) => void;
+  onLeftImageClick?: (event: MouseEvent) => void;
   onrightImageClick?: (event: MouseEvent) => void;
+  onRightImageClick?: (event: MouseEvent) => void;
   oncenterTextClick?: (event: MouseEvent) => void;
+  onCenterTextClick?: (event: MouseEvent) => void;
   onitemClick?: (event: MouseEvent) => void;
+  onItemClick?: (event: MouseEvent) => void;
   ontopSectionClick?: (event: MouseEvent) => void;
+  onTopSectionClick?: (event: MouseEvent) => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

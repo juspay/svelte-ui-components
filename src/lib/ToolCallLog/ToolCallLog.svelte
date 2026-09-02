@@ -6,7 +6,16 @@
   import { computeMenuDropdownPosition } from '../Menu/dropdownPosition';
   import type { ToolCallChip, ToolCallLogProperties } from './properties';
 
-  let { chips, onchipclick, testId, classes }: ToolCallLogProperties = $props();
+  let {
+    chips,
+    onchipclick: onchipclickLegacy,
+    onChipClick,
+    testId,
+    classes
+  }: ToolCallLogProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchipclick = $derived(onChipClick ?? onchipclickLegacy);
 
   // Exactly one popover open at a time, component-local.
   let openIndex = $state<number | null>(null);

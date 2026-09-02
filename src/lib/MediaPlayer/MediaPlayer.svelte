@@ -26,10 +26,14 @@
     captionsSrcLang,
     onplay,
     onpause,
-    onvolumechange,
+    onvolumechange: onvolumechangeLegacy,
+    onVolumeChange,
     testId,
     classes
   }: MediaPlayerProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onvolumechange = $derived(onVolumeChange ?? onvolumechangeLegacy);
 
   let videoPlayer: HTMLVideoElement | null = $state(null);
 

@@ -25,4 +25,5 @@ export type OptionalPillProperties = {
 export type PillEventProperties = {
   onclick?: (event: MouseEvent) => void;
   ondismiss?: () => void;
+  onDismiss?: () => void;
 };

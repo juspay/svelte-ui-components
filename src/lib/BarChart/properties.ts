@@ -242,5 +242,7 @@ export type OptionalBarChartProperties = {
 
 export type BarChartEventProperties = {
   onbarclick?: (event: { index: number; dataPoint: BarChartDataPoint }) => void;
+  onBarClick?: (event: { index: number; dataPoint: BarChartDataPoint }) => void;
   onbarhover?: (event: { index: number; dataPoint: BarChartDataPoint } | null) => void;
+  onBarHover?: (event: { index: number; dataPoint: BarChartDataPoint } | null) => void;
 };

@@ -19,5 +19,7 @@ export type OptionalSliderProperties = {
 
 export type SliderEventProperties = {
   onchange?: (value: number) => void;
+  onChange?: (value: number) => void;
   oninput?: (value: number) => void;
+  onInput?: (value: number) => void;
 };

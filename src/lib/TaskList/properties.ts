@@ -23,6 +23,7 @@ export type MandatoryTaskListProperties = {
 export type OptionalTaskListProperties = {
   /** Fires when a failed row's retry button is clicked, with that row's index. */
   onretry?: (index: number) => void;
+  onRetry?: (index: number) => void;
   testId?: string;
   classes?: string;
 };

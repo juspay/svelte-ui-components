@@ -11,9 +11,12 @@
     testId,
     trigger,
     interactiveTrigger = false,
-    onselect,
-    onopen,
-    onclose,
+    onselect: onselectLegacy,
+    onSelect,
+    onopen: onopenLegacy,
+    onOpen,
+    onclose: oncloseLegacy,
+    onClose,
     classes,
     transformSvg,
     selectedValue = null,
@@ -24,6 +27,11 @@
     placement = 'bottom-left',
     usePortal = false
   }: MenuProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onclose = $derived(onClose ?? oncloseLegacy);
+  const onopen = $derived(onOpen ?? onopenLegacy);
+  const onselect = $derived(onSelect ?? onselectLegacy);
 
   let itemRole = $derived(menuRole === 'listbox' ? 'option' : 'menuitem');
 

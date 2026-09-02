@@ -10,10 +10,16 @@
     showValue = false,
     labelFormatter,
     testId,
-    onchange,
-    oninput,
+    onchange: onchangeLegacy,
+    onChange,
+    oninput: oninputLegacy,
+    onInput,
     classes
   }: SliderProperties = $props();
+
+  // Event-casing phase 1: both spellings accepted, the correct one wins.
+  const onchange = $derived(onChange ?? onchangeLegacy);
+  const oninput = $derived(onInput ?? oninputLegacy);
 
   let percentage = $derived(((value - min) / (max - min)) * 100);
   let displayValue = $derived(labelFormatter ? labelFormatter(value) : String(value));

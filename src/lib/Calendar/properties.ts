@@ -22,6 +22,9 @@ export type OptionalCalendarProperties = {
 
 export type CalendarEventProperties = {
   onselect?: (event: { date: Date }) => void;
+  onSelect?: (event: { date: Date }) => void;
   onrangeselect?: (event: { rangeStart: Date; rangeEnd: Date }) => void;
+  onRangeSelect?: (event: { rangeStart: Date; rangeEnd: Date }) => void;
   onmonthchange?: (event: { year: number; month: number }) => void;
+  onMonthChange?: (event: { year: number; month: number }) => void;
 };

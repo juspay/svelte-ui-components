@@ -68,6 +68,10 @@
       }
     }
   });
+  // Display state only. `bind:value` here would write the user's keystrokes into a
+  // $derived override that is discarded the moment `committed` or `listening` changes;
+  // the write path is `oninput` below, which puts them in `committed` where the
+  // controller's seedTranscript can read them back.
   let simulatedValue = $derived(simulated.listening ? simulated.interimText : committed);
 
   let browserCommitted = $state('');
@@ -111,7 +115,7 @@
 <div class="demo-row">
   <div class="composer-host">
     <ChatComposer
-      bind:value={simulatedValue}
+      value={simulatedValue}
       placeholder="Tap the mic — a scripted transcript streams in"
       recording={simulated.listening}
       oninput={(value) => {
@@ -133,7 +137,7 @@
 <div class="demo-row">
   <div class="composer-host">
     <ChatComposer
-      bind:value={browserValue}
+      value={browserValue}
       placeholder="Uses the real microphone where the browser supports it"
       recording={browserEngine.listening}
       oninput={(value) => {

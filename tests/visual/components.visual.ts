@@ -44,6 +44,28 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
  * problem, fixed since, and it is baselined now: re-check an entry here before
  * assuming the reason still holds.
  */
+/**
+ * Per-route pixel allowances, for a route whose baseline is stable everywhere
+ * except one antialiased edge. Scoped to the named route only: every other
+ * snapshot stays on the exact match below.
+ *
+ * The allowance is a COUNT, not a ratio, and it is deliberately far below the
+ * smallest real change this suite has ever caught, so a genuine regression
+ * cannot hide underneath it. For reference, the real diffs seen so far were
+ * 415px (a one-line demo row added to Toggle), 1577px (the Toolbar back-control
+ * rewrite) and 137982px (a new section on the Input page).
+ */
+const TOLERANCES: Readonly<Record<string, number>> = {
+  // Measured, not assumed. Two failures on two different branches, neither of
+  // which touches TaskList, produced the SAME five pixels: x=83, y=332-336.
+  // That column is the antialiased left edge of the part-filled progress circle
+  // beside "Draft migration plan"; it rasterises at rgb(220) in the baseline and
+  // rgb(107) when the arc boundary lands one column over. A re-run on unchanged
+  // code cleared it both times. Two of the nine runs since this baseline landed
+  // hit it, so it is frequent enough to gate merges on noise.
+  'task-list': 12
+};
+
 const EXCLUDED: Readonly<Record<string, string>> = {
   // Measured across full-suite runs rather than assumed: the captured height
   // walks 2029 -> 2035 -> 2121 -> 2150 -> 2059px within a single test's own
@@ -350,13 +372,22 @@ test.describe('visual baselines', () => {
 
       const masks = (MASKS[slug] ?? []).map((selector) => page.locator(selector));
 
+      const allowance = TOLERANCES[slug];
+
+      // Exact match is the default, and stays the default. A blanket tolerance
+      // would be a slow leak: it hides the sub-threshold drift that accumulates
+      // into a real regression, and the container pins rendering tightly enough
+      // that we don't need one. A route in TOLERANCES trades that exactness for
+      // a bounded pixel count on that route alone -- and only maxDiffPixels is
+      // passed there, since maxDiffPixelRatio: 0 alongside it is the stricter
+      // bound and would fail the comparison anyway.
+      const comparison =
+        typeof allowance === 'number' ? { maxDiffPixels: allowance } : { maxDiffPixelRatio: 0 };
+
       await expect(page.locator('main.content')).toHaveScreenshot(`${slug}.png`, {
         animations: 'disabled',
         mask: masks,
-        // Exact match. A tolerance here would be a slow leak: it hides the
-        // sub-threshold drift that accumulates into a real regression, and the
-        // container pins rendering tightly enough that we don't need one.
-        maxDiffPixelRatio: 0
+        ...comparison
       });
     });
   }

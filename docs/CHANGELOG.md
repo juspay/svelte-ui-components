@@ -2,53 +2,31 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.3)
 
-The 2 September sweep of review threads on the merged component-reuse PRs
-answered all 107 unresolved threads against release 3.1.0; fifteen were
-genuinely open. This lands all of them.
+Both routes were excluded as "unstable under suite load", which was true when
+written but was never re-tested after the viewport work. Retested by emptying
+EXCLUDED, generating baselines for both, and running the full suite repeatedly.
 
-Accessibility: Carousel marks the active dot aria-current; ListItem drops
-aria-selected together with role/tabindex under suppressRoleAndTabindex;
-Input gates aria-invalid on !actionInput exactly as the visible error state
-already is; Accordion gives the trigger an id and makes the panel a region
-labelled by it.
+task-list is stable and is now baselined. Its stated reason -- "one of the
+tallest demos with staged reveals" -- was the fitting problem: the demo grew
+past the viewport, the old loop ran out of attempts, and the capture stitched
+mid-scroll. That was fixed when growth that tracks the viewport started being
+detected, and this route has simply been excluded ever since on a reason that
+no longer applies. Two consecutive full-suite runs: 93 passed, 1 skipped, 0
+failed, with task-list green in both at ~800ms.
 
-Behaviour: Status applies its weight/colour defaults only to the plain div
-so a heading statusTextTag takes the application's typography;
-TypewriterText resyncs revealedWordCount after a bulk reveal;
-lockBodyScroll/unlockBodyScroll restore the host's prior inline overflow
-instead of clearing it.
+thinking-indicator stays out, now with the measurement instead of an
+impression. Within a single test's own retries the captured height walks
+2029 -&gt; 2035 -&gt; 2121 -&gt; 2150 -&gt; 2059px. The animated dots are pinned by the
+stylesheet; the per-second elapsed counter is not, because it retimes the
+layout on a real timer the manual clock does not drive. Its reason in EXCLUDED
+now says that, so the next person deciding whether to re-test it can tell what
+would have to change first.
 
-Web components: sui-status exposes status-text-tag; sui-chip-input exposes
-editable (attribute) and onedit (property).
+Baselined coverage goes from 92 routes to 93.
 
-Docs: browser-resolvable bundle URL in the ChipInput and DateRangePicker
-pages; the 2.136.0 ChipInput test-id rename recorded as a migration note;
-Combobox notes that aria-label names the listbox, shows inputProperties.label
-for the input, and lists allow-create; the Pill spec comment describes the
-regression guard it actually is.
-
-Every behavioural change is pinned by a demo-route Playwright test; two demo
-pages gained a case for that purpose. check:wc stays red on four untouched
-files (pre-existing, not run by CI).
-
-The /components/input visual baseline is regenerated in the pinned Playwright
-container for the new demo section (980x4362 -&gt; 980x4561; only that page changed).
-
-Review follow-ups: the actionInput demo field is named through ariaLabel so it
-keeps an accessible name with its label hidden, and the Carousel test asserts
-exactly one aria-current dot across the strip after navigation.
-
-Yama's review of 959c3ca3e: the Accordion trigger id is derived from the
-per-instance uid rather than effectivePanelId, so a panelId assigned after
-mount moves the panel's id without renaming the trigger (pinned by a
-demo-route test that assigns panelId late and asserts the trigger id and
-aria-labelledby hold); Carousel's dot expressions use strict equality;
-docs/Accordion.md records the region/aria-labelledby wiring and that an
-icon-only trigger snippet needs text or an aria-label on the icon for its
-accessible name. The /components/accordion visual baseline is regenerated in
-the pinned container for the new demo section (980x800 -&gt; 980x1029).
+## [3.1.3](https://github.com/juspay/svelte-ui-components/compare/3.1.3..3.1.2) - 2 September 2026
 
 ## [3.1.2](https://github.com/juspay/svelte-ui-components/compare/3.1.2..3.1.1) - 2 September 2026
 

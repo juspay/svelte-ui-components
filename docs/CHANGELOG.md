@@ -2,39 +2,30 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.5)
 
-The task-list baseline fails intermittently on five pixels: x=83, y=332-336.
-That column is the antialiased left edge of the part-filled progress circle
-beside "Draft migration plan". It rasterises at rgb(220) in the baseline and
-rgb(107) when the arc boundary lands one column over.
+Closing the last two open review threads from the chat-primitive PRs (#458
+to #461), found by a transcript audit: 23 threads there were never answered,
+and 21 are already fixed in code on release.
 
-Measured rather than assumed. Two failures, on two different branches, at
-byte-identical coordinates: #506 at e12a1372d and #505 at 577b81f57. Neither
-branch touches TaskList, and #506 cleared on a re-run of unchanged code. Two
-of the nine visual runs since this baseline landed hit it, so roughly a fifth
-of runs gate on noise.
+speech-to-text demo: `bind:value` wrote the user's keystrokes into a
+$derived override that is discarded as soon as `committed` or `listening`
+changes. Nothing was actually lost, because the `oninput` handler already
+puts the text into `committed`, but that made a two-way binding whose
+correctness depended entirely on a sibling handler. The binding is now
+one-way for both composers, so the derived is display state and `oninput` is
+the only write path, which is what it was already doing.
 
-Exact match stays the default for the other 92 snapshots. Only a route named
-in TOLERANCES trades it, and only for a bounded pixel COUNT, set far below
-the smallest real change this suite has caught: 415px for a demo row added to
-Toggle, 1577px for the Toolbar back-control rewrite, 137982px for a new
-section on the Input page. Twelve is 35x under the smallest of those, so a
-genuine regression cannot hide beneath it.
+ChatBubble: `--button-content-gap: 0px` had no explanation. Button uses that
+gap to space an icon from its label; the launcher renders an icon alone in a
+circle, where the gap pushes the glyph off-centre. The reset belongs here
+rather than in Button, whose default is right for a labelled button, and
+docs/ChatBubble.md already records it as a pill-launcher caveat.
 
-Only maxDiffPixels is passed for a toleranced route. Sending it alongside
-maxDiffPixelRatio: 0 would leave the stricter bound in force and fail the
-comparison anyway.
+svelte-check exit 0; prettier and eslint clean on both files; chat-bubble and
+speech-to-text visual baselines pass unchanged.
 
-Verified three ways in the pinned container, perturbing baselines by known
-pixel counts:
-
-5px on task-list   -&gt; passes, the real-world count is inside the allowance
-5px on toggle      -&gt; fails, so the allowance is scoped, not global
-19px on task-list  -&gt; fails, so the bound is real, not a blanket pass
-
-Baselines restored byte-identical afterwards; only this file changes. Full
-suite 93 passed, prettier and eslint clean, svelte-check exit 0.
+## [3.1.5](https://github.com/juspay/svelte-ui-components/compare/3.1.5..3.1.4) - 3 September 2026
 
 ## [3.1.4](https://github.com/juspay/svelte-ui-components/compare/3.1.4..3.1.3) - 3 September 2026
 

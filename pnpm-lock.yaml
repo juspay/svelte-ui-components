@@ -74,6 +74,9 @@ importers:
       marked:
         specifier: ^18.0.5
         version: 18.0.5
+      polymorph-ui-components:
+        specifier: 0.7.0
+        version: 0.7.0(svelte@5.56.3(@typescript-eslint/types@8.60.1))
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
@@ -1211,6 +1214,11 @@ packages:
     resolution: {integrity: sha512-hheHdokM8cdqCb0lcE3s+zT4t4W+vvjpGxsZlDnikarzx8tSzMebh3UiFtgqwFwnTnjYQcsyMF8ei2mCO/tpeA==}
     engines: {node: '>=18'}
     hasBin: true
+
+  polymorph-ui-components@0.7.0:
+    resolution: {integrity: sha512-3h87x8wsr1eU5MPuShWkzJK1wDih9ym9PlwNwSEjZCaN6K1qON3U63pSytoe/O2kJdCvWSaxJJNuNSGUBs5sNw==}
+    peerDependencies:
+      svelte: ^5.41.2
 
   postcss-load-config@3.1.4:
     resolution: {integrity: sha512-6DiM4E7v4coTE4uzA8U//WhtPwyhiim3eyjEMFCnUpzbrkK9wJHgKDT2mR+HbtSrd/NubVaYTOpSpjUl8NQeRg==}
@@ -2580,6 +2588,10 @@ snapshots:
       playwright-core: 1.60.0
     optionalDependencies:
       fsevents: 2.3.2
+
+  polymorph-ui-components@0.7.0(svelte@5.56.3(@typescript-eslint/types@8.60.1)):
+    dependencies:
+      svelte: 5.56.3(@typescript-eslint/types@8.60.1)
 
   postcss-load-config@3.1.4(postcss@8.5.15):
     dependencies:

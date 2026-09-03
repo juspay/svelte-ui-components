@@ -392,6 +392,10 @@
     --button-border-radius: var(--chat-bubble-border-radius, 50%);
     --button-color: var(--chat-bubble-background-color, #18181b);
     --button-text-color: var(--chat-bubble-color, #ffffff);
+    /* Button spaces its icon from its label with this gap. The launcher renders an
+       icon alone inside a circle, so that gap would push the glyph off-centre --
+       reset to 0 here rather than in Button, whose default is right for a labelled
+       button. docs/ChatBubble.md records this as a pill-launcher caveat. */
     --button-content-gap: 0px;
     --button-box-shadow: var(--chat-bubble-box-shadow, 0 8px 24px rgba(0, 0, 0, 0.25));
     --button-hover-color: var(--chat-bubble-hover-background-color, #27272a);

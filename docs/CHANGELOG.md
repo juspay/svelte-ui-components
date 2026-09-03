@@ -2,29 +2,41 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.1.4)
 
-Both routes were excluded as "unstable under suite load", which was true when
-written but was never re-tested after the viewport work. Retested by emptying
-EXCLUDED, generating baselines for both, and running the full suite repeatedly.
+The task-list baseline fails intermittently on five pixels: x=83, y=332-336.
+That column is the antialiased left edge of the part-filled progress circle
+beside "Draft migration plan". It rasterises at rgb(220) in the baseline and
+rgb(107) when the arc boundary lands one column over.
 
-task-list is stable and is now baselined. Its stated reason -- "one of the
-tallest demos with staged reveals" -- was the fitting problem: the demo grew
-past the viewport, the old loop ran out of attempts, and the capture stitched
-mid-scroll. That was fixed when growth that tracks the viewport started being
-detected, and this route has simply been excluded ever since on a reason that
-no longer applies. Two consecutive full-suite runs: 93 passed, 1 skipped, 0
-failed, with task-list green in both at ~800ms.
+Measured rather than assumed. Two failures, on two different branches, at
+byte-identical coordinates: #506 at e12a1372d and #505 at 577b81f57. Neither
+branch touches TaskList, and #506 cleared on a re-run of unchanged code. Two
+of the nine visual runs since this baseline landed hit it, so roughly a fifth
+of runs gate on noise.
 
-thinking-indicator stays out, now with the measurement instead of an
-impression. Within a single test's own retries the captured height walks
-2029 -&gt; 2035 -&gt; 2121 -&gt; 2150 -&gt; 2059px. The animated dots are pinned by the
-stylesheet; the per-second elapsed counter is not, because it retimes the
-layout on a real timer the manual clock does not drive. Its reason in EXCLUDED
-now says that, so the next person deciding whether to re-test it can tell what
-would have to change first.
+Exact match stays the default for the other 92 snapshots. Only a route named
+in TOLERANCES trades it, and only for a bounded pixel COUNT, set far below
+the smallest real change this suite has caught: 415px for a demo row added to
+Toggle, 1577px for the Toolbar back-control rewrite, 137982px for a new
+section on the Input page. Twelve is 35x under the smallest of those, so a
+genuine regression cannot hide beneath it.
 
-Baselined coverage goes from 92 routes to 93.
+Only maxDiffPixels is passed for a toleranced route. Sending it alongside
+maxDiffPixelRatio: 0 would leave the stricter bound in force and fail the
+comparison anyway.
+
+Verified three ways in the pinned container, perturbing baselines by known
+pixel counts:
+
+5px on task-list   -&gt; passes, the real-world count is inside the allowance
+5px on toggle      -&gt; fails, so the allowance is scoped, not global
+19px on task-list  -&gt; fails, so the bound is real, not a blanket pass
+
+Baselines restored byte-identical afterwards; only this file changes. Full
+suite 93 passed, prettier and eslint clean, svelte-check exit 0.
+
+## [3.1.4](https://github.com/juspay/svelte-ui-components/compare/3.1.4..3.1.3) - 3 September 2026
 
 ## [3.1.3](https://github.com/juspay/svelte-ui-components/compare/3.1.3..3.1.2) - 2 September 2026
 

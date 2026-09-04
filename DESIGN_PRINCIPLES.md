@@ -17,6 +17,20 @@ this pattern.** That's the baseline to hold new code to and gradually bring old 
 to — not a rewrite. A hardcoded color or size in a new `<style>` block should be treated
 as a bug, the same as an unhandled `null`.
 
+**A token can only reach a state the component actually paints.** The cascade cannot add a
+declaration that does not exist: a `.toggle-button:hover` rule with no `:active` beside it
+leaves nothing for `--theme-switcher-bg-pressed` to land in, so no consumer can supply a
+pressed state however carefully they arrange their own stylesheet. It is the one gap in the
+contract a consumer cannot work around, and it is invisible from the source — the component
+reads as fully tokenised, because every rule it *does* have is.
+
+Measured on an embedded Shopify Admin surface (42 routes, 573 elements, five interaction
+states each, states forced through CDP rather than inferred): every divergence from the host
+closed by feeding tokens from the consumer's stylesheet except two, and both were a state no
+rule painted. So enumerate the states when adding a component — rest, hover, focus-visible,
+active, disabled — and give each one a rule and a token. A missing state is a missing API,
+not a missing style.
+
 ## 2. Framework-agnosticism is a real target, not just a Svelte library
 
 This library ships both a Svelte 5 package and a web-component build (`sui-*` custom

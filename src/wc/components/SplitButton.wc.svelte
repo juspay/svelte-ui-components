@@ -10,7 +10,8 @@
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       onselect: { type: 'Object' },
-      dropdownIcon: { type: 'Object' }
+      dropdownIcon: { type: 'Object' },
+      onSelect: { type: 'Object' }
     }
   }}
 />

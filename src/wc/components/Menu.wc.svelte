@@ -17,7 +17,10 @@
       interactiveTrigger: { type: 'Boolean', attribute: 'interactive-trigger' },
       selectedValue: { type: 'String', attribute: 'selected-value' },
       placement: { type: 'String', attribute: 'placement' },
-      usePortal: { type: 'Boolean', attribute: 'use-portal' }
+      usePortal: { type: 'Boolean', attribute: 'use-portal' },
+      onSelect: { type: 'Object' },
+      onOpen: { type: 'Object' },
+      onClose: { type: 'Object' }
     }
   }}
 />

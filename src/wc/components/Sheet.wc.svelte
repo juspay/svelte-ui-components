@@ -15,7 +15,10 @@
       onafterclose: { type: 'Object' },
       dismissOnOutsideClick: { type: 'Boolean', attribute: 'dismiss-on-outside-click' },
       content: { type: 'Object' },
-      footer: { type: 'Object' }
+      footer: { type: 'Object' },
+      onClose: { type: 'Object' },
+      onAfterOpen: { type: 'Object' },
+      onAfterClose: { type: 'Object' }
     }
   }}
 />

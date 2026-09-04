@@ -6,7 +6,8 @@
       rows: { type: 'Array' },
       onretry: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      onRetry: { type: 'Object' }
     }
   }}
 />

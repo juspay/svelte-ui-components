@@ -16,7 +16,8 @@
       classes: { type: 'String' },
       onscrollposition: { type: 'Object' },
       arrowPrevious: { type: 'Object' },
-      arrowNext: { type: 'Object' }
+      arrowNext: { type: 'Object' },
+      onScrollPosition: { type: 'Object' }
     }
   }}
 />

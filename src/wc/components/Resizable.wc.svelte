@@ -18,7 +18,10 @@
       classes: { type: 'String' },
       onresize: { type: 'Object' },
       onresizestart: { type: 'Object' },
-      onresizeend: { type: 'Object' }
+      onresizeend: { type: 'Object' },
+      onResize: { type: 'Object' },
+      onResizeStart: { type: 'Object' },
+      onResizeEnd: { type: 'Object' }
     }
   }}
 />

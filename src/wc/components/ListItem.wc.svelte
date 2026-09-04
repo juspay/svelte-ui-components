@@ -30,7 +30,12 @@
       leftContent: { type: 'Object' },
       centerContent: { type: 'Object' },
       rightContent: { type: 'Object' },
-      bottomContent: { type: 'Object' }
+      bottomContent: { type: 'Object' },
+      onLeftImageClick: { type: 'Object' },
+      onRightImageClick: { type: 'Object' },
+      onCenterTextClick: { type: 'Object' },
+      onItemClick: { type: 'Object' },
+      onTopSectionClick: { type: 'Object' }
     }
   }}
 />

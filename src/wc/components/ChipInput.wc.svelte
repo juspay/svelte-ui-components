@@ -13,7 +13,11 @@
       onadd: { type: 'Object' },
       ondismiss: { type: 'Object' },
       onedit: { type: 'Object' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      onAdd: { type: 'Object' },
+      onDismiss: { type: 'Object' },
+      onEdit: { type: 'Object' },
+      onChange: { type: 'Object' }
     }
   }}
 />

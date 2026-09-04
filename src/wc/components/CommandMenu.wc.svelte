@@ -12,7 +12,9 @@
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onclose: { type: 'Object' },
-      itemIcon: { type: 'Object' }
+      itemIcon: { type: 'Object' },
+      onSelect: { type: 'Object' },
+      onClose: { type: 'Object' }
     }
   }}
 />

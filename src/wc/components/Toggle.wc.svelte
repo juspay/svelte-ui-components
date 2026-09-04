@@ -8,7 +8,8 @@
       disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      testId: { type: 'String', attribute: 'test-id' }
+      testId: { type: 'String', attribute: 'test-id' },
+      onClick: { type: 'Object' }
     }
   }}
 />

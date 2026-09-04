@@ -13,7 +13,8 @@
       onbuttonClick: { type: 'Object' },
       icon: { type: 'Object' },
       descriptionSnippet: { type: 'Object' },
-      testId: { type: 'String', attribute: 'test-id' }
+      testId: { type: 'String', attribute: 'test-id' },
+      onButtonClick: { type: 'Object' }
     }
   }}
 />

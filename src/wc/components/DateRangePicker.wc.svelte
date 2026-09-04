@@ -39,7 +39,13 @@
       compareCalendar: { type: 'Object' },
       triggerSnippet: { type: 'Object' },
       triggerIcon: { type: 'Object' },
-      compareTrigger: { type: 'Object' }
+      compareTrigger: { type: 'Object' },
+      onApply: { type: 'Object' },
+      onApplySingle: { type: 'Object' },
+      onApplyCompare: { type: 'Object' },
+      onCancel: { type: 'Object' },
+      onOpenToggle: { type: 'Object' },
+      onClear: { type: 'Object' }
     }
   }}
 />

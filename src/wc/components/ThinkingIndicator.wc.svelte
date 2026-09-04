@@ -25,7 +25,9 @@
       selected: { type: 'Object' },
       onrowselect: { type: 'Object' },
       onsettled: { type: 'Object' },
-      collapseDelayMs: { type: 'Object', attribute: 'collapse-delay-ms' }
+      collapseDelayMs: { type: 'Object', attribute: 'collapse-delay-ms' },
+      onRowSelect: { type: 'Object' },
+      onSettled: { type: 'Object' }
     }
   }}
 />

@@ -13,7 +13,9 @@
       classes: { type: 'String' },
       oninput: { type: 'Object' },
       onchange: { type: 'Object' },
-      labelFormatter: { type: 'Object' }
+      labelFormatter: { type: 'Object' },
+      onChange: { type: 'Object' },
+      onInput: { type: 'Object' }
     }
   }}
 />

@@ -12,7 +12,8 @@
       dismissIcon: { type: 'Object' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      ondismiss: { type: 'Object' }
+      ondismiss: { type: 'Object' },
+      onDismiss: { type: 'Object' }
     }
   }}
 />

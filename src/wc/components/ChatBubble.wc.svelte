@@ -26,7 +26,10 @@
       classes: { type: 'String' },
       onopen: { type: 'Object' },
       onclose: { type: 'Object' },
-      ontoggle: { type: 'Object' }
+      ontoggle: { type: 'Object' },
+      onOpen: { type: 'Object' },
+      onClose: { type: 'Object' },
+      onToggle: { type: 'Object' }
     }
   }}
 />

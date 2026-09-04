@@ -52,14 +52,15 @@ Define variant classes in your app's CSS that set Pill CSS variables, then pass 
 
 ## Props
 
-| Prop        | Type      | Required | Default | Description                                                                                                                                                            |
-| ----------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text        | `string`  | Yes      | `-`     | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                   |
-| dismissible | `boolean` | No       | `false` | When true, shows a small X button after the text that triggers the ondismiss event when clicked.                                                                       |
-| disabled    | `boolean` | No       | `false` | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                          |
-| testId      | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                |
-| title       | `string`  | No       | `-`     | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                          |
-| classes     | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop         | Type      | Required | Default   | Description                                                                                                                                                              |
+| ------------ | --------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| text         | `string`  | Yes      | `-`       | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                     |
+| dismissible  | `boolean` | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked.                                                                         |
+| dismissLabel | `string`  | No       | `Dismiss` | Accessible name of the dismiss button. Pass a translated string for localised products; blank values fall back to the default. Web component attribute: `dismiss-label`. |
+| disabled     | `boolean` | No       | `false`   | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                            |
+| testId       | `string`  | No       | `-`       | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                  |
+| title        | `string`  | No       | `-`       | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                            |
+| classes      | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.   |
 
 ## Snippets
 
@@ -80,6 +81,12 @@ Svelte 5 Snippet props — pass content blocks to the component.
 ## CSS Variables
 
 Override these custom properties to theme the component.
+
+The dismiss action uses a ghost Button. Its enabled background stays transparent
+at rest, hover and press, and the glyph reads `--pill-dismiss-color` and
+`--pill-dismiss-hover-color` even under consumer Button-container theme rules.
+Consumer disabled colours and keyboard focus indicators remain available.
+Keyboard activation of the dismiss button does not activate the pill body.
 
 | Variable                     | Default                                   | CSS Property     | Description                                                               |
 | ---------------------------- | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------- |
@@ -128,4 +135,4 @@ Tag: `<sui-pill>`
 | Slot Name      | Maps to Snippet | Description                                                              |
 | -------------- | --------------- | ------------------------------------------------------------------------ |
 | `leading-icon` | `leadingIcon`   | Content rendered before the text label (icon, image, or inline element). |
-| `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button.                                |
+| `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button; defaults to the close glyph.   |

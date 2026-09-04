@@ -135,6 +135,49 @@ export function readComponentProps(source: string): ComponentProps {
   return { names: [], hasRest: false };
 }
 
+/**
+ * A wrapper may expose a component prop under a different name — `id` and
+ * `ariaLabel` collide with host accessors, and `ariaLabelledby` follows the same
+ * `input-*` convention so the host's own `aria-labelledby` keeps its meaning. The
+ * wrapper then declares `inputAriaLabelledby` and renders
+ * `<Toggle ariaLabelledby={inputAriaLabelledby} />`. Parity holds when the
+ * component attribute is bound to an identifier the wrapper declares, so this
+ * collects those attribute names. A bound identifier that is NOT a declared prop
+ * is not forwarding anything a consumer can set, and stays missing.
+ */
+export function readForwardedProps(source: string, declared: ReadonlySet<string>): string[] {
+  const root = asRecord(parse(source, { modern: true }));
+  const forwarded: string[] = [];
+  const visit = (node: unknown): void => {
+    const record = asRecord(node);
+    if (record.type === 'Component') {
+      for (const attribute of asList(record.attributes)) {
+        const attributeRecord = asRecord(attribute);
+        if (attributeRecord.type !== 'Attribute' || typeof attributeRecord.name !== 'string') {
+          continue;
+        }
+        const expression = asRecord(expressionOf(attributeRecord.value));
+        if (
+          expression.type === 'Identifier' &&
+          typeof expression.name === 'string' &&
+          declared.has(expression.name) &&
+          expression.name !== attributeRecord.name
+        ) {
+          forwarded.push(attributeRecord.name);
+        }
+      }
+    }
+    for (const child of asList(asRecord(record.fragment).nodes)) {
+      visit(child);
+    }
+    for (const child of asList(record.nodes)) {
+      visit(child);
+    }
+  };
+  visit(root.fragment);
+  return forwarded;
+}
+
 /** Resolves the `$lib/...` import a wrapper renders back to a file on disk. */
 export function wrappedComponentPath(source: string): string | null {
   const root = asRecord(parse(source, { modern: true }));
@@ -230,7 +273,10 @@ export function readWrapperParity(): readonly WrapperParity[] {
 
     const component = readComponentProps(readFileSync(componentPath, 'utf8'));
     const declared = new Set(props);
-    const absent = component.hasRest ? [] : component.names.filter((name) => !declared.has(name));
+    const forwarded = new Set(readForwardedProps(source, declared));
+    const absent = component.hasRest
+      ? []
+      : component.names.filter((name) => !declared.has(name) && !forwarded.has(name));
 
     results.push({
       wrapper,

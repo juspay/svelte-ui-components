@@ -7,12 +7,19 @@
     disabled = false,
     testId,
     classes,
+    id,
+    ariaLabel,
+    ariaLabelledby,
     onclick: onclickLegacy,
     onClick
   }: ToggleProperties = $props();
 
   // Event-casing phase 1: both spellings accepted, the correct one wins.
   const onclick = $derived(onClick ?? onclickLegacy);
+
+  // Stable across hydration so the hidden input stays named and text remains clickable.
+  const generatedId = $props.id();
+  const inputId = $derived(id?.trim() || `toggle-${generatedId}`);
 
   const handleCheckboxClick = (e: MouseEvent): void => {
     if (e.target instanceof HTMLInputElement && typeof e.target.checked === 'boolean') {
@@ -29,13 +36,16 @@
   data-pw={testId}
   testID={testId}
 >
-  <div class="text" hidden={text.length === 0}>{text}</div>
+  <label class="text" for={inputId} hidden={text.length === 0}>{text}</label>
   <label class="switch">
     <input
+      id={inputId}
       class="input-checkbox"
       type="checkbox"
       {checked}
       {disabled}
+      aria-label={ariaLabel?.trim() || null}
+      aria-labelledby={ariaLabelledby?.trim() || null}
       onclick={handleCheckboxClick}
     />
     <span class="slider round"></span>

@@ -13,7 +13,9 @@
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       oncomplete: { type: 'Object' },
-      onerror: { type: 'Object' }
+      onerror: { type: 'Object' },
+      onComplete: { type: 'Object' },
+      onError: { type: 'Object' }
     }
   }}
 />

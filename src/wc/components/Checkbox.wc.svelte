@@ -13,7 +13,8 @@
       classes: { type: 'String' },
       ariaLabel: { type: 'String', attribute: 'aria-label' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      onClick: { type: 'Object' }
     }
   }}
 />

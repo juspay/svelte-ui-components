@@ -26,7 +26,10 @@
       onopen: { type: 'Object' },
       onclose: { type: 'Object' },
       hierarchy: { type: 'String', attribute: 'hierarchy' },
-      usePortal: { type: 'Boolean', attribute: 'use-portal' }
+      usePortal: { type: 'Boolean', attribute: 'use-portal' },
+      onChange: { type: 'Object' },
+      onOpen: { type: 'Object' },
+      onClose: { type: 'Object' }
     }
   }}
 />

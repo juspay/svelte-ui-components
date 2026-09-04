@@ -49,7 +49,16 @@
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' },
       onscrollstate: { type: 'Object' },
-      headerContent: { type: 'Object' }
+      headerContent: { type: 'Object' },
+      onSend: { type: 'Object' },
+      onSuggestion: { type: 'Object' },
+      onClose: { type: 'Object' },
+      onStop: { type: 'Object' },
+      onVoice: { type: 'Object' },
+      onAttach: { type: 'Object' },
+      onRetry: { type: 'Object' },
+      onFeedback: { type: 'Object' },
+      onScrollState: { type: 'Object' }
     }
   }}
 />

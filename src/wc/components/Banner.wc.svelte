@@ -14,7 +14,8 @@
       ondismiss: { type: 'Object' },
       icon: { type: 'Object' },
       rightContent: { type: 'Object' },
-      dismissIcon: { type: 'Object' }
+      dismissIcon: { type: 'Object' },
+      onDismiss: { type: 'Object' }
     }
   }}
 />

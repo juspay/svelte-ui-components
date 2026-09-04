@@ -57,7 +57,19 @@
       onattachclick: { type: 'Object' },
       onaction: { type: 'Object' },
       actionIcon: { type: 'Object' },
-      actionLabel: { type: 'String', attribute: 'action-label' }
+      actionLabel: { type: 'String', attribute: 'action-label' },
+      onRemoveRichImage: { type: 'Object' },
+      onRemoveRichFile: { type: 'Object' },
+      onRemoveRichVideo: { type: 'Object' },
+      onOpenRichImage: { type: 'Object' },
+      onOpenRichVideo: { type: 'Object' },
+      onOpenRichFile: { type: 'Object' },
+      onSubmit: { type: 'Object' },
+      onStop: { type: 'Object' },
+      onVoice: { type: 'Object' },
+      onAttach: { type: 'Object' },
+      onAttachClick: { type: 'Object' },
+      onAction: { type: 'Object' }
     }
   }}
 />

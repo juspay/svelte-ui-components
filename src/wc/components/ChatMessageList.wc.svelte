@@ -19,7 +19,10 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onretry: { type: 'Object' },
-      onfeedback: { type: 'Object' }
+      onfeedback: { type: 'Object' },
+      onScrollState: { type: 'Object' },
+      onRetry: { type: 'Object' },
+      onFeedback: { type: 'Object' }
     }
   }}
 />

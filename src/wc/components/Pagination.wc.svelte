@@ -13,7 +13,8 @@
       prevButtonTestId: { type: 'String', attribute: 'prev-button-test-id' },
       nextButtonTestId: { type: 'String', attribute: 'next-button-test-id' },
       onchange: { type: 'Object' },
-      onLoadMore: { type: 'Object' }
+      onLoadMore: { type: 'Object' },
+      onChange: { type: 'Object' }
     }
   }}
 />

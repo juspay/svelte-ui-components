@@ -30,7 +30,13 @@
       content: { type: 'Object' },
       footerSnippet: { type: 'Object' },
       lockScroll: { type: 'Boolean', attribute: 'lock-scroll' },
-      autoDismissAfter: { type: 'Number', attribute: 'auto-dismiss-after' }
+      autoDismissAfter: { type: 'Number', attribute: 'auto-dismiss-after' },
+      onClose: { type: 'Object' },
+      onHeaderRightImageClick: { type: 'Object' },
+      onHeaderLeftImageClick: { type: 'Object' },
+      onPrimaryButtonClick: { type: 'Object' },
+      onSecondaryButtonClick: { type: 'Object' },
+      onOverlayClick: { type: 'Object' }
     }
   }}
 />

@@ -11,7 +11,9 @@
       onstepclick: { type: 'Object' },
       onhandleStepClick: { type: 'Object' },
       suppressRoleAndTabindex: { type: 'Boolean', attribute: 'suppress-role-and-tabindex' },
-      suppressContainerTestId: { type: 'Boolean', attribute: 'suppress-container-test-id' }
+      suppressContainerTestId: { type: 'Boolean', attribute: 'suppress-container-test-id' },
+      onStepClick: { type: 'Object' },
+      onHandleStepClick: { type: 'Object' }
     }
   }}
 />

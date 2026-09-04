@@ -10,7 +10,9 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onchange: { type: 'Object' },
-      oninput: { type: 'Object' }
+      oninput: { type: 'Object' },
+      onChange: { type: 'Object' },
+      onInput: { type: 'Object' }
     }
   }}
 />

@@ -46,7 +46,15 @@
       onchange: { type: 'Object' },
       onadd: { type: 'Object' },
       onremove: { type: 'Object' },
-      oncreate: { type: 'Object' }
+      oncreate: { type: 'Object' },
+      onSelect: { type: 'Object' },
+      onInput: { type: 'Object' },
+      onOpen: { type: 'Object' },
+      onClose: { type: 'Object' },
+      onChange: { type: 'Object' },
+      onAdd: { type: 'Object' },
+      onRemove: { type: 'Object' },
+      onCreate: { type: 'Object' }
     }
   }}
 />

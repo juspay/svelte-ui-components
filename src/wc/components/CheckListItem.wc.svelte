@@ -9,7 +9,8 @@
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       onclick: { type: 'Object' },
-      checkboxLabel: { type: 'Object' }
+      checkboxLabel: { type: 'Object' },
+      onClick: { type: 'Object' }
     }
   }}
 />

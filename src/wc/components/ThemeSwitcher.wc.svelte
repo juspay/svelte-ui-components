@@ -9,7 +9,8 @@
       storageKey: { type: 'String', reflect: true, attribute: 'storage-key' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      onChange: { type: 'Object' }
     }
   }}
 />

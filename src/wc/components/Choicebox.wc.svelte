@@ -9,7 +9,8 @@
       showIndicator: { type: 'Boolean', reflect: true, attribute: 'show-indicator' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      onClick: { type: 'Object' }
     }
   }}
 />

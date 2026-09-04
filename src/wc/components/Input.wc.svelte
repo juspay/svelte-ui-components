@@ -60,7 +60,14 @@
       minRows: { type: 'Number', attribute: 'min-rows' },
       maxRows: { type: 'Number', attribute: 'max-rows' },
       resize: { type: 'String', attribute: 'resize' },
-      showCount: { type: 'Boolean', attribute: 'show-count' }
+      showCount: { type: 'Boolean', attribute: 'show-count' },
+      onfocus: { type: 'Object' },
+      onfocusout: { type: 'Object' },
+      onblur: { type: 'Object' },
+      oninput: { type: 'Object' },
+      onpaste: { type: 'Object' },
+      onclick: { type: 'Object' },
+      onkeydown: { type: 'Object' }
     }
   }}
 />

@@ -10,7 +10,8 @@
       classes: { type: 'String' },
       onerror: { type: 'Object' },
       inlineSvg: { type: 'Boolean', attribute: 'inline-svg' },
-      transformSvg: { type: 'Object' }
+      transformSvg: { type: 'Object' },
+      onError: { type: 'Object' }
     }
   }}
 />

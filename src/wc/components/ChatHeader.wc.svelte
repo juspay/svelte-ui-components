@@ -14,7 +14,8 @@
       showClose: { type: 'Boolean', attribute: 'show-close' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onclose: { type: 'Object' }
+      onclose: { type: 'Object' },
+      onClose: { type: 'Object' }
     }
   }}
 />

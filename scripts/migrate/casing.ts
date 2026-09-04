@@ -15,7 +15,7 @@
  * public API.
  */
 
-const NATIVE_EVENTS: ReadonlySet<string> = new Set([
+export const NATIVE_EVENTS: ReadonlySet<string> = new Set([
   'click',
   'dblclick',
   'auxclick',

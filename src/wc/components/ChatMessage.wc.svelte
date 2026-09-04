@@ -23,7 +23,10 @@
       classes: { type: 'String' },
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' },
-      oncopy: { type: 'Object' }
+      oncopy: { type: 'Object' },
+      onRetry: { type: 'Object' },
+      onFeedback: { type: 'Object' },
+      onCopy: { type: 'Object' }
     }
   }}
 />

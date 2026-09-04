@@ -4,7 +4,8 @@
     shadow: 'open',
     props: {
       icons: { type: 'Object' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

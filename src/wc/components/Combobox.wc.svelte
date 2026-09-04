@@ -53,6 +53,7 @@
 
 <script lang="ts">
   import Combobox from '$lib/Combobox/Combobox.svelte';
+  import type { ComboboxProperties } from '$lib/Combobox/properties';
 
   // Combobox reassigns all five of these; see ChipInput.wc.svelte for why a one-way spread
   // leaves the host element's properties stale.
@@ -63,7 +64,7 @@
     highlightedIndex = $bindable(-1),
     selected = $bindable([]),
     ...rest
-  } = $props();
+  }: ComboboxProperties = $props();
 </script>
 
 <Combobox {...rest} bind:value bind:inputValue bind:open bind:highlightedIndex bind:selected />

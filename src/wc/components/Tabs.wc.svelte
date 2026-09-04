@@ -10,7 +10,11 @@
       scrollLeftIcon: { type: 'Object' },
       scrollRightIcon: { type: 'Object' },
       classes: { type: 'String' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      activeKey: { type: 'String', attribute: 'active-key' },
+      orientation: { type: 'String', attribute: 'orientation' },
+      tab: { type: 'Object' },
+      onkeychange: { type: 'Object' }
     }
   }}
 />

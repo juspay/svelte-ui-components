@@ -37,7 +37,12 @@ const config: PlaywrightTestConfig = {
     testIdAttribute: 'data-pw',
     // Real proof, not just a pass/fail assertion: a playable recording of every
     // test, embedded into the html report so it travels with the CI artifact.
-    video: 'on'
+    video: 'on',
+    // The video shows what happened; the trace shows why. It carries the DOM
+    // snapshot at every step, so a reviewer can inspect the custom element's
+    // actual attributes and shadow tree at the moment of the assertion rather
+    // than taking the recording's word for it.
+    trace: 'on'
   },
   projects: [
     {

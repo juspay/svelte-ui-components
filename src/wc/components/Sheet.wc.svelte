@@ -12,7 +12,10 @@
       classes: { type: 'String' },
       onclose: { type: 'Object' },
       onafteropen: { type: 'Object' },
-      onafterclose: { type: 'Object' }
+      onafterclose: { type: 'Object' },
+      dismissOnOutsideClick: { type: 'Boolean', attribute: 'dismiss-on-outside-click' },
+      content: { type: 'Object' },
+      footer: { type: 'Object' }
     }
   }}
 />

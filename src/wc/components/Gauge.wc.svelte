@@ -6,7 +6,9 @@
       value: { type: 'Number', reflect: true },
       showLabel: { type: 'Boolean', reflect: true, attribute: 'show-label' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      max: { type: 'Number', attribute: 'max' },
+      labelFormatter: { type: 'Object' }
     }
   }}
 />

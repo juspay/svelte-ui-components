@@ -26,7 +26,11 @@
       oncenterTextClick: { type: 'Object' },
       onitemClick: { type: 'Object' },
       ontopSectionClick: { type: 'Object' },
-      onkeydown: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      leftContent: { type: 'Object' },
+      centerContent: { type: 'Object' },
+      rightContent: { type: 'Object' },
+      bottomContent: { type: 'Object' }
     }
   }}
 />
@@ -36,17 +40,23 @@
   let props = $props();
 </script>
 
+<!-- A property-assigned snippet wins; the slot is the fallback. The branch stays
+     inside the body snippet so `<slot>` keeps its `$$props` scope. -->
 <ListItem {...props}>
   {#snippet leftContent()}
-    <slot name="left-content"></slot>
+    {#if props.leftContent}{@render props.leftContent()}{:else}<slot name="left-content"
+      ></slot>{/if}
   {/snippet}
   {#snippet centerContent()}
-    <slot name="center-content"></slot>
+    {#if props.centerContent}{@render props.centerContent()}{:else}<slot name="center-content"
+      ></slot>{/if}
   {/snippet}
   {#snippet rightContent()}
-    <slot name="right-content"></slot>
+    {#if props.rightContent}{@render props.rightContent()}{:else}<slot name="right-content"
+      ></slot>{/if}
   {/snippet}
   {#snippet bottomContent()}
-    <slot name="bottom-content"></slot>
+    {#if props.bottomContent}{@render props.bottomContent()}{:else}<slot name="bottom-content"
+      ></slot>{/if}
   {/snippet}
 </ListItem>

@@ -8,7 +8,10 @@
       delay: { type: 'Number', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      usePortal: { type: 'Boolean', attribute: 'use-portal' }
+      usePortal: { type: 'Boolean', attribute: 'use-portal' },
+      icon: { type: 'Object' },
+      iconPosition: { type: 'String', attribute: 'icon-position' },
+      content: { type: 'Object' }
     }
   }}
 />

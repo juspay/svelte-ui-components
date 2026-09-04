@@ -5,7 +5,10 @@
     props: {
       items: { type: 'Array', reflect: false },
       ariaLabel: { type: 'String', attribute: 'aria-label' },
-      classes: { type: 'String', attribute: 'classes' }
+      classes: { type: 'String', attribute: 'classes' },
+      item: { type: 'Object' },
+      separator: { type: 'Object' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

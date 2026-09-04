@@ -38,6 +38,53 @@ This library takes a different approach: **components are unstyled by default** 
 
 ---
 
+## Coming in 4.0.0: one breaking change
+
+Advance notice, not a change in this release. **Nothing below has happened yet** —
+the current 3.x line still accepts everything it always did.
+
+In 4.0.0, `children` stops being a declared property on `sui-chat-bubble`,
+`sui-draggable` and `sui-resizable`. Assigning it will set an inert expando and
+the content will silently disappear. Pass the content as light-DOM children
+instead, which those wrappers will forward through their default slot:
+
+```js
+el.children = mySnippet; // before — no longer works
+```
+
+```html
+<sui-draggable><div>…</div></sui-draggable>
+<!-- after -->
+```
+
+**Reading `element.children` is what the change fixes.** Declaring the property
+replaces the inherited accessor, so on those three elements `element.children`
+returns `undefined` rather than an `HTMLCollection` today and
+`el.children.length` throws. That is why the declaration has to go, and why it
+cannot go before a major.
+
+You can find affected call sites now, well before the major — this reports and
+writes nothing:
+
+```sh
+npx sui-codemod --dry-run ./src
+```
+
+It flags `.children =` assignments only in files that also mention one of the
+three elements, so ordinary DOM code is not reported. The fix moves content from
+a JavaScript assignment into markup, which is a decision about where content is
+authored, so the tool deliberately does not rewrite it for you. Requires Node
+&ge;&nbsp;22.18; `typescript` is an optional peer dependency that the codemod's
+Svelte-parsing paths need.
+
+Nothing else in the custom-element surface breaks. Everything this release adds —
+185 wrapper props, three previously unregistered elements, the `spellcheck` and
+`aria-haspopup` mappings, the snippet props on Banner, ListItem, Menu, Modal and
+Button, Accordion's `disabled`, LottiePlayer's callbacks — is new surface or a
+fix to something that did not work.
+
+---
+
 ## Quick Start
 
 ```svelte
@@ -165,8 +212,14 @@ component.
 <script type="module" src="https://juspay.github.io/svelte-ui-components/wc/index.js"></script>
 
 <!-- Pinned to an npm version, via jsDelivr or unpkg -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@juspay/svelte-ui-components@latest/dist-wc/index.js"></script>
-<script type="module" src="https://unpkg.com/@juspay/svelte-ui-components@latest/dist-wc/index.js"></script>
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/@juspay/svelte-ui-components@latest/dist-wc/index.js"
+></script>
+<script
+  type="module"
+  src="https://unpkg.com/@juspay/svelte-ui-components@latest/dist-wc/index.js"
+></script>
 
 <sui-button>Click me</sui-button>
 <sui-input placeholder="Type here"></sui-input>

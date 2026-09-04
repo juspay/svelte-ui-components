@@ -18,7 +18,8 @@
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onrangeselect: { type: 'Object' },
-      onmonthchange: { type: 'Object' }
+      onmonthchange: { type: 'Object' },
+      initialMonth: { type: 'Object' }
     }
   }}
 />

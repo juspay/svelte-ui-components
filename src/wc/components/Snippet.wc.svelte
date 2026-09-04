@@ -8,7 +8,8 @@
       showCopyButton: { type: 'Boolean', reflect: true, attribute: 'show-copy-button' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      oncopy: { type: 'Object' }
+      oncopy: { type: 'Object' },
+      copyIcon: { type: 'Object' }
     }
   }}
 />

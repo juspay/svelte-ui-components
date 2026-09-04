@@ -41,7 +41,26 @@
       leftIconLabel: { type: 'String', attribute: 'left-icon-label' },
       rightIconLabel: { type: 'String', attribute: 'right-icon-label' },
       mandatory: { type: 'Boolean', reflect: true },
-      forceError: { type: 'Boolean', reflect: true, attribute: 'force-error' }
+      forceError: { type: 'Boolean', reflect: true, attribute: 'force-error' },
+      readonly: { type: 'Boolean', attribute: 'readonly' },
+      // Not 'Boolean': Svelte's boolean conversion is presence-based, mapping any
+      // non-null attribute value to true, so `spellcheck="false"` — the only
+      // spelling that turns spell checking off — arrived as true. The prop is a
+      // tri-state (`boolean | null`, default null = "leave the browser alone"),
+      // which a presence-based boolean cannot express at all.
+      spellcheck: { type: 'String', attribute: 'spellcheck' },
+      min: { type: 'Number', attribute: 'min' },
+      max: { type: 'Number', attribute: 'max' },
+      onBlur: { type: 'Object' },
+      ariaAutocomplete: { type: 'String', attribute: 'aria-autocomplete' },
+      ariaControls: { type: 'String', attribute: 'aria-controls' },
+      ariaActivedescendant: { type: 'String', attribute: 'aria-activedescendant' },
+      rows: { type: 'Number', attribute: 'rows' },
+      autoResize: { type: 'Boolean', attribute: 'auto-resize' },
+      minRows: { type: 'Number', attribute: 'min-rows' },
+      maxRows: { type: 'Number', attribute: 'max-rows' },
+      resize: { type: 'String', attribute: 'resize' },
+      showCount: { type: 'Boolean', attribute: 'show-count' }
     }
   }}
 />
@@ -49,6 +68,26 @@
 <script lang="ts">
   import Input from '$lib/Input/Input.svelte';
   let props = $props();
+
+  // Restores the tri-state the attribute string flattens: absent stays null so
+  // the browser default is untouched, "false" is honoured, and a bare
+  // `spellcheck` (empty value, the HTML boolean-attribute idiom) reads as true.
+  const asSpellcheck = (value: unknown): boolean | null => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    const text = String(value).trim().toLowerCase();
+    if (text === 'false') {
+      return false;
+    }
+    if (text === '' || text === 'true' || text === 'spellcheck') {
+      return true;
+    }
+    return null;
+  };
 </script>
 
-<Input {...props} />
+<Input {...props} spellcheck={asSpellcheck(props.spellcheck)} />

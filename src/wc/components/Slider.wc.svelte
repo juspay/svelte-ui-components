@@ -12,7 +12,8 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       oninput: { type: 'Object' },
-      onchange: { type: 'Object' }
+      onchange: { type: 'Object' },
+      labelFormatter: { type: 'Object' }
     }
   }}
 />

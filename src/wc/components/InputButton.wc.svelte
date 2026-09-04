@@ -15,7 +15,10 @@
       inputEventProperties: { type: 'Object' },
       rightButtonEventProperties: { type: 'Object' },
       leftButtonEventProperties: { type: 'Object' },
-      bottomButtonEventProperties: { type: 'Object' }
+      bottomButtonEventProperties: { type: 'Object' },
+      leftIcon: { type: 'Object' },
+      rightIcon: { type: 'Object' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

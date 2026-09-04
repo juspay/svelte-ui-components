@@ -6,7 +6,8 @@
       brandLogoURL: { type: 'String', reflect: true, attribute: 'brand-logo-url' },
       brandText: { type: 'String', reflect: true, attribute: 'brand-text' },
       subText: { type: 'String', reflect: true, attribute: 'sub-text' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

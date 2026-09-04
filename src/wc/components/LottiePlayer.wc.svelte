@@ -10,7 +10,10 @@
       speed: { type: 'Number', reflect: true },
       renderer: { type: 'String', reflect: true },
       ariaHidden: { type: 'Boolean', reflect: true, attribute: 'aria-hidden' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' },
+      oncomplete: { type: 'Object' },
+      onerror: { type: 'Object' }
     }
   }}
 />
@@ -19,14 +22,23 @@
   import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
   let props = $props();
 
-  const host = $host<HTMLElement>();
+  // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's name
+  // minus its `$` with the rune itself (sveltejs/svelte#13715, same class as `state` vs
+  // `$state`), reporting `$host` as used before its declaration.
+  const hostEl = $host();
 
+  // These handlers sit after {...props}, so they are the only ones the child can
+  // call. Declaring `oncomplete`/`onerror` made them assignable without making
+  // them reachable — forwarding here is what closes that gap, and the DOM event
+  // still fires for addEventListener consumers.
   function handleComplete(): void {
-    host.dispatchEvent(new CustomEvent('complete', { bubbles: true, composed: true }));
+    props.oncomplete?.();
+    hostEl.dispatchEvent(new CustomEvent('complete', { bubbles: true, composed: true }));
   }
 
   function handleError(): void {
-    host.dispatchEvent(new CustomEvent('error', { bubbles: true, composed: true }));
+    props.onerror?.();
+    hostEl.dispatchEvent(new CustomEvent('error', { bubbles: true, composed: true }));
   }
 </script>
 

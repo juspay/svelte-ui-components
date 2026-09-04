@@ -27,7 +27,7 @@
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run build:wc && npm run package",
     "test": "npm run test:integration && npm run test:unit",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod && npm run check:migrate",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod && npm run check:migrate && npm run check:wc-parity",
     "check:codemod": "tsc -p scripts/codemod/tsconfig.json",
     "codemod": "node scripts/codemod/cli.ts",
     "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",
@@ -40,7 +40,9 @@
     "test:visual": "scripts/visual-test.sh",
     "test:visual:update": "scripts/visual-test.sh --update-snapshots",
     "migrate": "node scripts/migrate/cli.ts",
-    "check:migrate": "tsc -p scripts/migrate/tsconfig.json"
+    "check:migrate": "tsc -p scripts/migrate/tsconfig.json",
+    "check:wc-parity": "tsc -p scripts/wc-parity/tsconfig.json",
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "exports": {
     ".": {
@@ -56,19 +58,26 @@
     "dist",
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*",
-    "dist-wc"
+    "dist-wc",
+    "scripts/codemod",
+    "!scripts/codemod/*.test.ts",
+    "scripts/postinstall.mjs"
   ],
   "peerDependencies": {
     "lottie-web": ">=5.0.0",
     "marked": "^18.0.0",
     "svelte": "^5.41.2",
-    "type-decoder": "^2.1.0"
+    "type-decoder": "^2.1.0",
+    "typescript": ">=5.0.0"
   },
   "peerDependenciesMeta": {
     "lottie-web": {
       "optional": true
     },
     "marked": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },
@@ -183,5 +192,11 @@
     "replaceText": {
       "(ABC-\\d+)": "[`$1`](https://juspay.atlassian.net/browse/$1)"
     }
+  },
+  "bin": {
+    "sui-codemod": "./scripts/codemod/cli.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

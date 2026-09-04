@@ -18,7 +18,15 @@
       selectAllLabel: { type: 'String', attribute: 'select-all-label' },
       onchange: { type: 'Object' },
       leftIcon: { type: 'String', attribute: 'left-icon', reflect: true },
-      leftIconTestId: { type: 'String', attribute: 'left-icon-test-id' }
+      leftIconTestId: { type: 'String', attribute: 'left-icon-test-id' },
+      bottomContent: { type: 'Object' },
+      optionIndicator: { type: 'Object' },
+      showSelectedTick: { type: 'Boolean', attribute: 'show-selected-tick' },
+      triggerSummary: { type: 'Object' },
+      onopen: { type: 'Object' },
+      onclose: { type: 'Object' },
+      hierarchy: { type: 'String', attribute: 'hierarchy' },
+      usePortal: { type: 'Boolean', attribute: 'use-portal' }
     }
   }}
 />

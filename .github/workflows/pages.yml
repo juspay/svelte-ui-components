@@ -11,13 +11,22 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Scoped per ref, not repo-wide. A single literal `pages` group made every run
+    # in the repository each other's rival: a second pull request opening its build
+    # cancelled the first one's, which is how #505 lost build and deploy to #504
+    # twenty seconds apart, both jobs recording zero billable time.
+    #
+    # This sits on the job, not the workflow. At workflow scope cancel-in-progress
+    # cancels the whole run — the deploy job included — so a second push to the
+    # same ref would kill a deployment already in flight, which is precisely the
+    # half-published site the deploy group below exists to prevent. Only the build
+    # is safe to supersede.
+    concurrency:
+      group: pages-build-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,6 +70,13 @@ jobs:
     needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    # Real deployments still have to queue behind one another — Pages accepts one
+    # at a time. This group is deliberately shared and deliberately does not
+    # cancel: killing a deployment mid-flight is how a half-published site
+    # happens. Only the build above is parallel-safe.
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

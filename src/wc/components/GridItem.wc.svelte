@@ -9,7 +9,8 @@
       showLoader: { type: 'Boolean', reflect: true, attribute: 'show-loader' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      onkeydown: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

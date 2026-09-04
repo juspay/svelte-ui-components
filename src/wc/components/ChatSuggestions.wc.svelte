@@ -12,7 +12,8 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       chipClasses: { type: 'String', attribute: 'chip-classes' },
-      onselect: { type: 'Object' }
+      onselect: { type: 'Object' },
+      icon: { type: 'Object' }
     }
   }}
 />

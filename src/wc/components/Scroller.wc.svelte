@@ -14,7 +14,9 @@
       smoothScroll: { type: 'Boolean', reflect: true, attribute: 'smooth-scroll' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onscrollposition: { type: 'Object' }
+      onscrollposition: { type: 'Object' },
+      arrowPrevious: { type: 'Object' },
+      arrowNext: { type: 'Object' }
     }
   }}
 />

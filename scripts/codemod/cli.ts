@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import type { Direction } from './map.ts';
 import { transformModuleSpecifiers, transformSvelte } from './transform.ts';
 import type { TransformResult } from './transform.ts';
+import { findChildrenAssignments } from './wc-children.ts';
 
 export type CliSummary = {
   readonly exitCode: number;
@@ -160,10 +161,13 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
     const result: TransformResult = file.endsWith('.svelte')
       ? transformSvelte(source, file, direction)
       : transformModuleSpecifiers(source, file, direction);
-    for (const warning of result.warnings) {
+    // Reported in both directions and in dry runs: it is a 4.0.0 breaking change
+    // to report, not a rename to apply, so it never contributes to filesChanged.
+    const childrenWarnings = direction === 'to-sui' ? findChildrenAssignments(source, file) : [];
+    for (const warning of [...result.warnings, ...childrenWarnings]) {
       log(`${warning.file}:${warning.line}:${warning.column} WARN ${warning.message}`);
     }
-    warnings += result.warnings.length;
+    warnings += result.warnings.length + childrenWarnings.length;
     if (!result.changed) {
       continue;
     }

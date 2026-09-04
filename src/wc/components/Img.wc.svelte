@@ -8,7 +8,9 @@
       fallback: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onerror: { type: 'Object' }
+      onerror: { type: 'Object' },
+      inlineSvg: { type: 'Boolean', attribute: 'inline-svg' },
+      transformSvg: { type: 'Object' }
     }
   }}
 />

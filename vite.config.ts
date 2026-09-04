@@ -7,7 +7,8 @@ export default defineConfig({
     include: [
       'src/**/*.{test,spec}.{js,ts}',
       'scripts/codemod/**/*.{test,spec}.{js,ts}',
-      'scripts/migrate/**/*.{test,spec}.{js,ts}'
+      'scripts/migrate/**/*.{test,spec}.{js,ts}',
+      'scripts/wc-parity/**/*.{test,spec}.{js,ts}'
     ]
   }
 });

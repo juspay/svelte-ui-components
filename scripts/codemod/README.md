@@ -1,5 +1,19 @@
 # polymorph → SUI consumer migration codemod
 
+Also reports the one breaking change in the 4.0.0 custom-element surface:
+`children` is no longer a declared property on `sui-chat-bubble`,
+`sui-draggable` or `sui-resizable`, so assigning it silently loses the content.
+That check runs on every forward migration and in dry runs, reports rather than
+rewrites (moving content into markup is a decision, not a rename), and only
+fires in files that also mention one of the three elements. See
+`wc-children.ts`.
+
+This package is published, so consumers can run it without a checkout:
+
+```sh
+npx sui-codemod --dry-run ./src
+```
+
 Mechanically migrates a consumer codebase from `polymorph-ui-components` to
 `@juspay/svelte-ui-components`:
 

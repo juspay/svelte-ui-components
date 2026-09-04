@@ -33,7 +33,13 @@
       onapplycompare: { type: 'Object' },
       oncancel: { type: 'Object' },
       onopentoggle: { type: 'Object' },
-      onclear: { type: 'Object' }
+      onclear: { type: 'Object' },
+      maxRangeDays: { type: 'Number', attribute: 'max-range-days' },
+      timePicker: { type: 'Object' },
+      compareCalendar: { type: 'Object' },
+      triggerSnippet: { type: 'Object' },
+      triggerIcon: { type: 'Object' },
+      compareTrigger: { type: 'Object' }
     }
   }}
 />

@@ -8,7 +8,8 @@
       disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      checkboxLabel: { type: 'Object' }
     }
   }}
 />

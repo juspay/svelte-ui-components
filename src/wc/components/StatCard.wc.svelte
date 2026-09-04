@@ -18,7 +18,10 @@
       onCheckboxChange: { type: 'Object' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      footer: { type: 'Object' },
+      valueSnippet: { type: 'Object' },
+      headerRight: { type: 'Object' }
     }
   }}
 />

@@ -3,7 +3,8 @@
     tag: 'sui-loader',
     shadow: 'open',
     props: {
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

@@ -7,7 +7,10 @@
       classes: { type: 'String' },
       triggerClasses: { type: 'String', attribute: 'trigger-classes' },
       testId: { type: 'String', attribute: 'test-id' },
-      panelId: { type: 'String', attribute: 'panel-id' }
+      panelId: { type: 'String', attribute: 'panel-id' },
+      trigger: { type: 'Object' },
+      ontoggle: { type: 'Object' },
+      disabled: { type: 'Boolean', reflect: true, attribute: 'disabled' }
     }
   }}
 />

@@ -48,7 +48,8 @@
       onattach: { type: 'Object' },
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' },
-      onscrollstate: { type: 'Object' }
+      onscrollstate: { type: 'Object' },
+      headerContent: { type: 'Object' }
     }
   }}
 />

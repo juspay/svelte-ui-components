@@ -26,7 +26,19 @@
       checkboxSelection: { type: 'Object' },
       searchConfig: { type: 'Object' },
       onCellChange: { type: 'Object' },
-      onSearchChange: { type: 'Object' }
+      onSearchChange: { type: 'Object' },
+      sortAscIcon: { type: 'Object' },
+      sortDescIcon: { type: 'Object' },
+      sortDefaultIcon: { type: 'Object' },
+      cell: { type: 'Object' },
+      empty: { type: 'Object' },
+      paginatorSlot: { type: 'Object' },
+      toolbarSlot: { type: 'Object' },
+      rowNumberLabel: { type: 'String', attribute: 'row-number-label' },
+      summaryRowIndex: { type: 'Number', attribute: 'summary-row-index' },
+      headerTooltipIcon: { type: 'Object' },
+      headerTooltipPosition: { type: 'Object' },
+      usePortal: { type: 'Boolean', attribute: 'use-portal' }
     }
   }}
 />

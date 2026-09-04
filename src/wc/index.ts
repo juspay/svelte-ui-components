@@ -81,3 +81,11 @@ import './components/ChatBubble.wc.svelte';
 import './components/ToolCallLog.wc.svelte';
 import './components/TaskList.wc.svelte';
 import './components/ThinkingIndicator.wc.svelte';
+
+// Wrappers that existed but were never imported here, so `sui-attachment-chip-row`,
+// `sui-hitl` and `sui-typewriter-text` were undefined for every consumer of the
+// bundle — customElements.define never ran for them. Nothing referenced these
+// files, which is why no build error ever pointed at it.
+import './components/AttachmentChipRow.wc.svelte';
+import './components/HITL.wc.svelte';
+import './components/TypewriterText.wc.svelte';

@@ -26,7 +26,11 @@
       onkeydown: { type: 'Object' },
       overlayBackdropFilter: { type: 'String', attribute: 'overlay-backdrop-filter' },
       overlayFadeIn: { type: 'Boolean', attribute: 'overlay-fade-in' },
-      usePortal: { type: 'Boolean', attribute: 'use-portal' }
+      usePortal: { type: 'Boolean', attribute: 'use-portal' },
+      content: { type: 'Object' },
+      footerSnippet: { type: 'Object' },
+      lockScroll: { type: 'Boolean', attribute: 'lock-scroll' },
+      autoDismissAfter: { type: 'Number', attribute: 'auto-dismiss-after' }
     }
   }}
 />
@@ -36,11 +40,13 @@
   let props = $props();
 </script>
 
+<!-- Property-assigned snippets win; the slots are the fallback. The branch stays
+     inside the body snippet so `<slot>` keeps its `$$props` scope. -->
 <Modal {...props}>
   {#snippet content()}
-    <slot></slot>
+    {#if props.content}{@render props.content()}{:else}<slot></slot>{/if}
   {/snippet}
   {#snippet footerSnippet()}
-    <slot name="footer"></slot>
+    {#if props.footerSnippet}{@render props.footerSnippet()}{:else}<slot name="footer"></slot>{/if}
   {/snippet}
 </Modal>

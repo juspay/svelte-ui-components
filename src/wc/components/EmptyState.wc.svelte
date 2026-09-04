@@ -6,7 +6,10 @@
       title: { type: 'String', reflect: true },
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },
-      testId: { type: 'String', attribute: 'test-id' }
+      testId: { type: 'String', attribute: 'test-id' },
+      icon: { type: 'Object' },
+      titleSnippet: { type: 'Object' },
+      descriptionSnippet: { type: 'Object' }
     }
   }}
 />

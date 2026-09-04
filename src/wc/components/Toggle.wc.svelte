@@ -7,7 +7,8 @@
       text: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      testId: { type: 'String', attribute: 'test-id' }
     }
   }}
 />

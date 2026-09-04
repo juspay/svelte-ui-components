@@ -10,7 +10,8 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onfiles: { type: 'Object' },
-      onerror: { type: 'Object' }
+      onerror: { type: 'Object' },
+      trigger: { type: 'Object' }
     }
   }}
 />

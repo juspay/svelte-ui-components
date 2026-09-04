@@ -261,3 +261,85 @@ test.describe('a declared prop whose name is also a native handler', () => {
     ]);
   });
 });
+
+test.describe('declaring a native handler name does not take the DOM path with it', () => {
+  test('addEventListener still works on an element that declares the same name', async ({
+    page
+  }) => {
+    await loadBundle(page);
+
+    // Review on #512 held that declaring `onclick`/`onfocus`/`oninput` shadows
+    // the native GlobalEventHandlers accessor, and so changes web-component
+    // behaviour. The shadowing is real and measured in the test above. What
+    // matters for a consumer is whether it costs them the DOM, and it does not:
+    // the declaration replaces one property, not the event system. This asserts
+    // the escape hatch actually exists rather than assuming it does, because
+    // "use addEventListener instead" is the whole mitigation.
+    const seen = await page.evaluate(async () => {
+      const order: string[] = [];
+
+      const element = document.createElement('sui-toggle');
+      element.addEventListener('click', () => order.push('addEventListener'));
+      Reflect.set(element, 'onClick', () => order.push('declared-prop'));
+      document.body.append(element);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      element.shadowRoot?.querySelector('input')?.click();
+
+      return order;
+    });
+
+    // Both run. The listener is not displaced by the prop, and the prop is not
+    // displaced by the listener.
+    expect(seen, 'declaring the prop cost the element its DOM event').toContain('addEventListener');
+    expect(seen).toContain('declared-prop');
+  });
+
+  test('the shared observed attribute resolves to the legacy spelling', async ({ page }) => {
+    await loadBundle(page);
+
+    // The other half of that review: `onclick` and `onClick` both lowercase to
+    // the `onclick` attribute, so Svelte's `$$g_p` returns whichever key
+    // `Object.keys` yields first, and the finding called that undocumented
+    // key-enumeration behaviour to rely on. It is -- for the attribute path,
+    // which is inert here because a function cannot be written as an HTML
+    // attribute. Property assignment is unaffected: each declared key gets its
+    // own accessor, which is why precedence holds in the tests above.
+    //
+    // Pinned by driving the attribute rather than by counting it. An earlier
+    // version asserted only that `onclick` appears twice in observedAttributes,
+    // while the comment claimed it would catch a reordering -- which it would
+    // not have, since both entries are the same string. Review caught the gap.
+    // Setting the attribute and reading both properties back shows which key
+    // actually won, so a reordering of the declarations fails here.
+    const resolved = await page.evaluate(async () => {
+      const constructor = customElements.get('sui-toggle');
+      const observed =
+        typeof constructor === 'function' ? Reflect.get(constructor, 'observedAttributes') : [];
+      const list: string[] = Array.isArray(observed) ? observed : [];
+
+      const element = document.createElement('sui-toggle');
+      document.body.append(element);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      // `type: 'Object'` runs the attribute through JSON.parse, so a parseable
+      // marker lands on whichever prop the attribute resolved to.
+      element.setAttribute('onclick', '{"marker":true}');
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      return {
+        onclickCount: list.filter((name) => name === 'onclick').length,
+        legacyGotIt: JSON.stringify(Reflect.get(element, 'onclick')),
+        correctedGotIt: JSON.stringify(Reflect.get(element, 'onClick'))
+      };
+    });
+
+    // Both declarations really do claim the same attribute -- the premise the
+    // finding rests on, confirmed rather than taken on trust.
+    expect(resolved.onclickCount, 'the two spellings no longer share an attribute').toBe(2);
+
+    // And the legacy key is the one it resolves to, because it is declared
+    // first. This is the assertion a reordering would break.
+    expect(resolved.legacyGotIt, 'the attribute stopped resolving to the legacy spelling').toBe(
+      '{"marker":true}'
+    );
+  });
+});

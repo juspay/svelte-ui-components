@@ -13,6 +13,8 @@
       classes: { type: 'String' },
       checkboxAriaLabel: { type: 'String', attribute: 'aria-label' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
+      controlled: { type: 'Boolean', reflect: true },
+      attributes: { type: 'Object' },
       onclick: { type: 'Object' }
     }
   }}

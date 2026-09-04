@@ -704,7 +704,7 @@ A second search-input mode (`searchConfig.displayMode: 'inline'`) — a trigger 
 
 ### Checkbox Selection
 
-These variables style the leading checkbox column that appears when `checkboxSelection` is set.
+These variables style the leading checkbox column that appears when `checkboxSelection` is set. The column renders the library `Checkbox` in controlled mode; every `--table-checkbox-*` token below is bridged onto the matching `--checkbox-*` variable inside the column, so theming the table keeps working and an app-wide `Checkbox` theme is overridden only there.
 
 | Variable                                      | Default                          | CSS Property     | Description                                                                |
 | --------------------------------------------- | -------------------------------- | ---------------- | -------------------------------------------------------------------------- |
@@ -712,13 +712,15 @@ These variables style the leading checkbox column that appears when `checkboxSel
 | `--table-checkbox-col-padding`                | `12px 12px`                      | padding          | Padding of the checkbox column cells.                                      |
 | `--table-checkbox-size`                       | `18px`                           | width, height    | Size (width and height) of the checkbox box element.                       |
 | `--table-checkbox-border`                     | `2px solid #9ca3af`              | border           | Border of the unchecked checkbox.                                          |
-| `--table-checkbox-border-radius`              | `3px`                            | border-radius    | Border radius of the checkbox box.                                         |
+| `--table-checkbox-border-radius`              | `4px`                            | border-radius    | Border radius of the checkbox box. Falls back to `--radius` when unset.    |
 | `--table-checkbox-background`                 | `transparent`                    | background-color | Background of the unchecked checkbox.                                      |
 | `--table-checkbox-hover-border-color`         | `#6b7280`                        | border-color     | Border color of the checkbox on hover (when not disabled).                 |
 | `--table-checkbox-checked-background`         | `#2563eb`                        | background-color | Background of the checked checkbox.                                        |
 | `--table-checkbox-checked-border-color`       | `#2563eb`                        | border-color     | Border color of the checked checkbox.                                      |
+| `--table-checkbox-checked-border`             | `2px solid #2563eb`              | border           | Whole border of the checked checkbox. Set it when the checked width must differ from `2px`; it wins over `--table-checkbox-checked-border-color`. |
 | `--table-checkbox-indeterminate-background`   | `#2563eb`                        | background-color | Background of the header checkbox in indeterminate (partial-select) state. |
 | `--table-checkbox-indeterminate-border-color` | `#2563eb`                        | border-color     | Border color of the header checkbox in indeterminate state.                |
+| `--table-checkbox-indeterminate-border`       | `2px solid #2563eb`              | border           | Whole border of the header checkbox in indeterminate state; wins over `--table-checkbox-indeterminate-border-color`. |
 | `--table-checkbox-disabled-opacity`           | `0.4`                            | opacity          | Opacity of a disabled checkbox row.                                        |
 | `--table-checkbox-focus-ring`                 | `0 0 0 3px rgba(59,130,246,0.3)` | box-shadow       | Focus ring shown on the checkbox element when focused via keyboard.        |
 | `--table-checkbox-icon-size`                  | `12px`                           | width, height    | Size of the checkmark / minus SVG icon inside the checkbox box.            |

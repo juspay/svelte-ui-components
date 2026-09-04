@@ -64,9 +64,9 @@ test.describe('Table — newly-documented props are real', () => {
     await expect(table).toBeVisible();
     await expect(page.getByTestId('bulk-count')).not.toBeVisible();
 
-    // Row selection is a custom role="checkbox" span, not a native <input> --
-    // Table.svelte renders it as <span class="table-checkbox-box" role="checkbox">.
-    await table.locator('tbody tr').first().locator('.table-checkbox-box').click();
+    // Row selection is the library Checkbox in controlled mode: the visible
+    // control is its role="checkbox" box, not a native <input>.
+    await table.locator('tbody tr').first().getByRole('checkbox').click();
 
     const bulkCount = page.getByTestId('bulk-count');
     await expect(bulkCount).toBeVisible();

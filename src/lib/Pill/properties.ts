@@ -13,6 +13,11 @@ export type OptionalPillProperties = {
   title?: string;
   dismissIcon?: Snippet;
   /**
+   * Accessible name of the dismiss control. Defaults to "Dismiss"; pass a translated
+   * string for localised products. Blank values fall back to the default.
+   */
+  dismissLabel?: string;
+  /**
    * A Svelte snippet rendered immediately before the text label inside a
    * `<span class="pill-leading-icon">` wrapper. Use for icons, logos, or any
    * inline decoration. The wrapper does not receive `aria-hidden` — leave

@@ -9,14 +9,19 @@
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      onClick: { type: 'Object' }
+      onClick: { type: 'Object' },
+      inputId: { type: 'String', attribute: 'input-id' },
+      inputAriaLabel: { type: 'String', attribute: 'input-aria-label' },
+      inputAriaLabelledby: { type: 'String', attribute: 'input-aria-labelledby' }
     }
   }}
 />
 
 <script lang="ts">
   import Toggle from '$lib/Toggle/Toggle.svelte';
-  let props = $props();
+
+  // Keep the host's native identity and ARIA accessors independent of its shadow input.
+  let { inputId = '', inputAriaLabel = '', inputAriaLabelledby = '', ...props } = $props();
 </script>
 
-<Toggle {...props} />
+<Toggle {...props} id={inputId} ariaLabel={inputAriaLabel} ariaLabelledby={inputAriaLabelledby} />

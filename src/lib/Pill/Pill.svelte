@@ -10,6 +10,7 @@
     testId,
     title,
     dismissIcon,
+    dismissLabel,
     leadingIcon,
     onclick,
     ondismiss: ondismissLegacy,
@@ -30,6 +31,9 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (event.currentTarget instanceof HTMLElement) {
@@ -66,10 +70,12 @@
   <span class="pill-text">{text}</span>
   {#if dismissible}
     <div class="pill-dismiss">
+      <!-- A dismiss action is a bare icon, not a primary call to action. -->
       <Button
+        variant="ghost"
         {disabled}
         onclick={handleDismiss}
-        ariaLabel="Dismiss"
+        ariaLabel={dismissLabel?.trim() || 'Dismiss'}
         {...typeof testId === 'string' ? { testId: `${testId}-dismiss` } : {}}
       >
         {#if typeof dismissIcon === 'function'}
@@ -145,6 +151,25 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+  }
+
+  /* Consumer themes can set Button tokens on its container, beating inherited
+     wrapper values. Pin the painting element too so the chip owns its enabled
+     glyph; leave disabled colours and focus indicators to the consumer theme. */
+  .pill-dismiss :global(.button-container),
+  .pill-dismiss :global(.button-el) {
+    --button-color: transparent;
+    --button-background: none;
+    --button-active-background: transparent;
+    --button-border: none;
+    --button-padding: 0;
+    --button-text-color: var(--pill-dismiss-color, currentColor);
+    --button-hover-color: transparent;
+    --button-hover-border: none;
+    --button-hover-text-color: var(
+      --pill-dismiss-hover-color,
+      var(--pill-dismiss-color, currentColor)
+    );
   }
 
   .pill-dismiss :global(svg) {

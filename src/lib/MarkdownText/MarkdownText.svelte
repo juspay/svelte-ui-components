@@ -2,9 +2,9 @@
   import { renderMarkdown } from './markdown';
   import type { MarkdownTextProperties } from './properties';
 
-  let { markdown, breaks = false, testId, classes }: MarkdownTextProperties = $props();
+  let { markdown, breaks = false, testId, classes, tableLabel }: MarkdownTextProperties = $props();
 
-  let html = $derived(renderMarkdown(markdown, { breaks }));
+  let html = $derived(renderMarkdown(markdown, { breaks, tableLabel }));
 </script>
 
 <div
@@ -106,16 +106,43 @@
     opacity: var(--markdown-text-blockquote-opacity, 0.85);
   }
 
-  .markdown-text :global(table) {
+  /* The wrapper scrolls, not the table. `display: block` on a `<table>` is what
+     would make `overflow-x` work on the element itself, but it also strips the
+     table's semantics for assistive technology, so the scroll container is a
+     separate box and the table stays a table. `max-width` bounds the wrapper to
+     the message; the table's `max-content` width is what overflows it. */
+  .markdown-text :global(.markdown-table-wrapper) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
-    border-collapse: collapse;
     margin: 0.5em 0;
   }
 
+  /* The wrapper holds focus, so it has to show it: a tab stop with no visible
+     ring is a keyboard user's dead end. Same default as Table's focusable rows. */
+  .markdown-text :global(.markdown-table-wrapper:focus-visible) {
+    outline: 2px solid var(--markdown-text-focus-outline-color, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  /* Without an intrinsic width the table is exactly its container's width and a
+     six-column table compresses instead of scrolling. `max-content` supplies
+     that width; `min-width` keeps a narrow table filling the message rather
+     than shrink-wrapping to its content. */
+  .markdown-text :global(.markdown-table-wrapper table) {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+  }
+
+  /* The container sets `overflow-wrap: anywhere` so long unbroken strings in a
+     message cannot force it wide. Inside a table that rule defeats the width
+     above: it makes every character a break opportunity, so `max-content`
+     resolves to `min-content` and the table collapses again. Cells opt back
+     out — they are sized by the column model, not by the message box. */
   .markdown-text :global(th),
   .markdown-text :global(td) {
+    overflow-wrap: normal;
     padding: 5px 10px;
     border: 1px solid var(--markdown-text-table-border-color, rgba(0, 0, 0, 0.12));
     text-align: left;

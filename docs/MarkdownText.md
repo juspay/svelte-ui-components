@@ -36,12 +36,13 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 
 ## Props
 
-| Prop     | Type      | Required | Default | Description                                                                                                                        |
-| -------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| markdown | `string`  | Yes      | `-`     | Markdown source. Raw HTML inside it is escaped and shown as text; unsafe link/image protocols are stripped while their text stays. |
-| breaks   | `boolean` | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                              |
-| testId   | `string`  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                               |
-| classes  | `string`  | No       | `-`     | Class string on the root element.                                                                                                  |
+| Prop       | Type      | Required | Default | Description                                                                                                                                                                  |
+| ---------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| markdown   | `string`  | Yes      | `-`     | Markdown source. Raw HTML inside it is escaped and shown as text; unsafe link/image protocols are stripped while their text stays.                                           |
+| breaks     | `boolean` | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                        |
+| testId     | `string`  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                         |
+| classes    | `string`  | No       | `-`     | Class string on the root element.                                                                                                                                            |
+| tableLabel | `string`  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark. |
 
 ## Security model
 
@@ -49,6 +50,42 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 - **URL protocol allow-list.** `[x](javascript:…)` and `[x](data:…)` render as plain text without an anchor; `![x](javascript:…)` renders the alt text without an `<img>`. Entity-smuggled protocols (`jav&#x09;ascript:`) fail scheme parsing and are treated as relative paths, where attribute-escaping keeps them inert.
 - **External links are tab-safe.** `http:`/`https:` links open with `target="_blank" rel="noopener noreferrer"` (the same default the library's Button/Card apply); relative, `mailto:` and `tel:` links keep same-tab navigation. Autolinks and bare URLs go through the same protocol guard as explicit links.
 - **Pre-sanitized HTML has its own prop.** If you already hold trusted, sanitized HTML, use `ChatMessage`'s `html` prop — `markdown` is for untrusted source text.
+
+## Wide tables
+
+Ask a model for a summary and it answers with a table, and a chat bubble is rarely
+wide enough for one. Each table is wrapped in a scrollable region, so the table scrolls
+horizontally and the message around it does not, while header and body keep sharing
+one set of column edges.
+
+The wrapper exists rather than scrolling the table directly because `display: block`
+on a `<table>` — which is what makes `overflow-x` apply to the element itself —
+also strips the table's semantics, and assistive technology loses row and column
+navigation on exactly the content that most needs it. `Table.svelte` reaches the
+same shape with its `.table-scroll` wrapper.
+
+| declaration                              | on                        | why it is needed                                                                                                                                                                                                                               |
+| ---------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `display: block` + `overflow-x: auto`    | `.markdown-table-wrapper` | makes the wrapper the scroll container, leaving the table a table                                                                                                                                                                              |
+| `max-width: 100%`                        | `.markdown-table-wrapper` | bounds the scroll container to the message, so the table overflows the wrapper instead of the page                                                                                                                                             |
+| `width: max-content` + `min-width: 100%` | `table`                   | gives it something to overflow with, while a narrow table still fills the message                                                                                                                                                              |
+| `tabindex="0"`                           | `.markdown-table-wrapper` | a box with `overflow-x: auto` cannot be scrolled with arrow keys unless it can hold focus; without this the scrolling is mouse-only                                                                                                            |
+| `overflow-wrap: normal`                  | `th`, `td`                | the container sets `overflow-wrap: anywhere` so a long unbroken string cannot force the message wide; inside a table that makes every character a break opportunity, so `max-content` collapses to `min-content` and the table stops scrolling |
+| `:focus-visible` outline                 | `.markdown-table-wrapper` | a tab stop with no visible focus ring is a dead end for a keyboard user; the ring's colour is `--markdown-text-focus-outline-color`                                                                                                            |
+
+Remove any one of them and a wide table compresses to fit, loses its semantics,
+cannot be reached from the keyboard, or gives no sign that it has been reached. Cells keep `white-space: normal`, so a table
+that _does_ fit still wraps inside its cells rather than being forced onto one line.
+
+Pass `tableLabel` to name the region:
+
+```svelte
+<MarkdownText {markdown} tableLabel="Recent orders" />
+```
+
+That adds `role="region"` and `aria-label`. Without it the wrapper stays
+keyboard-scrollable but announces no landmark, since a region the user cannot
+identify is worse than no region at all.
 
 ## CSS Variables
 
@@ -72,6 +109,7 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 | `--markdown-text-table-header-background` | `rgba(0, 0, 0, 0.04)`     | Table header background.       |
 | `--markdown-text-image-border-radius`     | `8px`                     | Image corner radius.           |
 | `--markdown-text-hr-color`                | `rgba(0, 0, 0, 0.12)`     | Horizontal rule color.         |
+| `--markdown-text-focus-outline-color`     | `#3b82f6`                 | Focus ring on a table wrapper. |
 
 ## Type Reference
 
@@ -81,10 +119,12 @@ export type MarkdownTextProperties = {
   breaks?: boolean;
   testId?: string;
   classes?: string;
+  tableLabel?: string;
 };
 
 export type RenderMarkdownOptions = {
   breaks?: boolean;
   inline?: boolean;
+  tableLabel?: string;
 };
 ```

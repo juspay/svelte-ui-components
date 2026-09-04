@@ -16,6 +16,13 @@ export type OptionalMarkdownTextProperties = {
   breaks?: boolean;
   testId?: string;
   classes?: string;
+  /**
+   * Accessible name for the scrollable region wrapping each table. Supplying it
+   * adds `role="region"` and `aria-label`; without it the wrapper stays
+   * keyboard-scrollable but announces no landmark, since an unnamed region is
+   * worse than none.
+   */
+  tableLabel?: string;
 };
 
 export type RenderMarkdownOptions = {
@@ -28,4 +35,6 @@ export type RenderMarkdownOptions = {
    * link/image protocols are stripped.
    */
   inline?: boolean;
+  /** Accessible name for the scroll region wrapping each table. See `MarkdownTextProperties.tableLabel`. */
+  tableLabel?: string;
 };

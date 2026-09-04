@@ -104,6 +104,31 @@ function annotateExternalLinks(html: string): string {
   );
 }
 
+/* A wide table has to scroll, and the scroll container has to be reachable.
+   Both constraints land on a wrapper rather than on the `<table>` itself:
+   `display: block` on a table is what makes `overflow-x` work, but it also
+   drops the element's table semantics, so assistive technology loses row and
+   column navigation on exactly the content that most needs it. Wrapping keeps
+   the table a table. `tabindex="0"` is the other half — an element with
+   `overflow-x: auto` cannot be scrolled with arrow keys unless it can hold
+   focus, so without it the new scrolling is mouse-only. Table.svelte reaches
+   the same shape with `.table-scroll`, and BarChart and Book both pair a
+   scrollable region with a tabindex. */
+const TABLE_OPEN = /<table>/g;
+const TABLE_CLOSE = /<\/table>/g;
+
+function wrapTables(html: string, label?: string): string {
+  /* `role="region"` without an accessible name announces a landmark the user
+     cannot identify, which is worse than no landmark, so the role appears only
+     when the caller supplies a name. The tabindex does not depend on it:
+     keyboard scrolling should work either way. */
+  const open =
+    typeof label === 'string' && label.length > 0
+      ? `<div class="markdown-table-wrapper" tabindex="0" role="region" aria-label="${escapeHtml(label)}">`
+      : '<div class="markdown-table-wrapper" tabindex="0">';
+  return html.replace(TABLE_OPEN, `${open}<table>`).replace(TABLE_CLOSE, '</table></div>');
+}
+
 function instanceFor(options: RenderMarkdownOptions): Marked {
   const breaks = options.breaks === true;
   const key = breaks ? 'breaks' : 'default';
@@ -123,5 +148,10 @@ export function renderMarkdown(markdown: string, options: RenderMarkdownOptions 
   const instance = instanceFor(options);
   const output =
     options.inline === true ? instance.parseInline(markdown) : instance.parse(markdown);
-  return typeof output === 'string' ? annotateExternalLinks(output) : '';
+  if (typeof output !== 'string') {
+    return '';
+  }
+  /* Inline parsing produces no block elements, so there is no table to wrap. */
+  const linked = annotateExternalLinks(output);
+  return options.inline === true ? linked : wrapTables(linked, options.tableLabel);
 }

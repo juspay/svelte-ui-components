@@ -6,7 +6,8 @@
       markdown: { type: 'String' },
       breaks: { type: 'Boolean' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      tableLabel: { type: 'String', attribute: 'table-label' }
     }
   }}
 />

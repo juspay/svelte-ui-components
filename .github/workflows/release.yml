@@ -190,8 +190,33 @@ jobs:
           # Ensure docs directory exists
           mkdir -p docs
 
-          # Generate changelog
-          auto-changelog --config .auto-changelog
+          # Generate changelog.
+          #
+          # The `[skip ci]` half is carried over from .auto-changelog rather than
+          # dropped. A command-line pattern REPLACES the config one, so filtering
+          # only the release commits would have silently retired the existing
+          # filter. It currently matches nothing -- no commit subject or body on
+          # release carries `[skip ci]`, checked across 400 -- but a filter that
+          # matches nothing today is not the same as one that is safe to remove.
+          #
+          # --ignore-commit-pattern has to be a flag: auto-changelog reads it
+          # from argv only, and the same key in .auto-changelog is silently
+          # accepted and never applied. Dropping the release commits is what
+          # makes a section readable, and it does more than remove one bullet --
+          # releaseSummary takes its prose from the newest commit in the
+          # release, which is otherwise always the bodiless `chore(release)`
+          # commit, so every section rendered empty.
+          auto-changelog --config .auto-changelog \
+            --ignore-commit-pattern '(\[skip ci\]|^chore\(release\):)'
+
+          # Deliberately NOT formatted. An earlier version of this change ran
+          # `prettier --write` here, because the generator's output stopped
+          # being prettier-clean once sections carried prose. Prettier does not
+          # merely reformat it -- it reads the underscores in prose like
+          # `DESIGN_PRINCIPLES ... corrects _to_` as emphasis spanning two lines
+          # and rewrites them to `DESIGN*PRINCIPLES ... corrects \_to*`, and it
+          # is not idempotent, so every release would corrupt a little more.
+          # docs/CHANGELOG.md is in .prettierignore instead.
 
           # If changelog generation failed, create a basic one
           if [ ! -f "docs/CHANGELOG.md" ]; then

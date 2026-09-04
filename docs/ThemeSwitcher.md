@@ -62,6 +62,7 @@ Override these custom properties to theme the component.
 | `--theme-switcher-border-radius`       | `8px`         | border-radius    | Border radius of the toggle button (also used by segment control). |
 | `--theme-switcher-bg`                  | `transparent` | background-color | Background color of the toggle button.                             |
 | `--theme-switcher-bg-hover`            | `#f3f4f6`     | background-color | Background color of the toggle button on hover.                    |
+| `--theme-switcher-bg-pressed`          | `#e5e7eb`     | background-color | Background color of the toggle button while pressed.               |
 | `--theme-switcher-icon-color`          | `#374151`     | color            | Color of the icons (also used by segment buttons).                 |
 | `--theme-switcher-transition-duration` | `0.3s`        | transition       | Duration of the icon animation and all transitions.                |
 

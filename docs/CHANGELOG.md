@@ -2,59 +2,59 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.2.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.3.0)
 
-Phase 2 of docs/EVENT_CASING_MIGRATION.md. Phase 1 gave every grandfathered
-event prop its correct spelling alongside the old one; this tells a consumer
-which of the two they are using, once, and what to run to move.
+`table` carried `display: block` and `overflow-x: auto` but no intrinsic
+width, so the block box was exactly its container's width and there was
+nothing to overflow with. A six-column reply compressed to fit instead of
+scrolling: measured at a 480px container, scrollWidth 480 against
+clientWidth 480.
 
-Dev-only, because a production warning is noise a consumer cannot act on
-mid-incident and 142 of them would bury real output. `import.meta.env.DEV` is
-the guard specifically because the bundler statically replaces it, so the call
-is removed from a production build rather than merely skipped at runtime.
+The scroll container is a wrapper rather than the table itself, because
+`display: block` is what makes `overflow-x` apply to a `&lt;table&gt;` and it
+also strips the element's table semantics -- assistive technology loses
+row and column navigation on exactly the content that most needs it.
+Table.svelte reaches the same shape with `.table-scroll`. Each table is
+now wrapped in `.markdown-table-wrapper`, which scrolls and is bounded by
+`max-width: 100%`, while the table keeps `display: table` and takes
+`width: max-content` with `min-width: 100%` to overflow it.
 
-Once per component-and-prop rather than per render: a deprecated prop on a list
-row would otherwise warn a thousand times, and the key includes the component
-because `onclick` is deprecated on many of them -- deduplicating on the prop
-alone would report the first and silently hide the rest.
+`tabindex="0"` on the wrapper is the other half. A box with
+`overflow-x: auto` cannot be scrolled with arrow keys unless it can hold
+focus, so without it the new scrolling was mouse-only. BarChart and Book
+both pair a scrollable region with a tabindex.
 
-Rebased onto 3.2.0. Review responses follow.
+Width alone does not fix the compression, which is the part worth
+recording. The container sets `overflow-wrap: anywhere` so an unbroken
+string in a model reply cannot force the message wide. Inside a table
+that makes every character a break opportunity, so `max-content` resolves
+to `min-content` and the table collapses exactly as before. Cells opt back
+out with `overflow-wrap: normal`. Either half alone measures 480 against
+480.
 
-## The removal version is a constant, and it is a commitment
+`tableLabel` names the region. Supplying it adds `role="region"` and
+`aria-label`; without it the wrapper stays keyboard-scrollable and
+announces no landmark, since a region the user cannot identify is worse
+than no region. Declared on the custom element as `table-label`.
 
-`DEPRECATION_REMOVAL_VERSION` replaces the literal in the message. The reviewer
-called this cosmetic; it had stopped being cosmetic. The string was written
-while #506 was expected to cut 4.0.0. #506 shipped inside 3.2.0 as a minor, so
-this warning was briefly promising consumers a removal version that nothing was
-committed to. 4.0.0 is now the agreed target, one place names it, and a test
-pins the value so moving it is a deliberate edit visible in a diff rather than
-a silent one.
+Cells keep `white-space: normal`, so a table that does fit still wraps
+inside its cells rather than being forced onto one line.
 
-## Not exporting it from src/lib/index.ts is the mark of an internal module
+A tab stop with no visible ring is a keyboard user's dead end, so the
+wrapper draws a `:focus-visible` outline, themed by
+`--markdown-text-focus-outline-color` with the same default Table uses
+for its focusable rows.
 
-The review reads the absence as an oversight, on the grounds that a
-library-wide helper consumers cannot import is either internal or a mistake.
-It is internal, and this codebase already says so this way: src/lib/utils.ts
-exports ten functions and the barrel re-exports three, leaving getStorageItem,
-hexToRgb, rgbToHsv and four more reachable only from inside src/lib. Selective
-re-export is the existing convention for exactly this, not an accident.
+Five demo-page tests, on two new demo sections since the existing
+two-column table cannot overflow anything: the wrapper overflows while
+the table keeps `display: table`; the wrapper is focusable and ArrowRight
+really scrolls it; the focused wrapper shows an outline; every body row
+shares the header's column edges, not just the first; and the region is
+named only when a label is passed. Six unit tests pin the string the
+post-processor emits: one wrapper per table, role and label only when
+labelled, an escaped label, several tables, inline mode, and no table.
 
-Components call warnDeprecatedProp themselves when handed a deprecated
-spelling; a consumer has no call for it. Exporting it would add public API that
-4.0.0 then has to carry. The module now states this rather than leaving the
-reader to infer it, which is the ambiguity the finding actually named.
-
-## The env stub can no longer leak
-
-vi.unstubAllEnvs() moves into afterEach. It sat after the assertion in the
-production-silence case, so a failure there would throw before the cleanup ran
-and leave DEV=false set for every later case in the same worker -- silencing
-the warnings they assert and surfacing the failure somewhere it did not happen.
-
-7 unit tests here, all passing. The suite reports 49 failures in
-scripts/wc-parity/prop-parity.test.ts; those are inherited from the release tip
-this is rebased onto and are fixed by #512, not by anything in this branch --
-prop-parity is the only failing file. lint 0 errors.
+## [3.3.0](https://github.com/juspay/svelte-ui-components/compare/3.3.0..3.2.3) - 4 September 2026
 
 ## [3.2.3](https://github.com/juspay/svelte-ui-components/compare/3.2.3..3.2.2) - 4 September 2026
 

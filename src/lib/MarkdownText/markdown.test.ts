@@ -173,3 +173,57 @@ describe('renderMarkdown', () => {
     expect(link).not.toContain('<a');
   });
 });
+
+// The wrapper is emitted by a post-processor over marked's HTML rather than by a
+// renderer override, so it is pinned here on the string it produces. The demo-page
+// tests cover the browser behaviour; these cover the contract a demo refactor
+// could silently drop.
+describe('renderMarkdown — table wrapping', () => {
+  const table = '| a | b |\n| --- | --- |\n| 1 | 2 |';
+
+  it('wraps a table in a focusable scroll wrapper', () => {
+    const output = renderMarkdown(table);
+    expect(output).toContain('<div class="markdown-table-wrapper" tabindex="0"><table>');
+    expect(output).toContain('</table></div>');
+    expect(output.match(/<div class="markdown-table-wrapper"/g)).toHaveLength(1);
+  });
+
+  it('names the region only when a label is supplied', () => {
+    const unlabelled = renderMarkdown(table);
+    expect(unlabelled).not.toContain('role=');
+    expect(unlabelled).not.toContain('aria-label=');
+
+    const labelled = renderMarkdown(table, { tableLabel: 'Recent orders' });
+    expect(labelled).toContain(
+      '<div class="markdown-table-wrapper" tabindex="0" role="region" aria-label="Recent orders"><table>'
+    );
+
+    // An empty label is no label: a region without a name is worse than none.
+    const empty = renderMarkdown(table, { tableLabel: '' });
+    expect(empty).not.toContain('role=');
+    expect(empty).toContain('tabindex="0"');
+  });
+
+  it('escapes the label so it cannot break out of the attribute', () => {
+    const output = renderMarkdown(table, { tableLabel: 'a"b<c>&d' });
+    expect(output).toContain('aria-label="a&quot;b&lt;c&gt;&amp;d"');
+    expect(output).not.toContain('aria-label="a"b');
+  });
+
+  it('gives each of several tables its own wrapper', () => {
+    const output = renderMarkdown(`${table}\n\nbetween\n\n${table}`, { tableLabel: 'x' });
+    expect(output.match(/<div class="markdown-table-wrapper"/g)).toHaveLength(2);
+    expect(output.match(/<\/table><\/div>/g)).toHaveLength(2);
+    expect(output.match(/<table>/g)).toHaveLength(2);
+  });
+
+  it('does not wrap in inline mode, which renders no block elements', () => {
+    const output = renderMarkdown(table, { inline: true, tableLabel: 'x' });
+    expect(output).not.toContain('markdown-table-wrapper');
+    expect(output).not.toContain('<table>');
+  });
+
+  it('leaves markdown without a table untouched', () => {
+    expect(renderMarkdown('plain **text**')).not.toContain('markdown-table-wrapper');
+  });
+});

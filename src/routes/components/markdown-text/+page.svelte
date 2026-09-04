@@ -38,6 +38,17 @@
   ].join('\n');
 
   const twoLines = 'roses are red\nviolets are blue';
+
+  // Six columns of real order data, in a panel narrower than the table needs. A
+  // model asked for a summary answers in exactly this shape, and a chat bubble
+  // is never wide enough for it — so the overflow behaviour is the common case,
+  // not an edge case.
+  const wideTable = [
+    '| Order ID | Customer | Payment method | Status | Amount | Created |',
+    '| --- | --- | --- | --- | --- | --- |',
+    '| ORD-100001 | Priya Raghunathan | Netbanking (HDFC) | Completed | 12,500.00 | 2026-09-01 10:22 |',
+    '| ORD-100002 | Sundaram Venkatesh | UPI Collect | Pending capture | 3,499.50 | 2026-09-01 11:04 |'
+  ].join('\n');
 </script>
 
 <div class="page-header">
@@ -71,6 +82,29 @@
 </p>
 <div class="demo-panel">
   <MarkdownText markdown={hostileSource} testId="markdown-text-hostile" />
+</div>
+
+<h2>A table wider than the message</h2>
+<p class="demo-note">
+  The table scrolls inside itself, so the message around it does not. Its columns stay aligned
+  across header and body while it does.
+</p>
+<div class="demo-panel">
+  <MarkdownText markdown={wideTable} testId="markdown-text-wide-table" />
+</div>
+
+<h2>A named table region</h2>
+<p class="demo-note">
+  Passing <code>tableLabel</code> names the scroll region, which is what makes
+  <code>role="region"</code> useful. Without it the wrapper is still keyboard-scrollable but announces
+  no landmark, because an unnamed region is worse than none.
+</p>
+<div class="demo-panel">
+  <MarkdownText
+    markdown={wideTable}
+    tableLabel="Recent orders"
+    testId="markdown-text-labelled-table"
+  />
 </div>
 
 <h2>Line breaks</h2>

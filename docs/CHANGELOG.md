@@ -2,29 +2,26 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.2.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.2.1)
 
-The toggle button had a :hover rule and no :active rule at all, so pressing
-it was visually identical to hovering it and the control gave no confirmation
-that the press had registered. Found by measuring every interactive control in
-five interaction states on a Shopify-embedded surface: this was the last one
-with no pressed state, and it was unreachable from the consumer side because a
-token cannot feed a state the component never paints.
+Principle 1 says every visual decision is a custom property with a fallback.
+It does not say what happens when there is no declaration at all, and that
+turns out to be the one gap in the theming contract a consumer cannot work
+around: the cascade can override a rule, but it cannot invent one.
 
---theme-switcher-bg-pressed follows the existing bg / bg-hover naming and ships
-a literal fallback like every other token in this file, so consumers that set
-nothing keep a working default. It is deliberately not called -bg-active: here
-"active" already means the SELECTED segment (--theme-switcher-icon-color-active,
---theme-switcher-segment-active-bg), so that spelling would be ambiguous.
+Found by 515. `.toggle-button` had a :hover rule and no :active rule, so
+--theme-switcher-bg-pressed had nowhere to land and no arrangement of the
+consumer's stylesheet could have produced a pressed state. The component read
+as fully tokenised the whole time, because every rule it did have was.
 
-.segment-button is left alone. It paints selection through a sliding indicator
-behind a transparent button, so a pressed background there is a separate design
-question rather than the same one-line fix.
+The measurement is what makes it worth stating rather than asserting: across
+42 routes and 573 elements in five interaction states on an embedded Shopify
+Admin surface, every divergence from the host closed by feeding tokens from
+the consumer's side except two, and both were a state no rule painted.
 
-Verified by the new spec, which asserts all three states resolve to distinct
-colours — a pressed state equal to hover is the same defect wearing a new
-token. Negative control: with the rule removed the spec fails reporting the
-hover colour where the pressed colour was expected.
+No change to behaviour, tests or the public API.
+
+## [3.2.1](https://github.com/juspay/svelte-ui-components/compare/3.2.1..3.2.0) - 4 September 2026
 
 ## [3.2.0](https://github.com/juspay/svelte-ui-components/compare/3.2.0..3.1.6) - 4 September 2026
 

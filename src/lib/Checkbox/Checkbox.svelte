@@ -14,11 +14,21 @@
     onclick,
     classes,
     ariaControls,
-    ariaLabel
+    ariaLabel,
+    controlled = false,
+    attributes
   }: CheckboxProperties = $props();
 
   function handleClick(): void {
     if (disabled) {
+      return;
+    }
+    // Controlled: the parent owns the state and is told what the click asked
+    // for. Nothing is flipped locally, so a parent that declines the change
+    // (a controlled table selection that rejects a row) keeps the box, the
+    // native input and aria-checked all agreeing with the value it passed.
+    if (controlled) {
+      onclick?.(!checked);
       return;
     }
     checked = !checked;
@@ -76,6 +86,7 @@
     onkeydown={handleKeyDown}
     data-pw={typeof testId === 'string' ? `${testId}-box` : null}
     testID={typeof testId === 'string' ? `${testId}-box` : null}
+    {...attributes}
   >
     {#if checked && !indeterminate}
       {#if typeof checkedIcon === 'function'}

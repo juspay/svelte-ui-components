@@ -10,12 +10,11 @@
   import Tooltip from '../Tooltip/Tooltip.svelte';
   import Pagination from '../Pagination/Pagination.svelte';
   import Select from '../Select/Select.svelte';
+  import Checkbox from '../Checkbox/Checkbox.svelte';
   import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
   import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
   import searchSvg from '$lib/assets/search.svg?raw';
   import closeSvg from '$lib/assets/close.svg?raw';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
-  import minusSvg from '$lib/assets/minus.svg?raw';
 
   let {
     tableTitle = '',
@@ -596,11 +595,22 @@
     checkboxSelection.onSelectionChange?.(new Set(internalSelectedIds));
   };
 
-  const handleCheckboxKeydown = (event: KeyboardEvent, action: () => void): void => {
-    if (event.key === ' ' || event.key === 'Enter') {
-      event.preventDefault();
-      action();
+  /**
+   * Attributes for one row checkbox (`rowIndex` -1 is the header). The row id
+   * doubles as the element id the header's `aria-controls` points at; the
+   * consumer's `getRowAttributes` is spread last so its own test attribute wins.
+   */
+  const checkboxAttributes = (rowId: string, rowIndex: number): Record<string, string> => {
+    const suffix = rowIndex === -1 ? 'select-all' : `row-checkbox-${rowId}`;
+    const own: Record<string, string> = rowIndex === -1 ? {} : { id: `row-checkbox-${rowId}` };
+    if (typeof testId === 'string') {
+      own['data-pw'] = `${testId}-${suffix}`;
+      own.testID = `${testId}-${suffix}`;
     }
+    const consumer = checkboxSelection?.getRowAttributes
+      ? checkboxSelection.getRowAttributes(rowId, rowIndex)
+      : {};
+    return { ...own, ...consumer };
   };
 
   let isCheckboxMode = $derived(!!checkboxSelection && checkboxSelection.enabled !== false);
@@ -674,37 +684,20 @@
                   class="table-header table-checkbox-col"
                   class:table-header-sticky={isStickyHeader}
                 >
-                  <!-- Header tri-state checkbox -->
-                  <span
-                    class="table-checkbox-box"
-                    class:checked={headerCheckboxState === 'all'}
-                    class:indeterminate={headerCheckboxState === 'some'}
-                    role="checkbox"
-                    tabindex={0}
-                    aria-checked={headerCheckboxState === 'some'
-                      ? 'mixed'
-                      : headerCheckboxState === 'all'}
-                    aria-label="Select all rows"
-                    data-pw={typeof testId === 'string' ? `${testId}-select-all` : null}
-                    testID={typeof testId === 'string' ? `${testId}-select-all` : null}
-                    {...checkboxSelection?.getRowAttributes
-                      ? checkboxSelection.getRowAttributes('__header__', -1)
-                      : {}}
-                    aria-controls={selectableRowIds
+                  <!-- Header tri-state checkbox: the library Checkbox in controlled mode,
+                       so the tri-state is computed here and never flipped locally. -->
+                  <Checkbox
+                    text=""
+                    ariaLabel="Select all rows"
+                    controlled
+                    checked={headerCheckboxState === 'all'}
+                    indeterminate={headerCheckboxState === 'some'}
+                    ariaControls={selectableRowIds
                       .map((rowId) => `row-checkbox-${rowId}`)
                       .join(' ')}
+                    attributes={checkboxAttributes('__header__', -1)}
                     onclick={toggleAllSelection}
-                    onkeydown={(keyboardEvent) =>
-                      handleCheckboxKeydown(keyboardEvent, toggleAllSelection)}
-                  >
-                    {#if headerCheckboxState === 'all'}
-                      <!-- eslint-disable svelte/no-at-html-tags -->
-                      <span class="table-checkbox-icon">{@html checkmarkSvg}</span>
-                    {:else if headerCheckboxState === 'some'}
-                      <!-- eslint-disable svelte/no-at-html-tags -->
-                      <span class="table-checkbox-icon">{@html minusSvg}</span>
-                    {/if}
-                  </span>
+                  />
                 </th>
               {:else if isCheckboxMode && isSingleSelect}
                 <!-- In single-select mode the header cell is an empty spacer -->
@@ -917,40 +910,22 @@
                   tabindex={isRowClickable ? 0 : null}
                 >
                   {#if isCheckboxMode}
-                    <td class="table-content table-checkbox-col">
-                      <span
-                        class="table-checkbox-box"
-                        class:checked={rowSelected}
-                        class:disabled={rowDisabled}
-                        role="checkbox"
-                        id={`row-checkbox-${rowId}`}
-                        tabindex={rowDisabled ? -1 : 0}
-                        aria-checked={rowSelected}
-                        aria-disabled={rowDisabled}
-                        aria-label={`Select row ${rowId || 'non-selectable'}`}
-                        data-pw={typeof testId === 'string'
-                          ? `${testId}-row-checkbox-${rowId}`
-                          : null}
-                        testID={typeof testId === 'string'
-                          ? `${testId}-row-checkbox-${rowId}`
-                          : null}
-                        {...checkboxSelection?.getRowAttributes
-                          ? checkboxSelection.getRowAttributes(rowId, rowIndex)
-                          : {}}
-                        onclick={(mouseEvent) => {
-                          mouseEvent.stopPropagation();
-                          toggleRowSelection(rowId);
-                        }}
-                        onkeydown={(keyboardEvent) => {
-                          keyboardEvent.stopPropagation();
-                          handleCheckboxKeydown(keyboardEvent, () => toggleRowSelection(rowId));
-                        }}
-                      >
-                        {#if rowSelected}
-                          <!-- eslint-disable svelte/no-at-html-tags -->
-                          <span class="table-checkbox-icon">{@html checkmarkSvg}</span>
-                        {/if}
-                      </span>
+                    <!-- The cell swallows the click and the key so a clickable row does not
+                         also fire its own handler when the checkbox is toggled. -->
+                    <td
+                      class="table-content table-checkbox-col"
+                      onclick={(mouseEvent) => mouseEvent.stopPropagation()}
+                      onkeydown={(keyboardEvent) => keyboardEvent.stopPropagation()}
+                    >
+                      <Checkbox
+                        text=""
+                        ariaLabel={`Select row ${rowId || 'non-selectable'}`}
+                        controlled
+                        checked={rowSelected}
+                        disabled={rowDisabled}
+                        attributes={checkboxAttributes(rowId, rowIndex)}
+                        onclick={() => toggleRowSelection(rowId)}
+                      />
                     </td>
                   {/if}
                   {#if rowNumberColumn}
@@ -1444,64 +1419,35 @@
   }
 
   /* ── C2-1 Checkbox column ───────────────────────────────────────────────── */
+  /* The column renders the library Checkbox. The table's own --table-checkbox-*
+     tokens stay the public API and are bridged onto Checkbox's --checkbox-*
+     variables here, so a consumer theming the table keeps working and a
+     consumer theming Checkbox app-wide is overridden only inside the table. */
   .table-checkbox-col {
     width: var(--table-checkbox-col-width, 44px);
     padding: var(--table-checkbox-col-padding, 12px 12px);
-  }
-
-  .table-checkbox-box {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--table-checkbox-size, 18px);
-    height: var(--table-checkbox-size, 18px);
-    border: var(--table-checkbox-border, 2px solid #9ca3af);
-    border-radius: var(--table-checkbox-border-radius, var(--radius, 4px));
-    background-color: var(--table-checkbox-background, transparent);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-      background-color 0.15s,
-      border-color 0.15s;
-    user-select: none;
-  }
-
-  .table-checkbox-box:focus-visible {
-    outline: none;
-    box-shadow: var(--table-checkbox-focus-ring, 0 0 0 3px rgba(59, 130, 246, 0.3));
-  }
-
-  .table-checkbox-box:not(.disabled):hover {
-    border-color: var(--table-checkbox-hover-border-color, #6b7280);
-  }
-
-  .table-checkbox-box.checked {
-    background-color: var(--table-checkbox-checked-background, #2563eb);
-    border-color: var(--table-checkbox-checked-border-color, #2563eb);
-  }
-
-  .table-checkbox-box.indeterminate {
-    background-color: var(--table-checkbox-indeterminate-background, #2563eb);
-    border-color: var(--table-checkbox-indeterminate-border-color, #2563eb);
-  }
-
-  .table-checkbox-box.disabled {
-    opacity: var(--table-checkbox-disabled-opacity, 0.4);
-    cursor: not-allowed;
-  }
-
-  .table-checkbox-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--table-checkbox-icon-size, 12px);
-    height: var(--table-checkbox-icon-size, 12px);
-    color: var(--table-checkbox-icon-color, #ffffff);
-  }
-
-  .table-checkbox-icon :global(svg) {
-    width: 100%;
-    height: 100%;
+    --checkbox-container-gap: 0;
+    --checkbox-size: var(--table-checkbox-size, 18px);
+    --checkbox-border: var(--table-checkbox-border, 2px solid #9ca3af);
+    --checkbox-border-radius: var(--table-checkbox-border-radius, var(--radius, 4px));
+    --checkbox-background: var(--table-checkbox-background, transparent);
+    --checkbox-hover-border-color: var(--table-checkbox-hover-border-color, #6b7280);
+    --checkbox-checked-background: var(--table-checkbox-checked-background, #2563eb);
+    --checkbox-checked-border: var(
+      --table-checkbox-checked-border,
+      2px solid var(--table-checkbox-checked-border-color, #2563eb)
+    );
+    --checkbox-indeterminate-background: var(--table-checkbox-indeterminate-background, #2563eb);
+    --checkbox-indeterminate-border: var(
+      --table-checkbox-indeterminate-border,
+      2px solid var(--table-checkbox-indeterminate-border-color, #2563eb)
+    );
+    --checkbox-disabled-opacity: var(--table-checkbox-disabled-opacity, 0.4);
+    --checkbox-focus-ring: var(--table-checkbox-focus-ring, 0 0 0 3px rgba(59, 130, 246, 0.3));
+    --checkbox-icon-size: var(--table-checkbox-icon-size, 12px);
+    --checkbox-checkmark-color: var(--table-checkbox-icon-color, #ffffff);
+    --checkbox-dash-color: var(--table-checkbox-icon-color, #ffffff);
+    --checkbox-transition: 0.15s;
   }
 
   /* ── Sort button ────────────────────────────────────────────────────────── */

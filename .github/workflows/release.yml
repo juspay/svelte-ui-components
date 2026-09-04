@@ -4,6 +4,31 @@ on:
   push:
     branches: [release]
 
+# Two releases must never be in flight together. 3.1.5 and 3.2.0 were both
+# damaged by the same race: merges seconds apart start one run each, and both
+# reach `npm publish` and `git push` at the same time. On 3.2.0 one run pushed
+# its changelog commit and the other died rebasing onto it --
+# `CONFLICT (content): Merge conflict in docs/CHANGELOG.md` -- so the release
+# that published the tarball is the one that failed, and its notes were lost.
+#
+# cancel-in-progress is false and must stay false. Cancelling a release mid-way
+# is the one outcome worse than delaying it: the npm publish, the git tag and
+# the GitHub release are three separate steps, and a run killed between them
+# leaves a version on the registry with no tag behind it.
+#
+# This serialises the runs. It does NOT make the second one correct, and the
+# rest of the race is deliberately left visible rather than half-fixed: the
+# version is chosen by `git log -1` in "Determine version bump type", which
+# reads only the tip commit of that run's own checkout. Two merges each with a
+# `feat:` tip therefore both compute the same next version from the same base,
+# and the queued run will now fail loudly at `npm publish` on a version that
+# already exists rather than racing the first one. Making it pick the right
+# version means reading the branch tip instead of the pushed SHA, which changes
+# what a release builds and belongs in its own change.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 # Pinned so both publish jobs upgrade to the same npm, which is what supports
 # OIDC trusted publishing. Bump in one place.
 env:
@@ -65,8 +90,110 @@ jobs:
             echo "No MCP package changes detected"
           fi
 
-  release:
+  # The gate that did not exist when 3.2.0 published.
+  #
+  # Every quality workflow in this repository -- ci, visual, yama-review -- is
+  # `pull_request`-only. A push to `release` ran Pages and this file, and this
+  # file ran `pnpm lint` and then published. So two PRs that were each green
+  # against their own base merged fourteen seconds apart, the combination was
+  # never tested anywhere, and 3.2.0 went to npm from a tree whose own unit
+  # suite had 49 failures. Nothing was broken; nothing was watching.
+  #
+  # A separate job rather than more steps inside `release`: `needs` makes the
+  # dependency the thing that blocks, so publishing cannot begin until the
+  # suite has passed, and a reader can see that from the job graph.
+  # Unconditional on purpose. Gating this on `root_changed` would have left the
+  # MCP package publishing through an ungated path: `publish-mcp` runs when
+  # `needs.release.result` is 'skipped', and a skipped `release` is exactly what
+  # an MCP-only push produces -- so the one job this file exists to gate would
+  # have sailed past it. Worse, a *failed* verify also renders `release` as
+  # 'skipped', so the gate would have opened precisely when it should shut.
+  # Running it on every push costs one suite on a push that releases nothing,
+  # and removes both holes.
+  verify:
     needs: detect-changes
+    runs-on: ubuntu-latest
+    # Every publish now waits on this job, so a step that hangs would hold the
+    # release open indefinitely instead of failing it. Playwright install plus
+    # both suites finish in well under half of this.
+    timeout-minutes: 30
+
+    # `contents: read` is all this job's own steps need. `actions: write` is here
+    # by review decision, not by demonstrated need: the artifact upload and the
+    # pnpm store cache were both observed working under `contents: read` alone
+    # (ci.yml runs the identical pair and uploaded a 335 MB report on d49920fff).
+    # It is granted deliberately and recorded here so the next reader knows this
+    # workflow -- which publishes to npm -- can also cancel runs and delete
+    # artifacts, and can drop the line if that reach is ever unwanted.
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # pnpm before node, deliberately: setup-node's `cache: pnpm` resolves the
+      # store path by running pnpm, so pnpm has to exist first. `run_install: false`
+      # stops action-setup installing before that cache is configured, which would
+      # make the cache do nothing on every run.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint (prettier, eslint, event-casing)
+        run: pnpm lint
+
+      - name: Type-check
+        run: pnpm check
+
+      # The step that would have caught it. scripts/wc-parity/prop-parity.test.ts
+      # is a vitest test, and it had been failing on `release` since the merge.
+      # The root `check` does not cover the web-component build, which this
+      # library also ships; a WC-only type error would reach the registry
+      # otherwise.
+      - name: Type-check web components
+        run: pnpm run check:wc
+
+      - name: Unit tests (vitest)
+        run: pnpm run test:unit --run
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Integration tests (playwright)
+        run: pnpm run test:integration
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          # v4 artifacts are immutable, so a fixed name makes the upload fail on
+          # a re-run -- which is the one time the report is most wanted.
+          name: release-verify-playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: playwright-report/
+          retention-days: 14
+          # `if: always()` also fires when the job was cancelled or failed before
+          # Playwright ran. `warn` is the setting that satisfies both halves of the
+          # review on this line: nothing is uploaded when the directory is absent, so
+          # there is no empty artifact masquerading as evidence, and the run still
+          # says so in the log rather than passing over it in silence. `ignore` hid
+          # the diagnosis; `error` would fail a job whose tests never ran.
+          if-no-files-found: warn
+
+  release:
+    needs: [detect-changes, verify]
     if: needs.detect-changes.outputs.root_changed == 'true'
     runs-on: ubuntu-latest
     environment: npm
@@ -97,8 +224,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run linting
-        run: pnpm lint
+      # Linting moved to the `verify` job this one now needs, so it gates the
+      # publish rather than running beside it.
 
       - name: Determine version bump type
         id: version-type
@@ -263,6 +390,74 @@ jobs:
             exit 1
           fi
 
+      # BEFORE the publish, deliberately. npm publishes are effectively permanent
+      # -- a version cannot be re-published and unpublishing is restricted -- while
+      # a commit on `release` is revertible. With publish first, anything that stops
+      # this push leaves the registry permanently ahead of the repo, with no tag, no
+      # `chore(release)` commit and no GitHub Release naming what shipped.
+      #
+      # That is not hypothetical: run 33961677670 published 3.4.1 and then failed
+      # here with `GH006: Protected branch update failed ... 3 of 3 required status
+      # checks are expected`, because `release` requires checks/build/visual with
+      # enforce_admins on, and a freshly-created release commit has no check runs.
+      # 3.4.1 is on npm today with no trace of it in this repository.
+      #
+      # Ordering it first cannot make that push succeed -- only a settings change
+      # can -- but it makes the failure safe: the run stops before publishing and
+      # the registry stays clean. The reverse failure (pushed, then publish fails)
+      # leaves a version commit for an unpublished version, which the existing
+      # `npm view ... && exit 0` guard below makes safe to resolve by re-running.
+      - name: Push changes (without tags)
+        run: |
+          # Pull latest changes to avoid conflicts
+          git fetch origin release
+
+          # Check if we're behind
+          if [ $(git rev-list --count HEAD..origin/release) -gt 0 ]; then
+            echo "Local branch is behind remote. Attempting to rebase..."
+            git rebase origin/release
+          fi
+
+          git push origin release
+
+          echo "Successfully pushed changes for version ${{ steps.version-bump.outputs.new_version }}"
+
+      # Tag before the publish, for the same reason the branch push moved above
+      # it: a tag is a git write and can be deleted, an npm publish cannot be
+      # undone. With both git writes ahead of it, anything that blocks either one
+      # stops the run with the registry untouched.
+      #
+      # This does NOT adopt the review's alternative of returning to publish-first
+      # with `git push --atomic origin release <tag>`. Atomicity is between the two
+      # git refs; it does nothing about the ordering against npm, and the failure
+      # that stranded 3.4.1 was the branch push being REJECTED, which an atomic
+      # push would simply extend to the tag as well -- published, with neither ref
+      # written.
+      #
+      # The GitHub Release stays after the publish: it announces a released
+      # version, so it should follow the thing it announces.
+      - name: Create and push git tag
+        run: |
+          TAG_NAME="${{ steps.version-bump.outputs.new_version }}"
+
+          # Delete tag if it exists locally
+          if git tag -l | grep -q "^${TAG_NAME}$"; then
+            git tag -d "$TAG_NAME"
+          fi
+
+          # Delete tag if it exists remotely
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+            git push origin ":refs/tags/$TAG_NAME"
+          fi
+
+          # Create new tag
+          git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+
+          # Push the tag
+          git push origin "$TAG_NAME"
+
+          echo "Successfully created and pushed tag $TAG_NAME"
+
       - name: Upgrade npm for OIDC trusted publishing
         run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
 
@@ -286,44 +481,6 @@ jobs:
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
           npm publish --access public --provenance
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
-
-      - name: Push changes (without tags)
-        run: |
-          # Pull latest changes to avoid conflicts
-          git fetch origin release
-
-          # Check if we're behind
-          if [ $(git rev-list --count HEAD..origin/release) -gt 0 ]; then
-            echo "Local branch is behind remote. Attempting to rebase..."
-            git rebase origin/release
-          fi
-
-          # Push changes first (without tags)
-          git push origin release
-
-          echo "Successfully pushed changes for version ${{ steps.version-bump.outputs.new_version }}"
-
-      - name: Create and push git tag
-        run: |
-          TAG_NAME="${{ steps.version-bump.outputs.new_version }}"
-
-          # Delete tag if it exists locally
-          if git tag -l | grep -q "^${TAG_NAME}$"; then
-            git tag -d "$TAG_NAME"
-          fi
-
-          # Delete tag if it exists remotely
-          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
-            git push origin ":refs/tags/$TAG_NAME"
-          fi
-
-          # Create new tag
-          git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
-
-          # Push the tag
-          git push origin "$TAG_NAME"
-
-          echo "Successfully created and pushed tag $TAG_NAME"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -354,11 +511,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-mcp:
-    needs: [detect-changes, release]
+    needs: [detect-changes, verify, release]
     # Run when the MCP package changed, after the root job either published or
     # was skipped (i.e. don't run if the root release job actually failed).
+    #
+    # `verify` is named explicitly rather than inherited through `release`.
+    # `always()` means a skipped or failed dependency does not stop this job by
+    # itself, and both of those render `needs.release.result` as 'skipped' --
+    # so keying only on `release` would let an MCP publish through on a red
+    # suite. The gate has to be asserted, not assumed.
     if: |
       always() &&
+      needs.verify.result == 'success' &&
       needs.detect-changes.outputs.mcp_changed == 'true' &&
       (needs.release.result == 'success' || needs.release.result == 'skipped')
     runs-on: ubuntu-latest

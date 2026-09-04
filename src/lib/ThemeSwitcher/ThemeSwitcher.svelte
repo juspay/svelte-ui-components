@@ -183,6 +183,10 @@
     background-color: var(--theme-switcher-bg-hover, #f3f4f6);
   }
 
+  .toggle-button:active {
+    background-color: var(--theme-switcher-bg-pressed, #e5e7eb);
+  }
+
   .icon {
     display: inline-flex;
     align-items: center;

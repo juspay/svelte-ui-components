@@ -20,9 +20,17 @@ as a bug, the same as an unhandled `null`.
 **A token can only reach a state the component actually paints.** The cascade cannot add a
 declaration that does not exist: a `.toggle-button:hover` rule with no `:active` beside it
 leaves nothing for `--theme-switcher-bg-pressed` to land in, so no consumer can supply a
-pressed state however carefully they arrange their own stylesheet. It is the one gap in the
-contract a consumer cannot work around, and it is invisible from the source — the component
-reads as fully tokenised, because every rule it *does* have is.
+pressed state through the token contract however carefully they arrange their own
+stylesheet. It is invisible from the source, too — the component reads as fully tokenised,
+because every rule it _does_ have is.
+
+How far that goes depends on which build a consumer is on, and the distinction is worth
+keeping straight. Through the custom elements the shadow boundary is the end of it: an
+outside stylesheet cannot reach a rule that does not exist, and cannot add one. Importing
+the Svelte components directly, styles are scoped rather than encapsulated, so a consumer
+can still write the missing rule themselves — at the cost of reaching past the token API
+into class names that are not part of it. Neither case makes the missing declaration
+acceptable; the first leaves no way out at all, and the second only an unsupported one.
 
 Measured on an embedded Shopify Admin surface (42 routes, 573 elements, five interaction
 states each, states forced through CDP rather than inferred): every divergence from the host
@@ -56,7 +64,7 @@ hook for Playwright.
   `onSelectionChange`. This matches the wider Svelte-component ecosystem's convention for
   invented callback props.
 
-This is deliberately *not* polymorph's rule (lowercase for everything, including
+This is deliberately _not_ polymorph's rule (lowercase for everything, including
 synthesized events). That's a real, coherent choice, but it trades away the native/synthetic
 distinction that Svelte 5 itself draws, and it isn't obviously better — just different.
 What actually needed fixing here wasn't the rule, it was that this codebase had never
@@ -81,6 +89,6 @@ otherwise it stays a plain element.
 ## 5. Documentation is built for machines, not just humans
 
 This library ships an MCP server (`mcp/`) exposing `list_components`-style tools over
-`docs/*.md` — components are increasingly composed and themed *through* AI assistants, not
+`docs/*.md` — components are increasingly composed and themed _through_ AI assistants, not
 just read about by humans. `docs/_index.json` is the source of truth; keep it current when
 a component is added, the same way you'd keep an export current.

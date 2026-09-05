@@ -36,7 +36,12 @@
       onHeaderLeftImageClick: { type: 'Object' },
       onPrimaryButtonClick: { type: 'Object' },
       onSecondaryButtonClick: { type: 'Object' },
-      onOverlayClick: { type: 'Object' }
+      onOverlayClick: { type: 'Object' },
+      onheaderrightimageclick: { type: 'Object' },
+      onheaderleftimageclick: { type: 'Object' },
+      onprimarybuttonclick: { type: 'Object' },
+      onsecondarybuttonclick: { type: 'Object' },
+      onoverlayclick: { type: 'Object' }
     }
   }}
 />

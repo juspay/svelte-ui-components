@@ -1,160 +1,96 @@
-# Event-casing migration plan (targeting 4.0.0)
+# Event-casing migration (to lowercase, completing in 4.0.0)
 
-`DESIGN_PRINCIPLES.md` states the rule: a native DOM event forwarded as-is keeps
-Svelte 5's own lowercase spelling (`onclick`), and every synthesized event is
-camelCase from the character after `on` (`onRowClick`).
+`DESIGN_PRINCIPLES.md` §3 states the rule: **every event prop is `on` followed
+by the event name in lowercase** — `onclick`, `oninput`, `onrowclick`,
+`onoverlayclick` — whether the browser fires the event or the component
+invents it. This document is what it took to get there, and what a consumer
+has to do.
 
-`scripts/event-casing-baseline.json` grandfathers the props that already
-broke that rule when the check was introduced. The check stops the count
-growing; it has never fixed the existing set. Renaming any of them is a
-breaking prop-name change for real consumers, which is why they were baselined
-rather than cleaned up as a drive-by.
+## Why the rule changed
 
-This document is the plan for clearing them. **Nothing here has been renamed.**
+Through 3.4 the rule was split: a forwarded DOM event kept Svelte's lowercase
+spelling, an invented event was camelCase (`onRowClick`). That distinction is
+real inside the library and invisible at the call site — a consumer writing
+`<Table onrowclick>` has no way to know which kind of event that is. The
+codebase itself never managed it either: 142 props had drifted across three
+styles over 580 commits, including hybrids like `onleftImageClick` that were
+neither convention.
 
-## Six of the 100 are not violations
+One rule needs no such knowledge, and it is the spelling consumers of the
+forked library already write, which makes this library a drop-in for them.
 
-The checker classifies a prop as a native-event forward by **name**. That is
-wrong for six props whose names happen to collide with a DOM event but which
-hand back domain data:
+## What a consumer does
 
-| Component         | Prop                              | What it actually passes                         |
-| ----------------- | --------------------------------- | ----------------------------------------------- |
-| Combobox          | `onClick`                         | not a `MouseEvent` forward                      |
-| Table             | `onInput`, `onSelect`, `onToggle` | `(rowIndex, checked/selectedId, originalIndex)` |
-| ThinkingIndicator | `onToggle`                        | `() => void`                                    |
-| TypewriterText    | `onProgress`                      | `TypewriterProgress`, not a `ProgressEvent`     |
+Nothing, immediately: every spelling this library has ever accepted still
+works. Passing a deprecated one warns once, in dev, naming its replacement.
 
-These are already correctly camelCased. Lowercasing them on a name match would
-rename six _correct_ props into wrong ones. The classification has to read the
-signature — `Input.onBlur?: (event: FocusEvent) => void` is a real forward and
-`Table.onToggle?: (rowIndex: number, …)` is not — which is what
-`forwardsDomEvent` in `scripts/migrate/casing.ts` does.
+Before upgrading to 4.0.0, run the codemod from the project root:
 
-Fixing the classification also makes the check **stricter**, because a prop
-whose name matches a DOM event but whose signature does not was previously
-excused entirely. That surfaced **48 real violations the old checker never
-reported** — `Accordion.ontoggle`, `Checkbox.onclick`, `Img.onerror`,
-`Slider.oninput` and so on, all synthetic events written in lowercase.
+```sh
+npx sui-codemod --dry-run ./src   # preview
+npx sui-codemod ./src             # apply
+```
 
-**The baseline therefore goes 100 → 142**: six false positives out, 48
-previously-invisible violations in. That is done in this change, and the
-checker still reports `0 new`.
+It rewrites the deprecated spellings on library components in `.svelte` files
+(`scripts/codemod/legacy-pairs.ts` is its table, generated from the
+`@deprecated` tags in the library's own `properties.ts` files) and reports what
+it cannot prove safe — spread attributes, unresolvable tags — as `WARN` lines
+with `file:line:column` rather than guessing.
 
-## Every one of the 142 has a mechanically derivable name
+Two things the codemod deliberately leaves alone:
 
-`scripts/migrate/casing.ts` derives the correct spelling for all of them, and
-`casing.test.ts` asserts it against the real baseline file: **142 violations, 0
-unresolved**, and no derived target collides with a prop that already exists on
-the same component. That
-test is also the guard going forward — a newly added violation whose name
-cannot be derived fails it, which is what keeps the eventual rename mechanical.
+- **Callback keys on config objects.** `TableColumn.onToggle`,
+  `TablePaginationConfig.onPageChange`, `ComboboxAction.onClick` are members of
+  a data object a consumer builds, not props on a tag. They keep their
+  camelCase spelling and are not deprecated.
+- **Keys inside a spread.** `<Input {...inputEventProperties} />` hides its
+  keys from a tag-level rewrite; the spread is reported so a person can look.
 
-They fall into three shapes.
+## How the library moved
 
-### A — native events wrongly camelCased (7 props)
+**Phase 0 — a rule, and a check.** `scripts/check-event-casing.js` fails the
+build on any event prop with an uppercase letter unless its declaration is
+tagged `@deprecated`. There is no grandfathering list: the tag is what makes an
+old spelling legible as a temporary state rather than a second convention.
 
-These genuinely forward a DOM event — their signatures take `FocusEvent`,
-`MouseEvent`, `KeyboardEvent` and so on — so the rule wants the lowercase
-spelling. All seven are on `Input`.
+**Phase 1 — every spelling accepted (3.5.0).**
+`scripts/migrate/lowercase-event-props.ts` rewrote all 94 `properties.ts`
+files and their components: each event prop's lowercase name is the
+declaration, every earlier spelling is a one-line `@deprecated` alias beside
+it, and the component resolves them to one value through
+`resolveDeprecatedProp`, lowercase winning. 191 aliases across 57 components.
 
-| Component         | Today        | Becomes      |
-| ----------------- | ------------ | ------------ |
-| Combobox          | `onClick`    | `onclick`    |
-| Input             | `onBlur`     | `onblur`     |
-| Input             | `onClick`    | `onclick`    |
-| Input             | `onFocus`    | `onfocus`    |
-| Input             | `onFocusout` | `onfocusout` |
-| Input             | `onInput`    | `oninput`    |
-| Input             | `onKeyDown`  | `onkeydown`  |
-| Input             | `onPaste`    | `onpaste`    |
-| Table             | `onInput`    | `oninput`    |
-| Table             | `onSelect`   | `onselect`   |
-| Table             | `onToggle`   | `ontoggle`   |
-| ThinkingIndicator | `onToggle`   | `ontoggle`   |
-| TypewriterText    | `onProgress` | `onprogress` |
+The same value is read once at mount from a generated `$effect.pre`, so a
+consumer who passes a deprecated spelling is told even if the event never
+fires — a `$derived` alone would stay silent until the handler ran.
 
-### B — synthetic events, partially camelCased (13 props)
+`scripts/migrate/alias-wc-props.ts` did the custom-element half: a wrapper only
+forwards what `customElement.props` declares, so 46 lowercase declarations
+across 18 wrappers were added, or the new spelling would have been unreachable
+through `<sui-*>`.
 
-Lowercase, then switching to camelCase partway through — the exact bug the rule
-was written to catch. The word boundaries survive, so only the first letter is
-wrong.
+The library's own call sites moved with it —
+`scripts/migrate/rename-internal-usages.ts` for `src/`, and
+`scripts/migrate/rename-doc-usages.ts` for `docs/` and `README.md`. Both have
+tests that fail if a deprecated spelling reappears, because an internal one
+warns in a consumer's console for code the consumer did not write, and a
+documented one is an instruction to use something 4.0.0 removes.
 
-| Component | Today                     | Becomes                   |
-| --------- | ------------------------- | ------------------------- |
-| ListItem  | `oncenterTextClick`       | `onCenterTextClick`       |
-| ListItem  | `onitemClick`             | `onItemClick`             |
-| ListItem  | `onleftImageClick`        | `onLeftImageClick`        |
-| ListItem  | `onrightImageClick`       | `onRightImageClick`       |
-| ListItem  | `ontopSectionClick`       | `onTopSectionClick`       |
-| Modal     | `onheaderLeftImageClick`  | `onHeaderLeftImageClick`  |
-| Modal     | `onheaderRightImageClick` | `onHeaderRightImageClick` |
-| Modal     | `onoverlayClick`          | `onOverlayClick`          |
-| Modal     | `onprimaryButtonClick`    | `onPrimaryButtonClick`    |
-| Modal     | `onsecondaryButtonClick`  | `onSecondaryButtonClick`  |
-| Status    | `onbuttonClick`           | `onButtonClick`           |
-| Stepper   | `onhandleStepClick`       | `onHandleStepClick`       |
-| Toolbar   | `onbackClick`             | `onBackClick`             |
+**Phase 2 — removal (4.0.0).** Every alias declaration, its resolver and its
+warning are deleted; each component reads only its lowercase name.
+`src/lib/deprecation.ts` goes with them. `scripts/codemod/legacy-pairs.ts`
+stays, frozen, as the table a consumer's codemod run still needs.
 
-### C — synthetic events, entirely lowercase (the large majority)
+## The one hand-wired component
 
-The word boundaries are no longer in the name: nothing in `onbarclick` says
-where `bar` ends. They are recovered by segmenting against a closed domain
-vocabulary rather than by hand, and **every one segments exactly one way** —
-`onbarclick` → `onBarClick`, `onopenrichfile` → `onOpenRichFile`,
-`onafterclose` → `onAfterClose`.
+`Step`'s `onclick` is declared in `Stepper/properties.ts` — the one directory
+hosting two exported components — so the generator, which looks for a
+component file matching the directory name, reports it as skipped. `Step.svelte`
+carries the same resolver line, written by hand;
+`src/lib/Stepper/Stepper.svelte.test.ts` clicks a step under both spellings so
+the wiring cannot silently rot.
 
-A general English dictionary is deliberately not used: it would find spurious
-splits, and the extra recall buys nothing on a corpus this size. Where a body
-ever segments more than one way, every candidate is reported rather than one
-being silently chosen — a wrong split would put a wrong prop name into the
-public API.
-
-Run `node scripts/migrate/casing-report.ts` to print the full derived map.
-
-## The phases
-
-The constraint that shapes everything: 11 consumers across 3 incompatible
-Svelte generations. A rename that lands without an alias breaks all of them at
-once, and a major bump without a mechanical path means 11 teams hand-editing
-the same prop names.
-
-**Phase 0 — fix the checker, no rename. Done in this PR.**
-Classify by signature rather than by name. Six false positives leave the
-baseline, 48 previously-unreported violations enter it, and the count becomes 142. Nothing consumer-visible changes: no prop is renamed, and the check still
-reports `0 new`.
-
-**Phase 1 — additive aliases, no break (a 3.x minor).**
-Each prop gains its correct spelling _alongside_ the old one, both wired to the
-same handler. Consumers on the old name keep working untouched; new code uses
-the correct name immediately. All 142 can land together, because none of the
-target names needs a decision.
-
-**Phase 2 — deprecation warning, dev only.**
-Using an old spelling logs once per prop, naming its replacement. Dev builds
-only: a production warning is noise a consumer cannot act on mid-incident.
-
-**Phase 3 — remove the old spellings in 4.0.0.**
-Only after every alias has shipped in a released 3.x and the codemod entries
-exist. `event-casing-baseline.json` is deleted in the same change, because the
-check then has nothing left to grandfather.
-
-## Consumers migrate mechanically
-
-`scripts/codemod/` already does component-aware prop renaming — it resolves
-import aliases, namespace imports and `svelte:component`, and warns with
-`file:line:column` rather than guessing when a spread could hide a prop. Its
-rename map is data, so these 100 pairs are added to it rather than a second
-tool being written.
-
-`scripts/migrate/` then reports them the way it reports the 3.0.0 Toolbar
-change, so a consumer runs one command and sees everything standing between it
-and the next major.
-
-## Why not simply do the rename now
-
-Every one of these is a published prop name, and the library is at 3.0.0. The
-earliest honest window for removal is 4.0.0, and getting there without
-stranding consumers means the aliases have to ship, and be released, well
-before the removal. The rename itself is a small change; the sequencing is the
-work.
+`Stepper` itself had two names for one event (`onstepclick` and
+`onhandleStepClick`); both, and their camelCase twins, resolve to
+`onhandlestepclick` — the forked library's spelling, so its consumers need no
+change at all.

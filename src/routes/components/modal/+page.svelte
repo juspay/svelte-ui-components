@@ -51,13 +51,13 @@
         secondaryButton: { text: 'Cancel' }
       }}
       onclose={() => (showModal = false)}
-      onheaderRightImageClick={() => (showModal = false)}
-      onoverlayClick={() => (showModal = false)}
-      onprimaryButtonClick={() => {
+      onheaderrightimageclick={() => (showModal = false)}
+      onoverlayclick={() => (showModal = false)}
+      onprimarybuttonclick={() => {
         alert('Confirmed!');
         showModal = false;
       }}
-      onsecondaryButtonClick={() => (showModal = false)}
+      onsecondarybuttonclick={() => (showModal = false)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -77,7 +77,7 @@
         align="center"
         showOverlay
         header={{ text: 'Top-Aligned Header Items' }}
-        onoverlayClick={() => (showModalTop = false)}
+        onoverlayclick={() => (showModalTop = false)}
       >
         {#snippet content()}
           <div style="padding: 16px;">
@@ -106,8 +106,8 @@
       leftImageTestId="decorative-left-image"
       header={{ text: 'Decorative left image', leftImage: backIconSrc, rightImage: closeIconSrc }}
       onclose={() => (showDecorativeLeftImageModal = false)}
-      onoverlayClick={() => (showDecorativeLeftImageModal = false)}
-      onheaderRightImageClick={() => (showDecorativeLeftImageModal = false)}
+      onoverlayclick={() => (showDecorativeLeftImageModal = false)}
+      onheaderrightimageclick={() => (showDecorativeLeftImageModal = false)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -133,9 +133,9 @@
       leftImageAriaLabel="Go back"
       header={{ text: 'Back button', leftImage: backIconSrc, rightImage: closeIconSrc }}
       onclose={() => (showBackButtonModal = false)}
-      onoverlayClick={() => (showBackButtonModal = false)}
-      onheaderRightImageClick={() => (showBackButtonModal = false)}
-      onheaderLeftImageClick={() => (backButtonClickCount += 1)}
+      onoverlayclick={() => (showBackButtonModal = false)}
+      onheaderrightimageclick={() => (showBackButtonModal = false)}
+      onheaderleftimageclick={() => (backButtonClickCount += 1)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -165,9 +165,9 @@
           secondaryButton: { text: 'Cancel' }
         }}
         onclose={() => (showTallModal = false)}
-        onoverlayClick={() => (showTallModal = false)}
-        onprimaryButtonClick={() => (showTallModal = false)}
-        onsecondaryButtonClick={() => (showTallModal = false)}
+        onoverlayclick={() => (showTallModal = false)}
+        onprimarybuttonclick={() => (showTallModal = false)}
+        onsecondarybuttonclick={() => (showTallModal = false)}
       >
         {#snippet content()}
           <div style="padding: 16px;">
@@ -206,9 +206,9 @@
         primaryButton: { text: 'Got it' }
       }}
       onclose={() => (showSlideUpModal = false)}
-      onheaderRightImageClick={() => (showSlideUpModal = false)}
-      onoverlayClick={() => (showSlideUpModal = false)}
-      onprimaryButtonClick={() => (showSlideUpModal = false)}
+      onheaderrightimageclick={() => (showSlideUpModal = false)}
+      onoverlayclick={() => (showSlideUpModal = false)}
+      onprimarybuttonclick={() => (showSlideUpModal = false)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -238,7 +238,7 @@
       testId="no-scroll-lock-modal"
       header={{ text: 'Background still scrolls' }}
       onclose={() => (showNoScrollLockModal = false)}
-      onoverlayClick={() => (showNoScrollLockModal = false)}
+      onoverlayclick={() => (showNoScrollLockModal = false)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -270,7 +270,7 @@
         showAutoDismissModal = false;
         autoDismissFired = true;
       }}
-      onoverlayClick={() => (showAutoDismissModal = false)}
+      onoverlayclick={() => (showAutoDismissModal = false)}
     >
       {#snippet content()}
         <div style="padding: 16px;">
@@ -304,7 +304,7 @@
           secondaryButton: { text: 'Cancel', disabled: true, testId: 'disabled-footer-secondary' }
         }}
         onclose={() => (showDisabledFooterModal = false)}
-        onoverlayClick={() => (showDisabledFooterModal = false)}
+        onoverlayclick={() => (showDisabledFooterModal = false)}
       >
         {#snippet content()}
           <div style="padding: 16px;">
@@ -328,7 +328,7 @@
   <Modal
     testId="nested-lock-outer-modal"
     header={{ text: 'Outer' }}
-    onoverlayClick={() => (nestedLockOuterOpen = false)}
+    onoverlayclick={() => (nestedLockOuterOpen = false)}
   >
     {#snippet content()}
       <Button
@@ -351,7 +351,7 @@
   <Modal
     testId="nested-lock-inner-modal"
     header={{ text: 'Inner' }}
-    onoverlayClick={() => (nestedLockInnerOpen = false)}
+    onoverlayclick={() => (nestedLockInnerOpen = false)}
   >
     {#snippet content()}
       <Button

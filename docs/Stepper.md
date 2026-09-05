@@ -1,6 +1,6 @@
 # Stepper
 
-A progress indicator showing numbered steps with completion and active states. Each step shows either a step number or a custom icon, a label, and a dashed separator line to the next step. Steps before `currentStepIndex` are styled as completed (green), the step at `currentStepIndex` is active (dark), and remaining steps are inactive (grey). Steps support explicit per-step `status` values (`completed`, `active`, `pending`, `failure`, `in-progress`, `muted`). Each step is clickable, firing `onstepclick` with the 1-based selected index. The component supports both horizontal and vertical layouts.
+A progress indicator showing numbered steps with completion and active states. Each step shows either a step number or a custom icon, a label, and a dashed separator line to the next step. Steps before `currentStepIndex` are styled as completed (green), the step at `currentStepIndex` is active (dark), and remaining steps are inactive (grey). Steps support explicit per-step `status` values (`completed`, `active`, `pending`, `failure`, `in-progress`, `muted`). Each step is clickable, firing `onhandlestepclick` with the 1-based selected index. The component supports both horizontal and vertical layouts.
 
 ## Usage
 
@@ -14,7 +14,7 @@ A progress indicator showing numbered steps with completion and active states. E
 <Stepper
   steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }]}
   currentStepIndex={currentStep}
-  onstepclick={(e) => (currentStep = e.selectedIndex - 1)}
+  onhandlestepclick={(e) => (currentStep = e.selectedIndex - 1)}
 />
 ```
 
@@ -46,8 +46,8 @@ A progress indicator showing numbered steps with completion and active states. E
 
 | Event             | Type                                         | Description                                                                                                               |
 | ----------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| onstepclick       | `(event: { selectedIndex: number }) => void` | Fires when any step is clicked. Receives `{ selectedIndex: number }` with the **1-based** step index.                     |
-| onhandleStepClick | `(event: { selectedIndex: number }) => void` | **Deprecated.** Use `onstepclick` instead. Same signature, provided for backward compatibility with pre-v2 consumer code. |
+| onhandlestepclick       | `(event: { selectedIndex: number }) => void` | Fires when any step is clicked. Receives `{ selectedIndex: number }` with the **1-based** step index.                     |
+| onhandlestepclick | `(event: { selectedIndex: number }) => void` | **Deprecated.** Use `onhandlestepclick` instead. Same signature, provided for backward compatibility with pre-v2 consumer code. |
 
 ## CSS Variables
 

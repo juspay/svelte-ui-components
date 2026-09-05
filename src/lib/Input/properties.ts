@@ -92,8 +92,12 @@ export type OptionalInputProperties = {
   /** Passive/clickable icon rendered inside the field on the trailing edge (e.g. a clear button). */
   rightIcon?: Snippet;
   /** When set, the leftIcon becomes a focusable button invoking this handler. */
+  onlefticonclick?: () => void;
+  /** @deprecated Use `onlefticonclick` instead; both work until 4.0.0. */
   onLeftIconClick?: () => void;
   /** When set, the rightIcon becomes a focusable button invoking this handler. */
+  onrighticonclick?: () => void;
+  /** @deprecated Use `onrighticonclick` instead; both work until 4.0.0. */
   onRightIconClick?: () => void;
   /** Accessible label for the clickable leftIcon button (defaults to a generic label). */
   leftIconLabel?: string;
@@ -106,19 +110,28 @@ export type OptionalInputProperties = {
 };
 
 export type InputEventProperties = {
-  onInput?: (value: string, event: Event) => void;
   oninput?: (value: string, event: Event) => void;
-  onFocus?: (event: FocusEvent) => void;
+  /** @deprecated Use `oninput` instead; both work until 4.0.0. */
+  onInput?: (value: string, event: Event) => void;
   onfocus?: (event: FocusEvent) => void;
-  onFocusout?: (event: FocusEvent) => void;
+  /** @deprecated Use `onfocus` instead; both work until 4.0.0. */
+  onFocus?: (event: FocusEvent) => void;
   onfocusout?: (event: FocusEvent) => void;
-  onBlur?: (event: FocusEvent) => void;
+  /** @deprecated Use `onfocusout` instead; both work until 4.0.0. */
+  onFocusout?: (event: FocusEvent) => void;
   onblur?: (event: FocusEvent) => void;
-  onPaste?: (event: ClipboardEvent) => void;
+  /** @deprecated Use `onblur` instead; both work until 4.0.0. */
+  onBlur?: (event: FocusEvent) => void;
   onpaste?: (event: ClipboardEvent) => void;
-  onClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onpaste` instead; both work until 4.0.0. */
+  onPaste?: (event: ClipboardEvent) => void;
   onclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onclick` instead; both work until 4.0.0. */
+  onClick?: (event: MouseEvent) => void;
+  onstatechange?: (state: ValidationState) => void;
+  /** @deprecated Use `onstatechange` instead; both work until 4.0.0. */
   onStateChange?: (state: ValidationState) => void;
-  onKeyDown?: (event: KeyboardEvent) => void;
   onkeydown?: (event: KeyboardEvent) => void;
+  /** @deprecated Use `onkeydown` instead; both work until 4.0.0. */
+  onKeyDown?: (event: KeyboardEvent) => void;
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ModalProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { onMount, onDestroy } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
@@ -26,18 +27,23 @@
     testId,
     content,
     footerSnippet,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
-    onheaderRightImageClick: onheaderRightImageClickLegacy,
+    onheaderRightImageClick: onheaderRightImageClickProp,
     onHeaderRightImageClick,
-    onheaderLeftImageClick: onheaderLeftImageClickLegacy,
+    onheaderrightimageclick,
+    onheaderLeftImageClick: onheaderLeftImageClickProp,
     onHeaderLeftImageClick,
-    onprimaryButtonClick: onprimaryButtonClickLegacy,
+    onheaderleftimageclick,
+    onprimaryButtonClick: onprimaryButtonClickProp,
     onPrimaryButtonClick,
-    onsecondaryButtonClick: onsecondaryButtonClickLegacy,
+    onprimarybuttonclick,
+    onsecondaryButtonClick: onsecondaryButtonClickProp,
     onSecondaryButtonClick,
-    onoverlayClick: onoverlayClickLegacy,
+    onsecondarybuttonclick,
+    onoverlayClick: onoverlayClickProp,
     onOverlayClick,
+    onoverlayclick,
     onkeydown,
     classes,
     overlayBackdropFilter,
@@ -47,15 +53,97 @@
     autoDismissAfter = null
   }: ModalProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const onheaderLeftImageClick = $derived(onHeaderLeftImageClick ?? onheaderLeftImageClickLegacy);
-  const onheaderRightImageClick = $derived(
-    onHeaderRightImageClick ?? onheaderRightImageClickLegacy
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclose = $derived(
+    resolveDeprecatedProp('Modal', 'onClose', 'onclose', onClose, oncloseProp)
   );
-  const onoverlayClick = $derived(onOverlayClick ?? onoverlayClickLegacy);
-  const onprimaryButtonClick = $derived(onPrimaryButtonClick ?? onprimaryButtonClickLegacy);
-  const onsecondaryButtonClick = $derived(onSecondaryButtonClick ?? onsecondaryButtonClickLegacy);
+  const onheaderLeftImageClick = $derived(
+    resolveDeprecatedProp(
+      'Modal',
+      'onheaderLeftImageClick',
+      'onheaderleftimageclick',
+      onheaderLeftImageClickProp,
+      resolveDeprecatedProp(
+        'Modal',
+        'onHeaderLeftImageClick',
+        'onheaderleftimageclick',
+        onHeaderLeftImageClick,
+        onheaderleftimageclick
+      )
+    )
+  );
+  const onheaderRightImageClick = $derived(
+    resolveDeprecatedProp(
+      'Modal',
+      'onheaderRightImageClick',
+      'onheaderrightimageclick',
+      onheaderRightImageClickProp,
+      resolveDeprecatedProp(
+        'Modal',
+        'onHeaderRightImageClick',
+        'onheaderrightimageclick',
+        onHeaderRightImageClick,
+        onheaderrightimageclick
+      )
+    )
+  );
+  const onoverlayClick = $derived(
+    resolveDeprecatedProp(
+      'Modal',
+      'onoverlayClick',
+      'onoverlayclick',
+      onoverlayClickProp,
+      resolveDeprecatedProp(
+        'Modal',
+        'onOverlayClick',
+        'onoverlayclick',
+        onOverlayClick,
+        onoverlayclick
+      )
+    )
+  );
+  const onprimaryButtonClick = $derived(
+    resolveDeprecatedProp(
+      'Modal',
+      'onprimaryButtonClick',
+      'onprimarybuttonclick',
+      onprimaryButtonClickProp,
+      resolveDeprecatedProp(
+        'Modal',
+        'onPrimaryButtonClick',
+        'onprimarybuttonclick',
+        onPrimaryButtonClick,
+        onprimarybuttonclick
+      )
+    )
+  );
+  const onsecondaryButtonClick = $derived(
+    resolveDeprecatedProp(
+      'Modal',
+      'onsecondaryButtonClick',
+      'onsecondarybuttonclick',
+      onsecondaryButtonClickProp,
+      resolveDeprecatedProp(
+        'Modal',
+        'onSecondaryButtonClick',
+        'onsecondarybuttonclick',
+        onSecondaryButtonClick,
+        onsecondarybuttonclick
+      )
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      onclose,
+      onheaderLeftImageClick,
+      onheaderRightImageClick,
+      onoverlayClick,
+      onprimaryButtonClick,
+      onsecondaryButtonClick
+    );
+  });
 
   let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 

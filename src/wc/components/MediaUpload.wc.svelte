@@ -25,7 +25,10 @@
       classes: { type: 'String' },
       onFilesChange: { type: 'Object' },
       onRemove: { type: 'Object' },
-      onRejected: { type: 'Object' }
+      onRejected: { type: 'Object' },
+      onchange: { type: 'Object' },
+      onremove: { type: 'Object' },
+      onerror: { type: 'Object' }
     }
   }}
 />

@@ -160,7 +160,7 @@ A row can carry a `breakdown` array, rendered as a labelled grid beneath the row
 
 ### Header Checkbox
 
-The header renders even without a title. `onCheckboxChange` fires with the new checked state; drive `checkbox.checked` from your own state for a controlled checkbox. On an interactive card (`onclick` set), toggling the checkbox does not fire the card action.
+The header renders even without a title. `oncheckboxchange` fires with the new checked state; drive `checkbox.checked` from your own state for a controlled checkbox. On an interactive card (`onclick` set), toggling the checkbox does not fire the card action.
 
 ```svelte
 <script>
@@ -171,7 +171,7 @@ The header renders even without a title. `onCheckboxChange` fires with the new c
   title="Include Returns"
   value={withReturns ? '₹12.4Cr' : '₹10.9Cr'}
   checkbox={{ text: 'With returns', checked: withReturns }}
-  onCheckboxChange={(checked) => (withReturns = checked)}
+  oncheckboxchange={(checked) => (withReturns = checked)}
 />
 ```
 
@@ -200,10 +200,10 @@ The header renders even without a title. `onCheckboxChange` fires with the new c
 | rows             | `StatCardRow[]`                       | No       | `-`        | Multiple metric rows. When set, replaces the single value/delta row with a divider-separated column. Each row supports `heading`, `comparisonValue` (inline "/ ₹10L" denominator), `change` (`number` renders the delta with a "—" glyph at 0; `null` renders "N/A"; `undefined` renders nothing), `invertChangeColors`, `tooltip`, `additionalContent`, `additionalContentBreak`, `valueVariant`, `subtitle`, `breakdownHeading`, and a `breakdown` grid. |
 | rowsDirection    | `'column' \| 'row'`                   | No       | `'column'` | Layout direction for `rows`. `'column'` stacks rows vertically with horizontal dividers; `'row'` lays the sections side by side with vertical dividers, each section flexing to share the width equally.                                                                                                                                                                                                                                                   |
 | tooltip          | `StatCardTooltip`                     | No       | `-`        | Tooltip shown on the card title — `{ text, position?, testId? }`.                                                                                                                                                                                                                                                                                                                                                                                          |
-| checkbox         | `{ text: string; checked?: boolean }` | No       | `-`        | Renders a checkbox next to the title. The header is shown even when `title` is omitted. Pair with `onCheckboxChange` for a controlled checkbox.                                                                                                                                                                                                                                                                                                            |
+| checkbox         | `{ text: string; checked?: boolean }` | No       | `-`        | Renders a checkbox next to the title. The header is shown even when `title` is omitted. Pair with `oncheckboxchange` for a controlled checkbox.                                                                                                                                                                                                                                                                                                            |
 | headerRight      | `Snippet`                             | No       | `-`        | Snippet rendered at the right edge of the header row.                                                                                                                                                                                                                                                                                                                                                                                                      |
 | children         | `Snippet`                             | No       | `-`        | Default slot rendered inside the card body, after any rows (e.g. an embedded `ProportionBar`).                                                                                                                                                                                                                                                                                                                                                             |
-| onCheckboxChange | `(checked: boolean) => void`          | No       | `-`        | Fires with the new checked state when the header checkbox is toggled.                                                                                                                                                                                                                                                                                                                                                                                      |
+| oncheckboxchange | `(checked: boolean) => void`          | No       | `-`        | Fires with the new checked state when the header checkbox is toggled.                                                                                                                                                                                                                                                                                                                                                                                      |
 | classes          | `string`                              | No       | `-`        | Extra CSS class names appended to the root element. Useful for theming — define classes with CSS variable overrides and pass them to create variants.                                                                                                                                                                                                                                                                                                      |
 | testId           | `string`                              | No       | `-`        | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                                                                                                                                                                 |
 | onclick          | `(event: MouseEvent) => void`         | No       | `-`        | Click handler. When provided, the card root becomes interactive: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler.                                                                                                                                                                                                                                                                                                             |
@@ -231,7 +231,7 @@ The header renders even without a title. `onCheckboxChange` fires with the new c
 | Event            | Type                          | Description                                                                                                                                          |
 | ---------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | onclick          | `(event: MouseEvent) => void` | Fires when the card is clicked. When provided, the card gains `role="button"`, `tabindex="0"`, and keyboard support (Enter/Space). No-op if omitted. |
-| onCheckboxChange | `(checked: boolean) => void`  | Fires with the new checked state when the header checkbox is toggled. Interaction is stopped from propagating to the card's click action.            |
+| oncheckboxchange | `(checked: boolean) => void`  | Fires with the new checked state when the header checkbox is toggled. Interaction is stopped from propagating to the card's click action.            |
 
 ## CSS Variables
 
@@ -369,7 +369,7 @@ Tag: `<sui-stat-card>`
 ></sui-stat-card>
 ```
 
-Complex props (`rows`, `tooltip`, `checkbox`, `onCheckboxChange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively:
+Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively:
 
 ```html
 <sui-stat-card id="revenue" title="Revenue Overview">

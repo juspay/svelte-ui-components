@@ -155,7 +155,7 @@
     value={checkboxChecked ? '₹12.4Cr' : '₹10.9Cr'}
     delta={checkboxChecked ? '+8.2%' : '+5.7%'}
     checkbox={{ text: 'With returns', checked: checkboxChecked }}
-    onCheckboxChange={(checked) => {
+    oncheckboxchange={(checked) => {
       checkboxChecked = checked;
     }}
     testId="with-checkbox"
@@ -171,7 +171,7 @@
     value="₹10.9Cr"
     delta="+5.7%"
     checkbox={{ text: 'Include returns', checked: headerlessChecked }}
-    onCheckboxChange={(checked) => {
+    oncheckboxchange={(checked) => {
       headerlessChecked = checked;
     }}
     testId="headerless-card"
@@ -188,7 +188,7 @@
     value="68.4%"
     delta="+3.1%"
     checkbox={{ text: 'Live data', checked: clickableChecked }}
-    onCheckboxChange={(checked) => {
+    oncheckboxchange={(checked) => {
       clickableChecked = checked;
     }}
     onclick={() => {

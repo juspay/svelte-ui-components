@@ -21,7 +21,8 @@
       onclick: { type: 'Object' },
       footer: { type: 'Object' },
       valueSnippet: { type: 'Object' },
-      headerRight: { type: 'Object' }
+      headerRight: { type: 'Object' },
+      oncheckboxchange: { type: 'Object' }
     }
   }}
 />

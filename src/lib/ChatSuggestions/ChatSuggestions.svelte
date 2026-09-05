@@ -3,6 +3,7 @@
   import Img from '../Img/Img.svelte';
   import Scroller from '../Scroller/Scroller.svelte';
   import type { ChatSuggestion, ChatSuggestionsProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     items,
@@ -13,14 +14,21 @@
     loading = false,
     icon,
     chipClasses,
-    onselect: onselectLegacy,
+    onselect: onselectProp,
     onSelect,
     testId,
     classes
   }: ChatSuggestionsProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onselect = $derived(onSelect ?? onselectLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onselect = $derived(
+    resolveDeprecatedProp('ChatSuggestions', 'onSelect', 'onselect', onSelect, onselectProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onselect);
+  });
 
   const labelOf = (item: ChatSuggestion): string => (typeof item === 'string' ? item : item.label);
 

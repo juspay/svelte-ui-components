@@ -39,7 +39,7 @@
         channels: ['online store', 'POS'],
         stackable: false
       }}
-      onConfirm={record}
+      onconfirm={record}
       testId="demo-confirmation"
     />
   {/key}
@@ -58,7 +58,7 @@
       { label: 'PLATFORM', value: 'Meta Ads (Facebook + Instagram)' },
       { label: 'TIME', value: 'Jul 1 - Jul 31, 2026' }
     ]}
-    onConfirm={() => {}}
+    onconfirm={() => {}}
   />
 </div>
 
@@ -102,7 +102,7 @@
       { label: 'BANNER', value: 'Monsoon sale — 20% off sitewide' },
       { label: 'PLACEMENT', value: 'Home page hero' }
     ]}
-    onConfirm={record}
+    onconfirm={record}
   />
 </div>
 
@@ -119,7 +119,7 @@
       refreshToken: 'rt-987654'
     }}
     hiddenKeys={['apiKey', 'refreshToken']}
-    onConfirm={record}
+    onconfirm={record}
   />
 </div>
 
@@ -139,10 +139,10 @@
     title="Start voice checkout"
     countdownSeconds={0}
     isMicMuted={micMuted}
-    onMicToggle={() => {
+    onmictoggle={() => {
       micMuted = !micMuted;
     }}
-    onConfirm={(event) => {
+    onconfirm={(event) => {
       record(event);
       micMuted = false;
     }}

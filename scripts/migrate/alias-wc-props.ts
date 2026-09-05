@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parse } from 'svelte/compiler';
 import { readWrapperParity } from '../wc-parity/prop-parity.ts';
-import { NATIVE_EVENTS } from './casing.ts';
+import { scanDeclarations } from './lowercase-event-props.ts';
 
 /**
- * Phase 1 of the event-casing migration stopped at the Svelte layer.
- * alias-event-props.ts gave each grandfathered event prop a second spelling on
- * the component, but a custom element only forwards what `customElement.props`
- * declares, so none of the corrected spellings were reachable through a web
- * component. This closes that half.
+ * The event-casing migration stops at the Svelte layer on its own:
+ * lowercase-event-props.ts gives each event prop its lowercase spelling on the
+ * component, but a custom element only forwards what `customElement.props`
+ * declares, so a new spelling is unreachable through a web component until it
+ * is declared there too. This closes that half.
  *
  * Committed rather than run once and thrown away, for the same reason its
  * sibling is: 126 declarations across 49 wrappers is not a diff anyone can
@@ -69,23 +69,30 @@ function offsetOf(node: unknown, key: 'start' | 'end'): number {
 /**
  * Whether a prop is an event callback, and so safe to declare as `type: 'Object'`.
  *
- * Both spellings the casing rule produces are accepted, and nothing else. A
- * synthesized event is camelCase from the character after `on`, and a native DOM
- * event forwarded as-is keeps Svelte's lowercase spelling — so `onClick` and
- * `onfocus` both qualify while `once` does not. A bare `/^on[A-Za-z]/` would
- * have taken `once` too and declared it a callback; there is no such prop today,
- * which is exactly why the guard belongs here rather than after one appears.
- *
- * A grandfathered lowercase *synthesized* name (`onbarclick`) is deliberately
- * not matched. Every one of those is already declared, so none can reach this;
- * if one ever does, a reported skip that leaves the ratchet red is a better
- * outcome than a guessed declaration that looks settled.
+ * Judged by the library's own declarations, not by the spelling: with every
+ * event prop lowercase, a name test alone cannot tell `onclick` from a future
+ * `once`, and a wrong declaration is worse than an absent one because it looks
+ * settled. `eventProps` is every `on*` prop declared with a function type in
+ * some `src/lib/**\/properties.ts` (see `libraryEventProps`).
  */
-export function isEventProp(name: string): boolean {
-  if (/^on[A-Z]/.test(name)) {
-    return true;
+export function isEventProp(name: string, eventProps: ReadonlySet<string>): boolean {
+  return eventProps.has(name);
+}
+
+/** Every event prop name declared on a component's props type, library-wide. */
+export function libraryEventProps(root: string): ReadonlySet<string> {
+  const names = new Set<string>();
+  const lib = join(root, 'src', 'lib');
+  for (const entry of readdirSync(lib)) {
+    const file = join(lib, entry, 'properties.ts');
+    if (!existsSync(file)) {
+      continue;
+    }
+    for (const declaration of scanDeclarations(readFileSync(file, 'utf8'))) {
+      names.add(declaration.name);
+    }
   }
-  return name.startsWith('on') && NATIVE_EVENTS.has(name.slice(2));
+  return names;
 }
 
 /**
@@ -144,14 +151,15 @@ export function planWrapperProps(root: string): {
 } {
   const additions: Addition[] = [];
   const skipped: Skip[] = [];
+  const eventProps = libraryEventProps(root);
 
   for (const entry of readWrapperParity()) {
     if (entry.missing.length === 0) {
       continue;
     }
-    const events = entry.missing.filter((prop) => isEventProp(prop));
+    const events = entry.missing.filter((prop) => isEventProp(prop, eventProps));
     for (const prop of entry.missing) {
-      if (!isEventProp(prop)) {
+      if (!isEventProp(prop, eventProps)) {
         skipped.push({
           wrapper: entry.wrapper,
           prop,

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { AnimationItem } from 'lottie-web';
   import type { LottiePlayerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   type LocalAnimationItem = Pick<
     AnimationItem,
@@ -18,15 +19,24 @@
     ariaHidden = true,
     testId,
     classes,
-    oncomplete: oncompleteLegacy,
+    oncomplete: oncompleteProp,
     onComplete,
-    onerror: onerrorLegacy,
+    onerror: onerrorProp,
     onError
   }: LottiePlayerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const oncomplete = $derived(onComplete ?? oncompleteLegacy);
-  const onerror = $derived(onError ?? onerrorLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const oncomplete = $derived(
+    resolveDeprecatedProp('LottiePlayer', 'onComplete', 'oncomplete', onComplete, oncompleteProp)
+  );
+  const onerror = $derived(
+    resolveDeprecatedProp('LottiePlayer', 'onError', 'onerror', onError, onerrorProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(oncomplete, onerror);
+  });
 
   let containerEl: HTMLDivElement | null = $state(null);
   let animationItem: LocalAnimationItem | null = $state(null);

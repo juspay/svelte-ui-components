@@ -1,6 +1,6 @@
 # IframeViewer
 
-A security-conscious iframe embed. It renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` **and** the message originates from the embedded iframe's own window. An empty `allowedOrigins` list (the default) processes nothing, so it is secure by default.
+A security-conscious iframe embed. It renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onmessage` only when the message origin is in `allowedOrigins` **and** the message originates from the embedded iframe's own window. An empty `allowedOrigins` list (the default) processes nothing, so it is secure by default.
 
 ## Usage
 
@@ -13,7 +13,7 @@ A security-conscious iframe embed. It renders an `<iframe>` for the given `src` 
   src={'https://example.com'}
   title={'Example'}
   allowedOrigins={['https://example.com']}
-  onMessage={(event) => console.log(event.data)}
+  onmessage={(event) => console.log(event.data)}
 />
 ```
 
@@ -23,7 +23,7 @@ A security-conscious iframe embed. It renders an `<iframe>` for the given `src` 
 | -------------- | ------------------- | -------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | src            | `string`            | Yes      | `-`                  | URL loaded into the iframe.                                                                                                      |
 | title          | `string`            | No       | `'Embedded Content'` | Accessible title for the iframe.                                                                                                 |
-| allowedOrigins | `string[]`          | No       | `[]`                 | Origins allowed to send `postMessage` events to `onMessage`. An empty array (the default) processes nothing — secure by default. |
+| allowedOrigins | `string[]`          | No       | `[]`                 | Origins allowed to send `postMessage` events to `onmessage`. An empty array (the default) processes nothing — secure by default. |
 | allow          | `string`            | No       | `'fullscreen'`       | Permissions policy applied to the iframe `allow` attribute.                                                                      |
 | sandbox        | `string`            | No       | `-`                  | Value for the iframe `sandbox` attribute. Omitted when not set.                                                                  |
 | credentialless | `boolean`           | No       | `-`                  | Sets the iframe's `credentialless` attribute. Applied in the same render statement as `src`, so it is present before the iframe's first load — no dependency on effect-scheduling order. |
@@ -38,11 +38,11 @@ Event handler props with callback signatures.
 
 | Event     | Type                            | Description                                                                                                                                 |
 | --------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| onMessage | `(event: MessageEvent) => void` | Called with the `MessageEvent` for `postMessage` events whose origin is in `allowedOrigins` and whose source is the embedded iframe window. |
+| onmessage | `(event: MessageEvent) => void` | Called with the `MessageEvent` for `postMessage` events whose origin is in `allowedOrigins` and whose source is the embedded iframe window. |
 
 ## Instance Methods
 
-`postMessage` is exported from the component instance — bind it to send messages into the embedded iframe (outbound), mirroring `onMessage` for the inbound direction:
+`postMessage` is exported from the component instance — bind it to send messages into the embedded iframe (outbound), mirroring `onmessage` for the inbound direction:
 
 ```svelte
 <script>
@@ -91,12 +91,12 @@ Tag: `<sui-iframe-viewer>`
 ></sui-iframe-viewer>
 ```
 
-The `allowed-origins` attribute and the `onMessage` callback are set as JavaScript properties on the element (callbacks cannot cross the HTML attribute boundary):
+The `allowed-origins` attribute and the `onmessage` callback are set as JavaScript properties on the element (callbacks cannot cross the HTML attribute boundary):
 
 ```js
 const frame = document.querySelector('sui-iframe-viewer');
 frame.allowedOrigins = ['https://example.com'];
-frame.onMessage = (event) => console.log(event.data);
+frame.onmessage = (event) => console.log(event.data);
 ```
 
 `postMessage` is **not** exposed on `<sui-iframe-viewer>` — it is a Svelte-only instance accessor (see Instance Methods above). Web Component consumers already have a standard way to reach the same outcome: query the rendered `<iframe>` inside the element's shadow root and call its `contentWindow.postMessage` directly.

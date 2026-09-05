@@ -236,7 +236,7 @@
     label="Paste here"
     rows={3}
     testId="input-paste-textarea"
-    onPaste={() => (pasteCount += 1)}
+    onpaste={() => (pasteCount += 1)}
   />
 </div>
 

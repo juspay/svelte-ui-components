@@ -57,11 +57,11 @@ only the offending selection is dropped, with a single summary error message.
 
 | Event         | Type                                           | Description                                                       |
 | ------------- | ---------------------------------------------- | ----------------------------------------------------------------- |
-| onFilesChange | `(files: File[]) => void`                      | Fires whenever the staged file list changes (add or remove).      |
-| onRemove      | `(file: File) => void`                         | Fires when a single file is removed via its card's remove button. |
-| onRejected    | `(rejections: MediaUploadRejection[]) => void` | Fires when one or more files in a selection/drop fail validation. |
+| onchange | `(files: File[]) => void`                      | Fires whenever the staged file list changes (add or remove).      |
+| onremove      | `(file: File) => void`                         | Fires when a single file is removed via its card's remove button. |
+| onerror    | `(rejections: MediaUploadRejection[]) => void` | Fires when one or more files in a selection/drop fail validation. |
 
-Named `onFilesChange`/`onRemove`/`onRejected`, not `onchange`/`onremove`/`onerror`: none
+Named `onchange`/`onremove`/`onerror`, not `onchange`/`onremove`/`onerror`: none
 of the three relay a native event object (they carry `File[]`, a single `File`, and a
 custom rejection list respectively), so per `DESIGN_PRINCIPLES.md` they're synthesized
 events and use camelCase — `onchange`/`onerror` in particular would have implied native

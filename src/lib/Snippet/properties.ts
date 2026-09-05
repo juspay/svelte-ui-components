@@ -18,5 +18,6 @@ export type OptionalSnippetProperties = {
 
 export type SnippetEventProperties = {
   oncopy?: () => void;
+  /** @deprecated Use `oncopy` instead; both work until 4.0.0. */
   onCopy?: () => void;
 };

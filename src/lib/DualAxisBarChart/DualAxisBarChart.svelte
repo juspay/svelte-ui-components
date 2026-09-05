@@ -4,6 +4,7 @@
     DualAxisSeries,
     DualAxisTooltipContext
   } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
@@ -53,14 +54,27 @@
     interactiveLegend = false,
     hideLegendBelow = 360,
     tooltipSnippet,
-    onbarclick: onbarclickLegacy,
+    onbarclick: onbarclickProp,
     onBarClick,
     testId,
     classes
   }: DualAxisBarChartProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onbarclick = $derived(onBarClick ?? onbarclickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onbarclick = $derived(
+    resolveDeprecatedProp(
+      'DualAxisBarChart',
+      'onBarClick',
+      'onbarclick',
+      onBarClick,
+      onbarclickProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onbarclick);
+  });
 
   // ── State ──────────────────────────────────────────────────────
 

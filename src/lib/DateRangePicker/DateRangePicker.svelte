@@ -4,6 +4,7 @@
     DateRangePreset,
     TimeDisplayBoundary
   } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { tick, untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
@@ -54,27 +55,62 @@
     initialPresetLabel,
     compareTrigger,
     openCompare = $bindable(false),
-    onapply: onapplyLegacy,
+    onapply: onapplyProp,
     onApply,
-    onapplysingle: onapplysingleLegacy,
+    onapplysingle: onapplysingleProp,
     onApplySingle,
-    onapplycompare: onapplycompareLegacy,
+    onapplycompare: onapplycompareProp,
     onApplyCompare,
-    oncancel: oncancelLegacy,
+    oncancel: oncancelProp,
     onCancel,
-    onopentoggle: onopentoggleLegacy,
+    onopentoggle: onopentoggleProp,
     onOpenToggle,
-    onclear: onclearLegacy,
+    onclear: onclearProp,
     onClear
   }: DateRangePickerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onapply = $derived(onApply ?? onapplyLegacy);
-  const onapplycompare = $derived(onApplyCompare ?? onapplycompareLegacy);
-  const onapplysingle = $derived(onApplySingle ?? onapplysingleLegacy);
-  const oncancel = $derived(onCancel ?? oncancelLegacy);
-  const onclear = $derived(onClear ?? onclearLegacy);
-  const onopentoggle = $derived(onOpenToggle ?? onopentoggleLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onapply = $derived(
+    resolveDeprecatedProp('DateRangePicker', 'onApply', 'onapply', onApply, onapplyProp)
+  );
+  const onapplycompare = $derived(
+    resolveDeprecatedProp(
+      'DateRangePicker',
+      'onApplyCompare',
+      'onapplycompare',
+      onApplyCompare,
+      onapplycompareProp
+    )
+  );
+  const onapplysingle = $derived(
+    resolveDeprecatedProp(
+      'DateRangePicker',
+      'onApplySingle',
+      'onapplysingle',
+      onApplySingle,
+      onapplysingleProp
+    )
+  );
+  const oncancel = $derived(
+    resolveDeprecatedProp('DateRangePicker', 'onCancel', 'oncancel', onCancel, oncancelProp)
+  );
+  const onclear = $derived(
+    resolveDeprecatedProp('DateRangePicker', 'onClear', 'onclear', onClear, onclearProp)
+  );
+  const onopentoggle = $derived(
+    resolveDeprecatedProp(
+      'DateRangePicker',
+      'onOpenToggle',
+      'onopentoggle',
+      onOpenToggle,
+      onopentoggleProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onapply, onapplycompare, onapplysingle, oncancel, onclear, onopentoggle);
+  });
 
   const isDualMonth: boolean = $derived(
     typeof dualMonth === 'boolean' ? dualMonth : mode === 'range'

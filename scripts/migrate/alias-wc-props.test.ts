@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { declareProps, isEventProp, lastPropertyEnd, planWrapperProps } from './alias-wc-props.ts';
+import {
+  declareProps,
+  isEventProp,
+  lastPropertyEnd,
+  libraryEventProps,
+  planWrapperProps
+} from './alias-wc-props.ts';
 
 const root = process.cwd();
 
@@ -70,22 +76,28 @@ describe('phase 1 wrapper declarations', () => {
     expect(lastPropertyEnd(source)).toBe(-1);
   });
 
-  it('recognises both spellings of an event prop and nothing else', () => {
-    // Both directions are real targets: DESIGN_PRINCIPLES keeps the lowercase
-    // spelling for a native DOM event forwarded as-is, so `onfocus` is as much a
-    // corrected name as `onRowSelect`.
-    expect(isEventProp('onClick')).toBe(true);
-    expect(isEventProp('onRowSelect')).toBe(true);
-    expect(isEventProp('onfocus')).toBe(true);
-    expect(isEventProp('onvolumechange')).toBe(true);
+  it('recognises an event prop by the library declaring it, not by its spelling', () => {
+    // With every event prop lowercase, spelling alone cannot tell `onclick`
+    // from a future `once`; the library's own `properties.ts` declarations are
+    // the authority. `libraryEventProps` reads them; here a fixed set stands in.
+    const declared: ReadonlySet<string> = new Set(['onclick', 'onrowselect', 'onfocus', 'onClick']);
+    expect(isEventProp('onclick', declared)).toBe(true);
+    expect(isEventProp('onrowselect', declared)).toBe(true);
+    expect(isEventProp('onClick', declared)).toBe(true);
 
-    // The whole point of not matching a bare /^on[A-Za-z]/: each of these would
-    // otherwise be declared `{ type: 'Object' }` and silently mistyped.
-    expect(isEventProp('once')).toBe(false);
-    expect(isEventProp('onboarding')).toBe(false);
-    expect(isEventProp('only')).toBe(false);
-    expect(isEventProp('on')).toBe(false);
-    expect(isEventProp('classes')).toBe(false);
+    // Each of these would otherwise be declared `{ type: 'Object' }` and silently mistyped.
+    expect(isEventProp('once', declared)).toBe(false);
+    expect(isEventProp('onboarding', declared)).toBe(false);
+    expect(isEventProp('on', declared)).toBe(false);
+    expect(isEventProp('classes', declared)).toBe(false);
+  });
+
+  it('reads every event prop the library declares', () => {
+    const declared = libraryEventProps(process.cwd());
+    expect(declared.has('onclick')).toBe(true);
+    expect(declared.has('onrowclick')).toBe(true);
+    expect(declared.has('onErrorMessage')).toBe(false);
+    expect(declared.has('once')).toBe(false);
   });
 
   it('declares every added prop as an Object, which is what a callback needs', () => {

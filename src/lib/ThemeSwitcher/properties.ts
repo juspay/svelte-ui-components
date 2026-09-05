@@ -22,5 +22,6 @@ export type OptionalThemeSwitcherProperties = {
 
 export type ThemeSwitcherEventProperties = {
   onchange?: (value: string, resolvedValue: string) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (value: string, resolvedValue: string) => void;
 };

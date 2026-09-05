@@ -26,6 +26,7 @@ export type MandatoryToolCallLogProperties = {
 
 export type OptionalToolCallLogProperties = {
   onchipclick?: (index: number, chip: ToolCallChip) => void;
+  /** @deprecated Use `onchipclick` instead; both work until 4.0.0. */
   onChipClick?: (index: number, chip: ToolCallChip) => void;
   testId?: string;
   classes?: string;

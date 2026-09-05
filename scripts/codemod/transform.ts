@@ -1,8 +1,8 @@
-import ts from 'typescript';
 import { parse } from 'svelte/compiler';
 import type { AST } from 'svelte/compiler';
-import { directionConfig } from './map.ts';
-import type { Direction, DirectionConfig } from './map.ts';
+import { legacyRenameTable, legacyProps } from './legacy-pairs.ts';
+
+export const SUI_PACKAGE = '@juspay/svelte-ui-components';
 
 export type TransformWarning = {
   readonly file: string;
@@ -15,8 +15,18 @@ export type TransformResult = {
   readonly code: string;
   readonly changed: boolean;
   readonly propsRenamed: number;
-  readonly importsRewritten: number;
   readonly warnings: ReadonlyArray<TransformWarning>;
+};
+
+/**
+ * How imports are attributed to this library. The defaults describe a
+ * consumer (`@juspay/svelte-ui-components` specifiers, no default imports);
+ * this repository's own migration script overrides both so a `$lib/X/X.svelte`
+ * default import counts as component `X`.
+ */
+export type TransformOptions = {
+  readonly isLibraryImport?: (specifier: string) => boolean;
+  readonly defaultImportComponent?: (specifier: string) => string | null;
 };
 
 type Edit = { readonly start: number; readonly end: number; readonly text: string };
@@ -63,111 +73,38 @@ type Scan = {
   readonly edits: Edit[];
   readonly warnings: TransformWarning[];
   readonly bindings: Map<string, Binding>;
-  importsRewritten: number;
-  importsFromPackage: boolean;
+  importsLibrary: boolean;
   propsRenamed: number;
 };
 
-function packageSubpath(specifier: string, fromPackage: string): string | null {
-  if (specifier === fromPackage) {
-    return '';
-  }
-  if (specifier.startsWith(`${fromPackage}/`)) {
-    return specifier.slice(fromPackage.length);
-  }
-  return null;
+function isPackageSpecifier(specifier: string): boolean {
+  return specifier === SUI_PACKAGE || specifier.startsWith(`${SUI_PACKAGE}/`);
 }
 
-function rewriteSpecifierEdit(
-  source: string,
-  literal: object,
-  value: string,
-  config: DirectionConfig
-): Edit | null {
-  const subpath = packageSubpath(value, config.fromPackage);
-  if (subpath === null) {
-    return null;
-  }
-  const range = rangeOf(literal);
-  if (range === null) {
-    return null;
-  }
-  const quote = source.charAt(range.start);
+type Resolver = Required<TransformOptions>;
+
+function resolverFor(options: TransformOptions): Resolver {
   return {
-    start: range.start,
-    end: range.end,
-    text: `${quote}${config.toPackage}${subpath}${quote}`
+    isLibraryImport: options.isLibraryImport ?? isPackageSpecifier,
+    defaultImportComponent: options.defaultImportComponent ?? (() => null)
   };
-}
-
-/** Deep-walk an estree subtree for dynamic `import('...')` of the source package. */
-function collectDynamicImportEdits(
-  source: string,
-  node: unknown,
-  config: DirectionConfig,
-  scan: Scan
-): void {
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      collectDynamicImportEdits(source, item, config, scan);
-    }
-    return;
-  }
-  if (typeof node !== 'object' || node === null) {
-    return;
-  }
-  if ('type' in node && node.type === 'ImportExpression' && 'source' in node) {
-    const literal = node.source;
-    if (
-      typeof literal === 'object' &&
-      literal !== null &&
-      'type' in literal &&
-      literal.type === 'Literal' &&
-      'value' in literal &&
-      typeof literal.value === 'string'
-    ) {
-      const edit = rewriteSpecifierEdit(source, literal, literal.value, config);
-      if (edit !== null) {
-        scan.edits.push(edit);
-        scan.importsRewritten += 1;
-        scan.importsFromPackage = true;
-      }
-    }
-  }
-  for (const value of Object.values(node)) {
-    collectDynamicImportEdits(source, value, config, scan);
-  }
 }
 
 function scanScript(
   source: string,
   file: string,
   program: Program,
-  config: DirectionConfig,
+  resolver: Resolver,
   scan: Scan
 ): void {
   for (const statement of program.body) {
-    if (
-      (statement.type === 'ImportDeclaration' ||
-        statement.type === 'ExportNamedDeclaration' ||
-        statement.type === 'ExportAllDeclaration') &&
-      statement.source != null &&
-      typeof statement.source.value === 'string'
-    ) {
-      const edit = rewriteSpecifierEdit(source, statement.source, statement.source.value, config);
-      if (edit !== null) {
-        scan.edits.push(edit);
-        scan.importsRewritten += 1;
-      }
-    }
     if (statement.type !== 'ImportDeclaration') {
-      collectDynamicImportEdits(source, statement, config, scan);
       continue;
     }
     const specifier = typeof statement.source.value === 'string' ? statement.source.value : '';
-    const fromPackage = packageSubpath(specifier, config.fromPackage) !== null;
-    if (fromPackage) {
-      scan.importsFromPackage = true;
+    const fromLibrary = resolver.isLibraryImport(specifier);
+    if (fromLibrary) {
+      scan.importsLibrary = true;
     }
     for (const spec of statement.specifiers) {
       if (spec.type === 'ImportSpecifier') {
@@ -179,13 +116,17 @@ function scanScript(
               : null;
         scan.bindings.set(
           spec.local.name,
-          fromPackage && exported !== null ? { kind: 'component', exported } : { kind: 'other' }
+          fromLibrary && exported !== null ? { kind: 'component', exported } : { kind: 'other' }
         );
       } else if (spec.type === 'ImportNamespaceSpecifier') {
-        scan.bindings.set(spec.local.name, fromPackage ? { kind: 'namespace' } : { kind: 'other' });
+        scan.bindings.set(spec.local.name, fromLibrary ? { kind: 'namespace' } : { kind: 'other' });
       } else {
-        scan.bindings.set(spec.local.name, { kind: 'other' });
-        if (fromPackage) {
+        const component = fromLibrary ? resolver.defaultImportComponent(specifier) : null;
+        scan.bindings.set(
+          spec.local.name,
+          component !== null ? { kind: 'component', exported: component } : { kind: 'other' }
+        );
+        if (fromLibrary && component === null) {
           const at = positionOf(source, rangeOf(spec)?.start ?? 0);
           scan.warnings.push({
             file,
@@ -250,10 +191,9 @@ function renameAttributes(
   tagLabel: string,
   component: string,
   element: LibraryElement,
-  config: DirectionConfig,
+  table: ReadonlyMap<string, string> | null,
   scan: Scan
 ): void {
-  const table = config.renames.get(component) ?? null;
   if (table === null) {
     return;
   }
@@ -323,13 +263,13 @@ function warnUnresolvedElement(
   file: string,
   tagLabel: string,
   element: LibraryElement,
-  config: DirectionConfig,
+  renameableProps: ReadonlySet<string>,
   scan: Scan
 ): void {
   const suspicious = element.attributes
     .filter((attribute) => attribute.type === 'Attribute')
     .map((attribute) => attribute.name)
-    .filter((name) => config.allFromProps.has(name));
+    .filter((name) => renameableProps.has(name));
   if (suspicious.length === 0) {
     return;
   }
@@ -379,12 +319,18 @@ function walkFragment(fragment: AST.Fragment, visit: (element: LibraryElement) =
   }
 }
 
+/**
+ * Rewrites every deprecated event-prop spelling on a library component in a
+ * consumer's `.svelte` file to the corrected one (`legacy-pairs.ts`). Only
+ * components resolvable to an import from this package are touched; a tag
+ * that cannot be resolved but carries a renameable prop is reported instead.
+ */
 export function transformSvelte(
   source: string,
   file: string,
-  direction: Direction
+  options: TransformOptions = {}
 ): TransformResult {
-  const config = directionConfig(direction);
+  const resolver = resolverFor(options);
   let root: AST.Root;
   try {
     root = parse(source, { modern: true, filename: file });
@@ -394,7 +340,6 @@ export function transformSvelte(
       code: source,
       changed: false,
       propsRenamed: 0,
-      importsRewritten: 0,
       warnings: [{ file, line: 1, column: 1, message: `could not parse file: ${message}` }]
     };
   }
@@ -402,18 +347,18 @@ export function transformSvelte(
     edits: [],
     warnings: [],
     bindings: new Map(),
-    importsRewritten: 0,
-    importsFromPackage: false,
+    importsLibrary: false,
     propsRenamed: 0
   };
   const instance = root.instance ?? null;
   if (instance !== null) {
-    scanScript(source, file, instance.content, config, scan);
+    scanScript(source, file, instance.content, resolver, scan);
   }
   const moduleScript = root.module ?? null;
   if (moduleScript !== null) {
-    scanScript(source, file, moduleScript.content, config, scan);
+    scanScript(source, file, moduleScript.content, resolver, scan);
   }
+  const renames = legacyRenameTable();
   walkFragment(root.fragment, (element) => {
     const resolution =
       element.type === 'Component'
@@ -421,9 +366,17 @@ export function transformSvelte(
         : resolveThisExpression(element.expression, scan.bindings);
     const tagLabel = element.type === 'Component' ? element.name : 'svelte:component';
     if (resolution.kind === 'library') {
-      renameAttributes(source, file, tagLabel, resolution.component, element, config, scan);
-    } else if (resolution.kind === 'unresolved' && scan.importsFromPackage) {
-      warnUnresolvedElement(source, file, tagLabel, element, config, scan);
+      renameAttributes(
+        source,
+        file,
+        tagLabel,
+        resolution.component,
+        element,
+        renames.get(resolution.component) ?? null,
+        scan
+      );
+    } else if (resolution.kind === 'unresolved' && scan.importsLibrary) {
+      warnUnresolvedElement(source, file, tagLabel, element, legacyProps(), scan);
     }
   });
   const code = applyEdits(source, scan.edits);
@@ -431,119 +384,6 @@ export function transformSvelte(
     code,
     changed: code !== source,
     propsRenamed: scan.propsRenamed,
-    importsRewritten: scan.importsRewritten,
     warnings: scan.warnings
-  };
-}
-
-function scriptKindFor(file: string): ts.ScriptKind {
-  if (file.endsWith('.tsx')) {
-    return ts.ScriptKind.TSX;
-  }
-  if (file.endsWith('.jsx')) {
-    return ts.ScriptKind.JSX;
-  }
-  if (file.endsWith('.js') || file.endsWith('.mjs') || file.endsWith('.cjs')) {
-    return ts.ScriptKind.JS;
-  }
-  return ts.ScriptKind.TS;
-}
-
-/** The module specifier a node carries, or null if it is not an import site. */
-function specifierOf(node: ts.Node): ts.StringLiteralLike | null {
-  if (ts.isImportDeclaration(node) && ts.isStringLiteralLike(node.moduleSpecifier)) {
-    return node.moduleSpecifier;
-  }
-  if (ts.isExportDeclaration(node)) {
-    const specifier = node.moduleSpecifier;
-    if (typeof specifier !== 'undefined' && ts.isStringLiteralLike(specifier)) {
-      return specifier;
-    }
-    return null;
-  }
-  // `import('x')` and `require('x')`.
-  if (ts.isCallExpression(node) && node.arguments.length > 0) {
-    const callee = node.expression;
-    const isImport = callee.kind === ts.SyntaxKind.ImportKeyword;
-    const isRequire = ts.isIdentifier(callee) && callee.text === 'require';
-    const first = node.arguments[0];
-    if ((isImport || isRequire) && ts.isStringLiteralLike(first)) {
-      return first;
-    }
-    return null;
-  }
-  // `import X = require('x')`. TS-only syntax whose specifier hangs off an
-  // ExternalModuleReference rather than a call expression.
-  if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
-    const expression = node.moduleReference.expression;
-    if (ts.isStringLiteralLike(expression)) {
-      return expression;
-    }
-    return null;
-  }
-  // `import('x').Foo` in type position.
-  if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
-    const literal = node.argument.literal;
-    if (ts.isStringLiteralLike(literal)) {
-      return literal;
-    }
-  }
-  return null;
-}
-
-/**
- * Import-specifier rewrite for plain .ts/.js files (barrels, utilities).
- *
- * Parsed rather than matched. This was a context-anchored regex on the
- * reasoning that a specifier only appears after `from`, `import`, `import(` or
- * `require(` -- true, but those words appear just as readily in a comment or
- * inside a quoted string, and the regex rewrote all of them. TypeScript is
- * already a devDependency and already type-checks this directory, so the exact
- * answer costs nothing here. Only the literal's interior is replaced, so the
- * original quote style survives.
- */
-export function transformModuleSpecifiers(
-  source: string,
-  file: string,
-  direction: Direction
-): TransformResult {
-  const config = directionConfig(direction);
-  const sourceFile = ts.createSourceFile(
-    file,
-    source,
-    ts.ScriptTarget.ESNext,
-    true,
-    scriptKindFor(file)
-  );
-
-  const edits: { readonly start: number; readonly end: number; readonly text: string }[] = [];
-  const visit = (node: ts.Node): void => {
-    const specifier = specifierOf(node);
-    if (specifier !== null) {
-      const subpath = packageSubpath(specifier.text, config.fromPackage);
-      if (subpath !== null) {
-        edits.push({
-          start: specifier.getStart(sourceFile) + 1,
-          end: specifier.getEnd() - 1,
-          text: `${config.toPackage}${subpath}`
-        });
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-
-  // Applied back to front so earlier offsets stay valid.
-  let code = source;
-  for (const edit of [...edits].reverse()) {
-    code = code.slice(0, edit.start) + edit.text + code.slice(edit.end);
-  }
-
-  return {
-    code,
-    changed: code !== source,
-    propsRenamed: 0,
-    importsRewritten: edits.length,
-    warnings: []
   };
 }

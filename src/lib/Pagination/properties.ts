@@ -29,7 +29,10 @@ export type OptionalPaginationProperties = {
 
 export type PaginationEventProperties = {
   onchange?: (page: number) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (page: number) => void;
   /** Fired when the load-more CTA is clicked (cursor mode). */
+  onloadmore?: () => void;
+  /** @deprecated Use `onloadmore` instead; both work until 4.0.0. */
   onLoadMore?: () => void;
 };

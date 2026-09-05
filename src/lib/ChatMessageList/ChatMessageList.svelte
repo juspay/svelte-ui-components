@@ -7,6 +7,7 @@
   import type { ChatMessageData } from '../Chat/types';
   import type { ChatMessageFeedback } from '../ChatMessage/properties';
   import type { ChatMessageListProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   const NEAR_BOTTOM_THRESHOLD = 80;
 
@@ -23,20 +24,37 @@
     jumpLabel = 'Jump to latest',
     jumpIcon,
     allowCopy = false,
-    onscrollstate: onscrollstateLegacy,
+    onscrollstate: onscrollstateProp,
     onScrollState,
-    onretry: onretryLegacy,
+    onretry: onretryProp,
     onRetry,
-    onfeedback: onfeedbackLegacy,
+    onfeedback: onfeedbackProp,
     onFeedback,
     testId,
     classes
   }: ChatMessageListProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
-  const onretry = $derived(onRetry ?? onretryLegacy);
-  const onscrollstate = $derived(onScrollState ?? onscrollstateLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onfeedback = $derived(
+    resolveDeprecatedProp('ChatMessageList', 'onFeedback', 'onfeedback', onFeedback, onfeedbackProp)
+  );
+  const onretry = $derived(
+    resolveDeprecatedProp('ChatMessageList', 'onRetry', 'onretry', onRetry, onretryProp)
+  );
+  const onscrollstate = $derived(
+    resolveDeprecatedProp(
+      'ChatMessageList',
+      'onScrollState',
+      'onscrollstate',
+      onScrollState,
+      onscrollstateProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onfeedback, onretry, onscrollstate);
+  });
 
   let listEl: HTMLElement | null = $state(null);
   let innerEl: HTMLElement | null = $state(null);

@@ -29,7 +29,9 @@ export type OptionalCommandMenuProperties = {
 
 export type CommandMenuEventProperties = {
   onselect?: (item: CommandItem) => void;
+  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
   onSelect?: (item: CommandItem) => void;
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
 };

@@ -39,16 +39,20 @@ export type OptionalChipInputProperties = {
 
 export type ChipInputEventProperties = {
   onadd?: (value: string) => void;
+  /** @deprecated Use `onadd` instead; both work until 4.0.0. */
   onAdd?: (value: string) => void;
   ondismiss?: (value: string) => void;
+  /** @deprecated Use `ondismiss` instead; both work until 4.0.0. */
   onDismiss?: (value: string) => void;
   /**
    * Fires after an in-place edit (see `editable`) commits a value that actually changed. Not
    * fired when the edit is cancelled (Escape) or committed with the text unchanged.
    */
   onedit?: (value: string, previousValue: string) => void;
+  /** @deprecated Use `onedit` instead; both work until 4.0.0. */
   onEdit?: (value: string, previousValue: string) => void;
   /** Fires alongside `onadd`/`ondismiss`/`onedit`, after any of them has already updated `values`. */
   onchange?: (values: string[]) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (values: string[]) => void;
 };

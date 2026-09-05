@@ -30,7 +30,9 @@
       cancelTestId: { type: 'String', attribute: 'cancel-test-id' },
       completionTestId: { type: 'String', attribute: 'completion-test-id' },
       completionTextTestId: { type: 'String', attribute: 'completion-text-test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      onconfirm: { type: 'Object' },
+      onmictoggle: { type: 'Object' }
     }
   }}
 />

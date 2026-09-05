@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ResizableProperties, ResizeEdge } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     width = $bindable(null),
@@ -13,20 +14,37 @@
     disabled = false,
     handleLabel = 'Resize',
     children,
-    onresize: onresizeLegacy,
+    onresize: onresizeProp,
     onResize,
-    onresizestart: onresizestartLegacy,
+    onresizestart: onresizestartProp,
     onResizeStart,
-    onresizeend: onresizeendLegacy,
+    onresizeend: onresizeendProp,
     onResizeEnd,
     testId,
     classes
   }: ResizableProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onresize = $derived(onResize ?? onresizeLegacy);
-  const onresizeend = $derived(onResizeEnd ?? onresizeendLegacy);
-  const onresizestart = $derived(onResizeStart ?? onresizestartLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onresize = $derived(
+    resolveDeprecatedProp('Resizable', 'onResize', 'onresize', onResize, onresizeProp)
+  );
+  const onresizeend = $derived(
+    resolveDeprecatedProp('Resizable', 'onResizeEnd', 'onresizeend', onResizeEnd, onresizeendProp)
+  );
+  const onresizestart = $derived(
+    resolveDeprecatedProp(
+      'Resizable',
+      'onResizeStart',
+      'onresizestart',
+      onResizeStart,
+      onresizestartProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onresize, onresizeend, onresizestart);
+  });
 
   const DIRS: Record<ResizeEdge, { x: -1 | 0 | 1; y: -1 | 0 | 1 }> = {
     top: { x: 0, y: -1 },

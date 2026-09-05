@@ -1,0 +1,238 @@
+/**
+ * Every event-prop spelling this library still accepts but has deprecated,
+ * mapped to the lowercase spelling a consumer should use instead
+ * (DESIGN_PRINCIPLES.md §3: event props are lowercase throughout). Generated
+ * from the `@deprecated` tags in `src/lib/**\/properties.ts` — the tag names
+ * the replacement, so the library's own declarations are the source of truth
+ * and this table is a snapshot of them.
+ *
+ * `component` is the exported component name a consumer imports, which is
+ * usually but not always the `properties.ts` directory name: Stepper's
+ * `properties.ts` declares props for both `Stepper` and `Step`, and the
+ * `onClick`/`onclick` entry attributed to `Step` comes from that one shared
+ * file (see `scripts/codemod/generate-maps.ts`'s `OWNER_COMPONENTS`).
+ *
+ * Every entry is a same-package rewrite (a consumer moving off a spelling
+ * this library itself deprecated), so there is no import specifier to touch,
+ * only the attribute name.
+ *
+ * `scripts/codemod/generate-maps.ts` recomputes this table from source;
+ * `legacy-pairs.test.ts` asserts the committed array below matches its
+ * output, so drift fails CI instead of shipping quietly.
+ */
+
+export type LegacyPair = {
+  readonly component: string;
+  readonly legacy: string;
+  readonly corrected: string;
+};
+
+export const LEGACY_PAIRS: ReadonlyArray<LegacyPair> = [
+  { component: 'Accordion', legacy: 'onToggle', corrected: 'ontoggle' },
+  { component: 'AreaChart', legacy: 'onPointHover', corrected: 'onpointhover' },
+  { component: 'AreaChart', legacy: 'onPointClick', corrected: 'onpointclick' },
+  { component: 'AttachmentChipRow', legacy: 'onRemoveImage', corrected: 'onremoveimage' },
+  { component: 'AttachmentChipRow', legacy: 'onRemoveFile', corrected: 'onremovefile' },
+  { component: 'AttachmentChipRow', legacy: 'onRemoveVideo', corrected: 'onremovevideo' },
+  { component: 'AttachmentChipRow', legacy: 'onOpenImage', corrected: 'onopenimage' },
+  { component: 'AttachmentChipRow', legacy: 'onOpenVideo', corrected: 'onopenvideo' },
+  { component: 'AttachmentChipRow', legacy: 'onOpenFile', corrected: 'onopenfile' },
+  { component: 'Banner', legacy: 'onDismiss', corrected: 'ondismiss' },
+  { component: 'BarChart', legacy: 'onChartReady', corrected: 'onchartready' },
+  { component: 'BarChart', legacy: 'onBarClick', corrected: 'onbarclick' },
+  { component: 'BarChart', legacy: 'onBarHover', corrected: 'onbarhover' },
+  { component: 'Book', legacy: 'onPageChange', corrected: 'onpagechange' },
+  { component: 'Calendar', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'Calendar', legacy: 'onRangeSelect', corrected: 'onrangeselect' },
+  { component: 'Calendar', legacy: 'onMonthChange', corrected: 'onmonthchange' },
+  { component: 'Chat', legacy: 'onSend', corrected: 'onsend' },
+  { component: 'Chat', legacy: 'onSuggestion', corrected: 'onsuggestion' },
+  { component: 'Chat', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Chat', legacy: 'onStop', corrected: 'onstop' },
+  { component: 'Chat', legacy: 'onVoice', corrected: 'onvoice' },
+  { component: 'Chat', legacy: 'onAttach', corrected: 'onattach' },
+  { component: 'Chat', legacy: 'onRetry', corrected: 'onretry' },
+  { component: 'Chat', legacy: 'onFeedback', corrected: 'onfeedback' },
+  { component: 'ChatBubble', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'ChatBubble', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'ChatBubble', legacy: 'onToggle', corrected: 'ontoggle' },
+  { component: 'ChatComposer', legacy: 'onSubmit', corrected: 'onsubmit' },
+  { component: 'ChatComposer', legacy: 'onStop', corrected: 'onstop' },
+  { component: 'ChatComposer', legacy: 'onVoice', corrected: 'onvoice' },
+  { component: 'ChatComposer', legacy: 'onAttach', corrected: 'onattach' },
+  { component: 'ChatComposer', legacy: 'onAttachClick', corrected: 'onattachclick' },
+  { component: 'ChatComposer', legacy: 'onRemoveRichImage', corrected: 'onremoverichimage' },
+  { component: 'ChatComposer', legacy: 'onRemoveRichFile', corrected: 'onremoverichfile' },
+  { component: 'ChatComposer', legacy: 'onRemoveRichVideo', corrected: 'onremoverichvideo' },
+  { component: 'ChatComposer', legacy: 'onOpenRichImage', corrected: 'onopenrichimage' },
+  { component: 'ChatComposer', legacy: 'onOpenRichVideo', corrected: 'onopenrichvideo' },
+  { component: 'ChatComposer', legacy: 'onOpenRichFile', corrected: 'onopenrichfile' },
+  { component: 'ChatComposer', legacy: 'onAction', corrected: 'onaction' },
+  { component: 'ChatHeader', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'ChatMessage', legacy: 'onRetry', corrected: 'onretry' },
+  { component: 'ChatMessage', legacy: 'onFeedback', corrected: 'onfeedback' },
+  { component: 'ChatMessage', legacy: 'onCopy', corrected: 'oncopy' },
+  { component: 'ChatMessageList', legacy: 'onScrollState', corrected: 'onscrollstate' },
+  { component: 'ChatMessageList', legacy: 'onRetry', corrected: 'onretry' },
+  { component: 'ChatMessageList', legacy: 'onFeedback', corrected: 'onfeedback' },
+  { component: 'ChatSuggestions', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'CheckListItem', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'Checkbox', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'ChipInput', legacy: 'onAdd', corrected: 'onadd' },
+  { component: 'ChipInput', legacy: 'onDismiss', corrected: 'ondismiss' },
+  { component: 'ChipInput', legacy: 'onEdit', corrected: 'onedit' },
+  { component: 'ChipInput', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Choicebox', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'ColorPicker', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'ColorPicker', legacy: 'onInput', corrected: 'oninput' },
+  { component: 'Combobox', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'Combobox', legacy: 'onInput', corrected: 'oninput' },
+  { component: 'Combobox', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'Combobox', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Combobox', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Combobox', legacy: 'onAdd', corrected: 'onadd' },
+  { component: 'Combobox', legacy: 'onRemove', corrected: 'onremove' },
+  { component: 'Combobox', legacy: 'onCreate', corrected: 'oncreate' },
+  { component: 'CommandMenu', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'CommandMenu', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'ContextMenu', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'ContextMenu', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'ContextMenu', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'DateRangePicker', legacy: 'onApply', corrected: 'onapply' },
+  { component: 'DateRangePicker', legacy: 'onApplySingle', corrected: 'onapplysingle' },
+  { component: 'DateRangePicker', legacy: 'onApplyCompare', corrected: 'onapplycompare' },
+  { component: 'DateRangePicker', legacy: 'onCancel', corrected: 'oncancel' },
+  { component: 'DateRangePicker', legacy: 'onOpenToggle', corrected: 'onopentoggle' },
+  { component: 'DateRangePicker', legacy: 'onClear', corrected: 'onclear' },
+  { component: 'Draggable', legacy: 'onMoveStart', corrected: 'onmovestart' },
+  { component: 'Draggable', legacy: 'onMove', corrected: 'onmove' },
+  { component: 'Draggable', legacy: 'onMoveEnd', corrected: 'onmoveend' },
+  { component: 'DualAxisBarChart', legacy: 'onBarClick', corrected: 'onbarclick' },
+  { component: 'FileDropzoneTrigger', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'FileInput', legacy: 'onFiles', corrected: 'onfiles' },
+  { component: 'FileInput', legacy: 'onError', corrected: 'onerror' },
+  { component: 'FunnelChart', legacy: 'onStageClick', corrected: 'onstageclick' },
+  { component: 'FunnelChart', legacy: 'onStageHover', corrected: 'onstagehover' },
+  { component: 'Gallery', legacy: 'onImageClick', corrected: 'onimageclick' },
+  { component: 'Gallery', legacy: 'onEditClick', corrected: 'oneditclick' },
+  { component: 'Gallery', legacy: 'onDeleteClick', corrected: 'ondeleteclick' },
+  { component: 'Gallery', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'Gallery', legacy: 'onDismiss', corrected: 'onclose' },
+  { component: 'Gallery', legacy: 'onIndexChange', corrected: 'onchange' },
+  { component: 'HITL', legacy: 'onConfirm', corrected: 'onconfirm' },
+  { component: 'HITL', legacy: 'onMicToggle', corrected: 'onmictoggle' },
+  { component: 'IframeViewer', legacy: 'onMessage', corrected: 'onmessage' },
+  { component: 'Img', legacy: 'onError', corrected: 'onerror' },
+  { component: 'Input', legacy: 'onLeftIconClick', corrected: 'onlefticonclick' },
+  { component: 'Input', legacy: 'onRightIconClick', corrected: 'onrighticonclick' },
+  { component: 'Input', legacy: 'onInput', corrected: 'oninput' },
+  { component: 'Input', legacy: 'onFocus', corrected: 'onfocus' },
+  { component: 'Input', legacy: 'onFocusout', corrected: 'onfocusout' },
+  { component: 'Input', legacy: 'onBlur', corrected: 'onblur' },
+  { component: 'Input', legacy: 'onPaste', corrected: 'onpaste' },
+  { component: 'Input', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'Input', legacy: 'onStateChange', corrected: 'onstatechange' },
+  { component: 'Input', legacy: 'onKeyDown', corrected: 'onkeydown' },
+  { component: 'LineChart', legacy: 'onPointClick', corrected: 'onpointclick' },
+  { component: 'LineChart', legacy: 'onPointHover', corrected: 'onpointhover' },
+  { component: 'LineChart', legacy: 'onChartReady', corrected: 'onchartready' },
+  { component: 'ListItem', legacy: 'onleftImageClick', corrected: 'onleftimageclick' },
+  { component: 'ListItem', legacy: 'onLeftImageClick', corrected: 'onleftimageclick' },
+  { component: 'ListItem', legacy: 'onrightImageClick', corrected: 'onrightimageclick' },
+  { component: 'ListItem', legacy: 'onRightImageClick', corrected: 'onrightimageclick' },
+  { component: 'ListItem', legacy: 'oncenterTextClick', corrected: 'oncentertextclick' },
+  { component: 'ListItem', legacy: 'onCenterTextClick', corrected: 'oncentertextclick' },
+  { component: 'ListItem', legacy: 'onitemClick', corrected: 'onitemclick' },
+  { component: 'ListItem', legacy: 'onItemClick', corrected: 'onitemclick' },
+  { component: 'ListItem', legacy: 'ontopSectionClick', corrected: 'ontopsectionclick' },
+  { component: 'ListItem', legacy: 'onTopSectionClick', corrected: 'ontopsectionclick' },
+  { component: 'LottiePlayer', legacy: 'onComplete', corrected: 'oncomplete' },
+  { component: 'LottiePlayer', legacy: 'onError', corrected: 'onerror' },
+  { component: 'MediaPlayer', legacy: 'onVolumeChange', corrected: 'onvolumechange' },
+  { component: 'MediaUpload', legacy: 'onFilesChange', corrected: 'onchange' },
+  { component: 'MediaUpload', legacy: 'onRemove', corrected: 'onremove' },
+  { component: 'MediaUpload', legacy: 'onRejected', corrected: 'onerror' },
+  { component: 'Menu', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'Menu', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'Menu', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Modal', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Modal', legacy: 'onheaderRightImageClick', corrected: 'onheaderrightimageclick' },
+  { component: 'Modal', legacy: 'onHeaderRightImageClick', corrected: 'onheaderrightimageclick' },
+  { component: 'Modal', legacy: 'onheaderLeftImageClick', corrected: 'onheaderleftimageclick' },
+  { component: 'Modal', legacy: 'onHeaderLeftImageClick', corrected: 'onheaderleftimageclick' },
+  { component: 'Modal', legacy: 'onprimaryButtonClick', corrected: 'onprimarybuttonclick' },
+  { component: 'Modal', legacy: 'onPrimaryButtonClick', corrected: 'onprimarybuttonclick' },
+  { component: 'Modal', legacy: 'onsecondaryButtonClick', corrected: 'onsecondarybuttonclick' },
+  { component: 'Modal', legacy: 'onSecondaryButtonClick', corrected: 'onsecondarybuttonclick' },
+  { component: 'Modal', legacy: 'onoverlayClick', corrected: 'onoverlayclick' },
+  { component: 'Modal', legacy: 'onOverlayClick', corrected: 'onoverlayclick' },
+  { component: 'Pagination', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Pagination', legacy: 'onLoadMore', corrected: 'onloadmore' },
+  { component: 'PieChart', legacy: 'onChartReady', corrected: 'onchartready' },
+  { component: 'PieChart', legacy: 'onSliceClick', corrected: 'onsliceclick' },
+  { component: 'PieChart', legacy: 'onSliceHover', corrected: 'onslicehover' },
+  { component: 'Pill', legacy: 'onDismiss', corrected: 'ondismiss' },
+  { component: 'Radio', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Resizable', legacy: 'onResize', corrected: 'onresize' },
+  { component: 'Resizable', legacy: 'onResizeStart', corrected: 'onresizestart' },
+  { component: 'Resizable', legacy: 'onResizeEnd', corrected: 'onresizeend' },
+  { component: 'SankeyChart', legacy: 'onNodeClick', corrected: 'onnodeclick' },
+  { component: 'SankeyChart', legacy: 'onLinkClick', corrected: 'onlinkclick' },
+  { component: 'SankeyChart', legacy: 'onNodeHover', corrected: 'onnodehover' },
+  { component: 'SankeyChart', legacy: 'onLinkHover', corrected: 'onlinkhover' },
+  { component: 'Scroller', legacy: 'onScrollPosition', corrected: 'onscrollposition' },
+  { component: 'Select', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Select', legacy: 'onOpen', corrected: 'onopen' },
+  { component: 'Select', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Sheet', legacy: 'onClose', corrected: 'onclose' },
+  { component: 'Sheet', legacy: 'onAfterOpen', corrected: 'onafteropen' },
+  { component: 'Sheet', legacy: 'onAfterClose', corrected: 'onafterclose' },
+  { component: 'Slider', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Slider', legacy: 'onInput', corrected: 'oninput' },
+  { component: 'Snippet', legacy: 'onCopy', corrected: 'oncopy' },
+  { component: 'SplitButton', legacy: 'onSelect', corrected: 'onselect' },
+  { component: 'SplitInput', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'SplitInput', legacy: 'onInput', corrected: 'oninput' },
+  { component: 'SplitInput', legacy: 'onComplete', corrected: 'oncomplete' },
+  { component: 'StatCard', legacy: 'onCheckboxChange', corrected: 'oncheckboxchange' },
+  { component: 'Status', legacy: 'onbuttonClick', corrected: 'onbuttonclick' },
+  { component: 'Status', legacy: 'onButtonClick', corrected: 'onbuttonclick' },
+  { component: 'Stepper', legacy: 'onstepclick', corrected: 'onhandlestepclick' },
+  { component: 'Stepper', legacy: 'onStepClick', corrected: 'onhandlestepclick' },
+  { component: 'Stepper', legacy: 'onhandleStepClick', corrected: 'onhandlestepclick' },
+  { component: 'Stepper', legacy: 'onHandleStepClick', corrected: 'onhandlestepclick' },
+  { component: 'Step', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'Table', legacy: 'onRowClick', corrected: 'onrowclick' },
+  { component: 'Table', legacy: 'onSort', corrected: 'onsort' },
+  { component: 'Table', legacy: 'onCellChange', corrected: 'oncellchange' },
+  { component: 'Table', legacy: 'onSearchChange', corrected: 'onsearchchange' },
+  { component: 'Tabs', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'Tabs', legacy: 'onKeyChange', corrected: 'onkeychange' },
+  { component: 'TaskList', legacy: 'onRetry', corrected: 'onretry' },
+  { component: 'ThemeSwitcher', legacy: 'onChange', corrected: 'onchange' },
+  { component: 'ThinkingIndicator', legacy: 'onToggle', corrected: 'ontoggle' },
+  { component: 'ThinkingIndicator', legacy: 'onRowSelect', corrected: 'onrowselect' },
+  { component: 'ThinkingIndicator', legacy: 'onSettled', corrected: 'onsettled' },
+  { component: 'Toast', legacy: 'onToastHide', corrected: 'ontoasthide' },
+  { component: 'Toggle', legacy: 'onClick', corrected: 'onclick' },
+  { component: 'ToolCallLog', legacy: 'onChipClick', corrected: 'onchipclick' },
+  { component: 'Toolbar', legacy: 'onbackClick', corrected: 'onbackclick' },
+  { component: 'Toolbar', legacy: 'onBackClick', corrected: 'onbackclick' },
+  { component: 'TypewriterText', legacy: 'onProgress', corrected: 'onprogress' }
+];
+
+/** component name -> (legacy prop name -> corrected prop name). */
+export function legacyRenameTable(): ReadonlyMap<string, ReadonlyMap<string, string>> {
+  const table = new Map<string, Map<string, string>>();
+  for (const pair of LEGACY_PAIRS) {
+    const component = table.get(pair.component) ?? new Map<string, string>();
+    component.set(pair.legacy, pair.corrected);
+    table.set(pair.component, component);
+  }
+  return table;
+}
+
+/** Every legacy prop name across all components, for unresolved-tag warnings. */
+export function legacyProps(): ReadonlySet<string> {
+  return new Set(LEGACY_PAIRS.map((pair) => pair.legacy));
+}

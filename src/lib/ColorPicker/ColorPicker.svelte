@@ -5,6 +5,7 @@
   import SplitInput from '$lib/SplitInput/SplitInput.svelte';
   import swapVerticalSvg from '$lib/assets/swap-vertical.svg?raw';
   import type { ColorPickerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import {
     hexToHsv,
     hsvToHex,
@@ -22,16 +23,25 @@
     disabled = false,
     showValue = false,
     testId,
-    onchange: onchangeLegacy,
+    onchange: onchangeProp,
     onChange,
-    oninput: oninputLegacy,
+    oninput: oninputProp,
     onInput,
     classes
   }: ColorPickerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onchange = $derived(onChange ?? onchangeLegacy);
-  const oninput = $derived(onInput ?? oninputLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onchange = $derived(
+    resolveDeprecatedProp('ColorPicker', 'onChange', 'onchange', onChange, onchangeProp)
+  );
+  const oninput = $derived(
+    resolveDeprecatedProp('ColorPicker', 'onInput', 'oninput', onInput, oninputProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onchange, oninput);
+  });
 
   // ── Internal state ──────────────────────────────────────────────
 
@@ -217,7 +227,7 @@
           disable={disabled}
           maxLength={7}
           classes="color-picker-text-input"
-          onInput={handleTextInput}
+          oninput={handleTextInput}
         />
       </div>
     {/if}
@@ -268,7 +278,7 @@
               value={hexInputValue}
               maxLength={7}
               classes="cp-field-input"
-              onInput={handleHexFieldInput}
+              oninput={handleHexFieldInput}
             />
             <span class="cp-field-label">HEX</span>
           </div>

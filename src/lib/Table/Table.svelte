@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TableProperties, TableCheckboxSelectionConfig, TableRow } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { normalizeColumns } from './normalizeColumns';
   import BuiltinCell from './BuiltinCell.svelte';
   import type { JSONValue } from 'type-decoder';
@@ -36,16 +37,20 @@
     sortDefaultIcon,
     cell,
     empty,
-    onRowClick,
-    onSort,
-    onCellChange: _onCellChange,
+    onRowClick: onRowClickProp,
+    onrowclick,
+    onSort: onSortProp,
+    onsort,
+    onCellChange,
+    oncellchange,
     classes,
     paginatorSlot,
     getRowTestId,
     getCellTestId,
     checkboxSelection,
     searchConfig,
-    onSearchChange,
+    onSearchChange: onSearchChangeProp,
+    onsearchchange,
     pagination,
     toolbarSlot,
     rowNumberColumn = false,
@@ -55,6 +60,29 @@
     headerTooltipPosition,
     usePortal = false
   }: TableProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onRowClick = $derived(
+    resolveDeprecatedProp('Table', 'onRowClick', 'onrowclick', onRowClickProp, onrowclick)
+  );
+  const onSort = $derived(resolveDeprecatedProp('Table', 'onSort', 'onsort', onSortProp, onsort));
+  const _onCellChange = $derived(
+    resolveDeprecatedProp('Table', 'onCellChange', 'oncellchange', onCellChange, oncellchange)
+  );
+  const onSearchChange = $derived(
+    resolveDeprecatedProp(
+      'Table',
+      'onSearchChange',
+      'onsearchchange',
+      onSearchChangeProp,
+      onsearchchange
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onRowClick, onSort, _onCellChange, onSearchChange);
+  });
 
   // ─── Keyed column model → positional projection ─────────────────────────────
   // When `columns` is provided, the keyed model is normalized once and the
@@ -837,9 +865,9 @@
                             testId={searchConfig?.testId ?? ''}
                             ariaLabel={searchConfig?.placeholder ?? 'Search'}
                             autoComplete="off"
-                            onInput={(value: string) => updateSearch(value)}
-                            onBlur={collapseInlineSearchIfEmpty}
-                            onKeyDown={handleInlineSearchKeyDown}
+                            oninput={(value: string) => updateSearch(value)}
+                            onblur={collapseInlineSearchIfEmpty}
+                            onkeydown={handleInlineSearchKeyDown}
                             classes="table-inline-search-input"
                           />
                           <span class="table-inline-search-clear">
@@ -1077,7 +1105,7 @@
                 prevButtonTestId={pagination.prevButtonTestId}
                 nextButtonTestId={pagination.nextButtonTestId}
                 onchange={handlePageChange}
-                onLoadMore={pagination.onLoadMore}
+                onloadmore={pagination.onLoadMore}
               />
             {/if}
           </span>

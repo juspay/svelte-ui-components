@@ -13,7 +13,8 @@
       suppressRoleAndTabindex: { type: 'Boolean', attribute: 'suppress-role-and-tabindex' },
       suppressContainerTestId: { type: 'Boolean', attribute: 'suppress-container-test-id' },
       onStepClick: { type: 'Object' },
-      onHandleStepClick: { type: 'Object' }
+      onHandleStepClick: { type: 'Object' },
+      onhandlestepclick: { type: 'Object' }
     }
   }}
 />

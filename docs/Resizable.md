@@ -16,7 +16,7 @@ Resize only changes size, never position — so the handle edges you pick should
 
 <Resizable bind:width bind:height minWidth={320} maxWidth={680} handles={['right', 'bottom', 'bottom-right']}>
   <!-- any content; give it height: 100% to fill -->
-  <Chat {messages} {onsend} />
+  <Chat {messages} onsend={onsend} />
 </Resizable>
 ```
 

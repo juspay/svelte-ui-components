@@ -7,6 +7,7 @@
     BarFillGradient,
     BarFillPattern
   } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { ChartHighlightAPI } from '../_chart/highlight';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
@@ -82,7 +83,8 @@
     tooltipSnippet,
     empty,
     renderOverlay,
-    onChartReady,
+    onChartReady: onChartReadyProp,
+    onchartready,
     highlightedIndex = null,
     normaliseToFirstPoint = false,
     topN,
@@ -91,17 +93,36 @@
     interactiveLegend = false,
     hideLegendBelow = 360,
     tooltipPortal = false,
-    onbarclick: onbarclickLegacy,
+    onbarclick: onbarclickProp,
     onBarClick,
-    onbarhover: onbarhoverLegacy,
+    onbarhover: onbarhoverProp,
     onBarHover,
     testId,
     classes
   }: BarChartProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onbarclick = $derived(onBarClick ?? onbarclickLegacy);
-  const onbarhover = $derived(onBarHover ?? onbarhoverLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onbarclick = $derived(
+    resolveDeprecatedProp('BarChart', 'onBarClick', 'onbarclick', onBarClick, onbarclickProp)
+  );
+  const onbarhover = $derived(
+    resolveDeprecatedProp('BarChart', 'onBarHover', 'onbarhover', onBarHover, onbarhoverProp)
+  );
+
+  const onChartReady = $derived(
+    resolveDeprecatedProp(
+      'BarChart',
+      'onChartReady',
+      'onchartready',
+      onChartReadyProp,
+      onchartready
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onbarclick, onbarhover, onChartReady);
+  });
 
   // ── State ──────────────────────────────────────────────────────
 

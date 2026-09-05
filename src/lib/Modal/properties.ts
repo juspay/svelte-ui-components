@@ -59,16 +59,32 @@ export type OptionalModalProperties = {
 
 export type ModalEventProperties = {
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
+  onheaderrightimageclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onheaderrightimageclick` instead; both work until 4.0.0. */
   onheaderRightImageClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onheaderrightimageclick` instead; both work until 4.0.0. */
   onHeaderRightImageClick?: (event: MouseEvent) => void;
+  onheaderleftimageclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onheaderleftimageclick` instead; both work until 4.0.0. */
   onheaderLeftImageClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onheaderleftimageclick` instead; both work until 4.0.0. */
   onHeaderLeftImageClick?: (event: MouseEvent) => void;
+  onprimarybuttonclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onprimarybuttonclick` instead; both work until 4.0.0. */
   onprimaryButtonClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onprimarybuttonclick` instead; both work until 4.0.0. */
   onPrimaryButtonClick?: (event: MouseEvent) => void;
+  onsecondarybuttonclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onsecondarybuttonclick` instead; both work until 4.0.0. */
   onsecondaryButtonClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onsecondarybuttonclick` instead; both work until 4.0.0. */
   onSecondaryButtonClick?: (event: MouseEvent) => void;
+  onoverlayclick?: () => void;
+  /** @deprecated Use `onoverlayclick` instead; both work until 4.0.0. */
   onoverlayClick?: () => void;
+  /** @deprecated Use `onoverlayclick` instead; both work until 4.0.0. */
   onOverlayClick?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DraggableProperties, DragPosition } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     x = $bindable(0),
@@ -11,12 +12,31 @@
     step = 16,
     dragLabel = 'Drag to move',
     children,
-    onMoveStart,
-    onMove,
-    onMoveEnd,
+    onMoveStart: onMoveStartProp,
+    onmovestart,
+    onMove: onMoveProp,
+    onmove,
+    onMoveEnd: onMoveEndProp,
+    onmoveend,
     testId,
     classes
   }: DraggableProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onMoveStart = $derived(
+    resolveDeprecatedProp('Draggable', 'onMoveStart', 'onmovestart', onMoveStartProp, onmovestart)
+  );
+  const onMove = $derived(
+    resolveDeprecatedProp('Draggable', 'onMove', 'onmove', onMoveProp, onmove)
+  );
+  const onMoveEnd = $derived(
+    resolveDeprecatedProp('Draggable', 'onMoveEnd', 'onmoveend', onMoveEndProp, onmoveend)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onMoveStart, onMove, onMoveEnd);
+  });
 
   let active: {
     pointerId: number;

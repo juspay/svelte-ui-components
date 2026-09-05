@@ -18,5 +18,6 @@ export type OptionalCheckListItemProperties = {
 
 export type CheckListItemEventProperties = {
   onclick?: (checked: boolean) => void;
+  /** @deprecated Use `onclick` instead; both work until 4.0.0. */
   onClick?: (checked: boolean) => void;
 };

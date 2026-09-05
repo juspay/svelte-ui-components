@@ -9,6 +9,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { partyOf } from '../Chat/roles';
   import type { ChatMessageProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     role,
@@ -27,20 +28,31 @@
     retryLabel = 'Retry',
     feedbackUpLabel = 'Good response',
     feedbackDownLabel = 'Bad response',
-    onretry: onretryLegacy,
+    onretry: onretryProp,
     onRetry,
-    onfeedback: onfeedbackLegacy,
+    onfeedback: onfeedbackProp,
     onFeedback,
-    oncopy: oncopyLegacy,
+    oncopy: oncopyProp,
     onCopy,
     testId,
     classes
   }: ChatMessageProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const oncopy = $derived(onCopy ?? oncopyLegacy);
-  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
-  const onretry = $derived(onRetry ?? onretryLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const oncopy = $derived(
+    resolveDeprecatedProp('ChatMessage', 'onCopy', 'oncopy', onCopy, oncopyProp)
+  );
+  const onfeedback = $derived(
+    resolveDeprecatedProp('ChatMessage', 'onFeedback', 'onfeedback', onFeedback, onfeedbackProp)
+  );
+  const onretry = $derived(
+    resolveDeprecatedProp('ChatMessage', 'onRetry', 'onretry', onRetry, onretryProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(oncopy, onfeedback, onretry);
+  });
 
   let party = $derived(partyOf(role));
 

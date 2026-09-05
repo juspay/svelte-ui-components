@@ -21,11 +21,12 @@
   "homepage": "https://github.com/juspay/svelte-ui-components",
   "scripts": {
     "dev": "vite dev --host",
-    "build": "vite build && npm run build:wc && npm run package",
+    "build": "vite build && npm run build:wc && npm run build:codemod && npm run package",
     "build:wc": "vite build --config vite.config.wc.ts && echo 'export {};' > dist-wc/index.d.ts",
+    "build:codemod": "rm -rf dist-codemod && tsc -p scripts/codemod/tsconfig.build.json",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
-    "prepublishOnly": "npm run build:wc && npm run package",
+    "prepublishOnly": "npm run build:wc && npm run build:codemod && npm run package",
     "test": "npm run test:integration && npm run test:unit",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod && npm run check:migrate && npm run check:wc-parity",
     "check:codemod": "tsc -p scripts/codemod/tsconfig.json",
@@ -59,8 +60,7 @@
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*",
     "dist-wc",
-    "scripts/codemod",
-    "!scripts/codemod/*.test.ts",
+    "dist-codemod",
     "scripts/postinstall.mjs"
   ],
   "peerDependencies": {
@@ -92,6 +92,7 @@
     "@sveltejs/kit": "^2.63.1",
     "@sveltejs/package": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@testing-library/svelte": "^5.4.2",
     "@types/node": "^22.20.1",
     "@types/semver": "^7.8.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
@@ -102,6 +103,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "lottie-web": "^5.13.0",
     "marked": "^18.0.5",
     "prettier": "^3.8.3",
@@ -194,7 +196,7 @@
     }
   },
   "bin": {
-    "sui-codemod": "./scripts/codemod/cli.ts"
+    "sui-codemod": "./dist-codemod/bin.js"
   },
   "engines": {
     "node": ">=22.18"

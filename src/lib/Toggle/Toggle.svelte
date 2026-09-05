@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ToggleProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     checked = false,
@@ -10,12 +11,19 @@
     id,
     ariaLabel,
     ariaLabelledby,
-    onclick: onclickLegacy,
+    onclick: onclickProp,
     onClick
   }: ToggleProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclick = $derived(onClick ?? onclickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclick = $derived(
+    resolveDeprecatedProp('Toggle', 'onClick', 'onclick', onClick, onclickProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onclick);
+  });
 
   // Stable across hydration so the hidden input stays named and text remains clickable.
   const generatedId = $props.id();

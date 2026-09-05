@@ -53,11 +53,11 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 | Event             | Type                             | Description                                                                                        |
 | ----------------- | -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| onleftImageClick  | `(event: MouseEvent) => void`    | Fires when the left image is clicked.                                                              |
-| onrightImageClick | `(event: MouseEvent) => void`    | Fires when the right image is clicked.                                                             |
-| oncenterTextClick | `(event: MouseEvent) => void`    | Fires when the center text/label area is clicked.                                                  |
-| onitemClick       | `(event: MouseEvent) => void`    | Fires when the entire list item container is clicked (including all sub-areas).                    |
-| ontopSectionClick | `(event: MouseEvent) => void`    | Fires when the top section (left + center + right row, excluding the accordion bottom) is clicked. |
+| onleftimageclick  | `(event: MouseEvent) => void`    | Fires when the left image is clicked.                                                              |
+| onrightimageclick | `(event: MouseEvent) => void`    | Fires when the right image is clicked.                                                             |
+| oncentertextclick | `(event: MouseEvent) => void`    | Fires when the center text/label area is clicked.                                                  |
+| onitemclick       | `(event: MouseEvent) => void`    | Fires when the entire list item container is clicked (including all sub-areas).                    |
+| ontopsectionclick | `(event: MouseEvent) => void`    | Fires when the top section (left + center + right row, excluding the accordion bottom) is clicked. |
 | onkeydown         | `(event: KeyboardEvent) => void` | Fires when a key is pressed while any focusable section of the list item has focus.                |
 
 ## CSS Variables
@@ -177,5 +177,5 @@ Pass `transformSvg` to rewrite left and right SVG image markup before it is inli
 `ListItem` renders synthetic button roles and tab stops by default. When a surrounding consumer supplies the interactive semantics, set `suppressRoleAndTabindex` to remove those paired attributes without changing click handlers.
 
 ```svelte
-<ListItem suppressRoleAndTabindex onitemClick={handleItemClick} />
+<ListItem suppressRoleAndTabindex onitemclick={handleItemClick} />
 ```

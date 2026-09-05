@@ -1,14 +1,20 @@
 <script lang="ts">
   import type { ModalProperties } from './properties';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { createDebouncer, lockBodyScroll, unlockBodyScroll } from '../utils';
+  import { focusEntryPoint, focusTrapTabTarget } from './focus-trap';
   import Button from '$lib/Button/Button.svelte';
   import Img from '$lib/Img/Img.svelte';
 
   let overlayDiv: HTMLDivElement | null = $state(null);
+  let modalContent: HTMLDivElement | null = $state(null);
   let backPressed = $state(false);
+  // Captured in onMount right before focus moves in, restored in onDestroy.
+  // Not $state: it's read-once bookkeeping for the mount/destroy pair, not
+  // something the template reacts to.
+  let previouslyFocusedElement: HTMLElement | null = null;
 
   let {
     size = 'fit-content',
@@ -33,13 +39,27 @@
     onsecondarybuttonclick,
     onoverlayclick,
     onkeydown,
+    ondismiss,
     classes,
     overlayBackdropFilter,
     overlayFadeIn = false,
     usePortal = false,
     lockScroll = true,
-    autoDismissAfter = null
+    autoDismissAfter = null,
+    ariaLabel,
+    role,
+    overlayAriaLabel
   }: ModalProperties = $props();
+
+  // The overlay only takes role="button" and becomes keyboard-reachable when a
+  // click on it would actually do something. Without either handler, clicking
+  // or activating it is already a no-op (see handleOverlayClick's guard) --
+  // announcing it as a focusable "button" in that case is worse for assistive
+  // tech than leaving it unannounced, same reasoning already applied to the
+  // header images below.
+  const overlayDismissible = $derived(
+    typeof onoverlayclick === 'function' || typeof ondismiss === 'function'
+  );
 
   let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -67,9 +87,27 @@
     };
   };
 
+  // Resolves the real focused element regardless of whether modalContent sits
+  // in the light DOM or inside Modal.wc.svelte's open shadow root.
+  // document.activeElement stops at a shadow boundary and returns the shadow
+  // host itself, never the element actually focused inside it -- getRootNode()
+  // returns that shadow root directly when modalContent is shadow-hosted, and
+  // the owner Document otherwise.
+  const getActiveElement = (): Element | null => {
+    if (modalContent === null) {
+      return null;
+    }
+    const root = modalContent.getRootNode();
+    if (root instanceof Document || root instanceof ShadowRoot) {
+      return root.activeElement;
+    }
+    return null;
+  };
+
   const handlePopstate = (): void => {
     backPressed = true;
     onclose?.();
+    ondismiss?.();
   };
 
   const handleRightImageClick = (event: MouseEvent): void => {
@@ -92,6 +130,7 @@
     if (event.target === overlayDiv) {
       debounce(() => {
         onoverlayclick?.();
+        ondismiss?.();
       });
     }
   };
@@ -101,6 +140,49 @@
     const key = event?.key;
     if (key === 'Escape') {
       onoverlayclick?.();
+      ondismiss?.();
+      return;
+    }
+    if (key === 'Tab') {
+      const target = focusTrapTabTarget({
+        container: modalContent,
+        activeElement: getActiveElement(),
+        shiftKey: event.shiftKey
+      });
+      if (target !== null) {
+        event.preventDefault();
+        target.focus();
+      }
+    }
+  };
+
+  // The overlay's own Enter/Space activation, additional to the shared
+  // handleKeyDown (Escape/Tab/onkeydown-prop) that svelte:window already
+  // delivers here via bubbling -- this handler must not also call
+  // handleKeyDown itself, or every keydown on/under the overlay would run it
+  // twice (once from this direct call, once from the window listener seeing
+  // the same event bubble past it), double-firing onkeydown and, on Escape,
+  // the dismiss callbacks. Enter/Space activation is scoped to this handler,
+  // not folded into handleKeyDown itself, because handleKeyDown also runs
+  // from the window listener for a keypress anywhere in the modal (e.g. an
+  // input field) -- it must not treat every Enter/Space in the modal as an
+  // overlay dismissal. This handler is bound to the overlay div, so a keydown
+  // on any focusable descendant (the back button, a footer button, an input
+  // field) bubbles up and reaches it too -- the target check below is what
+  // actually stops that bubbled Enter/Space from being read as an activation
+  // of the overlay itself, mirroring the guard handleOverlayClick already has
+  // for the click case.
+  const handleOverlayKeyDown = (event: KeyboardEvent): void => {
+    if (
+      (event.key === 'Enter' || event.key === ' ') &&
+      overlayDismissible &&
+      event.target === overlayDiv
+    ) {
+      event.preventDefault();
+      debounce(() => {
+        onoverlayclick?.();
+        ondismiss?.();
+      });
     }
   };
 
@@ -131,6 +213,18 @@
       history.pushState(null, '', window.location.href);
       window.addEventListener('popstate', handlePopstate);
     }
+    // Focus starts inside the dialog once it exists, same as Sheet's trap --
+    // otherwise Tab from wherever the trigger was leaves focus behind it,
+    // outside the trap that was just installed.
+    void tick().then(() => {
+      // Capture whatever had focus (the trigger, typically) right before
+      // moving focus in, so onDestroy can put it back. Shadow-aware for the
+      // same reason the Tab trap is: inside Modal.wc.svelte's open shadow
+      // root, document.activeElement would return the shadow host instead.
+      const active = getActiveElement();
+      previouslyFocusedElement = active instanceof HTMLElement ? active : null;
+      focusEntryPoint(modalContent);
+    });
   });
 
   onDestroy(() => {
@@ -148,6 +242,13 @@
         window.removeEventListener('popstate', handlePopstate);
       }
     }
+    // Restore focus to wherever it was before the modal took it. Guarded on
+    // isConnected: the trigger can have been unmounted while the modal was
+    // open (e.g. the page navigated), and .focus() on a detached element is
+    // a silent no-op at best.
+    if (previouslyFocusedElement !== null && previouslyFocusedElement.isConnected) {
+      previouslyFocusedElement.focus();
+    }
   });
 </script>
 
@@ -155,6 +256,7 @@
 
 {#if typeof content === 'function'}
   <OverlayAnimation fadeIn={overlayFadeIn}>
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
     <div
       bind:this={overlayDiv}
       use:portalAction={{ usePortal }}
@@ -163,14 +265,22 @@
         ? `--modal-overlay-backdrop-filter: ${overlayBackdropFilter};`
         : null}
       onclick={handleOverlayClick}
-      onkeydown={handleKeyDown}
-      role="button"
-      tabindex="0"
+      onkeydown={handleOverlayKeyDown}
+      role={overlayDismissible ? 'button' : null}
+      tabindex={overlayDismissible ? 0 : null}
+      aria-label={overlayAriaLabel ?? null}
       data-pw={testId}
       testID={testId}
     >
       <ModalAnimation enable={enableTransition} {align} {transitionType} {entryAnimation}>
-        <div class="modal-content {size}">
+        <div
+          bind:this={modalContent}
+          class="modal-content {size}"
+          role={role ?? null}
+          aria-modal={role != null ? 'true' : null}
+          aria-label={ariaLabel ?? null}
+          tabindex="-1"
+        >
           {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}
             <div class="header">
               {#if typeof header.leftImage === 'string' && header.leftImage.length > 0}
@@ -300,6 +410,11 @@
     border-radius: var(--modal-border-radius, var(--radius, 4px));
     overflow: var(--modal-content-overflow, auto);
     border-top: var(--modal-content-border-top);
+    /* tabindex="-1" makes this the focus-trap's fallback target when the modal
+       has no focusable content of its own (see focus-trap.ts); it is never in
+       the Tab order itself, so it needs no visible focus ring the way a real
+       focusable element would. Matches Sheet's sheet-panel. */
+    outline: none;
     /* Viewport containment for every size class: only .fit-content used to carry
        a max-height, so a size whose height var is overridden to fit-content (or
        anything taller than the screen) grew past the viewport and pushed its

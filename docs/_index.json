@@ -165,7 +165,7 @@
   },
   {
     "name": "Modal",
-    "description": "A dialog overlay component that renders on top of the page with configurable size, alignment, header, footer, and transition animations. entryAnimation can override the per-align default, e.g. a slide-up bottom-sheet-style dialog while centered. Locks body scroll and optionally handles hardware back-press navigation. Supports click-to-dismiss and Escape key."
+    "description": "A dialog overlay component that renders on top of the page with configurable size, alignment, header, footer, and transition animations. entryAnimation can override the per-align default, e.g. a slide-up bottom-sheet-style dialog while centered. Locks body scroll and optionally handles hardware back-press navigation. The content panel takes no role/aria-modal by default; setting role opts into role/aria-modal together (optionally an ariaLabel) and traps Tab focus; ondismiss unifies overlay-click, Escape and hardware-back-press dismissal."
   },
   {
     "name": "ModalAnimation",

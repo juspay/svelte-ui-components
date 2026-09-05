@@ -15,6 +15,7 @@
       debounceTime: { type: 'Number', attribute: 'debounce-time' },
       leftImageTestId: { type: 'String', attribute: 'left-image-test-id' },
       leftImageAriaLabel: { type: 'String', attribute: 'left-image-aria-label' },
+      overlayAriaLabel: { type: 'String', attribute: 'overlay-aria-label' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclose: { type: 'Object' },
@@ -30,7 +31,13 @@
       onheaderleftimageclick: { type: 'Object' },
       onprimarybuttonclick: { type: 'Object' },
       onsecondarybuttonclick: { type: 'Object' },
-      onoverlayclick: { type: 'Object' }
+      onoverlayclick: { type: 'Object' },
+      ondismiss: { type: 'Object' }
+      // ariaLabel and role are declared on the Svelte component (#529) but not
+      // here -- both are HOST_RESERVED_PROPS (see scripts/wc-parity), since
+      // declaring them would replace the custom element's own ARIAMixin `role`/
+      // `ariaLabel` accessors. A web-component consumer sets the native
+      // attribute (role="alertdialog") on <sui-modal> directly instead.
     }
   }}
 />

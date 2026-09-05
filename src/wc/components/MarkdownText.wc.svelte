@@ -7,7 +7,8 @@
       breaks: { type: 'Boolean' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      tableLabel: { type: 'String', attribute: 'table-label' }
+      tableLabel: { type: 'String', attribute: 'table-label' },
+      sanitize: { type: 'Object' }
     }
   }}
 />

@@ -36,13 +36,14 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 
 ## Props
 
-| Prop       | Type      | Required | Default | Description                                                                                                                                                                  |
-| ---------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| markdown   | `string`  | Yes      | `-`     | Markdown source. Raw HTML inside it is escaped and shown as text; unsafe link/image protocols are stripped while their text stays.                                           |
-| breaks     | `boolean` | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                        |
-| testId     | `string`  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                         |
-| classes    | `string`  | No       | `-`     | Class string on the root element.                                                                                                                                            |
-| tableLabel | `string`  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark. |
+| Prop       | Type                     | Required | Default | Description                                                                                                                                                                  |
+| ---------- | ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| markdown   | `string`                 | Yes      | `-`     | Markdown source. Raw HTML inside it is escaped and shown as text; unsafe link/image protocols are stripped while their text stays.                                           |
+| breaks     | `boolean`                | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                        |
+| testId     | `string`                 | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                         |
+| classes    | `string`                 | No       | `-`     | Class string on the root element.                                                                                                                                            |
+| tableLabel | `string`                 | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark. |
+| sanitize   | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, and whether task-list checkboxes render. See the Security model section below.  |
 
 ## Security model
 
@@ -50,6 +51,21 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 - **URL protocol allow-list.** `[x](javascript:…)` and `[x](data:…)` render as plain text without an anchor; `![x](javascript:…)` renders the alt text without an `<img>`. Entity-smuggled protocols (`jav&#x09;ascript:`) fail scheme parsing and are treated as relative paths, where attribute-escaping keeps them inert.
 - **External links are tab-safe.** `http:`/`https:` links open with `target="_blank" rel="noopener noreferrer"` (the same default the library's Button/Card apply); relative, `mailto:` and `tel:` links keep same-tab navigation. Autolinks and bare URLs go through the same protocol guard as explicit links.
 - **Pre-sanitized HTML has its own prop.** If you already hold trusted, sanitized HTML, use `ChatMessage`'s `html` prop — `markdown` is for untrusted source text.
+- **The allow-list can be narrowed, never widened.** Pass `sanitize={{ allowedProtocols: [...] }}` when your own link policy is stricter than the library default (for example, no live `mailto:`/`tel:` in a support chat). It is intersected with the library's own allow-list for each surface (links vs. images), so listing an unsafe scheme like `javascript:` is a no-op, not a hole. Omitting `sanitize` keeps today's defaults exactly as they are — this is additive, not a replacement for the built-in list:
+
+  ```svelte
+  <!-- Only http(s) links/images; mailto: and tel: are dropped, keeping their text. -->
+  <MarkdownText {markdown} sanitize={{ allowedProtocols: ['http:', 'https:'] }} />
+  ```
+
+- **The tag allow-list narrows from "everything", never from a preset list.** Unlike `allowedProtocols`, there is no built-in default to intersect with — every tag `marked`'s GFM output can produce (`a`, `img`, `strong`, `em`, `del`, `code`, `pre`, `blockquote`, `ul`, `ol`, `table`, `hr`, `h1`–`h6`) renders normally until `sanitize.allowedTags` is supplied. Once it is, a disallowed tag renders its parsed inner content as plain text instead of the element — the same "keep the text, drop the element" contract the protocol allow-list uses. An unrecognised name is ignored, not an error. This is independent of the raw-HTML escaping guarantee above, which has no opt-out:
+
+  ```svelte
+  <!-- Headings, lists and tables render as plain text; links/emphasis still render. -->
+  <MarkdownText {markdown} sanitize={{ allowedTags: ['a', 'strong', 'em'] }} />
+  ```
+
+- **Task-list checkboxes can render as plain text instead.** GFM task items (`- [ ] done`) already render a `disabled` checkbox by default — it never submits or toggles — so `sanitize={{ disableTaskLists: true }}` is a presentation choice, not a safety one, for surfaces that would rather show the list item's text with no checkbox glyph at all. Defaults to `false`, keeping today's checkbox rendering.
 
 ## Wide tables
 
@@ -120,11 +136,26 @@ export type MarkdownTextProperties = {
   testId?: string;
   classes?: string;
   tableLabel?: string;
+  sanitize?: MarkdownSanitizeOptions;
+};
+
+export type MarkdownSanitizeOptions = {
+  // Intersected with the library's own default allow-list per surface (links,
+  // images), so it can only narrow what renders, never widen it.
+  allowedProtocols?: string[];
+  // No preset default to intersect with -- every tag renders until this is
+  // supplied, then it narrows from "everything". A disallowed tag keeps its
+  // text and drops the element.
+  allowedTags?: string[];
+  // Render task-list items as plain text instead of a (already-disabled)
+  // checkbox. Defaults to false.
+  disableTaskLists?: boolean;
 };
 
 export type RenderMarkdownOptions = {
   breaks?: boolean;
   inline?: boolean;
   tableLabel?: string;
+  sanitize?: MarkdownSanitizeOptions;
 };
 ```

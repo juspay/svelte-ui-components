@@ -1,6 +1,6 @@
 import { Marked } from 'marked';
 import type { RendererObject, Tokens } from 'marked';
-import type { RenderMarkdownOptions } from './properties';
+import type { MarkdownSanitizeOptions, RenderMarkdownOptions } from './properties';
 
 /**
  * Chat content comes from models and users, not from the app's own templates,
@@ -68,27 +68,140 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const sanitizingRenderer: RendererObject = {
-  html(token: Tokens.HTML | Tokens.Tag): string {
-    return escapeHtml(token.text);
-  },
-  link(token: Tokens.Link): string | false {
-    if (hasSafeProtocol(token.href, SAFE_LINK_PROTOCOLS)) {
-      return false;
-    }
-    return escapeHtml(token.text);
-  },
-  image(token: Tokens.Image): string | false {
-    if (hasSafeProtocol(token.href, SAFE_IMAGE_PROTOCOLS)) {
-      return false;
-    }
-    return escapeHtml(token.text);
+/**
+ * `allowedProtocols` can only NARROW a surface's default allow-list, never
+ * widen it -- intersecting with the library default (rather than substituting
+ * it) is what makes listing an unsafe scheme like `javascript:` a no-op
+ * instead of a hole. Casing is normalised so `'HTTPS:'` narrows the same as
+ * `'https:'`, matching how `hasSafeProtocol` reads `URL.protocol` (always
+ * lower-case).
+ */
+function narrow(defaults: Set<string>, allowedProtocols?: string[]): Set<string> {
+  if (!allowedProtocols) {
+    return defaults;
   }
-};
+  const requested = new Set(allowedProtocols.map((protocol) => protocol.toLowerCase()));
+  return new Set([...defaults].filter((protocol) => requested.has(protocol)));
+}
+
+function resolveProtocolSets(sanitize?: MarkdownSanitizeOptions): {
+  links: Set<string>;
+  images: Set<string>;
+} {
+  return {
+    links: narrow(SAFE_LINK_PROTOCOLS, sanitize?.allowedProtocols),
+    images: narrow(SAFE_IMAGE_PROTOCOLS, sanitize?.allowedProtocols)
+  };
+}
+
+/**
+ * `null` means "no restriction" (today's default: every tag marked's GFM
+ * output can produce renders normally) -- unlike the protocol allow-lists,
+ * there is no built-in default set to fall back to once this exists, so its
+ * absence is what keeps old behaviour byte-for-byte.
+ */
+function resolveTagAllowList(allowedTags?: string[]): Set<string> | null {
+  return allowedTags ? new Set(allowedTags) : null;
+}
+
+function tagAllowed(allowed: Set<string> | null, tag: string): boolean {
+  return allowed === null || allowed.has(tag);
+}
+
+function createSanitizingRenderer(
+  protocols: { links: Set<string>; images: Set<string> },
+  allowedTags: Set<string> | null,
+  disableTaskLists: boolean
+): RendererObject {
+  return {
+    html(token: Tokens.HTML | Tokens.Tag): string {
+      return escapeHtml(token.text);
+    },
+    link(token: Tokens.Link): string | false {
+      if (hasSafeProtocol(token.href, protocols.links) && tagAllowed(allowedTags, 'a')) {
+        return false;
+      }
+      return escapeHtml(token.text);
+    },
+    image(token: Tokens.Image): string | false {
+      if (hasSafeProtocol(token.href, protocols.images) && tagAllowed(allowedTags, 'img')) {
+        return false;
+      }
+      return escapeHtml(token.text);
+    },
+    strong(token: Tokens.Strong): string | false {
+      if (tagAllowed(allowedTags, 'strong')) {
+        return false;
+      }
+      return this.parser.parseInline(token.tokens);
+    },
+    em(token: Tokens.Em): string | false {
+      if (tagAllowed(allowedTags, 'em')) {
+        return false;
+      }
+      return this.parser.parseInline(token.tokens);
+    },
+    del(token: Tokens.Del): string | false {
+      if (tagAllowed(allowedTags, 'del')) {
+        return false;
+      }
+      return this.parser.parseInline(token.tokens);
+    },
+    codespan(token: Tokens.Codespan): string | false {
+      if (tagAllowed(allowedTags, 'code')) {
+        return false;
+      }
+      return escapeHtml(token.text);
+    },
+    code(token: Tokens.Code): string | false {
+      if (tagAllowed(allowedTags, 'pre')) {
+        return false;
+      }
+      return `${escapeHtml(token.text)}\n`;
+    },
+    blockquote(token: Tokens.Blockquote): string | false {
+      if (tagAllowed(allowedTags, 'blockquote')) {
+        return false;
+      }
+      return this.parser.parse(token.tokens);
+    },
+    heading(token: Tokens.Heading): string | false {
+      if (tagAllowed(allowedTags, `h${token.depth}`)) {
+        return false;
+      }
+      return `${this.parser.parseInline(token.tokens)}\n`;
+    },
+    list(token: Tokens.List): string | false {
+      if (tagAllowed(allowedTags, token.ordered ? 'ol' : 'ul')) {
+        return false;
+      }
+      return token.items.map((item) => this.parser.parse(item.tokens)).join('');
+    },
+    table(token: Tokens.Table): string | false {
+      if (tagAllowed(allowedTags, 'table')) {
+        return false;
+      }
+      const rowText = (cells: Tokens.TableCell[]): string =>
+        cells.map((cell) => this.parser.parseInline(cell.tokens)).join(' | ');
+      const lines = [rowText(token.header), ...token.rows.map(rowText)];
+      return `<p>${lines.join('<br>')}</p>`;
+    },
+    hr(): string | false {
+      return tagAllowed(allowedTags, 'hr') ? false : '';
+    },
+    checkbox(): string | false {
+      return disableTaskLists ? '' : false;
+    }
+  };
+}
 
 /* Safe to share across SSR requests: each instance's configuration (renderer,
    gfm, breaks) is fixed at construction and parse() takes no per-request state,
-   so the cache only ever holds config-immutable parsers keyed by option shape. */
+   so the cache only ever holds config-immutable parsers keyed by option shape.
+   The key folds in the resolved protocol sets, tag allow-list and task-list
+   toggle (sorted for a stable string) so differently-configured `sanitize`
+   options get their own cached instance and never share a renderer with a
+   different allow-list. */
 const instances = new Map<string, Marked>();
 
 /* External links open in a new tab with `rel="noopener noreferrer"` — the same
@@ -131,10 +244,23 @@ function wrapTables(html: string, label?: string): string {
 
 function instanceFor(options: RenderMarkdownOptions): Marked {
   const breaks = options.breaks === true;
-  const key = breaks ? 'breaks' : 'default';
+  const protocols = resolveProtocolSets(options.sanitize);
+  const allowedTags = resolveTagAllowList(options.sanitize?.allowedTags);
+  const disableTaskLists = options.sanitize?.disableTaskLists === true;
+  const key = [
+    breaks ? 'breaks' : 'default',
+    [...protocols.links].sort().join(','),
+    [...protocols.images].sort().join(','),
+    allowedTags ? [...allowedTags].sort().join(',') : '*',
+    disableTaskLists ? 'no-tasks' : 'tasks'
+  ].join('|');
   let instance = instances.get(key);
   if (!instance) {
-    instance = new Marked({ gfm: true, breaks, renderer: sanitizingRenderer });
+    instance = new Marked({
+      gfm: true,
+      breaks,
+      renderer: createSanitizingRenderer(protocols, allowedTags, disableTaskLists)
+    });
     instances.set(key, instance);
   }
   return instance;

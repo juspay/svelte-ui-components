@@ -8,6 +8,7 @@
       sheetTitle: { type: 'String', reflect: true, attribute: 'title' },
       showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },
       showCloseButton: { type: 'Boolean', reflect: true, attribute: 'show-close-button' },
+      headingLevel: { type: 'Number', reflect: true, attribute: 'heading-level' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onclose: { type: 'Object' },

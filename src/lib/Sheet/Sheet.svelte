@@ -12,6 +12,7 @@
     showOverlay = true,
     dismissOnOutsideClick = showOverlay,
     showCloseButton = true,
+    headingLevel,
     testId,
     content,
     footer,
@@ -34,6 +35,10 @@
         return { x: 0, y: -400, duration: 300 };
       case 'bottom':
         return { x: 0, y: 400, duration: 300 };
+      // No edge to fly in from — a centered dialog only fades, so x/y stay
+      // at 0 and `fly` degrades to exactly the overlay's own fade transition.
+      case 'center':
+        return { x: 0, y: 0, duration: 300 };
     }
   });
 
@@ -101,6 +106,20 @@
       onafterclose();
     }
   }
+
+  // headingLevel's `1 | 2 | 3 | 4 | 5 | 6` union only constrains Svelte-import
+  // consumers. Through the web component, attributes are untyped strings
+  // coerced to Number — heading-level="7"/"0"/"-1"/"foo" would otherwise reach
+  // `h${headingLevel}` unchecked and render an invalid tag (<h7>, <h0>, <h-1>,
+  // <hNaN>). Validate at runtime and fall back to the existing <span>.
+  const headingTag = $derived(
+    typeof headingLevel === 'number' &&
+      Number.isInteger(headingLevel) &&
+      headingLevel >= 1 &&
+      headingLevel <= 6
+      ? `h${headingLevel}`
+      : null
+  );
 </script>
 
 {#if open}
@@ -135,7 +154,11 @@
       {#if typeof title === 'string' || showCloseButton}
         <div class="sheet-header">
           {#if typeof title === 'string'}
-            <span class="sheet-title">{title}</span>
+            {#if headingTag !== null}
+              <svelte:element this={headingTag} class="sheet-title">{title}</svelte:element>
+            {:else}
+              <span class="sheet-title">{title}</span>
+            {/if}
           {/if}
           {#if showCloseButton}
             <div class="sheet-close-button">
@@ -239,6 +262,20 @@
   .sheet-panel.bottom {
     bottom: var(--sheet-bottom, 0);
     border-top: var(--sheet-border, none);
+  }
+
+  /* `side="center"` is a fixed-size floating dialog, not an edge-anchored
+     panel: no top/bottom/left/right offset, sized by its own tokens rather
+     than --sheet-width/--sheet-height (so an existing left/right/top/bottom
+     theme is untouched by adding this variant), and centered with a
+     transform instead of stretching to an edge. */
+  .sheet-panel.center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--sheet-center-width, 480px);
+    max-width: var(--sheet-center-max-width, calc(100vw - 32px));
+    max-height: var(--sheet-center-max-height, 90vh);
   }
 
   .sheet-header {

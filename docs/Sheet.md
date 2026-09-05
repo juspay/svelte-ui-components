@@ -1,6 +1,6 @@
 # Sheet
 
-A panel component that slides in from any edge of the screen (left, right, top, or bottom). Designed for navigation menus, settings panels, detail views, or notification trays. Left/right sheets span the full viewport height; top/bottom sheets span the full viewport width. Includes a structured layout with a header (title and close button), scrollable content area, and an optional footer. The `open` prop is bindable for two-way state control. Body scroll is locked while the sheet is open, and focus is trapped within the panel for accessibility.
+A panel component that slides in from any edge of the screen (left, right, top, or bottom), or floats as a fixed-size dialog centered in the viewport (`side="center"`). Designed for navigation menus, settings panels, detail views, notification trays, or confirmation dialogs. Left/right sheets span the full viewport height; top/bottom sheets span the full viewport width; a centered sheet fades in at a fixed size and does not touch any edge. Includes a structured layout with a header (title and close button), scrollable content area, and an optional footer. The `open` prop is bindable for two-way state control. Body scroll is locked while the sheet is open, and focus is trapped within the panel for accessibility. The header title renders as a plain `<span>` by default, or a real `<h1>`-`<h6>` heading via `headingLevel`.
 
 ## Usage
 
@@ -23,19 +23,34 @@ A panel component that slides in from any edge of the screen (left, right, top, 
 </Sheet>
 ```
 
+A centered confirmation dialog, with the title rendered as a real `<h2>`:
+
+```svelte
+<Sheet bind:open={confirmOpen} side="center" title="Delete project?" headingLevel={2}>
+  {#snippet content()}
+    <p>This can't be undone.</p>
+  {/snippet}
+  {#snippet footer()}
+    <button onclick={() => (confirmOpen = false)}>Cancel</button>
+    <button onclick={deleteProject}>Delete</button>
+  {/snippet}
+</Sheet>
+```
+
 ## Props
 
-| Prop                  | Type        | Required | Default               | Description                                                                                                                                                                                                                                                                   |
-| --------------------- | ----------- | -------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| content               | `Snippet`   | Yes      | -                     | Snippet rendered inside the scrollable content area of the sheet panel. This is the main body of the sheet.                                                                                                                                                                   |
-| open                  | `boolean`   | No       | `false`               | Bindable. Controls whether the sheet is visible. When true, the sheet panel slides in from the configured side and the overlay is shown. Supports two-way binding via `bind:open`.                                                                                            |
-| side                  | `SheetSide` | No       | `'right'`             | The edge of the screen from which the sheet slides in. `'left'` and `'right'` panels span the full viewport height with configurable width. `'top'` and `'bottom'` panels span the full viewport width with configurable height.                                              |
-| title                 | `string`    | No       | `-`                   | Text displayed in the sheet header. When provided, a header bar is rendered at the top of the panel with this title.                                                                                                                                                          |
-| showOverlay           | `boolean`   | No       | `true`                | When true, shows a dark semi-transparent overlay behind the sheet panel. When false, the overlay is transparent with pointer-events disabled on the backdrop.                                                                                                                 |
-| dismissOnOutsideClick | `boolean`   | No       | mirrors `showOverlay` | Whether clicking outside the panel dismisses the sheet, independent of `showOverlay`'s visual tint. Defaults to mirroring `showOverlay`. Set `true` alongside `showOverlay={false}` for a dismissible sheet with no dimming backdrop — e.g. an anchored dropdown-style panel. |
-| showCloseButton       | `boolean`   | No       | `true`                | When true, renders a close button (X) in the sheet header. Clicking it closes the sheet and fires the onclose event.                                                                                                                                                          |
-| testId                | `string`    | No       | `-`                   | Value for data-pw on the overlay container element. The close button gets `{testId}-close` as its data-pw value. Used for Playwright test selectors.                                                                                                                          |
-| classes               | `string`    | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                        |
+| Prop                  | Type               | Required | Default               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | ------------------ | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| content               | `Snippet`          | Yes      | -                     | Snippet rendered inside the scrollable content area of the sheet panel. This is the main body of the sheet.                                                                                                                                                                                                                                                                                                                                             |
+| open                  | `boolean`          | No       | `false`               | Bindable. Controls whether the sheet is visible. When true, the sheet panel slides in from the configured side and the overlay is shown. Supports two-way binding via `bind:open`.                                                                                                                                                                                                                                                                      |
+| side                  | `SheetSide`        | No       | `'right'`             | The edge of the screen from which the sheet slides in, or `'center'`. `'left'` and `'right'` panels span the full viewport height with configurable width. `'top'` and `'bottom'` panels span the full viewport width with configurable height. `'center'` renders a fixed-size dialog centered in the viewport that fades in rather than sliding from an edge, sized by `--sheet-center-width`/`--sheet-center-max-width`/`--sheet-center-max-height`. |
+| title                 | `string`           | No       | `-`                   | Text displayed in the sheet header. When provided, a header bar is rendered at the top of the panel with this title.                                                                                                                                                                                                                                                                                                                                    |
+| showOverlay           | `boolean`          | No       | `true`                | When true, shows a dark semi-transparent overlay behind the sheet panel. When false, the overlay is transparent with pointer-events disabled on the backdrop.                                                                                                                                                                                                                                                                                           |
+| dismissOnOutsideClick | `boolean`          | No       | mirrors `showOverlay` | Whether clicking outside the panel dismisses the sheet, independent of `showOverlay`'s visual tint. Defaults to mirroring `showOverlay`. Set `true` alongside `showOverlay={false}` for a dismissible sheet with no dimming backdrop — e.g. an anchored dropdown-style panel.                                                                                                                                                                           |
+| showCloseButton       | `boolean`          | No       | `true`                | When true, renders a close button (X) in the sheet header. Clicking it closes the sheet and fires the onclose event.                                                                                                                                                                                                                                                                                                                                    |
+| headingLevel          | `1\|2\|3\|4\|5\|6` | No       | `-`                   | Renders `title` through a real `<h1>`-`<h6>` element instead of the default `<span>`. Omit to keep the existing `<span>` markup. Pick the level that is correct for the surrounding document outline.                                                                                                                                                                                                                                                   |
+| testId                | `string`           | No       | `-`                   | Value for data-pw on the overlay container element. The close button gets `{testId}-close` as its data-pw value. Used for Playwright test selectors.                                                                                                                                                                                                                                                                                                    |
+| classes               | `string`           | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                                                                                                                                  |
 
 ## Snippets
 
@@ -66,6 +81,9 @@ Override these custom properties to theme the component.
 | `--sheet-max-width`                     | `100vw`                          | max-width        | Maximum width of the sheet panel (left/right sides), prevents it from exceeding viewport width on small screens.                                                                     |
 | `--sheet-height`                        | `300px`                          | height           | Height of the sheet panel (applies to top/bottom sides only).                                                                                                                        |
 | `--sheet-max-height`                    | `100vh`                          | max-height       | Maximum height of the sheet panel (top/bottom sides), prevents it from exceeding viewport height.                                                                                    |
+| `--sheet-center-width`                  | `480px`                          | width            | Width of the sheet panel when `side="center"`. Independent of `--sheet-width` so an existing left/right theme is unaffected by adding a centered sheet.                              |
+| `--sheet-center-max-width`              | `calc(100vw - 32px)`             | max-width        | Maximum width of a `side="center"` panel, keeping a small viewport gutter on narrow screens.                                                                                         |
+| `--sheet-center-max-height`             | `90vh`                           | max-height       | Maximum height of a `side="center"` panel before its content area scrolls.                                                                                                           |
 | `--sheet-background`                    | `#ffffff`                        | background-color | Background color of the sheet panel.                                                                                                                                                 |
 | `--sheet-box-shadow`                    | `-2px 0 8px rgba(0, 0, 0, 0.15)` | box-shadow       | Shadow cast by the sheet panel.                                                                                                                                                      |
 | `--sheet-z-index`                       | `16`                             | z-index          | Z-index stacking order of the sheet panel itself.                                                                                                                                    |
@@ -110,7 +128,7 @@ Custom types used by this component's props and events:
 ### SheetSide
 
 ```typescript
-type SheetSide = 'left' | 'right' | 'top' | 'bottom';
+type SheetSide = 'left' | 'right' | 'top' | 'bottom' | 'center';
 ```
 
 ## Internal Dependencies
@@ -129,6 +147,14 @@ Tag: `<sui-sheet>`
   <div slot="footer">
     <button>Save</button>
   </div>
+</sui-sheet>
+```
+
+A centered dialog with a real heading (`heading-level`, reflecting `headingLevel`):
+
+```html
+<sui-sheet open side="center" title="Delete project?" heading-level="2">
+  <p>This can't be undone.</p>
 </sui-sheet>
 ```
 

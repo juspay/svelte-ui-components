@@ -225,7 +225,7 @@
   },
   {
     "name": "Sheet",
-    "description": "A panel that slides in from any edge of the screen (left, right, top, or bottom). Includes a structured layout with header, scrollable content, and optional footer. Body scroll locks while open, focus is trapped, and Escape key dismisses. The open prop is bindable."
+    "description": "A panel that slides in from any edge of the screen (left, right, top, or bottom), or floats as a fixed-size centered dialog (side=\"center\"). Includes a structured layout with header, scrollable content, and optional footer. The title renders as a plain <span> by default, or a real <h1>-<h6> via headingLevel. Body scroll locks while open, focus is trapped, and Escape key dismisses. The open prop is bindable."
   },
   {
     "name": "Shimmer",

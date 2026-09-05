@@ -6,6 +6,7 @@
     text,
     backIcon,
     backLabel = 'Back',
+    backHref,
     leftContent,
     centerContent,
     rightContent,
@@ -23,6 +24,22 @@
   // The icon is decorative, so the label is the button's only accessible name — an empty or
   // whitespace-only value must not strip it.
   const backAccessibleName = $derived(backLabel.trim().length > 0 ? backLabel : 'Back');
+  // A real link only when a non-empty href is actually given — same emptiness check the
+  // rest of the component already applies to backIcon, so `backHref=""` behaves like "unset"
+  // rather than rendering a same-page anchor.
+  const hasBackHref = $derived(typeof backHref === 'string' && backHref.length > 0);
+
+  // A native <a> does not fire `click` on Space — only Enter — so the keyboard activation the
+  // old <button> gave for free would silently regress when backHref swaps the tag. Enter already
+  // reaches `onbackclick` through the anchor's native click, so only Space needs help here; the
+  // consumer's own `onkeydown` still runs unconditionally, same as it always has.
+  const handleBackKeydown = (event: KeyboardEvent): void => {
+    onkeydown?.(event);
+    if (hasBackHref && event.key === ' ') {
+      event.preventDefault();
+      onbackclick?.();
+    }
+  };
 </script>
 
 <div class="toolbar {classes ?? ''}" data-pw={testId} testID={testId}>
@@ -34,12 +51,15 @@
     {#if typeof leftContent === 'function'}
       {@render leftContent()}
     {:else if showBackControl}
-      <button
-        type="button"
+      <svelte:element
+        this={hasBackHref ? 'a' : 'button'}
+        type={hasBackHref ? null : 'button'}
+        href={hasBackHref ? backHref : null}
+        role={null}
         class="back"
         aria-label={backAccessibleName}
         onclick={onbackclick}
-        {onkeydown}
+        onkeydown={handleBackKeydown}
       >
         {#if typeof backIcon === 'string'}
           <img src={backIcon} alt="" />
@@ -56,7 +76,7 @@
             />
           </svg>
         {/if}
-      </button>
+      </svelte:element>
     {/if}
     {#if typeof centerContent === 'function'}
       <div class="center-content">

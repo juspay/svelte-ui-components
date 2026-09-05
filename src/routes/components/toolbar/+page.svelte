@@ -1,5 +1,9 @@
 <script lang="ts">
   import Toolbar from '$lib/Toolbar/Toolbar.svelte';
+
+  // Proves onbackclick still fires as the anchor's click handler alongside backHref —
+  // navigation and a side effect coexist, exactly like Button's href + onclick.
+  let backHrefClicks = $state(0);
 </script>
 
 <div class="page-header">
@@ -83,6 +87,51 @@
            --toolbar-box-shadow: none;"
   >
     <Toolbar text="Empty label" testId="toolbar-empty-back-label" showBackButton backLabel="  " />
+  </div>
+
+  <!-- backHref renders the built-in back control as a real <a href>. A same-page hash target
+       keeps the demo on this route while proving onbackclick still fires as the anchor's click
+       handler alongside the href, exactly like the library's own Button href + onclick. -->
+  <div
+    id="toolbar-back-href-demo"
+    style="position: relative; width: 100%;
+           --toolbar-position: relative;
+           --toolbar-width: 100%;
+           --toolbar-background: transparent;
+           --toolbar-box-shadow: none;"
+  >
+    <Toolbar
+      text="Back as a link"
+      testId="toolbar-back-href"
+      showBackButton
+      backHref="#toolbar-back-href-demo"
+      onbackclick={() => {
+        backHrefClicks += 1;
+      }}
+    />
+    <span class="state-display" data-pw="toolbar-back-href-clicks">{backHrefClicks}</span>
+  </div>
+
+  <!-- leftContent still takes full precedence over backHref, same as it already does over
+       the default button — the built-in back control (button or anchor) never renders once
+       leftContent is supplied. -->
+  <div
+    style="position: relative; width: 100%;
+           --toolbar-position: relative;
+           --toolbar-width: 100%;
+           --toolbar-background: transparent;
+           --toolbar-box-shadow: none;"
+  >
+    <Toolbar
+      text="leftContent wins over backHref"
+      testId="toolbar-left-content-precedence"
+      showBackButton
+      backHref="#toolbar-back-href-demo"
+    >
+      {#snippet leftContent()}
+        <span data-pw="toolbar-left-content-marker">Custom left content</span>
+      {/snippet}
+    </Toolbar>
   </div>
 
   <!-- backIcon={null} keeps its historical meaning: render no icon at all. -->

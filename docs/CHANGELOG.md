@@ -6,6 +6,56 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.3.1)
 
+3.2.0 shipped with no `## [3.2.0]` heading -- its content sat under
+`## [Unreleased]` -- and no mention of #506 at all. The immediate cause was a
+release race: #505 and #506 merged fourteen seconds apart, both runs computed
+3.2.0, and the one that generated the changelog was building from 0f53508,
+which contains #505 and not #506.
+
+Regenerating fixes the heading. It does not fix the omission, and chasing that
+turned up something larger: docs/templates/changelog.hbs iterated
+`{{#each sections}}`, which is not a field auto-changelog provides. The commit
+loop nested inside it had the right field names and had simply never executed,
+so no released version in this changelog has ever listed a commit. Every
+section from 1.0.0 onward was empty. The `{{#if summary}}` above it worked,
+which is why the file never looked obviously broken -- the pending release's
+prose showed under Unreleased and was overwritten by the next one.
+
+Removing the dead wrapper is the fix; the inner loop is unchanged. Two further
+rendering faults in the same template are corrected: `- ` and the subject sat
+on separate source lines, which Markdown reads as an empty list item followed
+by a paragraph, and the H1 had the intro paragraph glued to it.
+
+`chore(release)` commits are filtered, which matters for more than one bullet:
+`releaseSummary` takes its prose from the newest commit in a release, and that
+is always the bodiless `chore(release)` commit, so every section rendered
+without a summary. Dropping them restores the writeups. The flag has to be
+passed as `--ignore-commit-pattern` on the command line; auto-changelog reads
+it from argv only and accepts the same key in .auto-changelog silently without
+ever applying it. Both camelCase and kebab-case were tried before the flag
+moved.
+
+An earlier version of this change ran `prettier --write` on the generated file,
+because its output stops being prettier-clean once sections carry prose.
+Measured before shipping it: prettier does not merely reformat this file, it
+corrupts it. Prose containing `DESIGN_PRINCIPLES` and `corrects _to_` on nearby
+lines is read as markdown emphasis spanning both, and rewritten to
+`DESIGN*PRINCIPLES` and `corrects \_to*`. It is not idempotent either, so a
+release would have mangled a little more each time -- and the mangling lands in
+commit prose nobody would think to re-read.
+
+docs/CHANGELOG.md goes in .prettierignore instead, which is where a generated
+file belongs. The release step now says explicitly that it is not formatted,
+so the next person to notice the file is unformatted does not re-add the step.
+
+Rebased onto 3.3.0; the conflict was the generated file itself and was resolved
+by regenerating rather than merging lines. 265+ sections now carry the commits
+and summaries they should always have had, including 3.2.1, 3.2.2 and 3.2.3.
+
+lint 0 errors.
+
+- fix(changelog): render every release's commits and summary, starting with 3.2.0 ([41b1330](https://github.com/juspay/svelte-ui-components/commit/41b1330be1ad771f5bbf47ee36ef0e906af1bc3a))
+
 ## [3.3.1](https://github.com/juspay/svelte-ui-components/compare/3.3.1..3.3.0) - 4 September 2026
 
 `table` carried `display: block` and `overflow-x: auto` but no intrinsic

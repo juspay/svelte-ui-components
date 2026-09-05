@@ -8,11 +8,16 @@
   import attachSvg from '$lib/assets/attach.svg?raw';
   import type { Action } from 'svelte/action';
   import type { ChatComposerProperties } from './properties';
+  import { resolveControlDisabled } from './controlDisabled';
+  import { shouldApplyClear } from './submitResult';
 
   let {
     value = $bindable(''),
     placeholder = '',
     disabled = false,
+    textDisabled = null,
+    voiceDisabled = null,
+    sendDisabled = null,
     submitOnEnter = true,
     maxLength = 0,
     streaming = false,
@@ -75,8 +80,15 @@
     richImages.length > 0 || richVideos.length > 0 || richFiles.length > 0
   );
 
+  // #526: each falls back to the shared `disabled` when its own flag is
+  // unset, so a caller who never passes the new props keeps the original
+  // single-`disabled`-gates-everything behaviour exactly.
+  let resolvedTextDisabled = $derived(resolveControlDisabled(textDisabled, disabled));
+  let resolvedVoiceDisabled = $derived(resolveControlDisabled(voiceDisabled, disabled));
+  let resolvedSendDisabled = $derived(resolveControlDisabled(sendDisabled, disabled));
+
   let canSend = $derived(
-    !disabled &&
+    !resolvedSendDisabled &&
       (sendable ?? (value.trim().length > 0 || attachments.length > 0 || hasRichAttachments))
   );
 
@@ -84,9 +96,28 @@
     if (!canSend) {
       return;
     }
-    onsubmit?.(value, attachments);
-    value = '';
-    attachments = [];
+    const submitted = { value, attachments };
+    const result = onsubmit?.(submitted.value, submitted.attachments);
+    if (result instanceof Promise) {
+      // Nothing here disables the composer while the promise settles — the
+      // user is free to keep typing, so the clear only lands if `value` and
+      // `attachments` still match what was actually sent (see shouldApplyClear).
+      // A rejection is treated the same as a resolved `false`: keep the draft.
+      void result.then(
+        (resolved) => {
+          if (shouldApplyClear(resolved, submitted, { value, attachments })) {
+            value = '';
+            attachments = [];
+          }
+        },
+        () => {}
+      );
+      return;
+    }
+    if (shouldApplyClear(result, submitted, { value, attachments })) {
+      value = '';
+      attachments = [];
+    }
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -208,7 +239,7 @@
       data-pw={inputTestId ?? null}
       bind:value
       {placeholder}
-      {disabled}
+      disabled={resolvedTextDisabled}
       rows="1"
       aria-label={inputAriaLabel ?? (placeholder.length > 0 ? placeholder : 'Message')}
       maxlength={maxLength > 0 ? maxLength : null}
@@ -220,7 +251,12 @@
 
     {#if showVoice}
       <div class="control voice" class:recording>
-        <Button onclick={() => onvoice?.()} {disabled} ariaLabel={voiceLabel} testId={voiceTestId}>
+        <Button
+          onclick={() => onvoice?.()}
+          disabled={resolvedVoiceDisabled}
+          ariaLabel={voiceLabel}
+          testId={voiceTestId}
+        >
           {#if typeof voiceIcon === 'function'}
             {@render voiceIcon()}
           {:else}
@@ -244,7 +280,12 @@
       </div>
     {:else if typeof onaction === 'function' && !canSend && !recording}
       <div class="control send action" data-pw={sendSlotTestId ?? null}>
-        <Button onclick={() => onaction()} {disabled} ariaLabel={actionLabel} testId={actionTestId}>
+        <Button
+          onclick={() => onaction()}
+          disabled={resolvedSendDisabled}
+          ariaLabel={actionLabel}
+          testId={actionTestId}
+        >
           {#if typeof actionIcon === 'function'}
             {@render actionIcon()}
           {:else}

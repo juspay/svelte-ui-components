@@ -27,6 +27,44 @@
 
   type Preview = { kind: 'image'; title: string } | { kind: 'video'; title: string } | null;
   let preview = $state<Preview>(null);
+
+  // Async onsubmit: a fake send that takes a moment to settle. `sendDisabled`
+  // is bound to `asyncPending` so a second submit can't fire while the first
+  // is still in flight — the pairing the docs recommend, since the composer
+  // never infers that on its own. Toggling "Simulate failure" resolves to
+  // `false`, which leaves the draft (and any attachments) exactly as they
+  // were instead of clearing them. "Simulate rejection" throws instead of
+  // resolving, exercising the other branch that keeps the draft — a rejected
+  // promise, treated the same as a resolved `false` (see `submitResult.ts`).
+  let asyncValue = $state('');
+  let asyncPending = $state(false);
+  let asyncFailNext = $state(false);
+  let asyncRejectNext = $state(false);
+  let asyncSent: string[] = $state([]);
+
+  async function fakeSend(): Promise<boolean> {
+    // Snapshot the toggles at call time — reading the reactive flags after
+    // the delay would let a mid-flight toggle change the outcome of an
+    // already dispatched send.
+    const shouldFail = asyncFailNext;
+    const shouldReject = asyncRejectNext;
+    asyncPending = true;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    asyncPending = false;
+    if (shouldReject) {
+      throw new Error('simulated send failure');
+    }
+    return !shouldFail;
+  }
+
+  // Independent per-control disable: `textDisabled` and `voiceDisabled` each
+  // gate one control on its own, with `disabled` left `false` throughout so
+  // the composer never dims — only the two toggled controls actually stop
+  // responding.
+  let controlsValue = $state('');
+  let controlsTextDisabled = $state(false);
+  let controlsVoiceDisabled = $state(false);
+  let voiceActivations = $state(0);
 </script>
 
 <div class="page-header">
@@ -35,7 +73,13 @@
 </div>
 
 <div class="chat-theme composer-frame">
-  <ChatComposer bind:value placeholder="Type a message…" onsubmit={(text) => sent.push(text)} />
+  <ChatComposer
+    bind:value
+    placeholder="Type a message…"
+    onsubmit={(text) => {
+      sent.push(text);
+    }}
+  />
 </div>
 
 {#each sent as message, i (i)}
@@ -78,6 +122,75 @@
   />
 </div>
 
+<h2>Async submit — keeps the draft when the send fails</h2>
+<label class="demo-toggle">
+  <input type="checkbox" data-pw="async-submit-fail-toggle" bind:checked={asyncFailNext} />
+  Simulate failure (onsubmit resolves to `false`)
+</label>
+<label class="demo-toggle">
+  <input type="checkbox" data-pw="async-submit-reject-toggle" bind:checked={asyncRejectNext} />
+  Simulate rejection (onsubmit's promise rejects)
+</label>
+<div class="chat-theme composer-frame">
+  <ChatComposer
+    bind:value={asyncValue}
+    placeholder="Type a message…"
+    sendDisabled={asyncPending}
+    testId="async-submit-demo"
+    inputTestId="async-submit-input"
+    sendTestId="async-submit-send"
+    onsubmit={async (text) => {
+      const ok = await fakeSend();
+      if (ok) {
+        asyncSent.push(text);
+      }
+      return ok;
+    }}
+  />
+</div>
+{#each asyncSent as message, i (i)}
+  <p class="demo-note" data-pw="async-submit-sent">{message}</p>
+{/each}
+
+<h2>Independent per-control disable — textDisabled / voiceDisabled / sendDisabled</h2>
+<label class="demo-toggle">
+  <input
+    type="checkbox"
+    data-pw="per-control-disable-text-toggle"
+    bind:checked={controlsTextDisabled}
+  />
+  Disable textarea only
+</label>
+<label class="demo-toggle">
+  <input
+    type="checkbox"
+    data-pw="per-control-disable-voice-toggle"
+    bind:checked={controlsVoiceDisabled}
+  />
+  Disable voice button only
+</label>
+<div class="chat-theme composer-frame">
+  <ChatComposer
+    bind:value={controlsValue}
+    placeholder="Type a message…"
+    textDisabled={controlsTextDisabled}
+    voiceDisabled={controlsVoiceDisabled}
+    testId="per-control-disable-demo"
+    inputTestId="per-control-disable-input"
+    voiceTestId="per-control-disable-voice"
+    sendTestId="per-control-disable-send"
+    onvoice={() => {
+      voiceActivations += 1;
+    }}
+    onsubmit={(text) => {
+      sent.push(text);
+    }}
+  />
+</div>
+<p class="demo-note" data-pw="per-control-disable-voice-count">
+  Voice activations: {voiceActivations}
+</p>
+
 {#if preview !== null}
   <div class="lightbox-backdrop" role="presentation" onclick={() => (preview = null)}>
     <figure class="lightbox" onclick={(event) => event.stopPropagation()} role="presentation">
@@ -101,6 +214,14 @@
 <style>
   .composer-frame {
     max-width: 480px;
+  }
+
+  .demo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--doc-text-primary, #18181b);
   }
 
   .lightbox-backdrop {

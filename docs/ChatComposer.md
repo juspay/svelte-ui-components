@@ -42,6 +42,49 @@ its lists are fed:
 />
 ```
 
+### Async submit — keep the draft on a rejected send
+
+`onsubmit` may return `boolean | Promise<boolean>` instead of only `void`. The composer clears
+`value` and `attachments` after every submit **unless** the return value — synchronous or
+resolved — is exactly `false`, in which case the draft is left exactly as it was so the caller
+can retry. A rejected promise is treated the same as a resolved `false`. This is fully
+backward compatible: a `void`-returning handler returns `undefined`, which is not `false`, so it
+keeps clearing on every submit exactly as before.
+
+```svelte
+<ChatComposer
+  bind:value
+  onsubmit={async (text, attachments) => {
+    const ok = await send(text, attachments);
+    return ok; // `false` restores `text`/`attachments` instead of clearing them
+  }}
+/>
+```
+
+While the promise is pending the composer does not disable itself — the user can keep typing.
+If they do, the eventual clear is skipped even on a truthy result, so it never wipes out text
+typed after the send was fired. Pair with `sendDisabled` (or `sendable`) if a second submit
+should be blocked until the first one settles; the composer does not infer that on its own,
+the same way `disabled` never has.
+
+### Independent per-control disable
+
+`disabled` still disables the textarea, the voice button and the send button together, as
+before. `textDisabled`, `voiceDisabled` and `sendDisabled` each override one control on its own
+— useful for e.g. freezing the send button mid-request while dictation stays live. Any of the
+three left unset falls back to `disabled`, so a caller that never passes them keeps today's
+single-`disabled` behaviour exactly:
+
+`disabled={true}` always dims the whole composer (`--chat-composer-disabled-opacity`)
+regardless of what the three per-control props are set to — the dimming reads the root
+`disabled` prop only, not the resolved per-control state. A caller who wants the visual dim to
+track only some controls should compute their own root class via `classes` rather than relying
+on `disabled` for that.
+
+```svelte
+<ChatComposer bind:value sendDisabled={sending} onsubmit={handleSend} onvoice={toggleDictation} />
+```
+
 ## Props
 
 | Prop                                                                                               | Type                    | Required | Default                | Description                                                                                                                                                                                                        |
@@ -49,6 +92,9 @@ its lists are fed:
 | value                                                                                              | `string`                | No       | `''`                   | Bindable. The draft text.                                                                                                                                                                                          |
 | placeholder                                                                                        | `string`                | No       | `''`                   | Input placeholder.                                                                                                                                                                                                 |
 | disabled                                                                                           | `boolean`               | No       | `false`                | Disable input and buttons.                                                                                                                                                                                         |
+| textDisabled                                                                                       | `boolean`               | No       | `-`                    | Disable only the textarea. Falls back to `disabled` when unset.                                                                                                                                                    |
+| voiceDisabled                                                                                      | `boolean`               | No       | `-`                    | Disable only the voice button. Falls back to `disabled` when unset.                                                                                                                                                |
+| sendDisabled                                                                                       | `boolean`               | No       | `-`                    | Disable only the send (and idle-action) button, independent of `sendable`. Falls back to `disabled` when unset.                                                                                                    |
 | submitOnEnter                                                                                      | `boolean`               | No       | `true`                 | Submit on Enter (Shift+Enter inserts a newline).                                                                                                                                                                   |
 | maxLength                                                                                          | `number`                | No       | `0`                    | Character cap; `0` disables the limit.                                                                                                                                                                             |
 | streaming                                                                                          | `boolean`               | No       | `false`                | When true, the send button becomes a stop button.                                                                                                                                                                  |
@@ -79,7 +125,7 @@ its lists are fed:
 
 | Event             | Type                                           | Description                                                                                                                        |
 | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| onsubmit          | `(value: string, attachments: File[]) => void` | Fires on submit with the value and pending attachments.                                                                            |
+| onsubmit          | `(value: string, attachments: File[]) => boolean \| void \| Promise<boolean \| void>` | Fires on submit with the value and pending attachments. Returning (or resolving to) `false` skips the automatic clear — see below. |
 | oninput           | `(value: string, event: Event) => void`        | Fires on every input change.                                                                                                       |
 | onkeydown         | `(event: KeyboardEvent) => void`               | Fires on key down in the input.                                                                                                    |
 | onstop            | `() => void`                                   | Enables the stop button. Fires when stop is pressed.                                                                               |

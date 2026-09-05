@@ -11,6 +11,22 @@ export type OptionalChatComposerProperties = {
   value?: string;
   placeholder?: string;
   disabled?: boolean;
+  /**
+   * Disables only the textarea. `null` (the default) falls back to `disabled`,
+   * so a caller that never sets this keeps today's single-`disabled` behaviour
+   * exactly.
+   */
+  textDisabled?: boolean | null;
+  /**
+   * Disables only the voice button. `null` (the default) falls back to
+   * `disabled` — see `textDisabled`.
+   */
+  voiceDisabled?: boolean | null;
+  /**
+   * Disables only the send (and idle-action) button, independent of `sendable`.
+   * `null` (the default) falls back to `disabled` — see `textDisabled`.
+   */
+  sendDisabled?: boolean | null;
   submitOnEnter?: boolean;
   maxLength?: number;
   streaming?: boolean;
@@ -79,7 +95,13 @@ export type OptionalChatComposerProperties = {
 };
 
 export type ChatComposerEventProperties = {
-  onsubmit?: (value: string, attachments: File[]) => void;
+  /**
+   * Fires on submit with the value and pending attachments. May return
+   * `boolean | Promise<boolean>`: an explicit `false` (sync or resolved) skips
+   * the automatic clear so a rejected send can restore its draft — anything
+   * else, including today's `void` return, clears exactly as before.
+   */
+  onsubmit?: (value: string, attachments: File[]) => boolean | void | Promise<boolean | void>;
   oninput?: (value: string, event: Event) => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onpaste?: (event: ClipboardEvent) => void;

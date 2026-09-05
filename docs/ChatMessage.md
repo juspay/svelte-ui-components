@@ -32,6 +32,7 @@ A single chat bubble. The primitive is the **party** — every message is from o
 | markdown                                                     | `string`                         | No       | `-`     | Markdown source rendered through the sanitized pipeline (raw HTML escaped, unsafe link/image protocols stripped — see `MarkdownText`). Non-empty `markdown` wins over `html`/`content`; a `body` snippet still wins. An empty string is treated as absent and falls through, exactly like `html`. Used as copy text when `content` is empty. The pipeline loads on demand — the `marked` peer is only needed when this prop is used; during SSR and while loading, `html`/`content` render as the fallback (use `MarkdownText`/`renderMarkdown` for server-rendered markdown). |
 | body                                                         | `Snippet \| null`                | No       | `-`     | Replaces the rendered body while keeping the bubble chrome (avatar, header, attachments, actions). Keep `content` as the text form for copy.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | streaming                                                    | `boolean`                        | No       | `false` | Shows a typing indicator when there is no content yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| clampLines                                                   | `number`                         | No       | `0`     | Collapse the rendered body to this many lines and make the bubble a disclosure control (click, Enter or Space). `0` or omitted leaves the message uncollapsed and adds no interactive role. The clamp applies to the rendered body, so `content` — and the copy action — always carry the whole message. A consumer stylesheet setting `--chat-message-clamp-lines` takes priority over this value. See Accessibility.                                                                                                                                                         |
 | status                                                       | `'sending' \| 'sent' \| 'error'` | No       | `-`     | `error` tints the bubble with the error color.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | avatar                                                       | `Snippet`                        | No       | `-`     | Avatar shown beside the bubble.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | header                                                       | `Snippet`                        | No       | `-`     | Header row above the bubble (author name, timestamp, etc.).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -39,6 +40,7 @@ A single chat bubble. The primitive is the **party** — every message is from o
 | allowCopy                                                    | `boolean`                        | No       | `false` | Show a built-in copy button in the hover actions row.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | actions                                                      | `Snippet`                        | No       | `-`     | Extra custom actions appended to the actions row.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | copyLabel / retryLabel / feedbackUpLabel / feedbackDownLabel | `string`                         | No       | `…`     | Aria-labels for the action buttons.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| expandLabel / collapseLabel                                  | `string`                         | No       | `…`     | Accessible name for the clamped bubble, swapped on the expanded state. Defaults `Expand message` / `Collapse message`.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | testId                                                       | `string`                         | No       | `-`     | `data-pw` on the root element.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | classes                                                      | `string`                         | No       | `-`     | Class string on the root element.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
@@ -65,58 +67,70 @@ type ChatRole = ChatParty | 'user' | 'assistant' | 'system' | (string & {});
 partyOf(role: ChatRole): ChatParty; // 'sender' | 'user' → 'sender'; everything else → 'responder'
 ```
 
+## Accessibility
+
+Only relevant when `clampLines` is set; without it the bubble is inert markup and none of this applies.
+
+- The clamped bubble is a disclosure control: `role="button"`, `tabindex="0"`, toggling on click, Enter or Space, with `aria-expanded` tracking the real state.
+- Its accessible name comes from `expandLabel` / `collapseLabel` rather than from its content. That is deliberate — name-from-content would make the control's name the entire message text, which says nothing about what activating it does. The consequence is that the message body is no longer announced as part of the control; it remains in the accessibility tree and is read normally in browse mode.
+- **Avoid nested interactive content in a clamped message.** WAI-ARIA prohibits interactive elements and headings inside `role="button"`, and this component cannot detect what a `body` snippet or `html` string renders. Activation originating from a nested link or button is guarded so it does not also toggle the clamp, but the invalid nesting itself remains, and assistive technology may not expose those descendants. If a message must carry links or controls, leave `clampLines` unset for it.
+- Keyboard focus is drawn by the component rather than left to the browser default, so it survives a consumer stylesheet that resets outlines on message surfaces. Theme it with `--chat-message-clamp-focus-outline`.
+
 ## CSS Variables
 
-| Variable                                       | Default                   | CSS Property  | Description                                             |
-| ---------------------------------------------- | ------------------------- | ------------- | ------------------------------------------------------- |
-| `--chat-message-max-width`                     | `82%`                     | max-width     | Max width of the message.                               |
-| `--chat-message-margin`                        | `0`                       | margin        | Margin around the message.                              |
-| `--chat-message-gap`                           | `10px`                    | gap           | Gap between avatar and bubble.                          |
-| `--chat-message-content-gap`                   | `6px`                     | gap           | Gap between header, bubble, attachments.                |
-| `--chat-message-header-font-size`              | `0.75rem`                 | font-size     | Header row font size.                                   |
-| `--chat-message-header-color`                  | `#71717a`                 | color         | Header row color.                                       |
-| `--chat-message-bubble-padding`                | `9px 13px`                | padding       | Bubble padding.                                         |
-| `--chat-message-bubble-border-radius`          | `16px`                    | border-radius | Bubble corner rounding.                                 |
-| `--chat-message-font-size`                     | `0.9375rem`               | font-size     | Bubble text size.                                       |
-| `--chat-message-line-height`                   | `1.5`                     | line-height   | Bubble line height.                                     |
-| `--chat-message-color`                         | `#27272a`                 | color         | Default bubble text color.                              |
-| `--chat-message-background`                    | `#f4f4f5`                 | background    | Default bubble background.                              |
-| `--chat-message-border`                        | `none`                    | border        | Default bubble border.                                  |
-| `--chat-message-box-shadow`                    | `none`                    | box-shadow    | Default bubble shadow.                                  |
-| `--chat-message-sender-color`                  | `#ffffff`                 | color         | Sender bubble text color.                               |
-| `--chat-message-sender-background`             | `#18181b`                 | background    | Sender bubble background.                               |
-| `--chat-message-sender-border`                 | `none`                    | border        | Sender bubble border.                                   |
-| `--chat-message-sender-border-radius`          | `16px`                    | border-radius | Sender bubble corner rounding.                          |
-| `--chat-message-responder-color`               | `#27272a`                 | color         | Responder bubble text color.                            |
-| `--chat-message-responder-background`          | `transparent`             | background    | Responder bubble background.                            |
-| `--chat-message-responder-border`              | `none`                    | border        | Responder bubble border.                                |
-| `--chat-message-responder-padding`             | `2px 0`                   | padding       | Responder bubble padding.                               |
-| `--chat-message-error-color`                   | `#e0334b`                 | color         | Bubble color when `status` is `error`.                  |
-| `--chat-message-attachments-gap`               | `8px`                     | gap           | Gap between attachments.                                |
-| `--chat-message-attachments-margin`            | `4px 0 0 0`               | margin        | Margin above attachments.                               |
-| `--chat-message-link-color`                    | `#6d28d9`                 | color         | Link color inside rendered HTML.                        |
-| `--chat-message-code-font-family`              | `ui-monospace, monospace` | font-family   | Inline/code-block font.                                 |
-| `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background    | Inline code background.                                 |
-| `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background    | Code-block background.                                  |
-| `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin        | Paragraph spacing inside rendered HTML.                 |
-| `--chat-message-list-margin`                   | `0.4em 0`                 | margin        | Margin around a rendered `<ul>`/`<ol>` list.             |
-| `--chat-message-list-padding`                  | `1.4em`                   | padding-left  | Indent of a rendered `<ul>`/`<ol>` list.                 |
-| `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin        | Margin around a rendered heading.                        |
-| `--chat-message-blockquote-border-color`       | `rgba(0,0,0,0.15)`        | border-color  | Left border color of a rendered blockquote.              |
-| `--chat-message-blockquote-opacity`            | `0.85`                    | opacity       | Opacity of rendered blockquote text.                     |
-| `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color  | Border color of a rendered table and its cells.          |
-| `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background    | Background of a rendered table's header row.             |
-| `--chat-message-image-border-radius`           | `8px`                     | border-radius | Corner rounding of a rendered image.                     |
-| `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top    | Color of a rendered horizontal rule.                     |
-| `--chat-message-actions-gap`                   | `2px`                     | gap           | Gap between action buttons.                             |
-| `--chat-message-actions-opacity`               | `0`                       | opacity       | Resting opacity of the actions row (revealed on hover). |
-| `--chat-message-actions-transition`            | `opacity 0.15s ease`      | transition    | Transition for the actions row's hover reveal.           |
-| `--chat-message-action-size`                   | `28px`                    | height/width  | Size of each action button.                             |
-| `--chat-message-action-padding`                | `6px`                     | padding       | Padding of each action button.                           |
-| `--chat-message-action-border-radius`          | `6px`                     | border-radius | Corner rounding of each action button.                   |
-| `--chat-message-action-background-color`       | `transparent`             | background    | Resting background of each action button.                |
-| `--chat-message-action-color`                  | `#71717a`                 | color         | Icon color of action buttons.                           |
-| `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background    | Action button hover background.                         |
+| Variable                                       | Default                   | CSS Property   | Description                                             |
+| ---------------------------------------------- | ------------------------- | -------------- | ------------------------------------------------------- |
+| `--chat-message-max-width`                     | `82%`                     | max-width      | Max width of the message.                               |
+| `--chat-message-margin`                        | `0`                       | margin         | Margin around the message.                              |
+| `--chat-message-gap`                           | `10px`                    | gap            | Gap between avatar and bubble.                          |
+| `--chat-message-content-gap`                   | `6px`                     | gap            | Gap between header, bubble, attachments.                |
+| `--chat-message-header-font-size`              | `0.75rem`                 | font-size      | Header row font size.                                   |
+| `--chat-message-header-color`                  | `#71717a`                 | color          | Header row color.                                       |
+| `--chat-message-bubble-padding`                | `9px 13px`                | padding        | Bubble padding.                                         |
+| `--chat-message-bubble-border-radius`          | `16px`                    | border-radius  | Bubble corner rounding.                                 |
+| `--chat-message-font-size`                     | `0.9375rem`               | font-size      | Bubble text size.                                       |
+| `--chat-message-line-height`                   | `1.5`                     | line-height    | Bubble line height.                                     |
+| `--chat-message-color`                         | `#27272a`                 | color          | Default bubble text color.                              |
+| `--chat-message-background`                    | `#f4f4f5`                 | background     | Default bubble background.                              |
+| `--chat-message-border`                        | `none`                    | border         | Default bubble border.                                  |
+| `--chat-message-box-shadow`                    | `none`                    | box-shadow     | Default bubble shadow.                                  |
+| `--chat-message-clamp-lines`                   | `clampLines`, else `2`    | line-clamp     | Line count for a clamped bubble. Outranks the prop.     |
+| `--chat-message-clamp-focus-outline`           | `2px solid currentColor`  | outline        | Focus ring on a clamped bubble.                         |
+| `--chat-message-clamp-focus-outline-offset`    | `2px`                     | outline-offset | Focus ring offset on a clamped bubble.                  |
+| `--chat-message-sender-color`                  | `#ffffff`                 | color          | Sender bubble text color.                               |
+| `--chat-message-sender-background`             | `#18181b`                 | background     | Sender bubble background.                               |
+| `--chat-message-sender-border`                 | `none`                    | border         | Sender bubble border.                                   |
+| `--chat-message-sender-border-radius`          | `16px`                    | border-radius  | Sender bubble corner rounding.                          |
+| `--chat-message-responder-color`               | `#27272a`                 | color          | Responder bubble text color.                            |
+| `--chat-message-responder-background`          | `transparent`             | background     | Responder bubble background.                            |
+| `--chat-message-responder-border`              | `none`                    | border         | Responder bubble border.                                |
+| `--chat-message-responder-padding`             | `2px 0`                   | padding        | Responder bubble padding.                               |
+| `--chat-message-error-color`                   | `#e0334b`                 | color          | Bubble color when `status` is `error`.                  |
+| `--chat-message-attachments-gap`               | `8px`                     | gap            | Gap between attachments.                                |
+| `--chat-message-attachments-margin`            | `4px 0 0 0`               | margin         | Margin above attachments.                               |
+| `--chat-message-link-color`                    | `#6d28d9`                 | color          | Link color inside rendered HTML.                        |
+| `--chat-message-code-font-family`              | `ui-monospace, monospace` | font-family    | Inline/code-block font.                                 |
+| `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background     | Inline code background.                                 |
+| `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background     | Code-block background.                                  |
+| `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin         | Paragraph spacing inside rendered HTML.                 |
+| `--chat-message-list-margin`                   | `0.4em 0`                 | margin         | Margin around a rendered `<ul>`/`<ol>` list.            |
+| `--chat-message-list-padding`                  | `1.4em`                   | padding-left   | Indent of a rendered `<ul>`/`<ol>` list.                |
+| `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin         | Margin around a rendered heading.                       |
+| `--chat-message-blockquote-border-color`       | `rgba(0,0,0,0.15)`        | border-color   | Left border color of a rendered blockquote.             |
+| `--chat-message-blockquote-opacity`            | `0.85`                    | opacity        | Opacity of rendered blockquote text.                    |
+| `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color   | Border color of a rendered table and its cells.         |
+| `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background     | Background of a rendered table's header row.            |
+| `--chat-message-image-border-radius`           | `8px`                     | border-radius  | Corner rounding of a rendered image.                    |
+| `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top     | Color of a rendered horizontal rule.                    |
+| `--chat-message-actions-gap`                   | `2px`                     | gap            | Gap between action buttons.                             |
+| `--chat-message-actions-opacity`               | `0`                       | opacity        | Resting opacity of the actions row (revealed on hover). |
+| `--chat-message-actions-transition`            | `opacity 0.15s ease`      | transition     | Transition for the actions row's hover reveal.          |
+| `--chat-message-action-size`                   | `28px`                    | height/width   | Size of each action button.                             |
+| `--chat-message-action-padding`                | `6px`                     | padding        | Padding of each action button.                          |
+| `--chat-message-action-border-radius`          | `6px`                     | border-radius  | Corner rounding of each action button.                  |
+| `--chat-message-action-background-color`       | `transparent`             | background     | Resting background of each action button.               |
+| `--chat-message-action-color`                  | `#71717a`                 | color          | Icon color of action buttons.                           |
+| `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background     | Action button hover background.                         |
 
 ## Web Component
 

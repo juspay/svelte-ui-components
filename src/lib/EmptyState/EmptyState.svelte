@@ -9,7 +9,8 @@
     classes,
     testId,
     titleSnippet,
-    descriptionSnippet
+    descriptionSnippet,
+    density
   }: EmptyStateProperties = $props();
 </script>
 
@@ -17,6 +18,7 @@
   class="empty-state {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
+  data-density={typeof density === 'string' ? density : null}
 >
   {#if typeof icon === 'function'}
     <div class="empty-state-icon">
@@ -62,11 +64,26 @@
   .empty-state {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: var(--empty-state-align-items, center);
     padding: var(--empty-state-padding, 32px 16px);
     text-align: var(--empty-state-text-align, center);
     gap: var(--empty-state-gap, 0px);
     color: inherit;
+  }
+
+  /* Density-scoped fallbacks. Higher specificity than `.empty-state` alone, so
+     these only take over when `data-density` is actually set — no attribute,
+     no match, today's defaults above stand untouched. `--empty-state-padding`
+     and `--empty-state-gap` are read first in both cases, so an instance-level
+     override always wins over either density's default. */
+  .empty-state[data-density='page'] {
+    padding: var(--empty-state-padding, 48px 24px);
+    gap: var(--empty-state-gap, 12px);
+  }
+
+  .empty-state[data-density='panel'] {
+    padding: var(--empty-state-padding, 16px 12px);
+    gap: var(--empty-state-gap, 4px);
   }
 
   .empty-state-icon {

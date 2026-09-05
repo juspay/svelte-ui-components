@@ -17,6 +17,7 @@
     markdown,
     body,
     streaming = false,
+    clampLines = 0,
     status,
     avatar,
     header,
@@ -25,6 +26,8 @@
     actions,
     copyLabel = 'Copy',
     retryLabel = 'Retry',
+    expandLabel = 'Expand message',
+    collapseLabel = 'Collapse message',
     feedbackUpLabel = 'Good response',
     feedbackDownLabel = 'Bad response',
     onretry: onretryLegacy,
@@ -36,6 +39,62 @@
     testId,
     classes
   }: ChatMessageProperties = $props();
+
+  // A long message can be collapsed to a few lines and opened by click or keyboard.
+  // Consumers had been rebuilding this around the `body` snippet; it belongs here so
+  // the chrome, the clamp and the expanded state stay one component's concern.
+  let expanded = $state(false);
+  let clampable = $derived(typeof clampLines === 'number' && clampLines > 0);
+  let clampActive = $derived(clampable && !expanded);
+  // Turning clamping off must not leave the message stuck open: without this, a parent
+  // that sets clampLines to 0 and later restores it would get an already-expanded bubble
+  // instead of the clamped default. A prop going away cannot be observed from a $derived
+  // without writing to state, so this is the sanctioned escape hatch rather than a
+  // reactive convenience.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (!clampable) {
+      expanded = false;
+    }
+  });
+  const toggleExpanded = () => {
+    if (clampable) {
+      expanded = !expanded;
+    }
+  };
+  // A message body can carry links and buttons. Those have their own job, and the
+  // bubble wrapping them must not turn every such activation into a second,
+  // unasked-for expand or collapse.
+  const isNestedControl = (event: Event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return false;
+    }
+    // `[tabindex]` is what generalises this past a fixed tag list: anything a
+    // consumer made focusable, custom elements included, carries one. The bubble
+    // itself matches every one of these, hence the currentTarget check.
+    const nested = target.closest(
+      'a[href], area[href], button, input, select, textarea, label, summary,' +
+        ' audio[controls], video[controls], [contenteditable]:not([contenteditable="false"]),' +
+        ' [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"], [role="checkbox"],' +
+        ' [role="menuitem"], [role="tab"], [role="switch"], [role="textbox"]'
+    );
+    return nested !== null && nested !== event.currentTarget;
+  };
+  // A nested handler that called preventDefault has already claimed the event.
+  const shouldToggleFrom = (event: Event) =>
+    clampable && !event.defaultPrevented && !isNestedControl(event);
+  const onClampClick = (event: MouseEvent) => {
+    if (shouldToggleFrom(event)) {
+      toggleExpanded();
+    }
+  };
+  const onClampKeydown = (event: KeyboardEvent) => {
+    if ((event.key === 'Enter' || event.key === ' ') && shouldToggleFrom(event)) {
+      event.preventDefault();
+      toggleExpanded();
+    }
+  };
 
   // Event-casing phase 1: both spellings accepted, the correct one wins.
   const oncopy = $derived(onCopy ?? oncopyLegacy);
@@ -136,7 +195,23 @@
         <div class="header">{@render header()}</div>
       {/if}
 
-      <div class="bubble">
+      <!-- The clamped bubble is a disclosure control: role, tabindex and both handlers are
+           gated on the same condition, so it is only focusable while it is genuinely a
+           button. The checker cannot see that through a dynamic role. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <div
+        class="bubble"
+        class:clampable
+        style={clampable ? `--chat-message-clamp-lines-prop: ${clampLines};` : null}
+        data-clamped={clampActive ? 'true' : null}
+        data-expanded={clampable ? String(expanded) : null}
+        role={clampable ? 'button' : null}
+        tabindex={clampable ? 0 : null}
+        aria-expanded={clampable ? expanded : null}
+        aria-label={clampable ? (expanded ? collapseLabel : expandLabel) : null}
+        onclick={clampable ? onClampClick : null}
+        onkeydown={clampable ? onClampKeydown : null}
+      >
         {#if hasBody}
           <div class="body">{@render body?.()}</div>
         {:else if hasHtml}
@@ -339,6 +414,28 @@
     .actions {
       opacity: 1;
     }
+  }
+
+  .bubble.clampable {
+    cursor: pointer;
+  }
+
+  /* The UA ring is present today, but consumer sheets in this ecosystem do reset
+     outlines on message surfaces, and a focusable bubble with no visible focus is
+     unusable by keyboard. Declaring it here makes it survive that and themeable. */
+  .bubble.clampable:focus-visible {
+    outline: var(--chat-message-clamp-focus-outline, 2px solid currentColor);
+    outline-offset: var(--chat-message-clamp-focus-outline-offset, 2px);
+  }
+
+  /* Clamp the rendered body, not the source: the message keeps its markup and its
+     copy text, and expanding is a state change rather than a re-render. */
+  .bubble[data-clamped='true'] .body {
+    display: -webkit-box;
+    line-clamp: var(--chat-message-clamp-lines, var(--chat-message-clamp-lines-prop, 2));
+    -webkit-line-clamp: var(--chat-message-clamp-lines, var(--chat-message-clamp-lines-prop, 2));
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .body :global(p) {

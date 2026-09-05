@@ -16,6 +16,10 @@
     { primary: 'Ranked by rating', secondary: '4★ and up' }
   ];
 
+  // Clamping is a prop, so a parent can withdraw it. The bubble has to fall back to
+  // its clamped default when it is restored, rather than staying open.
+  let toggleClampLines = $state(4);
+
   const markdownReply =
     'Same thing from **markdown** — parsed and sanitized internally:\n\n- Wireless earbuds\n- A scented candle set';
 
@@ -64,6 +68,46 @@
     />
     <ToolCallLog chips={settledToolChips} testId="chat-message-settled-tools" />
   </div>
+</div>
+
+<div class="demo-col">
+  <h2 id="clamp-link-target">Clamped, expandable</h2>
+  <ChatMessage
+    role="user"
+    testId="clamp-demo"
+    clampLines={2}
+    content="Line one of a message long enough to need collapsing. Line two continues it. Line three is past the clamp and must stay hidden until the bubble is expanded, which is what the test checks."
+  />
+  <ChatMessage
+    role="user"
+    testId="clamp-demo-four"
+    clampLines={4}
+    content="Line one of a message long enough to need collapsing. Line two continues it. Line three is past a two-line clamp. Line four is still within a four-line clamp, and line five is past both, so the two bubbles must not be the same height."
+  />
+
+  <ChatMessage role="user" testId="clamp-demo-link" clampLines={2}>
+    {#snippet body()}
+      <p>
+        A clamped message can still contain a
+        <a href="#clamp-link-target" data-pw="clamp-inner-link">link</a>, and activating that link
+        must not also expand the bubble. Line three exists so there is something to clamp away.
+      </p>
+    {/snippet}
+  </ChatMessage>
+
+  <ChatMessage
+    role="user"
+    testId="clamp-demo-toggle"
+    clampLines={toggleClampLines}
+    content="Line one of a message long enough to need collapsing. Line two continues it. Line three is past the clamp and must stay hidden until the bubble is expanded, which is what the test checks."
+  />
+  <button
+    type="button"
+    data-pw="clamp-toggle"
+    onclick={() => (toggleClampLines = toggleClampLines > 0 ? 0 : 4)}
+  >
+    Toggle clamping
+  </button>
 </div>
 
 <style>

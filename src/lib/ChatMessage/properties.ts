@@ -33,6 +33,16 @@ export type OptionalChatMessageProperties = {
    * action still has something to copy.
    */
   body?: Snippet | null;
+  /**
+   * Collapse the rendered body to this many lines, with the bubble acting as a
+   * button that expands and re-collapses it (Enter/Space as well as click). `0`
+   * or omitted leaves the message uncollapsed and adds no interactive role.
+   * The clamp applies to the rendered body, so `content` — and therefore the copy
+   * action — always carries the whole message. A consumer stylesheet setting
+   * `--chat-message-clamp-lines` takes priority over this value, so a theme can set
+   * the line count for every message without touching each call site.
+   */
+  clampLines?: number;
   streaming?: boolean;
   status?: ChatMessageStatus;
   avatar?: Snippet;
@@ -42,6 +52,13 @@ export type OptionalChatMessageProperties = {
   actions?: Snippet;
   copyLabel?: string;
   retryLabel?: string;
+  /**
+   * Accessible name for the clamped bubble, which is a button while `clampLines`
+   * is set. Without this the control's name is the whole message text, which says
+   * nothing about what activating it does.
+   */
+  expandLabel?: string;
+  collapseLabel?: string;
   feedbackUpLabel?: string;
   feedbackDownLabel?: string;
   testId?: string;

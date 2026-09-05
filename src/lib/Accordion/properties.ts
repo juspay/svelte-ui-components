@@ -28,5 +28,6 @@ export type OptionalAccordionProperties = {
 
 export type AccordionEventProperties = {
   ontoggle?: (expanded: boolean) => void;
+  /** @deprecated Use `ontoggle` instead; both work until 4.0.0. */
   onToggle?: (expanded: boolean) => void;
 };

@@ -6,6 +6,7 @@
   import closeSvg from '$lib/assets/close.svg?raw';
   import type { ResizeEdge } from '../Resizable/properties';
   import type { BubbleDrag, ChatBubbleProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     open = $bindable(false),
@@ -27,20 +28,31 @@
     expanded = $bindable(false),
     expandedPanelWidth = $bindable(600),
     expandedPanelHeight = $bindable(760),
-    onopen: onopenLegacy,
+    onopen: onopenProp,
     onOpen,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
-    ontoggle: ontoggleLegacy,
+    ontoggle: ontoggleProp,
     onToggle,
     testId,
     classes
   }: ChatBubbleProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const onopen = $derived(onOpen ?? onopenLegacy);
-  const ontoggle = $derived(onToggle ?? ontoggleLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclose = $derived(
+    resolveDeprecatedProp('ChatBubble', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+  const onopen = $derived(
+    resolveDeprecatedProp('ChatBubble', 'onOpen', 'onopen', onOpen, onopenProp)
+  );
+  const ontoggle = $derived(
+    resolveDeprecatedProp('ChatBubble', 'onToggle', 'ontoggle', onToggle, ontoggleProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onclose, onopen, ontoggle);
+  });
 
   const DRAG_THRESHOLD = 4;
 

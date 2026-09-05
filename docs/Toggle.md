@@ -107,7 +107,7 @@ same-named component prop would replace them; `aria-labelledby` follows the same
 | `id`                                                          | `inputId`               | `input-id`                                          | the shadow checkbox `id`         |
 | `ariaLabel`                                                   | `inputAriaLabel`        | `input-aria-label`                                  | the shadow checkbox `aria-label` |
 | `ariaLabelledby`                                              | `inputAriaLabelledby`   | `input-aria-labelledby`                             | the shadow checkbox reference    |
-| `text`, `checked`, `disabled`, `classes`, `testId`, `onClick` | same name               | `text`, `checked`, `disabled`, `classes`, `test-id` | unchanged                        |
+| `text`, `checked`, `disabled`, `classes`, `testId`, `onclick` | same name               | `text`, `checked`, `disabled`, `classes`, `test-id` | unchanged                        |
 
 Host `id`, `aria-label` and `aria-labelledby` on `<sui-toggle>` stay on the host
 element, exactly as they do on any other custom element.

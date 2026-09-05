@@ -135,9 +135,11 @@ export type OptionalDateRangePickerProperties = {
 export type DateRangePickerEventProperties = {
   /** Fired when the user clicks Apply in range mode. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
   onapply?: (event: { rangeStart: Date; rangeEnd: Date; presetLabel: string | null }) => void;
+  /** @deprecated Use `onapply` instead; both work until 4.0.0. */
   onApply?: (event: { rangeStart: Date; rangeEnd: Date; presetLabel: string | null }) => void;
   /** Fired when the user clicks Apply in single mode. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
   onapplysingle?: (event: { date: Date; presetLabel: string | null }) => void;
+  /** @deprecated Use `onapplysingle` instead; both work until 4.0.0. */
   onApplySingle?: (event: { date: Date; presetLabel: string | null }) => void;
   /** Fired when the compare range is applied. presetLabel is the sidebar preset name if one was active, or null for a custom calendar selection. */
   onapplycompare?: (event: {
@@ -145,6 +147,7 @@ export type DateRangePickerEventProperties = {
     compareEnd: Date;
     presetLabel: string | null;
   }) => void;
+  /** @deprecated Use `onapplycompare` instead; both work until 4.0.0. */
   onApplyCompare?: (event: {
     compareStart: Date;
     compareEnd: Date;
@@ -152,15 +155,18 @@ export type DateRangePickerEventProperties = {
   }) => void;
   /** Fired when the user dismisses without applying. */
   oncancel?: () => void;
+  /** @deprecated Use `oncancel` instead; both work until 4.0.0. */
   onCancel?: () => void;
   /** Fired whenever the picker opens or closes. */
   onopentoggle?: (event: { open: boolean }) => void;
+  /** @deprecated Use `onopentoggle` instead; both work until 4.0.0. */
   onOpenToggle?: (event: { open: boolean }) => void;
   /**
    * Fired when the user clicks the Clear button in single mode (requires clearable=true).
    * value is reset to null before this callback is invoked.
    */
   onclear?: () => void;
+  /** @deprecated Use `onclear` instead; both work until 4.0.0. */
   onClear?: () => void;
 };
 

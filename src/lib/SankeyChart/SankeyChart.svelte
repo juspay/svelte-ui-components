@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SankeyChartProperties, SankeyTooltipContext } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { computeSankeyLayout } from '$lib/_chart/geometry';
@@ -26,13 +27,13 @@
     valueFormat,
     tooltipSnippet,
     empty,
-    onnodeclick: onnodeclickLegacy,
+    onnodeclick: onnodeclickProp,
     onNodeClick,
-    onlinkclick: onlinkclickLegacy,
+    onlinkclick: onlinkclickProp,
     onLinkClick,
-    onnodehover: onnodehoverLegacy,
+    onnodehover: onnodehoverProp,
     onNodeHover,
-    onlinkhover: onlinkhoverLegacy,
+    onlinkhover: onlinkhoverProp,
     onLinkHover,
     testId,
     classes,
@@ -46,11 +47,24 @@
     marginX = 40
   }: SankeyChartProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onlinkclick = $derived(onLinkClick ?? onlinkclickLegacy);
-  const onlinkhover = $derived(onLinkHover ?? onlinkhoverLegacy);
-  const onnodeclick = $derived(onNodeClick ?? onnodeclickLegacy);
-  const onnodehover = $derived(onNodeHover ?? onnodehoverLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onlinkclick = $derived(
+    resolveDeprecatedProp('SankeyChart', 'onLinkClick', 'onlinkclick', onLinkClick, onlinkclickProp)
+  );
+  const onlinkhover = $derived(
+    resolveDeprecatedProp('SankeyChart', 'onLinkHover', 'onlinkhover', onLinkHover, onlinkhoverProp)
+  );
+  const onnodeclick = $derived(
+    resolveDeprecatedProp('SankeyChart', 'onNodeClick', 'onnodeclick', onNodeClick, onnodeclickProp)
+  );
+  const onnodehover = $derived(
+    resolveDeprecatedProp('SankeyChart', 'onNodeHover', 'onnodehover', onNodeHover, onnodehoverProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onlinkclick, onlinkhover, onnodeclick, onnodehover);
+  });
 
   // ── State ──────────────────────────────────────────────────────
 

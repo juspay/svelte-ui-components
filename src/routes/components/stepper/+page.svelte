@@ -17,7 +17,7 @@
     testId="stepper-horizontal"
     steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }, { label: 'Confirm' }]}
     currentStepIndex={currentStep}
-    onstepclick={(event) => (currentStep = event.selectedIndex - 1)}
+    onhandlestepclick={(event) => (currentStep = event.selectedIndex - 1)}
   />
 </div>
 
@@ -27,7 +27,7 @@
     orientation="vertical"
     steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }, { label: 'Confirm' }]}
     currentStepIndex={currentVerticalStep}
-    onstepclick={(event) => (currentVerticalStep = event.selectedIndex - 1)}
+    onhandlestepclick={(event) => (currentVerticalStep = event.selectedIndex - 1)}
   />
 </div>
 

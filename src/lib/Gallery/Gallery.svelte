@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte';
   import { fade } from 'svelte/transition';
   import type { GalleryImage, GalleryProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Img from '../Img/Img.svelte';
   import Button from '../Button/Button.svelte';
   import Icon from '../Icon/Icon.svelte';
@@ -28,15 +29,50 @@
     deleteIcon,
     itemFooter,
     testId,
-    onImageClick,
-    onEditClick,
-    onDeleteClick,
-    onOpen,
-    onDismiss,
-    onIndexChange,
+    onImageClick: onImageClickProp,
+    onimageclick,
+    onEditClick: onEditClickProp,
+    oneditclick,
+    onDeleteClick: onDeleteClickProp,
+    ondeleteclick,
+    onOpen: onOpenProp,
+    onopen,
+    onDismiss: onDismissProp,
+    onclose,
+    onIndexChange: onIndexChangeProp,
+    onchange,
     onkeydown,
     classes
   }: GalleryProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onImageClick = $derived(
+    resolveDeprecatedProp('Gallery', 'onImageClick', 'onimageclick', onImageClickProp, onimageclick)
+  );
+  const onEditClick = $derived(
+    resolveDeprecatedProp('Gallery', 'onEditClick', 'oneditclick', onEditClickProp, oneditclick)
+  );
+  const onDeleteClick = $derived(
+    resolveDeprecatedProp(
+      'Gallery',
+      'onDeleteClick',
+      'ondeleteclick',
+      onDeleteClickProp,
+      ondeleteclick
+    )
+  );
+  const onOpen = $derived(resolveDeprecatedProp('Gallery', 'onOpen', 'onopen', onOpenProp, onopen));
+  const onDismiss = $derived(
+    resolveDeprecatedProp('Gallery', 'onDismiss', 'onclose', onDismissProp, onclose)
+  );
+  const onIndexChange = $derived(
+    resolveDeprecatedProp('Gallery', 'onIndexChange', 'onchange', onIndexChangeProp, onchange)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onImageClick, onEditClick, onDeleteClick, onOpen, onDismiss, onIndexChange);
+  });
 
   let lightboxDiv: HTMLDivElement | null = $state(null);
   let closeButtonWrap: HTMLDivElement | null = $state(null);

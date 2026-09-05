@@ -44,7 +44,7 @@
     centerTextTestId="list-item-suppressed-center"
     suppressRoleAndTabindex
     ariaSelected={true}
-    onitemClick={handleSuppressedItemClick}
+    onitemclick={handleSuppressedItemClick}
   />
   <output data-pw="list-item-suppressed-clicks">{suppressedItemClicks}</output>
 </div>

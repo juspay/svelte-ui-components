@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { ContextMenuProperties, ContextMenuItem } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     items,
@@ -8,19 +9,30 @@
     maxHeight = '240px',
     testId,
     children,
-    onselect: onselectLegacy,
+    onselect: onselectProp,
     onSelect,
-    onopen: onopenLegacy,
+    onopen: onopenProp,
     onOpen,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
     classes
   }: ContextMenuProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const onopen = $derived(onOpen ?? onopenLegacy);
-  const onselect = $derived(onSelect ?? onselectLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclose = $derived(
+    resolveDeprecatedProp('ContextMenu', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+  const onopen = $derived(
+    resolveDeprecatedProp('ContextMenu', 'onOpen', 'onopen', onOpen, onopenProp)
+  );
+  const onselect = $derived(
+    resolveDeprecatedProp('ContextMenu', 'onSelect', 'onselect', onSelect, onselectProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onclose, onopen, onselect);
+  });
 
   let menuEl: HTMLDivElement | null = $state(null);
   let containerEl: HTMLDivElement | null = $state(null);

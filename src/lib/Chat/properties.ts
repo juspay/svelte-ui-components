@@ -53,21 +53,30 @@ export type OptionalChatProperties = {
 
 export type ChatEventProperties = {
   onsend?: (value: string, attachments: File[]) => void;
+  /** @deprecated Use `onsend` instead; both work until 4.0.0. */
   onSend?: (value: string, attachments: File[]) => void;
   onsuggestion?: (value: string, index: number) => void;
+  /** @deprecated Use `onsuggestion` instead; both work until 4.0.0. */
   onSuggestion?: (value: string, index: number) => void;
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
   onstop?: () => void;
+  /** @deprecated Use `onstop` instead; both work until 4.0.0. */
   onStop?: () => void;
   onvoice?: () => void;
+  /** @deprecated Use `onvoice` instead; both work until 4.0.0. */
   onVoice?: () => void;
   onattach?: (files: File[]) => void;
+  /** @deprecated Use `onattach` instead; both work until 4.0.0. */
   onAttach?: (files: File[]) => void;
   onretry?: () => void;
+  /** @deprecated Use `onretry` instead; both work until 4.0.0. */
   onRetry?: () => void;
   onfeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
+  /** @deprecated Use `onfeedback` instead; both work until 4.0.0. */
   onFeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
+  /** @deprecated Use `onScrollState` instead; both work until 4.0.0. */
   onscrollstate?: ChatMessageListProperties['onscrollstate'];
   onScrollState?: ChatMessageListProperties['onscrollstate'];
 };

@@ -3,6 +3,7 @@
   import Loader from '$lib/Loader/Loader.svelte';
   import Img from '$lib/Img/Img.svelte';
   import type { ListItemProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     leftImageUrl,
@@ -25,16 +26,21 @@
     centerContent,
     rightContent,
     bottomContent,
-    onleftImageClick: onleftImageClickLegacy,
+    onleftImageClick: onleftImageClickProp,
     onLeftImageClick,
-    onrightImageClick: onrightImageClickLegacy,
+    onleftimageclick,
+    onrightImageClick: onrightImageClickProp,
     onRightImageClick,
-    oncenterTextClick: oncenterTextClickLegacy,
+    onrightimageclick,
+    oncenterTextClick: oncenterTextClickProp,
     onCenterTextClick,
-    onitemClick: onitemClickLegacy,
+    oncentertextclick,
+    onitemClick: onitemClickProp,
     onItemClick,
-    ontopSectionClick: ontopSectionClickLegacy,
+    onitemclick,
+    ontopSectionClick: ontopSectionClickProp,
     onTopSectionClick,
+    ontopsectionclick,
     onkeydown,
     classes,
     transformSvg,
@@ -43,12 +49,87 @@
     id
   }: ListItemProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const oncenterTextClick = $derived(onCenterTextClick ?? oncenterTextClickLegacy);
-  const onitemClick = $derived(onItemClick ?? onitemClickLegacy);
-  const onleftImageClick = $derived(onLeftImageClick ?? onleftImageClickLegacy);
-  const onrightImageClick = $derived(onRightImageClick ?? onrightImageClickLegacy);
-  const ontopSectionClick = $derived(onTopSectionClick ?? ontopSectionClickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const oncenterTextClick = $derived(
+    resolveDeprecatedProp(
+      'ListItem',
+      'oncenterTextClick',
+      'oncentertextclick',
+      oncenterTextClickProp,
+      resolveDeprecatedProp(
+        'ListItem',
+        'onCenterTextClick',
+        'oncentertextclick',
+        onCenterTextClick,
+        oncentertextclick
+      )
+    )
+  );
+  const onitemClick = $derived(
+    resolveDeprecatedProp(
+      'ListItem',
+      'onitemClick',
+      'onitemclick',
+      onitemClickProp,
+      resolveDeprecatedProp('ListItem', 'onItemClick', 'onitemclick', onItemClick, onitemclick)
+    )
+  );
+  const onleftImageClick = $derived(
+    resolveDeprecatedProp(
+      'ListItem',
+      'onleftImageClick',
+      'onleftimageclick',
+      onleftImageClickProp,
+      resolveDeprecatedProp(
+        'ListItem',
+        'onLeftImageClick',
+        'onleftimageclick',
+        onLeftImageClick,
+        onleftimageclick
+      )
+    )
+  );
+  const onrightImageClick = $derived(
+    resolveDeprecatedProp(
+      'ListItem',
+      'onrightImageClick',
+      'onrightimageclick',
+      onrightImageClickProp,
+      resolveDeprecatedProp(
+        'ListItem',
+        'onRightImageClick',
+        'onrightimageclick',
+        onRightImageClick,
+        onrightimageclick
+      )
+    )
+  );
+  const ontopSectionClick = $derived(
+    resolveDeprecatedProp(
+      'ListItem',
+      'ontopSectionClick',
+      'ontopsectionclick',
+      ontopSectionClickProp,
+      resolveDeprecatedProp(
+        'ListItem',
+        'onTopSectionClick',
+        'ontopsectionclick',
+        onTopSectionClick,
+        ontopsectionclick
+      )
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      oncenterTextClick,
+      onitemClick,
+      onleftImageClick,
+      onrightImageClick,
+      ontopSectionClick
+    );
+  });
 
   function handleLeftImageClick(event: MouseEvent): void {
     onleftImageClick?.(event);

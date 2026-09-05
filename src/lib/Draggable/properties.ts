@@ -25,7 +25,13 @@ export type OptionalDraggableProperties = {
 };
 
 export type DraggableEventProperties = {
+  onmovestart?: (position: DragPosition) => void;
+  /** @deprecated Use `onmovestart` instead; both work until 4.0.0. */
   onMoveStart?: (position: DragPosition) => void;
+  onmove?: (position: DragPosition) => void;
+  /** @deprecated Use `onmove` instead; both work until 4.0.0. */
   onMove?: (position: DragPosition) => void;
+  onmoveend?: (position: DragPosition) => void;
+  /** @deprecated Use `onmoveend` instead; both work until 4.0.0. */
   onMoveEnd?: (position: DragPosition) => void;
 };

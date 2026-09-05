@@ -14,7 +14,8 @@
       icon: { type: 'Object' },
       descriptionSnippet: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      onButtonClick: { type: 'Object' }
+      onButtonClick: { type: 'Object' },
+      onbuttonclick: { type: 'Object' }
     }
   }}
 />

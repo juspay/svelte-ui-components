@@ -31,11 +31,14 @@ export type OptionalSheetProperties = {
 
 export type SheetEventProperties = {
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
   /** Called once after the open transition has fully completed. */
   onafteropen?: () => void;
+  /** @deprecated Use `onafteropen` instead; both work until 4.0.0. */
   onAfterOpen?: () => void;
   /** Called once after the close transition has fully completed. */
   onafterclose?: () => void;
+  /** @deprecated Use `onafterclose` instead; both work until 4.0.0. */
   onAfterClose?: () => void;
 };

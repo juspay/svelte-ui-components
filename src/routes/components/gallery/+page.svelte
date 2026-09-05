@@ -38,8 +38,8 @@
     {images}
     view="grid"
     testId="gallery-demo"
-    onEditClick={() => {}}
-    onDeleteClick={handleDelete}
+    oneditclick={() => {}}
+    ondeleteclick={handleDelete}
   />
 </div>
 

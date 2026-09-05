@@ -73,26 +73,34 @@ export type OptionalComboboxProperties = {
 
 export type ComboboxEventProperties = {
   onselect?: (item: ComboboxItem) => void;
+  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
   onSelect?: (item: ComboboxItem) => void;
   oninput?: (value: string) => void;
+  /** @deprecated Use `oninput` instead; both work until 4.0.0. */
   onInput?: (value: string) => void;
   onopen?: () => void;
+  /** @deprecated Use `onopen` instead; both work until 4.0.0. */
   onOpen?: () => void;
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onfocus?: (event: FocusEvent) => void;
   onblur?: (event: FocusEvent) => void;
   /** Multi-select: fires whenever the selection changes (add, remove, or create). */
   onchange?: (selected: string[]) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (selected: string[]) => void;
   /** Multi-select: fires when a value is added. */
   onadd?: (value: string) => void;
+  /** @deprecated Use `onadd` instead; both work until 4.0.0. */
   onAdd?: (value: string) => void;
   /** Multi-select: fires when a value is removed. */
   onremove?: (value: string) => void;
+  /** @deprecated Use `onremove` instead; both work until 4.0.0. */
   onRemove?: (value: string) => void;
   /** Fires when the create row is chosen, with the trimmed query. */
   oncreate?: (value: string) => void;
+  /** @deprecated Use `oncreate` instead; both work until 4.0.0. */
   onCreate?: (value: string) => void;
 };

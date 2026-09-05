@@ -1,9 +1,8 @@
 # Design Principles
 
 What this library's architecture commits to, and why — written down for the first time
-after a comparison against a fork of this codebase (`polymorph-ui-components`) showed
-several of these were already true in practice but never stated, and one was true
-inconsistently because it was never stated at all.
+after an architecture review showed several of these were already true in practice but
+never stated, and one was true inconsistently because it was never stated at all.
 
 ## 1. Theming is an API contract, not an afterthought
 
@@ -54,30 +53,30 @@ Every component: a `properties.ts` file alongside its `.svelte` file, a universa
 `classes?: string` escape hatch on the root element, a universal `testId` → `data-pw`
 hook for Playwright.
 
-**Event props follow one rule, based on what the event actually is:**
+**Every event prop is `on` followed by the event name in lowercase.** `onclick`,
+`oninput`, `onrowclick`, `onoverlayclick`, `oncentertextclick` — whether the browser
+fires the event or the component invents it. One rule, with no judgement call about
+which kind of event a prop carries.
 
-- **A native DOM event forwarded as-is stays lowercase** — `onclick`, `onkeydown`,
-  `onmousedown` — because that's Svelte 5's own idiom for real DOM event attributes.
-  Renaming these to `onClick` would fight the framework, not follow a convention.
-- **A synthesized event — one this component invents, with no native DOM equivalent —
-  is camelCase starting right after `on`**: `onRowClick`, `onCenterTextClick`,
-  `onSelectionChange`. This matches the wider Svelte-component ecosystem's convention for
-  invented callback props.
+The alternative — lowercase for forwarded DOM events, camelCase for invented ones —
+is the rule this library used through 3.4, and it is a coherent choice: it mirrors the
+native/synthetic distinction Svelte 5 itself draws. It was dropped because the
+distinction is invisible at the call site. A consumer writing `<Table onrowclick>` has
+no way to know whether the library considers that event native, and got it wrong often
+enough that the codebase itself carried hybrids like `onleftImageClick` that were
+neither convention. A single rule needs no such knowledge, and it matches the spelling
+consumers of the forked library already write.
 
-This is deliberately _not_ polymorph's rule (lowercase for everything, including
-synthesized events). That's a real, coherent choice, but it trades away the native/synthetic
-distinction that Svelte 5 itself draws, and it isn't obviously better — just different.
-What actually needed fixing here wasn't the rule, it was that this codebase had never
-picked one: native events were already consistently lowercase, but synthesized events
-had drifted across three different styles over 580 commits, including accidental hybrids
-like `onleftImageClick` that are neither convention.
+The earlier spellings all remain accepted as `@deprecated` aliases: passing `onRowClick`
+still works and warns once, in dev, naming its replacement. 4.0.0 removes them; `npx
+sui-codemod ./src` rewrites a consumer's call sites (see `docs/EVENT_CASING_MIGRATION.md`).
 
-`scripts/check-event-casing.js` enforces this going forward (`npm run lint:event-casing`,
-wired into `npm run lint`). It grandfathers the violations that already existed when the
-rule was written down — renaming any of them is a breaking prop-name change for real
-consumers, not a lint fix, and needs its own deprecation path. Fixing one is: rename it,
-remove it from `scripts/event-casing-baseline.json` in the same PR, and treat it as a
-breaking change in the changelog.
+`scripts/check-event-casing.js` enforces the rule going forward (`npm run
+lint:event-casing`, wired into `npm run lint`). There is no grandfathering list: an
+event prop with an uppercase letter fails the build unless its declaration is tagged
+`@deprecated`, which is what makes an alias legible as a temporary state rather than a
+second convention. A callback key on a config object (`TableColumn.onToggle`) is not a
+component prop and keeps its own spelling.
 
 ## 4. Accessibility is baseline, not premium
 

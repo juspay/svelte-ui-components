@@ -38,7 +38,11 @@
       summaryRowIndex: { type: 'Number', attribute: 'summary-row-index' },
       headerTooltipIcon: { type: 'Object' },
       headerTooltipPosition: { type: 'Object' },
-      usePortal: { type: 'Boolean', attribute: 'use-portal' }
+      usePortal: { type: 'Boolean', attribute: 'use-portal' },
+      onrowclick: { type: 'Object' },
+      onsort: { type: 'Object' },
+      oncellchange: { type: 'Object' },
+      onsearchchange: { type: 'Object' }
     }
   }}
 />

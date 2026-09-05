@@ -52,8 +52,9 @@ type CasingPair = { readonly tag: string; readonly spellings: readonly string[] 
  * Direction is deliberately not inferred here. It is not always "camelCase is
  * the correct one": DESIGN_PRINCIPLES keeps Svelte's lowercase spelling for a
  * native DOM event forwarded as-is, so Input's `onFocus(event: FocusEvent)`
- * corrects *to* `onfocus` while Toggle's `onclick(checked: boolean)` corrects to
- * `onClick`. Both spellings have to work either way, which is all this asks.
+ * and Toggle's `onclick(checked: boolean)` is a component event; both are
+ * spelled lowercase, and each keeps its camelCase alias until 4.0.0. Both
+ * spellings have to work either way, which is all this asks.
  */
 const casingPairs = (): readonly CasingPair[] => {
   const pairs: CasingPair[] = [];
@@ -129,11 +130,14 @@ test.describe('custom elements accept both spellings of every aliased event prop
     ).toEqual([]);
   });
 
-  test('the corrected spelling reaches the component through the element', async ({ page }) => {
+  test('the deprecated camelCase spelling still reaches the component through the element', async ({
+    page
+  }) => {
     await loadBundle(page);
 
-    // sui-toggle corrects onclick -> onClick, and its handler is observable:
-    // clicking the shadow checkbox calls it with the new checked state.
+    // sui-toggle's event prop is `onclick`; `onClick` stays as a deprecated
+    // alias until 4.0.0. Both are observable: clicking the shadow checkbox
+    // calls the handler with the new checked state.
     const calls = await page.evaluate(async () => {
       const element = document.createElement('sui-toggle');
       const seen: boolean[] = [];
@@ -144,13 +148,13 @@ test.describe('custom elements accept both spellings of every aliased event prop
       return seen;
     });
 
-    expect(calls, 'onClick never fired -- the corrected spelling is unreachable').toEqual([true]);
+    expect(calls, 'onClick never fired -- the deprecated alias is unreachable').toEqual([true]);
   });
 
-  test('the legacy spelling still reaches the component', async ({ page }) => {
+  test('the lowercase spelling reaches the component', async ({ page }) => {
     await loadBundle(page);
 
-    // The regression guard for declaring both. If adding onClick had cost the
+    // The regression guard for declaring both. If keeping onClick had cost the
     // element its onclick, this is where it would show.
     const calls = await page.evaluate(async () => {
       const element = document.createElement('sui-toggle');
@@ -162,20 +166,21 @@ test.describe('custom elements accept both spellings of every aliased event prop
       return seen;
     });
 
-    expect(calls, 'onclick stopped firing once onClick was declared alongside it').toEqual([true]);
+    expect(calls, 'onclick stopped firing with onClick declared alongside it').toEqual([true]);
   });
 
-  test('the corrected spelling wins when both are set', async ({ page }) => {
+  test('the lowercase spelling wins when both are set', async ({ page }) => {
     await loadBundle(page);
 
-    // Matches the component's own precedence, `$derived(onClick ?? onclickLegacy)`.
+    // Matches the component's own precedence: `resolveDeprecatedProp` hands
+    // back the lowercase value whenever it is set.
     // A web-component consumer setting both must get the same answer a Svelte
     // consumer passing both would get, or the two entry points disagree.
     const winner = await page.evaluate(async () => {
       const element = document.createElement('sui-toggle');
       const seen: string[] = [];
-      Reflect.set(element, 'onclick', () => seen.push('legacy'));
-      Reflect.set(element, 'onClick', () => seen.push('corrected'));
+      Reflect.set(element, 'onclick', () => seen.push('lowercase'));
+      Reflect.set(element, 'onClick', () => seen.push('camelCase'));
       document.body.append(element);
       await new Promise((resolve) => requestAnimationFrame(resolve));
       element.shadowRoot?.querySelector('input')?.click();
@@ -183,17 +188,16 @@ test.describe('custom elements accept both spellings of every aliased event prop
     });
 
     expect(winner, 'the element disagrees with the component about which spelling wins').toEqual([
-      'corrected'
+      'lowercase'
     ]);
   });
 
-  test('a native-event prop corrected to lowercase reaches the component', async ({ page }) => {
+  test('a native-event prop reaches the component through its lowercase name', async ({ page }) => {
     await loadBundle(page);
 
-    // The other direction. sui-input forwards real DOM events, so its correct
-    // spelling is Svelte's lowercase one: onFocus is the legacy name and onfocus
-    // is the target. Declaring `onfocus` also shadows the host's own handler
-    // accessor, which is exactly why it is worth watching in a browser.
+    // sui-input forwards real DOM events; `onfocus` is its prop and `onFocus`
+    // the deprecated alias. Declaring `onfocus` also shadows the host's own
+    // handler accessor, which is exactly why it is worth watching in a browser.
     const fired = await page.evaluate(async () => {
       const element = document.createElement('sui-input');
       let count = 0;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { validateInput } from '$lib/utils';
   import type { InputProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { ValidationState } from '$lib/types';
 
   let {
@@ -30,20 +31,21 @@
     testId = '',
     textTransformers = [],
     textViewPresentation = [],
-    onFocus: onFocusLegacy = () => {},
+    onFocus: onFocusProp,
     onfocus,
-    onFocusout: onFocusoutLegacy = () => {},
+    onFocusout: onFocusoutProp,
     onfocusout,
-    onBlur: onBlurLegacy = () => {},
+    onBlur: onBlurProp,
     onblur,
-    onInput: onInputLegacy = () => {},
+    onInput: onInputProp,
     oninput,
-    onPaste: onPasteLegacy = () => {},
+    onPaste: onPasteProp,
     onpaste,
-    onStateChange = () => {},
-    onClick: onClickLegacy = () => {},
+    onStateChange: onStateChangeProp,
+    onstatechange,
+    onClick: onClickProp,
     onclick,
-    onKeyDown: onKeyDownLegacy = () => {},
+    onKeyDown: onKeyDownProp,
     onkeydown,
     classes,
     role,
@@ -54,8 +56,10 @@
     ariaActivedescendant,
     leftIcon,
     rightIcon,
-    onLeftIconClick,
-    onRightIconClick,
+    onLeftIconClick: onLeftIconClickProp,
+    onlefticonclick,
+    onRightIconClick: onRightIconClickProp,
+    onrighticonclick,
     leftIconLabel = 'Leading action',
     rightIconLabel = 'Trailing action',
     mandatory = false,
@@ -68,14 +72,70 @@
     showCount = false
   }: InputProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onBlur = $derived(onblur ?? onBlurLegacy);
-  const onClick = $derived(onclick ?? onClickLegacy);
-  const onFocus = $derived(onfocus ?? onFocusLegacy);
-  const onFocusout = $derived(onfocusout ?? onFocusoutLegacy);
-  const onInput = $derived(oninput ?? onInputLegacy);
-  const onKeyDown = $derived(onkeydown ?? onKeyDownLegacy);
-  const onPaste = $derived(onpaste ?? onPasteLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onBlur = $derived(resolveDeprecatedProp('Input', 'onBlur', 'onblur', onBlurProp, onblur));
+  const onClick = $derived(
+    resolveDeprecatedProp('Input', 'onClick', 'onclick', onClickProp, onclick)
+  );
+  const onFocus = $derived(
+    resolveDeprecatedProp('Input', 'onFocus', 'onfocus', onFocusProp, onfocus)
+  );
+  const onFocusout = $derived(
+    resolveDeprecatedProp('Input', 'onFocusout', 'onfocusout', onFocusoutProp, onfocusout)
+  );
+  const onInput = $derived(
+    resolveDeprecatedProp('Input', 'onInput', 'oninput', onInputProp, oninput)
+  );
+  const onKeyDown = $derived(
+    resolveDeprecatedProp('Input', 'onKeyDown', 'onkeydown', onKeyDownProp, onkeydown)
+  );
+  const onPaste = $derived(
+    resolveDeprecatedProp('Input', 'onPaste', 'onpaste', onPasteProp, onpaste)
+  );
+
+  const onLeftIconClick = $derived(
+    resolveDeprecatedProp(
+      'Input',
+      'onLeftIconClick',
+      'onlefticonclick',
+      onLeftIconClickProp,
+      onlefticonclick
+    )
+  );
+  const onRightIconClick = $derived(
+    resolveDeprecatedProp(
+      'Input',
+      'onRightIconClick',
+      'onrighticonclick',
+      onRightIconClickProp,
+      onrighticonclick
+    )
+  );
+  const onStateChange = $derived(
+    resolveDeprecatedProp(
+      'Input',
+      'onStateChange',
+      'onstatechange',
+      onStateChangeProp,
+      onstatechange
+    ) ?? (() => {})
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      onBlur,
+      onClick,
+      onFocus,
+      onFocusout,
+      onInput,
+      onKeyDown,
+      onPaste,
+      onLeftIconClick,
+      onRightIconClick,
+      onStateChange
+    );
+  });
 
   /* `for` on a <label> resolves against an element's id, never its name. The label
      was emitted with for={name} while the field itself carried only name={name},
@@ -236,7 +296,7 @@
       inputElement.value = currentValue;
     }
     value = inputElement.value;
-    onInput(inputElement.value, event);
+    onInput?.(inputElement.value, event);
   }
 
   /**
@@ -254,7 +314,7 @@
     // useTextArea) had no way to observe a paste at all. Hand the event over
     // before that branch and return, leaving tel's behaviour byte-identical.
     if (dataType !== 'tel') {
-      onPaste(event);
+      onPaste?.(event);
       return;
     }
 
@@ -288,7 +348,7 @@
           );
           // Adding reactivity
           value = finalValue;
-          onPaste(event);
+          onPaste?.(event);
           event.preventDefault(); // prevent bubble and let finalValue be entered
         }
         /**
@@ -309,8 +369,8 @@
     if (validationState === 'InProgress' && value.length > 0) {
       validationState = 'Invalid';
     }
-    onFocusout(event);
-    onBlur(event);
+    onFocusout?.(event);
+    onBlur?.(event);
   }
 </script>
 

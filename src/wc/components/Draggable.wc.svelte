@@ -16,7 +16,10 @@
       classes: { type: 'String' },
       onMoveStart: { type: 'Object' },
       onMove: { type: 'Object' },
-      onMoveEnd: { type: 'Object' }
+      onMoveEnd: { type: 'Object' },
+      onmovestart: { type: 'Object' },
+      onmove: { type: 'Object' },
+      onmoveend: { type: 'Object' }
     }
   }}
 />

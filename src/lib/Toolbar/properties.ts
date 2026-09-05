@@ -15,7 +15,10 @@ export type ToolbarProperties = ToolbarEventProperties & {
 };
 
 export type ToolbarEventProperties = {
+  onbackclick?: () => void;
+  /** @deprecated Use `onbackclick` instead; both work until 4.0.0. */
   onbackClick?: () => void;
+  /** @deprecated Use `onbackclick` instead; both work until 4.0.0. */
   onBackClick?: () => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

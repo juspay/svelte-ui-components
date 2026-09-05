@@ -1,6 +1,6 @@
 # LineChart
 
-A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, five curve interpolations (linear, monotone, spline, step, natural), gradient fill under the line, a `showArea` mode with per-gradient custom colours, an `xAxisCategories` prop that replaces numeric x indices with string labels, an imperative highlight API exposed via `onChartReady` for external orchestration (e.g. voice narration sync), a declarative `highlightedIndex` prop, an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltips. Zero external dependencies — built from pure SVG with CSS custom property theming.
+A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, five curve interpolations (linear, monotone, spline, step, natural), gradient fill under the line, a `showArea` mode with per-gradient custom colours, an `xAxisCategories` prop that replaces numeric x indices with string labels, an imperative highlight API exposed via `onchartready` for external orchestration (e.g. voice narration sync), a declarative `highlightedIndex` prop, an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltips. Zero external dependencies — built from pure SVG with CSS custom property theming.
 
 ## Usage
 
@@ -127,7 +127,7 @@ Receive a `ChartHighlightAPI` after mount to drive point highlighting from an ex
   const labels = api?.getCategories(); // e.g. ['Jan', 'Feb', 'Mar', ...]
 </script>
 
-<LineChart {series} xAxisCategories={months} {onChartReady} />
+<LineChart {series} xAxisCategories={months} onchartready={onChartReady} />
 ```
 
 ### highlightedIndex — Declarative Prop
@@ -272,7 +272,7 @@ on narrow charts. Y-axis ticks were already capped at 6.
 | ------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | onpointclick | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint }) => void`         | Fires when the plot area is clicked with a hovered point.                                                              |
 | onpointhover | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint } \| null) => void` | Fires when hover moves to a new point or leaves the chart. `null` on leave.                                            |
-| onChartReady | `(api: ChartHighlightAPI) => void`                                                                | Called once after mount. Provides a `ChartHighlightAPI` for imperative `highlight(index\|null)` and `getCategories()`. |
+| onchartready | `(api: ChartHighlightAPI) => void`                                                                | Called once after mount. Provides a `ChartHighlightAPI` for imperative `highlight(index\|null)` and `getCategories()`. |
 
 ## CSS Variables
 

@@ -170,7 +170,7 @@
     {/each}
     <button class="demo-btn" onclick={() => chartApi?.highlight(null)}>Clear</button>
   </div>
-  <PieChart data={marketShare} innerRadius={0.55} onChartReady={handleChartReady} />
+  <PieChart data={marketShare} innerRadius={0.55} onchartready={handleChartReady} />
 </div>
 
 <h3>Delta Badge + Highlight combined</h3>

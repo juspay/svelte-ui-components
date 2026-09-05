@@ -8,6 +8,7 @@
   import attachSvg from '$lib/assets/attach.svg?raw';
   import type { Action } from 'svelte/action';
   import type { ChatComposerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     value = $bindable(''),
@@ -26,17 +27,17 @@
     richVideoTooltip,
     richRemoveIcon,
     richFileIcon,
-    onremoverichimage: onremoverichimageLegacy,
+    onremoverichimage: onremoverichimageProp,
     onRemoveRichImage,
-    onremoverichfile: onremoverichfileLegacy,
+    onremoverichfile: onremoverichfileProp,
     onRemoveRichFile,
-    onremoverichvideo: onremoverichvideoLegacy,
+    onremoverichvideo: onremoverichvideoProp,
     onRemoveRichVideo,
-    onopenrichimage: onopenrichimageLegacy,
+    onopenrichimage: onopenrichimageProp,
     onOpenRichImage,
-    onopenrichvideo: onopenrichvideoLegacy,
+    onopenrichvideo: onopenrichvideoProp,
     onOpenRichVideo,
-    onopenrichfile: onopenrichfileLegacy,
+    onopenrichfile: onopenrichfileProp,
     onOpenRichFile,
     sendable = null,
     accept = '',
@@ -52,20 +53,20 @@
     actionIcon,
     actionLabel = 'Voice conversation',
     leading,
-    onsubmit: onsubmitLegacy,
+    onsubmit: onsubmitProp,
     onSubmit,
     oninput,
     onkeydown,
     onpaste,
-    onstop: onstopLegacy,
+    onstop: onstopProp,
     onStop,
-    onvoice: onvoiceLegacy,
+    onvoice: onvoiceProp,
     onVoice,
-    onattach: onattachLegacy,
+    onattach: onattachProp,
     onAttach,
-    onattachclick: onattachclickLegacy,
+    onattachclick: onattachclickProp,
     onAttachClick,
-    onaction: onactionLegacy,
+    onaction: onactionProp,
     onAction,
     testId,
     inputTestId,
@@ -79,19 +80,103 @@
     classes
   }: ChatComposerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onaction = $derived(onAction ?? onactionLegacy);
-  const onattach = $derived(onAttach ?? onattachLegacy);
-  const onattachclick = $derived(onAttachClick ?? onattachclickLegacy);
-  const onopenrichfile = $derived(onOpenRichFile ?? onopenrichfileLegacy);
-  const onopenrichimage = $derived(onOpenRichImage ?? onopenrichimageLegacy);
-  const onopenrichvideo = $derived(onOpenRichVideo ?? onopenrichvideoLegacy);
-  const onremoverichfile = $derived(onRemoveRichFile ?? onremoverichfileLegacy);
-  const onremoverichimage = $derived(onRemoveRichImage ?? onremoverichimageLegacy);
-  const onremoverichvideo = $derived(onRemoveRichVideo ?? onremoverichvideoLegacy);
-  const onstop = $derived(onStop ?? onstopLegacy);
-  const onsubmit = $derived(onSubmit ?? onsubmitLegacy);
-  const onvoice = $derived(onVoice ?? onvoiceLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onaction = $derived(
+    resolveDeprecatedProp('ChatComposer', 'onAction', 'onaction', onAction, onactionProp)
+  );
+  const onattach = $derived(
+    resolveDeprecatedProp('ChatComposer', 'onAttach', 'onattach', onAttach, onattachProp)
+  );
+  const onattachclick = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onAttachClick',
+      'onattachclick',
+      onAttachClick,
+      onattachclickProp
+    )
+  );
+  const onopenrichfile = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onOpenRichFile',
+      'onopenrichfile',
+      onOpenRichFile,
+      onopenrichfileProp
+    )
+  );
+  const onopenrichimage = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onOpenRichImage',
+      'onopenrichimage',
+      onOpenRichImage,
+      onopenrichimageProp
+    )
+  );
+  const onopenrichvideo = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onOpenRichVideo',
+      'onopenrichvideo',
+      onOpenRichVideo,
+      onopenrichvideoProp
+    )
+  );
+  const onremoverichfile = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onRemoveRichFile',
+      'onremoverichfile',
+      onRemoveRichFile,
+      onremoverichfileProp
+    )
+  );
+  const onremoverichimage = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onRemoveRichImage',
+      'onremoverichimage',
+      onRemoveRichImage,
+      onremoverichimageProp
+    )
+  );
+  const onremoverichvideo = $derived(
+    resolveDeprecatedProp(
+      'ChatComposer',
+      'onRemoveRichVideo',
+      'onremoverichvideo',
+      onRemoveRichVideo,
+      onremoverichvideoProp
+    )
+  );
+  const onstop = $derived(
+    resolveDeprecatedProp('ChatComposer', 'onStop', 'onstop', onStop, onstopProp)
+  );
+  const onsubmit = $derived(
+    resolveDeprecatedProp('ChatComposer', 'onSubmit', 'onsubmit', onSubmit, onsubmitProp)
+  );
+  const onvoice = $derived(
+    resolveDeprecatedProp('ChatComposer', 'onVoice', 'onvoice', onVoice, onvoiceProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      onaction,
+      onattach,
+      onattachclick,
+      onopenrichfile,
+      onopenrichimage,
+      onopenrichvideo,
+      onremoverichfile,
+      onremoverichimage,
+      onremoverichvideo,
+      onstop,
+      onsubmit,
+      onvoice
+    );
+  });
 
   let fileInput: HTMLInputElement | null = $state(null);
 
@@ -170,12 +255,12 @@
         images={richImages}
         videos={richVideos}
         files={richFiles}
-        onRemoveImage={onremoverichimage}
-        onRemoveVideo={onremoverichvideo}
-        onRemoveFile={onremoverichfile}
-        onOpenImage={onopenrichimage}
-        onOpenVideo={onopenrichvideo}
-        onOpenFile={onopenrichfile}
+        onremoveimage={onremoverichimage}
+        onremovevideo={onremoverichvideo}
+        onremovefile={onremoverichfile}
+        onopenimage={onopenrichimage}
+        onopenvideo={onopenrichvideo}
+        onopenfile={onopenrichfile}
         imageTooltip={richImageTooltip}
         videoTooltip={richVideoTooltip}
         removeIcon={richRemoveIcon}

@@ -78,7 +78,7 @@ Beyond `'text'` and `'custom'`, `column.type` selects a built-in renderer compos
 | `toggle`              | `TableToggleCellData` `{ checked?, ariaLabel?, testId? }`                                                                                 | a Toggle; `column.onToggle(rowIndex, checked)` receives the **new** state after the flip                                                                                                         |
 | `link`                | `TableLinkCellData` `{ url, label?, copyable? }` (or a bare url string)                                                                   | external link with an optional copy-to-clipboard affordance                                                                                                                                      |
 | `select`              | `TableSelectCellData` `{ options, selectedId?, placeholder?, disabled?, testId?, itemTestId? }`                                           | a Select; `column.onSelect(rowIndex, selectedId, originalIndex)`                                                                                                                                 |
-| `input`               | `TableInputCellData` `{ value?, placeholder?, disabled?, testId?, ariaLabel?, iconUrl?, dataType?, validationPattern?, onErrorMessage? }` | an Input; `column.onInput(rowIndex, value, originalIndex)`. `ariaLabel` names the field for screen readers (recommended — cells have no visible label); `iconUrl` renders a passive leading icon |
+| `input`               | `TableInputCellData` `{ value?, placeholder?, disabled?, testId?, ariaLabel?, iconUrl?, dataType?, validationPattern?, onErrorMessage? }` | an Input; `column.oninput(rowIndex, value, originalIndex)`. `ariaLabel` names the field for screen readers (recommended — cells have no visible label); `iconUrl` renders a passive leading icon |
 | `button`              | `TableButtonCellData` — union: `{ text, iconUrl?, ariaLabel?, … }` (text button) or `{ iconUrl, ariaLabel, … }` (icon-only)               | a Button; `column.onButtonClick(rowIndex, originalIndex)`. Icon-only buttons render as a bare ghost control and **require** `ariaLabel` (enforced by the type and the runtime narrowing)         |
 | `action-group`        | `TableActionGroupCellData` `{ primaryButton?, menuItems? }`                                                                               | a primary Button plus a kebab overflow Menu; `column.onPrimaryAction` / `column.onMenuAction`                                                                                                    |
 | `popup-menu`          | `TablePopupMenuCellData` `{ items, ariaLabel? }`                                                                                          | a kebab-triggered row Menu; `column.onMenuAction(rowIndex, itemId, originalIndex)`                                                                                                               |
@@ -125,7 +125,7 @@ const columns: TableColumn[] = [
 
 ### Sorting: getSortValue and server mode
 
-`column.getSortValue(row, rowIndex)` supplies the comparable value for client-side sorting (currency/date parsing stays in the consumer): `{ id: 'amount', getSortValue: (row) => Number(String(row.amount).replace(/[₹,]/g, '')) }`. Setting `sortMode="server"` keeps the header sort UI and `onSort` callback but skips the internal reorder — the consumer re-orders its rows (e.g. via a server query).
+`column.getSortValue(row, rowIndex)` supplies the comparable value for client-side sorting (currency/date parsing stays in the consumer): `{ id: 'amount', getSortValue: (row) => Number(String(row.amount).replace(/[₹,]/g, '')) }`. Setting `sortMode="server"` keeps the header sort UI and `onsort` callback but skips the internal reorder — the consumer re-orders its rows (e.g. via a server query).
 
 The standalone `sortTableRows(rows, columnIndex, direction, options?)` export sorts positional rows type-aware (numeric strings with thousands separators / percent / currency sort numerically; text case-insensitively; `sortType: 'date'` opt-in for dates, using range starts) with optional `hasSummaryRow` pinning and `nestedKey` extraction for object cells — useful for `sortMode="server"` consumers and unit tests.
 
@@ -395,7 +395,7 @@ Pass `checkboxSelection` to render a leading checkbox column. Set `selectionMode
 
 ### Search Bar
 
-Pass `searchConfig` to show a search input above the table. By default the table filters rows client-side across all columns. Pass `onSearchChange` to disable client-side filtering and delegate to the server instead.
+Pass `searchConfig` to show a search input above the table. By default the table filters rows client-side across all columns. Pass `onsearchchange` to disable client-side filtering and delegate to the server instead.
 
 ```svelte
 <!-- Server-side delegation: client filtering disabled, onSearchChange fires on every keystroke -->
@@ -418,7 +418,7 @@ Pass `searchConfig` to show a search input above the table. By default the table
   tableHeaders={['Name', 'Email', 'Role']}
   tableData={filteredRows}
   searchConfig={{ placeholder: 'Search…' }}
-  onSearchChange={(term) => {
+  onsearchchange={(term) => {
     filteredRows = fetchRows(term);
   }}
 />
@@ -426,7 +426,7 @@ Pass `searchConfig` to show a search input above the table. By default the table
 
 ### Editable Cells (onCellChange pattern)
 
-`onCellChange` is accepted as a prop for components that want to pass a handler via the standard props channel (e.g. for type-checking at the call site), but Table does **not** call it internally. The correct wiring pattern is to close over your own handler directly inside the `cell` snippet, which runs in consumer scope:
+`oncellchange` is accepted as a prop for components that want to pass a handler via the standard props channel (e.g. for type-checking at the call site), but Table does **not** call it internally. The correct wiring pattern is to close over your own handler directly inside the `cell` snippet, which runs in consumer scope:
 
 ```svelte
 <script>
@@ -445,7 +445,7 @@ Pass `searchConfig` to show a search input above the table. By default the table
   {#snippet cell(value, rowIndex, colIndex)}
     <Input
       value={String(value ?? '')}
-      onInput={(newValue) => handleCellChange(rowIndex, colIndex, newValue)}
+      oninput={(newValue) => handleCellChange(rowIndex, colIndex, newValue)}
     />
   {/snippet}
 </Table>
@@ -475,10 +475,10 @@ Pass `searchConfig` to show a search input above the table. By default the table
 | getRowTestId          | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                                                                                                                  |
 | getCellTestId         | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                                                                                                      |
 | checkboxSelection     | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                                                                                                        |
-| searchConfig          | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onSearchChange` to delegate filtering to the server. See `TableSearchConfig` type below.                                                                                     |
+| searchConfig          | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onsearchchange` to delegate filtering to the server. See `TableSearchConfig` type below.                                                                                     |
 | columns               | `TableColumn[]`                                                     | No       | `-`                   | Keyed column model (preferred). When provided, `columns`/`rows` are normalized internally onto the same engine as `tableHeaders`/`tableData`, which are then ignored for that instance. See `TableColumn` type below and "Usage" above.                                     |
 | rows                  | `TableRow[]`                                                        | No       | `-`                   | Keyed row data, addressed by `TableColumn.id`. Used with `columns`. Missing keys render as empty cells. See `TableRow` type below.                                                                                                                                          |
-| sortMode              | `'client' \| 'server'`                                              | No       | `'client'`            | `'client'` sorts rows internally on header click. `'server'` keeps the header sort UI and `onSort` callback but skips the internal reorder — the consumer re-orders the data itself.                                                                                        |
+| sortMode              | `'client' \| 'server'`                                              | No       | `'client'`            | `'client'` sorts rows internally on header click. `'server'` keeps the header sort UI and `onsort` callback but skips the internal reorder — the consumer re-orders the data itself.                                                                                        |
 | pagination            | `TablePaginationConfig`                                             | No       | `-`                   | Built-in footer paginator (range label, optional page-size selector, page controls). See `TablePaginationConfig` type below and "Built-in Pagination" above.                                                                                                                |
 | toolbarSlot           | `Snippet<[{ selectedIds: Set<string> }]>`                           | No       | `-`                   | Bulk-action bar rendered above the table while the checkbox selection is non-empty. The library owns only placement — content is entirely consumer-rendered. See "Controlled Selection + Bulk Toolbar" above.                                                               |
 | rowNumberColumn       | `boolean`                                                           | No       | `false`               | Prepends a sequential row-number column (1-based, pagination-aware).                                                                                                                                                                                                        |
@@ -503,10 +503,10 @@ Pass `searchConfig` to show a search input above the table. By default the table
 
 | Event          | Type                                                                | Description                                                                                                                                                                                                                                                               |
 | -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onRowClick     | `(rowIndex: number, rowData: JSONValue[]) => void`                  | Fires when a data row is clicked. The row becomes focusable and keyboard-navigable when provided.                                                                                                                                                                         |
-| onSort         | `(columnIndex: number, direction: SortDirection) => void`           | Fires after a column sort is toggled. `direction` is `'asc'` or `'desc'`.                                                                                                                                                                                                 |
-| onCellChange   | `(rowIndex: number, colIndex: number, newValue: JSONValue) => void` | Accepted as a prop for type-checking at the call site, but **not called by Table internally**. Wire your handler directly inside the `cell` snippet instead — snippets run in consumer scope and already have your handler in closure. See "Editable Cells" recipe above. |
-| onSearchChange | `(searchTerm: string) => void`                                      | When provided, disables built-in client-side filtering and calls this callback on every search input change. Use to delegate filtering to the server. Requires `searchConfig` to be set.                                                                                  |
+| onrowclick     | `(rowIndex: number, rowData: JSONValue[]) => void`                  | Fires when a data row is clicked. The row becomes focusable and keyboard-navigable when provided.                                                                                                                                                                         |
+| onsort         | `(columnIndex: number, direction: SortDirection) => void`           | Fires after a column sort is toggled. `direction` is `'asc'` or `'desc'`.                                                                                                                                                                                                 |
+| oncellchange   | `(rowIndex: number, colIndex: number, newValue: JSONValue) => void` | Accepted as a prop for type-checking at the call site, but **not called by Table internally**. Wire your handler directly inside the `cell` snippet instead — snippets run in consumer scope and already have your handler in closure. See "Editable Cells" recipe above. |
+| onsearchchange | `(searchTerm: string) => void`                                      | When provided, disables built-in client-side filtering and calls this callback on every search input change. Use to delegate filtering to the server. Requires `searchConfig` to be set.                                                                                  |
 
 ## CSS Variables
 

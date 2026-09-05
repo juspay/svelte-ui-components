@@ -156,5 +156,6 @@ export type DualAxisBarChartEventProperties = {
    * Receives the category index and the full tooltip context for that category.
    */
   onbarclick?: (event: { categoryIndex: number; context: DualAxisTooltipContext }) => void;
+  /** @deprecated Use `onbarclick` instead; both work until 4.0.0. */
   onBarClick?: (event: { categoryIndex: number; context: DualAxisTooltipContext }) => void;
 };

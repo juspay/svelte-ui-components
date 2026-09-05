@@ -1,6 +1,6 @@
 # Toast
 
-An animated notification that slides in from a configurable direction, stays visible for `duration` milliseconds, then slides out and fires `onToastHide`. Supports type variants (success/error/info/warn) that apply different background colors. The toast can overlap the page (absolute positioning) or be inline (relative). Has optional left icon, right icon (acts as close button), subtext, and bottom content snippet.
+An animated notification that slides in from a configurable direction, stays visible for `duration` milliseconds, then slides out and fires `ontoasthide`. Supports type variants (success/error/info/warn) that apply different background colors. The toast can overlap the page (absolute positioning) or be inline (relative). Has optional left icon, right icon (acts as close button), subtext, and bottom content snippet.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 | Event       | Type         | Description                                                                                                                   |
 | ----------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| onToastHide | `() => void` | Fires after the toast has fully animated out (outro animation complete). Use this to clean up or remove the toast from state. |
+| ontoasthide | `() => void` | Fires after the toast has fully animated out (outro animation complete). Use this to clean up or remove the toast from state. |
 
 ## CSS Variables
 

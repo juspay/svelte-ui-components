@@ -22,7 +22,7 @@ Page-level navigation with numbered page buttons, prev/next controls, and ellips
 | disabled         | `boolean` | No       | `false` | Whether the entire pagination is disabled. When true, all buttons become non-interactive, the container dims (opacity 0.5), and the cursor changes to not-allowed.                                                                                                                                                     |
 | testId           | `string`  | No       | `-`     | Value for the `data-pw` attribute on the nav container, used for end-to-end testing selectors.                                                                                                                                                                                                                         |
 | classes          | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                 |
-| hasMore          | `boolean` | No       | `false` | Cursor / load-more mode. When `true`, the next button stays enabled past `currentPage >= totalPages`; on the last known page it becomes a load-more CTA (see `onLoadMore`). `totalPages` precedence: the plain next-button is enabled only if `hasMore` is `true` OR `currentPage < totalPages`. |
+| hasMore          | `boolean` | No       | `false` | Cursor / load-more mode. When `true`, the next button stays enabled past `currentPage >= totalPages`; on the last known page it becomes a load-more CTA (see `onloadmore`). `totalPages` precedence: the plain next-button is enabled only if `hasMore` is `true` OR `currentPage < totalPages`. |
 | prevButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the previous-page button, used for end-to-end testing selectors.                                                                                                                                                                                                                  |
 | nextButtonTestId | `string`  | No       | `-`     | Value for the `data-pw` attribute on the next-page button (and the load-more CTA in cursor mode), used for end-to-end testing selectors.                                                                                                                                                                                |
 
@@ -31,7 +31,7 @@ Page-level navigation with numbered page buttons, prev/next controls, and ellips
 | Event      | Type                     | Description                                                                                                                                                                                                                      |
 | ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | onchange   | `(page: number) => void` | Fires when a new page is selected via page button or prev/next click. Receives the new page number. Does NOT fire when clicking the already-active page, when disabled, or when clicking prev on page 1 / next on the last page. |
-| onLoadMore | `() => void`             | Fires when the load-more CTA is clicked (cursor mode). Use this to fetch the next page of data and increment `totalPages`.                                                                                                       |
+| onloadmore | `() => void`             | Fires when the load-more CTA is clicked (cursor mode). Use this to fetch the next page of data and increment `totalPages`.                                                                                                       |
 
 ## CSS Variables
 
@@ -111,7 +111,7 @@ Override these custom properties to theme the component.
 
 ## Cursor / Load-more mode
 
-Set `hasMore` to `true` when your data source uses cursor-based pagination and you do not yet know the total page count. When the user reaches the last known page, the next-button is replaced by a load-more CTA (styled via `--pagination-load-more-*` CSS variables). Clicking it fires `onLoadMore`; your handler fetches the next batch and increments `totalPages`.
+Set `hasMore` to `true` when your data source uses cursor-based pagination and you do not yet know the total page count. When the user reaches the last known page, the next-button is replaced by a load-more CTA (styled via `--pagination-load-more-*` CSS variables). Clicking it fires `onloadmore`; your handler fetches the next batch and increments `totalPages`.
 
 ```svelte
 <script>
@@ -134,7 +134,7 @@ Set `hasMore` to `true` when your data source uses cursor-based pagination and y
   {totalPages}
   bind:currentPage
   {hasMore}
-  onLoadMore={handleLoadMore}
+  onloadmore={handleLoadMore}
 />
 ```
 

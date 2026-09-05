@@ -22,9 +22,12 @@ export type OptionalCalendarProperties = {
 
 export type CalendarEventProperties = {
   onselect?: (event: { date: Date }) => void;
+  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
   onSelect?: (event: { date: Date }) => void;
   onrangeselect?: (event: { rangeStart: Date; rangeEnd: Date }) => void;
+  /** @deprecated Use `onrangeselect` instead; both work until 4.0.0. */
   onRangeSelect?: (event: { rangeStart: Date; rangeEnd: Date }) => void;
   onmonthchange?: (event: { year: number; month: number }) => void;
+  /** @deprecated Use `onmonthchange` instead; both work until 4.0.0. */
   onMonthChange?: (event: { year: number; month: number }) => void;
 };

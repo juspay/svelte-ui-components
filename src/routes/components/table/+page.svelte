@@ -646,7 +646,7 @@
     columns={interactiveColumns}
     rows={interactiveRows}
     testId="table-interactive-cells"
-    onRowClick={(rowIndex) => {
+    onrowclick={(rowIndex) => {
       rowClickLog = `row ${rowIndex}`;
     }}
   />
@@ -672,7 +672,7 @@
     rows={serverRows}
     sortMode="server"
     testId="table-server-sort"
-    onSort={handleServerSort}
+    onsort={handleServerSort}
   />
   <p data-pw="server-sort-log" style="margin-top: 8px; color: #64748b; font-size: 14px;">
     Sort request: {serverSortLog}
@@ -889,7 +889,7 @@
       ['iPhone 15', 'Phone', '$999'],
       ['AirPods Pro', 'Audio', '$249']
     ]}
-    onRowClick={handleRowClick}
+    onrowclick={handleRowClick}
     --table-row-hover-background="#f0f9ff"
   />
   {#if clickedRow}
@@ -995,7 +995,7 @@
     ]}
     {getRowTestId}
     {getCellTestId}
-    onRowClick={(rowIndex, rowData) => {
+    onrowclick={(rowIndex, rowData) => {
       lastCellTestId = getCellTestId(rowData, rowData[0], rowIndex);
     }}
     --table-row-hover-background="#f0f9ff"
@@ -1112,7 +1112,7 @@
     tableHeaders={['Product', 'Category', 'Price']}
     tableData={serverFilteredRows}
     searchConfig={{ placeholder: 'Search products…', testId: 'product-search' }}
-    onSearchChange={(term) => {
+    onsearchchange={(term) => {
       serverSearchTerm = term;
     }}
     --table-row-hover-background="#f9fafb"
@@ -1133,7 +1133,7 @@
   <Table
     tableHeaders={['Name', 'Department']}
     tableData={editableRows}
-    onCellChange={handleCellChange}
+    oncellchange={handleCellChange}
   >
     {#snippet cell(value, rowIndex, colIndex)}
       <!-- The snippet runs in consumer scope — handleCellChange is already in closure -->

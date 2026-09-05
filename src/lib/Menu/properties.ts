@@ -95,9 +95,12 @@ export type OptionalMenuProperties = {
 
 export type MenuEventProperties = {
   onselect?: (item: MenuItem) => void;
+  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
   onSelect?: (item: MenuItem) => void;
   onopen?: () => void;
+  /** @deprecated Use `onopen` instead; both work until 4.0.0. */
   onOpen?: () => void;
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
 };

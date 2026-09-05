@@ -4,6 +4,7 @@
   import Scroller from '../Scroller/Scroller.svelte';
   import { tooltip } from '../Tooltip/tooltip-action';
   import type { AttachmentChipRowProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   /**
    * The pending-attachment strip above a chat composer: image thumbnails, video
@@ -15,12 +16,18 @@
     images = [],
     files = [],
     videos = [],
-    onRemoveImage,
-    onRemoveFile,
-    onRemoveVideo,
-    onOpenImage,
-    onOpenVideo,
-    onOpenFile,
+    onRemoveImage: onRemoveImageProp,
+    onremoveimage,
+    onRemoveFile: onRemoveFileProp,
+    onremovefile,
+    onRemoveVideo: onRemoveVideoProp,
+    onremovevideo,
+    onOpenImage: onOpenImageProp,
+    onopenimage,
+    onOpenVideo: onOpenVideoProp,
+    onopenvideo,
+    onOpenFile: onOpenFileProp,
+    onopenfile,
     imageTooltip,
     videoTooltip,
     removeIcon,
@@ -28,6 +35,74 @@
     testId,
     classes
   }: AttachmentChipRowProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onRemoveImage = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onRemoveImage',
+      'onremoveimage',
+      onRemoveImageProp,
+      onremoveimage
+    )
+  );
+  const onRemoveFile = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onRemoveFile',
+      'onremovefile',
+      onRemoveFileProp,
+      onremovefile
+    )
+  );
+  const onRemoveVideo = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onRemoveVideo',
+      'onremovevideo',
+      onRemoveVideoProp,
+      onremovevideo
+    )
+  );
+  const onOpenImage = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onOpenImage',
+      'onopenimage',
+      onOpenImageProp,
+      onopenimage
+    )
+  );
+  const onOpenVideo = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onOpenVideo',
+      'onopenvideo',
+      onOpenVideoProp,
+      onopenvideo
+    )
+  );
+  const onOpenFile = $derived(
+    resolveDeprecatedProp(
+      'AttachmentChipRow',
+      'onOpenFile',
+      'onopenfile',
+      onOpenFileProp,
+      onopenfile
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      onRemoveImage,
+      onRemoveFile,
+      onRemoveVideo,
+      onOpenImage,
+      onOpenVideo,
+      onOpenFile
+    );
+  });
 </script>
 
 {#if images.length > 0 || videos.length > 0 || files.length > 0}

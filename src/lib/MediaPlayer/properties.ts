@@ -38,5 +38,6 @@ export type MediaPlayerEventProperties = {
   onplay?: (event: Event) => void;
   onpause?: (event: Event) => void;
   onvolumechange?: (muted: boolean) => void;
+  /** @deprecated Use `onvolumechange` instead; both work until 4.0.0. */
   onVolumeChange?: (muted: boolean) => void;
 };

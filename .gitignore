@@ -19,3 +19,6 @@ playwright-report/
 playwright-report-visual/
 .superpowers/
 juspay-svelte-ui-components-*.tgz
+
+# compiled codemod, produced by build:codemod
+dist-codemod

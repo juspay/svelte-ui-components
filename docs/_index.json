@@ -8,6 +8,10 @@
     "description": "A responsive SVG area chart for visualizing volume under a trend. Supports multiple series with regular stacking, 100% (normalized) stacking, configurable fill opacity, data labels, hover overlay with crosshair, and custom tooltips. Shares the same curve types and axis options as LineChart."
   },
   {
+    "name": "AttachmentChipRow",
+    "description": "The pending-attachment strip above a chat composer: image thumbnails and file tiles, each with a floating remove button, scrolling horizontally through the library `Scroller` when they overflow. Renders nothing while there are no attachments."
+  },
+  {
     "name": "Avatar",
     "description": "A circular user avatar that displays an image (via the Img component with fallback support) or a text initial. Supports configurable size, border, and status indicator via CSS variables."
   },
@@ -360,6 +364,14 @@
     "description": "An image gallery with grid or list layout and an optional full-screen lightbox (previous/next nav, counter, caption, focus-trapped keyboard control - arrows, Home/End, Escape, Tab). open/activeIndex are bindable. Optional per-item edit/delete actions appear only when their handler prop (onEditClick/onDeleteClick) is provided - no separate show flags. Grid items can render fully custom content via the itemFooter snippet. Events are onImageClick/onEditClick/onDeleteClick/onOpen/onDismiss/onIndexChange (camelCase, synthesized) plus onkeydown (lowercase, a genuine native KeyboardEvent relay) - onDismiss specifically avoids onClose since no real <dialog> element is involved."
   },
   {
+    "name": "HITL",
+    "description": "Human-in-the-loop approval: the assistant wants to run an action, and the person approves or cancels it before it executes. Unless disabled, a countdown sweeps across the confirm button and auto-approves the action when it completes. Interacting with any HITL pauses every sibling card's countdown, so an auto-approval never fires while the user is actively deciding."
+  },
+  {
+    "name": "KeyValue",
+    "description": "A read-only label/value grid for rendering detail views — offer summaries, customer profiles, order metadata, and similar \"field: value\" layouts. Pairs flow row-major across a configurable number of columns, collapsing to a single column on narrow screens. Empty values are skipped by default (so optional fields disappear cleanly), and either side can be fully customised with a snippet for rendering tags, links, avatars, or formatted values. For a single prominent metric with a delta badge and dashboard framing, use `StatCard` instead."
+  },
+  {
     "name": "ThinkingIndicator",
     "description": "An AI status line for chat turns: a shimmering label while the model works, an optional expandable detail — either a plain reasoning paragraph or a kind-aware trace (steps checklist with a live frontier spinner, prose reasoning, linked search sources with toned badges, or selectable file edits with diff stats) — plus a host-driven busy machine (auto-open, once-only `onsettled`, post-settle auto-collapse a user toggle overrides) and an opt-in live elapsed-seconds counter that ticks while busy and freezes on settle."
   },
@@ -374,5 +386,9 @@
   {
     "name": "SoundKit",
     "description": "A synthesized, SSR-safe UI sound engine (module export `createSoundKit`, not a component): five Web Audio recipes (press/tick/release/page/pulse), a master gain, opt-in enablement persisted to localStorage, and a capture-phase click listener mapping controls to sounds semantically with `data-sound` overrides."
+  },
+  {
+    "name": "TypewriterText",
+    "description": "Reveals text one character at a time, the way a streaming model answer reads. Built for streaming: while `isStreaming` is `true`, typing follows the growing `text` without restarting; the moment it turns `false`, the remainder appears at once."
   }
 ]

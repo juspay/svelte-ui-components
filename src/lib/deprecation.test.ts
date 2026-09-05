@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEPRECATION_REMOVAL_VERSION,
   resetDeprecationWarnings,
+  resolveDeprecatedProp,
   warnDeprecatedProp
 } from './deprecation.js';
 
@@ -82,5 +83,92 @@ describe('deprecated-prop warnings', () => {
     warnDeprecatedProp('Pill', 'onclick', 'onClick');
 
     expect(console.warn).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('resolveDeprecatedProp', () => {
+  beforeEach(() => {
+    resetDeprecationWarnings();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  // Mirrors how a component actually calls this: two optional bindings out of
+  // the same `$props()` destructure, one of them possibly absent. Declaring
+  // them through an object with `?:` fields -- rather than passing a value
+  // directly -- is what lets a case below omit one without writing the
+  // banned `undefined` identifier.
+  type Toggle = { readonly onclickLegacy?: string; readonly onClick?: string };
+
+  it('falls back to the legacy value, and warns once however many times it is called', () => {
+    const props: Toggle = { onclickLegacy: 'legacy-value' };
+
+    const first = resolveDeprecatedProp(
+      'Toggle',
+      'onclick',
+      'onClick',
+      props.onclickLegacy,
+      props.onClick
+    );
+    const second = resolveDeprecatedProp(
+      'Toggle',
+      'onclick',
+      'onClick',
+      props.onclickLegacy,
+      props.onClick
+    );
+
+    expect(first).toBe('legacy-value');
+    expect(second).toBe('legacy-value');
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('prefers the corrected value over the legacy one, and stays silent', () => {
+    const props: Toggle = { onclickLegacy: 'legacy-value', onClick: 'current-value' };
+
+    const result = resolveDeprecatedProp(
+      'Toggle',
+      'onclick',
+      'onClick',
+      props.onclickLegacy,
+      props.onClick
+    );
+
+    expect(result).toBe('current-value');
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('returns the corrected value untouched, and stays silent, when no legacy value was ever supplied', () => {
+    const props: Toggle = { onClick: 'current-value' };
+
+    const result = resolveDeprecatedProp(
+      'Toggle',
+      'onclick',
+      'onClick',
+      props.onclickLegacy,
+      props.onClick
+    );
+
+    expect(result).toBe('current-value');
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('stays silent, and resolves to nothing, when neither spelling was supplied', () => {
+    const props: Toggle = {};
+
+    const result = resolveDeprecatedProp(
+      'Toggle',
+      'onclick',
+      'onClick',
+      props.onclickLegacy,
+      props.onClick
+    );
+
+    expect(result).toBeUndefined();
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

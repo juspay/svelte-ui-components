@@ -2,9 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import type { Direction } from './map.ts';
-import { transformModuleSpecifiers, transformSvelte } from './transform.ts';
-import type { TransformResult } from './transform.ts';
+import { transformSvelte } from './transform.ts';
 import { findChildrenAssignments } from './wc-children.ts';
 
 export type CliSummary = {
@@ -12,18 +10,18 @@ export type CliSummary = {
   readonly filesScanned: number;
   readonly filesChanged: number;
   readonly propsRenamed: number;
-  readonly importsRewritten: number;
   readonly warnings: number;
 };
 
 const USAGE = [
-  'Usage: node scripts/codemod/cli.ts [--reverse] [--dry-run] <path...>',
+  'Usage: npx sui-codemod [--dry-run] <path...>',
+  '       (inside this repository: node scripts/codemod/cli.ts ...)',
   '',
-  'Migrates consumer sources from polymorph-ui-components to',
-  '@juspay/svelte-ui-components: rewrites import specifiers and renames the',
-  'casing-only synthetic event props on library components (see map.ts).',
+  'Prepares a @juspay/svelte-ui-components consumer for 4.0.0: renames every',
+  'deprecated event-prop spelling on library components to its corrected',
+  'spelling (see legacy-pairs.ts) and reports `children` assignments on the',
+  'custom elements that stop declaring it.',
   '',
-  '  --reverse   migrate @juspay/svelte-ui-components -> polymorph-ui-components',
   '  --dry-run   print every change as a diff without writing any file',
   '  --help      show this help',
   '',
@@ -44,6 +42,8 @@ const SKIPPED_DIRECTORIES = new Set([
   'test-results'
 ]);
 
+// Scripts are scanned for `children` assignments only; the prop renames live
+// in markup, so .svelte files are the only ones ever rewritten.
 const SCRIPT_FILE = /\.(ts|js|mts|mjs|cts|cjs)$/;
 
 function collectFiles(path: string, out: Set<string>): void {
@@ -110,7 +110,6 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
     filesScanned: 0,
     filesChanged: 0,
     propsRenamed: 0,
-    importsRewritten: 0,
     warnings: 0
   };
   let parsed;
@@ -118,7 +117,6 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
     parsed = parseArgs({
       args: [...argv],
       options: {
-        reverse: { type: 'boolean' },
         'dry-run': { type: 'boolean' },
         help: { type: 'boolean' }
       },
@@ -144,7 +142,6 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
       return failure;
     }
   }
-  const direction: Direction = parsed.values.reverse === true ? 'to-poly' : 'to-sui';
   const dryRun = parsed.values['dry-run'] === true;
 
   const files = new Set<string>();
@@ -154,16 +151,15 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
 
   let filesChanged = 0;
   let propsRenamed = 0;
-  let importsRewritten = 0;
   let warnings = 0;
   for (const file of files) {
     const source = readFileSync(file, 'utf8');
-    const result: TransformResult = file.endsWith('.svelte')
-      ? transformSvelte(source, file, direction)
-      : transformModuleSpecifiers(source, file, direction);
-    // Reported in both directions and in dry runs: it is a 4.0.0 breaking change
-    // to report, not a rename to apply, so it never contributes to filesChanged.
-    const childrenWarnings = direction === 'to-sui' ? findChildrenAssignments(source, file) : [];
+    // The `children` removal is a 4.0.0 breaking change to report, not a
+    // rename to apply, so it never contributes to filesChanged.
+    const childrenWarnings = findChildrenAssignments(source, file);
+    const result = file.endsWith('.svelte')
+      ? transformSvelte(source, file)
+      : { code: source, changed: false, propsRenamed: 0, warnings: [] };
     for (const warning of [...result.warnings, ...childrenWarnings]) {
       log(`${warning.file}:${warning.line}:${warning.column} WARN ${warning.message}`);
     }
@@ -173,26 +169,22 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
     }
     filesChanged += 1;
     propsRenamed += result.propsRenamed;
-    importsRewritten += result.importsRewritten;
     if (dryRun) {
       printLineDiff(file, source, result.code, log);
     } else {
       writeFileSync(file, result.code);
-      log(
-        `${file}: ${result.propsRenamed} prop(s) renamed, ${result.importsRewritten} import(s) rewritten`
-      );
+      log(`${file}: ${result.propsRenamed} prop(s) renamed`);
     }
   }
   log(
     `${dryRun ? '[dry run] ' : ''}scanned ${files.size} file(s), changed ${filesChanged}, ` +
-      `renamed ${propsRenamed} prop(s), rewrote ${importsRewritten} import(s), ${warnings} warning(s)`
+      `renamed ${propsRenamed} prop(s), ${warnings} warning(s)`
   );
   return {
     exitCode: 0,
     filesScanned: files.size,
     filesChanged,
     propsRenamed,
-    importsRewritten,
     warnings
   };
 }

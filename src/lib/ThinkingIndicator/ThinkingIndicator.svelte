@@ -5,6 +5,7 @@
   import Loader from '../Loader/Loader.svelte';
   import Pill from '../Pill/Pill.svelte';
   import type { ThinkingIndicatorProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     label,
@@ -12,7 +13,8 @@
     expanded = $bindable(false),
     variant = 'default',
     showElapsed = false,
-    onToggle,
+    onToggle: onToggleProp,
+    ontoggle,
     avatar,
     toggleIcon,
     testId,
@@ -27,16 +29,35 @@
     moreLabel,
     selectable = false,
     selected = $bindable(null),
-    onrowselect: onrowselectLegacy,
+    onrowselect: onrowselectProp,
     onRowSelect,
-    onsettled: onsettledLegacy,
+    onsettled: onsettledProp,
     onSettled,
     collapseDelayMs = 2600
   }: ThinkingIndicatorProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onrowselect = $derived(onRowSelect ?? onrowselectLegacy);
-  const onsettled = $derived(onSettled ?? onsettledLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onrowselect = $derived(
+    resolveDeprecatedProp(
+      'ThinkingIndicator',
+      'onRowSelect',
+      'onrowselect',
+      onRowSelect,
+      onrowselectProp
+    )
+  );
+  const onsettled = $derived(
+    resolveDeprecatedProp('ThinkingIndicator', 'onSettled', 'onsettled', onSettled, onsettledProp)
+  );
+
+  const onToggle = $derived(
+    resolveDeprecatedProp('ThinkingIndicator', 'onToggle', 'ontoggle', onToggleProp, ontoggle)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onrowselect, onsettled, onToggle);
+  });
 
   // `rows` being present at all (even `[]`) puts the indicator into trace mode: the
   // Accordion body renders the kind-aware trace instead of the `detail` paragraph,

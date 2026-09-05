@@ -68,7 +68,7 @@ Call `initialize()` eagerly (e.g. in `onMount`) when you want support detection 
 | `seedTranscript`            | `() => string`                                           | `-`                | Text the transcript starts from when listening begins (e.g. the composer's current value).               |
 | `onTranscript`              | `(transcript: string) => void`                           | `-`                | Fires with the accumulated transcript each time a final result lands.                                    |
 | `onListeningChange`         | `(listening: boolean) => void`                           | `-`                | Fires on notified start/stop.                                                                            |
-| `onError`                   | `(message: string, code: string \| null) => void`        | `-`                | Fires whenever the toast is shown; `code` is the recognition error code when there is one.               |
+| `onerror`                   | `(message: string, code: string \| null) => void`        | `-`                | Fires whenever the toast is shown; `code` is the recognition error code when there is one.               |
 | `onDiagnostic`              | `(event: string, detail: Record<string, string \| number \| boolean \| null>) => void` | `-` | Non-fatal internals worth logging; wire to your telemetry.                                               |
 
 ## Notes

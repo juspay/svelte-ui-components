@@ -38,7 +38,7 @@
       dismissible
       testId="pill-interactive"
       onclick={() => (pillClickCount += 1)}
-      onDismiss={() => (dismissCount += 1)}
+      ondismiss={() => (dismissCount += 1)}
     />
     <span data-pw="pill-click-count">{pillClickCount}</span>
   </div>
@@ -50,14 +50,14 @@
       testId="pill-dismiss-under-variant-rule"
       text="Shopify variant theme"
       dismissible
-      onDismiss={() => (dismissCount += 1)}
+      ondismiss={() => (dismissCount += 1)}
     />
     <Pill
       testId="pill-dismiss-disabled"
       text="Disabled dismiss"
       dismissible
       disabled
-      onDismiss={() => (dismissCount += 1)}
+      ondismiss={() => (dismissCount += 1)}
     />
     <Pill
       testId="pill-dismiss-custom-colour"

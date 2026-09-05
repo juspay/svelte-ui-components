@@ -97,7 +97,7 @@ Set `highlightedIndex` to a zero-based category index to emphasise that bar and 
 <button onclick={() => (highlighted = null)}>Clear highlight</button>
 ```
 
-### Imperative Highlight via `onChartReady`
+### Imperative Highlight via `onchartready`
 
 Receive a `ChartHighlightAPI` handle on mount to drive highlighting from outside the chart (e.g. synchronised with a voice narrator or a sibling component). The handle's `type` is always `'bar-chart'`.
 
@@ -115,7 +115,7 @@ Receive a `ChartHighlightAPI` handle on mount to drive highlighting from outside
   const clear = () => chartApi?.highlight(null);
 </script>
 
-<BarChart {data} onChartReady={handleReady} />
+<BarChart {data} onchartready={handleReady} />
 <button onclick={highlightSecond}>Highlight Feb</button>
 <button onclick={clear}>Clear</button>
 ```
@@ -168,8 +168,8 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 | scrollable            | `boolean`                              | No       | `false`      | Wraps the chart in a horizontally-scrollable container. Use with `minBandWidth` to keep bars readable.                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | minBandWidth          | `number`                               | No       | `48`         | Minimum pixel width per category band when `scrollable` is `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | marginX               | `number`                               | No       | auto         | Fixed horizontal inset (px) between the svg edges and the plot, overriding the auto layout's left/right margins. Use for edge-to-edge funnels where tick-label padding leaves dead space beside the first/last bars; short category labels recommended (long edge labels may clip).                                                                                                                                                                                                                                       |
-| onChartReady          | `(api: ChartHighlightAPI) => void`     | No       | `-`          | Called once on mount with an imperative highlight handle. Use `api.highlight(index)` to emphasise a bar; `api.highlight(null)` clears. `api.getCategories()` returns the ordered label list. `api.type` is always `'bar-chart'`.                                                                                                                                                                                                                                                                                          |
-| highlightedIndex      | `number \| null`                       | No       | `null`       | Declarative highlight: the bar at this zero-based index is shown at full opacity; all others are dimmed. Overrides any index set via `onChartReady`. Set to `null` to show all bars normally.                                                                                                                                                                                                                                                                                                                             |
+| onchartready          | `(api: ChartHighlightAPI) => void`     | No       | `-`          | Called once on mount with an imperative highlight handle. Use `api.highlight(index)` to emphasise a bar; `api.highlight(null)` clears. `api.getCategories()` returns the ordered label list. `api.type` is always `'bar-chart'`.                                                                                                                                                                                                                                                                                          |
+| highlightedIndex      | `number \| null`                       | No       | `null`       | Declarative highlight: the bar at this zero-based index is shown at full opacity; all others are dimmed. Overrides any index set via `onchartready`. Set to `null` to show all bars normally.                                                                                                                                                                                                                                                                                                                             |
 | normaliseToFirstPoint | `boolean`                              | No       | `false`      | When `true`, each series' values are expressed as a percentage of that series' own first data point (baseline = 100). Series whose first point is zero are left unchanged.                                                                                                                                                                                                                                                                                                                                                |
 | topN                  | `number`                               | No       | `-`          | Keep only the top `topN` bars by value (descending). The remaining bars are summed into one overflow bar labelled by `overflowLabel`. Has no effect when the chart already has `topN` or fewer bars.                                                                                                                                                                                                                                                                                                                      |
 | overflowLabel         | `string`                               | No       | `"Other"`    | Label for the aggregated overflow bar produced by `topN`. Has no effect when `topN` is not set.                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -228,7 +228,7 @@ Override these custom properties to theme the component.
 | `--chart-empty-padding`              | `32px 24px`                 | padding          | Padding around the empty state content.                                   |
 | `--chart-empty-color`                | `#9ca3af`                   | color            | Text color of empty state default.                                        |
 | `--barchart-bar-hover-opacity`       | `1`                         | opacity          | Opacity of the hovered bar.                                               |
-| `--barchart-bar-highlighted-opacity` | `1`                         | opacity          | Opacity of a bar emphasised via `highlightedIndex` or `onChartReady`.     |
+| `--barchart-bar-highlighted-opacity` | `1`                         | opacity          | Opacity of a bar emphasised via `highlightedIndex` or `onchartready`.     |
 | `--barchart-bar-dimmed-opacity`      | `0.3`                       | opacity          | Opacity of non-highlighted / non-hovered bars when a highlight is active. |
 | `--barchart-value-color`             | `#333`                      | fill             | Color of value labels.                                                    |
 | `--barchart-value-font-size`         | `11px`                      | font-size        | Font size of value labels.                                                |
@@ -297,7 +297,7 @@ type BarChartSeries = {
     { label: 'Mar', value: 5100 }
   ];
   // Imperative highlight via onChartReady
-  chart.onChartReady = (api) => {
+  chart.onchartready = (api) => {
     api.highlight(1); // highlight Feb
   };
 </script>

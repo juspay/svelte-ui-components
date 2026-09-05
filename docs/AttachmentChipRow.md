@@ -13,8 +13,8 @@ The pending-attachment strip above a chat composer: image thumbnails and file ti
   {images}
   {files}
   imageTooltip={(image) => image.filename ?? ''}
-  onRemoveImage={(id) => removeImage(id)}
-  onRemoveFile={(id) => removeFile(id)}
+  onremoveimage={(id) => removeImage(id)}
+  onremovefile={(id) => removeFile(id)}
 />
 ```
 
@@ -25,12 +25,12 @@ The pending-attachment strip above a chat composer: image thumbnails and file ti
 | images        | `AttachmentChipImage[]`                  | No       | `[]`    | `{ id, thumbnailData, filename? }` — thumbnailData is the img src.                                         |
 | files         | `AttachmentChipFile[]`                   | No       | `[]`    | `{ id, filename }`.                                                                                        |
 | videos        | `AttachmentChipVideo[]`                  | No       | `[]`    | `{ id, thumbnailData?, filename? }` — a poster tile with a play badge; a plain dark tile without a poster. |
-| onRemoveImage | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row (no remove buttons).                                    |
-| onRemoveFile  | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
-| onRemoveVideo | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
-| onOpenImage   | `(image: AttachmentChipImage) => void`   | No       | `-`     | Makes the image tile a real button; fires on click (e.g. open a lightbox).                                 |
-| onOpenVideo   | `(video: AttachmentChipVideo) => void`   | No       | `-`     | Makes the video tile a real button; fires on click (e.g. play the video).                                  |
-| onOpenFile    | `(file: AttachmentChipFile) => void`     | No       | `-`     | Makes the file tile a real button; fires on click.                                                         |
+| onremoveimage | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row (no remove buttons).                                    |
+| onremovefile  | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
+| onremovevideo | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
+| onopenimage   | `(image: AttachmentChipImage) => void`   | No       | `-`     | Makes the image tile a real button; fires on click (e.g. open a lightbox).                                 |
+| onopenvideo   | `(video: AttachmentChipVideo) => void`   | No       | `-`     | Makes the video tile a real button; fires on click (e.g. play the video).                                  |
+| onopenfile    | `(file: AttachmentChipFile) => void`     | No       | `-`     | Makes the file tile a real button; fires on click.                                                         |
 | imageTooltip  | `(image: AttachmentChipImage) => string` | No       | `-`     | Tooltip text for an image chip.                                                                            |
 | videoTooltip  | `(video: AttachmentChipVideo) => string` | No       | `-`     | Tooltip text for a video chip.                                                                             |
 | removeIcon    | `Snippet`                                | No       | `-`     | Glyph inside the remove button. Built-in cross when omitted.                                               |

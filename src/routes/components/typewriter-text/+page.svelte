@@ -174,7 +174,7 @@
     speed={20}
     isStreaming={true}
     testId="typewriter-progress-demo"
-    onProgress={handleProgress}
+    onprogress={handleProgress}
   />
   <p>
     Revealed <span data-pw="typewriter-progress-index">{progressIndex}</span>

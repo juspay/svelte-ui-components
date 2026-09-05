@@ -57,6 +57,9 @@ export type StatusProperties = StatusEventProperties & {
 };
 
 export type StatusEventProperties = {
+  onbuttonclick?: () => void;
+  /** @deprecated Use `onbuttonclick` instead; both work until 4.0.0. */
   onbuttonClick?: () => void;
+  /** @deprecated Use `onbuttonclick` instead; both work until 4.0.0. */
   onButtonClick?: () => void;
 };

@@ -26,16 +26,28 @@ export type MandatoryAttachmentChipRowProperties = Record<never, never>;
 
 export type OptionalAttachmentChipRowProperties = {
   /** Omit to render the row read-only — chips lose their remove buttons. */
+  onremoveimage?: (id: string) => void;
+  /** @deprecated Use `onremoveimage` instead; both work until 4.0.0. */
   onRemoveImage?: (id: string) => void;
+  onremovefile?: (id: string) => void;
+  /** @deprecated Use `onremovefile` instead; both work until 4.0.0. */
   onRemoveFile?: (id: string) => void;
+  onremovevideo?: (id: string) => void;
+  /** @deprecated Use `onremovevideo` instead; both work until 4.0.0. */
   onRemoveVideo?: (id: string) => void;
   /**
    * Open/preview callbacks — when provided, the chip's tile becomes a real button
    * and clicking it fires with the attachment (e.g. open a lightbox, play the
    * video). Omitted, the tile stays non-interactive.
    */
+  onopenimage?: (image: AttachmentChipImage) => void;
+  /** @deprecated Use `onopenimage` instead; both work until 4.0.0. */
   onOpenImage?: (image: AttachmentChipImage) => void;
+  onopenvideo?: (video: AttachmentChipVideo) => void;
+  /** @deprecated Use `onopenvideo` instead; both work until 4.0.0. */
   onOpenVideo?: (video: AttachmentChipVideo) => void;
+  onopenfile?: (file: AttachmentChipFile) => void;
+  /** @deprecated Use `onopenfile` instead; both work until 4.0.0. */
   onOpenFile?: (file: AttachmentChipFile) => void;
   images?: AttachmentChipImage[];
   files?: AttachmentChipFile[];

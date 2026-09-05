@@ -13,6 +13,10 @@ export type OptionalSnippetProperties = {
   showCopyButton?: boolean;
   testId?: string;
   copyIcon?: Snippet;
+  /** Text shown in place of the copy icon after a successful copy. Defaults to `'Copied!'`. */
+  copiedLabel?: string;
+  /** Milliseconds before the copied feedback reverts to the copy icon. Defaults to `2000`. */
+  copyResetMs?: number;
   classes?: string;
 };
 

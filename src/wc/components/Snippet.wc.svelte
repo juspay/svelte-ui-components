@@ -7,6 +7,8 @@
       prompt: { type: 'String', reflect: true },
       showCopyButton: { type: 'Boolean', reflect: true, attribute: 'show-copy-button' },
       testId: { type: 'String', attribute: 'test-id' },
+      copiedLabel: { type: 'String', reflect: true, attribute: 'copied-label' },
+      copyResetMs: { type: 'Number', reflect: true, attribute: 'copy-reset-ms' },
       classes: { type: 'String' },
       oncopy: { type: 'Object' },
       copyIcon: { type: 'Object' }

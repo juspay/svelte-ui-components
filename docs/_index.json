@@ -237,7 +237,7 @@
   },
   {
     "name": "Snippet",
-    "description": "A copyable command-line code snippet with a prompt prefix and copy-to-clipboard button. Shows 'Copied!' feedback after copying. Supports custom copy icon snippet. Clipboard errors are silently handled for non-secure contexts."
+    "description": "A copyable command-line code snippet with a prompt prefix and copy-to-clipboard button. Shows 'Copied!' feedback (customizable via copiedLabel/copyResetMs) after copying, with unmount-safe timer cleanup. Supports custom copy icon snippet. Clipboard errors are silently handled for non-secure contexts."
   },
   {
     "name": "SplitButton",

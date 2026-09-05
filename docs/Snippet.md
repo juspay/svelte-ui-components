@@ -1,6 +1,6 @@
 # Snippet
 
-A copyable command-line code snippet with a prompt prefix symbol and an inline copy-to-clipboard button. Displays a single-line command or code string in a monospace container. After copying, briefly shows "Copied!" feedback before reverting to the copy icon. Clipboard errors are silently caught (handles non-secure contexts and iframe restrictions). Ideal for CLI commands, install instructions, or any text the user needs to copy.
+A copyable command-line code snippet with a prompt prefix symbol and an inline copy-to-clipboard button. Displays a single-line command or code string in a monospace container. After copying, briefly shows "Copied!" feedback (customizable via `copiedLabel`) before reverting to the copy icon after `copyResetMs` milliseconds (default 2000). The reset timer is cleared on unmount, so navigating away mid-flash never sets state on a destroyed component. Clipboard errors are silently caught (handles non-secure contexts and iframe restrictions). Ideal for CLI commands, install instructions, or any text the user needs to copy.
 
 ## Usage
 
@@ -30,6 +30,8 @@ A copyable command-line code snippet with a prompt prefix symbol and an inline c
 | prompt         | `string`  | No       | `$`     | The prefix symbol shown before the text (e.g. '$', '>', '#'). Visually indicates a terminal prompt.                                                                    |
 | showCopyButton | `boolean` | No       | `true`  | Whether to show the copy-to-clipboard button on the right side. Set to false for display-only snippets.                                                                |
 | testId         | `string`  | No       | `-`     | Test identifier applied as `data-pw` attribute on the container for Playwright selectors.                                                                              |
+| copiedLabel    | `string`  | No       | `Copied!` | Text shown in place of the copy icon after a successful copy.                                                                                                         |
+| copyResetMs    | `number`  | No       | `2000`  | Milliseconds before the copied feedback reverts to the copy icon.                                                                                                       |
 | classes        | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
 ## Snippets
@@ -87,7 +89,12 @@ This component uses the following library components internally:
 Tag: `<sui-snippet>`
 
 ```html
-<sui-snippet text="npm install @juspay/svelte-ui-components" show-copy-button>
+<sui-snippet
+  text="npm install @juspay/svelte-ui-components"
+  show-copy-button
+  copied-label="Copied to clipboard"
+  copy-reset-ms="1500"
+>
   <svg slot="copy-icon">...</svg>
 </sui-snippet>
 ```

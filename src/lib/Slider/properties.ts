@@ -18,6 +18,13 @@ export type OptionalSliderProperties = {
    * so a control whose purpose is not carried by adjacent visible text needs this.
    */
   ariaLabel?: string;
+  /**
+   * Ids of the elements that name the range input (aria-labelledby). Use this
+   * instead of `ariaLabel` when the name is already on screen, so the two cannot
+   * drift apart. `ariaLabel` wins if both are given, matching how the platform
+   * resolves them.
+   */
+  ariaLabelledby?: string;
   testId?: string;
   classes?: string;
 };

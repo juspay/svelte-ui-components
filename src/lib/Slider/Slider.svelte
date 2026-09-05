@@ -10,6 +10,7 @@
     showValue = false,
     labelFormatter,
     ariaLabel,
+    ariaLabelledby,
     testId,
     onchange,
     oninput,
@@ -44,6 +45,7 @@
     {value}
     {disabled}
     aria-label={typeof ariaLabel === 'string' ? ariaLabel : null}
+    aria-labelledby={typeof ariaLabel === 'string' ? null : (ariaLabelledby ?? null)}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
     oninput={handleInput}

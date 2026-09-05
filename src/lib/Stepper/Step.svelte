@@ -16,6 +16,12 @@
     onkeydown
   }: StepProperties = $props();
 
+  // Per-instance, because `step-label-${stepIndex}` collides across two Steppers
+  // on one page and `aria-labelledby` then resolves to whichever matching id
+  // comes first in the document — naming a step after a different Stepper's.
+  const uid = $props.id();
+  const labelId = `step-label-${uid}`;
+
   const handleStepClick = (): void => {
     onclick?.({ selectedIndex: stepIndex });
   };
@@ -59,7 +65,7 @@
   role={suppressRoleAndTabindex ? null : 'button'}
   tabindex={suppressRoleAndTabindex ? null : 0}
   aria-label={ariaLabel ?? null}
-  aria-labelledby={ariaLabel ? null : `step-label-${stepIndex}`}
+  aria-labelledby={ariaLabel ? null : labelId}
   aria-current={status === 'active' ? 'step' : null}
 >
   {#if typeof icon === 'string' && icon.length > 0}
@@ -99,7 +105,7 @@
     </div>
   {/if}
 
-  <div class="step-text" id="step-label-{stepIndex}">
+  <div class="step-text" id={labelId}>
     {label}
   </div>
 

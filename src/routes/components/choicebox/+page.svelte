@@ -16,16 +16,30 @@
 </div>
 
 <h3>Radio mode</h3>
-<div class="demo-row">
-  <Choicebox mode="radio" selected={radioSelection === 0} onclick={() => selectRadio(0)}>
+<!-- Grouped and named, so assistive tech announces "1 of 3" rather than three
+     unrelated radios. Roving focus across the group still is not implemented —
+     Choicebox has no concept of siblings sharing a group — and that gap is
+     pinned as a test.fixme in tests/a11y-choicebox.spec.ts. -->
+<div class="demo-row" role="radiogroup" aria-label="Shipping speed">
+  <Choicebox
+    mode="radio"
+    selected={radioSelection === 0}
+    onclick={() => selectRadio(0)}
+    testId="choicebox-radio-standard"
+  >
     <span class="choice-title">Standard Shipping</span>
     <span class="choice-desc">3-5 business days</span>
   </Choicebox>
-  <Choicebox mode="radio" selected={radioSelection === 1} onclick={() => selectRadio(1)}>
+  <Choicebox
+    mode="radio"
+    selected={radioSelection === 1}
+    onclick={() => selectRadio(1)}
+    testId="choicebox-radio-express"
+  >
     <span class="choice-title">Express Shipping</span>
     <span class="choice-desc">1-2 business days</span>
   </Choicebox>
-  <Choicebox mode="radio" disabled>
+  <Choicebox mode="radio" disabled testId="choicebox-radio-overnight">
     <span class="choice-title">Overnight</span>
     <span class="choice-desc">Next business day</span>
   </Choicebox>
@@ -33,10 +47,10 @@
 
 <h3>Checkbox mode</h3>
 <div class="demo-row">
-  <Choicebox mode="checkbox" bind:selected={checkA}>
+  <Choicebox mode="checkbox" bind:selected={checkA} testId="choicebox-check-a">
     <span class="choice-title">Gift wrapping</span>
   </Choicebox>
-  <Choicebox mode="checkbox" bind:selected={checkB}>
+  <Choicebox mode="checkbox" bind:selected={checkB} testId="choicebox-check-b">
     <span class="choice-title">Include receipt</span>
   </Choicebox>
 </div>

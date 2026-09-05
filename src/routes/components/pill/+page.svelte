@@ -149,6 +149,38 @@
   <Pill text="Wrapping pill text demo" classes="pill-wrap" testId="pill-wrap-demo" />
 </div>
 
+<!-- #520: a semantic tone prop, plus a non-clickable-by-default cursor and
+     letter-spacing/text-transform variables, so a status chip no longer needs
+     a hand-rolled tone-* class per call site. -->
+<section data-pw="pill-tone-fixtures">
+  <h2>Tone</h2>
+  <div class="demo-row">
+    <Pill text="Accent" tone="accent" testId="pill-tone-accent" />
+    <Pill text="Ok" tone="ok" testId="pill-tone-ok" />
+    <Pill text="Warn" tone="warn" testId="pill-tone-warn" />
+    <Pill text="Danger" tone="danger" testId="pill-tone-danger" />
+    <Pill text="Muted" tone="muted" testId="pill-tone-muted" />
+  </div>
+  <div class="demo-row">
+    <!-- A theme can restate what a tone means without a tone-* class per call site. -->
+    <Pill text="Themed ok" tone="ok" classes="pill-tone-ok-themed" testId="pill-tone-ok-themed" />
+    <!-- An explicit --pill-background/--pill-color still wins over the tone default. -->
+    <Pill
+      text="Tone + override"
+      tone="danger"
+      classes="pill-tone-override"
+      testId="pill-tone-override"
+    />
+  </div>
+  <div class="demo-row">
+    <Pill text="Clickable (pointer cursor)" onclick={() => {}} testId="pill-cursor-interactive" />
+    <Pill text="Label only (default cursor)" testId="pill-cursor-static" />
+  </div>
+  <div class="demo-row">
+    <Pill text="UPPERCASE BADGE" tone="accent" classes="pill-tone-badge" testId="pill-tone-badge" />
+  </div>
+</section>
+
 <style>
   :global(.pill-info) {
     --pill-background: #d1ecf1;
@@ -223,5 +255,23 @@
   :global(.pill-custom-dismiss) {
     --pill-dismiss-color: #123456;
     --pill-dismiss-hover-color: #654321;
+  }
+
+  /* Restates what tone="ok" means for this theme, without a tone-* class at the call site. */
+  :global(.pill-tone-ok-themed) {
+    --pill-tone-ok-background: #0f5132;
+    --pill-tone-ok-color: #ffffff;
+  }
+
+  /* An explicit --pill-background/--pill-color still wins over tone="danger"'s default. */
+  :global(.pill-tone-override) {
+    --pill-background: #000000;
+    --pill-color: #ffffff;
+  }
+
+  :global(.pill-tone-badge) {
+    --pill-font-size: 11px;
+    --pill-letter-spacing: 0.06em;
+    --pill-text-transform: uppercase;
   }
 </style>

@@ -17,10 +17,27 @@
     footer,
     stretch = false,
     scrollable = false,
-    cssVars
+    cssVars,
+    attrs,
+    as
   }: CardProperties = $props();
 
-  const isAnchor = $derived(typeof href === 'string' && href.length > 0);
+  // `as`, when given, picks the rendered tag outright. Omitted, the root keeps
+  // its existing rule: an `<a>` exactly when `href` is set, a `<div>`
+  // otherwise -- so a consumer who never passes `as` gets the identical tag
+  // resolution as before this prop existed.
+  const rootTag = $derived(as ?? (typeof href === 'string' && href.length > 0 ? 'a' : 'div'));
+  // Anchor-only attributes/behaviour (href/target/rel, and skipping the
+  // synthetic role/tabindex/keydown shim) key off the *resolved* tag rather
+  // than `href` alone, so `as="figure"` on an href-carrying Card renders a
+  // real `<figure>` with no dangling `href` attribute instead of a
+  // contradictory figure-that-navigates. It also requires `href` to actually
+  // be set: `as="a"` with an `onclick` but no `href` renders a bare `<a>`
+  // with nothing to navigate to, which is not natively focusable or
+  // keyboard-activatable, so treating it as an anchor here would silently
+  // drop the interactive-div keyboard shim (role/tabindex/onkeydown) with no
+  // native behaviour to replace it.
+  const isAnchor = $derived(rootTag === 'a' && typeof href === 'string' && href.length > 0);
   const isInteractive = $derived(isAnchor || typeof onclick === 'function');
   // HTML target values are ASCII case-insensitive (e.g. "_BLANK" opens a new
   // context identically to "_blank"), so the comparison must normalize case
@@ -50,7 +67,8 @@
 </script>
 
 <svelte:element
-  this={isAnchor ? 'a' : 'div'}
+  this={rootTag}
+  {...attrs ?? {}}
   class="card {classes ?? ''}"
   class:card-interactive={isInteractive}
   class:card-stretch={stretch}

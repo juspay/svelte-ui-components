@@ -85,4 +85,36 @@ export type OptionalCardProperties = {
    * rendered, so existing consumers are unchanged.
    */
   cssVars?: Record<string, string | number>;
+  /**
+   * Arbitrary attributes spread onto the card root — `data-*`/`aria-*` (or any
+   * other) attribute names mapped to string values. For consumers that key
+   * off attribute-selector CSS (`[data-state="waiting"]`, `[data-density]`,
+   * `[data-offline]`) the way the rest of their app does, instead of adding a
+   * second `classes` modifier for the same state. Applied before Card's own
+   * `class`/`style`/`data-pw`/`testID`/`role`/`tabindex`/`href`/`target`/`rel`/
+   * `onclick`/`onkeydown` attributes, so an entry here can never override one
+   * of those — only add attributes Card does not already manage. Omitted by
+   * default, so existing consumers render exactly the same attributes as
+   * before.
+   */
+  attrs?: Record<string, string>;
+  /**
+   * Overrides the tag `svelte:element` renders for the card root — e.g.
+   * `'figure'` for a card that needs real `<figure>` semantics (so a
+   * `<figcaption>` inside `children` or `footer` is valid markup, and the
+   * element carries sectioning-content semantics no wrapper `<figure>` around
+   * a `<div>`-rooted Card could give it).
+   *
+   * When omitted, the root keeps its existing behaviour exactly: `'a'` when
+   * `href` is set, `'div'` otherwise. Setting `as` to anything other than
+   * `'a'` renders that tag instead and suppresses the anchor
+   * attributes/behaviour — `href`/`target`/`rel` are not rendered on it, and
+   * the synthetic `role="button"`/`tabindex`/keydown shim applies instead
+   * when `onclick` is provided, the same as a plain interactive `<div>`.
+   * Setting `as="a"` renders an `<a>` with `href`/`target`/`rel` when `href`
+   * is also set; with `as="a"` but no `href` there is nothing to navigate
+   * to, so the element gets the same interactive-div keyboard shim an
+   * `onclick`-only `<div>` gets instead of anchor semantics it can't have.
+   */
+  as?: 'div' | 'a' | 'figure';
 };

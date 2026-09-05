@@ -17,7 +17,9 @@
       target: { type: 'String', attribute: 'target' },
       rel: { type: 'String', attribute: 'rel' },
       headerRight: { type: 'Object' },
-      footer: { type: 'Object' }
+      footer: { type: 'Object' },
+      attrs: { type: 'Object' },
+      as: { type: 'String', reflect: true, attribute: 'as' }
     }
   }}
 />

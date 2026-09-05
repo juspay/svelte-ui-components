@@ -10,5 +10,13 @@
 </div>
 
 <div class="demo-row" style="max-width: 400px;">
-  <Slider bind:value={sliderValue} min={0} max={100} step={1} showValue />
+  <Slider
+    bind:value={sliderValue}
+    min={0}
+    max={100}
+    step={1}
+    showValue
+    ariaLabel="Volume"
+    testId="slider-basic"
+  />
 </div>

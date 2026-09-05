@@ -19,10 +19,19 @@
     classes
   }: CommandMenuProperties = $props();
 
+  // Stable per-instance ids keep ARIA references distinct across menus.
+  const uid = $props.id();
+  const listboxId = `command-menu-listbox-${uid}`;
+
   let query = $state('');
   let activeIndex = $state(0);
   let inputElement: HTMLInputElement | null = $state(null);
   let listElement: HTMLDivElement | null = $state(null);
+  let dialogElement: HTMLDivElement | null = $state(null);
+  // Captured when the dialog opens, consumed once it unmounts — mirrors
+  // Gallery.svelte's lightboxAction so focus returns to whatever opened the
+  // command menu instead of falling back to <body>.
+  let openerElement: HTMLElement | null = null;
 
   let filteredItems = $derived.by(() => {
     if (query.trim() === '') {
@@ -67,6 +76,13 @@
     }
     return map;
   });
+
+  // aria-activedescendant must point at the id of the highlighted option, which
+  // is keyed by its flat index (see the option's own id below) — null once the
+  // list is empty, since there is then no option to describe.
+  let activeDescendantId = $derived(
+    flatItems.length > 0 ? `command-menu-option-${uid}-${activeIndex}` : null
+  );
 
   function close() {
     open = false;
@@ -132,7 +148,45 @@
         close();
         break;
       }
+      case 'Tab': {
+        // aria-modal="true" promises focus stays inside, so Tab cycles rather
+        // than escaping. Cycle over whatever is actually tabbable instead of
+        // pinning to the input: today the input is the only tab stop (options
+        // are tabindex="-1" and are reached with arrows), so the two are
+        // equivalent — but pinning would silently break the moment the dialog
+        // gains a second tab stop, such as a close button.
+        const tabbable = tabbableElements();
+        if (tabbable.length === 0) {
+          break;
+        }
+        event.preventDefault();
+        const active = document.activeElement;
+        const current = active instanceof HTMLElement ? tabbable.indexOf(active) : -1;
+        const step = event.shiftKey ? -1 : 1;
+        const next = (current + step + tabbable.length) % tabbable.length;
+        tabbable.at(next)?.focus();
+        break;
+      }
     }
+  }
+
+  // Everything inside the dialog that Tab would normally reach. `tabindex="-1"`
+  // is excluded because those are arrow-key targets, not tab stops.
+  function tabbableElements(): HTMLElement[] {
+    if (dialogElement === null) {
+      return [];
+    }
+    const candidates = dialogElement.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]'
+    );
+    return [...candidates].filter(
+      (el) =>
+        // The options are real <button>s held out of the tab order with
+        // tabindex="-1"; they are arrow-key targets. Excluding -1 only in the
+        // `[tabindex]` selector would still match them as buttons.
+        el.getAttribute('tabindex') !== '-1' &&
+        (el.offsetParent !== null || el === document.activeElement)
+    );
   }
 
   async function scrollActiveIntoView() {
@@ -167,6 +221,9 @@
   // onDestroy below must NOT unlock as well: with a shared reference count a second
   // decrement would release a lock another open surface still needs.
   function scrollLockAction(_node: HTMLElement) {
+    if (openerElement === null && document.activeElement instanceof HTMLElement) {
+      openerElement = document.activeElement;
+    }
     lockBodyScroll();
     tick().then(() => {
       if (inputElement !== null) {
@@ -176,6 +233,10 @@
     return {
       destroy() {
         unlockBodyScroll();
+        if (openerElement !== null) {
+          openerElement.focus();
+          openerElement = null;
+        }
       }
     };
   }
@@ -204,7 +265,7 @@
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
   >
-    <div class="command-menu-dialog">
+    <div class="command-menu-dialog" bind:this={dialogElement}>
       <div class="command-menu-input-wrapper">
         {#if typeof searchIcon === 'function'}
           {@render searchIcon()}
@@ -223,6 +284,11 @@
           {placeholder}
           autocomplete="off"
           spellcheck="false"
+          role="combobox"
+          aria-expanded={flatItems.length > 0}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={activeDescendantId}
           data-pw={typeof testId === 'string' ? `${testId}-input` : null}
           testID={typeof testId === 'string' ? `${testId}-input` : null}
         />
@@ -230,7 +296,7 @@
 
       <div class="command-menu-separator"></div>
 
-      <div class="command-menu-list" bind:this={listElement} role="listbox">
+      <div class="command-menu-list" bind:this={listElement} id={listboxId} role="listbox">
         {#if flatItems.length === 0}
           <div class="command-menu-empty">
             {emptyText}
@@ -244,6 +310,7 @@
               {@const index = flatIndexLookup.get(item.value) ?? -1}
               <button
                 type="button"
+                id={`command-menu-option-${uid}-${index}`}
                 class="command-menu-item"
                 class:active={index === activeIndex}
                 class:disabled={item.disabled}

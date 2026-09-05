@@ -19,10 +19,28 @@
   let focusedIndex: number = $state(-1);
   let posX: number = $state(0);
   let posY: number = $state(0);
+  // Captured when the menu opens, consumed once on close — the element that had
+  // focus (or triggered the native contextmenu event) is where focus belongs once
+  // the menu goes away, matching Menu.svelte's own restore-on-close contract.
+  let openerElement: HTMLElement | null = $state(null);
 
   let selectableItems: ContextMenuItem[] = $derived(
     items.filter((item) => !item.separator && !item.disabled)
   );
+
+  // The frame that moves focus into the freshly-opened menu, kept so closing can
+  // cancel it. Escape pressed between the right-click and that frame used to
+  // leave the callback queued: it ran after the menu was gone, moved focus onto
+  // an item that no longer existed, and left the page with nothing focused at
+  // all — worse than never restoring, because the user's place is simply lost.
+  let openFrame: number | null = null;
+
+  function cancelOpenFrame() {
+    if (openFrame !== null) {
+      cancelAnimationFrame(openFrame);
+      openFrame = null;
+    }
+  }
 
   function openMenu(x: number, y: number) {
     posX = x;
@@ -30,16 +48,37 @@
     open = true;
     focusedIndex = 0;
     onopen?.();
-    requestAnimationFrame(() => {
+    cancelOpenFrame();
+    openFrame = requestAnimationFrame(() => {
+      openFrame = null;
       adjustPosition();
       focusItem(0);
     });
   }
 
   function close() {
+    cancelOpenFrame();
     open = false;
     focusedIndex = -1;
     onclose?.();
+
+    const opener = openerElement;
+    openerElement = null;
+    if (opener === null) {
+      return;
+    }
+
+    // Only take focus back if nothing else has claimed it. Closing by clicking a
+    // focusable element outside means the browser has already moved focus there,
+    // and pulling it back to the opener would fight the user and lose their
+    // place. Focus still inside the dying menu, or fallen to <body>, is loose and
+    // does belong to the opener.
+    const active = document.activeElement;
+    const focusIsLoose =
+      active === null || active === document.body || (menuEl?.contains(active) ?? false);
+    if (focusIsLoose) {
+      opener.focus();
+    }
   }
 
   function selectMenuItem(item: ContextMenuItem) {
@@ -90,6 +129,12 @@
 
   function handleContextMenu(event: MouseEvent) {
     event.preventDefault();
+    // A right-click usually leaves <body> as the active element, and "restore
+    // focus to <body>" is not a restoration — it is the same as doing nothing,
+    // but it also discards whatever the browser would have done. Capture only a
+    // real element.
+    const active = document.activeElement;
+    openerElement = active instanceof HTMLElement && active !== document.body ? active : null;
     openMenu(event.clientX, event.clientY);
   }
 
@@ -147,13 +192,28 @@
     }
   }
 
+  // Escape is handled on the document as well as on the menu, because for one
+  // frame after the right-click the menu is open but focus has not moved into it
+  // yet. A menu-only handler does nothing during that window: the keystroke is
+  // swallowed, the menu stays open, and the pending frame then pulls focus into
+  // it — so a quick Escape appeared to do the opposite of what it asked for. An
+  // open menu should close on Escape wherever focus happens to be.
+  function handleDocumentKeydown(event: KeyboardEvent) {
+    if (open && event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    }
+  }
+
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleDocumentKeydown);
   });
 
   onDestroy(() => {
     if (typeof window !== 'undefined') {
       document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleDocumentKeydown);
     }
   });
 </script>
@@ -162,7 +222,7 @@
   class="context-menu-container {classes ?? ''}"
   bind:this={containerEl}
   oncontextmenu={handleContextMenu}
-  role="application"
+  {...open ? { role: 'application' } : {}}
   data-pw={testId}
   testID={testId}
 >

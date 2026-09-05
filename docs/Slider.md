@@ -24,6 +24,7 @@ A range slider input for selecting a numeric value within min/max bounds. The `v
 | showValue      | `boolean`                   | No       | `false` | Whether to display the current numeric value as a label next to the slider track.                                                                                      |
 | labelFormatter | `(value: number) => string` | No       | `-`     | Formats the displayed value label. Called with the current numeric value and returns a string. Falls back to `String(value)` when absent.                              |
 | ariaLabel      | `string`                    | No       | `-`     | Names the range input for assistive tech. A bare slider announces only its value, so a control whose purpose is not carried by nearby visible text needs this.         |
+| ariaLabelledby | `string`                    | No       | `-`     | Ids of the elements that name the range input, applied as `aria-labelledby`. Prefer this when the name is already visible on screen. `ariaLabel` wins if both are set. |
 | testId         | `string`                    | No       | `-`     | Value for the data-pw attribute on the range input, used for end-to-end testing selectors.                                                                             |
 | classes        | `string`                    | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 
@@ -68,5 +69,40 @@ Override these custom properties to theme the component.
 Tag: `<sui-slider>`
 
 ```html
-<sui-slider value="50" min="0" max="100" step="1" show-value></sui-slider>
+<sui-slider value="50" min="0" max="100" step="1" show-value aria-label="Volume"></sui-slider>
 ```
+
+Name the control with the `aria-label` or `aria-labelledby` **attribute**, exactly as
+above. Set from JavaScript, the property names are `sliderAriaLabel` and
+`sliderAriaLabelledby`:
+
+```js
+const slider = document.querySelector('sui-slider');
+slider.sliderAriaLabel = 'Volume'; // sets the component prop
+slider.ariaLabel = 'Volume'; // sets the platform's own ARIAMixin property
+```
+
+ARIAMixin already defines `ariaLabel` and `ariaLabelledby` on every `HTMLElement`.
+Declaring them here would replace the platform's accessors, so the element takes the
+prefixed names instead — the same collision the 4.0.0 renames avoided elsewhere. The
+attributes are unaffected.
+
+### `aria-labelledby` on the element is resolved, not forwarded
+
+`<sui-slider>` renders its range input inside a shadow root, and ARIA id references do
+not cross a shadow boundary — an `aria-labelledby` pointing at an element in your page
+cannot name something inside the element's shadow root. Passing the id straight through
+would leave the slider with no accessible name at all.
+
+So the element reads the referenced element(s) from your document and applies the text
+as `aria-label` on the input instead. Referencing a visible label works:
+
+```html
+<span id="volume-label">Volume</span>
+<sui-slider aria-labelledby="volume-label"></sui-slider>
+```
+
+The one difference from the Svelte component, where the reference resolves natively: the
+name is **copied when it resolves, not bound**. Editing the label element's text later
+does not update the slider's name — re-set `aria-labelledby` (or use `aria-label`) if the
+name changes. `aria-label` still wins when both are set.

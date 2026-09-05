@@ -13,6 +13,7 @@
 <div class="demo-row">
   <Button text="Open Command Menu (Ctrl+K)" onclick={() => (showCommandMenu = true)} />
   <CommandMenu
+    testId="command-menu-demo"
     bind:open={showCommandMenu}
     items={[
       { label: 'New File', value: 'new-file', group: 'File', shortcut: 'Ctrl+N' },

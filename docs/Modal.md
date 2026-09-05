@@ -1,6 +1,6 @@
 # Modal
 
-A dialog overlay component that renders on top of the page with configurable size, alignment, header (with left/right images and text), footer (with primary/secondary Button components), and transition animations. It locks body scroll on mount and optionally handles hardware back-press navigation. The overlay supports click-to-dismiss (debounced) and Escape key handling.
+A dialog overlay component that renders on top of the page with configurable size, alignment, header (with left/right images and text), footer (with primary/secondary Button components), and transition animations. It locks body scroll on mount and optionally handles hardware back-press navigation. The overlay supports click-to-dismiss (debounced) and Escape key handling. The content panel takes no `role`/`aria-modal` by default (unchanged from prior behavior); setting `role` opts into `role="dialog"` (or `role="alertdialog"`) plus `aria-modal="true"`, with an optional `ariaLabel` for its accessible name. Tab is trapped inside the panel, focus moves in on mount, and returns to whatever was focused before the modal opened once it closes.
 
 ## Usage
 
@@ -28,11 +28,14 @@ A dialog overlay component that renders on top of the page with configurable siz
 | debounceTime             | `number`                                                                                                                                                  | No       | `700`           | Debounce delay in milliseconds for overlay click handling. Prevents rapid repeated overlay dismissals.                                                                                                                                                                                                                                                                                          |
 | leftImageTestId          | `string`                                                                                                                                                  | No       | `-`             | Value for data-pw on the left header image wrapper.                                                                                                                                                                                                                                                                                                                                             |
 | leftImageAriaLabel       | `string`                                                                                                                                                  | No       | `-`             | Accessible name (rendered as `aria-label`) for the left header image's `role="button"` wrapper (e.g., a back control) — required for screen readers since the wrapper carries no visible text.                                                                                                                                                                                                  |
+| overlayAriaLabel         | `string`                                                                                                                                                  | No       | `-`             | Accessible name (rendered as `aria-label`) for the overlay's `role="button"` wrapper. Only meaningful when the overlay is dismissible (an `onoverlayclick` or `ondismiss` handler is supplied) — that's the only state where the overlay is announced as a focusable button, and it's also reachable via Enter/Space in that state.                                                            |
 | testId                   | `string`                                                                                                                                                  | No       | `-`             | Value for data-pw on the modal overlay container.                                                                                                                                                                                                                                                                                                                                               |
 | classes                  | `string`                                                                                                                                                  | No       | `-`             | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                                                                          |
 | overlayBackdropFilter    | `string`                                                                                                                                                  | No       | `-`             | CSS `backdrop-filter` value applied to the overlay (e.g. `"blur(6px)"`). Sets `--modal-overlay-backdrop-filter` inline on the overlay div. Default: `none` (no blur).                                                                                                                                                                                                                           |
 | overlayFadeIn            | `boolean`                                                                                                                                                 | No       | `false`         | When true, the overlay backdrop fades in on mount instead of appearing instantly. Pairs well with `entryAnimation="slide-up"` for a softer combined entrance.                                                                                                                                                                                                                                   |
 | usePortal                | `boolean`                                                                                                                                                 | No       | `false`         | When true, mounts the modal overlay at `document.body` so it escapes any ancestor clipping or stacking contexts. Useful inside `overflow: hidden` or `transform` containers.                                                                                                                                                                                                                    |
+| ariaLabel                | `string`                                                                                                                                                  | No       | `-`             | Accessible name for the modal, rendered as `aria-label` on the content panel (the element carrying `role`/`aria-modal` when `role` is set). Without it a screen reader announces an unnamed dialog.                                                                                                                                                                                             |
+| role                     | `ModalRole = 'dialog' \| 'alertdialog'`                                                                                                                   | No       | `-` (unset)     | ARIA role for the content panel. Unset by default — the panel renders no `role` and no `aria-modal`, matching behavior before this prop existed, so an existing consumer who never touches `role` sees no DOM/ARIA change. Set explicitly to opt in: the panel then also carries `aria-modal="true"`. Use `'alertdialog'` for a dialog that interrupts to demand an immediate response (e.g. a destructive confirmation).                                                                                                                                                                                             |
 
 ## Snippets
 
@@ -54,6 +57,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | onsecondarybuttonclick  | `(event: MouseEvent) => void`    | Fires when the secondary footer button is clicked.                                                                                                                                    |
 | onoverlayclick          | `() => void`                     | Fires when the dark overlay background is clicked (outside the modal content). Also fires when the Escape key is pressed. Debounced by debounceTime milliseconds.                     |
 | onkeydown               | `(event: KeyboardEvent) => void` | Fires when any key is pressed while the modal is open (attached to the window).                                                                                                       |
+| ondismiss               | `() => void`                     | Fires on every path that dismisses the modal from outside it: an overlay click, Escape, and a hardware back-press. A superset of `onoverlayclick` (backdrop/Escape only) and `onclose` (hardware back-press/`autoDismissAfter` only) — wire this one callback instead of both when all you need is "the modal wants to close". Both existing events still fire unchanged alongside it. |
 
 ## CSS Variables
 
@@ -195,6 +199,12 @@ type ModalTransition = 'IN' | 'ALL';
 type ModalEntryAnimation = 'fade' | 'slide-up' | 'slide-down';
 ```
 
+### ModalRole
+
+```typescript
+type ModalRole = 'dialog' | 'alertdialog';
+```
+
 ### ButtonProperties
 
 ```typescript
@@ -237,6 +247,8 @@ Tag: `<sui-modal>`
   </div>
 </sui-modal>
 ```
+
+`aria-label` and `role` are not props on `<sui-modal>` — they're reserved accessors on every custom element (`ARIAMixin`/`role`), so declaring them as component props would replace the native ones instead of adding to them. Set them as native attributes directly on the host, e.g. `<sui-modal role="alertdialog" aria-label="Delete account">`. `ondismiss` (and `overlayAriaLabel`) are ordinary props and work the same way as on the Svelte component.
 
 ### Slots
 

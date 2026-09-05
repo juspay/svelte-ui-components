@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.3.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.3.2)
+
+Preserve Pill dismiss contrast and keyboard activation across interaction states,
+with a configurable dismiss label for localised products. Name Toggle inputs with
+blank-safe IDs and semantic labels. Keep native web-component host accessors
+untouched by exposing input-scoped id, aria-label and aria-labelledby aliases for
+the shadow checkbox, and document the mapping between the two distributions.
+
+Include source controls, accessibility checks and actual runtime before/after proof.
+Full functional and unit suites pass locally. The Pill and Toggle visual baselines
+are regenerated in the pinned Playwright container for the added demo sections and
+re-verified with a clean compare run in the same image.
+
+- feat(components): keep Pill dismissal legible and label Toggle inputs ([5b453b7](https://github.com/juspay/svelte-ui-components/commit/5b453b70ec41e8f39d96fb898567d725117cf7fa))
+
+## [3.3.2](https://github.com/juspay/svelte-ui-components/compare/3.3.2..3.3.1) - 5 September 2026
 
 3.2.0 shipped with no `## [3.2.0]` heading -- its content sat under
 `## [Unreleased]` -- and no mention of #506 at all. The immediate cause was a

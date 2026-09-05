@@ -12,6 +12,9 @@ Renders keyboard shortcut badges inline. Each key is displayed in a styled `<kbd
 <KeyboardInput keys={['Ctrl', 'K']} />
 
 <KeyboardInput keys="Cmd+Shift+P" />
+
+<!-- Opt out of symbol substitution: renders the word "SPACE", not ␣ -->
+<KeyboardInput keys={['SPACE']} literal />
 ```
 
 ## Props
@@ -22,6 +25,7 @@ Renders keyboard shortcut badges inline. Each key is displayed in a styled `<kbd
 | separator | `string`             | No       | `"+"`   | The character displayed between key badges and used to split a string `keys` value into individual keys.                                                                                                                          |
 | testId    | `string`             | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                                                                                     |
 | classes   | `string`             | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                            |
+| literal   | `boolean`            | No       | `false` | When `true`, every key renders exactly as given and the Key Symbols table below is bypassed entirely — e.g. `keys={['SPACE']} literal` renders the word "SPACE", not ␣. Default behaviour (substitution) is unchanged.            |
 
 ## Events
 
@@ -48,6 +52,10 @@ The component automatically converts common modifier key names (case-insensitive
 | `Space`                          | &#9251; | Space bar          |
 
 Any key name not in this list is rendered as-is (e.g. `"K"` stays `"K"`).
+
+Pass `literal` to skip this table entirely and render every key exactly as given —
+useful when the word itself is the label, such as a "Hold SPACE" caption where the
+substituted ␣ symbol would read as a blank pill mid-sentence.
 
 ## CSS Variables
 
@@ -86,6 +94,7 @@ type OptionalKeyboardInputProperties = {
   separator?: string;
   testId?: string;
   classes?: string;
+  literal?: boolean;
 };
 
 type KeyboardInputEventProperties = {

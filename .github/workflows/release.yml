@@ -633,31 +633,12 @@ jobs:
         working-directory: mcp
         run: npm run build
 
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
-
-      - name: Publish MCP to NPM
-        id: npm-publish
-        working-directory: mcp
-        run: |
-          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
-          # short-lived publish credential itself, via the trusted-publisher
-          # config on npmjs.com for this repo + this workflow file.
-
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
-
-          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
-          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
-            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
-            exit 0
-          fi
-
-          # Scoped package -> publish publicly
-          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public --provenance
-          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
-
+      # Before the publish, for the reason the root release job already does it:
+      # an npm version cannot be re-published and unpublishing is restricted, while
+      # a commit and a tag can both be deleted. Published first, anything that stops
+      # this step strands a version on the registry that this repository has no
+      # record of -- which is exactly how 3.4.1 ended up on npm with no tag, no
+      # `chore(release)` commit and no GitHub Release.
       - name: Commit and tag MCP release
         run: |
           NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
@@ -691,10 +672,27 @@ jobs:
 
           echo "Released @juspay/svelte-ui-components-mcp $NEW_VERSION"
 
-      - name: Rollback MCP version on failure
-        if: failure() && steps.npm-publish.conclusion == 'failure'
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
+
+      - name: Publish MCP to NPM
+        id: npm-publish
         working-directory: mcp
         run: |
-          echo "MCP publish failed, rolling back version change..."
-          git checkout -- package.json
-          echo "Version rollback completed"
+          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
+          # short-lived publish credential itself, via the trusted-publisher
+          # config on npmjs.com for this repo + this workflow file.
+
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Scoped package -> publish publicly
+          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
+          npm publish --access public --provenance
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"

@@ -54,7 +54,7 @@
     totalPages={cursorTotalPages}
     bind:currentPage={loadMorePage}
     hasMore={cursorHasMore}
-    onLoadMore={handleLoadMore}
+    onloadmore={handleLoadMore}
     testId="pagination-cursor"
   />
   <span class="state-display"

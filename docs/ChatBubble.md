@@ -15,7 +15,7 @@ The offset is the bindable `dragX`/`dragY`. Set **`resizable`** to let the user 
 <button onclick={() => (expanded = !expanded)}>Toggle size</button>
 
 <ChatBubble bind:open bind:expanded expandedPanelWidth={680} expandedPanelHeight={820}>
-  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -38,7 +38,7 @@ The offset is the bindable `dragX`/`dragY`. Set **`resizable`** to let the user 
 </script>
 
 <ChatBubble bind:open label="Open chat">
-  <Chat {messages} bind:value title="Assistant" {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value title="Assistant" onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -60,12 +60,12 @@ Enable the chat-head behaviors. With the default `dragMode="snap"` the bubble do
   bind:panelHeight
   position="bottom-right"
 >
-  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 
 <!-- free-form drag: stays exactly where dropped -->
 <ChatBubble bind:open draggable dragMode="free">
-  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -119,7 +119,7 @@ Both launcher icons are snippets; provide your own for closed (`icon`) and open 
 <ChatBubble bind:open>
   {#snippet icon()}<MessageIcon />{/snippet}
   {#snippet openIcon()}<ChevronDownIcon />{/snippet}
-  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -135,7 +135,7 @@ children needs its own gap wrapper:
   {#snippet icon()}
     <span class="pill-content"><MessageIcon /> Ask Assistant</span>
   {/snippet}
-  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
 </ChatBubble>
 
 <style>

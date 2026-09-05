@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, untrack } from 'svelte';
   import type { TypewriterTextProperties, TypewriterCharacterDelayRange } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     text,
@@ -9,11 +10,22 @@
     renderText,
     variableDelay,
     resolveDelay,
-    onProgress,
+    onProgress: onProgressProp,
+    onprogress,
     renderCharacter,
     testId,
     classes
   }: TypewriterTextProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onProgress = $derived(
+    resolveDeprecatedProp('TypewriterText', 'onProgress', 'onprogress', onProgressProp, onprogress)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onProgress);
+  });
 
   let displayedText = $state('');
   let currentIndex = $state(0);

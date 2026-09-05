@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "../../dist-codemod",
+    "rewriteRelativeImportExtensions": true,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["./*.ts"],
+  "exclude": ["./*.test.ts", "./generate-maps.ts"]
+}

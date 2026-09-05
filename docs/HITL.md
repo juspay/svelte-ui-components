@@ -13,7 +13,7 @@ Human-in-the-loop approval: the assistant wants to run an action, and the person
   confirmationId={confirmation.id}
   title="Create discount"
   functionArguments={confirmation.arguments}
-  onConfirm={({ confirmationId, action, approved }) => respond(confirmationId, approved, action)}
+  onconfirm={({ confirmationId, action, approved }) => respond(confirmationId, approved, action)}
 />
 
 <!-- Must not auto-approve (e.g. OAuth) — reject instead if untouched for 90s -->
@@ -33,13 +33,13 @@ Human-in-the-loop approval: the assistant wants to run an action, and the person
 | sections             | `HITLSection[]`                           | No       | `-`                        | Labelled parameter blocks. Wins over `functionArguments`.                                             |
 | functionArguments    | `Record<string, unknown>`                 | No       | `-`                        | Raw arguments, formatted generically (`*` → All, bools → Yes/No, arrays → bullets, nesting indented). |
 | hiddenKeys           | `string[]`                                | No       | meta keys                  | Case-insensitive keys excluded from generic formatting.                                               |
-| onConfirm            | `(event: HITLEvent) => void`              | No       | `-`                        | `{ confirmationId, action, approved }`; action is `approved`, `rejected`, or `auto-approved`.         |
+| onconfirm            | `(event: HITLEvent) => void`              | No       | `-`                        | `{ confirmationId, action, approved }`; action is `approved`, `rejected`, or `auto-approved`.         |
 | confirmLabel         | `string`                                  | No       | `'Confirm'`                | Confirm button text.                                                                                  |
 | cancelLabel          | `string`                                  | No       | `'Cancel'`                 | Cancel button text.                                                                                   |
 | countdownSeconds     | `number`                                  | No       | `10`                       | Auto-approve countdown; `0` disables.                                                                 |
 | autoCancelSeconds    | `number`                                  | No       | `0`                        | Auto-reject an untouched card after N seconds; `0` disables.                                          |
-| isMicMuted           | `boolean`                                 | No       | `false`                    | With `onMicToggle`: mic is muted while the card is open, restored on decision.                        |
-| onMicToggle          | `() => void \| Promise<void>`             | No       | `-`                        | Toggle handler for voice sessions.                                                                    |
+| isMicMuted           | `boolean`                                 | No       | `false`                    | With `onmictoggle`: mic is muted while the card is open, restored on decision.                        |
+| onmictoggle          | `() => void \| Promise<void>`             | No       | `-`                        | Toggle handler for voice sessions.                                                                    |
 | isHistoryMode        | `boolean`                                 | No       | `false`                    | Render a settled card from `initialState`, no timers or buttons.                                      |
 | initialState         | `{ approved?: boolean; status?: string }` | No       | `-`                        | `status: 'EXPIRED'` renders the timed-out state.                                                      |
 | approvedIcon         | `Snippet`                                 | No       | built-in check             | Completion icon when approved.                                                                        |

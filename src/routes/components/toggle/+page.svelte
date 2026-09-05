@@ -27,7 +27,7 @@
   <Toggle
     text="Corrected spelling"
     checked={aliasChecked}
-    onClick={(val) => (aliasChecked = val)}
+    onclick={(val) => (aliasChecked = val)}
     testId="toggle-alias"
   />
   <span class="state-display" data-pw="toggle-alias-state">{aliasChecked ? 'ON' : 'OFF'}</span>
@@ -37,7 +37,7 @@
   <Toggle
     text="Built-in text label"
     checked={textLabelChecked}
-    onClick={(val) => (textLabelChecked = val)}
+    onclick={(val) => (textLabelChecked = val)}
     testId="toggle-text-label"
   />
   <span class="state-display" data-pw="toggle-text-label-state"
@@ -50,7 +50,7 @@
   <Toggle
     id="toggle-external-label-input"
     checked={externalLabelChecked}
-    onClick={(val) => (externalLabelChecked = val)}
+    onclick={(val) => (externalLabelChecked = val)}
     testId="toggle-external-label-switch"
   />
   <span class="state-display" data-pw="toggle-external-label-state"

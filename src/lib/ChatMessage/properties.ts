@@ -50,9 +50,12 @@ export type OptionalChatMessageProperties = {
 
 export type ChatMessageEventProperties = {
   onretry?: (() => void) | null;
+  /** @deprecated Use `onretry` instead; both work until 4.0.0. */
   onRetry?: (() => void) | null;
   onfeedback?: ((value: ChatMessageFeedback) => void) | null;
+  /** @deprecated Use `onfeedback` instead; both work until 4.0.0. */
   onFeedback?: ((value: ChatMessageFeedback) => void) | null;
   oncopy?: (text: string) => void;
+  /** @deprecated Use `oncopy` instead; both work until 4.0.0. */
   onCopy?: (text: string) => void;
 };

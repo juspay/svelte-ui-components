@@ -99,9 +99,12 @@ export type OptionalSelectProperties = {
 
 export type SelectEventProperties = {
   onchange?: (value: string[]) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (value: string[]) => void;
   onopen?: () => void;
+  /** @deprecated Use `onopen` instead; both work until 4.0.0. */
   onOpen?: () => void;
   onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onClose?: () => void;
 };

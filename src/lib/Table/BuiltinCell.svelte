@@ -352,7 +352,7 @@
           : null}
         onErrorMessage={inputData.onErrorMessage ?? null}
         actionInput={false}
-        onInput={(newValue) => column.onInput?.(rowIndex, newValue, originalIndex)}
+        oninput={(newValue) => column.onInput?.(rowIndex, newValue, originalIndex)}
         {...inputData.iconUrl ? { leftIcon: inputLeadingIcon } : {}}
       />
     </span>

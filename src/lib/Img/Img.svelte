@@ -1,11 +1,12 @@
 <script lang="ts">
   import type { ImgProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     src,
     alt,
     fallback,
-    onerror: onerrorLegacy,
+    onerror: onerrorProp,
     onError,
     classes,
     inlineSvg,
@@ -13,8 +14,15 @@
     testId
   }: ImgProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onerror = $derived(onError ?? onerrorLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onerror = $derived(
+    resolveDeprecatedProp('Img', 'onError', 'onerror', onError, onerrorProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onerror);
+  });
 
   let currentSrc = $derived(src);
   // Per-source failure marker: when inlining a given URL fails we fall back to
@@ -92,8 +100,81 @@
     'focusable'
   ]);
 
+  /**
+   * The host attributes this component writes itself. A fetched root may
+   * legitimately overwrite one (an icon set's own role/aria-label), and the
+   * src-change cleanup then has to put the component's value back rather than
+   * just remove it: Svelte only re-applies its own attribute when `alt` or
+   * `testId` changes, so a bare removal would leave the host with no role
+   * until the next re-render.
+   */
+  /**
+   * `alt` is a required `string` in `properties.ts`, which settles it for a
+   * Svelte consumer and settles nothing for a web-component one: `<sui-img>`
+   * takes its props from JavaScript, so an omitted `alt` arrives as undefined
+   * and every `alt.length` below would throw where the compiler cannot see it.
+   */
+  const label = $derived(alt ?? '');
+
+  function restoreHostOwnedAttribute(host: SVGSVGElement, name: string): boolean {
+    const named = label.length > 0;
+    switch (name.toLowerCase()) {
+      case 'role':
+        return setOrRemove(host, name, named ? 'img' : null);
+      case 'aria-label':
+        return setOrRemove(host, name, named ? label : null);
+      case 'aria-hidden':
+        return setOrRemove(host, name, named ? null : 'true');
+      case 'data-pw':
+      case 'testid':
+        return setOrRemove(host, name, testId ?? null);
+      default:
+        return false;
+    }
+  }
+
+  function setOrRemove(host: SVGSVGElement, name: string, value: string | null): boolean {
+    if (value === null) {
+      host.removeAttribute(name);
+    } else {
+      host.setAttribute(name, value);
+    }
+    return true;
+  }
+
   function isSafeInlineRootAttribute(lowerCaseName: string): boolean {
     return SAFE_INLINE_ROOT_ATTRIBUTES.has(lowerCaseName) || lowerCaseName.startsWith('aria-');
+  }
+
+  /**
+   * Descendants removed outright, because nothing static artwork needs is
+   * expressed with them.
+   *
+   * `script` and `foreignObject` are the obvious two. The SMIL animation
+   * elements are here because SMIL animates *any* attribute by name — `<set
+   * attributeName="onclick" to="…">` plants an event handler, and `<animate
+   * attributeName="xlink:href" values="javascript:…">` plants a URL — so a
+   * guard that strips `on*` and bad hrefs at adoption time but keeps SMIL
+   * only moves the same vector one element deeper, to be applied a frame
+   * later. `use` stays: it is how real icon sets reference their own `defs`,
+   * and where it points is handled by the URL rule below.
+   */
+  const REMOVED_ELEMENTS =
+    'script, foreignObject, animate, animateMotion, animateTransform, set, mpath, discard';
+
+  const URL_ATTRIBUTES: ReadonlySet<string> = new Set(['href', 'xlink:href', 'src']);
+
+  /**
+   * Whether a URL attribute points inside this same document (`#gradient`).
+   *
+   * Only a fragment survives. A `javascript:` URL is the classic vector, but
+   * an ordinary remote URL is not safe either: on `<image href>` or `<use
+   * href>` it fetches on adoption, which is a request the consumer's page
+   * never asked to make, from markup the consumer did not write. A same
+   * document reference can do neither.
+   */
+  function isSameDocumentReference(value: string): boolean {
+    return value.trim().startsWith('#');
   }
 
   /**
@@ -110,11 +191,11 @@
    * legitimately carry the entire SVG geometry and paint vocabulary (`d`,
    * `transform`, `gradientUnits`, …), so enumerating what is permitted would
    * break real artwork. What is dangerous is narrow and well understood:
-   * scripting elements, `on*` handlers, and URL attributes pointing at
-   * `javascript:`.
+   * scripting elements, SMIL animation, `on*` handlers, and URL attributes
+   * that leave this document.
    */
   function sanitizeInlinedSubtree(root: SVGSVGElement): void {
-    for (const element of Array.from(root.querySelectorAll('script, foreignObject'))) {
+    for (const element of Array.from(root.querySelectorAll(REMOVED_ELEMENTS))) {
       element.remove();
     }
     for (const element of Array.from(root.querySelectorAll('*'))) {
@@ -124,10 +205,7 @@
           element.removeAttribute(attribute.name);
           continue;
         }
-        // `href`, `xlink:href` and `src` accept a javascript: URL, which runs
-        // on activation of an <a> wrapper or on load of a nested resource.
-        const isUrlAttribute = name === 'href' || name === 'xlink:href' || name === 'src';
-        if (isUrlAttribute && /^\s*javascript:/i.test(attribute.value)) {
+        if (URL_ATTRIBUTES.has(name) && !isSameDocumentReference(attribute.value)) {
           element.removeAttribute(attribute.name);
         }
       }
@@ -150,17 +228,25 @@
     return new Set(Array.from(root.attributes, (attribute) => attribute.name.toLowerCase()));
   }
 
+  /**
+   * Resolves to the root attribute names this load copied onto the host, so
+   * the next load can remove them first. Without that, an attribute the
+   * previous file supplied (say `fill`) outlives a `src` change to a file that
+   * does not, and the two icons blend. Early exits hand back `previouslyCopied`
+   * untouched: nothing was painted, so nothing is owed.
+   */
   async function loadInlineSvg(
     host: SVGSVGElement,
     url: string,
     transform: ((svg: string) => string) | null,
-    signal: AbortSignal
-  ): Promise<void> {
+    signal: AbortSignal,
+    previouslyCopied: readonly string[]
+  ): Promise<readonly string[]> {
     try {
       const response = await fetch(url, { signal });
       if (!response.ok) {
         failedInlineSrc = url;
-        return;
+        return previouslyCopied;
       }
       const rawSvg = await response.text();
       const hasTransform = typeof transform === 'function';
@@ -168,21 +254,26 @@
       const parsed = new DOMParser().parseFromString(markup, 'image/svg+xml');
       if (parsed.querySelector('parsererror') !== null) {
         failedInlineSrc = url;
-        return;
+        return previouslyCopied;
       }
       const sourceSvg = parsed.querySelector('svg');
       if (sourceSvg === null) {
         failedInlineSrc = url;
-        return;
+        return previouslyCopied;
       }
       // The action may have been torn down (or re-run) while awaiting the
       // body — bail before mutating so a stale fetch never paints over the
       // latest one.
       if (signal.aborted) {
-        return;
+        return previouslyCopied;
       }
       while (host.firstChild !== null) {
         host.removeChild(host.firstChild);
+      }
+      for (const name of previouslyCopied) {
+        if (!restoreHostOwnedAttribute(host, name)) {
+          host.removeAttribute(name);
+        }
       }
       // With no transform the parsed root IS the fetched root, so every name
       // is network-supplied and only the allowlist applies. With a transform,
@@ -191,36 +282,45 @@
       // nothing can be attributed to the caller and the allowlist applies to
       // everything.
       const fetchedRootNames = hasTransform ? collectRootAttributeNames(rawSvg) : null;
-      for (const attribute of Array.from(sourceSvg.attributes)) {
+      const accepted = Array.from(sourceSvg.attributes).filter((attribute) => {
         const name = attribute.name.toLowerCase();
-        if (name === 'class') {
-          continue;
-        }
         const addedByTransform = fetchedRootNames !== null && !fetchedRootNames.has(name);
-        if (isSafeInlineRootAttribute(name) || addedByTransform) {
-          host.setAttribute(attribute.name, attribute.value);
-        }
+        return name !== 'class' && (isSafeInlineRootAttribute(name) || addedByTransform);
+      });
+      for (const attribute of accepted) {
+        host.setAttribute(attribute.name, attribute.value);
       }
+      const copied = accepted.map((attribute) => attribute.name);
       // Before adoption, not after: an event-handler attribute becomes a live
       // handler as soon as its element enters the document.
       sanitizeInlinedSubtree(sourceSvg);
       while (sourceSvg.firstChild !== null) {
         host.appendChild(sourceSvg.firstChild);
       }
+      return copied;
     } catch {
       if (!signal.aborted) {
         failedInlineSrc = url;
       }
+      return previouslyCopied;
     }
   }
 
   function inlineSvgInto(host: SVGSVGElement, params: InlineParams) {
     let controller = new AbortController();
+    let copied: readonly string[] = [];
 
     function load(current: InlineParams): void {
       controller.abort();
       controller = new AbortController();
-      void loadInlineSvg(host, current.url, current.transform, controller.signal);
+      const { signal } = controller;
+      void loadInlineSvg(host, current.url, current.transform, signal, copied).then((names) => {
+        // A superseded load resolves after the one that replaced it may
+        // already have recorded its own names; only the live load may write.
+        if (!signal.aborted) {
+          copied = names;
+        }
+      });
     }
 
     load(params);
@@ -240,9 +340,9 @@
   <svg
     use:inlineSvgInto={{ url: currentSrc, transform: transformSvg ?? null }}
     class={classes ?? ''}
-    role={alt.length > 0 ? 'img' : null}
-    aria-label={alt.length > 0 ? alt : null}
-    aria-hidden={alt.length === 0 ? 'true' : null}
+    role={label.length > 0 ? 'img' : null}
+    aria-label={label.length > 0 ? label : null}
+    aria-hidden={label.length === 0 ? 'true' : null}
     data-pw={testId}
     testID={testId}
   ></svg>
@@ -250,7 +350,7 @@
   <img
     class={classes ?? ''}
     src={currentSrc}
-    {alt}
+    alt={label}
     onerror={handleFallback}
     data-pw={testId}
     testID={testId}

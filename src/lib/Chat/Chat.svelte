@@ -5,6 +5,7 @@
   import ChatSuggestions from '../ChatSuggestions/ChatSuggestions.svelte';
   import ThinkingIndicator from '../ThinkingIndicator/ThinkingIndicator.svelte';
   import type { ChatProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     messages,
@@ -43,21 +44,21 @@
     stopIcon,
     voiceIcon,
     attachIcon,
-    onsend: onsendLegacy,
+    onsend: onsendProp,
     onSend,
-    onsuggestion: onsuggestionLegacy,
+    onsuggestion: onsuggestionProp,
     onSuggestion,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
-    onstop: onstopLegacy,
+    onstop: onstopProp,
     onStop,
-    onvoice: onvoiceLegacy,
+    onvoice: onvoiceProp,
     onVoice,
-    onattach: onattachLegacy,
+    onattach: onattachProp,
     onAttach,
-    onretry: onretryLegacy,
+    onretry: onretryProp,
     onRetry,
-    onfeedback: onfeedbackLegacy,
+    onfeedback: onfeedbackProp,
     onFeedback,
     onscrollstate: onscrollstateLegacy,
     onScrollState,
@@ -65,16 +66,51 @@
     classes
   }: ChatProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onattach = $derived(onAttach ?? onattachLegacy);
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
-  const onretry = $derived(onRetry ?? onretryLegacy);
-  const onscrollstate = $derived(onScrollState ?? onscrollstateLegacy);
-  const onsend = $derived(onSend ?? onsendLegacy);
-  const onstop = $derived(onStop ?? onstopLegacy);
-  const onsuggestion = $derived(onSuggestion ?? onsuggestionLegacy);
-  const onvoice = $derived(onVoice ?? onvoiceLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onattach = $derived(
+    resolveDeprecatedProp('Chat', 'onAttach', 'onattach', onAttach, onattachProp)
+  );
+  const onclose = $derived(
+    resolveDeprecatedProp('Chat', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+  const onfeedback = $derived(
+    resolveDeprecatedProp('Chat', 'onFeedback', 'onfeedback', onFeedback, onfeedbackProp)
+  );
+  const onretry = $derived(
+    resolveDeprecatedProp('Chat', 'onRetry', 'onretry', onRetry, onretryProp)
+  );
+  const onscrollstate = $derived(
+    resolveDeprecatedProp(
+      'Chat',
+      'onscrollstate',
+      'onScrollState',
+      onscrollstateLegacy,
+      onScrollState
+    )
+  );
+  const onsend = $derived(resolveDeprecatedProp('Chat', 'onSend', 'onsend', onSend, onsendProp));
+  const onstop = $derived(resolveDeprecatedProp('Chat', 'onStop', 'onstop', onStop, onstopProp));
+  const onsuggestion = $derived(
+    resolveDeprecatedProp('Chat', 'onSuggestion', 'onsuggestion', onSuggestion, onsuggestionProp)
+  );
+  const onvoice = $derived(
+    resolveDeprecatedProp('Chat', 'onVoice', 'onvoice', onVoice, onvoiceProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(
+      onattach,
+      onclose,
+      onfeedback,
+      onretry,
+      onscrollstate,
+      onsend,
+      onstop,
+      onsuggestion,
+      onvoice
+    );
+  });
 
   let showHeader = $derived(
     title.length > 0 ||

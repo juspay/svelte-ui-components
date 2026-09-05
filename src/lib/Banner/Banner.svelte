@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { BannerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { slide } from 'svelte/transition';
   import Button from '../Button/Button.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
@@ -14,15 +15,22 @@
     rightContent,
     dismissIcon,
     onclick,
-    ondismiss: ondismissLegacy,
+    ondismiss: ondismissProp,
     onDismiss,
     classes,
     title,
     role = null
   }: BannerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const ondismiss = $derived(onDismiss ?? ondismissLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const ondismiss = $derived(
+    resolveDeprecatedProp('Banner', 'onDismiss', 'ondismiss', onDismiss, ondismissProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(ondismiss);
+  });
 
   let interactive = $derived(typeof onclick === 'function');
 

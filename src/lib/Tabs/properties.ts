@@ -62,7 +62,9 @@ export type OptionalTabsProperties = {
 
 export type TabsEventProperties = {
   onchange?: (index: number, label: string) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (index: number, label: string) => void;
   onkeychange?: (key: string) => void;
+  /** @deprecated Use `onkeychange` instead; both work until 4.0.0. */
   onKeyChange?: (key: string) => void;
 };

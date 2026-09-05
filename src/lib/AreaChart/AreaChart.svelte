@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AreaChartProperties, AreaChartTooltipContext } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
@@ -51,17 +52,38 @@
     tooltipSnippet,
     empty,
     tooltipPortal = false,
-    onpointhover: onpointhoverLegacy,
+    onpointhover: onpointhoverProp,
     onPointHover,
-    onpointclick: onpointclickLegacy,
+    onpointclick: onpointclickProp,
     onPointClick,
     testId,
     classes
   }: AreaChartProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onpointclick = $derived(onPointClick ?? onpointclickLegacy);
-  const onpointhover = $derived(onPointHover ?? onpointhoverLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onpointclick = $derived(
+    resolveDeprecatedProp(
+      'AreaChart',
+      'onPointClick',
+      'onpointclick',
+      onPointClick,
+      onpointclickProp
+    )
+  );
+  const onpointhover = $derived(
+    resolveDeprecatedProp(
+      'AreaChart',
+      'onPointHover',
+      'onpointhover',
+      onPointHover,
+      onpointhoverProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onpointclick, onpointhover);
+  });
 
   // ── State ──────────────────────────────────────────────────────
 

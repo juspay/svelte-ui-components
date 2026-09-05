@@ -1,9 +1,19 @@
-# polymorph → SUI consumer migration codemod
+# SUI consumer migration codemod
 
-Also reports the one breaking change in the 4.0.0 custom-element surface:
+Prepares a `@juspay/svelte-ui-components` consumer for 4.0.0 in one command:
+rewrites every deprecated event-prop spelling to its lowercase name
+(`legacy-pairs.ts`, generated from the `@deprecated` tags in the library's own
+`properties.ts` files and pinned by a test). `--dry-run` prints the diff and
+writes nothing.
+
+Callback keys on config objects (`TableColumn.onToggle`,
+`TablePaginationConfig.onPageChange`) are not component props, are not
+deprecated, and are left alone.
+
+Also reports the other breaking change in the 4.0.0 custom-element surface:
 `children` is no longer a declared property on `sui-chat-bubble`,
 `sui-draggable` or `sui-resizable`, so assigning it silently loses the content.
-That check runs on every forward migration and in dry runs, reports rather than
+That check runs on every file, including in dry runs, reports rather than
 rewrites (moving content into markup is a decision, not a rename), and only
 fires in files that also mention one of the three elements. See
 `wc-children.ts`.
@@ -14,20 +24,12 @@ This package is published, so consumers can run it without a checkout:
 npx sui-codemod --dry-run ./src
 ```
 
-Mechanically migrates a consumer codebase from `polymorph-ui-components` to
-`@juspay/svelte-ui-components`:
-
-- rewrites import/export/dynamic-import specifiers (subpaths like `/wc` are
-  preserved), in `.svelte`, `.ts` and `.js` files;
-- renames the 28 synthetic event props (see `map.ts`) on library components in
-  `.svelte` markup. All but one differ from the fork only in case; Stepper's
-  `onhandlestepclick` becomes `onstepclick`, stepping over the deprecated
-  `onhandleStepClick` alias that the casing match would otherwise have picked.
-  Renaming is component-aware: `onsort` is renamed on a
-  `<Table>` imported from the library (through aliases,
-  `import { Table as DataTable }`, namespace imports and
-  `<svelte:component this={Table}>`), and left alone on your own components
-  and on native elements.
+Renaming is component-aware: `onclick` is renamed to `onClick` on a `<Toggle>`
+imported from the library (through aliases, `import { Toggle as Switch }`,
+namespace imports and `<svelte:component this={Toggle}>`), and left alone on
+your own components and on native elements. Import specifiers are never
+touched. Only `.svelte` files are rewritten; `.ts`/`.js` files are scanned for
+`children` assignments.
 
 ## Usage
 
@@ -40,9 +42,6 @@ npm run codemod -- --dry-run ../consumer-app/src
 
 # apply
 npm run codemod -- ../consumer-app/src
-
-# migrate in the other direction (SUI -> polymorph)
-npm run codemod -- --reverse ../consumer-app/src
 ```
 
 Directories are walked recursively; `node_modules`, `.git`, `.svelte-kit`,
@@ -55,22 +54,19 @@ Anything it cannot prove safe is reported as a `WARN` with `file:line:column`
 instead of being rewritten — silent wrong rewrites are worse than reported
 skips:
 
-- **Spread attributes.** `<Table {...props} />` may carry a renamed prop
+- **Spread attributes.** `<Modal {...props} />` may carry a renamed prop
   inside `props`; the object is defined elsewhere, so it is warned about, not
   rewritten.
-- **Unresolvable components.** `const Picked = Table;` then
-  `<Picked onsort={...} />` — the tag does not resolve to an import, so a
+- **Unresolvable components.** `const Picked = Toggle;` then
+  `<Picked onclick={...} />` — the tag does not resolve to an import, so a
   warning is emitted when it carries a renameable prop name.
 - **Default imports** from the library cannot be resolved to a component.
-- **Semantic renames** — same event, different word — are not casing pairs
-  and need a human: Gallery `onclose`→`onDismiss`, `onchange`→`onIndexChange`;
-  MediaUpload `onchange`→`onFilesChange`, `onerror`→`onRejected`.
+- **A target already present.** `<Toggle onclick onClick>` is left as-is and
+  reported; which handler wins is a decision.
 - Props typed against library types in `<script>` (e.g. an object literal fed
   to a spread) are not rewritten — the spread warning covers the usage site.
 
-Shorthand attributes are expanded when renamed (`{onsort}` →
-`onSort={onsort}`), so a `--reverse` round trip restores the original names
-but not the shorthand form.
+Shorthand attributes are expanded when renamed (`{onclick}` →
+`onClick={onclick}`), keeping the local identifier.
 
-`map.ts` documents how the pair list was derived and verified against both
-libraries' sources.
+`legacy-pairs.ts` documents how the rename table is derived and pinned.

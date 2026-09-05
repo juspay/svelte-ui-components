@@ -34,15 +34,30 @@ export type ListItemProperties = ListItemEventProperties & {
 };
 
 export type ListItemEventProperties = {
+  onleftimageclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onleftimageclick` instead; both work until 4.0.0. */
   onleftImageClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onleftimageclick` instead; both work until 4.0.0. */
   onLeftImageClick?: (event: MouseEvent) => void;
+  onrightimageclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onrightimageclick` instead; both work until 4.0.0. */
   onrightImageClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onrightimageclick` instead; both work until 4.0.0. */
   onRightImageClick?: (event: MouseEvent) => void;
+  oncentertextclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `oncentertextclick` instead; both work until 4.0.0. */
   oncenterTextClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `oncentertextclick` instead; both work until 4.0.0. */
   onCenterTextClick?: (event: MouseEvent) => void;
+  onitemclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onitemclick` instead; both work until 4.0.0. */
   onitemClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `onitemclick` instead; both work until 4.0.0. */
   onItemClick?: (event: MouseEvent) => void;
+  ontopsectionclick?: (event: MouseEvent) => void;
+  /** @deprecated Use `ontopsectionclick` instead; both work until 4.0.0. */
   ontopSectionClick?: (event: MouseEvent) => void;
+  /** @deprecated Use `ontopsectionclick` instead; both work until 4.0.0. */
   onTopSectionClick?: (event: MouseEvent) => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

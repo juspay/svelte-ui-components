@@ -37,8 +37,10 @@ export type OptionalLottiePlayerProperties = {
 export type LottiePlayerEventProperties = {
   /** Fired when the animation completes (non-looping). */
   oncomplete?: () => void;
+  /** @deprecated Use `oncomplete` instead; both work until 4.0.0. */
   onComplete?: () => void;
   /** Fired when the animation fails to load. */
   onerror?: () => void;
+  /** @deprecated Use `onerror` instead; both work until 4.0.0. */
   onError?: () => void;
 };

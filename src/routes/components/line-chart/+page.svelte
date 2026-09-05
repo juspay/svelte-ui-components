@@ -260,7 +260,12 @@
   or step-through orchestrator.
 </p>
 <div class="demo-row">
-  <LineChart series={singleSeries} xAxisCategories={monthLabels} {onChartReady} showDots />
+  <LineChart
+    series={singleSeries}
+    xAxisCategories={monthLabels}
+    onchartready={onChartReady}
+    showDots
+  />
 </div>
 <div class="highlight-controls">
   {#each monthLabels as label, i (i)}

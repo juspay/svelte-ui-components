@@ -2,20 +2,28 @@
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
   import type { FileDropzoneTriggerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     icon,
     heading,
     caption,
     compact = false,
-    onclick: onclickLegacy,
+    onclick: onclickProp,
     onClick,
     testId,
     classes
   }: FileDropzoneTriggerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclick = $derived(onClick ?? onclickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclick = $derived(
+    resolveDeprecatedProp('FileDropzoneTrigger', 'onClick', 'onclick', onClick, onclickProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onclick);
+  });
 </script>
 
 {#if compact}

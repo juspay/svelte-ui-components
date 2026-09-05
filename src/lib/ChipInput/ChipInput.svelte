@@ -2,6 +2,7 @@
   import Input from '$lib/Input/Input.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
   import type { ChipInputProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     values = $bindable([]),
@@ -11,21 +12,32 @@
     editable = false,
     testId,
     classes,
-    onadd: onaddLegacy,
+    onadd: onaddProp,
     onAdd,
-    ondismiss: ondismissLegacy,
+    ondismiss: ondismissProp,
     onDismiss,
-    onedit: oneditLegacy,
+    onedit: oneditProp,
     onEdit,
-    onchange: onchangeLegacy,
+    onchange: onchangeProp,
     onChange
   }: ChipInputProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onadd = $derived(onAdd ?? onaddLegacy);
-  const onchange = $derived(onChange ?? onchangeLegacy);
-  const ondismiss = $derived(onDismiss ?? ondismissLegacy);
-  const onedit = $derived(onEdit ?? oneditLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onadd = $derived(resolveDeprecatedProp('ChipInput', 'onAdd', 'onadd', onAdd, onaddProp));
+  const onchange = $derived(
+    resolveDeprecatedProp('ChipInput', 'onChange', 'onchange', onChange, onchangeProp)
+  );
+  const ondismiss = $derived(
+    resolveDeprecatedProp('ChipInput', 'onDismiss', 'ondismiss', onDismiss, ondismissProp)
+  );
+  const onedit = $derived(
+    resolveDeprecatedProp('ChipInput', 'onEdit', 'onedit', onEdit, oneditProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onadd, onchange, ondismiss, onedit);
+  });
 
   let draft = $state('');
 
@@ -153,11 +165,11 @@
           actionInput={false}
           classes="chip-input-edit"
           bind:this={editInputRef}
-          onInput={(nextValue) => {
+          oninput={(nextValue) => {
             editDraft = nextValue;
           }}
-          onKeyDown={(event) => handleEditKeyDown(event, chip)}
-          onBlur={() => handleEditBlur(chip)}
+          onkeydown={(event) => handleEditKeyDown(event, chip)}
+          onblur={() => handleEditBlur(chip)}
           {...typeof testId === 'string' ? { testId: `${testId}-item-${index}-edit` } : {}}
         />
       </div>
@@ -186,11 +198,11 @@
       actionInput={false}
       disable={disabled}
       classes="chip-input-draft"
-      onInput={(nextValue) => {
+      oninput={(nextValue) => {
         draft = nextValue;
       }}
-      onKeyDown={handleKeyDown}
-      onBlur={addChip}
+      onkeydown={handleKeyDown}
+      onblur={addChip}
       {...typeof testId === 'string' ? { testId: `${testId}-add` } : {}}
     />
   </div>

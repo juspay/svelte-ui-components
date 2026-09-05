@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ToolbarProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     showBackButton = true,
@@ -11,15 +12,29 @@
     rightContent,
     additionalContent,
     classes,
-    onbackClick: onbackClickLegacy,
+    onbackClick: onbackClickProp,
     onBackClick,
+    onbackclick,
     onkeydown,
     testId,
     headingTestId
   }: ToolbarProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onbackClick = $derived(onBackClick ?? onbackClickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onbackClick = $derived(
+    resolveDeprecatedProp(
+      'Toolbar',
+      'onbackClick',
+      'onbackclick',
+      onbackClickProp,
+      resolveDeprecatedProp('Toolbar', 'onBackClick', 'onbackclick', onBackClick, onbackclick)
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onbackClick);
+  });
 
   // `backIcon={null}` (or '') has always meant "render no back control at all", and consumers
   // rely on it; only the DEFAULT changes, from a CDN image to the inline icon.

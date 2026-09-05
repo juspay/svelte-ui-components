@@ -1,6 +1,6 @@
 # PieChart
 
-A responsive SVG pie/donut chart with slice hover highlighting, programmatic highlight control, an optional delta-change badge, custom labels, legend, and donut center content. When `innerRadius` is set, renders as a donut with optional content in the center hole via the `center` snippet. Supports a semi-circle (half-donut) layout via `semiCircle`, a tabular value legend via `legendShowValues`, and configurable percentage decimal places via `percentDecimals`. The `onChartReady` callback delivers an imperative `ChartHighlightAPI` so external orchestrators (e.g. voice narration, dashboards) can drive slice highlights without touching component state; the `highlightedIndex` prop provides the same capability declaratively. A `changePercentage` prop renders a positioned `DeltaIndicator` badge at the top-right corner of the chart container, with `changeInvertColors` for lower-is-better metrics.
+A responsive SVG pie/donut chart with slice hover highlighting, programmatic highlight control, an optional delta-change badge, custom labels, legend, and donut center content. When `innerRadius` is set, renders as a donut with optional content in the center hole via the `center` snippet. Supports a semi-circle (half-donut) layout via `semiCircle`, a tabular value legend via `legendShowValues`, and configurable percentage decimal places via `percentDecimals`. The `onchartready` callback delivers an imperative `ChartHighlightAPI` so external orchestrators (e.g. voice narration, dashboards) can drive slice highlights without touching component state; the `highlightedIndex` prop provides the same capability declaratively. A `changePercentage` prop renders a positioned `DeltaIndicator` badge at the top-right corner of the chart container, with `changeInvertColors` for lower-is-better metrics.
 
 ## Usage
 
@@ -98,7 +98,7 @@ Highlight a specific slice index via the `highlightedIndex` prop. The highlighte
 
 ### Programmatic Highlight — Imperative API
 
-Use `onChartReady` to receive a `ChartHighlightAPI` handle. Call `api.highlight(index)` / `api.highlight(null)` from external logic (voice narration, keyboard controls, dashboard orchestration).
+Use `onchartready` to receive a `ChartHighlightAPI` handle. Call `api.highlight(index)` / `api.highlight(null)` from external logic (voice narration, keyboard controls, dashboard orchestration).
 
 ```svelte
 <script>
@@ -110,7 +110,7 @@ Use `onChartReady` to receive a `ChartHighlightAPI` handle. Call `api.highlight(
 <PieChart
   {data}
   innerRadius={0.6}
-  onChartReady={(api) => {
+  onchartready={(api) => {
     chartApi = api;
   }}
 />
@@ -164,7 +164,7 @@ overlapping text:
 | semiCircle         | `boolean`                          | No       | `false`      | Render as a semi-circle (half-pie/donut). Arc spans the top 180°. Aspect ratio defaults to 2:1.                                                                                          |
 | legendShowValues   | `boolean`                          | No       | `false`      | When `showLegend` is also true, renders a tabular legend with formatted values and percentages per slice.                                                                                |
 | percentDecimals    | `number`                           | No       | `0`          | Decimal places used for percentage formatting in on-arc labels (`showValues`) and the legend value column.                                                                               |
-| onChartReady       | `(api: ChartHighlightAPI) => void` | No       | `-`          | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.        |
+| onchartready       | `(api: ChartHighlightAPI) => void` | No       | `-`          | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.        |
 | highlightedIndex   | `number \| null`                   | No       | `null`       | Declarative highlight: the index of the slice to highlight. The highlighted slice scales out and all others dim. Pass `null` or omit to clear. Mouse hover takes priority when active.   |
 | changePercentage   | `number`                           | No       | `-`          | When provided, renders a `DeltaIndicator` badge at the top-right of the chart container showing the percentage change. Positive values appear green ↑, negative appear red ↓ by default. |
 | changeInvertColors | `boolean`                          | No       | `false`      | Swap the up/down colors on the delta badge for lower-is-better metrics (e.g. RTO rate, bounce rate).                                                                                     |
@@ -250,4 +250,4 @@ Thresholds: ≥ 1 Cr (10 million) → `"1.5Cr"`, ≥ 1 L (100 thousand) → `"2.
 <sui-pie-chart></sui-pie-chart>
 ```
 
-All scalar props map to kebab-case attributes (`inner-radius`, `semi-circle`, `show-labels`, `show-values`, `label-position`, `show-legend`, `start-angle`, `aspect-ratio`, `legend-show-values`, `percent-decimals`, `highlighted-index`, `change-percentage`, `change-invert-colors`, `test-id`). Object and function props (`data`, `valueFormat`, `onChartReady`, `onsliceclick`, `onslicehover`, etc.) must be set via JavaScript property assignment.
+All scalar props map to kebab-case attributes (`inner-radius`, `semi-circle`, `show-labels`, `show-values`, `label-position`, `show-legend`, `start-angle`, `aspect-ratio`, `legend-show-values`, `percent-decimals`, `highlighted-index`, `change-percentage`, `change-invert-colors`, `test-id`). Object and function props (`data`, `valueFormat`, `onchartready`, `onsliceclick`, `onslicehover`, etc.) must be set via JavaScript property assignment.

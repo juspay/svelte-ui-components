@@ -17,7 +17,13 @@
       removeIcon: { type: 'Object' },
       fileIcon: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      onremoveimage: { type: 'Object' },
+      onremovefile: { type: 'Object' },
+      onremovevideo: { type: 'Object' },
+      onopenimage: { type: 'Object' },
+      onopenvideo: { type: 'Object' },
+      onopenfile: { type: 'Object' }
     }
   }}
 />

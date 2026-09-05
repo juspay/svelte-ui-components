@@ -80,15 +80,19 @@ export type OptionalChatComposerProperties = {
 
 export type ChatComposerEventProperties = {
   onsubmit?: (value: string, attachments: File[]) => void;
+  /** @deprecated Use `onsubmit` instead; both work until 4.0.0. */
   onSubmit?: (value: string, attachments: File[]) => void;
   oninput?: (value: string, event: Event) => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onpaste?: (event: ClipboardEvent) => void;
   onstop?: () => void;
+  /** @deprecated Use `onstop` instead; both work until 4.0.0. */
   onStop?: () => void;
   onvoice?: () => void;
+  /** @deprecated Use `onvoice` instead; both work until 4.0.0. */
   onVoice?: () => void;
   onattach?: (files: File[]) => void;
+  /** @deprecated Use `onattach` instead; both work until 4.0.0. */
   onAttach?: (files: File[]) => void;
   /**
    * Intercepts the attach button: when provided, clicking it calls this instead of
@@ -96,16 +100,20 @@ export type ChatComposerEventProperties = {
    * gallery / files).
    */
   onattachclick?: () => void;
+  /** @deprecated Use `onattachclick` instead; both work until 4.0.0. */
   onAttachClick?: () => void;
   /**
    * Removal callbacks for the rich strip's chips. Omit them to render the rich
    * chips read-only (no remove buttons), mirroring AttachmentChipRow.
    */
   onremoverichimage?: (id: string) => void;
+  /** @deprecated Use `onremoverichimage` instead; both work until 4.0.0. */
   onRemoveRichImage?: (id: string) => void;
   onremoverichfile?: (id: string) => void;
+  /** @deprecated Use `onremoverichfile` instead; both work until 4.0.0. */
   onRemoveRichFile?: (id: string) => void;
   onremoverichvideo?: (id: string) => void;
+  /** @deprecated Use `onremoverichvideo` instead; both work until 4.0.0. */
   onRemoveRichVideo?: (id: string) => void;
   /**
    * Open/preview callbacks for the rich strip's chips — when provided, a chip's
@@ -113,10 +121,13 @@ export type ChatComposerEventProperties = {
    * open a lightbox, play the video).
    */
   onopenrichimage?: (image: AttachmentChipImage) => void;
+  /** @deprecated Use `onopenrichimage` instead; both work until 4.0.0. */
   onOpenRichImage?: (image: AttachmentChipImage) => void;
   onopenrichvideo?: (video: AttachmentChipVideo) => void;
+  /** @deprecated Use `onopenrichvideo` instead; both work until 4.0.0. */
   onOpenRichVideo?: (video: AttachmentChipVideo) => void;
   onopenrichfile?: (file: AttachmentChipFile) => void;
+  /** @deprecated Use `onopenrichfile` instead; both work until 4.0.0. */
   onOpenRichFile?: (file: AttachmentChipFile) => void;
   /**
    * The composer's idle action (e.g. voice conversation mode). While the value is
@@ -124,5 +135,6 @@ export type ChatComposerEventProperties = {
    * to an action button that fires this.
    */
   onaction?: () => void;
+  /** @deprecated Use `onaction` instead; both work until 4.0.0. */
   onAction?: () => void;
 };

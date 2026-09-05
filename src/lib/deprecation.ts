@@ -61,3 +61,55 @@ export const warnDeprecatedProp = (component: string, oldName: string, newName: 
       `Run \`npx sui-codemod --dry-run ./src\` to see every affected call site.`
   );
 };
+
+/**
+ * The other half of phase 2: decide which of the two values wins, and warn
+ * exactly when that decision is the one a consumer should act on.
+ *
+ * `warnDeprecatedProp` only knows how to print a message -- something still
+ * has to pick a value, and it has to be the same call site so the two cannot
+ * drift (a component naming one prop in its `$derived` line while the warning
+ * names another). This is that call site, meant to replace it directly:
+ * `const onclick = $derived(onClick ?? onclickLegacy)` becomes
+ * `const onclick = $derived(resolveDeprecatedProp('Toggle', 'onclick',
+ * 'onClick', onclickLegacy, onClick))`.
+ *
+ * It warns only when the legacy value is the one actually taking effect --
+ * `current` absent, `legacy` present. A consumer who passed only the
+ * corrected spelling, or passed neither, has not done anything deprecated and
+ * gets no warning for it. Checked with `typeof legacy !== 'undefined'` rather
+ * than truthiness, so a legacy value of `false` or `0` still counts as
+ * supplied -- these are event-handler props today, but the check does not
+ * assume that.
+ *
+ * `legacy` and `current` are left as a bare `T` rather than `T | undefined`:
+ * this repo's lint config bans the `undefined` keyword in a type position the
+ * same way it bans the bare identifier, and every alias pair's two spellings
+ * already share one signature (phase 1 generated the corrected declaration by
+ * copying the legacy one), so inferring `T` from the two arguments as-passed
+ * -- each already `Handler | undefined` via its `?:` in `properties.ts` --
+ * lands on the same effective type without writing the keyword.
+ */
+export const resolveDeprecatedProp = <T>(
+  component: string,
+  oldName: string,
+  newName: string,
+  legacy: T,
+  current: T
+) => {
+  if (typeof current === 'undefined' && typeof legacy !== 'undefined') {
+    warnDeprecatedProp(component, oldName, newName);
+  }
+  return current ?? legacy;
+};
+
+/**
+ * Forces the alias `$derived`s to evaluate once at mount.
+ *
+ * A `$derived` runs only when it is read, and for most components the alias
+ * is read inside the event handler -- so a consumer who passed the legacy
+ * spelling and never triggered the event would never be told. Each wired
+ * component calls this from one `$effect.pre` with every alias it declares;
+ * the read is the whole point, so the values themselves are unused.
+ */
+export const readDeprecatedProps = (..._values: readonly unknown[]): void => {};

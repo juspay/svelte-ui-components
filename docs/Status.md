@@ -34,7 +34,7 @@ The `statusDescription` string is rendered with `{@html}`, so a caller can pass 
 
 | Event         | Type         | Description                                                                |
 | ------------- | ------------ | -------------------------------------------------------------------------- |
-| onbuttonClick | `() => void` | Fires when the action button (configured via buttonProperties) is clicked. |
+| onbuttonclick | `() => void` | Fires when the action button (configured via buttonProperties) is clicked. |
 
 ## Snippets
 

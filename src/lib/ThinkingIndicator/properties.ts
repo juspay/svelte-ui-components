@@ -50,6 +50,8 @@ export type OptionalThinkingIndicatorProperties = {
    * shape). No effect on the `bare` or `chip` variants.
    */
   showElapsed?: boolean;
+  ontoggle?: () => void;
+  /** @deprecated Use `ontoggle` instead; both work until 4.0.0. */
   onToggle?: () => void;
   /** Leading indicator. Falls back to the built-in `Loader` spinner. */
   avatar?: Snippet;
@@ -91,9 +93,11 @@ export type OptionalThinkingIndicatorProperties = {
   /** Bindable index of the selected coding row (`null` = none). */
   selected?: number | null;
   onrowselect?: (index: number | null) => void;
+  /** @deprecated Use `onrowselect` instead; both work until 4.0.0. */
   onRowSelect?: (index: number | null) => void;
   /** Fires exactly once, the moment `busy` flips false. No effect while `busy` is never set. */
   onsettled?: () => void;
+  /** @deprecated Use `onsettled` instead; both work until 4.0.0. */
   onSettled?: () => void;
   /**
    * Delay (ms) before the automatic post-settle collapse fires once `busy` flips

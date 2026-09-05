@@ -1,113 +1,19 @@
 #!/usr/bin/env node
-// Enforces DESIGN_PRINCIPLES.md's event-casing rule:
-//   - native DOM events forwarded as-is stay lowercase (onclick, onkeydown, ...)
-//     to match Svelte 5's own idiom for real DOM event attributes
-//   - every other (synthesized) event is camelCase from the character right
-//     after "on" (onRowClick, onCenterTextClick, ...)
+// Enforces DESIGN_PRINCIPLES.md's event-casing rule: every event prop is
+// `on` followed by the event name in lowercase — onclick, onrowclick,
+// onoverlayclick — whether the browser fires the event or the component
+// invents it. One rule, no native/synthetic judgement call.
 //
-// This catches exactly the class of bug found across the codebase before this
-// rule existed: a prop that starts "on" + lowercase word, then switches to
-// camelCase partway through (onleftImageClick, oncenterTextClick), or one
-// that's lowercase throughout despite being a made-up, multi-word event name
-// (onbarclick) — neither a real native event name nor valid camelCase.
-//
-// event-casing-baseline.json grandfathers the violations that already
-// existed when this check was introduced: renaming any of them is a
-// breaking prop-name change for real consumers, not something to do as a
-// drive-by lint fix. This check's job is to stop the count from growing,
-// not to retroactively rewrite the public API. Fix an entry, then remove
-// it from the baseline in the same PR.
+// The one tolerated exception is a declaration marked `@deprecated`: the 3.x
+// releases keep the earlier camelCase and mixed-case spellings alive as
+// aliases so consumers can migrate with `npx sui-codemod`, and 4.0.0 removes
+// them. An uppercase letter in an event prop that is NOT deprecated is a new
+// violation and fails the build.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const NATIVE_EVENTS = new Set([
-  'click',
-  'dblclick',
-  'auxclick',
-  'contextmenu',
-  'mousedown',
-  'mouseup',
-  'mousemove',
-  'mouseenter',
-  'mouseleave',
-  'mouseover',
-  'mouseout',
-  'keydown',
-  'keyup',
-  'keypress',
-  'focus',
-  'blur',
-  'focusin',
-  'focusout',
-  'input',
-  'change',
-  'submit',
-  'reset',
-  'select',
-  'invalid',
-  'scroll',
-  'wheel',
-  'resize',
-  'drag',
-  'dragstart',
-  'dragend',
-  'dragenter',
-  'dragleave',
-  'dragover',
-  'drop',
-  'touchstart',
-  'touchend',
-  'touchmove',
-  'touchcancel',
-  'pointerdown',
-  'pointerup',
-  'pointermove',
-  'pointerenter',
-  'pointerleave',
-  'pointerover',
-  'pointerout',
-  'pointercancel',
-  'copy',
-  'cut',
-  'paste',
-  'load',
-  'error',
-  'abort',
-  'animationstart',
-  'animationend',
-  'animationiteration',
-  'transitionend',
-  'transitionstart',
-  'toggle',
-  'close',
-  'cancel',
-  // HTMLMediaElement (audio/video)
-  'play',
-  'pause',
-  'ended',
-  'volumechange',
-  'timeupdate',
-  'loadstart',
-  'loadeddata',
-  'loadedmetadata',
-  'canplay',
-  'canplaythrough',
-  'seeking',
-  'seeked',
-  'waiting',
-  'stalled',
-  'suspend',
-  'progress',
-  'ratechange',
-  'durationchange',
-  'emptied'
-]);
-
-const PROP_LINE = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\??:/;
-// DOM event types a genuine forward would hand straight to the caller.
-const DOM_EVENT_TYPE =
-  /\b(?:Event|UIEvent|MouseEvent|KeyboardEvent|FocusEvent|InputEvent|ClipboardEvent|PointerEvent|TouchEvent|DragEvent|WheelEvent|SubmitEvent|AnimationEvent|TransitionEvent|ProgressEvent)\b/;
+const PROP_LINE = /^\s*(on[A-Za-z]+)\??:/;
 const root = join(import.meta.dirname, '..');
 
 function findPropertiesFiles(dir) {
@@ -124,79 +30,101 @@ function findPropertiesFiles(dir) {
   return out;
 }
 
+// A declaration runs from its first line to the first `;` at bracket depth
+// zero, so a multi-line arrow type is read whole before deciding whether the
+// prop is a callback at all (`onErrorMessage?: string` is not an event).
+function declarationText(lines, from) {
+  let depth = 0;
+  const parts = [];
+  for (let i = from; i < lines.length; i++) {
+    parts.push(lines[i]);
+    for (const character of lines[i]) {
+      if (character === '(' || character === '{' || character === '[') {
+        depth += 1;
+      } else if (character === ')' || character === '}' || character === ']') {
+        depth -= 1;
+      } else if (character === ';' && depth === 0) {
+        return parts.join('\n');
+      }
+    }
+  }
+  return parts.join('\n');
+}
+
+function docBlockAbove(lines, index) {
+  const block = [];
+  for (let i = index - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line.length === 0 || !/^(\/\*\*|\*|\/\/)/.test(line)) {
+      break;
+    }
+    block.unshift(line);
+  }
+  return block.join('\n');
+}
+
 function checkFile(path) {
   const violations = [];
+  let deprecated = 0;
   const lines = readFileSync(path, 'utf8').split('\n');
+  let owner = '';
   lines.forEach((line, i) => {
+    const typeLine = line.match(/^(?:export )?type (\w+)\b/);
+    if (typeLine) {
+      owner = typeLine[1];
+    }
     const m = line.match(PROP_LINE);
     if (!m) {
       return;
     }
-    const name = m[1];
-    if (!/^on[a-zA-Z]/.test(name)) {
+    // Only a component's own props are in scope: a callback key on a config
+    // object (`TableColumn.onToggle`, a chat adapter) is declared in a type not
+    // named `…Properties`, or nested deeper than the props type's own members.
+    if (!owner.endsWith('Properties') || m[0].length - m[0].trimStart().length !== 2) {
       return;
     }
-
-    const rest = name.slice(2);
-    const restLower = rest.toLowerCase();
-    // A prop only forwards a native event if it hands the caller a DOM event.
-    // Matching on the NAME alone mis-flagged six correct props whose names
-    // collide with a DOM event but which pass domain data instead:
-    // TypewriterText's onProgress passes a TypewriterProgress, Table's onToggle
-    // passes (rowIndex, checked, originalIndex), ThinkingIndicator's onToggle
-    // takes nothing. Lowercasing those would rename correct props into wrong
-    // ones, so the declared type decides, not the spelling.
-    const isNative = NATIVE_EVENTS.has(restLower) && DOM_EVENT_TYPE.test(line);
-
-    if (isNative) {
-      if (rest !== restLower) {
-        violations.push({
-          line: i + 1,
-          name,
-          reason: `native DOM event "${restLower}" should stay lowercase: on${restLower}`
-        });
-      }
-    } else if (/^[a-z]/.test(rest)) {
-      const fixed = 'on' + rest[0].toUpperCase() + rest.slice(1);
-      violations.push({
-        line: i + 1,
-        name,
-        reason: `synthesized event should be camelCase: ${fixed} (word boundaries beyond the first may need a manual pass)`
-      });
+    const name = m[1];
+    if (!declarationText(lines, i).includes('=>')) {
+      return;
     }
+    if (name === name.toLowerCase()) {
+      return;
+    }
+    if (docBlockAbove(lines, i).includes('@deprecated')) {
+      deprecated += 1;
+      return;
+    }
+    violations.push({
+      line: i + 1,
+      name,
+      reason: `event props are lowercase: on${name.slice(2).toLowerCase()} (keep ${name} only as a @deprecated alias)`
+    });
   });
-  return violations;
+  return { violations, deprecated };
 }
 
-const baseline = new Set(
-  JSON.parse(readFileSync(join(import.meta.dirname, 'event-casing-baseline.json'), 'utf8'))
-);
 const files = findPropertiesFiles(join(root, 'src', 'lib'));
 
-let newCount = 0;
-let knownCount = 0;
+let violationCount = 0;
+let deprecatedCount = 0;
 
 for (const file of files) {
   const rel = file.replace(root + '/', '');
-  const violations = checkFile(file);
+  const { violations, deprecated } = checkFile(file);
+  deprecatedCount += deprecated;
   for (const v of violations) {
-    const key = `${rel}::${v.name}`;
-    if (baseline.has(key)) {
-      knownCount++;
-    } else {
-      newCount++;
-      console.log(`${rel}:${v.line}  ${v.name}  —  ${v.reason}`);
-    }
+    violationCount++;
+    console.log(`${rel}:${v.line}  ${v.name}  —  ${v.reason}`);
   }
 }
 
 console.log(
-  `\n${knownCount} known (grandfathered) violation(s), ${newCount} new violation(s), across ${files.length} properties.ts files.`
+  `\n${violationCount} event-casing violation(s), ${deprecatedCount} deprecated alias(es) awaiting 4.0.0, across ${files.length} properties.ts files.`
 );
 
-if (newCount > 0) {
+if (violationCount > 0) {
   console.log(
-    'New event-casing violations found. Either fix the name, or if it is genuinely a native DOM event this list is missing, add it to NATIVE_EVENTS.'
+    'New event-casing violations found. Event props are lowercase throughout; an old spelling may only remain as a @deprecated alias.'
   );
   process.exit(1);
 }

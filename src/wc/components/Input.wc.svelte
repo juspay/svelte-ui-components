@@ -67,7 +67,10 @@
       oninput: { type: 'Object' },
       onpaste: { type: 'Object' },
       onclick: { type: 'Object' },
-      onkeydown: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      onstatechange: { type: 'Object' },
+      onlefticonclick: { type: 'Object' },
+      onrighticonclick: { type: 'Object' }
     }
   }}
 />

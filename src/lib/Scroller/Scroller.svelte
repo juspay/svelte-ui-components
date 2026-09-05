@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ScrollerProperties, ScrollPosition } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Button from '../Button/Button.svelte';
   import chevronLeft from '../assets/chevron-left.svg?raw';
   import chevronRight from '../assets/chevron-right.svg?raw';
@@ -21,13 +22,26 @@
     testId,
     arrowPrevious,
     arrowNext,
-    onscrollposition: onscrollpositionLegacy,
+    onscrollposition: onscrollpositionProp,
     onScrollPosition,
     classes
   }: ScrollerProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onscrollposition = $derived(onScrollPosition ?? onscrollpositionLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onscrollposition = $derived(
+    resolveDeprecatedProp(
+      'Scroller',
+      'onScrollPosition',
+      'onscrollposition',
+      onScrollPosition,
+      onscrollpositionProp
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onscrollposition);
+  });
 
   let containerEl: HTMLDivElement | null = $state(null);
   let canScrollPrev = $state(false);

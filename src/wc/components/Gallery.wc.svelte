@@ -25,7 +25,13 @@
       onOpen: { type: 'Object' },
       onDismiss: { type: 'Object' },
       onIndexChange: { type: 'Object' },
-      onkeydown: { type: 'Object' }
+      onkeydown: { type: 'Object' },
+      onimageclick: { type: 'Object' },
+      oneditclick: { type: 'Object' },
+      ondeleteclick: { type: 'Object' },
+      onopen: { type: 'Object' },
+      onclose: { type: 'Object' },
+      onchange: { type: 'Object' }
     }
   }}
 />

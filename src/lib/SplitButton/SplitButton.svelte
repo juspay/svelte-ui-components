@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SplitButtonProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { MenuItem } from '../Menu/properties';
   import Button from '../Button/Button.svelte';
   import Menu from '../Menu/Menu.svelte';
@@ -13,12 +14,19 @@
     dropdownIcon,
     classes,
     onclick,
-    onselect: onselectLegacy,
+    onselect: onselectProp,
     onSelect
   }: SplitButtonProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onselect = $derived(onSelect ?? onselectLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onselect = $derived(
+    resolveDeprecatedProp('SplitButton', 'onSelect', 'onselect', onSelect, onselectProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onselect);
+  });
 
   let menuOpen = $state(false);
 

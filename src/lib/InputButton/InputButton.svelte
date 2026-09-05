@@ -89,7 +89,7 @@
           {...inputEventProperties}
           bind:value
           bind:this={inputRef}
-          onStateChange={handleStateChange}
+          onstatechange={handleStateChange}
           actionInput={true}
         />
       </div>

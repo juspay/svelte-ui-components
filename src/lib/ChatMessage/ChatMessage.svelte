@@ -17,6 +17,7 @@
     markdown,
     body,
     streaming = false,
+    clampLines = 0,
     status,
     avatar,
     header,
@@ -25,6 +26,8 @@
     actions,
     copyLabel = 'Copy',
     retryLabel = 'Retry',
+    expandLabel = 'Expand message',
+    collapseLabel = 'Collapse message',
     feedbackUpLabel = 'Good response',
     feedbackDownLabel = 'Bad response',
     onretry: onretryLegacy,
@@ -37,6 +40,37 @@
     classes
   }: ChatMessageProperties = $props();
 
+  // A long message can be collapsed to a few lines and opened by click or keyboard.
+  // Consumers had been rebuilding this around the `body` snippet; it belongs here so
+  // the chrome, the clamp and the expanded state stay one component's concern.
+  let expanded = $state(false);
+  let clampable = $derived(typeof clampLines === 'number' && clampLines > 0);
+  let clampActive = $derived(clampable && !expanded);
+  // Turning clamping off must not leave the message stuck open: without this, a parent
+  // that sets clampLines to 0 and later restores it would get an already-expanded bubble
+  // instead of the clamped default. A prop going away cannot be observed from a $derived
+  // without writing to state, so this is the sanctioned escape hatch rather than a
+  // reactive convenience.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (!clampable) {
+      expanded = false;
+    }
+  });
+  // Ties the toggle to the region it expands. Per-instance, so two clamped messages
+  // on one page never collide.
+  const uid = $props.id();
+  const bodyId = `chat-message-body-${uid}`;
+  // Spread rather than a ternary: Button's testId is `string | undefined` and the
+  // repo forbids the `undefined` literal, so the prop is omitted instead of blanked.
+  let clampToggleTestId = $derived(
+    typeof testId === 'string' ? { testId: `${testId}-clamp-toggle` } : {}
+  );
+  const toggleExpanded = () => {
+    if (clampable) {
+      expanded = !expanded;
+    }
+  };
   // Event-casing phase 1: both spellings accepted, the correct one wins.
   const oncopy = $derived(onCopy ?? oncopyLegacy);
   const onfeedback = $derived(onFeedback ?? onfeedbackLegacy);
@@ -136,14 +170,38 @@
         <div class="header">{@render header()}</div>
       {/if}
 
-      <div class="bubble">
+      <!-- The bubble deliberately carries no role and no handler of its own. A button has
+           presentational children, so making the bubble one would flatten the paragraphs and
+           lists a message body renders; and a click target that is not focusable is a control
+           keyboard users cannot reach. The Button below is the whole control. -->
+      <div
+        class="bubble"
+        class:clampable
+        style={clampable ? `--chat-message-clamp-lines-prop: ${clampLines};` : null}
+        data-clamped={clampActive ? 'true' : null}
+        data-expanded={clampable ? String(expanded) : null}
+      >
         {#if hasBody}
-          <div class="body">{@render body?.()}</div>
+          <div class="body" id={bodyId}>{@render body?.()}</div>
         {:else if hasHtml}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <div class="body">{@html effectiveHtml}</div>
+          <div class="body" id={bodyId}>{@html effectiveHtml}</div>
         {:else if content.length > 0}
-          <div class="body text">{content}</div>
+          <div class="body text" id={bodyId}>{content}</div>
+        {/if}
+
+        {#if clampable}
+          <div class="clamp-toggle">
+            <Button
+              variant="ghost"
+              size="sm"
+              onclick={toggleExpanded}
+              ariaExpanded={expanded}
+              ariaControls={bodyId}
+              text={expanded ? collapseLabel : expandLabel}
+              {...clampToggleTestId}
+            />
+          </div>
         {/if}
 
         {#if showTyping}
@@ -339,6 +397,21 @@
     .actions {
       opacity: 1;
     }
+  }
+
+  .clamp-toggle {
+    display: flex;
+    margin-top: var(--chat-message-clamp-toggle-margin-top, 4px);
+  }
+
+  /* Clamp the rendered body, not the source: the message keeps its markup and its
+     copy text, and expanding is a state change rather than a re-render. */
+  .bubble[data-clamped='true'] .body {
+    display: -webkit-box;
+    line-clamp: var(--chat-message-clamp-lines, var(--chat-message-clamp-lines-prop, 2));
+    -webkit-line-clamp: var(--chat-message-clamp-lines, var(--chat-message-clamp-lines-prop, 2));
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .body :global(p) {

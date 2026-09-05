@@ -13,6 +13,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       ariaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       ariaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
+      ariaControls: { type: 'String', attribute: 'aria-controls' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       onkeydown: { type: 'Object' },

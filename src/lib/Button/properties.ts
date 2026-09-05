@@ -59,6 +59,11 @@ export type OptionalButtonProperties = {
   ariaLabel?: string;
   ariaExpanded?: boolean;
   /**
+   * `aria-controls`: the id of the region this button governs. Pair with
+   * `ariaExpanded` on a disclosure button so assistive tech can reach what it opens.
+   */
+  ariaControls?: string;
+  /**
    * Native `aria-haspopup`. Needed when the button is the trigger for a menu, listbox or
    * dialog — Menu hands exactly this to its `trigger` snippet.
    */

@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import type { SnippetProperties } from './properties';
   import Button from '../Button/Button.svelte';
   import copySvg from '$lib/assets/copy.svg?raw';
+  import { createCopyResetTimer } from './copyResetTimer';
 
   let {
     text,
@@ -9,20 +11,31 @@
     showCopyButton = true,
     testId,
     copyIcon,
+    copiedLabel = 'Copied!',
+    copyResetMs = 2000,
     oncopy,
     classes
   }: SnippetProperties = $props();
 
   let copied = $state(false);
 
+  // The reset timer used to be a bare setTimeout with nothing clearing it: a
+  // second copy before the first one's timer fired left two timers racing to
+  // flip `copied`, and navigating away mid-flash left the timer armed against
+  // a destroyed component. `createCopyResetTimer` (unit-tested on its own in
+  // copyResetTimer.test.ts) guarantees only one timer is ever pending, and
+  // onDestroy guarantees it never outlives the component it targets.
+  const resetTimer = createCopyResetTimer();
+  onDestroy(resetTimer.cancel);
+
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
       oncopy?.();
-      setTimeout(() => {
+      resetTimer.arm(() => {
         copied = false;
-      }, 2000);
+      }, copyResetMs);
     } catch {
       // Clipboard API unavailable (non-secure context, iframe restrictions)
     }
@@ -42,7 +55,7 @@
     <div class="snippet-copy">
       <Button onclick={handleCopy} ariaLabel="Copy to clipboard">
         {#if copied}
-          <span class="snippet-copied">Copied!</span>
+          <span class="snippet-copied" aria-live="polite">{copiedLabel}</span>
         {:else if typeof copyIcon === 'function'}
           {@render copyIcon()}
         {:else}

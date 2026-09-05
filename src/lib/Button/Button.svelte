@@ -22,6 +22,7 @@
     testId,
     ariaLabel,
     ariaExpanded,
+    ariaControls,
     ariaHaspopup,
     ariaSelected,
     ariaBusy,
@@ -91,6 +92,7 @@
     role={role ?? null}
     aria-label={ariaLabel ?? null}
     aria-expanded={ariaExpanded ?? null}
+    aria-controls={ariaControls ?? null}
     aria-haspopup={ariaHaspopup ?? null}
     aria-selected={ariaSelected ?? null}
     aria-busy={isBusy || ariaBusy || null}

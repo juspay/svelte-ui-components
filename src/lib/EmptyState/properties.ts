@@ -20,6 +20,16 @@ export type OptionalEmptyStateProperties = {
   classes?: string;
   testId?: string;
   /**
+   * Sets sane padding/gap defaults for the placeholder's context, without
+   * requiring a wrapper class. Omit for today's default sizing (unchanged).
+   * `'page'` is roomier, for a full route/view standing in for its content.
+   * `'panel'` is tighter, for a constrained panel, popover, or rail.
+   * Exposed on the root element as `data-density` so a consumer's own CSS can
+   * target it too. Either default can still be overridden per-instance with
+   * `--empty-state-padding` / `--empty-state-gap`, which always take priority.
+   */
+  density?: 'page' | 'panel';
+  /**
    * Optional snippet that replaces the `title` string at render time.
    * When provided, the mandatory `title` prop is still required for backward-compatibility
    * but its value is not rendered — the snippet takes full priority.

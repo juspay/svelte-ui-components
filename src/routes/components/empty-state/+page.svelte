@@ -111,3 +111,21 @@
     <Button text="Get started" />
   </EmptyState>
 </div>
+
+<h3>Density</h3>
+<div class="demo-row" style="flex-direction: column; max-width: 500px; gap: 24px;">
+  <EmptyState testId="empty-state-density-default" title="Default density" />
+  <EmptyState testId="empty-state-density-page" density="page" title="Page density" />
+  <EmptyState testId="empty-state-density-panel" density="panel" title="Panel density" />
+</div>
+
+<h3>Left-aligned via --empty-state-align-items</h3>
+<div class="demo-row" style="flex-direction: column; max-width: 500px; gap: 24px;">
+  <div style="--empty-state-align-items: flex-start;">
+    <EmptyState
+      testId="empty-state-align-override"
+      title="Left-aligned"
+      description="Aligned via --empty-state-align-items, not a hand-rolled wrapper class."
+    />
+  </div>
+</div>

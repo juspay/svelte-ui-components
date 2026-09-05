@@ -42,16 +42,41 @@ A centered placeholder component for empty lists, search results, or views. Disp
 <EmptyState title="No results found" />
 ```
 
+### Density
+
+`density` sets sane padding/gap defaults for the placeholder's context, without a
+wrapper class. Omit it for today's default sizing.
+
+```svelte
+<!-- Roomier, for a full route/view standing in for its content -->
+<EmptyState density="page" title="No results found" />
+
+<!-- Tighter, for a constrained panel, popover, or rail -->
+<EmptyState density="panel" title="Nothing here yet" />
+```
+
+### Left-Aligned (or any other alignment)
+
+`align-items` was previously hardcoded to `center`. `--empty-state-align-items`
+now reaches it directly — no wrapper class required:
+
+```svelte
+<div style="--empty-state-align-items: flex-start;">
+  <EmptyState title="Left-aligned" description="Aligned via a CSS variable." />
+</div>
+```
+
 ## Props
 
-| Prop               | Type      | Required | Default | Description                                                                                                                                                                                                                                                                      |
-| ------------------ | --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| title              | `string`  | Yes      | `-`     | Primary heading text. When `titleSnippet` is provided this value is not rendered, but the prop is still required for backward-compatibility (pass `""` as the minimal valid value).                                                                                              |
-| description        | `string`  | No       | `-`     | Supporting text displayed below the title. Omitted entirely when absent or empty. Silently discarded when `descriptionSnippet` is provided.                                                                                                                                      |
-| titleSnippet       | `Snippet` | No       | `-`     | Optional snippet that replaces the `title` string at render time. Use for rich markup (e.g. formatted text, inline icons). Takes full rendering priority over `title`.                                                                                                           |
-| descriptionSnippet | `Snippet` | No       | `-`     | Optional snippet that replaces the `description` string at render time. Use for rich markup (e.g. links, emphasis). Takes full rendering priority over `description`.                                                                                                            |
-| classes            | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                           |
-| testId             | `string`  | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection. When supplied, the title and rendered description wrappers receive `${testId}-title` and `${testId}-description` respectively; no description wrapper is added when no description is rendered. |
+| Prop               | Type                | Required | Default | Description                                                                                                                                                                                                                                                                                                                                      |
+| ------------------ | ------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| title              | `string`            | Yes      | `-`     | Primary heading text. When `titleSnippet` is provided this value is not rendered, but the prop is still required for backward-compatibility (pass `""` as the minimal valid value).                                                                                                                                                              |
+| description        | `string`            | No       | `-`     | Supporting text displayed below the title. Omitted entirely when absent or empty. Silently discarded when `descriptionSnippet` is provided.                                                                                                                                                                                                      |
+| titleSnippet       | `Snippet`           | No       | `-`     | Optional snippet that replaces the `title` string at render time. Use for rich markup (e.g. formatted text, inline icons). Takes full rendering priority over `title`.                                                                                                                                                                           |
+| descriptionSnippet | `Snippet`           | No       | `-`     | Optional snippet that replaces the `description` string at render time. Use for rich markup (e.g. links, emphasis). Takes full rendering priority over `description`.                                                                                                                                                                            |
+| classes            | `string`            | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                           |
+| testId             | `string`            | No       | `-`     | Value applied to the `data-pw` attribute on the root element for test selection. When supplied, the title and rendered description wrappers receive `${testId}-title` and `${testId}-description` respectively; no description wrapper is added when no description is rendered.                                                                 |
+| density            | `'page' \| 'panel'` | No       | `-`     | Sets sane padding/gap defaults for the placeholder's context, without a wrapper class. Omit for today's default sizing (unchanged). Also reflected onto the root element as `data-density`, so a consumer's own CSS can target it too. `--empty-state-padding` / `--empty-state-gap` still take priority over either density's default when set. |
 
 ## Snippets
 
@@ -100,9 +125,10 @@ Override these custom properties to theme the component.
 
 | Variable                                | Default        | CSS Property    | Description                                                                                 |
 | --------------------------------------- | -------------- | --------------- | ------------------------------------------------------------------------------------------- |
-| `--empty-state-padding`                 | `32px 16px`    | padding         | Padding of the empty state container.                                                       |
+| `--empty-state-padding`                 | `32px 16px`    | padding         | Padding of the empty state container. Overrides either density's own default when set.      |
+| `--empty-state-align-items`             | `center`       | align-items     | Cross-axis alignment of the container's own children (e.g. `flex-start` to left-align).     |
 | `--empty-state-text-align`              | `center`       | text-align      | Text alignment of all content.                                                              |
-| `--empty-state-gap`                     | `0px`          | gap             | Gap between flex children.                                                                  |
+| `--empty-state-gap`                     | `0px`          | gap             | Gap between flex children. Overrides either density's own default when set.                 |
 | `--empty-state-icon-size`               | `48px`         | width, height   | Width and height of the icon container.                                                     |
 | `--empty-state-icon-color`              | `currentColor` | color           | Color of the icon. Inherits from parent by default.                                         |
 | `--empty-state-icon-opacity`            | `0.4`          | opacity         | Opacity of the icon for subtle visual treatment.                                            |
@@ -133,6 +159,19 @@ Tag: `<sui-empty-state>`
   </svg>
   <button>Clear filters</button>
 </sui-empty-state>
+```
+
+`density` is also exposed as a string attribute on the web component:
+
+```html
+<sui-empty-state density="panel" title="Nothing running" />
+```
+
+`--empty-state-align-items` works across the shadow boundary just like every other
+CSS custom property — set it on the host element (or an ancestor) directly:
+
+```html
+<sui-empty-state title="Left-aligned" style="--empty-state-align-items: flex-start;" />
 ```
 
 ### Slots

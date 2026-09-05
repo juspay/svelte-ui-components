@@ -7,6 +7,7 @@
       text: { type: 'String', reflect: true },
       backIcon: { type: 'String', attribute: 'back-icon' },
       backLabel: { type: 'String', attribute: 'back-label' },
+      backHref: { type: 'String', attribute: 'back-href' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       headingTestId: { type: 'String', attribute: 'heading-test-id' },

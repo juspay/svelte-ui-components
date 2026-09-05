@@ -147,6 +147,7 @@ export type LineChartEventProperties = {
     pointIndex: number;
     point: LineChartDataPoint;
   }) => void;
+  /** @deprecated Use `onpointclick` instead; both work until 4.0.0. */
   onPointClick?: (event: {
     seriesIndex: number;
     pointIndex: number;
@@ -159,6 +160,7 @@ export type LineChartEventProperties = {
       point: LineChartDataPoint;
     } | null
   ) => void;
+  /** @deprecated Use `onpointhover` instead; both work until 4.0.0. */
   onPointHover?: (
     event: {
       seriesIndex: number;
@@ -171,5 +173,7 @@ export type LineChartEventProperties = {
    * so an external orchestrator (e.g. voice narration sync) can drive point
    * highlighting without knowledge of the chart's internal state.
    */
+  onchartready?: (api: ChartHighlightAPI) => void;
+  /** @deprecated Use `onchartready` instead; both work until 4.0.0. */
   onChartReady?: (api: ChartHighlightAPI) => void;
 };

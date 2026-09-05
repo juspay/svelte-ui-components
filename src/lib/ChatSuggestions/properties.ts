@@ -66,5 +66,6 @@ export type OptionalChatSuggestionsProperties = {
 
 export type ChatSuggestionsEventProperties = {
   onselect?: (value: string, index: number) => void;
+  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
   onSelect?: (value: string, index: number) => void;
 };

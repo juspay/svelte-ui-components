@@ -8,14 +8,14 @@
 </div>
 
 <div class="demo-row" style="max-width: 500px; flex-direction: column; gap: 24px;">
-  <Toolbar text="Page Title" showBackButton onbackClick={() => alert('Back clicked')} />
+  <Toolbar text="Page Title" showBackButton onbackclick={() => alert('Back clicked')} />
 
   <Toolbar
     text="Order Details"
     testId="toolbar-root"
     headingTestId="toolbar-heading"
     showBackButton
-    onbackClick={() => alert('Back clicked')}
+    onbackclick={() => alert('Back clicked')}
   />
 
   <div
@@ -31,7 +31,7 @@
       text="Centered & Clamped"
       testId="toolbar-content-tokens"
       showBackButton
-      onbackClick={() => alert('Back clicked')}
+      onbackclick={() => alert('Back clicked')}
     />
   </div>
 
@@ -39,7 +39,7 @@
        behaviour come from CSS variables; the title block is the consumer's own markup,
        passed through centerContent. -->
   <div class="page-header-demo">
-    <Toolbar testId="toolbar-page-header" showBackButton onbackClick={() => alert('Back clicked')}>
+    <Toolbar testId="toolbar-page-header" showBackButton onbackclick={() => alert('Back clicked')}>
       {#snippet centerContent()}
         <div class="heading-block">
           <h2 class="demo-title" data-pw="toolbar-page-header-heading">Shipping profiles</h2>
@@ -70,7 +70,7 @@
       testId="toolbar-custom-back-icon"
       showBackButton
       backIcon="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M10 3 5 8l5 5' stroke='%23000' stroke-width='2' fill='none'/></svg>"
-      onbackClick={() => alert('Back clicked')}
+      onbackclick={() => alert('Back clicked')}
     />
   </div>
 

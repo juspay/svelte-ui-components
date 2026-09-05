@@ -35,7 +35,12 @@
       onRightImageClick: { type: 'Object' },
       onCenterTextClick: { type: 'Object' },
       onItemClick: { type: 'Object' },
-      onTopSectionClick: { type: 'Object' }
+      onTopSectionClick: { type: 'Object' },
+      onleftimageclick: { type: 'Object' },
+      onrightimageclick: { type: 'Object' },
+      oncentertextclick: { type: 'Object' },
+      onitemclick: { type: 'Object' },
+      ontopsectionclick: { type: 'Object' }
     }
   }}
 />

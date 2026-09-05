@@ -16,7 +16,8 @@
       centerContent: { type: 'Object' },
       rightContent: { type: 'Object' },
       additionalContent: { type: 'Object' },
-      onBackClick: { type: 'Object' }
+      onBackClick: { type: 'Object' },
+      onbackclick: { type: 'Object' }
     }
   }}
 />

@@ -17,7 +17,7 @@
     <Toast
       message="Operation completed successfully!"
       type="success"
-      onToastHide={() => (showToast = false)}
+      ontoasthide={() => (showToast = false)}
     />
   {/if}
 </div>
@@ -29,7 +29,7 @@
       message="Anchored via --toast-bottom"
       type="info"
       classes="toast-bottom-center"
-      onToastHide={() => (showBottomToast = false)}
+      ontoasthide={() => (showBottomToast = false)}
     />
   {/if}
 </div>

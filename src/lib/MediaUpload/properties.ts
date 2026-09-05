@@ -47,7 +47,13 @@ export type OptionalMediaUploadProperties = {
 };
 
 export type MediaUploadEventProperties = {
+  onchange?: (files: File[]) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onFilesChange?: (files: File[]) => void;
+  onremove?: (file: File) => void;
+  /** @deprecated Use `onremove` instead; both work until 4.0.0. */
   onRemove?: (file: File) => void;
+  onerror?: (rejections: MediaUploadRejection[]) => void;
+  /** @deprecated Use `onerror` instead; both work until 4.0.0. */
   onRejected?: (rejections: MediaUploadRejection[]) => void;
 };

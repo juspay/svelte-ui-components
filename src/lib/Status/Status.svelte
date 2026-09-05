@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { StatusProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Button from '$lib/Button/Button.svelte';
   import Img from '$lib/Img/Img.svelte';
 
@@ -33,8 +34,9 @@
     statusDescription = '',
     buttonProperties,
     classes,
-    onbuttonClick: onbuttonClickLegacy,
+    onbuttonClick: onbuttonClickProp,
     onButtonClick,
+    onbuttonclick,
     icon,
     descriptionSnippet,
     children,
@@ -47,8 +49,27 @@
     statusIcon === LEGACY_DEFAULT_STATUS_ICON ? BUILTIN_STATUS_ICON : null
   );
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onbuttonClick = $derived(onButtonClick ?? onbuttonClickLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onbuttonClick = $derived(
+    resolveDeprecatedProp(
+      'Status',
+      'onbuttonClick',
+      'onbuttonclick',
+      onbuttonClickProp,
+      resolveDeprecatedProp(
+        'Status',
+        'onButtonClick',
+        'onbuttonclick',
+        onButtonClick,
+        onbuttonclick
+      )
+    )
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onbuttonClick);
+  });
 </script>
 
 <div

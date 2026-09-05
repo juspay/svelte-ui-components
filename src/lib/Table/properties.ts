@@ -564,7 +564,11 @@ export type OptionalTableProperties = {
 };
 
 export type TableEventProperties = {
+  onrowclick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
+  /** @deprecated Use `onrowclick` instead; both work until 4.0.0. */
   onRowClick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
+  onsort?: (columnIndex: number, direction: SortDirection) => void;
+  /** @deprecated Use `onsort` instead; both work until 4.0.0. */
   onSort?: (columnIndex: number, direction: SortDirection) => void;
   /**
    * C2-2: Callback invoked when a cell value changes via an editable element
@@ -597,11 +601,15 @@ export type TableEventProperties = {
    * this handler to parent components via the standard props channel — it does
    * not change the wiring inside the snippet.
    */
+  oncellchange?: (rowIndex: number, colIndex: number, newValue: JSONValue) => void;
+  /** @deprecated Use `oncellchange` instead; both work until 4.0.0. */
   onCellChange?: (rowIndex: number, colIndex: number, newValue: JSONValue) => void;
   /**
    * C2-3: When provided, the built-in client-side filtering is disabled and
    * this callback is called on every search input change instead, letting the
    * server decide what rows to show.
    */
+  onsearchchange?: (searchTerm: string) => void;
+  /** @deprecated Use `onsearchchange` instead; both work until 4.0.0. */
   onSearchChange?: (searchTerm: string) => void;
 };

@@ -21,7 +21,8 @@
       closeIconTestId: { type: 'String', attribute: 'close-icon-test-id' },
       classes: { type: 'String' },
       onToastHide: { type: 'Object' },
-      bottomContent: { type: 'Object' }
+      bottomContent: { type: 'Object' },
+      ontoasthide: { type: 'Object' }
     }
   }}
 />

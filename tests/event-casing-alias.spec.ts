@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Phase 1 of the event-casing migration adds each prop's correct spelling
- * alongside the old one, both wired to the same handler. The claim worth
- * testing is that the new spelling actually reaches the handler — a props type
- * carrying the name proves only that it compiles.
+ * Every event prop is lowercase (DESIGN_PRINCIPLES §3), and the earlier
+ * camelCase spellings stay accepted as deprecated aliases until 4.0.0. The
+ * claim worth testing in a real browser is that the lowercase spelling
+ * actually reaches the handler — a props type carrying the name proves only
+ * that it compiles. The deprecated spelling's path is covered by
+ * `wc-event-casing-parity.spec.ts` and `Toggle.svelte.test.ts`.
  */
-test('a component fires its handler through the corrected prop spelling', async ({ page }) => {
+test('a component fires its handler through the lowercase prop spelling', async ({ page }) => {
   await page.goto('/components/toggle');
 
   const state = page.locator('[data-pw="toggle-alias-state"]');
@@ -19,7 +21,7 @@ test('a component fires its handler through the corrected prop spelling', async 
   await expect(state).toHaveText('ON');
 });
 
-test('the original spelling still fires, untouched', async ({ page }) => {
+test('the first demo row fires through the same spelling', async ({ page }) => {
   await page.goto('/components/toggle');
 
   const state = page.locator('.demo-row').first().locator('.state-display');

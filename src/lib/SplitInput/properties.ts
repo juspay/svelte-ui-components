@@ -35,9 +35,12 @@ export type OptionalSplitInputProperties = {
 
 export type SplitInputEventProperties = {
   onchange?: (values: string[]) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (values: string[]) => void;
   oninput?: (values: string[]) => void;
+  /** @deprecated Use `oninput` instead; both work until 4.0.0. */
   onInput?: (values: string[]) => void;
   oncomplete?: (values: string[]) => void;
+  /** @deprecated Use `oncomplete` instead; both work until 4.0.0. */
   onComplete?: (values: string[]) => void;
 };

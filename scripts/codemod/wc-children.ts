@@ -1,7 +1,8 @@
 import type { TransformWarning } from './transform.ts';
 
 /**
- * Detects the one breaking change in the 4.0.0 custom-element surface:
+ * Detects the breaking change in the 4.0.0 custom-element surface (the other
+ * 4.0.0 break, the deprecated event spellings, is handled by legacy-pairs.ts):
  * `children` is no longer a declared prop on any `sui-*` element.
  *
  * Three elements shipped it in 3.1.4 — `sui-chat-bubble`, `sui-draggable` and

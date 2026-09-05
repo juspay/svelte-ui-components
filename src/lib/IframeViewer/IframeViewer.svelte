@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { IframeViewerProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     src,
@@ -13,8 +14,20 @@
     credentialless,
     testId,
     classes,
-    onMessage = () => {}
+    onMessage: onMessageProp,
+    onmessage
   }: IframeViewerProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onMessage = $derived(
+    resolveDeprecatedProp('IframeViewer', 'onMessage', 'onmessage', onMessageProp, onmessage) ??
+      (() => {})
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onMessage);
+  });
 
   let iframeEl: HTMLIFrameElement | null = $state(null);
 

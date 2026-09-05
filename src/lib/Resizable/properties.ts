@@ -35,9 +35,12 @@ export type OptionalResizableProperties = {
 
 export type ResizableEventProperties = {
   onresize?: (size: ResizeSize) => void;
+  /** @deprecated Use `onresize` instead; both work until 4.0.0. */
   onResize?: (size: ResizeSize) => void;
   onresizestart?: (size: ResizeSize) => void;
+  /** @deprecated Use `onresizestart` instead; both work until 4.0.0. */
   onResizeStart?: (size: ResizeSize) => void;
   onresizeend?: (size: ResizeSize) => void;
+  /** @deprecated Use `onresizeend` instead; both work until 4.0.0. */
   onResizeEnd?: (size: ResizeSize) => void;
 };

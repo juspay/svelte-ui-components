@@ -256,7 +256,7 @@ let {((open = $bindable(false)), onclose)}: Props = $props();
 let {(initialPage = $bindable(0))}: Props = $props();
 ```
 
-When `$bindable` is used, also provide a corresponding callback prop (`onclose`, `onchange`, `ontoggle`, `onpagechange`, etc.) so the parent can react to state changes without relying on two-way binding. Both patterns are supported — consumers choose one:
+When `$bindable` is used, also provide a corresponding callback prop (`onclose`, `onchange`, `ontoggle`, `onPageChange`, etc.) so the parent can react to state changes without relying on two-way binding. Both patterns are supported — consumers choose one:
 
 - **`bind:`** — parent observes state reactively, no callback needed
 - **callback** — parent reacts imperatively in a handler, no `bind:` needed

@@ -45,9 +45,9 @@ movable and resizable.
 
 | Event       | Type                                | Description                              |
 | ----------- | ------------------------------------ | ---------------------------------------- |
-| onMoveStart | `(position: { x, y }) => void`      | Fires when a drag/keyboard move begins.  |
-| onMove      | `(position: { x, y }) => void`      | Fires continuously during a move.        |
-| onMoveEnd   | `(position: { x, y }) => void`      | Fires when a pointer drag ends.          |
+| onmovestart | `(position: { x, y }) => void`      | Fires when a drag/keyboard move begins.  |
+| onmove      | `(position: { x, y }) => void`      | Fires continuously during a move.        |
+| onmoveend   | `(position: { x, y }) => void`      | Fires when a pointer drag ends.          |
 
 ## Keyboard Interactions
 

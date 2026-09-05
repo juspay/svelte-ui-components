@@ -16,7 +16,9 @@ export type FileInputProperties = {
   testId?: string;
   classes?: string;
   onfiles?: (files: File[]) => void;
+  /** @deprecated Use `onfiles` instead; both work until 4.0.0. */
   onFiles?: (files: File[]) => void;
   onerror?: (message: string) => void;
+  /** @deprecated Use `onerror` instead; both work until 4.0.0. */
   onError?: (message: string) => void;
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { BookProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import chevronLeftLgSvg from '$lib/assets/chevron-left-lg.svg?raw';
   import chevronRightLgSvg from '$lib/assets/chevron-right-lg.svg?raw';
   import Button from '../Button/Button.svelte';
@@ -14,13 +15,20 @@
     testId,
     previousIcon,
     nextIcon,
-    onpagechange: onpagechangeLegacy,
+    onpagechange: onpagechangeProp,
     onPageChange,
     classes
   }: BookProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onpagechange = $derived(onPageChange ?? onpagechangeLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onpagechange = $derived(
+    resolveDeprecatedProp('Book', 'onPageChange', 'onpagechange', onPageChange, onpagechangeProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onpagechange);
+  });
 
   let startX = 0;
   let isDragging = false;

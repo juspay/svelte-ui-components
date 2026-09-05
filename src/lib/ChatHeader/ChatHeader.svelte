@@ -3,6 +3,7 @@
   import Img from '../Img/Img.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
   import type { ChatHeaderProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     title = '',
@@ -14,15 +15,22 @@
     closeIcon,
     closeLabel = 'Close',
     showClose,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
     children,
     testId,
     classes
   }: ChatHeaderProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onclose = $derived(onClose ?? oncloseLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onclose = $derived(
+    resolveDeprecatedProp('ChatHeader', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onclose);
+  });
 
   let displayClose = $derived(showClose ?? typeof onclose === 'function');
 </script>

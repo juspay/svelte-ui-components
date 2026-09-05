@@ -17,5 +17,6 @@ export type OptionalRadioProperties = {
 
 export type RadioEventProperties = {
   onchange?: (value: string) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (value: string) => void;
 };

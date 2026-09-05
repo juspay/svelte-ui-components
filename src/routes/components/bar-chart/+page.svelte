@@ -177,7 +177,7 @@
       Cycle highlight (step {apiHighlightStep})
     </button>
   </div>
-  <BarChart data={monthlyRevenue} onChartReady={handleChartReady} />
+  <BarChart data={monthlyRevenue} onchartready={handleChartReady} />
 </div>
 
 <h3>Normalise to First Point (<code>normaliseToFirstPoint</code>)</h3>

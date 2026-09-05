@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import type { SelectItem, SelectProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Pill from '$lib/Pill/Pill.svelte';
   import Img from '$lib/Img/Img.svelte';
   import { computeSelectDropdownPosition } from './dropdownPosition';
@@ -22,11 +23,11 @@
     triggerSummary,
     testId,
     itemTestId,
-    onchange: onchangeLegacy,
+    onchange: onchangeProp,
     onChange,
-    onopen: onopenLegacy,
+    onopen: onopenProp,
     onOpen,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
     classes,
     open = $bindable(false),
@@ -37,10 +38,19 @@
     usePortal = false
   }: SelectProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onchange = $derived(onChange ?? onchangeLegacy);
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const onopen = $derived(onOpen ?? onopenLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onchange = $derived(
+    resolveDeprecatedProp('Select', 'onChange', 'onchange', onChange, onchangeProp)
+  );
+  const onclose = $derived(
+    resolveDeprecatedProp('Select', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+  const onopen = $derived(resolveDeprecatedProp('Select', 'onOpen', 'onopen', onOpen, onopenProp));
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onchange, onclose, onopen);
+  });
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
     return source.map((entry) => (typeof entry === 'string' ? { id: entry, label: entry } : entry));

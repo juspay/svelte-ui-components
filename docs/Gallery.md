@@ -31,8 +31,8 @@ built-in list-view text block.
 <!-- With edit/delete actions -->
 <Gallery
   {images}
-  onEditClick={(index) => editImage(index)}
-  onDeleteClick={(index) => removeImage(index)}
+  oneditclick={(index) => editImage(index)}
+  ondeleteclick={(index) => removeImage(index)}
 />
 ```
 
@@ -57,24 +57,24 @@ built-in list-view text block.
 | testId         | `string`                          | No       | `-`      | `data-pw` on the root element.                                                                |
 | classes        | `string`                          | No       | `-`      | Class string on both the grid/list root and the lightbox root.                                |
 
-Edit/delete actions are opt-in by presence: pass `onEditClick`/`onDeleteClick` to show
+Edit/delete actions are opt-in by presence: pass `oneditclick`/`ondeleteclick` to show
 that action; omit either (or both) to hide it, no separate `show*` prop needed.
 
 ## Events
 
 | Event         | Type                                         | Description                                                                   |
 | ------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
-| onImageClick  | `(index: number, event: MouseEvent) => void` | Fires on every item click, before the lightbox opens (if enabled).            |
-| onEditClick   | `(index: number, event: MouseEvent) => void` | Fires when an item's edit action is clicked. Presence shows the action.       |
-| onDeleteClick | `(index: number, event: MouseEvent) => void` | Fires when an item's delete action is clicked. Presence shows the action.     |
-| onOpen        | `(index: number) => void`                    | Fires when the lightbox opens.                                                |
-| onDismiss     | `() => void`                                 | Fires when the lightbox closes (Escape, backdrop click, or the close button). |
-| onIndexChange | `(index: number) => void`                    | Fires whenever the active lightbox image changes.                             |
+| onimageclick  | `(index: number, event: MouseEvent) => void` | Fires on every item click, before the lightbox opens (if enabled).            |
+| oneditclick   | `(index: number, event: MouseEvent) => void` | Fires when an item's edit action is clicked. Presence shows the action.       |
+| ondeleteclick | `(index: number, event: MouseEvent) => void` | Fires when an item's delete action is clicked. Presence shows the action.     |
+| onopen        | `(index: number) => void`                    | Fires when the lightbox opens.                                                |
+| onclose     | `() => void`                                 | Fires when the lightbox closes (Escape, backdrop click, or the close button). |
+| onchange | `(index: number) => void`                    | Fires whenever the active lightbox image changes.                             |
 | onkeydown     | `(event: KeyboardEvent) => void`             | Relays the lightbox's own keydown, before Gallery's built-in shortcuts run.   |
 
 `onkeydown` stays lowercase per `DESIGN_PRINCIPLES.md` — it relays the real
 `KeyboardEvent` from the lightbox. The rest are synthesized (index numbers, or no
-payload at all) and use camelCase; `onDismiss` specifically avoids the name `onClose`
+payload at all) and use camelCase; `onclose` specifically avoids the name `onclose`
 because nothing here is a native `<dialog>` element, so a lowercase `onclose` would
 have implied a native-event relay this doesn't do.
 

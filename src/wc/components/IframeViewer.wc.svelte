@@ -13,7 +13,8 @@
       referrerpolicy: { type: 'String', attribute: 'referrer-policy' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onMessage: { type: 'Object' }
+      onMessage: { type: 'Object' },
+      onmessage: { type: 'Object' }
     }
   }}
 />

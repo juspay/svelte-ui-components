@@ -50,8 +50,8 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 | Event       | Type                             | Description                                                                                                                                                      |
 | ----------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onbackClick | `() => void`                     | Fires when the default back button is clicked. Only relevant when showBackButton is true and leftContent snippet is not provided.                                |
-| onkeydown   | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the back button has focus. The control is a native `<button>`, so Enter and Space already activate `onbackClick` without this. |
+| onbackclick | `() => void`                     | Fires when the default back button is clicked. Only relevant when showBackButton is true and leftContent snippet is not provided.                                |
+| onkeydown   | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the back button has focus. The control is a native `<button>`, so Enter and Space already activate `onbackclick` without this. |
 
 ## CSS Variables
 
@@ -144,7 +144,7 @@ The defaults describe a fixed chrome bar. The same component renders an in-flow 
 with **no additional props** — only CSS variables and the snippets it already has:
 
 ```svelte
-<Toolbar showBackButton onbackClick={goBack}>
+<Toolbar showBackButton onbackclick={goBack}>
   {#snippet centerContent()}
     <div class="heading-block">
       <h2>Shipping profiles</h2>

@@ -37,11 +37,23 @@ export type OptionalGalleryProperties = {
 };
 
 export type GalleryEventProperties = {
+  onimageclick?: (index: number, event: MouseEvent) => void;
+  /** @deprecated Use `onimageclick` instead; both work until 4.0.0. */
   onImageClick?: (index: number, event: MouseEvent) => void;
+  oneditclick?: (index: number, event: MouseEvent) => void;
+  /** @deprecated Use `oneditclick` instead; both work until 4.0.0. */
   onEditClick?: (index: number, event: MouseEvent) => void;
+  ondeleteclick?: (index: number, event: MouseEvent) => void;
+  /** @deprecated Use `ondeleteclick` instead; both work until 4.0.0. */
   onDeleteClick?: (index: number, event: MouseEvent) => void;
+  onopen?: (index: number) => void;
+  /** @deprecated Use `onopen` instead; both work until 4.0.0. */
   onOpen?: (index: number) => void;
+  onclose?: () => void;
+  /** @deprecated Use `onclose` instead; both work until 4.0.0. */
   onDismiss?: () => void;
+  onchange?: (index: number) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onIndexChange?: (index: number) => void;
   onkeydown?: (event: KeyboardEvent) => void;
 };

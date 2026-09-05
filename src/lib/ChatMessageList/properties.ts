@@ -52,9 +52,12 @@ export type ChatMessageListEventProperties = {
    * jump-to-latest affordance outside the list.
    */
   onscrollstate?: (state: { atBottom: boolean; scrollable: boolean }) => void;
+  /** @deprecated Use `onscrollstate` instead; both work until 4.0.0. */
   onScrollState?: (state: { atBottom: boolean; scrollable: boolean }) => void;
   onretry?: () => void;
+  /** @deprecated Use `onretry` instead; both work until 4.0.0. */
   onRetry?: () => void;
   onfeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
+  /** @deprecated Use `onfeedback` instead; both work until 4.0.0. */
   onFeedback?: (value: ChatMessageFeedback, message: ChatMessageData) => void;
 };

@@ -6,6 +6,7 @@
   import Progress from '../Progress/Progress.svelte';
   import { pauseAllConfirmationTimers } from './timers';
   import type { HITLAction, HITLProperties, HITLResponse, HITLSection } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   /**
    * Human-in-the-loop approval card: the assistant wants to run an action and the
@@ -20,13 +21,15 @@
     sections,
     functionArguments,
     hiddenKeys,
-    onConfirm,
+    onConfirm: onConfirmProp,
+    onconfirm,
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     countdownSeconds = 10,
     autoCancelSeconds = 0,
     isMicMuted = false,
-    onMicToggle = null,
+    onMicToggle: onMicToggleProp,
+    onmictoggle,
     isHistoryMode = false,
     initialState = null,
     approvedIcon,
@@ -43,6 +46,20 @@
     completionTextTestId,
     classes
   }: HITLProperties = $props();
+
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onConfirm = $derived(
+    resolveDeprecatedProp('HITL', 'onConfirm', 'onconfirm', onConfirmProp, onconfirm)
+  );
+  const onMicToggle = $derived(
+    resolveDeprecatedProp('HITL', 'onMicToggle', 'onmictoggle', onMicToggleProp, onmictoggle) ??
+      null
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onConfirm, onMicToggle);
+  });
 
   const DEFAULT_HIDDEN_KEYS = [
     'action',

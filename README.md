@@ -100,7 +100,7 @@ fix to something that did not work.
   value=""
   placeholder="Enter email"
   dataType="email"
-  onStateChange={(state) => console.log(state)}
+  onstatechange={(state) => console.log(state)}
 />
 
 <!-- Toggle switch -->

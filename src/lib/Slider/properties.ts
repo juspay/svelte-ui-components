@@ -19,7 +19,9 @@ export type OptionalSliderProperties = {
 
 export type SliderEventProperties = {
   onchange?: (value: number) => void;
+  /** @deprecated Use `onchange` instead; both work until 4.0.0. */
   onChange?: (value: number) => void;
   oninput?: (value: number) => void;
+  /** @deprecated Use `oninput` instead; both work until 4.0.0. */
   onInput?: (value: number) => void;
 };

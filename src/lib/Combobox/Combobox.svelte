@@ -3,6 +3,7 @@
   import Input from '../Input/Input.svelte';
   import Pill from '../Pill/Pill.svelte';
   import type { ComboboxItem, ComboboxProperties } from './properties';
+  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   function defaultFilter(item: ComboboxItem, query: string): boolean {
     return item.label.toLowerCase().includes(query.toLowerCase());
@@ -40,36 +41,55 @@
     createLabel = (query: string) => `Create "${query}"`,
     action,
     actionIcon,
-    onselect: onselectLegacy,
+    onselect: onselectProp,
     onSelect,
-    oninput: oninputLegacy,
+    oninput: oninputProp,
     onInput,
-    onopen: onopenLegacy,
+    onopen: onopenProp,
     onOpen,
-    onclose: oncloseLegacy,
+    onclose: oncloseProp,
     onClose,
     onkeydown,
     onfocus,
     onblur,
-    onchange: onchangeLegacy,
+    onchange: onchangeProp,
     onChange,
-    onadd: onaddLegacy,
+    onadd: onaddProp,
     onAdd,
-    onremove: onremoveLegacy,
+    onremove: onremoveProp,
     onRemove,
-    oncreate: oncreateLegacy,
+    oncreate: oncreateProp,
     onCreate
   }: ComboboxProperties = $props();
 
-  // Event-casing phase 1: both spellings accepted, the correct one wins.
-  const onadd = $derived(onAdd ?? onaddLegacy);
-  const onchange = $derived(onChange ?? onchangeLegacy);
-  const onclose = $derived(onClose ?? oncloseLegacy);
-  const oncreate = $derived(onCreate ?? oncreateLegacy);
-  const oninput = $derived(onInput ?? oninputLegacy);
-  const onopen = $derived(onOpen ?? onopenLegacy);
-  const onremove = $derived(onRemove ?? onremoveLegacy);
-  const onselect = $derived(onSelect ?? onselectLegacy);
+  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
+  const onadd = $derived(resolveDeprecatedProp('Combobox', 'onAdd', 'onadd', onAdd, onaddProp));
+  const onchange = $derived(
+    resolveDeprecatedProp('Combobox', 'onChange', 'onchange', onChange, onchangeProp)
+  );
+  const onclose = $derived(
+    resolveDeprecatedProp('Combobox', 'onClose', 'onclose', onClose, oncloseProp)
+  );
+  const oncreate = $derived(
+    resolveDeprecatedProp('Combobox', 'onCreate', 'oncreate', onCreate, oncreateProp)
+  );
+  const oninput = $derived(
+    resolveDeprecatedProp('Combobox', 'onInput', 'oninput', onInput, oninputProp)
+  );
+  const onopen = $derived(
+    resolveDeprecatedProp('Combobox', 'onOpen', 'onopen', onOpen, onopenProp)
+  );
+  const onremove = $derived(
+    resolveDeprecatedProp('Combobox', 'onRemove', 'onremove', onRemove, onremoveProp)
+  );
+  const onselect = $derived(
+    resolveDeprecatedProp('Combobox', 'onSelect', 'onselect', onSelect, onselectProp)
+  );
+
+  // Read once at mount so an old spelling is reported even if the event never fires.
+  $effect.pre(() => {
+    readDeprecatedProps(onadd, onchange, onclose, oncreate, oninput, onopen, onremove, onselect);
+  });
 
   let containerEl: HTMLDivElement | null = $state(null);
   let inputRef: ReturnType<typeof Input> | null = $state(null);
@@ -400,10 +420,10 @@
         ariaAutocomplete="list"
         ariaControls={open ? listboxId : null}
         ariaActivedescendant={highlightedOptionId ?? null}
-        onInput={handleInput}
-        onKeyDown={handleKeydown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        oninput={handleInput}
+        onkeydown={handleKeydown}
+        onfocus={handleFocus}
+        onblur={handleBlur}
       />
     </div>
     {#if typeof inputSuffix === 'function'}

@@ -19,7 +19,7 @@ Markdown is bundled: set a message's `markdown` field and it renders in the bubb
   }
 </script>
 
-<Chat {messages} bind:value title="Assistant" placeholder="Ask anything…" {onsend} />
+<Chat {messages} bind:value title="Assistant" placeholder="Ask anything…" onsend={onsend} />
 ```
 
 ## Usage (with the decoupled controller)
@@ -84,7 +84,7 @@ Two snippets, and the difference matters. `message` replaces the whole message �
 It receives the whole `ChatMessageData`, so render on whatever field you like — a custom field of your own, or `attachments`, which `ChatController` fills from a transport's `handlers.onAttachment(...)`:
 
 ```svelte
-<Chat {messages} bind:value allowCopy onretry={() => chat.retry()} {onsend}>
+<Chat {messages} bind:value allowCopy onretry={() => chat.retry()} onsend={onsend}>
   {#snippet messageAttachments(msg)}
     {#each msg.attachments ?? [] as item, index (index)}
       <YourComponent data={item} />
@@ -105,7 +105,7 @@ Give it a viewport-sized box (use `100dvh` so the mobile URL bar doesn't clip th
 
 ```svelte
 <div style="height: 100dvh; width: 100vw">
-  <Chat {messages} bind:value title="Assistant" {onsend} />
+  <Chat {messages} bind:value title="Assistant" onsend={onsend} />
 </div>
 ```
 
@@ -122,7 +122,7 @@ The component ships no launcher button or fixed positioning — compose those, a
 
 {#if open}
   <div class="chat-panel">
-    <Chat {messages} bind:value title="Assistant" {onsend} onclose={() => (open = false)} />
+    <Chat {messages} bind:value title="Assistant" onsend={onsend} onclose={() => (open = false)} />
   </div>
 {/if}
 

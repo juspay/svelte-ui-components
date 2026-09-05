@@ -28,6 +28,7 @@
       cancelTestId: { type: 'String', attribute: 'cancel-test-id' },
       completionTestId: { type: 'String', attribute: 'completion-test-id' },
       completionTextTestId: { type: 'String', attribute: 'completion-text-test-id' },
+      actions: { type: 'Object' },
       classes: { type: 'String' },
       onconfirm: { type: 'Object' },
       onmictoggle: { type: 'Object' }
@@ -48,4 +49,11 @@
   } = $props();
 </script>
 
+<!-- `children` is intentionally NOT declared above: it is a reserved custom-
+     element prop name (declaring it breaks `element.children`, see
+     scripts/wc-parity/prop-parity.ts's HOST_RESERVED_PROPS), and unlike
+     Status.wc.svelte this component's `{#if children}` branch itself creates
+     a wrapping element — unconditionally forwarding a `<slot>` snippet here
+     would render that wrapper empty for every web-component consumer, the
+     same tradeoff ChatHeader/StatCard's wrappers already opted out of. -->
 <HITL {...props} title={hITLTitle} />

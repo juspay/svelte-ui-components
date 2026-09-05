@@ -21,6 +21,24 @@ export type HITLInitialState = {
   status?: string;
 };
 
+/**
+ * A side action rendered beside confirm/cancel — e.g. "Deny with instructions"
+ * opening a compose panel, or a third disposition a plain approve/reject can't
+ * express. Selecting one does NOT settle the card: no completion state, no
+ * `onconfirm`. It only pauses the countdown (own and siblings', like any other
+ * interaction) and calls `onSelect` — settling, if any, is the caller's job.
+ */
+export type HITLExtraAction = {
+  label: string;
+  onSelect: () => void;
+  /** `data-pw` for this action's button (default: `<testId>-action-<index>`). */
+  testId?: string;
+  /** Class string on this action's Button, e.g. to pick a variant. */
+  classes?: string;
+  /** Accessible name for this action's Button, when `label` alone isn't descriptive enough. */
+  ariaLabel?: string;
+};
+
 export type HITLProperties = OptionalHITLProperties & MandatoryHITLProperties;
 
 export type MandatoryHITLProperties = {
@@ -75,5 +93,16 @@ export type OptionalHITLProperties = {
   completionTestId?: string;
   /** Override the completion text's test id (default: `<testId>-completion-text`). */
   completionTextTestId?: string;
+  /**
+   * Extra side actions rendered between cancel and confirm — e.g. "Deny with
+   * instructions". None of these settle the card; see `HITLExtraAction`.
+   */
+  actions?: HITLExtraAction[];
+  /**
+   * Arbitrary extra controls — free-text input, multi-select chips — rendered
+   * in the body above the action row while the card is pending. Never shown
+   * once the card is completed or in history mode.
+   */
+  children?: Snippet;
   classes?: string;
 };

@@ -1,6 +1,6 @@
 import type { Snippet } from 'svelte';
 
-export type SheetSide = 'left' | 'right' | 'top' | 'bottom';
+export type SheetSide = 'left' | 'right' | 'top' | 'bottom' | 'center';
 
 export type SheetProperties = MandatorySheetProperties &
   OptionalSheetProperties &
@@ -24,6 +24,14 @@ export type OptionalSheetProperties = {
    */
   dismissOnOutsideClick?: boolean;
   showCloseButton?: boolean;
+  /**
+   * Renders `title` through a real `<h1>`-`<h6>` heading element instead of
+   * the default `<span>`. Omit to keep the existing `<span>` markup
+   * unchanged — the default when this prop is not set. Set it to the level
+   * that is correct in the surrounding document outline (a sheet opened from
+   * a page whose top-level heading is an `<h1>` typically wants `2`).
+   */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
   testId?: string;
   footer?: Snippet;
   classes?: string;

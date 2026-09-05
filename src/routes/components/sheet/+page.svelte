@@ -12,6 +12,8 @@
   let lifecycleLog = $state<string[]>([]);
   let showAnchored = $state(false);
   let showBlocking = $state(false);
+  let showCentered = $state(false);
+  let showHeading = $state(false);
 </script>
 
 <div class="page-header">
@@ -151,6 +153,45 @@
         A dimmed backdrop that blocks interaction with the page underneath but does not close when
         the overlay is clicked — the user must use the close button or an explicit action. Escape
         still closes.
+      </p>
+    {/snippet}
+  </Sheet>
+</div>
+
+<h3>Centered dialog</h3>
+<div class="demo-row">
+  <Button text="Open centered dialog" onclick={() => (showCentered = true)} />
+  <Sheet bind:open={showCentered} side="center" title="Delete project?" testId="sheet-centered">
+    {#snippet content()}
+      <p>
+        A fixed-size floating dialog centered in the viewport — a fade, not an edge slide-in, and
+        sized by <code>--sheet-center-width</code>/<code>--sheet-center-max-width</code> rather than stretching
+        to any edge.
+      </p>
+    {/snippet}
+    {#snippet footer()}
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <Button text="Cancel" onclick={() => (showCentered = false)} />
+        <Button text="Delete" onclick={() => (showCentered = false)} />
+      </div>
+    {/snippet}
+  </Sheet>
+</div>
+
+<h3>Real heading tag (headingLevel)</h3>
+<div class="demo-row">
+  <Button text="Open with headingLevel" onclick={() => (showHeading = true)} />
+  <Sheet
+    bind:open={showHeading}
+    side="center"
+    title="Confirm action"
+    headingLevel={2}
+    testId="sheet-heading"
+  >
+    {#snippet content()}
+      <p>
+        The title above renders through a real <code>&lt;h2&gt;</code>, not the default
+        <code>&lt;span&gt;</code>, because <code>headingLevel</code> is set.
       </p>
     {/snippet}
   </Sheet>

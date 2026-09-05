@@ -11,6 +11,13 @@
 
   // Simulated voice-session mic for the mic-integration variety below.
   let micMuted = $state(true);
+
+  // Extra-actions + children demo: a third disposition ("deny with
+  // instructions") beside confirm/cancel, plus a free-text box that only
+  // shows once that action is picked.
+  let composing = $state(false);
+  let composeNote = $state('');
+  let extraSelected = $state(0);
 </script>
 
 <div class="page-header">
@@ -126,7 +133,7 @@
 <h2>Voice flow — mic muted while the card is open</h2>
 <p class="demo-note">
   Simulated mic state: <strong>{micMuted ? 'muted' : 'live'}</strong>. HITL only reports mic state
-  through <code>isMicMuted</code>/<code>onMicToggle</code> — it renders no toggle affordance of its own,
+  through <code>isMicMuted</code>/<code>onmictoggle</code> — it renders no toggle affordance of its own,
   so this page supplies one below. The card still auto-mutes on open and restores the mic on a decision,
   via the same handler.
 </p>
@@ -147,6 +154,40 @@
       micMuted = false;
     }}
   />
+</div>
+
+<h2>Extra actions + children — a third disposition, plus free-text input</h2>
+<p class="demo-note">
+  <code>actions</code> adds "Deny with instructions…" beside cancel/confirm — picking it never
+  settles the card (count: <strong data-pw="demo-extra-count">{extraSelected}</strong>), it just
+  reveals the <code>children</code> textarea below via the consuming app's own state.
+</p>
+<div class="demo-row">
+  <HITL
+    confirmationId="demo-extra-actions"
+    title="Deploy to production"
+    countdownSeconds={0}
+    testId="demo-extra"
+    actions={[
+      {
+        label: 'Deny with instructions…',
+        onSelect: () => {
+          composing = true;
+          extraSelected += 1;
+        }
+      }
+    ]}
+    onconfirm={record}
+  >
+    {#if composing}
+      <textarea
+        class="demo-textarea"
+        data-pw="demo-extra-note"
+        bind:value={composeNote}
+        placeholder="What should change instead…"
+      ></textarea>
+    {/if}
+  </HITL>
 </div>
 
 <style>

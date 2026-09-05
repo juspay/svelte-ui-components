@@ -5,7 +5,13 @@
   import Card from '../Card/Card.svelte';
   import Progress from '../Progress/Progress.svelte';
   import { pauseAllConfirmationTimers } from './timers';
-  import type { HITLAction, HITLProperties, HITLResponse, HITLSection } from './properties';
+  import type {
+    HITLAction,
+    HITLExtraAction,
+    HITLProperties,
+    HITLResponse,
+    HITLSection
+  } from './properties';
 
   /**
    * Human-in-the-loop approval card: the assistant wants to run an action and the
@@ -43,6 +49,8 @@
     cancelTestId,
     completionTestId,
     completionTextTestId,
+    actions,
+    children,
     classes
   }: HITLProperties = $props();
 
@@ -178,6 +186,20 @@
     stopCountdown();
     clearAutoCancel();
     await decide(action);
+  };
+
+  // An extra action (e.g. "Deny with instructions") is a side path, not a
+  // decision — it never settles the card, so `onconfirm` never fires for it.
+  // It still counts as interacting with the card: pause this card's own
+  // countdown and every sibling's, exactly like clicking confirm or cancel.
+  const selectExtraAction = (action: HITLExtraAction): void => {
+    if (decisionPending || isProcessing || isCompleted) {
+      return;
+    }
+    pauseAllConfirmationTimers.set(true);
+    stopCountdown();
+    clearAutoCancel();
+    action.onSelect();
   };
 
   onMount(() => {
@@ -375,6 +397,11 @@
           </span>
         </div>
       {:else}
+        {#if children}
+          <div class="extra-content">
+            {@render children()}
+          </div>
+        {/if}
         <div class="action-buttons">
           <div class="cancel-button">
             <Button
@@ -385,6 +412,19 @@
               onclick={() => interact('rejected')}
             />
           </div>
+          {#each actions ?? [] as action, index (action.testId ?? `${index}-${action.label}`)}
+            <div class="extra-action-button">
+              <Button
+                variant="secondary"
+                text={action.label}
+                enable={!isProcessing}
+                testId={action.testId ?? (testId && `${testId}-action-${index}`)}
+                classes={action.classes}
+                ariaLabel={action.ariaLabel}
+                onclick={() => selectExtraAction(action)}
+              />
+            </div>
+          {/each}
           <div class="confirm-button">
             {#if countdownActive}
               <div class="progress-anchor">
@@ -480,6 +520,13 @@
     text-transform: capitalize;
   }
 
+  /* Rendered only when `children` is supplied; the flex gap on
+     .confirmation-body already spaces it from the params above and the
+     action-buttons row below, so no default-behavior change when it's absent. */
+  .extra-content {
+    width: 100%;
+  }
+
   .action-buttons {
     display: flex;
     gap: var(--hitl-buttons-gap, 0.75rem);
@@ -487,7 +534,8 @@
   }
 
   .cancel-button,
-  .confirm-button {
+  .confirm-button,
+  .extra-action-button {
     flex: 1;
     position: relative;
     --button-width: 100%;

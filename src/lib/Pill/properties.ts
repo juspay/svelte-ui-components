@@ -6,9 +6,24 @@ export type MandatoryPillProperties = {
   text: string;
 };
 
+/**
+ * Semantic tone for a status/category chip. Each tone maps to a
+ * `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color` pair (documented, with a built-in
+ * default) instead of a hand-rolled `tone-*` class repeated at every call site. An explicit
+ * `--pill-background` / `--pill-color` (set directly or via `classes`) always wins over the tone
+ * default — the same precedence Button's `variant` already uses relative to `--button-color`.
+ */
+export type PillTone = 'accent' | 'ok' | 'warn' | 'danger' | 'muted';
+
 export type OptionalPillProperties = {
   dismissible?: boolean;
   disabled?: boolean;
+  /**
+   * Semantic tone applied via themeable `--pill-tone-{tone}-background` / `-color` CSS
+   * variables. Unset by default, which renders exactly as before — no tone class, no CSS
+   * variable set. See `PillTone` for the mapping and override precedence.
+   */
+  tone?: PillTone;
   testId?: string;
   title?: string;
   dismissIcon?: Snippet;

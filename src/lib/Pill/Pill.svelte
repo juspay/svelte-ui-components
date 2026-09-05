@@ -2,11 +2,13 @@
   import type { PillProperties } from './properties';
   import Button from '../Button/Button.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
+  import { pillToneClass } from './pillTone';
 
   let {
     text,
     dismissible = false,
     disabled = false,
+    tone,
     testId,
     title,
     dismissIcon,
@@ -49,7 +51,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
-  class="pill {classes ?? ''}"
+  class="pill {pillToneClass(tone)} {classes ?? ''}"
   class:disabled
   onclick={interactive ? handleClick : null}
   onkeydown={interactive ? handleKeydown : null}
@@ -96,23 +98,60 @@
     justify-content: var(--pill-justify-content, center);
     text-align: var(--pill-text-align, center);
     gap: var(--pill-gap, 4px);
-    background-color: var(--pill-background, #e0e0e0);
-    color: var(--pill-color, #333333);
+    background-color: var(--pill-background, var(--_pill-tone-background, #e0e0e0));
+    color: var(--pill-color, var(--_pill-tone-color, #333333));
     font-size: var(--pill-font-size, 13px);
     font-weight: var(--pill-font-weight, 500);
     font-family: var(--pill-font-family);
+    letter-spacing: var(--pill-letter-spacing, normal);
+    text-transform: var(--pill-text-transform, none);
     padding: var(--pill-padding, 6px 10px);
     border-radius: var(--pill-border-radius, 999px);
     border: var(--pill-border, none);
-    cursor: var(--pill-cursor, pointer);
+    /* Non-interactive by default: nothing is clickable, so nothing should look
+       clickable. The pointer default below applies only once role="button" is
+       actually present (see handleClick / `interactive`) — an explicit
+       --pill-cursor still wins in both cases. */
+    cursor: var(--pill-cursor, default);
     max-width: var(--pill-max-width);
     line-height: var(--pill-line-height, 1);
     flex-shrink: var(--pill-flex-shrink);
   }
 
+  .pill[role='button'] {
+    cursor: var(--pill-cursor, pointer);
+  }
+
+  /* Tone defaults — an internal --_pill-tone-* layer, mirroring how Button's
+     variant classes set --_btn-*: a plain --pill-background/--pill-color
+     (explicit, or via `classes`) always wins over the tone's default. */
+  .tone-accent {
+    --_pill-tone-background: var(--pill-tone-accent-background, #d1ecf1);
+    --_pill-tone-color: var(--pill-tone-accent-color, #0c5460);
+  }
+  .tone-ok {
+    --_pill-tone-background: var(--pill-tone-ok-background, #d4edda);
+    --_pill-tone-color: var(--pill-tone-ok-color, #155724);
+  }
+  .tone-warn {
+    --_pill-tone-background: var(--pill-tone-warn-background, #fff3cd);
+    --_pill-tone-color: var(--pill-tone-warn-color, #856404);
+  }
+  .tone-danger {
+    --_pill-tone-background: var(--pill-tone-danger-background, #f8d7da);
+    --_pill-tone-color: var(--pill-tone-danger-color, #721c24);
+  }
+  .tone-muted {
+    --_pill-tone-background: var(--pill-tone-muted-background, #f1f1f1);
+    --_pill-tone-color: var(--pill-tone-muted-color, #6b7280);
+  }
+
   .pill:hover:not(.disabled) {
-    background-color: var(--pill-hover-background, var(--pill-background, #d0d0d0));
-    color: var(--pill-hover-color, var(--pill-color, #333333));
+    background-color: var(
+      --pill-hover-background,
+      var(--pill-background, var(--_pill-tone-background, #d0d0d0))
+    );
+    color: var(--pill-hover-color, var(--pill-color, var(--_pill-tone-color, #333333)));
   }
 
   .pill.disabled {

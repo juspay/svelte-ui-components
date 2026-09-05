@@ -6,6 +6,7 @@
       text: { type: 'String', reflect: true },
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
+      tone: { type: 'String', attribute: 'tone' },
       testId: { type: 'String', attribute: 'test-id' },
       pillTitle: { type: 'String', reflect: true, attribute: 'title' },
       leadingIcon: { type: 'Object' },

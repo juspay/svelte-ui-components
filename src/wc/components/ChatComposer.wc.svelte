@@ -6,6 +6,9 @@
       value: { type: 'String' },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
+      textDisabled: { type: 'String', attribute: 'text-disabled' },
+      voiceDisabled: { type: 'String', attribute: 'voice-disabled' },
+      sendDisabled: { type: 'String', attribute: 'send-disabled' },
       submitOnEnter: { type: 'Boolean', attribute: 'submit-on-enter' },
       maxLength: { type: 'Number', attribute: 'max-length' },
       streaming: { type: 'Boolean', reflect: true },
@@ -25,7 +28,7 @@
       onopenrichimage: { type: 'Object' },
       onopenrichvideo: { type: 'Object' },
       onopenrichfile: { type: 'Object' },
-      sendable: { type: 'Boolean' },
+      sendable: { type: 'String' },
       accept: { type: 'String', reflect: true },
       multiple: { type: 'Boolean', reflect: true },
       sendLabel: { type: 'String', attribute: 'send-label' },
@@ -64,7 +67,39 @@
 
 <script lang="ts">
   import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  let props = $props();
+
+  // `{ type: 'Boolean' }` is presence-based: an absent attribute arrives as
+  // `false`, never `null`. That flattens the tri-state `boolean | null`
+  // these four props need (see `controlDisabled.ts` / `properties.ts`) —
+  // `false` permanently overrides the `disabled` fallback instead of
+  // deferring to it, breaking e.g. `<sui-chat-composer disabled>` (the
+  // per-control attributes are absent, so they'd force every control back
+  // on). Declared `{ type: 'String' }` instead and restored to `boolean |
+  // null` here, mirroring Input.wc.svelte's `asSpellcheck`.
+  const asBooleanOrNull = (value: unknown): boolean | null => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    const text = String(value).trim().toLowerCase();
+    if (text === 'false') {
+      return false;
+    }
+    if (text === '' || text === 'true') {
+      return true;
+    }
+    return null;
+  };
+
+  let { textDisabled, voiceDisabled, sendDisabled, sendable, ...props } = $props();
 </script>
 
-<ChatComposer {...props} />
+<ChatComposer
+  {...props}
+  textDisabled={asBooleanOrNull(textDisabled)}
+  voiceDisabled={asBooleanOrNull(voiceDisabled)}
+  sendDisabled={asBooleanOrNull(sendDisabled)}
+  sendable={asBooleanOrNull(sendable)}
+/>

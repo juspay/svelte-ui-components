@@ -7,6 +7,7 @@
       separator: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      literal: { type: 'Boolean', reflect: true },
       onclick: { type: 'Object' }
     }
   }}

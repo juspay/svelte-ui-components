@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { KeyboardInputProperties } from './properties';
 
-  let { keys, separator = '+', testId, onclick, classes }: KeyboardInputProperties = $props();
+  let {
+    keys,
+    separator = '+',
+    testId,
+    onclick,
+    classes,
+    literal = false
+  }: KeyboardInputProperties = $props();
 
   const KEY_SYMBOLS: Record<string, string> = {
     cmd: '\u2318',
@@ -28,6 +35,9 @@
   let interactive = $derived(typeof onclick === 'function');
 
   function getSymbol(key: string): string {
+    if (literal) {
+      return key;
+    }
     return KEY_SYMBOLS[key.toLowerCase()] ?? key;
   }
 

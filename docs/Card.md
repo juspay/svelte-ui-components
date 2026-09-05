@@ -174,6 +174,41 @@ The Card component intentionally omits named layout slots to keep its API minima
 
 This pattern gives full layout control to the consumer (any number of zones, any flex/grid arrangement) without baking structural presets into the library.
 
+### Attribute Passthrough and Custom Root Tag
+
+`attrs` spreads arbitrary `data-*`/`aria-*` attributes onto the card root — for a
+consumer that already keys state off attribute-selector CSS (`[data-state="waiting"]`,
+`[data-density="compact"]`) elsewhere in their app, instead of encoding the same state as
+a second `classes` modifier. `as` overrides the rendered tag independent of `href`, for a
+card that needs real `<figure>` semantics (so a `<figcaption>` inside it is valid markup)
+without a separate wrapper element around an appearance-only Card.
+
+```svelte
+<script>
+  import { Card } from '@juspay/svelte-ui-components';
+</script>
+
+<!-- data-state drives a CSS rule the app already writes for other components -->
+<Card testId="session-card" attrs={{ 'data-state': 'waiting' }}>
+  <p>Waiting for input…</p>
+</Card>
+
+<!-- Card's root IS the <figure> -- no wrapper element needed for the semantics -->
+<Card as="figure" title="Aurora">
+  <div class="stage">…</div>
+  <figcaption>Aurora backdrop, 40% opacity</figcaption>
+</Card>
+```
+
+`attrs` is applied before Card's own `class`/`style`/`data-pw`/`testID`/`role`/`tabindex`/
+`href`/`target`/`rel`/`onclick`/`onkeydown` attributes, so it can only add attributes Card
+does not already manage — it cannot be used to override the click/keyboard/anchor behavior
+those props control. `as`, when omitted, keeps Card's existing tag resolution exactly:
+`<a>` when `href` is set, `<div>` otherwise. Setting `as` to anything other than `'a'`
+suppresses `href`/`target`/`rel` and the synthetic `role="button"`/`tabindex`/keydown shim
+applies instead when `onclick` is provided — the same interactive behavior a plain `<div>`
+gets today. Both props are omitted by default, so existing consumers are unaffected.
+
 ### Card with Header Right Slot
 
 ```svelte
@@ -238,24 +273,26 @@ priority over the matching string prop — only one of the two is rendered.
 
 ## Props
 
-| Prop               | Type                               | Required | Default | Description                                                                                                                                                                                                                                                                                                                  |
-| ------------------ | ---------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children           | `Snippet`                          | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                                                                                                                                                                |
-| title              | `string`                           | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                                                                                                                                                                        |
-| description        | `string`                           | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                                                                                                                                                                       |
-| titleSnippet       | `Snippet`                          | No       | `-`     | Rich-markup override for the title. Rendered inside the same `.card-title` container and takes priority over `title`. Providing it renders the header row even when `title` is omitted.                                                                                                                                      |
-| descriptionSnippet | `Snippet`                          | No       | `-`     | Rich-markup override for the description. Rendered inside the same `.card-description` container and takes priority over `description`.                                                                                                                                                                                      |
-| classes            | `string`                           | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                       |
-| testId             | `string`                           | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                                   |
-| onclick            | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided (and `href` is not), the card root becomes an interactive `<div>`: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. When `href` is also set, `onclick` still fires but the shim is skipped in favor of native anchor semantics. Omit both to keep a plain `<div>`. |
-| href               | `string`                           | No       | `-`     | Renders the card root as a native `<a href="...">` instead of a `<div>`, styled identically. Natively focusable and Enter-activated, so the `role="button"`/`tabindex`/keydown shim used for `onclick`-only cards is skipped. Omit to keep a `<div>` root.                                                                   |
-| target             | `string`                           | No       | `-`     | Anchor `target` (e.g. `_blank`). Only applied when `href` is set.                                                                                                                                                                                                                                                            |
-| rel                | `string`                           | No       | `-`     | Anchor `rel`. Only applied when `href` is set. Defaults to `noopener noreferrer` when `target="_blank"` and `rel` is not explicitly provided.                                                                                                                                                                                |
-| headerRight        | `Snippet`                          | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                                                                                                                                                                |
-| footer             | `Snippet`                          | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                                                                                                                                                                 |
-| stretch            | `boolean`                          | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.                                                                                                                                                          |
-| scrollable         | `boolean`                          | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility.                                                                                                                  |
-| cssVars            | `Record<string, string \| number>` | No       | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute.               |
+| Prop               | Type                               | Required | Default | Description                                                                                                                                                                                                                                                                                                                      |
+| ------------------ | ---------------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children           | `Snippet`                          | No       | `-`     | Main content body of the card. Rendered inside the `.card-content` container.                                                                                                                                                                                                                                                    |
+| title              | `string`                           | No       | `-`     | Header title text. When provided, renders the `.card-header` section.                                                                                                                                                                                                                                                            |
+| description        | `string`                           | No       | `-`     | Header subtitle/description text displayed below the title. Only rendered if `title` is also provided.                                                                                                                                                                                                                           |
+| titleSnippet       | `Snippet`                          | No       | `-`     | Rich-markup override for the title. Rendered inside the same `.card-title` container and takes priority over `title`. Providing it renders the header row even when `title` is omitted.                                                                                                                                          |
+| descriptionSnippet | `Snippet`                          | No       | `-`     | Rich-markup override for the description. Rendered inside the same `.card-description` container and takes priority over `description`.                                                                                                                                                                                          |
+| classes            | `string`                           | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                           |
+| testId             | `string`                           | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                                                                                                                                                                                                                                       |
+| onclick            | `(event: MouseEvent) => void`      | No       | `-`     | Click handler. When provided (and `href` is not), the card root becomes an interactive `<div>`: `role="button"`, `tabindex="0"`, and Enter/Space keydown trigger the handler. When `href` is also set, `onclick` still fires but the shim is skipped in favor of native anchor semantics. Omit both to keep a plain `<div>`.     |
+| href               | `string`                           | No       | `-`     | Renders the card root as a native `<a href="...">` instead of a `<div>`, styled identically. Natively focusable and Enter-activated, so the `role="button"`/`tabindex`/keydown shim used for `onclick`-only cards is skipped. Omit to keep a `<div>` root.                                                                       |
+| target             | `string`                           | No       | `-`     | Anchor `target` (e.g. `_blank`). Only applied when `href` is set.                                                                                                                                                                                                                                                                |
+| rel                | `string`                           | No       | `-`     | Anchor `rel`. Only applied when `href` is set. Defaults to `noopener noreferrer` when `target="_blank"` and `rel` is not explicitly provided.                                                                                                                                                                                    |
+| headerRight        | `Snippet`                          | No       | `-`     | Snippet rendered at the top-right of the header row alongside the title/description. When omitted the header row is unchanged (title block takes full width).                                                                                                                                                                    |
+| footer             | `Snippet`                          | No       | `-`     | Snippet rendered in a `<footer>` element below the content area. When omitted no footer element is rendered.                                                                                                                                                                                                                     |
+| stretch            | `boolean`                          | No       | `false` | When true, the card root gets `height: 100%` and becomes a flex column so the content area grows to fill remaining space. Useful in equal-height grid/flex layouts.                                                                                                                                                              |
+| scrollable         | `boolean`                          | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility.                                                                                                                      |
+| cssVars            | `Record<string, string \| number>` | No       | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute.                   |
+| attrs              | `Record<string, string>`           | No       | `-`     | Arbitrary attributes (e.g. `data-*`, `aria-*`) spread onto the card root, for attribute-selector CSS. Applied before Card's own class/style/data-pw/testID/role/tabindex/href/target/rel/onclick/onkeydown, so it can only add attributes Card does not already manage. Omit to render no extra attributes.                      |
+| as                 | `'div' \| 'a' \| 'figure'`         | No       | `-`     | Overrides the root element's tag independent of `href` — e.g. `'figure'` for real `<figure>` semantics. Omit to keep today's rule: `<a>` when `href` is set, `<div>` otherwise. A value other than `'a'` suppresses `href`/`target`/`rel` and applies the same interactive shim a plain `<div>` gets when `onclick` is provided. `as="a"` without `href` gets that same shim too — there is nothing to navigate to, so it behaves like an interactive `<div>` rendered as an `<a>` tag rather than a broken anchor. |
 
 ## Events
 
@@ -310,6 +347,8 @@ Override these custom properties to theme the component.
 Tag: `<sui-card>`
 
 Reflected boolean attributes: `stretch`, `scrollable`.
+
+`as="figure"` sets the root tag as a reflected `as` attribute; `attrs` is object-valued (set as a property, e.g. `el.attrs = { 'data-state': 'waiting' }`) like `cssVars`.
 
 ```html
 <sui-card title="Order Summary" description="Review your items">

@@ -197,6 +197,66 @@
 </div>
 
 <div class="demo-section">
+  <h2 class="demo-section-title">Attribute Passthrough and Custom Root Tag (attrs / as)</h2>
+  <p class="demo-hint" style="margin: 0 0 16px;">
+    <code>attrs</code> spreads arbitrary <code>data-*</code>/<code>aria-*</code> attributes onto the
+    root for attribute-selector CSS a consumer already writes elsewhere in their app.
+    <code>as</code> overrides the rendered tag — e.g. <code>"figure"</code> — independent of
+    <code>href</code>.
+  </p>
+  <div class="demo-row" style="gap: 16px; flex-wrap: wrap;">
+    <div class="card-theme">
+      <Card
+        testId="attrs-data-state-card"
+        attrs={{ 'data-state': 'waiting', 'data-density': 'compact' }}
+      >
+        <p style="margin: 0;">Root carries data-state="waiting" and data-density="compact".</p>
+      </Card>
+    </div>
+
+    <div class="card-theme">
+      <Card testId="as-figure-card" as="figure" title="Backdrop tile">
+        <p style="margin: 0;">Root renders as a real &lt;figure&gt;, not a &lt;div&gt;.</p>
+      </Card>
+    </div>
+
+    <div class="card-theme">
+      <Card
+        testId="as-figure-with-href-card"
+        as="figure"
+        href="{base}/components/button"
+        title="Figure ignores href"
+      >
+        <p style="margin: 0;">
+          A stray href alongside as="figure" is not rendered as an attribute — the figure never
+          becomes a link.
+        </p>
+      </Card>
+    </div>
+
+    <div class="card-theme">
+      <Card
+        testId="attrs-collision-card"
+        classes="attrs-collision-marker-class"
+        attrs={{ 'data-pw': 'hijacked', class: 'attrs-injected-class', role: 'not-a-button' }}
+      >
+        <p style="margin: 0;">
+          attrs tries to override data-pw/class/role — Card's own values win.
+        </p>
+      </Card>
+    </div>
+
+    <div class="card-clickable">
+      <Card as="a" onclick={handleCardClick('as-a-no-href')} testId="as-a-no-href-card">
+        <p style="margin: 0;">
+          as="a" with onclick but no href — still Tab-reachable, Enter/Space activate it.
+        </p>
+      </Card>
+    </div>
+  </div>
+</div>
+
+<div class="demo-section">
   <h2 class="demo-section-title">Custom Layout (Consumer Recipe)</h2>
   <p class="demo-hint" style="margin: 0 0 16px;">
     Place the layout inside the default content area — the Card provides the container, shadow, and

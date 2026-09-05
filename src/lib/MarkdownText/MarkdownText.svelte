@@ -2,9 +2,16 @@
   import { renderMarkdown } from './markdown';
   import type { MarkdownTextProperties } from './properties';
 
-  let { markdown, breaks = false, testId, classes, tableLabel }: MarkdownTextProperties = $props();
+  let {
+    markdown,
+    breaks = false,
+    testId,
+    classes,
+    tableLabel,
+    sanitize
+  }: MarkdownTextProperties = $props();
 
-  let html = $derived(renderMarkdown(markdown, { breaks, tableLabel }));
+  let html = $derived(renderMarkdown(markdown, { breaks, tableLabel, sanitize }));
 </script>
 
 <div

@@ -321,7 +321,7 @@
   },
   {
     "name": "MarkdownText",
-    "description": "Renders markdown as HTML through a sanitized-by-construction pipeline built for chat/agent content: raw HTML (block and inline) is escaped to visible text, and link/image URLs keep their href only on an allow-listed protocol (http/https/mailto/tel for links, http/https for images; relative URLs pass). GFM enabled; optional `breaks` mode renders single newlines as <br>. Pure string transform — SSR-identical, no DOM. The same pipeline is exported as `renderMarkdown(markdown, {breaks?})` and powers ChatMessage's `markdown` prop."
+    "description": "Renders markdown as HTML through a sanitized-by-construction pipeline built for chat/agent content: raw HTML (block and inline) is escaped to visible text, and link/image URLs keep their href only on an allow-listed protocol (http/https/mailto/tel for links, http/https for images; relative URLs pass). GFM enabled; optional `breaks` mode renders single newlines as <br>. The optional `sanitize` prop narrows further per instance: `allowedProtocols` narrows the protocol allow-list, `allowedTags` narrows which markdown-generated tags render as themselves (everything renders until supplied), and `disableTaskLists` renders task-list items as plain text instead of a checkbox — all default to today's behavior when omitted. `tableLabel` names the scrollable region wrapping a rendered table. Pure string transform — SSR-identical, no DOM. The same pipeline is exported as `renderMarkdown(markdown, {breaks?, inline?, tableLabel?, sanitize?})` and powers ChatMessage's `markdown` prop."
   },
   {
     "name": "ChatComposer",

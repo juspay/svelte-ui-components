@@ -37,7 +37,15 @@
 
 <script lang="ts">
   import HITL from '$lib/HITL/HITL.svelte';
-  let { hITLTitle, ...props } = $props();
+  import type { HITLProperties } from '$lib/HITL/properties';
+  // `title` is mandatory on HITL, so the renamed element property is too -- the same
+  // claim `Omit<HITLProperties, 'title'>` already makes about `confirmationId`.
+  let {
+    hITLTitle,
+    ...props
+  }: Omit<HITLProperties, 'title'> & {
+    hITLTitle: HITLProperties['title'];
+  } = $props();
 </script>
 
 <HITL {...props} title={hITLTitle} />

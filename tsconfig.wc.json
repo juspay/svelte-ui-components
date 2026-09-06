@@ -11,5 +11,5 @@
     "src/lib/**/*.svelte",
     ".svelte-kit/ambient.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/**/*.test.ts"]
 }

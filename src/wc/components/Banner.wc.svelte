@@ -21,7 +21,18 @@
 
 <script lang="ts">
   import Banner from '$lib/Banner/Banner.svelte';
-  let { bannerRole, ...props } = $props();
+  import type { BannerProperties } from '$lib/Banner/properties';
+  // The element renames `role` to `bannerRole` because the platform already defines `role` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    bannerRole,
+    ...props
+    // `title` is omitted as well as `role`: it is host-reserved, so the element never
+    // declares it and the wrapper's own title snippet is unconditional. Including it
+    // would advertise a prop nothing can set.
+  }: Omit<BannerProperties, 'role' | 'title'> & { bannerRole?: BannerProperties['role'] } =
+    $props();
 </script>
 
 <!--

@@ -65,7 +65,9 @@
     highlightedIndex = $bindable(-1),
     selected = $bindable([]),
     ...rest
-  }: ComboboxProperties = $props();
+  }: Omit<ComboboxProperties, 'ariaLabel'> & {
+    comboboxAriaLabel?: ComboboxProperties['ariaLabel'];
+  } = $props();
 </script>
 
 <Combobox

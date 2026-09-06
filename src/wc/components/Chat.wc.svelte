@@ -56,7 +56,14 @@
 
 <script lang="ts">
   import Chat from '$lib/Chat/Chat.svelte';
-  let { chatTitle, ...props } = $props();
+  import type { ChatProperties } from '$lib/Chat/properties';
+  // The element renames `title` to `chatTitle` because the platform already defines `title` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    chatTitle,
+    ...props
+  }: Omit<ChatProperties, 'title'> & { chatTitle?: ChatProperties['title'] } = $props();
 </script>
 
 <Chat {...props} title={chatTitle} />

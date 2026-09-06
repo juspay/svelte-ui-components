@@ -24,13 +24,20 @@
 
 <script lang="ts">
   import Menu from '$lib/Menu/Menu.svelte';
-  let { menuAriaLabel, ...props } = $props();
+  import type { MenuProperties } from '$lib/Menu/properties';
+  // The element renames `ariaLabel` to `menuAriaLabel` because the platform already defines `ariaLabel` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    menuAriaLabel,
+    ...props
+  }: Omit<MenuProperties, 'ariaLabel'> & { menuAriaLabel?: MenuProperties['ariaLabel'] } = $props();
 </script>
 
 <!-- A property-assigned trigger wins; the slot is the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. -->
 <Menu {...props} ariaLabel={menuAriaLabel}>
-  {#snippet trigger()}
-    {#if props.trigger}{@render props.trigger()}{:else}<slot name="trigger"></slot>{/if}
+  {#snippet trigger(triggerProps)}
+    {#if props.trigger}{@render props.trigger(triggerProps)}{:else}<slot name="trigger"></slot>{/if}
   {/snippet}
 </Menu>

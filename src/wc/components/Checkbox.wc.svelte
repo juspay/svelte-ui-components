@@ -20,7 +20,16 @@
 
 <script lang="ts">
   import Checkbox from '$lib/Checkbox/Checkbox.svelte';
-  let { checkboxAriaLabel, ...props } = $props();
+  import type { CheckboxProperties } from '$lib/Checkbox/properties';
+  // The element renames `ariaLabel` to `checkboxAriaLabel` because the platform already defines `ariaLabel` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    checkboxAriaLabel,
+    ...props
+  }: Omit<CheckboxProperties, 'ariaLabel'> & {
+    checkboxAriaLabel?: CheckboxProperties['ariaLabel'];
+  } = $props();
 </script>
 
 <Checkbox {...props} ariaLabel={checkboxAriaLabel}>

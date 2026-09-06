@@ -67,7 +67,18 @@
 
 <script lang="ts">
   import Input from '$lib/Input/Input.svelte';
-  let { inputAriaLabel, inputId, ...props } = $props();
+  import type { InputProperties } from '$lib/Input/properties';
+  // The element renames `ariaLabel` to `inputAriaLabel` and `id` to `inputId` because the platform already defines `ariaLabel` and `id` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    inputAriaLabel,
+    inputId,
+    ...props
+  }: Omit<InputProperties, 'ariaLabel' | 'id'> & {
+    inputAriaLabel?: InputProperties['ariaLabel'];
+    inputId?: InputProperties['id'];
+  } = $props();
 
   // Restores the tri-state the attribute string flattens: absent stays null so
   // the browser default is untouched, "false" is honoured, and a bare

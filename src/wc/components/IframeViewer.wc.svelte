@@ -20,7 +20,16 @@
 
 <script lang="ts">
   import IframeViewer from '$lib/IframeViewer/IframeViewer.svelte';
-  let { iframeViewerTitle, ...props } = $props();
+  import type { IframeViewerProperties } from '$lib/IframeViewer/properties';
+  // The element renames `title` to `iframeViewerTitle` because the platform already defines `title` on every
+  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // a destructured `$props()` no longer infers on its own.
+  let {
+    iframeViewerTitle,
+    ...props
+  }: Omit<IframeViewerProperties, 'title'> & {
+    iframeViewerTitle?: IframeViewerProperties['title'];
+  } = $props();
 </script>
 
 <IframeViewer {...props} title={iframeViewerTitle} />

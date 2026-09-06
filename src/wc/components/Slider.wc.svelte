@@ -13,14 +13,23 @@
       classes: { type: 'String' },
       oninput: { type: 'Object' },
       onchange: { type: 'Object' },
-      labelFormatter: { type: 'Object' }
+      labelFormatter: { type: 'Object' },
+      sliderAriaLabel: { type: 'String', attribute: 'aria-label' }
     }
   }}
 />
 
 <script lang="ts">
   import Slider from '$lib/Slider/Slider.svelte';
-  let props = $props();
+  import type { SliderProperties } from '$lib/Slider/properties';
+  // The element renames `ariaLabel` to `sliderAriaLabel` because the platform already
+  // defines `ariaLabel` on every HTMLElement; the attribute stays `aria-label`.
+  let {
+    sliderAriaLabel,
+    ...props
+  }: Omit<SliderProperties, 'ariaLabel'> & {
+    sliderAriaLabel?: SliderProperties['ariaLabel'];
+  } = $props();
 </script>
 
-<Slider {...props} />
+<Slider {...props} ariaLabel={sliderAriaLabel} />

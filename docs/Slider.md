@@ -23,6 +23,7 @@ A range slider input for selecting a numeric value within min/max bounds. The `v
 | disabled       | `boolean`                   | No       | `false` | Whether the slider is disabled. When true, the slider is visually dimmed, the thumb cannot be dragged, and no events fire.                                             |
 | showValue      | `boolean`                   | No       | `false` | Whether to display the current numeric value as a label next to the slider track.                                                                                      |
 | labelFormatter | `(value: number) => string` | No       | `-`     | Formats the displayed value label. Called with the current numeric value and returns a string. Falls back to `String(value)` when absent.                              |
+| ariaLabel      | `string`                    | No       | `-`     | Names the range input for assistive tech. A bare slider announces only its value, so a control whose purpose is not carried by nearby visible text needs this.         |
 | testId         | `string`                    | No       | `-`     | Value for the data-pw attribute on the range input, used for end-to-end testing selectors.                                                                             |
 | classes        | `string`                    | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 

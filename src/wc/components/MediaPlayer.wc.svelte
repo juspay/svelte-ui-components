@@ -21,9 +21,19 @@
       captionsSrcLang: { type: 'String', attribute: 'captions-src-lang' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      seekBar: { type: 'Boolean', attribute: 'seek-bar' },
+      timeDisplay: { type: 'Boolean', attribute: 'time-display' },
+      fullscreenButton: { type: 'Boolean', attribute: 'fullscreen-button' },
+      fullscreenIcon: { type: 'Object' },
+      exitFullscreenIcon: { type: 'Object' },
+      currentTime: { type: 'Number', attribute: 'current-time' },
+      duration: { type: 'Number' },
       onplay: { type: 'Object' },
       onpause: { type: 'Object' },
-      onvolumechange: { type: 'Object' }
+      onvolumechange: { type: 'Object' },
+      onseek: { type: 'Object' },
+      ontimeupdate: { type: 'Object' },
+      onfullscreenchange: { type: 'Object' }
     }
   }}
 />

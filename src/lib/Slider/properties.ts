@@ -13,6 +13,11 @@ export type OptionalSliderProperties = {
   disabled?: boolean;
   showValue?: boolean;
   labelFormatter?: (value: number) => string;
+  /**
+   * Names the range input for assistive tech. A bare slider announces only its value,
+   * so a control whose purpose is not carried by adjacent visible text needs this.
+   */
+  ariaLabel?: string;
   testId?: string;
   classes?: string;
 };

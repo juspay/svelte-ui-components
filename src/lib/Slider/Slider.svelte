@@ -9,6 +9,7 @@
     disabled = false,
     showValue = false,
     labelFormatter,
+    ariaLabel,
     testId,
     onchange,
     oninput,
@@ -42,6 +43,7 @@
     {step}
     {value}
     {disabled}
+    aria-label={typeof ariaLabel === 'string' ? ariaLabel : null}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
     oninput={handleInput}

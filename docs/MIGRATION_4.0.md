@@ -7,6 +7,28 @@ that 3.x could only half-apply while the old names still had to work.
 Nothing else about your components changes. If you already ran the codemod on
 3.x, you are done; this release deletes names you have stopped using.
 
+## Check your installed version first
+
+**This removal shipped in 3.5.1, not in 4.0.0.** The release workflow derives
+the version bump from the newest commit alone, and the commit that finally made
+the build green was a `fix:` — so the removal two commits below it went out
+under a patch number. 4.0.0 is that same library content under the version it
+should have carried.
+
+That means a `^3.5.0` or `~3.5.0` range already resolves to it. If handlers
+stopped firing after an install you did not think was a major upgrade, this is
+why:
+
+```sh
+npm ls @juspay/svelte-ui-components
+```
+
+**3.5.0 is the last release that accepts the old spellings.** 3.5.1 and 4.0.0
+accept exactly the same props as each other. Prefer migrating with the codemod
+below over pinning to 3.5.0 — pinning holds you behind `TypewriterText`,
+`ChatMessage`'s `marker`, and the fix that made `MenuTriggerProps` reachable
+through `<sui-menu>`.
+
 ## Do this
 
 ```sh
@@ -51,8 +73,8 @@ with the props it described.
 
 The same rename applies to `<sui-*>` elements, whose declarations followed the
 components. `element.onClick = fn` set an accessor that reached the component
-in 3.x; in 4.0.0 that property is no longer declared, so the assignment lands
-on a plain expando and never arrives. Use the lowercase name.
+in 3.5.0; from 3.5.1 that property is no longer declared, so the assignment
+lands on a plain expando and never arrives. Use the lowercase name.
 
 `addEventListener` is unaffected. It always went through the DOM rather than
 through a declared prop, and still does.
@@ -67,7 +89,7 @@ rather than declaring a function inline, and the lint gate only recognised
 inline function types as events, so the backwards tag was never flagged. The
 gate now understands that shape.
 
-4.0.0 resolves it the way the rule says: **`onscrollstate` is the prop, and
+This release resolves it the way the rule says: **`onscrollstate` is the prop, and
 `onScrollState` is removed.** If you followed Chat's 3.x notice and moved to
 `onScrollState`, move back — you are the one consumer group this release asks
 to change in the opposite direction, and the codemod does not cover it because
@@ -113,8 +135,8 @@ before, because each declaration now pins the attribute it already observed.
 What moved is the JavaScript property name, which is the collision itself:
 
 ```js
-element.title = 'Sales'; // 3.x: set the component prop. 4.0.0: the tooltip.
-element.cardTitle = 'Sales'; // 4.0.0: the component prop.
+element.title = 'Sales'; // 3.5.0: the component prop. 3.5.1+: the tooltip.
+element.cardTitle = 'Sales'; // 3.5.1+: the component prop.
 ```
 
 The new name is the component name followed by the old one —

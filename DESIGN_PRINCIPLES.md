@@ -67,9 +67,10 @@ enough that the codebase itself carried hybrids like `onleftImageClick` that wer
 neither convention. A single rule needs no such knowledge, and it matches the spelling
 consumers of the forked library already write.
 
-The earlier spellings all remain accepted as `@deprecated` aliases: passing `onRowClick`
-still works and warns once, in dev, naming its replacement. 4.0.0 removes them; `npx
-sui-codemod ./src` rewrites a consumer's call sites (see `docs/EVENT_CASING_MIGRATION.md`).
+The earlier spellings were accepted as `@deprecated` aliases through 3.5.0: passing
+`onRowClick` worked and warned once, in dev, naming its replacement. 3.5.1 removed them,
+under a patch bump it should not have had; `npx sui-codemod ./src` rewrites a consumer's
+call sites (see `docs/EVENT_CASING_MIGRATION.md`).
 
 `scripts/check-event-casing.js` enforces the rule going forward (`npm run
 lint:event-casing`, wired into `npm run lint`). There is no grandfathering list: an

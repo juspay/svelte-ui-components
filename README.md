@@ -38,15 +38,25 @@ This library takes a different approach: **components are unstyled by default** 
 
 ---
 
-## Coming in 4.0.0: one breaking change
+## Breaking changes, and the release they actually shipped in
 
-Advance notice, not a change in this release. **Nothing below has happened yet** —
-the current 3.x line still accepts everything it always did.
+**Both changes below shipped in 3.5.1, which went out as a patch by mistake.**
+The release workflow picks the version from the newest commit alone, and the
+commit that made the build green was a `fix:` — so the breaking commit beneath
+it was never seen. 4.0.0 is that same content under the version number it
+should have carried. A `^3.5.0` range already resolves to it; **3.5.0 is the
+last release without these changes.**
 
-In 4.0.0, `children` stops being a declared property on `sui-chat-bubble`,
-`sui-draggable` and `sui-resizable`. Assigning it will set an inert expando and
-the content will silently disappear. Pass the content as light-DOM children
-instead, which those wrappers will forward through their default slot:
+**Every deprecated event-prop spelling is gone.** The 190 camelCase and
+mixed-case event props that 3.x accepted as aliases are now unknown props,
+which Svelte drops without an error — the handler simply stops running.
+`npx sui-codemod ./src` rewrites them, and
+[`docs/MIGRATION_4.0.md`](docs/MIGRATION_4.0.md) lists every pair.
+
+**`children` is no longer a declared property** on `sui-chat-bubble`,
+`sui-draggable` and `sui-resizable`. Assigning it sets an inert expando and the
+content silently disappears. Pass the content as light-DOM children instead,
+which those wrappers forward through their default slot:
 
 ```js
 el.children = mySnippet; // before — no longer works
@@ -58,13 +68,12 @@ el.children = mySnippet; // before — no longer works
 ```
 
 **Reading `element.children` is what the change fixes.** Declaring the property
-replaces the inherited accessor, so on those three elements `element.children`
-returns `undefined` rather than an `HTMLCollection` today and
-`el.children.length` throws. That is why the declaration has to go, and why it
-cannot go before a major.
+replaced the inherited accessor, so up to 3.5.0 `element.children` returned
+`undefined` on those three elements rather than an `HTMLCollection`, and
+`el.children.length` threw. Removing the declaration gives the collection back.
 
-You can find affected call sites now, well before the major — this reports and
-writes nothing:
+You can find affected call sites with a dry run — this reports and writes
+nothing:
 
 ```sh
 npx sui-codemod --dry-run ./src

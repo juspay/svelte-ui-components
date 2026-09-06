@@ -1,4 +1,4 @@
-# Event-casing migration (to lowercase, completing in 4.0.0)
+# Event-casing migration (to lowercase, completed in 3.5.1)
 
 `DESIGN_PRINCIPLES.md` §3 states the rule: **every event prop is `on` followed
 by the event name in lowercase** — `onclick`, `oninput`, `onrowclick`,
@@ -21,10 +21,12 @@ forked library already write, which makes this library a drop-in for them.
 
 ## What a consumer does
 
-Through 3.x, nothing immediately: every spelling the library had ever accepted
-still worked, and passing a deprecated one warned once in dev, naming its
-replacement. 4.0.0 removed them, so an old spelling is now an unknown prop —
-inert, and silent unless you are on TypeScript, where the compiler catches it.
+Through **3.5.0**, nothing immediately: every spelling the library had ever
+accepted still worked, and passing a deprecated one warned once in dev, naming
+its replacement. **3.5.1 removed them** — as a patch, which it should not have
+been; see `docs/MIGRATION_4.0.md`. 4.0.0 is the same content under a correct
+version number. From 3.5.1 on, an old spelling is an unknown prop — inert, and
+silent unless you are on TypeScript, where the compiler catches it.
 
 Run the codemod from the project root, before or as part of the upgrade:
 

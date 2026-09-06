@@ -15,6 +15,13 @@ export type ChatMessageData = {
    */
   markdown?: string;
   streaming?: boolean;
+  /**
+   * Reveal this message progressively as it grows. Opt-in per message so it cannot stack with
+   * `Chat`'s controller-level reveal, which drip-feeds `content` instead and never sets this.
+   */
+  typewriter?: boolean;
+  /** Milliseconds between characters while `typewriter` is revealing this message. */
+  typewriterSpeed?: number;
   status?: ChatMessageStatus;
   timestamp?: number;
   attachments?: unknown[];

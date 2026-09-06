@@ -303,6 +303,8 @@
           markdown={msg.markdown}
           body={typeof messageBody === 'function' ? bodyFor : null}
           streaming={msg.streaming}
+          typewriter={msg.typewriter}
+          typewriterSpeed={msg.typewriterSpeed}
           status={msg.status}
           allowCopy={allowCopy && partyOf(msg.role) === 'responder'}
           attachments={typeof messageAttachments === 'function' ? attachmentsFor : null}

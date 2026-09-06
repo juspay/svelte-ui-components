@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '../Button/Button.svelte';
   import LoadingDots from '../LoadingDots/LoadingDots.svelte';
+  import TypewriterText from '../TypewriterText/TypewriterText.svelte';
   import copySvg from '$lib/assets/copy.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import retrySvg from '$lib/assets/retry.svg?raw';
@@ -17,6 +18,8 @@
     markdown,
     body,
     streaming = false,
+    typewriter = false,
+    typewriterSpeed,
     clampLines = 0,
     status,
     avatar,
@@ -102,8 +105,40 @@
     hasMarkdown && renderMarkdownFn !== null ? renderMarkdownFn(markdown ?? '') : html
   );
   let hasHtml = $derived(typeof effectiveHtml === 'string' && effectiveHtml.length > 0);
+
   let hasBody = $derived(typeof body === 'function');
-  let hasContent = $derived(hasBody || hasHtml || content.length > 0);
+
+  /* The typewriter reveals SOURCE text, not rendered HTML: typing a pre-rendered
+     `html` string character by character would put its tags on screen. So it drives
+     off `markdown` or `content` and leaves an `html`-only message to the normal
+     path. `markdown` is typed through the same pipeline the static branch uses, so
+     rich text reveals as rich text rather than as raw syntax that reformats at the
+     end. */
+  let typewriterSource = $derived(hasMarkdown ? (markdown ?? '') : content);
+  /* Gated on the pipeline for a markdown source. The renderer loads asynchronously, and
+     without this the typewriter starts on the SOURCE: `**bold**` is typed literally and
+     then reformats when the module resolves. Waiting matches what the static branch
+     already does — degrade to the `html`/`content` fallback until the renderer is there —
+     rather than showing syntax the consumer never asked to display. */
+  let typewriterActive = $derived(
+    typewriter &&
+      !hasBody &&
+      typewriterSource.length > 0 &&
+      (!hasMarkdown || renderMarkdownFn !== null)
+  );
+  let typewriterRenderText = $derived(
+    hasMarkdown && renderMarkdownFn !== null ? { renderText: renderMarkdownFn } : {}
+  );
+  // Clamped at the boundary the way LoadingDots clamps `dots`, so the prop's floor is part
+  // of this component's contract rather than something a consumer discovers. The finite
+  // check is not redundant: `typeof NaN === 'number'`, and `Math.max(1, NaN)` is `NaN`, so
+  // without it the documented floor is not actually enforced.
+  let typewriterPacing = $derived(
+    typeof typewriterSpeed === 'number' && Number.isFinite(typewriterSpeed)
+      ? { speed: Math.max(1, typewriterSpeed) }
+      : {}
+  );
+  let hasContent = $derived(hasBody || hasHtml || content.length > 0 || typewriterActive);
   let showTyping = $derived(streaming && !hasContent);
   let showRetry = $derived(typeof onretry === 'function');
   let showFeedback = $derived(typeof onfeedback === 'function');
@@ -176,6 +211,27 @@
       >
         {#if hasBody}
           <div class="body" id={bodyId}>{@render body?.()}</div>
+        {:else if typewriterActive}
+          <!-- ChatMessageList is a role="log" aria-live="polite" region, so a body whose text
+               grows one character at a time would be announced as it grows. Silence it only
+               WHILE it is growing: leaving it off once streaming ends would suppress the
+               settled message too, which is the announcement the live region exists for.
+               `aria-live="off"` is the spec answer (the innermost live setting wins), and
+               `aria-busy` is the purpose-built one — "being modified, wait before exposing" —
+               so the two together do not depend on a single behaviour being implemented. -->
+          <div
+            class="body"
+            id={bodyId}
+            aria-live={streaming ? 'off' : null}
+            aria-busy={streaming ? 'true' : null}
+          >
+            <TypewriterText
+              text={typewriterSource}
+              isStreaming={streaming}
+              {...typewriterRenderText}
+              {...typewriterPacing}
+            />
+          </div>
         {:else if hasHtml}
           <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <div class="body" id={bodyId}>{@html effectiveHtml}</div>

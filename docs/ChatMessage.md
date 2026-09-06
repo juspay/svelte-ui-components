@@ -32,6 +32,8 @@ A single chat bubble. The primitive is the **party** — every message is from o
 | markdown                                                     | `string`                         | No       | `-`     | Markdown source rendered through the sanitized pipeline (raw HTML escaped, unsafe link/image protocols stripped — see `MarkdownText`). Non-empty `markdown` wins over `html`/`content`; a `body` snippet still wins. An empty string is treated as absent and falls through, exactly like `html`. Used as copy text when `content` is empty. The pipeline loads on demand — the `marked` peer is only needed when this prop is used; during SSR and while loading, `html`/`content` render as the fallback (use `MarkdownText`/`renderMarkdown` for server-rendered markdown). |
 | body                                                         | `Snippet \| null`                | No       | `-`     | Replaces the rendered body while keeping the bubble chrome (avatar, header, attachments, actions). Keep `content` as the text form for copy.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | streaming                                                    | `boolean`                        | No       | `false` | Shows a typing indicator when there is no content yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| typewriter                                                   | `boolean`                        | No       | `false` | Reveal the message progressively through `TypewriterText` instead of painting it at once. Drives off `markdown` or `content`, never `html`; `markdown` types through the same pipeline the static branch uses, so rich text reveals as rich text. `streaming` selects the mode: true keeps typing as the text grows, false shows the remainder at once. Ignored when `body` is set.                                                                                                                                                                                            |
+| typewriterSpeed                                              | `number`                         | No       | `-`     | Milliseconds between characters while typing, clamped to a minimum of 1; a non-finite value is ignored. Defaults to `TypewriterText`'s own.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | clampLines                                                   | `number`                         | No       | `0`     | Collapse the rendered body to this many lines and render an expand/collapse `Button` below it. `0` or omitted leaves the message uncollapsed and renders no control. The clamp applies to the rendered body, so `content` — and the copy action — always carry the whole message. A consumer stylesheet setting `--chat-message-clamp-lines` takes priority over this value. See Accessibility.                                                                                                                                                                                |
 | status                                                       | `'sending' \| 'sent' \| 'error'` | No       | `-`     | `error` tints the bubble with the error color.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | avatar                                                       | `Snippet`                        | No       | `-`     | Avatar shown beside the bubble.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -75,6 +77,43 @@ Only relevant when `clampLines` is set; without it the bubble is inert markup an
 - **The bubble itself is deliberately not a button.** `role="button"` has presentational children, so it flattens the semantics of everything inside it — and a message body routinely renders paragraphs and lists from `markdown`, `html` or a `body` snippet. Giving the bubble the role would cost a screen-reader user that structure on every clamped message.
 - The bubble carries no handler either. An earlier revision let a click anywhere on it toggle, as a pointer convenience; that made it a control keyboard users could not reach, so it is gone. The Button is the only way to toggle, for every input method.
 - `aria-controls` on the button points at the clamped body, so assistive tech can reach the region the control governs. The id is generated per instance, so two clamped messages on one page never collide.
+
+## Streaming
+
+`typewriter` and `streaming` compose into the shape a chat surface actually needs: while a reply
+is arriving, `streaming` stays `true` and the text keeps typing as it grows; when the turn ends,
+`streaming` goes `false` and whatever is left is shown at once rather than typed out after the
+fact. Feed the accumulated text — `TypewriterText` continues from where it left off rather than
+restarting, so appending to `markdown`/`content` is all a consumer has to do.
+
+The body is `aria-live="off"` and `aria-busy="true"` **while `streaming` is true**, and only then.
+That matters when the message sits inside a live region: `ChatMessageList` is `role="log"
+aria-live="polite"`, so without it a body growing one character at a time would be announced on
+every character. The settled text is still read normally, and outside a live region both
+attributes are inert.
+
+`streaming` is the right condition rather than an approximation of one, because a `typewriter`
+message with `streaming` false does not reveal incrementally at all: `TypewriterText` clears its
+pending timer and assigns the whole string, so the body goes from empty to complete in a single
+step. There is no unannounced window to cover.
+
+`streaming` on its own (no `typewriter`) still means what it always did: a typing indicator while
+there is no content yet.
+
+### Through `ChatMessageList` and `Chat`
+
+`ChatMessageData` carries `typewriter` and `typewriterSpeed`, so a list can reveal one message
+without touching the rest:
+
+```js
+messages = [...messages, { id, role: 'responder', content: '', typewriter: true, streaming: true }];
+```
+
+`Chat` does **not** set them, and should not be given them: its controller already reveals
+progressively one layer down, buffering the stream and appending to `content` on a timer. Setting
+`typewriter` on a message `Chat` owns would reveal an already-revealing string — the two would
+compose into a much slower, uneven crawl. Use the controller's own `typewriter` option there, and
+this prop when you drive `ChatMessage` or `ChatMessageList` yourself.
 
 ## CSS Variables
 

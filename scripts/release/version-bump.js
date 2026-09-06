@@ -16,7 +16,7 @@
 // that is already on the registry, while the release commit cannot.
 
 import { execFileSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, realpathSync } from 'node:fs';
 
 // These mirror the shell the workflow used, deliberately, so a single commit
 // classifies exactly as it always did and only the range is new. Note the
@@ -88,32 +88,64 @@ export function bumpForRange(commits) {
  * Everything newer than the last release commit *for this package*. `log` is
  * newest-first, the order `git log` gives.
  *
+ * The window `log` came from is capped, because an unbounded `git log` on a long
+ * history overruns the subprocess buffer. That makes "no boundary found" two
+ * different situations, and conflating them is how an already-released `feat!`
+ * gets counted a second time:
+ *
+ *   - the whole history was read and holds no release commit — a fresh
+ *     repository, and everything genuinely is unreleased;
+ *   - the window ran out first — the boundary exists but was not read, and the
+ *     honest answer is that we cannot tell.
+ *
+ * The second case throws. A release that stops is recoverable; a release that
+ * silently picks the wrong number is what this whole module exists to prevent.
+ *
  * @param {readonly Commit[]} log
  * @param {Target} [target]
+ * @param {{ truncated?: boolean }} [window]
  * @returns {readonly Commit[]}
  */
-export function unreleasedCommits(log, target = 'root') {
+export function unreleasedCommits(log, target = 'root', window = {}) {
   const isBoundary = target === 'mcp' ? MCP_RELEASE : ROOT_RELEASE;
   const boundary = log.findIndex((commit) => isBoundary.test(commit.subject));
-  return boundary === -1 ? [...log] : log.slice(0, boundary);
+  if (boundary === -1) {
+    if (window.truncated === true) {
+      throw new Error(
+        `Read ${log.length} commits without reaching a ${target} release commit, and the ` +
+          `history window was truncated. The bump cannot be derived safely — raise the limit ` +
+          `in scripts/release/version-bump.js.`
+      );
+    }
+    return [...log];
+  }
+  return log.slice(0, boundary);
 }
+
+// Deliberately far past this repository's whole history (677 commits, 360 KB
+// with bodies) so the cap is a backstop against an unbounded read, not a limit
+// anything normally meets. `unreleasedCommits` refuses to answer if the boundary
+// is still not inside it.
+const HISTORY_LIMIT = 5000;
 
 /**
  * @param {{ cwd?: string, path?: string }} [options]
- * @returns {readonly Commit[]}
+ * @returns {{ commits: readonly Commit[], truncated: boolean }}
  */
 export function readLog(options = {}) {
   // NUL between subject and body, record separator between commits: a commit
   // body contains newlines and can contain almost anything else.
-  const args = ['log', '--pretty=format:%s%x00%b%x1e', '-n', '200'];
+  const args = ['log', '--pretty=format:%s%x00%b%x1e', '-n', String(HISTORY_LIMIT)];
   if (typeof options.path === 'string') {
     args.push('--', options.path);
   }
   const raw = execFileSync('git', args, {
     cwd: options.cwd,
-    encoding: 'utf8'
+    encoding: 'utf8',
+    // The default 1 MB is already only ~3x this repository's full log.
+    maxBuffer: 256 * 1024 * 1024
   });
-  return raw
+  const commits = raw
     .split('\x1e')
     .map((record) => record.replace(/^\n/, ''))
     .filter((record) => record.trim() !== '')
@@ -121,6 +153,7 @@ export function readLog(options = {}) {
       const [subject, body = ''] = record.split('\x00');
       return { subject, body };
     });
+  return { commits, truncated: commits.length >= HISTORY_LIMIT };
 }
 
 function main() {
@@ -128,8 +161,8 @@ function main() {
   const target = process.argv.includes('--mcp') ? 'mcp' : 'root';
   // MCP versions only what happened inside `mcp/`, which is also what gates
   // the job running at all. The root package versions the whole tree.
-  const log = readLog(target === 'mcp' ? { path: 'mcp' } : {});
-  const range = unreleasedCommits(log, target);
+  const { commits, truncated } = readLog(target === 'mcp' ? { path: 'mcp' } : {});
+  const range = unreleasedCommits(commits, target, { truncated });
   const bump = bumpForRange(range);
 
   const label = target === 'mcp' ? 'MCP' : 'root';
@@ -149,7 +182,23 @@ function main() {
   }
 }
 
-// Only run as a CLI, so the test can import the pure parts.
-if (process.argv[1] === import.meta.filename) {
+// Only run as a CLI, so the test can import the pure parts. Compare resolved
+// real paths: `process.argv[1]` is the path as invoked and `import.meta.filename`
+// is the resolved module path, so a symlink or a differently-normalised
+// invocation would make a plain === silently skip main() and emit no version at
+// all.
+function invokedDirectly() {
+  const invoked = process.argv[1];
+  if (typeof invoked !== 'string') {
+    return false;
+  }
+  try {
+    return realpathSync(invoked) === realpathSync(import.meta.filename);
+  } catch {
+    return false;
+  }
+}
+
+if (invokedDirectly()) {
   main();
 }

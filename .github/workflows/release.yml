@@ -17,14 +17,16 @@ on:
 # leaves a version on the registry with no tag behind it.
 #
 # This serialises the runs. It does NOT make the second one correct, and the
-# rest of the race is deliberately left visible rather than half-fixed: the
-# version is chosen by `git log -1` in "Determine version bump type", which
-# reads only the tip commit of that run's own checkout. Two merges each with a
-# `feat:` tip therefore both compute the same next version from the same base,
-# and the queued run will now fail loudly at `npm publish` on a version that
-# already exists rather than racing the first one. Making it pick the right
-# version means reading the branch tip instead of the pushed SHA, which changes
-# what a release builds and belongs in its own change.
+# rest of the race is deliberately left visible rather than half-fixed.
+# "Determine version bump type" now reads every commit since the last
+# `chore(release):` — see scripts/release/version-bump.js — but it reads them
+# from that run's OWN checkout, which is pinned to the SHA that triggered it.
+# Two merges in quick succession therefore each see a range ending at their own
+# commit, and both can compute the same next version from the same base. The
+# queued run then fails loudly at `npm publish` on a version that already
+# exists rather than racing the first one. Making it pick the right version
+# means reading the branch tip instead of the pushed SHA, which changes what a
+# release builds and belongs in its own change.
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false

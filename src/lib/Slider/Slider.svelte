@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SliderProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     value = $bindable(0),
@@ -11,25 +10,10 @@
     showValue = false,
     labelFormatter,
     testId,
-    onchange: onchangeProp,
-    onChange,
-    oninput: oninputProp,
-    onInput,
+    onchange,
+    oninput,
     classes
   }: SliderProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('Slider', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const oninput = $derived(
-    resolveDeprecatedProp('Slider', 'onInput', 'oninput', onInput, oninputProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange, oninput);
-  });
 
   let percentage = $derived(((value - min) / (max - min)) * 100);
   let displayValue = $derived(labelFormatter ? labelFormatter(value) : String(value));

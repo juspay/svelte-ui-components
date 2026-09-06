@@ -4,7 +4,6 @@
   import Scroller from '../Scroller/Scroller.svelte';
   import { tooltip } from '../Tooltip/tooltip-action';
   import type { AttachmentChipRowProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   /**
    * The pending-attachment strip above a chat composer: image thumbnails, video
@@ -16,17 +15,11 @@
     images = [],
     files = [],
     videos = [],
-    onRemoveImage: onRemoveImageProp,
     onremoveimage,
-    onRemoveFile: onRemoveFileProp,
     onremovefile,
-    onRemoveVideo: onRemoveVideoProp,
     onremovevideo,
-    onOpenImage: onOpenImageProp,
     onopenimage,
-    onOpenVideo: onOpenVideoProp,
     onopenvideo,
-    onOpenFile: onOpenFileProp,
     onopenfile,
     imageTooltip,
     videoTooltip,
@@ -35,74 +28,6 @@
     testId,
     classes
   }: AttachmentChipRowProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onRemoveImage = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onRemoveImage',
-      'onremoveimage',
-      onRemoveImageProp,
-      onremoveimage
-    )
-  );
-  const onRemoveFile = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onRemoveFile',
-      'onremovefile',
-      onRemoveFileProp,
-      onremovefile
-    )
-  );
-  const onRemoveVideo = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onRemoveVideo',
-      'onremovevideo',
-      onRemoveVideoProp,
-      onremovevideo
-    )
-  );
-  const onOpenImage = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onOpenImage',
-      'onopenimage',
-      onOpenImageProp,
-      onopenimage
-    )
-  );
-  const onOpenVideo = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onOpenVideo',
-      'onopenvideo',
-      onOpenVideoProp,
-      onopenvideo
-    )
-  );
-  const onOpenFile = $derived(
-    resolveDeprecatedProp(
-      'AttachmentChipRow',
-      'onOpenFile',
-      'onopenfile',
-      onOpenFileProp,
-      onopenfile
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      onRemoveImage,
-      onRemoveFile,
-      onRemoveVideo,
-      onOpenImage,
-      onOpenVideo,
-      onOpenFile
-    );
-  });
 </script>
 
 {#if images.length > 0 || videos.length > 0 || files.length > 0}
@@ -121,15 +46,15 @@
         testID={typeof testId === 'string' ? `${testId}-image-${image.id}` : null}
       >
         <svelte:element
-          this={typeof onOpenImage === 'function' ? 'button' : 'div'}
-          type={typeof onOpenImage === 'function' ? 'button' : null}
-          role={typeof onOpenImage === 'function' ? 'button' : null}
-          aria-label={typeof onOpenImage === 'function'
+          this={typeof onopenimage === 'function' ? 'button' : 'div'}
+          type={typeof onopenimage === 'function' ? 'button' : null}
+          role={typeof onopenimage === 'function' ? 'button' : null}
+          aria-label={typeof onopenimage === 'function'
             ? `Open ${image.filename ?? 'image'}`
             : null}
           class="thumb"
-          class:openable={typeof onOpenImage === 'function'}
-          onclick={typeof onOpenImage === 'function' ? () => onOpenImage(image) : null}
+          class:openable={typeof onopenimage === 'function'}
+          onclick={typeof onopenimage === 'function' ? () => onopenimage(image) : null}
           use:tooltip={{
             text: typeof imageTooltip === 'function' ? imageTooltip(image) : '',
             position: 'top'
@@ -137,14 +62,14 @@
         >
           <Img src={image.thumbnailData} alt={image.filename ?? 'Uploaded image'} fallback="" />
         </svelte:element>
-        {#if typeof onRemoveImage === 'function'}
+        {#if typeof onremoveimage === 'function'}
           <div class="remove-wrap">
             <Button
               variant="secondary"
               iconOnly={true}
               ariaLabel="Remove image"
               testId={testId && `${testId}-remove-image-${image.id}`}
-              onclick={() => onRemoveImage(image.id)}
+              onclick={() => onremoveimage(image.id)}
             >
               {#snippet icon()}
                 {#if removeIcon}
@@ -172,15 +97,15 @@
         testID={typeof testId === 'string' ? `${testId}-video-${video.id}` : null}
       >
         <svelte:element
-          this={typeof onOpenVideo === 'function' ? 'button' : 'div'}
-          type={typeof onOpenVideo === 'function' ? 'button' : null}
-          role={typeof onOpenVideo === 'function' ? 'button' : null}
-          aria-label={typeof onOpenVideo === 'function'
+          this={typeof onopenvideo === 'function' ? 'button' : 'div'}
+          type={typeof onopenvideo === 'function' ? 'button' : null}
+          role={typeof onopenvideo === 'function' ? 'button' : null}
+          aria-label={typeof onopenvideo === 'function'
             ? `Play ${video.filename ?? 'video'}`
             : null}
           class="thumb video-tile"
-          class:openable={typeof onOpenVideo === 'function'}
-          onclick={typeof onOpenVideo === 'function' ? () => onOpenVideo(video) : null}
+          class:openable={typeof onopenvideo === 'function'}
+          onclick={typeof onopenvideo === 'function' ? () => onopenvideo(video) : null}
           use:tooltip={{
             text: typeof videoTooltip === 'function' ? videoTooltip(video) : '',
             position: 'top'
@@ -195,14 +120,14 @@
             </svg>
           </span>
         </svelte:element>
-        {#if typeof onRemoveVideo === 'function'}
+        {#if typeof onremovevideo === 'function'}
           <div class="remove-wrap">
             <Button
               variant="secondary"
               iconOnly={true}
               ariaLabel="Remove video"
               testId={testId && `${testId}-remove-video-${video.id}`}
-              onclick={() => onRemoveVideo(video.id)}
+              onclick={() => onremovevideo(video.id)}
             >
               {#snippet icon()}
                 {#if removeIcon}
@@ -230,13 +155,13 @@
         testID={typeof testId === 'string' ? `${testId}-file-${file.id}` : null}
       >
         <svelte:element
-          this={typeof onOpenFile === 'function' ? 'button' : 'div'}
-          type={typeof onOpenFile === 'function' ? 'button' : null}
-          role={typeof onOpenFile === 'function' ? 'button' : null}
-          aria-label={typeof onOpenFile === 'function' ? `Open ${file.filename}` : null}
+          this={typeof onopenfile === 'function' ? 'button' : 'div'}
+          type={typeof onopenfile === 'function' ? 'button' : null}
+          role={typeof onopenfile === 'function' ? 'button' : null}
+          aria-label={typeof onopenfile === 'function' ? `Open ${file.filename}` : null}
           class="thumb file-tile"
-          class:openable={typeof onOpenFile === 'function'}
-          onclick={typeof onOpenFile === 'function' ? () => onOpenFile(file) : null}
+          class:openable={typeof onopenfile === 'function'}
+          onclick={typeof onopenfile === 'function' ? () => onopenfile(file) : null}
         >
           {#if fileIcon}
             {@render fileIcon()}
@@ -260,14 +185,14 @@
             </span>
           </div>
         </svelte:element>
-        {#if typeof onRemoveFile === 'function'}
+        {#if typeof onremovefile === 'function'}
           <div class="remove-wrap">
             <Button
               variant="secondary"
               iconOnly={true}
               ariaLabel="Remove file"
               testId={testId && `${testId}-remove-file-${file.id}`}
-              onclick={() => onRemoveFile(file.id)}
+              onclick={() => onremovefile(file.id)}
             >
               {#snippet icon()}
                 {#if removeIcon}

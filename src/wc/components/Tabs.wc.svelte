@@ -14,9 +14,7 @@
       activeKey: { type: 'String', attribute: 'active-key' },
       orientation: { type: 'String', attribute: 'orientation' },
       tab: { type: 'Object' },
-      onkeychange: { type: 'Object' },
-      onChange: { type: 'Object' },
-      onKeyChange: { type: 'Object' }
+      onkeychange: { type: 'Object' }
     }
   }}
 />

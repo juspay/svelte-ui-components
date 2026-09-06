@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import type { ThemeSwitcherOption, ThemeSwitcherProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { getStorageItem, setStorageItem } from '$lib/utils';
   import sunSvg from '$lib/assets/sun.svg?raw';
   import moonSvg from '$lib/assets/moon.svg?raw';
@@ -31,19 +30,8 @@
     storageKey = 'theme-preference',
     testId,
     classes,
-    onchange: onchangeProp,
-    onChange
+    onchange
   }: ThemeSwitcherProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('ThemeSwitcher', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange);
-  });
 
   let currentValue: string = $state(value ?? 'system');
   let systemPreference: string = $state('light');

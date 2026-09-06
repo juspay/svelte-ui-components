@@ -565,51 +565,11 @@ export type OptionalTableProperties = {
 
 export type TableEventProperties = {
   onrowclick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
-  /** @deprecated Use `onrowclick` instead; both work until 4.0.0. */
-  onRowClick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
   onsort?: (columnIndex: number, direction: SortDirection) => void;
-  /** @deprecated Use `onsort` instead; both work until 4.0.0. */
-  onSort?: (columnIndex: number, direction: SortDirection) => void;
-  /**
-   * C2-2: Callback invoked when a cell value changes via an editable element
-   * inside the consumer's `cell` snippet (e.g. an `<Input>` or `<Select>`).
-   *
-   * **How to wire it**: Svelte 5 snippets execute in the consumer's scope, so
-   * `onCellChange` is NOT forwarded by Table — you must close over your own
-   * handler directly inside the snippet:
-   *
-   * ```svelte
-   * <script>
-   *   let rows = $state(myData);
-   *   const handleCellChange = (rowIndex, colIndex, newValue) => {
-   *     rows[rowIndex][colIndex] = newValue;
-   *   };
-   * </script>
-   *
-   * <Table tableData={rows}>
-   *   {#snippet cell(value, rowIndex, colIndex)}
-   *     <Input
-   *       value={String(value ?? '')}
-   *       onInput={(newValue) => handleCellChange(rowIndex, colIndex, newValue)}
-   *     />
-   *   {/snippet}
-   * </Table>
-   * ```
-   *
-   * Table never mutates `tableData`; the consumer owns the source-of-truth
-   * array. Pass `onCellChange` as a top-level prop if you want Table to expose
-   * this handler to parent components via the standard props channel — it does
-   * not change the wiring inside the snippet.
-   */
-  oncellchange?: (rowIndex: number, colIndex: number, newValue: JSONValue) => void;
-  /** @deprecated Use `oncellchange` instead; both work until 4.0.0. */
-  onCellChange?: (rowIndex: number, colIndex: number, newValue: JSONValue) => void;
   /**
    * C2-3: When provided, the built-in client-side filtering is disabled and
    * this callback is called on every search input change instead, letting the
    * server decide what rows to show.
    */
   onsearchchange?: (searchTerm: string) => void;
-  /** @deprecated Use `onsearchchange` instead; both work until 4.0.0. */
-  onSearchChange?: (searchTerm: string) => void;
 };

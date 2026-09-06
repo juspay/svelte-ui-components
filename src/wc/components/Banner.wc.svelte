@@ -9,20 +9,19 @@
       visible: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      role: { type: 'String' },
+      bannerRole: { type: 'String', attribute: 'role' },
       onclick: { type: 'Object' },
       ondismiss: { type: 'Object' },
       icon: { type: 'Object' },
       rightContent: { type: 'Object' },
-      dismissIcon: { type: 'Object' },
-      onDismiss: { type: 'Object' }
+      dismissIcon: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import Banner from '$lib/Banner/Banner.svelte';
-  let props = $props();
+  let { bannerRole, ...props } = $props();
 </script>
 
 <!--
@@ -34,7 +33,7 @@
   `$$props` binding that is not in scope there, and the element renders nothing
   at all. `title` keeps no property branch: it is host-reserved, never declared.
 -->
-<Banner {...props}>
+<Banner {...props} role={bannerRole}>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}

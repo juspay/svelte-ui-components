@@ -5,25 +5,8 @@
   import Pill from '../Pill/Pill.svelte';
   import { computeMenuDropdownPosition } from '../Menu/dropdownPosition';
   import type { ToolCallChip, ToolCallLogProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
-  let {
-    chips,
-    onchipclick: onchipclickProp,
-    onChipClick,
-    testId,
-    classes
-  }: ToolCallLogProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchipclick = $derived(
-    resolveDeprecatedProp('ToolCallLog', 'onChipClick', 'onchipclick', onChipClick, onchipclickProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchipclick);
-  });
+  let { chips, onchipclick, testId, classes }: ToolCallLogProperties = $props();
 
   // Exactly one popover open at a time, component-local.
   let openIndex = $state<number | null>(null);

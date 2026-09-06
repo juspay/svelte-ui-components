@@ -13,8 +13,7 @@
       previousIcon: { type: 'Object' },
       nextIcon: { type: 'Object' },
       classes: { type: 'String' },
-      onpagechange: { type: 'Object' },
-      onPageChange: { type: 'Object' }
+      onpagechange: { type: 'Object' }
     }
   }}
 />

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { StepperProperties, StepStatus } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Step from './Step.svelte';
 
   let {
@@ -11,46 +10,8 @@
     testId,
     suppressRoleAndTabindex,
     suppressContainerTestId,
-    onstepclick,
-    onStepClick,
-    onhandleStepClick: onhandleStepClickProp,
-    onHandleStepClick,
     onhandlestepclick
   }: StepperProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onhandleStepClick = $derived(
-    resolveDeprecatedProp(
-      'Stepper',
-      'onstepclick',
-      'onhandlestepclick',
-      onstepclick,
-      resolveDeprecatedProp(
-        'Stepper',
-        'onStepClick',
-        'onhandlestepclick',
-        onStepClick,
-        resolveDeprecatedProp(
-          'Stepper',
-          'onhandleStepClick',
-          'onhandlestepclick',
-          onhandleStepClickProp,
-          resolveDeprecatedProp(
-            'Stepper',
-            'onHandleStepClick',
-            'onhandlestepclick',
-            onHandleStepClick,
-            onhandlestepclick
-          )
-        )
-      )
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onhandleStepClick);
-  });
 
   const resolveStatus = (stepIndex: number, explicitStatus: StepStatus | null): StepStatus => {
     if (explicitStatus !== null) {
@@ -90,7 +51,7 @@
         : ''} {effectiveStatus === 'completed' ? 'completed-step' : ''}"
     >
       <Step
-        onclick={onhandleStepClick}
+        onclick={onhandlestepclick}
         label={currentStep.label}
         icon={currentStep.icon}
         stepIndex={stepIndex + 1}

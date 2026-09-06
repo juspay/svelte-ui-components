@@ -67,21 +67,7 @@ export type AreaChartEventProperties = {
       point: AreaChartDataPoint;
     } | null
   ) => void;
-  /** @deprecated Use `onpointhover` instead; both work until 4.0.0. */
-  onPointHover?: (
-    event: {
-      seriesIndex: number;
-      pointIndex: number;
-      point: AreaChartDataPoint;
-    } | null
-  ) => void;
   onpointclick?: (event: {
-    seriesIndex: number;
-    pointIndex: number;
-    point: AreaChartDataPoint;
-  }) => void;
-  /** @deprecated Use `onpointclick` instead; both work until 4.0.0. */
-  onPointClick?: (event: {
     seriesIndex: number;
     pointIndex: number;
     point: AreaChartDataPoint;

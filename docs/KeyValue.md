@@ -51,14 +51,15 @@ By default (`hideEmpty`), items whose value is `null`, `undefined`, or an empty/
 
 ```svelte
 <!-- The "Notes" row is hidden -->
-<KeyValue items={[{ label: 'Notes', value: '' }, { label: 'Owner', value: 'Neha' }]} />
+<KeyValue
+  items={[
+    { label: 'Notes', value: '' },
+    { label: 'Owner', value: 'Neha' }
+  ]}
+/>
 
 <!-- The "Notes" row renders as "N/A" -->
-<KeyValue
-  items={[{ label: 'Notes', value: '' }]}
-  hideEmpty={false}
-  emptyText="N/A"
-/>
+<KeyValue items={[{ label: 'Notes', value: '' }]} hideEmpty={false} emptyText="N/A" />
 ```
 
 ### Custom value rendering
@@ -107,49 +108,49 @@ Define a class that overrides the KeyValue CSS variables and pass it via `classe
 
 ## Props
 
-| Prop         | Type                                | Required | Default      | Description                                                                                                       |
-| ------------ | ----------------------------------- | -------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| items        | `KeyValueItem[]`                    | Yes      | `-`          | The label/value pairs to render. Each item is `{ label, value?, testId? }`.                                       |
-| columns      | `number`                            | No       | `2`          | Number of columns the pairs flow across (row-major). Collapses to one column on narrow screens.                   |
-| layout       | `'vertical' \| 'horizontal'`        | No       | `'vertical'` | `'vertical'` stacks the value under the label; `'horizontal'` places them side-by-side.                           |
-| size         | `'sm' \| 'md' \| 'lg'`              | No       | `'md'`       | Typography preset scaling label/value font sizes: `sm` 14/12px, `md` 16/14px, `lg` 18/16px (value 2px below label). |
-| hideEmpty    | `boolean`                           | No       | `true`       | When `true`, items with a `null`/`undefined`/empty value are omitted.                                             |
-| emptyText    | `string`                            | No       | `'—'`        | Placeholder shown for empty values when `hideEmpty` is `false`.                                                   |
-| valueSnippet | `Snippet<[KeyValueItem, number]>`   | No       | `-`          | Custom renderer for the value cell, receiving `(item, index)`. Falls back to plain text.                          |
-| labelSnippet | `Snippet<[KeyValueItem, number]>`   | No       | `-`          | Custom renderer for the label cell, receiving `(item, index)`. Falls back to plain text.                          |
-| testId       | `string`                            | No       | `-`          | Value for the `data-pw` attribute on the root grid, used for end-to-end testing selectors.                        |
-| classes      | `string`                            | No       | `-`          | CSS class string applied to the root grid, for theming via class-scoped CSS variable overrides.                   |
+| Prop         | Type                              | Required | Default      | Description                                                                                                         |
+| ------------ | --------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------- |
+| items        | `KeyValueItem[]`                  | Yes      | `-`          | The label/value pairs to render. Each item is `{ label, value?, testId? }`.                                         |
+| columns      | `number`                          | No       | `2`          | Number of columns the pairs flow across (row-major). Collapses to one column on narrow screens.                     |
+| layout       | `'vertical' \| 'horizontal'`      | No       | `'vertical'` | `'vertical'` stacks the value under the label; `'horizontal'` places them side-by-side.                             |
+| size         | `'sm' \| 'md' \| 'lg'`            | No       | `'md'`       | Typography preset scaling label/value font sizes: `sm` 14/12px, `md` 16/14px, `lg` 18/16px (value 2px below label). |
+| hideEmpty    | `boolean`                         | No       | `true`       | When `true`, items with a `null`/`undefined`/empty value are omitted.                                               |
+| emptyText    | `string`                          | No       | `'—'`        | Placeholder shown for empty values when `hideEmpty` is `false`.                                                     |
+| valueSnippet | `Snippet<[KeyValueItem, number]>` | No       | `-`          | Custom renderer for the value cell, receiving `(item, index)`. Falls back to plain text.                            |
+| labelSnippet | `Snippet<[KeyValueItem, number]>` | No       | `-`          | Custom renderer for the label cell, receiving `(item, index)`. Falls back to plain text.                            |
+| testId       | `string`                          | No       | `-`          | Value for the `data-pw` attribute on the root grid, used for end-to-end testing selectors.                          |
+| classes      | `string`                          | No       | `-`          | CSS class string applied to the root grid, for theming via class-scoped CSS variable overrides.                     |
 
 ### KeyValueItem
 
-| Field  | Type                          | Required | Description                                                                          |
-| ------ | ----------------------------- | -------- | ------------------------------------------------------------------------------------ |
-| label  | `string`                      | Yes      | The field label (the "key").                                                         |
-| value  | `string \| number \| null`    | No       | The field value. Empty values are skipped when `hideEmpty` is `true`.                |
-| testId | `string`                      | No       | Per-item test id, emitted as `data-pw` on the item wrapper.                          |
+| Field  | Type                       | Required | Description                                                           |
+| ------ | -------------------------- | -------- | --------------------------------------------------------------------- |
+| label  | `string`                   | Yes      | The field label (the "key").                                          |
+| value  | `string \| number \| null` | No       | The field value. Empty values are skipped when `hideEmpty` is `true`. |
+| testId | `string`                   | No       | Per-item test id, emitted as `data-pw` on the item wrapper.           |
 
 ## Snippets
 
-| Snippet      | Args                    | Description                                            |
-| ------------ | ----------------------- | ------------------------------------------------------ |
-| valueSnippet | `(item, index)`         | Replaces the default text rendering of the value cell. |
-| labelSnippet | `(item, index)`         | Replaces the default text rendering of the label cell. |
+| Snippet      | Args            | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| valueSnippet | `(item, index)` | Replaces the default text rendering of the value cell. |
+| labelSnippet | `(item, index)` | Replaces the default text rendering of the label cell. |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                        | Default   | CSS Property        | Description                                          |
-| ------------------------------- | --------- | ------------------- | ---------------------------------------------------- |
-| `--keyvalue-column-gap`         | `32px`    | column-gap          | Horizontal gap between columns.                      |
-| `--keyvalue-row-gap`            | `16px`    | row-gap             | Vertical gap between rows.                           |
-| `--keyvalue-pair-gap`           | `4px`     | gap                 | Gap between a label and its value within an item.    |
-| `--keyvalue-label-color`        | `#1a1a1a` | color               | Label text color.                                    |
-| `--keyvalue-label-size`         | size-based | font-size          | Label font size. Defaults to the `size` preset (14/16/18px) unless set.  |
-| `--keyvalue-label-weight`       | `600`     | font-weight         | Label font weight.                                   |
-| `--keyvalue-label-line-height`  | `1.4`     | line-height         | Label line height.                                   |
-| `--keyvalue-label-width`        | `140px`   | flex-basis          | Label column width in `horizontal` layout.           |
-| `--keyvalue-value-color`        | `#555`    | color               | Value text color.                                    |
-| `--keyvalue-value-size`         | size-based | font-size          | Value font size. Defaults to the `size` preset (12/14/16px) unless set.  |
-| `--keyvalue-value-weight`       | `400`     | font-weight         | Value font weight.                                   |
-| `--keyvalue-value-line-height`  | `1.4`     | line-height         | Value line height.                                   |
+| Variable                       | Default    | CSS Property | Description                                                             |
+| ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------- |
+| `--keyvalue-column-gap`        | `32px`     | column-gap   | Horizontal gap between columns.                                         |
+| `--keyvalue-row-gap`           | `16px`     | row-gap      | Vertical gap between rows.                                              |
+| `--keyvalue-pair-gap`          | `4px`      | gap          | Gap between a label and its value within an item.                       |
+| `--keyvalue-label-color`       | `#1a1a1a`  | color        | Label text color.                                                       |
+| `--keyvalue-label-size`        | size-based | font-size    | Label font size. Defaults to the `size` preset (14/16/18px) unless set. |
+| `--keyvalue-label-weight`      | `600`      | font-weight  | Label font weight.                                                      |
+| `--keyvalue-label-line-height` | `1.4`      | line-height  | Label line height.                                                      |
+| `--keyvalue-label-width`       | `140px`    | flex-basis   | Label column width in `horizontal` layout.                              |
+| `--keyvalue-value-color`       | `#555`     | color        | Value text color.                                                       |
+| `--keyvalue-value-size`        | size-based | font-size    | Value font size. Defaults to the `size` preset (12/14/16px) unless set. |
+| `--keyvalue-value-weight`      | `400`      | font-weight  | Value font weight.                                                      |
+| `--keyvalue-value-line-height` | `1.4`      | line-height  | Value line height.                                                      |

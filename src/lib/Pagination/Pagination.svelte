@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { PaginationProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     totalPages,
@@ -8,29 +7,13 @@
     siblingCount = 1,
     disabled = false,
     testId,
-    onchange: onchangeProp,
-    onChange,
+    onchange,
     classes,
     hasMore = false,
     prevButtonTestId,
     nextButtonTestId,
-    onLoadMore: onLoadMoreProp,
     onloadmore
   }: PaginationProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('Pagination', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-
-  const onLoadMore = $derived(
-    resolveDeprecatedProp('Pagination', 'onLoadMore', 'onloadmore', onLoadMoreProp, onloadmore)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange, onLoadMore);
-  });
 
   function generatePages(total: number, current: number, siblings: number): (number | '...')[] {
     const pages: (number | '...')[] = [];
@@ -79,7 +62,7 @@
       return;
     }
     currentPage = currentPage + 1;
-    onLoadMore?.();
+    onloadmore?.();
   }
 </script>
 

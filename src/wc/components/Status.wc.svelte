@@ -10,11 +10,9 @@
       statusTextTag: { type: 'String', reflect: true, attribute: 'status-text-tag' },
       buttonProperties: { type: 'Object' },
       classes: { type: 'String' },
-      onbuttonClick: { type: 'Object' },
       icon: { type: 'Object' },
       descriptionSnippet: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      onButtonClick: { type: 'Object' },
       onbuttonclick: { type: 'Object' }
     }
   }}

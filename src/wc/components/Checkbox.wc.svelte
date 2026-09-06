@@ -11,20 +11,19 @@
       checkedIcon: { type: 'Object' },
       indeterminateIcon: { type: 'Object' },
       classes: { type: 'String' },
-      ariaLabel: { type: 'String', attribute: 'aria-label' },
+      checkboxAriaLabel: { type: 'String', attribute: 'aria-label' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
-      onclick: { type: 'Object' },
-      onClick: { type: 'Object' }
+      onclick: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import Checkbox from '$lib/Checkbox/Checkbox.svelte';
-  let props = $props();
+  let { checkboxAriaLabel, ...props } = $props();
 </script>
 
-<Checkbox {...props}>
+<Checkbox {...props} ariaLabel={checkboxAriaLabel}>
   {#snippet checkedIcon()}
     <slot name="checked-icon"></slot>
   {/snippet}

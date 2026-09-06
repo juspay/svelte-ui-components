@@ -2,7 +2,6 @@
   import { untrack } from 'svelte';
   import { fly } from 'svelte/transition';
   import type { ToastDirection, ToastProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { FlyAnimationConfig } from '$lib/types';
   import Img from '../Img/Img.svelte';
 
@@ -23,21 +22,10 @@
     messageTestId,
     subTextTestId,
     closeIconTestId,
-    onToastHide: onToastHideProp,
     ontoasthide,
     bottomContent,
     classes
   }: ToastProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onToastHide = $derived(
-    resolveDeprecatedProp('Toast', 'onToastHide', 'ontoasthide', onToastHideProp, ontoasthide)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onToastHide);
-  });
 
   const animationConfig: FlyAnimationConfig = $derived(getAnimationConfig(overlapPage, direction));
 
@@ -52,7 +40,7 @@
   }
 
   function handleAnimationEnd() {
-    onToastHide?.();
+    ontoasthide?.();
   }
 
   function getAnimationConfig(

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { CheckboxProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import minusSvg from '$lib/assets/minus.svg?raw';
 
@@ -12,22 +11,11 @@
     testId,
     checkedIcon,
     indeterminateIcon,
-    onclick: onclickProp,
-    onClick,
+    onclick,
     classes,
     ariaControls,
     ariaLabel
   }: CheckboxProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclick = $derived(
-    resolveDeprecatedProp('Checkbox', 'onClick', 'onclick', onClick, onclickProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onclick);
-  });
 
   function handleClick(): void {
     if (disabled) {

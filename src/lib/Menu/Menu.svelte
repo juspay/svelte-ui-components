@@ -4,7 +4,6 @@
   import Img from '../Img/Img.svelte';
   import { computeMenuDropdownPosition } from './dropdownPosition';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     items,
@@ -12,12 +11,9 @@
     testId,
     trigger,
     interactiveTrigger = false,
-    onselect: onselectProp,
-    onSelect,
-    onopen: onopenProp,
-    onOpen,
-    onclose: oncloseProp,
-    onClose,
+    onselect,
+    onopen,
+    onclose,
     classes,
     transformSvg,
     selectedValue = null,
@@ -28,20 +24,6 @@
     placement = 'bottom-left',
     usePortal = false
   }: MenuProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclose = $derived(
-    resolveDeprecatedProp('Menu', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-  const onopen = $derived(resolveDeprecatedProp('Menu', 'onOpen', 'onopen', onOpen, onopenProp));
-  const onselect = $derived(
-    resolveDeprecatedProp('Menu', 'onSelect', 'onselect', onSelect, onselectProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onclose, onopen, onselect);
-  });
 
   let itemRole = $derived(menuRole === 'listbox' ? 'option' : 'menuitem');
 

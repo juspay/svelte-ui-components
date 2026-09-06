@@ -3,7 +3,7 @@
     tag: 'sui-chat-message',
     shadow: 'open',
     props: {
-      role: { type: 'String', reflect: true },
+      chatMessageRole: { type: 'String', reflect: true, attribute: 'role' },
       content: { type: 'String' },
       html: { type: 'String' },
       markdown: { type: 'String' },
@@ -26,17 +26,14 @@
       classes: { type: 'String' },
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' },
-      oncopy: { type: 'Object' },
-      onRetry: { type: 'Object' },
-      onFeedback: { type: 'Object' },
-      onCopy: { type: 'Object' }
+      oncopy: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  let props = $props();
+  let { chatMessageRole, ...props } = $props();
 </script>
 
-<ChatMessage {...props} />
+<ChatMessage {...props} role={chatMessageRole} />

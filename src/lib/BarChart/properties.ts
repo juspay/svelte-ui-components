@@ -197,8 +197,6 @@ export type OptionalBarChartProperties = {
    * The `type` field on the handle is always `'bar-chart'`.
    */
   onchartready?: (api: ChartHighlightAPI) => void;
-  /** @deprecated Use `onchartready` instead; both work until 4.0.0. */
-  onChartReady?: (api: ChartHighlightAPI) => void;
   /**
    * Declarative complement to `onChartReady`. When set to a non-null number the
    * bar at that zero-based category index is highlighted (full opacity) and the
@@ -244,9 +242,5 @@ export type OptionalBarChartProperties = {
 
 export type BarChartEventProperties = {
   onbarclick?: (event: { index: number; dataPoint: BarChartDataPoint }) => void;
-  /** @deprecated Use `onbarclick` instead; both work until 4.0.0. */
-  onBarClick?: (event: { index: number; dataPoint: BarChartDataPoint }) => void;
   onbarhover?: (event: { index: number; dataPoint: BarChartDataPoint } | null) => void;
-  /** @deprecated Use `onbarhover` instead; both work until 4.0.0. */
-  onBarHover?: (event: { index: number; dataPoint: BarChartDataPoint } | null) => void;
 };

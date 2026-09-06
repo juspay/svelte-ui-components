@@ -9,8 +9,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       oncopy: { type: 'Object' },
-      copyIcon: { type: 'Object' },
-      onCopy: { type: 'Object' }
+      copyIcon: { type: 'Object' }
     }
   }}
 />

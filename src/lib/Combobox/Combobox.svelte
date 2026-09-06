@@ -3,7 +3,6 @@
   import Input from '../Input/Input.svelte';
   import Pill from '../Pill/Pill.svelte';
   import type { ComboboxItem, ComboboxProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   function defaultFilter(item: ComboboxItem, query: string): boolean {
     return item.label.toLowerCase().includes(query.toLowerCase());
@@ -41,55 +40,18 @@
     createLabel = (query: string) => `Create "${query}"`,
     action,
     actionIcon,
-    onselect: onselectProp,
-    onSelect,
-    oninput: oninputProp,
-    onInput,
-    onopen: onopenProp,
-    onOpen,
-    onclose: oncloseProp,
-    onClose,
+    onselect,
+    oninput,
+    onopen,
+    onclose,
     onkeydown,
     onfocus,
     onblur,
-    onchange: onchangeProp,
-    onChange,
-    onadd: onaddProp,
-    onAdd,
-    onremove: onremoveProp,
-    onRemove,
-    oncreate: oncreateProp,
-    onCreate
+    onchange,
+    onadd,
+    onremove,
+    oncreate
   }: ComboboxProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onadd = $derived(resolveDeprecatedProp('Combobox', 'onAdd', 'onadd', onAdd, onaddProp));
-  const onchange = $derived(
-    resolveDeprecatedProp('Combobox', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const onclose = $derived(
-    resolveDeprecatedProp('Combobox', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-  const oncreate = $derived(
-    resolveDeprecatedProp('Combobox', 'onCreate', 'oncreate', onCreate, oncreateProp)
-  );
-  const oninput = $derived(
-    resolveDeprecatedProp('Combobox', 'onInput', 'oninput', onInput, oninputProp)
-  );
-  const onopen = $derived(
-    resolveDeprecatedProp('Combobox', 'onOpen', 'onopen', onOpen, onopenProp)
-  );
-  const onremove = $derived(
-    resolveDeprecatedProp('Combobox', 'onRemove', 'onremove', onRemove, onremoveProp)
-  );
-  const onselect = $derived(
-    resolveDeprecatedProp('Combobox', 'onSelect', 'onselect', onSelect, onselectProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onadd, onchange, onclose, oncreate, oninput, onopen, onremove, onselect);
-  });
 
   let containerEl: HTMLDivElement | null = $state(null);
   let inputRef: ReturnType<typeof Input> | null = $state(null);
@@ -286,7 +248,7 @@
   function handleInput(val: string, event: Event) {
     inputValue = val;
     oninput?.(val);
-    inputEventProperties?.onInput?.(val, event);
+    inputEventProperties?.oninput?.(val, event);
     if (!open) {
       openDropdown();
     }
@@ -350,12 +312,12 @@
   function handleFocus(event: FocusEvent) {
     openDropdown();
     onfocus?.(event);
-    inputEventProperties?.onFocus?.(event);
+    inputEventProperties?.onfocus?.(event);
   }
 
   function handleBlur(event: FocusEvent) {
     onblur?.(event);
-    inputEventProperties?.onBlur?.(event);
+    inputEventProperties?.onblur?.(event);
   }
 
   function handleControlClick() {

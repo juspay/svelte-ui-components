@@ -3,7 +3,6 @@
   import Loader from '$lib/Loader/Loader.svelte';
   import Img from '$lib/Img/Img.svelte';
   import type { ListItemProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     leftImageUrl,
@@ -26,20 +25,10 @@
     centerContent,
     rightContent,
     bottomContent,
-    onleftImageClick: onleftImageClickProp,
-    onLeftImageClick,
     onleftimageclick,
-    onrightImageClick: onrightImageClickProp,
-    onRightImageClick,
     onrightimageclick,
-    oncenterTextClick: oncenterTextClickProp,
-    onCenterTextClick,
     oncentertextclick,
-    onitemClick: onitemClickProp,
-    onItemClick,
     onitemclick,
-    ontopSectionClick: ontopSectionClickProp,
-    onTopSectionClick,
     ontopsectionclick,
     onkeydown,
     classes,
@@ -49,106 +38,24 @@
     id
   }: ListItemProperties = $props();
 
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const oncenterTextClick = $derived(
-    resolveDeprecatedProp(
-      'ListItem',
-      'oncenterTextClick',
-      'oncentertextclick',
-      oncenterTextClickProp,
-      resolveDeprecatedProp(
-        'ListItem',
-        'onCenterTextClick',
-        'oncentertextclick',
-        onCenterTextClick,
-        oncentertextclick
-      )
-    )
-  );
-  const onitemClick = $derived(
-    resolveDeprecatedProp(
-      'ListItem',
-      'onitemClick',
-      'onitemclick',
-      onitemClickProp,
-      resolveDeprecatedProp('ListItem', 'onItemClick', 'onitemclick', onItemClick, onitemclick)
-    )
-  );
-  const onleftImageClick = $derived(
-    resolveDeprecatedProp(
-      'ListItem',
-      'onleftImageClick',
-      'onleftimageclick',
-      onleftImageClickProp,
-      resolveDeprecatedProp(
-        'ListItem',
-        'onLeftImageClick',
-        'onleftimageclick',
-        onLeftImageClick,
-        onleftimageclick
-      )
-    )
-  );
-  const onrightImageClick = $derived(
-    resolveDeprecatedProp(
-      'ListItem',
-      'onrightImageClick',
-      'onrightimageclick',
-      onrightImageClickProp,
-      resolveDeprecatedProp(
-        'ListItem',
-        'onRightImageClick',
-        'onrightimageclick',
-        onRightImageClick,
-        onrightimageclick
-      )
-    )
-  );
-  const ontopSectionClick = $derived(
-    resolveDeprecatedProp(
-      'ListItem',
-      'ontopSectionClick',
-      'ontopsectionclick',
-      ontopSectionClickProp,
-      resolveDeprecatedProp(
-        'ListItem',
-        'onTopSectionClick',
-        'ontopsectionclick',
-        onTopSectionClick,
-        ontopsectionclick
-      )
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      oncenterTextClick,
-      onitemClick,
-      onleftImageClick,
-      onrightImageClick,
-      ontopSectionClick
-    );
-  });
-
   function handleLeftImageClick(event: MouseEvent): void {
-    onleftImageClick?.(event);
+    onleftimageclick?.(event);
   }
 
   function handleRightImageClick(event: MouseEvent): void {
-    onrightImageClick?.(event);
+    onrightimageclick?.(event);
   }
 
   function handleCenterTextClick(event: MouseEvent): void {
-    oncenterTextClick?.(event);
+    oncentertextclick?.(event);
   }
 
   function handleItemClick(event: MouseEvent): void {
-    onitemClick?.(event);
+    onitemclick?.(event);
   }
 
   function handleTopSectionClick(event: MouseEvent): void {
-    ontopSectionClick?.(event);
+    ontopsectionclick?.(event);
   }
 </script>
 

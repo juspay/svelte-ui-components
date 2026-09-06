@@ -8,7 +8,6 @@
       expanded: { type: 'Boolean', reflect: true },
       variant: { type: 'String', reflect: true },
       showElapsed: { type: 'Boolean', attribute: 'show-elapsed' },
-      onToggle: { type: 'Object' },
       avatar: { type: 'Object' },
       toggleIcon: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
@@ -26,8 +25,6 @@
       onrowselect: { type: 'Object' },
       onsettled: { type: 'Object' },
       collapseDelayMs: { type: 'Object', attribute: 'collapse-delay-ms' },
-      onRowSelect: { type: 'Object' },
-      onSettled: { type: 'Object' },
       ontoggle: { type: 'Object' }
     }
   }}

@@ -204,7 +204,6 @@ export const LEGACY_PAIRS: ReadonlyArray<LegacyPair> = [
   { component: 'Step', legacy: 'onClick', corrected: 'onclick' },
   { component: 'Table', legacy: 'onRowClick', corrected: 'onrowclick' },
   { component: 'Table', legacy: 'onSort', corrected: 'onsort' },
-  { component: 'Table', legacy: 'onCellChange', corrected: 'oncellchange' },
   { component: 'Table', legacy: 'onSearchChange', corrected: 'onsearchchange' },
   { component: 'Tabs', legacy: 'onChange', corrected: 'onchange' },
   { component: 'Tabs', legacy: 'onKeyChange', corrected: 'onkeychange' },

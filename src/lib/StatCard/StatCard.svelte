@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { StatCardProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
   import Tooltip from '../Tooltip/Tooltip.svelte';
   import CheckListItem from '../CheckListItem/CheckListItem.svelte';
@@ -22,25 +21,8 @@
     testId,
     classes,
     onclick,
-    onCheckboxChange: onCheckboxChangeProp,
     oncheckboxchange
   }: StatCardProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onCheckboxChange = $derived(
-    resolveDeprecatedProp(
-      'StatCard',
-      'onCheckboxChange',
-      'oncheckboxchange',
-      onCheckboxChangeProp,
-      oncheckboxchange
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onCheckboxChange);
-  });
 
   const isInteractive = $derived(typeof onclick === 'function');
 
@@ -85,7 +67,7 @@
   };
 
   const handleCheckboxChange = (checked: boolean): void => {
-    onCheckboxChange?.(checked);
+    oncheckboxchange?.(checked);
   };
 
   /**

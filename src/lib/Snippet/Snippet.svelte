@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SnippetProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Button from '../Button/Button.svelte';
   import copySvg from '$lib/assets/copy.svg?raw';
 
@@ -10,18 +9,9 @@
     showCopyButton = true,
     testId,
     copyIcon,
-    oncopy: oncopyProp,
-    onCopy,
+    oncopy,
     classes
   }: SnippetProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const oncopy = $derived(resolveDeprecatedProp('Snippet', 'onCopy', 'oncopy', onCopy, oncopyProp));
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(oncopy);
-  });
 
   let copied = $state(false);
 

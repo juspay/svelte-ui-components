@@ -9,7 +9,6 @@
       closeLabel: { type: 'String', attribute: 'close-label' },
       icon: { type: 'Object' },
       openIcon: { type: 'Object' },
-      children: { type: 'Object' },
       draggable: { type: 'Boolean', reflect: true },
       dragMode: { type: 'String', attribute: 'drag-mode' },
       dragX: { type: 'Number', attribute: 'drag-x' },
@@ -26,10 +25,7 @@
       classes: { type: 'String' },
       onopen: { type: 'Object' },
       onclose: { type: 'Object' },
-      ontoggle: { type: 'Object' },
-      onOpen: { type: 'Object' },
-      onClose: { type: 'Object' },
-      onToggle: { type: 'Object' }
+      ontoggle: { type: 'Object' }
     }
   }}
 />

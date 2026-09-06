@@ -30,11 +30,11 @@ A floating tooltip that appears on hover or focus of a trigger element. The tool
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet  | Type      | Description                                                                                                                                               |
-| -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children | `Snippet` | The trigger element(s) that the tooltip wraps. The tooltip appears when hovering or focusing this content.                                                |
+| Snippet  | Type      | Description                                                                                                                                                                                                       |
+| -------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| children | `Snippet` | The trigger element(s) that the tooltip wraps. The tooltip appears when hovering or focusing this content.                                                                                                        |
 | icon     | `Snippet` | Optional icon rendered in the trigger wrapper beside `children` — before it by default, after it when `iconPosition="trailing"`. No default glyph is provided — consumers supply their own SVG or icon component. |
-| content  | `Snippet` | Optional bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. Use for rich multi-line or interactive bubble content.   |
+| content  | `Snippet` | Optional bubble body. When provided, replaces the plain `text` string inside the tooltip bubble. Use for rich multi-line or interactive bubble content.                                                           |
 
 ## Events
 

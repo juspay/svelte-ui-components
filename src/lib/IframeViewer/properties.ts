@@ -42,6 +42,4 @@ export type IframeViewerEventProperties = {
    * `allowedOrigins` and whose source is the embedded iframe window.
    */
   onmessage?: (event: MessageEvent) => void;
-  /** @deprecated Use `onmessage` instead; both work until 4.0.0. */
-  onMessage?: (event: MessageEvent) => void;
 };

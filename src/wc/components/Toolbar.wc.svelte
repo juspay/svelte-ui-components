@@ -10,13 +10,11 @@
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       headingTestId: { type: 'String', attribute: 'heading-test-id' },
-      onbackClick: { type: 'Object' },
       onkeydown: { type: 'Object' },
       leftContent: { type: 'Object' },
       centerContent: { type: 'Object' },
       rightContent: { type: 'Object' },
       additionalContent: { type: 'Object' },
-      onBackClick: { type: 'Object' },
       onbackclick: { type: 'Object' }
     }
   }}

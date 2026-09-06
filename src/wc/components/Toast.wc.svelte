@@ -20,7 +20,6 @@
       subTextTestId: { type: 'String', attribute: 'sub-text-test-id' },
       closeIconTestId: { type: 'String', attribute: 'close-icon-test-id' },
       classes: { type: 'String' },
-      onToastHide: { type: 'Object' },
       bottomContent: { type: 'Object' },
       ontoasthide: { type: 'Object' }
     }

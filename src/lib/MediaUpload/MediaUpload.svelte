@@ -6,7 +6,6 @@
   import closeSvg from '$lib/assets/close.svg?raw';
   import fileSvg from '$lib/assets/file.svg?raw';
   import type { MediaUploadItem, MediaUploadProperties, MediaUploadRejection } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     label,
@@ -27,31 +26,12 @@
     fileIcon,
     errorMessages,
     files = $bindable([]),
-    onFilesChange: onFilesChangeProp,
     onchange,
-    onRemove: onRemoveProp,
     onremove,
-    onRejected: onRejectedProp,
     onerror,
     testId,
     classes
   }: MediaUploadProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onFilesChange = $derived(
-    resolveDeprecatedProp('MediaUpload', 'onFilesChange', 'onchange', onFilesChangeProp, onchange)
-  );
-  const onRemove = $derived(
-    resolveDeprecatedProp('MediaUpload', 'onRemove', 'onremove', onRemoveProp, onremove)
-  );
-  const onRejected = $derived(
-    resolveDeprecatedProp('MediaUpload', 'onRejected', 'onerror', onRejectedProp, onerror)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onFilesChange, onRemove, onRejected);
-  });
 
   let items: MediaUploadItem[] = $state([]);
   let error: string = $state('');
@@ -63,7 +43,7 @@
 
   function syncFiles(): void {
     files = items.map((item) => item.file);
-    onFilesChange?.(files);
+    onchange?.(files);
   }
 
   function formatSize(bytes: number): string {
@@ -157,7 +137,7 @@
 
     error = rejections.length > 0 ? buildError(rejections) : '';
     if (rejections.length > 0) {
-      onRejected?.(rejections);
+      onerror?.(rejections);
     }
     syncFiles();
   }
@@ -195,7 +175,7 @@
     error = '';
     syncFiles();
     if (typeof removed === 'object') {
-      onRemove?.(removed.file);
+      onremove?.(removed.file);
     }
   }
 </script>

@@ -11,8 +11,8 @@
       loaderType: { type: 'String', reflect: true, attribute: 'loader-type' },
       type: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
-      ariaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
-      ariaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
+      buttonAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
+      buttonAriaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
@@ -44,13 +44,13 @@
 
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
-  let props = $props();
+  let { buttonAriaExpanded, buttonAriaLabel, ...props } = $props();
 </script>
 
 <!-- A property-assigned icon wins; the slot is the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. `children` is
      no longer a declared prop, so the default slot is its only path. -->
-<Button {...props}>
+<Button {...props} ariaLabel={buttonAriaLabel} ariaExpanded={buttonAriaExpanded}>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}

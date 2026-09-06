@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { LineChartProperties, LineChartTooltipContext } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { ChartHighlightAPI } from '$lib/_chart/highlight';
   import { onMount } from 'svelte';
@@ -60,50 +59,12 @@
     hideLegendBelow = 360,
     tooltipPortal = false,
     highlightedIndex = null,
-    onChartReady: onChartReadyProp,
     onchartready,
-    onpointclick: onpointclickProp,
-    onPointClick,
-    onpointhover: onpointhoverProp,
-    onPointHover,
+    onpointclick,
+    onpointhover,
     testId,
     classes
   }: LineChartProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onpointclick = $derived(
-    resolveDeprecatedProp(
-      'LineChart',
-      'onPointClick',
-      'onpointclick',
-      onPointClick,
-      onpointclickProp
-    )
-  );
-  const onpointhover = $derived(
-    resolveDeprecatedProp(
-      'LineChart',
-      'onPointHover',
-      'onpointhover',
-      onPointHover,
-      onpointhoverProp
-    )
-  );
-
-  const onChartReady = $derived(
-    resolveDeprecatedProp(
-      'LineChart',
-      'onChartReady',
-      'onchartready',
-      onChartReadyProp,
-      onchartready
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onpointclick, onpointhover, onChartReady);
-  });
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -160,7 +121,7 @@
       }
     };
 
-    onChartReady?.(api);
+    onchartready?.(api);
   });
 
   // ── Layout ─────────────────────────────────────────────────────

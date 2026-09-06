@@ -1130,11 +1130,7 @@
   the <code>cell</code> snippet, which runs in consumer scope.
 </p>
 <div class="demo-row" style="max-width: 600px; flex-direction: column; gap: 8px;">
-  <Table
-    tableHeaders={['Name', 'Department']}
-    tableData={editableRows}
-    oncellchange={handleCellChange}
-  >
+  <Table tableHeaders={['Name', 'Department']} tableData={editableRows}>
     {#snippet cell(value, rowIndex, colIndex)}
       <!-- The snippet runs in consumer scope — handleCellChange is already in closure -->
       <input

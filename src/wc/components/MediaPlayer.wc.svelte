@@ -23,8 +23,7 @@
       classes: { type: 'String' },
       onplay: { type: 'Object' },
       onpause: { type: 'Object' },
-      onvolumechange: { type: 'Object' },
-      onVolumeChange: { type: 'Object' }
+      onvolumechange: { type: 'Object' }
     }
   }}
 />

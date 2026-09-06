@@ -14,7 +14,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       noResultsText: { type: 'String', attribute: 'no-results-text' },
-      ariaLabel: { type: 'String', attribute: 'aria-label' },
+      comboboxAriaLabel: { type: 'String', attribute: 'aria-label' },
       multiple: { type: 'Boolean', reflect: true },
       selected: { type: 'Array' },
       maxSelected: { type: 'Number', attribute: 'max-selected' },
@@ -46,15 +46,7 @@
       onchange: { type: 'Object' },
       onadd: { type: 'Object' },
       onremove: { type: 'Object' },
-      oncreate: { type: 'Object' },
-      onSelect: { type: 'Object' },
-      onInput: { type: 'Object' },
-      onOpen: { type: 'Object' },
-      onClose: { type: 'Object' },
-      onChange: { type: 'Object' },
-      onAdd: { type: 'Object' },
-      onRemove: { type: 'Object' },
-      onCreate: { type: 'Object' }
+      oncreate: { type: 'Object' }
     }
   }}
 />
@@ -66,6 +58,7 @@
   // Combobox reassigns all five of these; see ChipInput.wc.svelte for why a one-way spread
   // leaves the host element's properties stale.
   let {
+    comboboxAriaLabel,
     value = $bindable(''),
     inputValue = $bindable(''),
     open = $bindable(false),
@@ -75,4 +68,12 @@
   }: ComboboxProperties = $props();
 </script>
 
-<Combobox {...rest} bind:value bind:inputValue bind:open bind:highlightedIndex bind:selected />
+<Combobox
+  {...rest}
+  ariaLabel={comboboxAriaLabel}
+  bind:value
+  bind:inputValue
+  bind:open
+  bind:highlightedIndex
+  bind:selected
+/>

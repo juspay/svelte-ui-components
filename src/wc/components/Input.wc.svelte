@@ -21,23 +21,14 @@
       autoComplete: { type: 'String', attribute: 'auto-complete' },
       inputMode: { type: 'String', attribute: 'input-mode' },
       name: { type: 'String', reflect: true },
-      id: { type: 'String' },
-      ariaLabel: { type: 'String', attribute: 'aria-label' },
+      inputId: { type: 'String', attribute: 'id' },
+      inputAriaLabel: { type: 'String', attribute: 'aria-label' },
       textTransformers: { type: 'Object' },
       textViewPresentation: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onInput: { type: 'Object' },
-      onFocus: { type: 'Object' },
-      onFocusout: { type: 'Object' },
-      onPaste: { type: 'Object' },
-      onClick: { type: 'Object' },
-      onStateChange: { type: 'Object' },
-      onKeyDown: { type: 'Object' },
       leftIcon: { type: 'Object' },
       rightIcon: { type: 'Object' },
-      onLeftIconClick: { type: 'Object' },
-      onRightIconClick: { type: 'Object' },
       leftIconLabel: { type: 'String', attribute: 'left-icon-label' },
       rightIconLabel: { type: 'String', attribute: 'right-icon-label' },
       mandatory: { type: 'Boolean', reflect: true },
@@ -51,7 +42,6 @@
       spellcheck: { type: 'String', attribute: 'spellcheck' },
       min: { type: 'Number', attribute: 'min' },
       max: { type: 'Number', attribute: 'max' },
-      onBlur: { type: 'Object' },
       ariaAutocomplete: { type: 'String', attribute: 'aria-autocomplete' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
       ariaActivedescendant: { type: 'String', attribute: 'aria-activedescendant' },
@@ -77,7 +67,7 @@
 
 <script lang="ts">
   import Input from '$lib/Input/Input.svelte';
-  let props = $props();
+  let { inputAriaLabel, inputId, ...props } = $props();
 
   // Restores the tri-state the attribute string flattens: absent stays null so
   // the browser default is untouched, "false" is honoured, and a bare
@@ -100,4 +90,9 @@
   };
 </script>
 
-<Input {...props} spellcheck={asSpellcheck(props.spellcheck)} />
+<Input
+  {...props}
+  id={inputId}
+  ariaLabel={inputAriaLabel}
+  spellcheck={asSpellcheck(props.spellcheck)}
+/>

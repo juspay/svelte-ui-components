@@ -50,7 +50,7 @@
 
   function handleStateChange(state: ValidationState): void {
     validationState = state;
-    inputEventProperties?.onStateChange?.(state);
+    inputEventProperties?.onstatechange?.(state);
   }
 
   export function focus() {

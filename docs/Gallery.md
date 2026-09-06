@@ -68,8 +68,8 @@ that action; omit either (or both) to hide it, no separate `show*` prop needed.
 | oneditclick   | `(index: number, event: MouseEvent) => void` | Fires when an item's edit action is clicked. Presence shows the action.       |
 | ondeleteclick | `(index: number, event: MouseEvent) => void` | Fires when an item's delete action is clicked. Presence shows the action.     |
 | onopen        | `(index: number) => void`                    | Fires when the lightbox opens.                                                |
-| onclose     | `() => void`                                 | Fires when the lightbox closes (Escape, backdrop click, or the close button). |
-| onchange | `(index: number) => void`                    | Fires whenever the active lightbox image changes.                             |
+| onclose       | `() => void`                                 | Fires when the lightbox closes (Escape, backdrop click, or the close button). |
+| onchange      | `(index: number) => void`                    | Fires whenever the active lightbox image changes.                             |
 | onkeydown     | `(event: KeyboardEvent) => void`             | Relays the lightbox's own keydown, before Gallery's built-in shortcuts run.   |
 
 `onkeydown` stays lowercase per `DESIGN_PRINCIPLES.md` — it relays the real

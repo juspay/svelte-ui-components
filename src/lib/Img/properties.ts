@@ -29,6 +29,4 @@ export type OptionalImgProperties = {
 
 export type ImgEventProperties = {
   onerror?: () => void;
-  /** @deprecated Use `onerror` instead; both work until 4.0.0. */
-  onError?: () => void;
 };

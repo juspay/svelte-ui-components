@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ModalProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { onMount, onDestroy } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
@@ -27,22 +26,11 @@
     testId,
     content,
     footerSnippet,
-    onclose: oncloseProp,
-    onClose,
-    onheaderRightImageClick: onheaderRightImageClickProp,
-    onHeaderRightImageClick,
+    onclose,
     onheaderrightimageclick,
-    onheaderLeftImageClick: onheaderLeftImageClickProp,
-    onHeaderLeftImageClick,
     onheaderleftimageclick,
-    onprimaryButtonClick: onprimaryButtonClickProp,
-    onPrimaryButtonClick,
     onprimarybuttonclick,
-    onsecondaryButtonClick: onsecondaryButtonClickProp,
-    onSecondaryButtonClick,
     onsecondarybuttonclick,
-    onoverlayClick: onoverlayClickProp,
-    onOverlayClick,
     onoverlayclick,
     onkeydown,
     classes,
@@ -52,98 +40,6 @@
     lockScroll = true,
     autoDismissAfter = null
   }: ModalProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclose = $derived(
-    resolveDeprecatedProp('Modal', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-  const onheaderLeftImageClick = $derived(
-    resolveDeprecatedProp(
-      'Modal',
-      'onheaderLeftImageClick',
-      'onheaderleftimageclick',
-      onheaderLeftImageClickProp,
-      resolveDeprecatedProp(
-        'Modal',
-        'onHeaderLeftImageClick',
-        'onheaderleftimageclick',
-        onHeaderLeftImageClick,
-        onheaderleftimageclick
-      )
-    )
-  );
-  const onheaderRightImageClick = $derived(
-    resolveDeprecatedProp(
-      'Modal',
-      'onheaderRightImageClick',
-      'onheaderrightimageclick',
-      onheaderRightImageClickProp,
-      resolveDeprecatedProp(
-        'Modal',
-        'onHeaderRightImageClick',
-        'onheaderrightimageclick',
-        onHeaderRightImageClick,
-        onheaderrightimageclick
-      )
-    )
-  );
-  const onoverlayClick = $derived(
-    resolveDeprecatedProp(
-      'Modal',
-      'onoverlayClick',
-      'onoverlayclick',
-      onoverlayClickProp,
-      resolveDeprecatedProp(
-        'Modal',
-        'onOverlayClick',
-        'onoverlayclick',
-        onOverlayClick,
-        onoverlayclick
-      )
-    )
-  );
-  const onprimaryButtonClick = $derived(
-    resolveDeprecatedProp(
-      'Modal',
-      'onprimaryButtonClick',
-      'onprimarybuttonclick',
-      onprimaryButtonClickProp,
-      resolveDeprecatedProp(
-        'Modal',
-        'onPrimaryButtonClick',
-        'onprimarybuttonclick',
-        onPrimaryButtonClick,
-        onprimarybuttonclick
-      )
-    )
-  );
-  const onsecondaryButtonClick = $derived(
-    resolveDeprecatedProp(
-      'Modal',
-      'onsecondaryButtonClick',
-      'onsecondarybuttonclick',
-      onsecondaryButtonClickProp,
-      resolveDeprecatedProp(
-        'Modal',
-        'onSecondaryButtonClick',
-        'onsecondarybuttonclick',
-        onSecondaryButtonClick,
-        onsecondarybuttonclick
-      )
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      onclose,
-      onheaderLeftImageClick,
-      onheaderRightImageClick,
-      onoverlayClick,
-      onprimaryButtonClick,
-      onsecondaryButtonClick
-    );
-  });
 
   let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -177,25 +73,25 @@
   };
 
   const handleRightImageClick = (event: MouseEvent): void => {
-    onheaderRightImageClick?.(event);
+    onheaderrightimageclick?.(event);
   };
 
   const handleLeftImageClick = (event: MouseEvent): void => {
-    onheaderLeftImageClick?.(event);
+    onheaderleftimageclick?.(event);
   };
 
   const handlePrimaryButtonClick = (event: MouseEvent): void => {
-    onprimaryButtonClick?.(event);
+    onprimarybuttonclick?.(event);
   };
 
   const handleSecondaryButtonClick = (event: MouseEvent): void => {
-    onsecondaryButtonClick?.(event);
+    onsecondarybuttonclick?.(event);
   };
 
   const handleOverlayClick = (event: MouseEvent): void => {
     if (event.target === overlayDiv) {
       debounce(() => {
-        onoverlayClick?.();
+        onoverlayclick?.();
       });
     }
   };
@@ -204,7 +100,7 @@
     onkeydown?.(event);
     const key = event?.key;
     if (key === 'Escape') {
-      onoverlayClick?.();
+      onoverlayclick?.();
     }
   };
 
@@ -213,14 +109,14 @@
   const handleLeftImageKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      onheaderLeftImageClick?.(new MouseEvent('click'));
+      onheaderleftimageclick?.(new MouseEvent('click'));
     }
   };
 
   const handleRightImageKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      onheaderRightImageClick?.(new MouseEvent('click'));
+      onheaderrightimageclick?.(new MouseEvent('click'));
     }
   };
 
@@ -290,7 +186,7 @@
                      activated is worse for assistive tech than leaving them unannounced. The two
                      branches are written out rather than computed so the role/tabindex pairing
                      stays statically checkable. -->
-                {#if typeof onheaderLeftImageClick === 'function'}
+                {#if typeof onheaderleftimageclick === 'function'}
                   <div
                     onclick={handleLeftImageClick}
                     onkeydown={handleLeftImageKeyDown}

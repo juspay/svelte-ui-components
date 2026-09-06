@@ -9,7 +9,6 @@
       classes: { type: 'String' },
       onclick: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      onClick: { type: 'Object' },
       inputId: { type: 'String', attribute: 'input-id' },
       inputAriaLabel: { type: 'String', attribute: 'input-aria-label' },
       inputAriaLabelledby: { type: 'String', attribute: 'input-aria-labelledby' }

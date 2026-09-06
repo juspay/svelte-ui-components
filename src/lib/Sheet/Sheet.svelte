@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SheetProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { fly, fade } from 'svelte/transition';
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
@@ -16,30 +15,11 @@
     testId,
     content,
     footer,
-    onclose: oncloseProp,
-    onClose,
-    onafteropen: onafteropenProp,
-    onAfterOpen,
-    onafterclose: onaftercloseProp,
-    onAfterClose,
+    onclose,
+    onafteropen,
+    onafterclose,
     classes
   }: SheetProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onafterclose = $derived(
-    resolveDeprecatedProp('Sheet', 'onAfterClose', 'onafterclose', onAfterClose, onaftercloseProp)
-  );
-  const onafteropen = $derived(
-    resolveDeprecatedProp('Sheet', 'onAfterOpen', 'onafteropen', onAfterOpen, onafteropenProp)
-  );
-  const onclose = $derived(
-    resolveDeprecatedProp('Sheet', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onafterclose, onafteropen, onclose);
-  });
 
   let overlayDiv: HTMLDivElement | null = $state(null);
   let sheetPanel: HTMLDivElement | null = $state(null);

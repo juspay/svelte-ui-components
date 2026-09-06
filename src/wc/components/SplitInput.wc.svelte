@@ -13,10 +13,7 @@
       classes: { type: 'String' },
       onchange: { type: 'Object' },
       oninput: { type: 'Object' },
-      oncomplete: { type: 'Object' },
-      onChange: { type: 'Object' },
-      onInput: { type: 'Object' },
-      onComplete: { type: 'Object' }
+      oncomplete: { type: 'Object' }
     }
   }}
 />

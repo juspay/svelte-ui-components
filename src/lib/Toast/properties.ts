@@ -29,8 +29,6 @@ export type OptionalToastProperties = {
 
 export type ToastEventProperties = {
   ontoasthide?: () => void;
-  /** @deprecated Use `ontoasthide` instead; both work until 4.0.0. */
-  onToastHide?: () => void;
 };
 
 export type ToastProperties = MandatoryToastProperties &

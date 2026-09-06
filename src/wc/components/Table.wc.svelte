@@ -19,14 +19,10 @@
       testId: { type: 'String', attribute: 'test-id' },
       caption: { type: 'String' },
       classes: { type: 'String' },
-      onRowClick: { type: 'Object' },
-      onSort: { type: 'Object' },
       getRowTestId: { type: 'Object' },
       getCellTestId: { type: 'Object' },
       checkboxSelection: { type: 'Object' },
       searchConfig: { type: 'Object' },
-      onCellChange: { type: 'Object' },
-      onSearchChange: { type: 'Object' },
       sortAscIcon: { type: 'Object' },
       sortDescIcon: { type: 'Object' },
       sortDefaultIcon: { type: 'Object' },
@@ -41,7 +37,6 @@
       usePortal: { type: 'Boolean', attribute: 'use-portal' },
       onrowclick: { type: 'Object' },
       onsort: { type: 'Object' },
-      oncellchange: { type: 'Object' },
       onsearchchange: { type: 'Object' }
     }
   }}

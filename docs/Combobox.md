@@ -136,13 +136,23 @@ TypeScript's structural typing lets you pass items with extra properties. Cast i
 ```svelte
 <Combobox items={fruits} bind:value={selected} bind:inputValue>
   {#snippet inputPrefix()}
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
       <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
     </svg>
   {/snippet}
   {#snippet inputSuffix()}
     {#if inputValue.length > 0}
-      <button onclick={() => (inputValue = '')} style="border: none; background: none; cursor: pointer;">
+      <button
+        onclick={() => (inputValue = '')}
+        style="border: none; background: none; cursor: pointer;"
+      >
         &times;
       </button>
     {/if}
@@ -161,7 +171,10 @@ TypeScript's structural typing lets you pass items with extra properties. Cast i
   {/snippet}
   {#snippet dropdownFooter()}
     <div style="padding: 8px 12px; border-top: 1px solid #eee;">
-      <button onclick={handleShowAll} style="width: 100%; border: none; background: none; color: #2563eb; cursor: pointer;">
+      <button
+        onclick={handleShowAll}
+        style="width: 100%; border: none; background: none; color: #2563eb; cursor: pointer;"
+      >
         Show all results
       </button>
     </div>
@@ -184,12 +197,7 @@ TypeScript's structural typing lets you pass items with extra properties. Cast i
   }
 </script>
 
-<Combobox
-  items={results}
-  filterFn={() => true}
-  oninput={handleInput}
-  placeholder="Search..."
->
+<Combobox items={results} filterFn={() => true} oninput={handleInput} placeholder="Search...">
   {#snippet inputSuffix()}
     {#if loading}
       <span class="spinner" />
@@ -241,123 +249,123 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 
 ## Props
 
-| Prop             | Type                                                        | Required | Default          | Description                                                                                                                                                            |
-| ---------------- | ----------------------------------------------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items            | `ComboboxItem[]`                                            | Yes      | `-`              | Array of selectable items. Each item has an `id`, `label`, optional `disabled` flag, and any extra properties. See ComboboxItem type below.                            |
-| value            | `string`                                                    | No       | `''`             | Bindable. The `id` of the currently selected item. Updated when the user selects an item from the dropdown.                                                            |
-| inputValue       | `string`                                                    | No       | `''`             | Bindable. The current text in the input field. Used for filtering items. Updated on every keystroke and when an item is selected (set to the item's label).             |
-| open             | `boolean`                                                   | No       | `false`          | Bindable. Controls whether the dropdown is visible. Opens on focus or typing; closes on selection, Escape, outside click, or Tab.                                      |
-| highlightedIndex | `number`                                                    | No       | `-1`             | Bindable. Index of the currently highlighted item within selectable (non-disabled) items. Set to -1 when nothing is highlighted. Useful for external highlight control. |
-| placeholder      | `string`                                                    | No       | `''`             | Placeholder text shown when the input is empty.                                                                                                                        |
-| disabled         | `boolean`                                                   | No       | `false`          | When true, the input is non-interactive and the dropdown cannot open. The component appears dimmed (opacity 0.5).                                                      |
-| name             | `string`                                                    | No       | `-`              | HTML `name` attribute on the input. Use for form submission.                                                                                                           |
-| testId           | `string`                                                    | No       | `-`              | Value for the `data-pw` attribute on the container. The input gets `{testId}-input` and each option gets `{testId}-option-{id}`.                                       |
-| classes          | `string`                                                    | No       | `-`              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| noResultsText    | `string`                                                    | No       | `'No results'`   | Text shown in the dropdown when no items match the current input value. Ignored when `emptySnippet` is provided.                                                       |
-| ariaLabel        | `string`                                                    | No       | `-`              | Sets `aria-label` on the listbox dropdown. Provides an accessible name for screen readers (e.g., `"Search results"`).                                                  |
-| inputProperties  | `OptionalInputProperties`                                   | No       | `-`              | Pass-through props for the internal Input component. Use for validation (`validators`, `validationPattern`, `inProgressPattern`), text formatting (`textTransformers`, `textViewPresentation`), `dataType`, `maxLength`, `minLength`, `useTextArea`, `label`, `onErrorMessage`, `infoMessage`, etc. See Input component docs for the full list. |
-| inputEventProperties | `InputEventProperties`                                  | No       | `-`              | Pass-through event handlers for the internal Input component. Use for `onpaste`, `onstatechange`, `onclick`, etc. Note: `oninput`, `onfocus`, `onblur`, and `onkeydown` are managed by Combobox and forwarded — use Combobox's own events for these. |
-| filterFn         | `(item: ComboboxItem, query: string) => boolean`            | No       | case-insensitive `includes` | Custom filter function called for each item when `inputValue` is non-empty. Return `true` to include the item. Use for startsWith, fuzzy matching, or server-side filtering (always return `true` and update `items` externally). |
-| multiple         | `boolean`                                                   | No       | `false`          | Enable multi-select: picked options become removable pills inside the control, and selection is tracked in `selected` instead of `value`.                             |
-| selected         | `string[]`                                                  | No       | `[]`             | Bindable. Array of selected item `id`s (multi-select mode). Use `bind:selected`.                                                                                       |
-| maxSelected      | `number`                                                    | No       | `-`              | Cap the number of selections (multi-select). At the limit, option/create rows are hidden and a limit message is shown.                                                 |
-| maxSelectedText  | `string`                                                    | No       | `'You can select up to {n}.'` | Message shown in the dropdown once `maxSelected` is reached.                                                                                          |
-| allowCreate      | `boolean`                                                   | No       | `false`          | Show a "Create …" row when the query has no exact match. Fires `oncreate`; in multi-select the value is also added to `selected`.                                      |
-| createLabel      | `(query: string) => string`                                 | No       | `Create "{query}"` | Builds the create-row label from the current query.                                                                                                                 |
-| action           | `ComboboxAction`                                            | No       | `-`              | A persistent custom action row at the foot of the dropdown: `{ label, onClick, keepOpen? }`.                                                                           |
+| Prop                 | Type                                             | Required | Default                       | Description                                                                                                                                                                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------ | -------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items                | `ComboboxItem[]`                                 | Yes      | `-`                           | Array of selectable items. Each item has an `id`, `label`, optional `disabled` flag, and any extra properties. See ComboboxItem type below.                                                                                                                                                                                                     |
+| value                | `string`                                         | No       | `''`                          | Bindable. The `id` of the currently selected item. Updated when the user selects an item from the dropdown.                                                                                                                                                                                                                                     |
+| inputValue           | `string`                                         | No       | `''`                          | Bindable. The current text in the input field. Used for filtering items. Updated on every keystroke and when an item is selected (set to the item's label).                                                                                                                                                                                     |
+| open                 | `boolean`                                        | No       | `false`                       | Bindable. Controls whether the dropdown is visible. Opens on focus or typing; closes on selection, Escape, outside click, or Tab.                                                                                                                                                                                                               |
+| highlightedIndex     | `number`                                         | No       | `-1`                          | Bindable. Index of the currently highlighted item within selectable (non-disabled) items. Set to -1 when nothing is highlighted. Useful for external highlight control.                                                                                                                                                                         |
+| placeholder          | `string`                                         | No       | `''`                          | Placeholder text shown when the input is empty.                                                                                                                                                                                                                                                                                                 |
+| disabled             | `boolean`                                        | No       | `false`                       | When true, the input is non-interactive and the dropdown cannot open. The component appears dimmed (opacity 0.5).                                                                                                                                                                                                                               |
+| name                 | `string`                                         | No       | `-`                           | HTML `name` attribute on the input. Use for form submission.                                                                                                                                                                                                                                                                                    |
+| testId               | `string`                                         | No       | `-`                           | Value for the `data-pw` attribute on the container. The input gets `{testId}-input` and each option gets `{testId}-option-{id}`.                                                                                                                                                                                                                |
+| classes              | `string`                                         | No       | `-`                           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                          |
+| noResultsText        | `string`                                         | No       | `'No results'`                | Text shown in the dropdown when no items match the current input value. Ignored when `emptySnippet` is provided.                                                                                                                                                                                                                                |
+| ariaLabel            | `string`                                         | No       | `-`                           | Sets `aria-label` on the listbox dropdown. Provides an accessible name for screen readers (e.g., `"Search results"`).                                                                                                                                                                                                                           |
+| inputProperties      | `OptionalInputProperties`                        | No       | `-`                           | Pass-through props for the internal Input component. Use for validation (`validators`, `validationPattern`, `inProgressPattern`), text formatting (`textTransformers`, `textViewPresentation`), `dataType`, `maxLength`, `minLength`, `useTextArea`, `label`, `onErrorMessage`, `infoMessage`, etc. See Input component docs for the full list. |
+| inputEventProperties | `InputEventProperties`                           | No       | `-`                           | Pass-through event handlers for the internal Input component. Use for `onpaste`, `onstatechange`, `onclick`, etc. Note: `oninput`, `onfocus`, `onblur`, and `onkeydown` are managed by Combobox and forwarded — use Combobox's own events for these.                                                                                            |
+| filterFn             | `(item: ComboboxItem, query: string) => boolean` | No       | case-insensitive `includes`   | Custom filter function called for each item when `inputValue` is non-empty. Return `true` to include the item. Use for startsWith, fuzzy matching, or server-side filtering (always return `true` and update `items` externally).                                                                                                               |
+| multiple             | `boolean`                                        | No       | `false`                       | Enable multi-select: picked options become removable pills inside the control, and selection is tracked in `selected` instead of `value`.                                                                                                                                                                                                       |
+| selected             | `string[]`                                       | No       | `[]`                          | Bindable. Array of selected item `id`s (multi-select mode). Use `bind:selected`.                                                                                                                                                                                                                                                                |
+| maxSelected          | `number`                                         | No       | `-`                           | Cap the number of selections (multi-select). At the limit, option/create rows are hidden and a limit message is shown.                                                                                                                                                                                                                          |
+| maxSelectedText      | `string`                                         | No       | `'You can select up to {n}.'` | Message shown in the dropdown once `maxSelected` is reached.                                                                                                                                                                                                                                                                                    |
+| allowCreate          | `boolean`                                        | No       | `false`                       | Show a "Create …" row when the query has no exact match. Fires `oncreate`; in multi-select the value is also added to `selected`.                                                                                                                                                                                                               |
+| createLabel          | `(query: string) => string`                      | No       | `Create "{query}"`            | Builds the create-row label from the current query.                                                                                                                                                                                                                                                                                             |
+| action               | `ComboboxAction`                                 | No       | `-`                           | A persistent custom action row at the foot of the dropdown: `{ label, onClick, keepOpen? }`.                                                                                                                                                                                                                                                    |
 
 ## Methods
 
 Exported methods that can be called via `bind:this` on the component instance.
 
-| Method          | Signature                                               | Description                                                                                                             |
-| --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Method          | Signature                                               | Description                                                                                                                      |
+| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `getInputRef()` | `() => HTMLInputElement \| HTMLTextAreaElement \| null` | Returns a reference to the underlying `<input>` DOM element. Use for custom focus management or third-party library integration. |
 
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet        | Type                               | Description                                                                                                                                                                                 |
-| -------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| itemSnippet    | `Snippet<[ComboboxItem, boolean]>` | Custom rendering for each dropdown item. Receives the `ComboboxItem` and a `boolean` indicating whether the item is currently highlighted. Cast the item to your extended type to access extra properties. |
-| emptySnippet   | `Snippet`                          | Custom content shown when the filter matches no items. Use for "create new" buttons, loading indicators, or styled empty states. When provided, overrides `noResultsText`.                  |
-| inputPrefix    | `Snippet`                          | Content rendered before the input inside the input wrapper (e.g., a search icon). Sits inside the border/focus ring.                                                                        |
-| inputSuffix    | `Snippet`                          | Content rendered after the input inside the input wrapper (e.g., a clear button, spinner, or chevron). Sits inside the border/focus ring.                                                   |
-| dropdownHeader | `Snippet`                          | Content rendered at the top of the dropdown, before the options list (e.g., a category label or pinned items).                                                                              |
-| dropdownFooter | `Snippet`                          | Content rendered at the bottom of the dropdown, after the options list (e.g., a "Show all results" link or action buttons).                                                                 |
-| pillSnippet    | `Snippet<[string, () => void, boolean]>` | Multi-select: custom pill renderer; receives `(value, remove, disabled)`. Defaults to the library `Pill`.                                                                             |
-| actionIcon     | `Snippet`                          | Custom leading icon for the persistent `action` row.                                                                                                                                        |
+| Snippet        | Type                                     | Description                                                                                                                                                                                                |
+| -------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| itemSnippet    | `Snippet<[ComboboxItem, boolean]>`       | Custom rendering for each dropdown item. Receives the `ComboboxItem` and a `boolean` indicating whether the item is currently highlighted. Cast the item to your extended type to access extra properties. |
+| emptySnippet   | `Snippet`                                | Custom content shown when the filter matches no items. Use for "create new" buttons, loading indicators, or styled empty states. When provided, overrides `noResultsText`.                                 |
+| inputPrefix    | `Snippet`                                | Content rendered before the input inside the input wrapper (e.g., a search icon). Sits inside the border/focus ring.                                                                                       |
+| inputSuffix    | `Snippet`                                | Content rendered after the input inside the input wrapper (e.g., a clear button, spinner, or chevron). Sits inside the border/focus ring.                                                                  |
+| dropdownHeader | `Snippet`                                | Content rendered at the top of the dropdown, before the options list (e.g., a category label or pinned items).                                                                                             |
+| dropdownFooter | `Snippet`                                | Content rendered at the bottom of the dropdown, after the options list (e.g., a "Show all results" link or action buttons).                                                                                |
+| pillSnippet    | `Snippet<[string, () => void, boolean]>` | Multi-select: custom pill renderer; receives `(value, remove, disabled)`. Defaults to the library `Pill`.                                                                                                  |
+| actionIcon     | `Snippet`                                | Custom leading icon for the persistent `action` row.                                                                                                                                                       |
 
 ## Events
 
-| Event     | Type                             | Description                                                                                                                                                       |
-| --------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onselect  | `(item: ComboboxItem) => void`   | Fires when an item is selected from the dropdown (via click or Enter). Receives the full item object. Cast to your extended type to access extra properties.       |
-| oninput   | `(value: string) => void`        | Fires on every input change. Receives the current input text. Use for server-side filtering or analytics.                                                          |
-| onopen    | `() => void`                     | Fires when the dropdown opens (on focus, typing, or ArrowDown).                                                                                                    |
-| onclose   | `() => void`                     | Fires when the dropdown closes (on selection, Escape, outside click, or Tab).                                                                                      |
-| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed in the input, before the component's built-in handling. Call `event.preventDefault()` to suppress the default behavior for that key.   |
-| onfocus   | `(event: FocusEvent) => void`    | Fires when the input element gains focus.                                                                                                                          |
-| onblur    | `(event: FocusEvent) => void`    | Fires when the input element loses focus.                                                                                                                          |
-| onchange  | `(selected: string[]) => void`   | Multi-select: fires whenever the selection changes (add, remove, or create).                                                                                       |
-| onadd     | `(value: string) => void`        | Multi-select: fires when a value is added.                                                                                                                          |
-| onremove  | `(value: string) => void`        | Multi-select: fires when a value is removed.                                                                                                                        |
-| oncreate  | `(value: string) => void`        | Fires when the create row is chosen, with the trimmed query.                                                                                                        |
+| Event     | Type                             | Description                                                                                                                                                      |
+| --------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onselect  | `(item: ComboboxItem) => void`   | Fires when an item is selected from the dropdown (via click or Enter). Receives the full item object. Cast to your extended type to access extra properties.     |
+| oninput   | `(value: string) => void`        | Fires on every input change. Receives the current input text. Use for server-side filtering or analytics.                                                        |
+| onopen    | `() => void`                     | Fires when the dropdown opens (on focus, typing, or ArrowDown).                                                                                                  |
+| onclose   | `() => void`                     | Fires when the dropdown closes (on selection, Escape, outside click, or Tab).                                                                                    |
+| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed in the input, before the component's built-in handling. Call `event.preventDefault()` to suppress the default behavior for that key. |
+| onfocus   | `(event: FocusEvent) => void`    | Fires when the input element gains focus.                                                                                                                        |
+| onblur    | `(event: FocusEvent) => void`    | Fires when the input element loses focus.                                                                                                                        |
+| onchange  | `(selected: string[]) => void`   | Multi-select: fires whenever the selection changes (add, remove, or create).                                                                                     |
+| onadd     | `(value: string) => void`        | Multi-select: fires when a value is added.                                                                                                                       |
+| onremove  | `(value: string) => void`        | Multi-select: fires when a value is removed.                                                                                                                     |
+| oncreate  | `(value: string) => void`        | Fires when the create row is chosen, with the trimmed query.                                                                                                     |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                                       | Default                                                             | CSS Property     | Description                                                                    |
-| ---------------------------------------------- | ------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ |
-| `--combobox-width`                             | `100%`                                                              | width            | Width of the combobox container.                                               |
-| `--combobox-font-family`                       | `inherit`                                                           | font-family      | Font family for the input and dropdown text.                                   |
-| `--combobox-font-size`                         | `14px`                                                              | font-size        | Font size for the input and dropdown text.                                     |
-| `--combobox-color`                             | `#333333`                                                           | color            | Text color for the input and dropdown.                                         |
-| `--combobox-disabled-opacity`                  | `0.5`                                                               | opacity          | Opacity when the combobox is disabled.                                         |
-| `--combobox-disabled-cursor`                   | `not-allowed`                                                       | cursor           | Cursor when the combobox is disabled.                                          |
-| `--combobox-input-padding`                     | `8px 12px`                                                          | padding          | Inner padding of the input field.                                              |
-| `--combobox-input-background`                  | `#ffffff`                                                           | background       | Background color of the input field.                                           |
-| `--combobox-input-border`                      | `1px solid #cccccc`                                                 | border           | Border of the input field in its default state.                                |
-| `--combobox-input-border-radius`               | `6px`                                                               | border-radius    | Corner rounding of the input field.                                            |
-| `--combobox-input-transition`                  | `border-color 0.15s, box-shadow 0.15s`                              | transition       | Transition animation for input border and shadow changes.                      |
-| `--combobox-input-hover-border-color`          | `#999999`                                                           | border-color     | Border color of the input on hover.                                            |
-| `--combobox-input-focus-border-color`          | `#2563eb`                                                           | border-color     | Border color of the input when focused.                                        |
-| `--combobox-input-focus-shadow`                | `0 0 0 2px rgba(37, 99, 235, 0.2)`                                  | box-shadow       | Focus ring shadow around the input.                                            |
-| `--combobox-placeholder-color`                 | `#999999`                                                           | color            | Color of the placeholder text.                                                 |
-| `--combobox-input-prefix-padding`              | `8px`                                                               | padding-left     | Left padding of the input prefix container.                                    |
-| `--combobox-input-suffix-padding`              | `8px`                                                               | padding-right    | Right padding of the input suffix container.                                   |
-| `--combobox-dropdown-top`                      | `100%`                                                              | top              | Top position of the dropdown relative to the container. Change to open upward. |
-| `--combobox-dropdown-left`                     | `0`                                                                 | left             | Left position of the dropdown relative to the container.                       |
-| `--combobox-dropdown-right`                    | `0`                                                                 | right            | Right position of the dropdown relative to the container.                      |
-| `--combobox-dropdown-gap`                      | `4px`                                                               | margin-top       | Gap between the input and the dropdown panel.                                  |
-| `--combobox-dropdown-background`               | `#ffffff`                                                           | background       | Background color of the dropdown panel.                                        |
-| `--combobox-dropdown-border`                   | `1px solid #cccccc`                                                 | border           | Border of the dropdown panel.                                                  |
-| `--combobox-dropdown-border-radius`            | `6px`                                                               | border-radius    | Corner rounding of the dropdown panel.                                         |
-| `--combobox-dropdown-shadow`                   | `0 4px 12px rgba(0, 0, 0, 0.1)`                                     | box-shadow       | Shadow of the dropdown panel.                                                  |
-| `--combobox-dropdown-max-height`               | `200px`                                                             | max-height       | Maximum height of the dropdown before it scrolls.                              |
-| `--combobox-dropdown-z-index`                  | `10`                                                                | z-index          | Stack order of the dropdown panel.                                             |
-| `--combobox-dropdown-padding`                  | `0`                                                                 | padding          | Inner padding of the dropdown panel.                                           |
-| `--combobox-option-padding`                    | `8px 12px`                                                          | padding          | Inner padding of each option.                                                  |
-| `--combobox-option-color`                      | `#333333`                                                           | color            | Text color of options.                                                         |
-| `--combobox-option-font-size`                  | `inherit`                                                           | font-size        | Font size of option text.                                                      |
-| `--combobox-option-font-weight`                | `inherit`                                                           | font-weight      | Font weight of option text.                                                    |
-| `--combobox-option-hover-background`           | `#f0f0f0`                                                           | background       | Background color of an option on hover or when highlighted via keyboard.       |
-| `--combobox-option-hover-color`                | `var(--combobox-option-color, #333333)`                              | color            | Text color of an option on hover.                                              |
-| `--combobox-option-selected-background`        | `#e8f0fe`                                                           | background       | Background color of the currently selected option.                             |
-| `--combobox-option-selected-color`             | `var(--combobox-option-color, #333333)`                              | color            | Text color of the currently selected option.                                   |
-| `--combobox-option-selected-font-weight`       | `inherit`                                                           | font-weight      | Font weight of the currently selected option.                                  |
-| `--combobox-option-selected-hover-background`  | `var(--combobox-option-selected-background, #e8f0fe)`                | background       | Background color of the selected option when also hovered/highlighted.         |
-| `--combobox-option-disabled-opacity`           | `0.4`                                                               | opacity          | Opacity of disabled options.                                                   |
-| `--combobox-option-disabled-cursor`            | `not-allowed`                                                       | cursor           | Cursor shown when hovering disabled options.                                   |
-| `--combobox-empty-padding`                     | `8px 12px`                                                          | padding          | Padding of the "no results" message.                                           |
-| `--combobox-empty-color`                       | `#999999`                                                           | color            | Color of the "no results" message text.                                        |
-| `--combobox-empty-font-style`                  | `italic`                                                            | font-style       | Font style of the "no results" message.                                        |
-| `--combobox-dropdown-header-border`            | `none`                                                              | border-bottom    | Bottom border of the dropdown header section.                                  |
-| `--combobox-dropdown-header-padding`           | `0`                                                                 | padding          | Padding of the dropdown header section.                                        |
-| `--combobox-dropdown-footer-border`            | `none`                                                              | border-top       | Top border of the dropdown footer section.                                     |
-| `--combobox-dropdown-footer-padding`           | `0`                                                                 | padding          | Padding of the dropdown footer section.                                        |
+| Variable                                      | Default                                               | CSS Property  | Description                                                                    |
+| --------------------------------------------- | ----------------------------------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `--combobox-width`                            | `100%`                                                | width         | Width of the combobox container.                                               |
+| `--combobox-font-family`                      | `inherit`                                             | font-family   | Font family for the input and dropdown text.                                   |
+| `--combobox-font-size`                        | `14px`                                                | font-size     | Font size for the input and dropdown text.                                     |
+| `--combobox-color`                            | `#333333`                                             | color         | Text color for the input and dropdown.                                         |
+| `--combobox-disabled-opacity`                 | `0.5`                                                 | opacity       | Opacity when the combobox is disabled.                                         |
+| `--combobox-disabled-cursor`                  | `not-allowed`                                         | cursor        | Cursor when the combobox is disabled.                                          |
+| `--combobox-input-padding`                    | `8px 12px`                                            | padding       | Inner padding of the input field.                                              |
+| `--combobox-input-background`                 | `#ffffff`                                             | background    | Background color of the input field.                                           |
+| `--combobox-input-border`                     | `1px solid #cccccc`                                   | border        | Border of the input field in its default state.                                |
+| `--combobox-input-border-radius`              | `6px`                                                 | border-radius | Corner rounding of the input field.                                            |
+| `--combobox-input-transition`                 | `border-color 0.15s, box-shadow 0.15s`                | transition    | Transition animation for input border and shadow changes.                      |
+| `--combobox-input-hover-border-color`         | `#999999`                                             | border-color  | Border color of the input on hover.                                            |
+| `--combobox-input-focus-border-color`         | `#2563eb`                                             | border-color  | Border color of the input when focused.                                        |
+| `--combobox-input-focus-shadow`               | `0 0 0 2px rgba(37, 99, 235, 0.2)`                    | box-shadow    | Focus ring shadow around the input.                                            |
+| `--combobox-placeholder-color`                | `#999999`                                             | color         | Color of the placeholder text.                                                 |
+| `--combobox-input-prefix-padding`             | `8px`                                                 | padding-left  | Left padding of the input prefix container.                                    |
+| `--combobox-input-suffix-padding`             | `8px`                                                 | padding-right | Right padding of the input suffix container.                                   |
+| `--combobox-dropdown-top`                     | `100%`                                                | top           | Top position of the dropdown relative to the container. Change to open upward. |
+| `--combobox-dropdown-left`                    | `0`                                                   | left          | Left position of the dropdown relative to the container.                       |
+| `--combobox-dropdown-right`                   | `0`                                                   | right         | Right position of the dropdown relative to the container.                      |
+| `--combobox-dropdown-gap`                     | `4px`                                                 | margin-top    | Gap between the input and the dropdown panel.                                  |
+| `--combobox-dropdown-background`              | `#ffffff`                                             | background    | Background color of the dropdown panel.                                        |
+| `--combobox-dropdown-border`                  | `1px solid #cccccc`                                   | border        | Border of the dropdown panel.                                                  |
+| `--combobox-dropdown-border-radius`           | `6px`                                                 | border-radius | Corner rounding of the dropdown panel.                                         |
+| `--combobox-dropdown-shadow`                  | `0 4px 12px rgba(0, 0, 0, 0.1)`                       | box-shadow    | Shadow of the dropdown panel.                                                  |
+| `--combobox-dropdown-max-height`              | `200px`                                               | max-height    | Maximum height of the dropdown before it scrolls.                              |
+| `--combobox-dropdown-z-index`                 | `10`                                                  | z-index       | Stack order of the dropdown panel.                                             |
+| `--combobox-dropdown-padding`                 | `0`                                                   | padding       | Inner padding of the dropdown panel.                                           |
+| `--combobox-option-padding`                   | `8px 12px`                                            | padding       | Inner padding of each option.                                                  |
+| `--combobox-option-color`                     | `#333333`                                             | color         | Text color of options.                                                         |
+| `--combobox-option-font-size`                 | `inherit`                                             | font-size     | Font size of option text.                                                      |
+| `--combobox-option-font-weight`               | `inherit`                                             | font-weight   | Font weight of option text.                                                    |
+| `--combobox-option-hover-background`          | `#f0f0f0`                                             | background    | Background color of an option on hover or when highlighted via keyboard.       |
+| `--combobox-option-hover-color`               | `var(--combobox-option-color, #333333)`               | color         | Text color of an option on hover.                                              |
+| `--combobox-option-selected-background`       | `#e8f0fe`                                             | background    | Background color of the currently selected option.                             |
+| `--combobox-option-selected-color`            | `var(--combobox-option-color, #333333)`               | color         | Text color of the currently selected option.                                   |
+| `--combobox-option-selected-font-weight`      | `inherit`                                             | font-weight   | Font weight of the currently selected option.                                  |
+| `--combobox-option-selected-hover-background` | `var(--combobox-option-selected-background, #e8f0fe)` | background    | Background color of the selected option when also hovered/highlighted.         |
+| `--combobox-option-disabled-opacity`          | `0.4`                                                 | opacity       | Opacity of disabled options.                                                   |
+| `--combobox-option-disabled-cursor`           | `not-allowed`                                         | cursor        | Cursor shown when hovering disabled options.                                   |
+| `--combobox-empty-padding`                    | `8px 12px`                                            | padding       | Padding of the "no results" message.                                           |
+| `--combobox-empty-color`                      | `#999999`                                             | color         | Color of the "no results" message text.                                        |
+| `--combobox-empty-font-style`                 | `italic`                                              | font-style    | Font style of the "no results" message.                                        |
+| `--combobox-dropdown-header-border`           | `none`                                                | border-bottom | Bottom border of the dropdown header section.                                  |
+| `--combobox-dropdown-header-padding`          | `0`                                                   | padding       | Padding of the dropdown header section.                                        |
+| `--combobox-dropdown-footer-border`           | `none`                                                | border-top    | Top border of the dropdown footer section.                                     |
+| `--combobox-dropdown-footer-padding`          | `0`                                                   | padding       | Padding of the dropdown footer section.                                        |
 
 ## Type Reference
 

@@ -8,7 +8,6 @@
   import attachSvg from '$lib/assets/attach.svg?raw';
   import type { Action } from 'svelte/action';
   import type { ChatComposerProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     value = $bindable(''),
@@ -27,18 +26,12 @@
     richVideoTooltip,
     richRemoveIcon,
     richFileIcon,
-    onremoverichimage: onremoverichimageProp,
-    onRemoveRichImage,
-    onremoverichfile: onremoverichfileProp,
-    onRemoveRichFile,
-    onremoverichvideo: onremoverichvideoProp,
-    onRemoveRichVideo,
-    onopenrichimage: onopenrichimageProp,
-    onOpenRichImage,
-    onopenrichvideo: onopenrichvideoProp,
-    onOpenRichVideo,
-    onopenrichfile: onopenrichfileProp,
-    onOpenRichFile,
+    onremoverichimage,
+    onremoverichfile,
+    onremoverichvideo,
+    onopenrichimage,
+    onopenrichvideo,
+    onopenrichfile,
     sendable = null,
     accept = '',
     multiple = false,
@@ -53,21 +46,15 @@
     actionIcon,
     actionLabel = 'Voice conversation',
     leading,
-    onsubmit: onsubmitProp,
-    onSubmit,
+    onsubmit,
     oninput,
     onkeydown,
     onpaste,
-    onstop: onstopProp,
-    onStop,
-    onvoice: onvoiceProp,
-    onVoice,
-    onattach: onattachProp,
-    onAttach,
-    onattachclick: onattachclickProp,
-    onAttachClick,
-    onaction: onactionProp,
-    onAction,
+    onstop,
+    onvoice,
+    onattach,
+    onattachclick,
+    onaction,
     testId,
     inputTestId,
     inputAriaLabel,
@@ -79,104 +66,6 @@
     actionTestId,
     classes
   }: ChatComposerProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onaction = $derived(
-    resolveDeprecatedProp('ChatComposer', 'onAction', 'onaction', onAction, onactionProp)
-  );
-  const onattach = $derived(
-    resolveDeprecatedProp('ChatComposer', 'onAttach', 'onattach', onAttach, onattachProp)
-  );
-  const onattachclick = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onAttachClick',
-      'onattachclick',
-      onAttachClick,
-      onattachclickProp
-    )
-  );
-  const onopenrichfile = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onOpenRichFile',
-      'onopenrichfile',
-      onOpenRichFile,
-      onopenrichfileProp
-    )
-  );
-  const onopenrichimage = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onOpenRichImage',
-      'onopenrichimage',
-      onOpenRichImage,
-      onopenrichimageProp
-    )
-  );
-  const onopenrichvideo = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onOpenRichVideo',
-      'onopenrichvideo',
-      onOpenRichVideo,
-      onopenrichvideoProp
-    )
-  );
-  const onremoverichfile = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onRemoveRichFile',
-      'onremoverichfile',
-      onRemoveRichFile,
-      onremoverichfileProp
-    )
-  );
-  const onremoverichimage = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onRemoveRichImage',
-      'onremoverichimage',
-      onRemoveRichImage,
-      onremoverichimageProp
-    )
-  );
-  const onremoverichvideo = $derived(
-    resolveDeprecatedProp(
-      'ChatComposer',
-      'onRemoveRichVideo',
-      'onremoverichvideo',
-      onRemoveRichVideo,
-      onremoverichvideoProp
-    )
-  );
-  const onstop = $derived(
-    resolveDeprecatedProp('ChatComposer', 'onStop', 'onstop', onStop, onstopProp)
-  );
-  const onsubmit = $derived(
-    resolveDeprecatedProp('ChatComposer', 'onSubmit', 'onsubmit', onSubmit, onsubmitProp)
-  );
-  const onvoice = $derived(
-    resolveDeprecatedProp('ChatComposer', 'onVoice', 'onvoice', onVoice, onvoiceProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      onaction,
-      onattach,
-      onattachclick,
-      onopenrichfile,
-      onopenrichimage,
-      onopenrichvideo,
-      onremoverichfile,
-      onremoverichimage,
-      onremoverichvideo,
-      onstop,
-      onsubmit,
-      onvoice
-    );
-  });
 
   let fileInput: HTMLInputElement | null = $state(null);
 

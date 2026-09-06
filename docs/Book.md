@@ -49,27 +49,27 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                      | Default               | CSS Property        | Description                                               |
-| ----------------------------- | --------------------- | ------------------- | --------------------------------------------------------- |
-| `--book-width`                | `100%`                | width               | Width of the book container.                              |
-| `--book-height`               | `400px`               | height              | Height of the page content area.                          |
-| `--book-background`           | `#ffffff`             | background-color    | Background color of the book container.                   |
-| `--book-border-radius`        | `8px`                 | border-radius       | Corner rounding of the book container.                    |
-| `--book-border`               | `1px solid #e0e0e0`   | border              | Border of the book container.                             |
-| `--book-overflow`             | `hidden`              | overflow            | Overflow behavior of the page content area.               |
-| `--book-transition-duration`  | `0.3s`                | transition-duration | Duration of the page transition animation.                |
-| `--book-nav-size`             | `36px`                | width/height        | Size of the navigation arrow buttons.                     |
-| `--book-nav-background`       | `rgba(0, 0, 0, 0.05)` | --button-background | Background of navigation buttons. Maps to `--button-background` which may have no effect in the current Button implementation. |
+| Variable                      | Default               | CSS Property              | Description                                                                                                                                        |
+| ----------------------------- | --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--book-width`                | `100%`                | width                     | Width of the book container.                                                                                                                       |
+| `--book-height`               | `400px`               | height                    | Height of the page content area.                                                                                                                   |
+| `--book-background`           | `#ffffff`             | background-color          | Background color of the book container.                                                                                                            |
+| `--book-border-radius`        | `8px`                 | border-radius             | Corner rounding of the book container.                                                                                                             |
+| `--book-border`               | `1px solid #e0e0e0`   | border                    | Border of the book container.                                                                                                                      |
+| `--book-overflow`             | `hidden`              | overflow                  | Overflow behavior of the page content area.                                                                                                        |
+| `--book-transition-duration`  | `0.3s`                | transition-duration       | Duration of the page transition animation.                                                                                                         |
+| `--book-nav-size`             | `36px`                | width/height              | Size of the navigation arrow buttons.                                                                                                              |
+| `--book-nav-background`       | `rgba(0, 0, 0, 0.05)` | --button-background       | Background of navigation buttons. Maps to `--button-background` which may have no effect in the current Button implementation.                     |
 | `--book-nav-hover-background` | `rgba(0, 0, 0, 0.1)`  | --button-hover-background | Hover background of navigation buttons. Maps to `--button-hover-background` which may have no effect — Button uses `--button-hover-color` instead. |
-| `--book-nav-color`            | `#333333`             | --button-color      | Maps to Button's `--button-color`, which controls `background-color` of navigation buttons. |
-| `--book-nav-border-radius`    | `50%`                 | border-radius       | Corner rounding of the navigation arrow buttons.          |
-| `--book-nav-disabled-opacity` | `0.3`                 | opacity             | Opacity of navigation arrows when at the first/last page. |
-| `--book-dot-size`             | `8px`                 | width/height        | Size of each page indicator dot.                          |
-| `--book-dot-gap`              | `8px`                 | gap                 | Gap between page indicator dots.                          |
-| `--book-dot-color`            | `#cccccc`             | background-color    | Color of inactive page indicator dots.                    |
-| `--book-dot-active-color`     | `#333333`             | background-color    | Color of the active page indicator dot.                   |
-| `--book-dot-border-radius`    | `50%`                 | border-radius       | Corner rounding of page indicator dots.                   |
-| `--book-indicator-padding`    | `12px 0`              | padding             | Padding around the page indicator dots container.         |
+| `--book-nav-color`            | `#333333`             | --button-color            | Maps to Button's `--button-color`, which controls `background-color` of navigation buttons.                                                        |
+| `--book-nav-border-radius`    | `50%`                 | border-radius             | Corner rounding of the navigation arrow buttons.                                                                                                   |
+| `--book-nav-disabled-opacity` | `0.3`                 | opacity                   | Opacity of navigation arrows when at the first/last page.                                                                                          |
+| `--book-dot-size`             | `8px`                 | width/height              | Size of each page indicator dot.                                                                                                                   |
+| `--book-dot-gap`              | `8px`                 | gap                       | Gap between page indicator dots.                                                                                                                   |
+| `--book-dot-color`            | `#cccccc`             | background-color          | Color of inactive page indicator dots.                                                                                                             |
+| `--book-dot-active-color`     | `#333333`             | background-color          | Color of the active page indicator dot.                                                                                                            |
+| `--book-dot-border-radius`    | `50%`                 | border-radius             | Corner rounding of page indicator dots.                                                                                                            |
+| `--book-indicator-padding`    | `12px 0`              | padding                   | Padding around the page indicator dots container.                                                                                                  |
 
 ## Type Reference
 

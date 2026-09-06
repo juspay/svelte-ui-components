@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { CalendarProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { SvelteDate } from 'svelte/reactivity';
   import { tick, untrack } from 'svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
@@ -20,43 +19,12 @@
     testId,
     previousMonthIcon,
     nextMonthIcon,
-    onselect: onselectProp,
-    onSelect,
-    onrangeselect: onrangeselectProp,
-    onRangeSelect,
-    onmonthchange: onmonthchangeProp,
-    onMonthChange,
+    onselect,
+    onrangeselect,
+    onmonthchange,
     classes,
     initialMonth = null
   }: CalendarProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onmonthchange = $derived(
-    resolveDeprecatedProp(
-      'Calendar',
-      'onMonthChange',
-      'onmonthchange',
-      onMonthChange,
-      onmonthchangeProp
-    )
-  );
-  const onrangeselect = $derived(
-    resolveDeprecatedProp(
-      'Calendar',
-      'onRangeSelect',
-      'onrangeselect',
-      onRangeSelect,
-      onrangeselectProp
-    )
-  );
-  const onselect = $derived(
-    resolveDeprecatedProp('Calendar', 'onSelect', 'onselect', onSelect, onselectProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onmonthchange, onrangeselect, onselect);
-  });
 
   const now = new SvelteDate();
   // Intentionally read initialMonth once (untracked) — it seeds the display month at mount

@@ -27,36 +27,36 @@ movable and resizable.
 
 ## Props
 
-| Prop      | Type                    | Required | Default          | Description                                                                 |
-| --------- | ----------------------- | -------- | ---------------- | ----------------------------------------------------------------------------|
-| x         | `number`                | No       | `0`               | Bindable. Horizontal offset in px.                                          |
-| y         | `number`                | No       | `0`               | Bindable. Vertical offset in px.                                            |
-| axis      | `'both'\|'x'\|'y'`      | No       | `'both'`          | Constrain dragging to one axis.                                             |
-| handle    | `string`                | No       | `-`               | CSS selector; only pointer-downs inside a matching descendant start a drag. Unset: the whole element is draggable except native interactive elements (`input`, `button`, `a`, ...). |
-| bounds    | `'viewport'\|null`      | No       | `null`            | Clamp dragging so the element's bounding box never leaves the viewport.     |
-| disabled  | `boolean`               | No       | `false`           | Disable drag and keyboard movement.                                         |
-| step      | `number`                | No       | `16`              | Pixels per arrow-key press (keyboard move).                                 |
-| dragLabel | `string`                | No       | `'Drag to move'`  | Aria-label for the draggable element.                                       |
-| children  | `Snippet`                | No       | `-`               | The content to make draggable.                                              |
-| testId    | `string`                | No       | `-`               | `data-pw` on the root element.                                              |
-| classes   | `string`                | No       | `-`               | Class string on the root element.                                          |
+| Prop      | Type               | Required | Default          | Description                                                                                                                                                                         |
+| --------- | ------------------ | -------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| x         | `number`           | No       | `0`              | Bindable. Horizontal offset in px.                                                                                                                                                  |
+| y         | `number`           | No       | `0`              | Bindable. Vertical offset in px.                                                                                                                                                    |
+| axis      | `'both'\|'x'\|'y'` | No       | `'both'`         | Constrain dragging to one axis.                                                                                                                                                     |
+| handle    | `string`           | No       | `-`              | CSS selector; only pointer-downs inside a matching descendant start a drag. Unset: the whole element is draggable except native interactive elements (`input`, `button`, `a`, ...). |
+| bounds    | `'viewport'\|null` | No       | `null`           | Clamp dragging so the element's bounding box never leaves the viewport.                                                                                                             |
+| disabled  | `boolean`          | No       | `false`          | Disable drag and keyboard movement.                                                                                                                                                 |
+| step      | `number`           | No       | `16`             | Pixels per arrow-key press (keyboard move).                                                                                                                                         |
+| dragLabel | `string`           | No       | `'Drag to move'` | Aria-label for the draggable element.                                                                                                                                               |
+| children  | `Snippet`          | No       | `-`              | The content to make draggable.                                                                                                                                                      |
+| testId    | `string`           | No       | `-`              | `data-pw` on the root element.                                                                                                                                                      |
+| classes   | `string`           | No       | `-`              | Class string on the root element.                                                                                                                                                   |
 
 ## Events
 
-| Event       | Type                                | Description                              |
-| ----------- | ------------------------------------ | ---------------------------------------- |
-| onmovestart | `(position: { x, y }) => void`      | Fires when a drag/keyboard move begins.  |
-| onmove      | `(position: { x, y }) => void`      | Fires continuously during a move.        |
-| onmoveend   | `(position: { x, y }) => void`      | Fires when a pointer drag ends.          |
+| Event       | Type                           | Description                             |
+| ----------- | ------------------------------ | --------------------------------------- |
+| onmovestart | `(position: { x, y }) => void` | Fires when a drag/keyboard move begins. |
+| onmove      | `(position: { x, y }) => void` | Fires continuously during a move.       |
+| onmoveend   | `(position: { x, y }) => void` | Fires when a pointer drag ends.         |
 
 ## Keyboard Interactions
 
 The element itself is focusable. Focus it and move with the keyboard:
 
-| Key                                              | Action                          |
-| ------------------------------------------------- | -------------------------------- |
-| `Arrow Left` / `Arrow Right`                      | Adjust `x` by `step` px (unless `axis="y"`). |
-| `Arrow Up` / `Arrow Down`                         | Adjust `y` by `step` px (unless `axis="x"`). |
+| Key                          | Action                                       |
+| ---------------------------- | -------------------------------------------- |
+| `Arrow Left` / `Arrow Right` | Adjust `x` by `step` px (unless `axis="y"`). |
+| `Arrow Up` / `Arrow Down`    | Adjust `y` by `step` px (unless `axis="x"`). |
 
 Movement is clamped by `bounds` the same way pointer dragging is.
 
@@ -78,14 +78,14 @@ type DragPosition = { x: number; y: number };
 
 ## CSS Variables
 
-| Variable                          | Default              | CSS Property | Description                       |
-| ---------------------------------- | --------------------- | ------------- | ---------------------------------- |
-| `--draggable-width`               | `fit-content`         | width         | Root element width.                |
-| `--draggable-height`              | `fit-content`         | height        | Root element height.               |
-| `--draggable-cursor`              | `grab`                | cursor        | Cursor when idle.                  |
-| `--draggable-cursor-active`       | `grabbing`            | cursor        | Cursor while actively dragging.    |
-| `--draggable-focus-outline`       | `2px solid #3b5bdb`   | outline       | Focus ring when keyboard-focused.  |
-| `--draggable-focus-outline-offset`| `2px`                 | outline-offset| Focus ring offset.                 |
+| Variable                           | Default             | CSS Property   | Description                       |
+| ---------------------------------- | ------------------- | -------------- | --------------------------------- |
+| `--draggable-width`                | `fit-content`       | width          | Root element width.               |
+| `--draggable-height`               | `fit-content`       | height         | Root element height.              |
+| `--draggable-cursor`               | `grab`              | cursor         | Cursor when idle.                 |
+| `--draggable-cursor-active`        | `grabbing`          | cursor         | Cursor while actively dragging.   |
+| `--draggable-focus-outline`        | `2px solid #3b5bdb` | outline        | Focus ring when keyboard-focused. |
+| `--draggable-focus-outline-offset` | `2px`               | outline-offset | Focus ring offset.                |
 
 ## Web Component
 

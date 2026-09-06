@@ -1,28 +1,8 @@
 <script lang="ts">
   import type { ImgProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
-  let {
-    src,
-    alt,
-    fallback,
-    onerror: onerrorProp,
-    onError,
-    classes,
-    inlineSvg,
-    transformSvg,
-    testId
-  }: ImgProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onerror = $derived(
-    resolveDeprecatedProp('Img', 'onError', 'onerror', onError, onerrorProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onerror);
-  });
+  let { src, alt, fallback, onerror, classes, inlineSvg, transformSvg, testId }: ImgProperties =
+    $props();
 
   let currentSrc = $derived(src);
   // Per-source failure marker: when inlining a given URL fails we fall back to

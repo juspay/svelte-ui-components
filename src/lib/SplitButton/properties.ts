@@ -20,6 +20,4 @@ export type OptionalSplitButtonProperties = {
 export type SplitButtonEventProperties = {
   onclick?: (event: MouseEvent) => void;
   onselect?: (item: MenuItem) => void;
-  /** @deprecated Use `onselect` instead; both work until 4.0.0. */
-  onSelect?: (item: MenuItem) => void;
 };

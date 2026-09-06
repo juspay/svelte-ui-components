@@ -2,7 +2,39 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.5.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.0.0)
+
+Table hand-rolled its selection control: a role="checkbox" span with its own tri-state,
+keyboard handling and forty lines of CSS that Checkbox already provides. Two implementations
+of one control drift, so the table now consumes the component it ships beside.
+
+Checkbox gains two additive props. `controlled` makes a click report the requested value
+through onClick without flipping anything locally, so a parent that declines the change (a
+table selection driven from a consumer-owned selectedIds set) keeps the box, the native
+input and aria-checked agreeing with the value it passed. `attributes` spreads a record onto
+the role="checkbox" box itself, spread last, so a row id for aria-controls or a consumer's
+own test attribute lands where the old markup put it.
+
+Table renders the header tri-state and every row with &lt;Checkbox controlled&gt;. Test ids, row
+ids and the getRowAttributes escape hatch are unchanged; the cell swallows click and keydown
+so a clickable row does not also fire. Every --table-checkbox-* token stays the public API
+and is bridged onto the --checkbox-* variables inside the column. Two tokens are added,
+--table-checkbox-checked-border and --table-checkbox-indeterminate-border, for consumers
+whose unchecked border is not 2px wide.
+
+The custom-element wrapper, docs/Checkbox.md, docs/Table.md and the docs-accuracy test move
+with it. A new Playwright test covers controlled mode (parent adopts, parent declines, via
+mouse and keyboard) and the attributes spread; reversing its first expectation fails at the
+line naming it, and the file was restored byte-identical.
+
+lint 0, check 0, unit 413/413, Playwright 30/30 across the checkbox and table suites, and
+the container-pinned visual suite reports the table demo pixel-identical; the checkbox demo
+is re-baselined for its two new example rows.
+
+-
+feat(Table): render row selection with the library Checkbox ([a2d2a70](https://github.com/juspay/svelte-ui-components/commit/a2d2a70efe8e260f3bbc55b8adc68a5e1bb2849d))
+
+## [4.0.0](https://github.com/juspay/svelte-ui-components/compare/4.0.0..3.5.1) - 6 September 2026
 
 3.5.1 published the breaking removal under a patch bump. `release.yml`
 derives the version from `git log -1` alone, so it read `d6066e9`

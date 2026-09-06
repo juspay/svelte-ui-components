@@ -1,18 +1,21 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
+import { FUNCTIONAL, playwrightPort, reuseExistingServer } from './scripts/pw-port.js';
 
-// Dedicated port: 4173 is vite's shared default and a preview server from an unrelated project
-// on it silently satisfies reuseExistingServer. 43199 avoids that collision, but it is still a
-// FIXED port, so two checkouts of THIS repo collide with each other — the second run reuses the
-// first's server and asserts against the wrong build, reporting failures that belong to another
-// worktree's code (or, worse, passes that were never earned). Set PW_PORT to a private value
-// when running alongside another checkout.
-const port = Number(process.env.PW_PORT ?? 43199);
+// Derived from this checkout's path, so two worktrees never share a server.
+// 4173 is vite's shared default and a preview server from an unrelated project
+// on it silently satisfies reuseExistingServer; a fixed port avoided that but
+// left checkouts of THIS repo colliding with each other. See scripts/pw-port.ts.
+// PW_PORT still overrides.
+const port = playwrightPort(FUNCTIONAL);
 
 const config: PlaywrightTestConfig = {
   webServer: {
     command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
     port,
-    reuseExistingServer: !process.env.CI,
+    // Only reuse a server on a port someone named deliberately; see
+    // scripts/pw-port.ts. On a derived port, `--strictPort` failing loudly beats
+    // silently testing another checkout's build.
+    reuseExistingServer: reuseExistingServer(),
     timeout: 120_000
   },
   testDir: 'tests',

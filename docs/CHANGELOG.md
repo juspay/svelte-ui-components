@@ -4,7 +4,109 @@ All notable changes to this project will be documented in this file. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.3.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.4.0)
+
+Consumers were rebuilding this on top of the `body` snippet. Lighthouse's
+`UserMessage` wrapper existed almost entirely for it: a `role="button"` div, a
+tabindex, an Enter/Space handler, a `data-clipped` attribute and a
+`-webkit-line-clamp` block, wrapped around a `ChatMessage` that was already
+rendering the chrome. Every consumer that wants a collapsed message re-derives
+the same keyboard handling and the same clamp CSS, and gets to make its own
+mistakes in both.
+
+`clampLines={n}` collapses the rendered body to n lines and makes the bubble its
+own control -- click, or focus and press Enter or Space. `0` or omitted leaves
+the message alone and adds no interactive role, so nothing changes for existing
+callers.
+
+The clamp is on the rendered body, not the source, so `content` still carries the
+whole message and the copy action still copies all of it.
+
+## Line count
+
+The prop is published as a private custom property and read behind the public
+`--chat-message-clamp-lines`, so a consumer theme sheet setting that token wins
+over the prop -- which is what the prop's own documentation promises. Publishing
+the public token inline instead looked simpler and matched `KeyValue`, but an
+inline style outranks any ancestor rule, which would have made the documented
+theme override silently inert.
+
+## The control is a Button
+
+The first version made the whole bubble `role="button"`. That was wrong, and
+review is what surfaced it: a button has presentational children, so it flattens
+the semantics of everything inside it -- and a message body routinely renders
+paragraphs and lists from `markdown`, `html` or a `body` snippet. Every clamped
+message would have cost a screen-reader user that structure.
+
+So the disclosure control is this library's own `Button`, rendered below the
+clamped body, carrying `ariaExpanded`, `ariaControls`, the focus order, native
+keyboard activation and the accessible name. `ChatMessage` was already importing
+`Button` for its copy/retry/feedback actions, so this is the same primitive.
+
+A middle revision also let a click anywhere on the bubble toggle, as a pointer
+convenience. Review was right that this is worse than it looks: a click target
+that is not focusable is a control a keyboard user cannot reach, and it needed a
+nested-activation guard purely so the Button's own click did not toggle twice.
+Both are gone. The Button is the only control, for every input method, and the
+bubble is inert markup.
+
+The name comes from `expandLabel` / `collapseLabel` props rather than hardcoded
+English, matching `copyLabel` and `retryLabel`.
+
+`Button` gains an `ariaControls` prop alongside the `ariaLabel` / `ariaExpanded`
+it already had, so a disclosure button can name the region it governs. The id is
+generated per instance with `$props.id()`, as `Accordion` and `Input` do.
+
+Turning clamping off resets the expansion, so a parent that withdraws
+`clampLines` and later restores it gets the clamped default rather than an
+already-open message.
+
+## Tests
+
+`tests/chat-message-clamp.test.ts`, against demo cases on
+`/components/chat-message`. The assertions are measured height, computed style
+and exposed state rather than the class names that produce them, because the risk
+in moving this into the library is that the clamp stops actually hiding anything:
+
+collapsed height  &lt;  expanded height
+clampLines={4} computes -webkit-line-clamp: 4 and is taller than clampLines={2}
+a consumer token set on an ancestor outranks the prop
+the bubble is NOT role=button, and clicking it does nothing
+a link inside a clamped message works and toggles nothing
+the Button is role=button, named, and reports aria-expanded
+aria-controls resolves to the clamped body
+Enter and Space on the Button expand and collapse
+withdrawing clampLines removes the control entirely, and restoring it re-clamps
+a message without clampLines gets no control at all
+
+Every assertion is negative-controlled -- the fix is reverted, the test is
+confirmed to fail naming its own locator, and the tree is restored
+byte-identically:
+
+clamp neutralised to 99 lines  -&gt;  Expected: &gt; 108, Received: 108
+prop no longer reaches the CSS -&gt;  [data-pw="clamp-demo-four"] .body
+token precedence reverted      -&gt;  [data-pw="clamp-demo-four"] .body
+reset removed                  -&gt;  [data-pw="clamp-demo-toggle"] .bubble
+role="button" put back on bubble  -&gt;  Expected not "button", Received "button"
+aria-controls removed             -&gt;  Received null
+
+`docs/ChatMessage.md` gains the two props, the CSS variables and an Accessibility
+section explaining why the bubble is not the control; `docs/Button.md` gains
+`ariaControls`. The custom-element wrappers declare every new prop -- the
+prop-parity suite catches that omission, and did.
+
+The visual baseline is regenerated in the pinned Playwright container; exactly
+one screenshot changed, which is the demo page this adds cases to.
+
+lint 0 - check 0 errors - 413 unit - 486 functional - 93 visual
+
+- feat(ChatMessage): collapse a long message to a clamped, expandable bubble ([5c8f209](https://github.com/juspay/svelte-ui-components/commit/5c8f2097636e915136efc1f8230f5deb88e0bc4b))
+- fix(release): gate the publish on tests, and stop two releases racing ([6d90a10](https://github.com/juspay/svelte-ui-components/commit/6d90a10117a9acbea81600a20db07e82723ecb88))
+- test(wc): pin the onclick/onClick attribute collision, and correct the encapsulation claim ([91a53d0](https://github.com/juspay/svelte-ui-components/commit/91a53d0b8fc37dac8eba29bf0cb6d9836dc411a6))
+- fix(release): push the MCP release before publishing it ([9734c32](https://github.com/juspay/svelte-ui-components/commit/9734c3272ec70919826439ff74dc0bf6a1c0eaaf))
+
+## [3.4.0](https://github.com/juspay/svelte-ui-components/compare/3.4.0..3.3.2) - 5 September 2026
 
 Preserve Pill dismiss contrast and keyboard activation across interaction states,
 with a configurable dismiss label for localised products. Name Toggle inputs with

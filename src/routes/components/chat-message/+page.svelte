@@ -98,6 +98,46 @@
 </div>
 
 <div class="demo-col">
+  <h2 id="marker-link-target">Marker</h2>
+  <ChatMessage
+    role="user"
+    testId="marker-demo"
+    marker
+    content="An accent bar on the bubble's leading edge, at the default offset."
+  />
+  <ChatMessage
+    role="user"
+    testId="marker-demo-off"
+    content="The same message with no marker — this is the control the test compares against."
+  />
+
+  <!-- The case the prop exists for: a surface where neither party has a filled bubble,
+       so the bar is the only thing telling the turns apart. -->
+  <div class="marker-gutter">
+    <ChatMessage
+      role="user"
+      testId="marker-demo-gutter"
+      marker
+      classes="marker-flat"
+      content="Unfilled, with the bar offset into the gutter beside it."
+    />
+    <ChatMessage
+      role="assistant"
+      testId="marker-demo-gutter-reply"
+      classes="marker-flat"
+      content="The reply on the same flat surface carries no bar, which is the distinction."
+    />
+  </div>
+
+  <ChatMessage role="user" testId="marker-demo-link" marker>
+    {#snippet body()}
+      <p>
+        <a href="#marker-link-target" data-pw="marker-inner-link">A link at the very start</a>
+        sits under the bar's own box, so the bar must not intercept its clicks.
+      </p>
+    {/snippet}
+  </ChatMessage>
+
   <h2 id="clamp-link-target">Clamped, expandable</h2>
   <ChatMessage
     role="user"
@@ -179,6 +219,22 @@
 </div>
 
 <style>
+  .marker-gutter {
+    /* Logical, to match the marker's own inset-inline-start: in RTL the bar moves to
+       the right gutter, and physical padding would reserve the space on the wrong side. */
+    padding-inline-start: 14px;
+  }
+
+  /* A genuinely flat surface: no fill on either party, which is the condition that
+     leaves the bar as the only thing distinguishing the turns. */
+  .marker-gutter :global(.marker-flat) {
+    --chat-message-sender-background: transparent;
+    --chat-message-sender-color: inherit;
+    --chat-message-marker-offset: -14px;
+    --chat-message-marker-width: 3px;
+    --chat-message-marker-color: #0ea5e9;
+  }
+
   .demo-col {
     display: flex;
     flex-direction: column;

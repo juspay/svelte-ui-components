@@ -35,6 +35,7 @@ A single chat bubble. The primitive is the **party** — every message is from o
 | typewriter                                                   | `boolean`                        | No       | `false` | Reveal the message progressively through `TypewriterText` instead of painting it at once. Drives off `markdown` or `content`, never `html`; `markdown` types through the same pipeline the static branch uses, so rich text reveals as rich text. `streaming` selects the mode: true keeps typing as the text grows, false shows the remainder at once. Ignored when `body` is set.                                                                                                                                                                                            |
 | typewriterSpeed                                              | `number`                         | No       | `-`     | Milliseconds between characters while typing, clamped to a minimum of 1; a non-finite value is ignored. Defaults to `TypewriterText`'s own.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | clampLines                                                   | `number`                         | No       | `0`     | Collapse the rendered body to this many lines and render an expand/collapse `Button` below it. `0` or omitted leaves the message uncollapsed and renders no control. The clamp applies to the rendered body, so `content` — and the copy action — always carry the whole message. A consumer stylesheet setting `--chat-message-clamp-lines` takes priority over this value. See Accessibility.                                                                                                                                                                                |
+| marker                                                       | `boolean`                        | No       | `false` | Draw an accent bar along the bubble's leading edge — the quote-bar shape used to mark one party's turns on a flat surface. Decorative and `aria-hidden`; positioned with `--chat-message-marker-offset`. See Marker.                                                                                                                                                                                                                                                                                                                                                           |
 | status                                                       | `'sending' \| 'sent' \| 'error'` | No       | `-`     | `error` tints the bubble with the error color.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | avatar                                                       | `Snippet`                        | No       | `-`     | Avatar shown beside the bubble.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | header                                                       | `Snippet`                        | No       | `-`     | Header row above the bubble (author name, timestamp, etc.).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -115,60 +116,86 @@ progressively one layer down, buffering the stream and appending to `content` on
 compose into a much slower, uneven crawl. Use the controller's own `typewriter` option there, and
 this prop when you drive `ChatMessage` or `ChatMessageList` yourself.
 
+## Marker
+
+`marker` draws an accent bar along the bubble's leading edge — the quote-bar shape used to mark
+one party's turns on a flat surface, where neither side has a filled bubble to tell them apart.
+
+It is decorative. The bar carries no text and is `aria-hidden`, so the distinction it makes has to
+be carried by something a screen reader can reach as well; `role` already does that, which is why
+the marker adds nothing to the accessibility tree.
+
+The bar is positioned with logical properties, so it follows `role` alignment into RTL rather than
+pinning to the left. `--chat-message-marker-offset` is the one to reach for: it defaults to `0`
+(flush with the bubble edge) and takes a negative value to sit in the gutter outside the bubble.
+
+```css
+.flat-surface .chat-message {
+  --chat-message-marker-offset: -12px;
+  --chat-message-marker-width: 3px;
+  --chat-message-marker-color: var(--your-indicator-color, #6d28d9);
+}
+```
+
 ## CSS Variables
 
-| Variable                                       | Default                   | CSS Property  | Description                                             |
-| ---------------------------------------------- | ------------------------- | ------------- | ------------------------------------------------------- |
-| `--chat-message-max-width`                     | `82%`                     | max-width     | Max width of the message.                               |
-| `--chat-message-margin`                        | `0`                       | margin        | Margin around the message.                              |
-| `--chat-message-gap`                           | `10px`                    | gap           | Gap between avatar and bubble.                          |
-| `--chat-message-content-gap`                   | `6px`                     | gap           | Gap between header, bubble, attachments.                |
-| `--chat-message-header-font-size`              | `0.75rem`                 | font-size     | Header row font size.                                   |
-| `--chat-message-header-color`                  | `#71717a`                 | color         | Header row color.                                       |
-| `--chat-message-bubble-padding`                | `9px 13px`                | padding       | Bubble padding.                                         |
-| `--chat-message-bubble-border-radius`          | `16px`                    | border-radius | Bubble corner rounding.                                 |
-| `--chat-message-font-size`                     | `0.9375rem`               | font-size     | Bubble text size.                                       |
-| `--chat-message-line-height`                   | `1.5`                     | line-height   | Bubble line height.                                     |
-| `--chat-message-color`                         | `#27272a`                 | color         | Default bubble text color.                              |
-| `--chat-message-background`                    | `#f4f4f5`                 | background    | Default bubble background.                              |
-| `--chat-message-border`                        | `none`                    | border        | Default bubble border.                                  |
-| `--chat-message-box-shadow`                    | `none`                    | box-shadow    | Default bubble shadow.                                  |
-| `--chat-message-clamp-lines`                   | `clampLines`, else `2`    | line-clamp    | Line count for a clamped bubble. Outranks the prop.     |
-| `--chat-message-clamp-toggle-margin-top`       | `4px`                     | margin-top    | Gap between the clamped body and its toggle button.     |
-| `--chat-message-sender-color`                  | `#ffffff`                 | color         | Sender bubble text color.                               |
-| `--chat-message-sender-background`             | `#18181b`                 | background    | Sender bubble background.                               |
-| `--chat-message-sender-border`                 | `none`                    | border        | Sender bubble border.                                   |
-| `--chat-message-sender-border-radius`          | `16px`                    | border-radius | Sender bubble corner rounding.                          |
-| `--chat-message-responder-color`               | `#27272a`                 | color         | Responder bubble text color.                            |
-| `--chat-message-responder-background`          | `transparent`             | background    | Responder bubble background.                            |
-| `--chat-message-responder-border`              | `none`                    | border        | Responder bubble border.                                |
-| `--chat-message-responder-padding`             | `2px 0`                   | padding       | Responder bubble padding.                               |
-| `--chat-message-error-color`                   | `#e0334b`                 | color         | Bubble color when `status` is `error`.                  |
-| `--chat-message-attachments-gap`               | `8px`                     | gap           | Gap between attachments.                                |
-| `--chat-message-attachments-margin`            | `4px 0 0 0`               | margin        | Margin above attachments.                               |
-| `--chat-message-link-color`                    | `#6d28d9`                 | color         | Link color inside rendered HTML.                        |
-| `--chat-message-code-font-family`              | `ui-monospace, monospace` | font-family   | Inline/code-block font.                                 |
-| `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background    | Inline code background.                                 |
-| `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background    | Code-block background.                                  |
-| `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin        | Paragraph spacing inside rendered HTML.                 |
-| `--chat-message-list-margin`                   | `0.4em 0`                 | margin        | Margin around a rendered `<ul>`/`<ol>` list.            |
-| `--chat-message-list-padding`                  | `1.4em`                   | padding-left  | Indent of a rendered `<ul>`/`<ol>` list.                |
-| `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin        | Margin around a rendered heading.                       |
-| `--chat-message-blockquote-border-color`       | `rgba(0,0,0,0.15)`        | border-color  | Left border color of a rendered blockquote.             |
-| `--chat-message-blockquote-opacity`            | `0.85`                    | opacity       | Opacity of rendered blockquote text.                    |
-| `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color  | Border color of a rendered table and its cells.         |
-| `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background    | Background of a rendered table's header row.            |
-| `--chat-message-image-border-radius`           | `8px`                     | border-radius | Corner rounding of a rendered image.                    |
-| `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top    | Color of a rendered horizontal rule.                    |
-| `--chat-message-actions-gap`                   | `2px`                     | gap           | Gap between action buttons.                             |
-| `--chat-message-actions-opacity`               | `0`                       | opacity       | Resting opacity of the actions row (revealed on hover). |
-| `--chat-message-actions-transition`            | `opacity 0.15s ease`      | transition    | Transition for the actions row's hover reveal.          |
-| `--chat-message-action-size`                   | `28px`                    | height/width  | Size of each action button.                             |
-| `--chat-message-action-padding`                | `6px`                     | padding       | Padding of each action button.                          |
-| `--chat-message-action-border-radius`          | `6px`                     | border-radius | Corner rounding of each action button.                  |
-| `--chat-message-action-background-color`       | `transparent`             | background    | Resting background of each action button.               |
-| `--chat-message-action-color`                  | `#71717a`                 | color         | Icon color of action buttons.                           |
-| `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background    | Action button hover background.                         |
+| Variable                                       | Default                   | CSS Property       | Description                                             |
+| ---------------------------------------------- | ------------------------- | ------------------ | ------------------------------------------------------- |
+| `--chat-message-max-width`                     | `82%`                     | max-width          | Max width of the message.                               |
+| `--chat-message-margin`                        | `0`                       | margin             | Margin around the message.                              |
+| `--chat-message-gap`                           | `10px`                    | gap                | Gap between avatar and bubble.                          |
+| `--chat-message-content-gap`                   | `6px`                     | gap                | Gap between header, bubble, attachments.                |
+| `--chat-message-header-font-size`              | `0.75rem`                 | font-size          | Header row font size.                                   |
+| `--chat-message-header-color`                  | `#71717a`                 | color              | Header row color.                                       |
+| `--chat-message-bubble-padding`                | `9px 13px`                | padding            | Bubble padding.                                         |
+| `--chat-message-bubble-border-radius`          | `16px`                    | border-radius      | Bubble corner rounding.                                 |
+| `--chat-message-font-size`                     | `0.9375rem`               | font-size          | Bubble text size.                                       |
+| `--chat-message-line-height`                   | `1.5`                     | line-height        | Bubble line height.                                     |
+| `--chat-message-color`                         | `#27272a`                 | color              | Default bubble text color.                              |
+| `--chat-message-background`                    | `#f4f4f5`                 | background         | Default bubble background.                              |
+| `--chat-message-border`                        | `none`                    | border             | Default bubble border.                                  |
+| `--chat-message-box-shadow`                    | `none`                    | box-shadow         | Default bubble shadow.                                  |
+| `--chat-message-clamp-lines`                   | `clampLines`, else `2`    | line-clamp         | Line count for a clamped bubble. Outranks the prop.     |
+| `--chat-message-clamp-toggle-margin-top`       | `4px`                     | margin-top         | Gap between the clamped body and its toggle button.     |
+| `--chat-message-sender-color`                  | `#ffffff`                 | color              | Sender bubble text color.                               |
+| `--chat-message-sender-background`             | `#18181b`                 | background         | Sender bubble background.                               |
+| `--chat-message-sender-border`                 | `none`                    | border             | Sender bubble border.                                   |
+| `--chat-message-sender-border-radius`          | `16px`                    | border-radius      | Sender bubble corner rounding.                          |
+| `--chat-message-responder-color`               | `#27272a`                 | color              | Responder bubble text color.                            |
+| `--chat-message-responder-background`          | `transparent`             | background         | Responder bubble background.                            |
+| `--chat-message-responder-border`              | `none`                    | border             | Responder bubble border.                                |
+| `--chat-message-responder-padding`             | `2px 0`                   | padding            | Responder bubble padding.                               |
+| `--chat-message-marker-width`                  | `2px`                     | width              | Thickness of the `marker` bar.                          |
+| `--chat-message-marker-color`                  | `#6d28d9`                 | background         | Color of the `marker` bar.                              |
+| `--chat-message-marker-offset`                 | `0px`                     | inset-inline-start | Leading offset; negative puts it outside the bubble.    |
+| `--chat-message-marker-inset-block`            | `0`                       | inset-block        | Vertical inset, to stop the bar short of the edges.     |
+| `--chat-message-marker-border-radius`          | `0`                       | border-radius      | Rounding of the `marker` bar.                           |
+| `--chat-message-error-color`                   | `#e0334b`                 | color              | Bubble color when `status` is `error`.                  |
+| `--chat-message-attachments-gap`               | `8px`                     | gap                | Gap between attachments.                                |
+| `--chat-message-attachments-margin`            | `4px 0 0 0`               | margin             | Margin above attachments.                               |
+| `--chat-message-link-color`                    | `#6d28d9`                 | color              | Link color inside rendered HTML.                        |
+| `--chat-message-code-font-family`              | `ui-monospace, monospace` | font-family        | Inline/code-block font.                                 |
+| `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background         | Inline code background.                                 |
+| `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background         | Code-block background.                                  |
+| `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin             | Paragraph spacing inside rendered HTML.                 |
+| `--chat-message-list-margin`                   | `0.4em 0`                 | margin             | Margin around a rendered `<ul>`/`<ol>` list.            |
+| `--chat-message-list-padding`                  | `1.4em`                   | padding-left       | Indent of a rendered `<ul>`/`<ol>` list.                |
+| `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin             | Margin around a rendered heading.                       |
+| `--chat-message-blockquote-border-color`       | `rgba(0,0,0,0.15)`        | border-color       | Left border color of a rendered blockquote.             |
+| `--chat-message-blockquote-opacity`            | `0.85`                    | opacity            | Opacity of rendered blockquote text.                    |
+| `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color       | Border color of a rendered table and its cells.         |
+| `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background         | Background of a rendered table's header row.            |
+| `--chat-message-image-border-radius`           | `8px`                     | border-radius      | Corner rounding of a rendered image.                    |
+| `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top         | Color of a rendered horizontal rule.                    |
+| `--chat-message-actions-gap`                   | `2px`                     | gap                | Gap between action buttons.                             |
+| `--chat-message-actions-opacity`               | `0`                       | opacity            | Resting opacity of the actions row (revealed on hover). |
+| `--chat-message-actions-transition`            | `opacity 0.15s ease`      | transition         | Transition for the actions row's hover reveal.          |
+| `--chat-message-action-size`                   | `28px`                    | height/width       | Size of each action button.                             |
+| `--chat-message-action-padding`                | `6px`                     | padding            | Padding of each action button.                          |
+| `--chat-message-action-border-radius`          | `6px`                     | border-radius      | Corner rounding of each action button.                  |
+| `--chat-message-action-background-color`       | `transparent`             | background         | Resting background of each action button.               |
+| `--chat-message-action-color`                  | `#71717a`                 | color              | Icon color of action buttons.                           |
+| `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background         | Action button hover background.                         |
 
 ## Web Component
 

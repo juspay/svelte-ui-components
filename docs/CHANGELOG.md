@@ -2,7 +2,70 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.5.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..3.5.1)
+
+3.5.1 published the breaking removal under a patch bump. `release.yml`
+derives the version from `git log -1` alone, so it read `d6066e9`
+(`fix(wc): ...`, no breaking footer) and never saw `190800b`
+(`feat(events)!: remove the 3.x legacy spellings...`) two commits below.
+`pnpm version patch` from 3.5.0 gave 3.5.1, and that is what went to npm
+on 2026-09-06T18:39:40Z.
+
+Verified against the published tarballs rather than the branch:
+`dist/Toast/properties.d.ts` declares `onToastHide` in 3.5.0 and
+`ontoasthide` in 3.5.1, and camelCase event-prop names across all
+`dist/*/properties.d.ts` fall from 134 to 14. The removal is live, and a
+`^3.5.0` range resolves to it.
+
+The consequence for a consumer is silence. Svelte drops an unknown prop
+without erroring, so a caret upgrade that looks like a patch stops
+handlers firing with no build failure and no runtime error. Only a
+TypeScript consumer gets a signal.
+
+The documentation said the opposite, which is what this commit fixes.
+README announced the `children` removal as "Coming in 4.0.0" under the
+words "**Nothing below has happened yet** — the current 3.x line still
+accepts everything it always did"; that sentence now tells a reader on
+3.5.1 they are safe when they are not. `DESIGN_PRINCIPLES.md` §3 still
+had the aliases "remain accepted". `EVENT_CASING_MIGRATION.md` was
+titled "completing in 4.0.0" and told consumers that through 3.x
+"nothing immediately". `MIGRATION_4.0.md` described the whole change as
+4.0.0's, with `element.title` commented `3.x:` and `4.0.0:`.
+
+All four now name the release the change actually landed in, and
+`MIGRATION_4.0.md` leads with how to tell whether you already have it
+(`npm ls @juspay/svelte-ui-components`) and that 3.5.0 is the last
+release accepting the old spellings. It recommends migrating over
+pinning to 3.5.0, and says what pinning costs: TypewriterText,
+ChatMessage's `marker`, and the fix that made `MenuTriggerProps`
+reachable through `&lt;sui-menu&gt;`.
+
+No library code changes. 4.0.0 ships the same components 3.5.1 does,
+under the version number the change should have carried. 3.5.1 stays
+published and undeprecated.
+
+The `!` and the footer below are load-bearing for exactly the reason
+this commit exists: without one of them `git log -1` reads a `docs:`
+subject and cuts 4.0.1.
+
+Verified: lint 0 (prettier, eslint, 0 event-casing violations across 94
+properties.ts files), `pnpm check` exit 0 over both configs — 867 files
+and 432 files, 0 errors each — and 828 unit tests pass. The README edit
+was caught first by `rename-doc-usages`'s repository-wide guard, which
+flagged a legacy spelling I had named in prose; the prose was reworded
+rather than the guard widened.
+
+BREAKING CHANGE: 4.0.0 carries the removal already present in 3.5.1 —
+every camelCase and mixed-case event prop deprecated in 3.x is gone,
+`Table.oncellchange` is deleted, `children` is no longer declared on
+`sui-chat-bubble`, `sui-draggable` and `sui-resizable`, and 24
+custom-element properties that collided with names the platform defines
+are renamed. See docs/MIGRATION_4.0.md.
+
+-
+**BREAKING:** docs(release)!: record that the 3.x removal shipped in 3.5.1, and cut it as 4.0.0 ([3013d88](https://github.com/juspay/svelte-ui-components/commit/3013d8858ae7a07fa96b6dea172f60f7b2fddb81))
+
+## [3.5.1](https://github.com/juspay/svelte-ui-components/compare/3.5.1..3.5.0) - 6 September 2026
 
 `Release and Publish` has failed on every commit since 9814b53 — four runs,
 including two that carried merged features — at `Type-check web components`,

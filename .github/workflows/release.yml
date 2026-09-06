@@ -230,12 +230,26 @@ jobs:
       - name: Determine version bump type
         id: version-type
         run: |
-          # Get the latest commit message
-          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          echo "Latest commit: $COMMIT_MSG"
+          # Classify the WHOLE range since the last released tag, not just the commit that
+          # happened to trigger this run. Reading `git log -1` loses every bump a failed or
+          # skipped run should have carried: 3.5.1 shipped two features and a BREAKING
+          # change as a patch, because the three runs before it failed and the `fix(wc):`
+          # merge that finally succeeded was the only commit it looked at.
+          LAST_TAG=$(git describe --tags --abbrev=0 --match '[0-9]*' 2>/dev/null || true)
+          if [ -n "$LAST_TAG" ]; then
+            RANGE="$LAST_TAG..HEAD"
+            echo "Classifying range: $RANGE"
+          else
+            RANGE=""
+            echo "No release tag found; classifying full history"
+          fi
 
-          # Check for BREAKING CHANGE in commit body
-          COMMIT_BODY=$(git log -1 --pretty=format:"%b")
+          # Release commits are this workflow's own bookkeeping, never a reason to bump.
+          COMMIT_MSG=$(git log $RANGE --grep="^chore(release):" --invert-grep --pretty=format:"%s")
+          COMMIT_BODY=$(git log $RANGE --grep="^chore(release):" --invert-grep --pretty=format:"%b")
+          echo "Commits considered:"
+          echo "$COMMIT_MSG" | sed 's/^/  /'
+
           HAS_BREAKING_CHANGE=false
           if echo "$COMMIT_BODY" | grep -iE "^BREAKING CHANGE:" > /dev/null; then
             HAS_BREAKING_CHANGE=true
@@ -566,8 +580,13 @@ jobs:
         run: |
           # Use the latest non-release commit so the root job's auto "chore(release):"
           # commit doesn't drive the MCP version bump.
-          COMMIT_MSG=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%s")
-          COMMIT_BODY=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%b")
+          MCP_LAST_TAG=$(git describe --tags --abbrev=0 --match '[0-9]*' 2>/dev/null || true)
+          MCP_RANGE=""
+          if [ -n "$MCP_LAST_TAG" ]; then
+            MCP_RANGE="$MCP_LAST_TAG..HEAD"
+          fi
+          COMMIT_MSG=$(git log $MCP_RANGE --grep="^chore(release):" --invert-grep --pretty=format:"%s")
+          COMMIT_BODY=$(git log $MCP_RANGE --grep="^chore(release):" --invert-grep --pretty=format:"%b")
           echo "MCP release driven by commit: $COMMIT_MSG"
 
           HAS_BREAKING_CHANGE=false

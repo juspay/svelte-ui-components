@@ -10,10 +10,7 @@
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onopen: { type: 'Object' },
-      onclose: { type: 'Object' },
-      onSelect: { type: 'Object' },
-      onOpen: { type: 'Object' },
-      onClose: { type: 'Object' }
+      onclose: { type: 'Object' }
     }
   }}
 />

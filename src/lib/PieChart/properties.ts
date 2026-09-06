@@ -47,8 +47,6 @@ export type OptionalPieChartProperties = {
    * always `'donut-chart'` regardless of whether `innerRadius` is set.
    */
   onchartready?: (api: ChartHighlightAPI) => void;
-  /** @deprecated Use `onchartready` instead; both work until 4.0.0. */
-  onChartReady?: (api: ChartHighlightAPI) => void;
   /**
    * Index of the slice to highlight programmatically. The highlighted slice
    * scales out and all others dim, exactly as if the user were hovering it.
@@ -71,9 +69,5 @@ export type OptionalPieChartProperties = {
 
 export type PieChartEventProperties = {
   onsliceclick?: (event: { index: number; slice: PieChartSlice }) => void;
-  /** @deprecated Use `onsliceclick` instead; both work until 4.0.0. */
-  onSliceClick?: (event: { index: number; slice: PieChartSlice }) => void;
   onslicehover?: (event: { index: number; slice: PieChartSlice } | null) => void;
-  /** @deprecated Use `onslicehover` instead; both work until 4.0.0. */
-  onSliceHover?: (event: { index: number; slice: PieChartSlice } | null) => void;
 };

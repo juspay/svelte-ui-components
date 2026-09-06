@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { RadioProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     name,
@@ -9,20 +8,9 @@
     text = '',
     disabled = false,
     testId,
-    onchange: onchangeProp,
-    onChange,
+    onchange,
     classes
   }: RadioProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('Radio', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange);
-  });
 
   let checked = $derived(selectedValue === value);
 

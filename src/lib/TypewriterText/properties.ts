@@ -116,8 +116,6 @@ export type OptionalTypewriterTextProperties = {
    * follow the reveal, or show how far along it is. Not called when omitted.
    */
   onprogress?: (progress: TypewriterProgress) => void;
-  /** @deprecated Use `onprogress` instead; both work until 4.0.0. */
-  onProgress?: (progress: TypewriterProgress) => void;
   /**
    * Render each revealed character yourself — highlight a token, wrap a number — instead
    * of the plain text node. Ignored when `renderText` is set, since that renderer already

@@ -147,6 +147,4 @@ export type StatCardEventProperties = {
   onclick?: (event: MouseEvent) => void;
   /** Fired when the header checkbox changes. */
   oncheckboxchange?: (checked: boolean) => void;
-  /** @deprecated Use `oncheckboxchange` instead; both work until 4.0.0. */
-  onCheckboxChange?: (checked: boolean) => void;
 };

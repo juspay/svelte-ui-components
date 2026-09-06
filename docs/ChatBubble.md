@@ -15,7 +15,7 @@ The offset is the bindable `dragX`/`dragY`. Set **`resizable`** to let the user 
 <button onclick={() => (expanded = !expanded)}>Toggle size</button>
 
 <ChatBubble bind:open bind:expanded expandedPanelWidth={680} expandedPanelHeight={820}>
-  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -38,7 +38,7 @@ The offset is the bindable `dragX`/`dragY`. Set **`resizable`** to let the user 
 </script>
 
 <ChatBubble bind:open label="Open chat">
-  <Chat {messages} bind:value title="Assistant" onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value title="Assistant" {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -60,12 +60,12 @@ Enable the chat-head behaviors. With the default `dragMode="snap"` the bubble do
   bind:panelHeight
   position="bottom-right"
 >
-  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 
 <!-- free-form drag: stays exactly where dropped -->
 <ChatBubble bind:open draggable dragMode="free">
-  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -119,7 +119,7 @@ Both launcher icons are snippets; provide your own for closed (`icon`) and open 
 <ChatBubble bind:open>
   {#snippet icon()}<MessageIcon />{/snippet}
   {#snippet openIcon()}<ChevronDownIcon />{/snippet}
-  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 ```
 
@@ -135,7 +135,7 @@ children needs its own gap wrapper:
   {#snippet icon()}
     <span class="pill-content"><MessageIcon /> Ask Assistant</span>
   {/snippet}
-  <Chat {messages} bind:value onsend={onsend} onclose={() => (open = false)} />
+  <Chat {messages} bind:value {onsend} onclose={() => (open = false)} />
 </ChatBubble>
 
 <style>
@@ -156,44 +156,44 @@ children needs its own gap wrapper:
 ## Snippets
 
 | Snippet  | Description                                                                          |
-| -------- | ----------------------------------------------------------------------------------- |
-| children | Panel content, typically a `Chat`. The panel sizes it to `panelWidth`/`panelHeight`.|
-| icon     | Launcher contents when closed. Falls back to a built-in chat icon.                  |
-| openIcon | Launcher contents when open. Falls back to a built-in close icon.                   |
+| -------- | ------------------------------------------------------------------------------------ |
+| children | Panel content, typically a `Chat`. The panel sizes it to `panelWidth`/`panelHeight`. |
+| icon     | Launcher contents when closed. Falls back to a built-in chat icon.                   |
+| openIcon | Launcher contents when open. Falls back to a built-in close icon.                    |
 
 ## Props
 
-| Prop           | Type                                                      | Required | Default         | Description                                                  |
-| -------------- | -------------------------------------------------------- | -------- | --------------- | ----------------------------------------------------------- |
-| open           | `boolean`                                                | No       | `false`         | Bindable. Whether the panel is open.                        |
-| position       | `'bottom-right'\|'bottom-left'\|'top-right'\|'top-left'` | No       | `'bottom-right'`| Which corner the launcher pins to (panel opens toward center).|
-| label          | `string`                                                | No       | `'Open chat'`   | Launcher aria-label (closed) and panel aria-label.          |
-| closeLabel     | `string`                                                | No       | `'Close chat'`  | Launcher aria-label when open.                              |
-| icon           | `Snippet`                                                | No       | `-`             | Launcher icon when closed. Falls back to a built-in asset.   |
-| openIcon       | `Snippet`                                                | No       | `-`             | Launcher icon when open. Falls back to a built-in close icon.|
-| children       | `Snippet`                                                | No       | `-`             | Panel content (e.g. a `Chat`).                              |
-| draggable      | `boolean`                                                | No       | `false`         | Let the user drag the launcher to reposition the whole widget.|
-| dragMode       | `'snap' \| 'free'`                                       | No       | `'snap'`        | `'snap'` anchors to the nearest left/right edge on release; `'free'` stays where dropped. |
-| dragX          | `number`                                                | No       | `0`             | Bindable. Horizontal drag offset (px) from the anchored corner. |
-| dragY          | `number`                                                | No       | `0`             | Bindable. Vertical drag offset (px) from the anchored corner. |
-| resizable      | `boolean`                                                | No       | `false`         | Allow resizing the panel (via `Resizable`).                 |
-| panelWidth     | `number`                                                | No       | `380`           | Bindable. Panel width in px.                                |
-| panelHeight    | `number`                                                | No       | `600`           | Bindable. Panel height in px.                               |
-| minPanelWidth  | `number`                                                | No       | `280`           | Minimum panel width when resizing.                         |
-| minPanelHeight | `number`                                                | No       | `360`           | Minimum panel height when resizing.                        |
-| expanded       | `boolean`                                                | No       | `false`         | Bindable. Toggle to grow the panel to the expanded preset (animated); restores the prior size on collapse. |
-| expandedPanelWidth  | `number`                                            | No       | `600`           | Bindable. Panel width (px) when `expanded` (capped to available space). |
-| expandedPanelHeight | `number`                                            | No       | `760`           | Bindable. Panel height (px) when `expanded` (capped to available space).|
-| testId         | `string`                                                | No       | `-`             | `data-pw` on the root element.                              |
-| classes        | `string`                                                | No       | `-`             | Class string on the root element.                          |
+| Prop                | Type                                                     | Required | Default          | Description                                                                                                |
+| ------------------- | -------------------------------------------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| open                | `boolean`                                                | No       | `false`          | Bindable. Whether the panel is open.                                                                       |
+| position            | `'bottom-right'\|'bottom-left'\|'top-right'\|'top-left'` | No       | `'bottom-right'` | Which corner the launcher pins to (panel opens toward center).                                             |
+| label               | `string`                                                 | No       | `'Open chat'`    | Launcher aria-label (closed) and panel aria-label.                                                         |
+| closeLabel          | `string`                                                 | No       | `'Close chat'`   | Launcher aria-label when open.                                                                             |
+| icon                | `Snippet`                                                | No       | `-`              | Launcher icon when closed. Falls back to a built-in asset.                                                 |
+| openIcon            | `Snippet`                                                | No       | `-`              | Launcher icon when open. Falls back to a built-in close icon.                                              |
+| children            | `Snippet`                                                | No       | `-`              | Panel content (e.g. a `Chat`).                                                                             |
+| draggable           | `boolean`                                                | No       | `false`          | Let the user drag the launcher to reposition the whole widget.                                             |
+| dragMode            | `'snap' \| 'free'`                                       | No       | `'snap'`         | `'snap'` anchors to the nearest left/right edge on release; `'free'` stays where dropped.                  |
+| dragX               | `number`                                                 | No       | `0`              | Bindable. Horizontal drag offset (px) from the anchored corner.                                            |
+| dragY               | `number`                                                 | No       | `0`              | Bindable. Vertical drag offset (px) from the anchored corner.                                              |
+| resizable           | `boolean`                                                | No       | `false`          | Allow resizing the panel (via `Resizable`).                                                                |
+| panelWidth          | `number`                                                 | No       | `380`            | Bindable. Panel width in px.                                                                               |
+| panelHeight         | `number`                                                 | No       | `600`            | Bindable. Panel height in px.                                                                              |
+| minPanelWidth       | `number`                                                 | No       | `280`            | Minimum panel width when resizing.                                                                         |
+| minPanelHeight      | `number`                                                 | No       | `360`            | Minimum panel height when resizing.                                                                        |
+| expanded            | `boolean`                                                | No       | `false`          | Bindable. Toggle to grow the panel to the expanded preset (animated); restores the prior size on collapse. |
+| expandedPanelWidth  | `number`                                                 | No       | `600`            | Bindable. Panel width (px) when `expanded` (capped to available space).                                    |
+| expandedPanelHeight | `number`                                                 | No       | `760`            | Bindable. Panel height (px) when `expanded` (capped to available space).                                   |
+| testId              | `string`                                                 | No       | `-`              | `data-pw` on the root element.                                                                             |
+| classes             | `string`                                                 | No       | `-`              | Class string on the root element.                                                                          |
 
 ## Events
 
-| Event    | Type                       | Description                                  |
-| -------- | -------------------------- | -------------------------------------------- |
-| onopen   | `() => void`               | Fires when the panel opens.                  |
-| onclose  | `() => void`               | Fires when the panel closes.                 |
-| ontoggle | `(open: boolean) => void`  | Fires on any open/close, with the new state. |
+| Event    | Type                      | Description                                  |
+| -------- | ------------------------- | -------------------------------------------- |
+| onopen   | `() => void`              | Fires when the panel opens.                  |
+| onclose  | `() => void`              | Fires when the panel closes.                 |
+| ontoggle | `(open: boolean) => void` | Fires on any open/close, with the new state. |
 
 ## Accessibility
 
@@ -208,29 +208,29 @@ Reuses `Button` (the launcher) and `Resizable` (panel resizing). Its content is 
 
 ## CSS Variables
 
-| Variable                              | Default                                       | CSS Property  | Description                       |
-| ------------------------------------- | --------------------------------------------- | ------------- | --------------------------------- |
-| `--chat-bubble-z-index`               | `1000`                                        | z-index       | Stacking order of the widget.     |
-| `--chat-bubble-offset-x`              | `24px`                                        | left/right    | Horizontal distance from the edge.|
-| `--chat-bubble-offset-y`              | `24px`                                        | top/bottom    | Vertical distance from the edge.  |
-| `--chat-bubble-size`                  | `56px`                                        | height/width  | Launcher button size.             |
-| `--chat-bubble-width`                 | `var(--chat-bubble-size, 56px)`               | width         | Launcher width alone — set to `fit-content` for a pill launcher whose width follows its content (e.g. icon + label) while `--chat-bubble-size` keeps the height. |
-| `--chat-bubble-height`                | `var(--chat-bubble-size, 56px)`               | height        | Launcher height alone, when it must differ from the width. |
-| `--chat-bubble-padding`               | `16px`                                        | padding       | Launcher icon padding.            |
-| `--chat-bubble-border-radius`         | `50%`                                         | border-radius | Launcher corner rounding.         |
-| `--chat-bubble-background-color`      | `#18181b`                                     | background    | Launcher background.              |
-| `--chat-bubble-color`                 | `#ffffff`                                     | color         | Launcher icon color.              |
-| `--chat-bubble-hover-background-color`| `#27272a`                                     | background    | Launcher hover background.        |
-| `--chat-bubble-box-shadow`            | `0 8px 24px rgba(0,0,0,0.25)`                 | box-shadow    | Launcher shadow.                  |
-| `--chat-bubble-snap-transition`       | `transform 0.28s cubic-bezier(0.22,1,0.36,1)` | transition    | Snap/reposition animation (disabled while dragging and under reduced-motion). |
-| `--chat-bubble-expand-transition`     | `width/height 0.32s cubic-bezier(0.22,1,0.36,1)` | transition | Expand/collapse size animation, applied via the panel's `Resizable` (`--resizable-transition`); disabled while drag-resizing and under reduced-motion. |
-| `--chat-bubble-panel-gap`             | `16px`                                        | bottom/top    | Gap between launcher and panel.   |
-| `--chat-bubble-panel-max-width`       | `calc(100vw - 32px)`                          | max-width     | Panel max width.                  |
-| `--chat-bubble-panel-max-height`      | `calc(100dvh - 120px)`                        | max-height    | Panel max height.                 |
-| `--chat-bubble-panel-border-radius`   | `16px`                                        | border-radius | Panel corner rounding.            |
-| `--chat-bubble-panel-background`      | `#ffffff`                                     | background    | Panel background.                 |
-| `--chat-bubble-panel-box-shadow`      | `0 16px 48px rgba(0,0,0,0.22)`                | box-shadow    | Panel shadow.                     |
-| `--chat-bubble-resize-handle-color`   | `transparent`                                 | background    | Resize handle fill (when `resizable`). |
+| Variable                               | Default                                          | CSS Property  | Description                                                                                                                                                      |
+| -------------------------------------- | ------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--chat-bubble-z-index`                | `1000`                                           | z-index       | Stacking order of the widget.                                                                                                                                    |
+| `--chat-bubble-offset-x`               | `24px`                                           | left/right    | Horizontal distance from the edge.                                                                                                                               |
+| `--chat-bubble-offset-y`               | `24px`                                           | top/bottom    | Vertical distance from the edge.                                                                                                                                 |
+| `--chat-bubble-size`                   | `56px`                                           | height/width  | Launcher button size.                                                                                                                                            |
+| `--chat-bubble-width`                  | `var(--chat-bubble-size, 56px)`                  | width         | Launcher width alone — set to `fit-content` for a pill launcher whose width follows its content (e.g. icon + label) while `--chat-bubble-size` keeps the height. |
+| `--chat-bubble-height`                 | `var(--chat-bubble-size, 56px)`                  | height        | Launcher height alone, when it must differ from the width.                                                                                                       |
+| `--chat-bubble-padding`                | `16px`                                           | padding       | Launcher icon padding.                                                                                                                                           |
+| `--chat-bubble-border-radius`          | `50%`                                            | border-radius | Launcher corner rounding.                                                                                                                                        |
+| `--chat-bubble-background-color`       | `#18181b`                                        | background    | Launcher background.                                                                                                                                             |
+| `--chat-bubble-color`                  | `#ffffff`                                        | color         | Launcher icon color.                                                                                                                                             |
+| `--chat-bubble-hover-background-color` | `#27272a`                                        | background    | Launcher hover background.                                                                                                                                       |
+| `--chat-bubble-box-shadow`             | `0 8px 24px rgba(0,0,0,0.25)`                    | box-shadow    | Launcher shadow.                                                                                                                                                 |
+| `--chat-bubble-snap-transition`        | `transform 0.28s cubic-bezier(0.22,1,0.36,1)`    | transition    | Snap/reposition animation (disabled while dragging and under reduced-motion).                                                                                    |
+| `--chat-bubble-expand-transition`      | `width/height 0.32s cubic-bezier(0.22,1,0.36,1)` | transition    | Expand/collapse size animation, applied via the panel's `Resizable` (`--resizable-transition`); disabled while drag-resizing and under reduced-motion.           |
+| `--chat-bubble-panel-gap`              | `16px`                                           | bottom/top    | Gap between launcher and panel.                                                                                                                                  |
+| `--chat-bubble-panel-max-width`        | `calc(100vw - 32px)`                             | max-width     | Panel max width.                                                                                                                                                 |
+| `--chat-bubble-panel-max-height`       | `calc(100dvh - 120px)`                           | max-height    | Panel max height.                                                                                                                                                |
+| `--chat-bubble-panel-border-radius`    | `16px`                                           | border-radius | Panel corner rounding.                                                                                                                                           |
+| `--chat-bubble-panel-background`       | `#ffffff`                                        | background    | Panel background.                                                                                                                                                |
+| `--chat-bubble-panel-box-shadow`       | `0 16px 48px rgba(0,0,0,0.22)`                   | box-shadow    | Panel shadow.                                                                                                                                                    |
+| `--chat-bubble-resize-handle-color`    | `transparent`                                    | background    | Resize handle fill (when `resizable`).                                                                                                                           |
 
 Panel size is set via the bindable `panelWidth`/`panelHeight` props (not CSS variables), so it stays in sync when the panel is resized.
 

@@ -27,6 +27,4 @@ export type OptionalBookProperties = {
 
 export type BookEventProperties = {
   onpagechange?: (page: number) => void;
-  /** @deprecated Use `onpagechange` instead; both work until 4.0.0. */
-  onPageChange?: (page: number) => void;
 };

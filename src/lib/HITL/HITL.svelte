@@ -6,7 +6,6 @@
   import Progress from '../Progress/Progress.svelte';
   import { pauseAllConfirmationTimers } from './timers';
   import type { HITLAction, HITLProperties, HITLResponse, HITLSection } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   /**
    * Human-in-the-loop approval card: the assistant wants to run an action and the
@@ -21,15 +20,15 @@
     sections,
     functionArguments,
     hiddenKeys,
-    onConfirm: onConfirmProp,
     onconfirm,
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     countdownSeconds = 10,
     autoCancelSeconds = 0,
     isMicMuted = false,
-    onMicToggle: onMicToggleProp,
-    onmictoggle,
+    // The resolver this replaced defaulted to null, and the call sites test for
+    // exactly null before awaiting it.
+    onmictoggle = null,
     isHistoryMode = false,
     initialState = null,
     approvedIcon,
@@ -46,20 +45,6 @@
     completionTextTestId,
     classes
   }: HITLProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onConfirm = $derived(
-    resolveDeprecatedProp('HITL', 'onConfirm', 'onconfirm', onConfirmProp, onconfirm)
-  );
-  const onMicToggle = $derived(
-    resolveDeprecatedProp('HITL', 'onMicToggle', 'onmictoggle', onMicToggleProp, onmictoggle) ??
-      null
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onConfirm, onMicToggle);
-  });
 
   const DEFAULT_HIDDEN_KEYS = [
     'action',
@@ -83,7 +68,7 @@
   // History mode renders the settled state from props; live mode from local state.
   // A history card with no initialState renders as expired rather than falling
   // through to the pending interactive card — a replayed card must never be able
-  // to fire onConfirm.
+  // to fire onconfirm.
   const userResponse = $derived.by((): HITLResponse | null => {
     if (isHistoryMode) {
       if (initialState === null) {
@@ -126,9 +111,9 @@
   };
 
   const restoreMicState = async (): Promise<void> => {
-    if (onMicToggle !== null && originalMicState !== null && isMicMuted !== originalMicState) {
+    if (onmictoggle !== null && originalMicState !== null && isMicMuted !== originalMicState) {
       try {
-        await onMicToggle();
+        await onmictoggle();
       } catch {
         // Mic restoration is best-effort; a failure must not block the decision.
       }
@@ -148,7 +133,7 @@
     localResponse = action;
     isProcessing = true;
     try {
-      onConfirm?.({
+      onconfirm?.({
         confirmationId,
         action,
         approved: action !== 'rejected'
@@ -199,10 +184,10 @@
     if (isHistoryMode) {
       return;
     }
-    if (onMicToggle !== null) {
+    if (onmictoggle !== null) {
       originalMicState = isMicMuted;
       if (!isMicMuted) {
-        void Promise.resolve(onMicToggle()).catch(() => {
+        void Promise.resolve(onmictoggle()).catch(() => {
           // Auto-mute is best-effort.
         });
       }

@@ -2,7 +2,6 @@
   import Input from '$lib/Input/Input.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
   import type { ChipInputProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     values = $bindable([]),
@@ -12,32 +11,11 @@
     editable = false,
     testId,
     classes,
-    onadd: onaddProp,
-    onAdd,
-    ondismiss: ondismissProp,
-    onDismiss,
-    onedit: oneditProp,
-    onEdit,
-    onchange: onchangeProp,
-    onChange
+    onadd,
+    ondismiss,
+    onedit,
+    onchange
   }: ChipInputProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onadd = $derived(resolveDeprecatedProp('ChipInput', 'onAdd', 'onadd', onAdd, onaddProp));
-  const onchange = $derived(
-    resolveDeprecatedProp('ChipInput', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const ondismiss = $derived(
-    resolveDeprecatedProp('ChipInput', 'onDismiss', 'ondismiss', onDismiss, ondismissProp)
-  );
-  const onedit = $derived(
-    resolveDeprecatedProp('ChipInput', 'onEdit', 'onedit', onEdit, oneditProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onadd, onchange, ondismiss, onedit);
-  });
 
   let draft = $state('');
 

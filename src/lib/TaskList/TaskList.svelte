@@ -3,19 +3,8 @@
   import Loader from '../Loader/Loader.svelte';
   import Button from '../Button/Button.svelte';
   import type { TaskListProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
-  let { rows, onretry: onretryProp, onRetry, testId, classes }: TaskListProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onretry = $derived(
-    resolveDeprecatedProp('TaskList', 'onRetry', 'onretry', onRetry, onretryProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onretry);
-  });
+  let { rows, onretry, testId, classes }: TaskListProperties = $props();
 
   // Rows appended in one update stagger relative to the batch, not the list start —
   // mirrors ThinkingTrace's growthWatcher so a host that streams rows in gets the

@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { PieChartProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
@@ -35,56 +34,18 @@
     tooltipSnippet,
     center,
     empty,
-    onsliceclick: onsliceclickProp,
-    onSliceClick,
-    onslicehover: onslicehoverProp,
-    onSliceHover,
+    onsliceclick,
+    onslicehover,
     testId,
     classes,
     semiCircle = false,
     legendShowValues = false,
     percentDecimals = 0,
-    onChartReady: onChartReadyProp,
     onchartready,
     highlightedIndex = null,
     changePercentage,
     changeInvertColors = false
   }: PieChartProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onsliceclick = $derived(
-    resolveDeprecatedProp(
-      'PieChart',
-      'onSliceClick',
-      'onsliceclick',
-      onSliceClick,
-      onsliceclickProp
-    )
-  );
-  const onslicehover = $derived(
-    resolveDeprecatedProp(
-      'PieChart',
-      'onSliceHover',
-      'onslicehover',
-      onSliceHover,
-      onslicehoverProp
-    )
-  );
-
-  const onChartReady = $derived(
-    resolveDeprecatedProp(
-      'PieChart',
-      'onChartReady',
-      'onchartready',
-      onChartReadyProp,
-      onchartready
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onsliceclick, onslicehover, onChartReady);
-  });
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -102,7 +63,7 @@
   let semiAspectRatioCssVar = $state(2);
 
   onMount(() => {
-    onChartReady?.({
+    onchartready?.({
       highlight: (index) => {
         programmaticIndex = index;
       },

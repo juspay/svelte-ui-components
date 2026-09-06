@@ -4,7 +4,7 @@
     shadow: 'open',
     props: {
       items: { type: 'Array', reflect: false },
-      ariaLabel: { type: 'String', attribute: 'aria-label' },
+      breadcrumbAriaLabel: { type: 'String', attribute: 'aria-label' },
       classes: { type: 'String', attribute: 'classes' },
       item: { type: 'Object' },
       separator: { type: 'Object' },
@@ -17,13 +17,17 @@
   import Breadcrumb from '$lib/Breadcrumb/Breadcrumb.svelte';
   import type { BreadcrumbItemData, BreadcrumbItemContext } from '$lib/Breadcrumb/properties';
 
+  // `ariaLabel` is an ARIAMixin accessor on every Element, so declaring it as a
+  // custom-element prop displaced the one assistive tech reads. The element now
+  // exposes `breadcrumbAriaLabel` and still observes the same `aria-label`
+  // attribute; only the JavaScript property name moved.
   let {
+    breadcrumbAriaLabel = '',
     items = [],
-    ariaLabel = '',
     classes
   }: {
+    breadcrumbAriaLabel?: string;
     items?: BreadcrumbItemData[];
-    ariaLabel?: string;
     classes?: string;
   } = $props();
 </script>
@@ -38,4 +42,4 @@
   {/if}
 {/snippet}
 
-<Breadcrumb {items} {ariaLabel} item={defaultItem} {classes} />
+<Breadcrumb {items} ariaLabel={breadcrumbAriaLabel} item={defaultItem} {classes} />

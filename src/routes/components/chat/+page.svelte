@@ -506,7 +506,7 @@
     scrollPolicy="pin-sender-turn"
     pinHold={scrollPolicyPinHold}
     jump={false}
-    onScrollState={(state) => {
+    onscrollstate={(state) => {
       scrollPolicyState = state;
     }}
     testId="chat-scroll-policy-pin"

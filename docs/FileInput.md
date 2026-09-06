@@ -101,25 +101,25 @@ The single primitive expresses both a compact button-style and an expanded dropz
 
 Override these custom properties (e.g. via the `classes` prop) to style the drop region.
 
-| Variable                             | Default        | CSS Property    | Description                                             |
-| ------------------------------------ | -------------- | --------------- | ------------------------------------------------------- |
-| `--file-input-display`               | `inline-flex`  | display         | Display mode of the root element.                       |
-| `--file-input-flex-direction`        | `column`       | flex-direction  | Flex direction.                                         |
-| `--file-input-align-items`           | `center`       | align-items     | Alignment of children.                                  |
-| `--file-input-justify-content`       | `center`       | justify-content | Justification of children.                              |
-| `--file-input-padding`               | unset          | padding         | Inner spacing of the drop region.                       |
-| `--file-input-border`                | unset          | border          | Border shorthand.                                       |
-| `--file-input-radius`                | unset          | border-radius   | Corner rounding.                                        |
-| `--file-input-background`            | unset          | background      | Background of the drop region.                          |
-| `--file-input-gap`                   | unset          | gap             | Gap between child elements.                             |
-| `--file-input-text-align`            | `center`       | text-align      | Text alignment inside the region.                       |
-| `--file-input-transition`            | unset          | transition      | CSS transition applied to the root.                     |
-| `--file-input-focus-outline`         | unset          | outline         | Outline when focused via keyboard.                      |
-| `--file-input-focus-outline-offset`  | unset          | outline-offset  | Offset of the focus outline.                            |
-| `--file-input-dragover-background`   | unset          | background      | Background when a file is dragged over.                 |
-| `--file-input-dragover-border-color` | unset          | border-color    | Border colour when a file is dragged over.              |
-| `--file-input-disabled-opacity`      | `0.5`          | opacity         | Opacity when disabled.                                  |
-| `--file-input-disabled-cursor`       | `not-allowed`  | cursor          | Cursor when disabled.                                   |
+| Variable                             | Default       | CSS Property    | Description                                |
+| ------------------------------------ | ------------- | --------------- | ------------------------------------------ |
+| `--file-input-display`               | `inline-flex` | display         | Display mode of the root element.          |
+| `--file-input-flex-direction`        | `column`      | flex-direction  | Flex direction.                            |
+| `--file-input-align-items`           | `center`      | align-items     | Alignment of children.                     |
+| `--file-input-justify-content`       | `center`      | justify-content | Justification of children.                 |
+| `--file-input-padding`               | unset         | padding         | Inner spacing of the drop region.          |
+| `--file-input-border`                | unset         | border          | Border shorthand.                          |
+| `--file-input-radius`                | unset         | border-radius   | Corner rounding.                           |
+| `--file-input-background`            | unset         | background      | Background of the drop region.             |
+| `--file-input-gap`                   | unset         | gap             | Gap between child elements.                |
+| `--file-input-text-align`            | `center`      | text-align      | Text alignment inside the region.          |
+| `--file-input-transition`            | unset         | transition      | CSS transition applied to the root.        |
+| `--file-input-focus-outline`         | unset         | outline         | Outline when focused via keyboard.         |
+| `--file-input-focus-outline-offset`  | unset         | outline-offset  | Offset of the focus outline.               |
+| `--file-input-dragover-background`   | unset         | background      | Background when a file is dragged over.    |
+| `--file-input-dragover-border-color` | unset         | border-color    | Border colour when a file is dragged over. |
+| `--file-input-disabled-opacity`      | `0.5`         | opacity         | Opacity when disabled.                     |
+| `--file-input-disabled-cursor`       | `not-allowed` | cursor          | Cursor when disabled.                      |
 
 ## Web Component
 
@@ -138,6 +138,6 @@ Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the
 
 ### Slots
 
-| Slot Name | Maps to Snippet | Description                                                   |
-| --------- | --------------- | ------------------------------------------------------------- |
-| `trigger` | `trigger`       | Drop zone or button content rendered inside the container.    |
+| Slot Name | Maps to Snippet | Description                                                |
+| --------- | --------------- | ---------------------------------------------------------- |
+| `trigger` | `trigger`       | Drop zone or button content rendered inside the container. |

@@ -41,39 +41,39 @@ Svelte 5 Snippet props -- pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                             | Default                                                  | CSS Property     | Description                                                            |
-| ------------------------------------ | -------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------- |
-| `--browser-width`                    | `100%`                                                   | width            | Width of the entire browser frame.                                     |
-| `--browser-max-width`                | `-`                                                      | max-width        | Maximum width of the browser frame.                                    |
-| `--browser-border-radius`            | `12px`                                                   | border-radius    | Corner rounding of the browser frame (applied when `rounded` is true). |
-| `--browser-shadow`                   | `0 8px 32px rgba(0, 0, 0, 0.12)`                         | box-shadow       | Drop shadow of the browser frame (applied when `shadow` is true).      |
-| `--browser-border`                   | `1px solid #d1d5db`                                      | border           | Border of the browser frame.                                           |
-| `--browser-chrome-bg`                | `#f3f4f6` (light) / `#1f2937` (dark)                     | background-color | Background color of the chrome area (title bar and address bar).       |
-| `--browser-chrome-color`             | `#374151` (light) / `#d1d5db` (dark)                     | color            | Text color in the chrome area.                                         |
-| `--browser-titlebar-padding`         | `12px 16px`                                              | padding          | Padding of the title bar containing traffic light buttons.             |
-| `--browser-dot-size`                 | `12px`                                                   | width/height     | Size of each traffic light dot.                                        |
-| `--browser-dot-gap`                  | `8px`                                                    | gap              | Gap between traffic light dots.                                        |
-| `--browser-dot-close-bg`             | `#ef4444`                                                | background-color | Background color of the close (red) dot.                               |
-| `--browser-dot-minimize-bg`          | `#f59e0b`                                                | background-color | Background color of the minimize (yellow) dot.                         |
-| `--browser-dot-maximize-bg`          | `#22c55e`                                                | background-color | Background color of the maximize (green) dot.                          |
-| `--browser-tab-bg`                   | `#ffffff` (light) / `#374151` (dark)                     | background-color | Background color of the active tab.                                    |
-| `--browser-tab-color`                | `#374151` (light) / `#d1d5db` (dark)                     | color            | Text color of the active tab.                                          |
-| `--browser-tab-font-size`            | `13px`                                                   | font-size        | Font size of the tab text.                                             |
-| `--browser-tab-font-family`          | `inherit`                                                | font-family      | Font family of the tab text.                                           |
-| `--browser-tab-padding`              | `6px 16px`                                               | padding          | Padding inside the tab.                                                |
-| `--browser-tab-border-radius`        | `8px 8px 0 0`                                            | border-radius    | Corner rounding of the tab (top corners only).                         |
-| `--browser-addressbar-padding`       | `8px 16px`                                               | padding          | Padding of the address bar row.                                        |
-| `--browser-addressbar-bg`            | `#ffffff` (light) / `#111827` (dark)                     | background-color | Background color of the address bar input area.                        |
-| `--browser-addressbar-border`        | `1px solid #e5e7eb` (light) / `1px solid #374151` (dark) | border           | Border of the address bar input area.                                  |
-| `--browser-addressbar-border-radius` | `6px`                                                    | border-radius    | Corner rounding of the address bar input area.                         |
-| `--browser-addressbar-font-size`     | `13px`                                                   | font-size        | Font size of the URL text.                                             |
-| `--browser-addressbar-font-family`   | `inherit`                                                | font-family      | Font family of the URL text.                                           |
-| `--browser-addressbar-color`         | `#6b7280`                                                | color            | Text color of the URL in the address bar.                              |
-| `--browser-addressbar-height`        | `32px`                                                   | height           | Height of the address bar input area.                                  |
+| Variable                             | Default                                                  | CSS Property     | Description                                                                 |
+| ------------------------------------ | -------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------- |
+| `--browser-width`                    | `100%`                                                   | width            | Width of the entire browser frame.                                          |
+| `--browser-max-width`                | `-`                                                      | max-width        | Maximum width of the browser frame.                                         |
+| `--browser-border-radius`            | `12px`                                                   | border-radius    | Corner rounding of the browser frame (applied when `rounded` is true).      |
+| `--browser-shadow`                   | `0 8px 32px rgba(0, 0, 0, 0.12)`                         | box-shadow       | Drop shadow of the browser frame (applied when `shadow` is true).           |
+| `--browser-border`                   | `1px solid #d1d5db`                                      | border           | Border of the browser frame.                                                |
+| `--browser-chrome-bg`                | `#f3f4f6` (light) / `#1f2937` (dark)                     | background-color | Background color of the chrome area (title bar and address bar).            |
+| `--browser-chrome-color`             | `#374151` (light) / `#d1d5db` (dark)                     | color            | Text color in the chrome area.                                              |
+| `--browser-titlebar-padding`         | `12px 16px`                                              | padding          | Padding of the title bar containing traffic light buttons.                  |
+| `--browser-dot-size`                 | `12px`                                                   | width/height     | Size of each traffic light dot.                                             |
+| `--browser-dot-gap`                  | `8px`                                                    | gap              | Gap between traffic light dots.                                             |
+| `--browser-dot-close-bg`             | `#ef4444`                                                | background-color | Background color of the close (red) dot.                                    |
+| `--browser-dot-minimize-bg`          | `#f59e0b`                                                | background-color | Background color of the minimize (yellow) dot.                              |
+| `--browser-dot-maximize-bg`          | `#22c55e`                                                | background-color | Background color of the maximize (green) dot.                               |
+| `--browser-tab-bg`                   | `#ffffff` (light) / `#374151` (dark)                     | background-color | Background color of the active tab.                                         |
+| `--browser-tab-color`                | `#374151` (light) / `#d1d5db` (dark)                     | color            | Text color of the active tab.                                               |
+| `--browser-tab-font-size`            | `13px`                                                   | font-size        | Font size of the tab text.                                                  |
+| `--browser-tab-font-family`          | `inherit`                                                | font-family      | Font family of the tab text.                                                |
+| `--browser-tab-padding`              | `6px 16px`                                               | padding          | Padding inside the tab.                                                     |
+| `--browser-tab-border-radius`        | `8px 8px 0 0`                                            | border-radius    | Corner rounding of the tab (top corners only).                              |
+| `--browser-addressbar-padding`       | `8px 16px`                                               | padding          | Padding of the address bar row.                                             |
+| `--browser-addressbar-bg`            | `#ffffff` (light) / `#111827` (dark)                     | background-color | Background color of the address bar input area.                             |
+| `--browser-addressbar-border`        | `1px solid #e5e7eb` (light) / `1px solid #374151` (dark) | border           | Border of the address bar input area.                                       |
+| `--browser-addressbar-border-radius` | `6px`                                                    | border-radius    | Corner rounding of the address bar input area.                              |
+| `--browser-addressbar-font-size`     | `13px`                                                   | font-size        | Font size of the URL text.                                                  |
+| `--browser-addressbar-font-family`   | `inherit`                                                | font-family      | Font family of the URL text.                                                |
+| `--browser-addressbar-color`         | `#6b7280`                                                | color            | Text color of the URL in the address bar.                                   |
+| `--browser-addressbar-height`        | `32px`                                                   | height           | Height of the address bar input area.                                       |
 | `--browser-lock-color`               | `#6b7280`                                                | color            | Color of the lock icon in the address bar (SVG uses `fill="currentColor"`). |
-| `--browser-content-bg`               | `#ffffff`                                                | background-color | Background color of the content viewport area.                         |
-| `--browser-content-min-height`       | `200px`                                                  | min-height       | Minimum height of the content viewport area.                           |
-| `--browser-content-overflow`         | `hidden`                                                 | overflow         | Overflow behavior of the content viewport area.                        |
+| `--browser-content-bg`               | `#ffffff`                                                | background-color | Background color of the content viewport area.                              |
+| `--browser-content-min-height`       | `200px`                                                  | min-height       | Minimum height of the content viewport area.                                |
+| `--browser-content-overflow`         | `hidden`                                                 | overflow         | Overflow behavior of the content viewport area.                             |
 
 ## Type Reference
 

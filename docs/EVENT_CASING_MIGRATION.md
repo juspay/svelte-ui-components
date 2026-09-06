@@ -21,19 +21,22 @@ forked library already write, which makes this library a drop-in for them.
 
 ## What a consumer does
 
-Nothing, immediately: every spelling this library has ever accepted still
-works. Passing a deprecated one warns once, in dev, naming its replacement.
+Through 3.x, nothing immediately: every spelling the library had ever accepted
+still worked, and passing a deprecated one warned once in dev, naming its
+replacement. 4.0.0 removed them, so an old spelling is now an unknown prop —
+inert, and silent unless you are on TypeScript, where the compiler catches it.
 
-Before upgrading to 4.0.0, run the codemod from the project root:
+Run the codemod from the project root, before or as part of the upgrade:
 
 ```sh
 npx sui-codemod --dry-run ./src   # preview
 npx sui-codemod ./src             # apply
 ```
 
-It rewrites the deprecated spellings on library components in `.svelte` files
-(`scripts/codemod/legacy-pairs.ts` is its table, generated from the
-`@deprecated` tags in the library's own `properties.ts` files) and reports what
+It rewrites the removed spellings on library components in `.svelte` files
+(`scripts/codemod/legacy-pairs.ts` is its table — generated from the
+`@deprecated` tags while they existed, and frozen at those 191 entries now that
+they do not) and reports what
 it cannot prove safe — spread attributes, unresolvable tags — as `WARN` lines
 with `file:line:column` rather than guessing.
 
@@ -42,7 +45,7 @@ Two things the codemod deliberately leaves alone:
 - **Callback keys on config objects.** `TableColumn.onToggle`,
   `TablePaginationConfig.onPageChange`, `ComboboxAction.onClick` are members of
   a data object a consumer builds, not props on a tag. They keep their
-  camelCase spelling and are not deprecated.
+  camelCase spelling and were never deprecated, so 4.0.0 does not touch them.
 - **Keys inside a spread.** `<Input {...inputEventProperties} />` hides its
   keys from a tag-level rewrite; the spread is reported so a person can look.
 
@@ -79,19 +82,37 @@ tests that fail if a deprecated spelling reappears, because an internal one
 warns in a consumer's console for code the consumer did not write, and a
 documented one is an instruction to use something 4.0.0 removes.
 
-**Phase 2 — removal (4.0.0).** Every alias declaration, its resolver and its
-warning are deleted; each component reads only its lowercase name.
-`src/lib/deprecation.ts` goes with them. `scripts/codemod/legacy-pairs.ts`
-stays, frozen, as the table a consumer's codemod run still needs.
+**Phase 2 — removal (4.0.0). Done.** Every alias declaration, its resolver and
+its warning are deleted; each component reads only its lowercase name.
+`src/lib/deprecation.ts` went with them, and
+`scripts/migrate/remove-wc-alias-props.ts` took 172 now-dead declarations off
+the custom-element wrappers — an element that still declared a removed spelling
+would expose a setter that silently reached nothing, which is worse than not
+declaring it. `scripts/codemod/legacy-pairs.ts` stays, frozen, as the table a
+consumer's codemod run still needs; `scripts/codemod/legacy-pairs.test.ts` now
+asserts the derivation yields nothing, which is what proves the removal
+complete. `docs/MIGRATION_4.0.md` is the consumer-facing guide.
+
+Three components had a resolver carrying a fallback (`?? null`,
+`?? (() => {})`) that the removal would have dropped along with it, leaving
+`HITL`, `IframeViewer` and `Input` calling an undefined handler. The generator
+reports those rather than guessing, and the defaults moved onto the
+destructured prop by hand.
+
+One component had to be corrected rather than merely stripped: `Chat` deprecated
+its _lowercase_ `onscrollstate` in favour of `onScrollState`, inverting the rule.
+It survived phase 0's gate because it borrows its type by indexed access and the
+gate only recognised inline function types as events. The gate now understands
+that shape, and 4.0.0 keeps `onscrollstate`.
 
 ## The one hand-wired component
 
 `Step`'s `onclick` is declared in `Stepper/properties.ts` — the one directory
 hosting two exported components — so the generator, which looks for a
-component file matching the directory name, reports it as skipped. `Step.svelte`
-carries the same resolver line, written by hand;
-`src/lib/Stepper/Stepper.svelte.test.ts` clicks a step under both spellings so
-the wiring cannot silently rot.
+component file matching the directory name, reported it as skipped through
+phase 1 and its resolver line was written by hand. With phase 2 done there is
+no resolver left to hand-write, and `src/lib/Stepper/Stepper.svelte.test.ts`
+clicks a step under the one remaining spelling.
 
 `Stepper` itself had two names for one event (`onstepclick` and
 `onhandleStepClick`); both, and their camelCase twins, resolve to

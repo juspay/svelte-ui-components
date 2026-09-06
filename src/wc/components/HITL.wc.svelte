@@ -4,18 +4,16 @@
     shadow: 'open',
     props: {
       confirmationId: { type: 'String', attribute: 'confirmation-id' },
-      title: { type: 'String', reflect: true },
+      hITLTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String' },
       sections: { type: 'Object' },
       functionArguments: { type: 'Object' },
       hiddenKeys: { type: 'Object' },
-      onConfirm: { type: 'Object' },
       confirmLabel: { type: 'String', attribute: 'confirm-label' },
       cancelLabel: { type: 'String', attribute: 'cancel-label' },
       countdownSeconds: { type: 'Number', attribute: 'countdown-seconds' },
       autoCancelSeconds: { type: 'Number', attribute: 'auto-cancel-seconds' },
       isMicMuted: { type: 'Boolean', attribute: 'is-mic-muted' },
-      onMicToggle: { type: 'Object' },
       isHistoryMode: { type: 'Boolean', attribute: 'is-history-mode' },
       initialState: { type: 'Object' },
       approvedIcon: { type: 'Object' },
@@ -39,7 +37,7 @@
 
 <script lang="ts">
   import HITL from '$lib/HITL/HITL.svelte';
-  let props = $props();
+  let { hITLTitle, ...props } = $props();
 </script>
 
-<HITL {...props} />
+<HITL {...props} title={hITLTitle} />

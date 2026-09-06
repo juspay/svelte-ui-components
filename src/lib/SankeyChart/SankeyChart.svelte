@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SankeyChartProperties, SankeyTooltipContext } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { computeSankeyLayout } from '$lib/_chart/geometry';
@@ -27,14 +26,10 @@
     valueFormat,
     tooltipSnippet,
     empty,
-    onnodeclick: onnodeclickProp,
-    onNodeClick,
-    onlinkclick: onlinkclickProp,
-    onLinkClick,
-    onnodehover: onnodehoverProp,
-    onNodeHover,
-    onlinkhover: onlinkhoverProp,
-    onLinkHover,
+    onnodeclick,
+    onlinkclick,
+    onnodehover,
+    onlinkhover,
     testId,
     classes,
     columnLabels,
@@ -46,25 +41,6 @@
     lastColumnLabelSide = 'right',
     marginX = 40
   }: SankeyChartProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onlinkclick = $derived(
-    resolveDeprecatedProp('SankeyChart', 'onLinkClick', 'onlinkclick', onLinkClick, onlinkclickProp)
-  );
-  const onlinkhover = $derived(
-    resolveDeprecatedProp('SankeyChart', 'onLinkHover', 'onlinkhover', onLinkHover, onlinkhoverProp)
-  );
-  const onnodeclick = $derived(
-    resolveDeprecatedProp('SankeyChart', 'onNodeClick', 'onnodeclick', onNodeClick, onnodeclickProp)
-  );
-  const onnodehover = $derived(
-    resolveDeprecatedProp('SankeyChart', 'onNodeHover', 'onnodehover', onNodeHover, onnodehoverProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onlinkclick, onlinkhover, onnodeclick, onnodehover);
-  });
 
   // ── State ──────────────────────────────────────────────────────
 

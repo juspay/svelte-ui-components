@@ -41,8 +41,6 @@ export type OptionalHITLProperties = {
   /** Argument keys (case-insensitive) hidden from the generic formatting. */
   hiddenKeys?: string[];
   onconfirm?: (event: HITLEvent) => void;
-  /** @deprecated Use `onconfirm` instead; both work until 4.0.0. */
-  onConfirm?: (event: HITLEvent) => void;
   confirmLabel?: string;
   cancelLabel?: string;
   /**
@@ -58,8 +56,6 @@ export type OptionalHITLProperties = {
   /** Current mic state — muted while the card is open, restored on decision. */
   isMicMuted?: boolean;
   onmictoggle?: (() => void | Promise<void>) | null;
-  /** @deprecated Use `onmictoggle` instead; both work until 4.0.0. */
-  onMicToggle?: (() => void | Promise<void>) | null;
   /** Renders a settled card from `initialState` with no timers or buttons. */
   isHistoryMode?: boolean;
   initialState?: HITLInitialState | null;

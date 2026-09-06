@@ -11,7 +11,6 @@
       classes: { type: 'String' },
       variableDelay: { type: 'Object' },
       resolveDelay: { type: 'Object' },
-      onProgress: { type: 'Object' },
       renderCharacter: { type: 'Object' },
       onprogress: { type: 'Object' }
     }

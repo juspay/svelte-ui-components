@@ -11,12 +11,8 @@
       disabled: { type: 'Boolean', reflect: true },
       step: { type: 'Number' },
       dragLabel: { type: 'String', attribute: 'drag-label' },
-      children: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onMoveStart: { type: 'Object' },
-      onMove: { type: 'Object' },
-      onMoveEnd: { type: 'Object' },
       onmovestart: { type: 'Object' },
       onmove: { type: 'Object' },
       onmoveend: { type: 'Object' }

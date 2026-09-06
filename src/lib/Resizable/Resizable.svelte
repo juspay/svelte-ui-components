@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ResizableProperties, ResizeEdge } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     width = $bindable(null),
@@ -14,37 +13,12 @@
     disabled = false,
     handleLabel = 'Resize',
     children,
-    onresize: onresizeProp,
-    onResize,
-    onresizestart: onresizestartProp,
-    onResizeStart,
-    onresizeend: onresizeendProp,
-    onResizeEnd,
+    onresize,
+    onresizestart,
+    onresizeend,
     testId,
     classes
   }: ResizableProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onresize = $derived(
-    resolveDeprecatedProp('Resizable', 'onResize', 'onresize', onResize, onresizeProp)
-  );
-  const onresizeend = $derived(
-    resolveDeprecatedProp('Resizable', 'onResizeEnd', 'onresizeend', onResizeEnd, onresizeendProp)
-  );
-  const onresizestart = $derived(
-    resolveDeprecatedProp(
-      'Resizable',
-      'onResizeStart',
-      'onresizestart',
-      onResizeStart,
-      onresizestartProp
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onresize, onresizeend, onresizestart);
-  });
 
   const DIRS: Record<ResizeEdge, { x: -1 | 0 | 1; y: -1 | 0 | 1 }> = {
     top: { x: 0, y: -1 },

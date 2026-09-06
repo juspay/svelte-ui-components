@@ -35,41 +35,41 @@ Call `initialize()` eagerly (e.g. in `onMount`) when you want support detection 
 
 ## Reactive fields
 
-| Field          | Type      | Description                                                                    |
-| -------------- | --------- | ------------------------------------------------------------------------------ |
-| `listening`    | `boolean` | True between the notified start and end of a listening session.                |
+| Field          | Type      | Description                                                                                  |
+| -------------- | --------- | -------------------------------------------------------------------------------------------- |
+| `listening`    | `boolean` | True between the notified start and end of a listening session.                              |
 | `interimText`  | `string`  | Committed transcript plus the current interim guess — what a composer shows while listening. |
-| `errorMessage` | `string`  | The current user-facing error.                                                 |
-| `errorVisible` | `boolean` | Toast visibility; auto-clears after `errorTimeoutMs` (default 4000ms).         |
-| `supported`    | `boolean` | Whether a recognition constructor was found (set by `initialize`).             |
+| `errorMessage` | `string`  | The current user-facing error.                                                               |
+| `errorVisible` | `boolean` | Toast visibility; auto-clears after `errorTimeoutMs` (default 4000ms).                       |
+| `supported`    | `boolean` | Whether a recognition constructor was found (set by `initialize`).                           |
 
 ## Methods
 
-| Method         | Description                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------- |
-| `initialize()` | Detects the API and builds a wired instance. Safe to call again to rebuild after a failure.       |
-| `start()`      | Starts listening; retries once through a re-init if the underlying `start()` throws.              |
-| `stop()`       | Stops listening and notifies.                                                                     |
-| `toggle()`     | The mic-button handler: stops when listening, otherwise runs the permission gate and starts.      |
-| `destroy()`    | Clears the toast timer and aborts/tears down the recognition instance.                            |
+| Method         | Description                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| `initialize()` | Detects the API and builds a wired instance. Safe to call again to rebuild after a failure.  |
+| `start()`      | Starts listening; retries once through a re-init if the underlying `start()` throws.         |
+| `stop()`       | Stops listening and notifies.                                                                |
+| `toggle()`     | The mic-button handler: stops when listening, otherwise runs the permission gate and starts. |
+| `destroy()`    | Clears the toast timer and aborts/tears down the recognition instance.                       |
 
 ## Options
 
-| Option                      | Type                                                     | Default            | Description                                                                                             |
-| --------------------------- | -------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
-| `lang`                      | `string`                                                 | `'en-US'`          | Recognition language.                                                                                    |
-| `continuous`                | `boolean`                                                | `false`            | Keep listening across pauses.                                                                            |
-| `interimResults`            | `boolean`                                                | `true`             | Emit interim guesses.                                                                                    |
-| `errorTimeoutMs`            | `number`                                                 | `4000`             | Toast auto-hide delay.                                                                                   |
-| `errorMessages`             | `Record<string, string>`                                 | built-in map       | Per-recognition-error-code copy, merged over the defaults (`not-allowed`, `no-speech`, `network`, …).    |
-| `messages`                  | `Partial<SpeechToTextMessages>`                          | built-in copy      | Overrides for the non-code messages (unsupported, init failure, permission denial, …).                   |
-| `getRecognitionConstructor` | `() => SpeechRecognitionConstructor \| null`             | reads `window`     | Injectable constructor source — the seam for tests, demos, and non-browser hosts.                        |
-| `requestPermission`         | `() => Promise<SpeechPermissionResult> \| null`          | `-`                | Host permission hook (e.g. a native shell's mic bridge). Return `null` to mean "no bridge here". Asked at most once; a denial is remembered. |
-| `seedTranscript`            | `() => string`                                           | `-`                | Text the transcript starts from when listening begins (e.g. the composer's current value).               |
-| `onTranscript`              | `(transcript: string) => void`                           | `-`                | Fires with the accumulated transcript each time a final result lands.                                    |
-| `onListeningChange`         | `(listening: boolean) => void`                           | `-`                | Fires on notified start/stop.                                                                            |
-| `onerror`                   | `(message: string, code: string \| null) => void`        | `-`                | Fires whenever the toast is shown; `code` is the recognition error code when there is one.               |
-| `onDiagnostic`              | `(event: string, detail: Record<string, string \| number \| boolean \| null>) => void` | `-` | Non-fatal internals worth logging; wire to your telemetry.                                               |
+| Option                      | Type                                                                                   | Default        | Description                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lang`                      | `string`                                                                               | `'en-US'`      | Recognition language.                                                                                                                        |
+| `continuous`                | `boolean`                                                                              | `false`        | Keep listening across pauses.                                                                                                                |
+| `interimResults`            | `boolean`                                                                              | `true`         | Emit interim guesses.                                                                                                                        |
+| `errorTimeoutMs`            | `number`                                                                               | `4000`         | Toast auto-hide delay.                                                                                                                       |
+| `errorMessages`             | `Record<string, string>`                                                               | built-in map   | Per-recognition-error-code copy, merged over the defaults (`not-allowed`, `no-speech`, `network`, …).                                        |
+| `messages`                  | `Partial<SpeechToTextMessages>`                                                        | built-in copy  | Overrides for the non-code messages (unsupported, init failure, permission denial, …).                                                       |
+| `getRecognitionConstructor` | `() => SpeechRecognitionConstructor \| null`                                           | reads `window` | Injectable constructor source — the seam for tests, demos, and non-browser hosts.                                                            |
+| `requestPermission`         | `() => Promise<SpeechPermissionResult> \| null`                                        | `-`            | Host permission hook (e.g. a native shell's mic bridge). Return `null` to mean "no bridge here". Asked at most once; a denial is remembered. |
+| `seedTranscript`            | `() => string`                                                                         | `-`            | Text the transcript starts from when listening begins (e.g. the composer's current value).                                                   |
+| `onTranscript`              | `(transcript: string) => void`                                                         | `-`            | Fires with the accumulated transcript each time a final result lands.                                                                        |
+| `onListeningChange`         | `(listening: boolean) => void`                                                         | `-`            | Fires on notified start/stop.                                                                                                                |
+| `onerror`                   | `(message: string, code: string \| null) => void`                                      | `-`            | Fires whenever the toast is shown; `code` is the recognition error code when there is one.                                                   |
+| `onDiagnostic`              | `(event: string, detail: Record<string, string \| number \| boolean \| null>) => void` | `-`            | Non-fatal internals worth logging; wire to your telemetry.                                                                                   |
 
 ## Notes
 

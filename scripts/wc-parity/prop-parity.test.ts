@@ -27,62 +27,32 @@ describe('custom-element wrappers declare every prop of the component they wrap'
 });
 
 /**
- * Twenty-four wrappers already ship a prop whose name shadows an accessor the
- * host element defines — `hidden`, `id`, `role`, `title` and ten `aria*` names.
+ * Empty, as of 4.0.0. It held 27 declarations whose names were already taken on
+ * the host element — `children`, `hidden`, `id`, `role`, `title` and ten
+ * `aria*` names — recorded rather than failed on, because renaming a public
+ * prop needs a major. `scripts/migrate/rename-host-reserved-props.ts` did that
+ * rename; the list stays so a twenty-eighth fails here instead of shipping.
  *
- * How harmful that is was NOT assumed. `sui-badge`'s `hidden` was measured in a
- * browser, and `element.hidden = true` still hides it: Svelte's declared setter
- * reflects to the attribute, so the native behaviour survives. This list is
- * therefore a conservative guard against *new* shadowing, not a register of
- * proven bugs. Any specific entry needs its own measurement before being called
- * a defect; `sui-input`'s `id` and the `aria*` reflections are the likeliest to
- * matter and none of them has been measured yet.
+ * Worth keeping straight, because the old note was careful about it and the fix
+ * should not overstate what it fixed: these were not 27 proven bugs. Only
+ * `children` was measured broken — `element.children` returned undefined
+ * instead of an HTMLCollection on the three wrappers that declared it, and that
+ * declaration is now simply gone, since light DOM already carries slotted
+ * content. `sui-badge`'s `hidden` was measured *working*: Svelte's declared
+ * setter reflects to the attribute, so the native behaviour survived. The
+ * `aria*` entries are the ones with a clear mechanism — ARIAMixin puts those
+ * accessors on every Element, and a same-named prop displaces the reflection
+ * assistive technology reads.
  *
- * The ten `aria*` entries are the same defect one layer down. ARIAMixin is
- * implemented on Element, so `ariaLabel` and friends are already accessors that
- * reflect to their `aria-*` attribute — a component prop of the same name
- * displaces the reflection assistive tech reads. Those went unnoticed until the
- * reserved list learned about ARIAMixin; they are not new, and no entry below
- * was introduced by this change.
- *
- * Renaming a public prop is a breaking change, so this records the existing set
- * by name instead of failing on it, and fails the moment a twenty-fifth appears.
- * The list is meant to shrink at the next major, not to be lived with.
+ * They were renamed uniformly anyway, because "the setter happens to reflect,
+ * so the platform behaviour survives" is a property of Svelte's current
+ * codegen rather than something this library guarantees, and a major is the
+ * only time the whole set can move at once. The rename is property-only: each
+ * declaration pins the attribute it already observed, so `<sui-card
+ * title="x">` is unchanged and only `element.title` versus
+ * `element.cardTitle` differs.
  */
-const KNOWN_HOST_RESERVED_DECLARATIONS: readonly string[] = [
-  // These three shipped `children` in a published version, so removing the
-  // declaration is a breaking change and waits for 4.0.0. Until then
-  // `element.children` is undefined on them — measured, not assumed — which is
-  // exactly why the name is reserved and why these are recorded rather than
-  // tolerated silently.
-  'ChatBubble.wc.svelte:children',
-  'Draggable.wc.svelte:children',
-  'Resizable.wc.svelte:children',
-  'Badge.wc.svelte:hidden',
-  'Badge.wc.svelte:ariaLabel',
-  'Banner.wc.svelte:role',
-  'Breadcrumb.wc.svelte:ariaLabel',
-  'Browser.wc.svelte:title',
-  'Button.wc.svelte:ariaLabel',
-  'Button.wc.svelte:ariaExpanded',
-  'Card.wc.svelte:title',
-  'Chat.wc.svelte:title',
-  'ChatHeader.wc.svelte:title',
-  'ChatMessage.wc.svelte:role',
-  'Checkbox.wc.svelte:ariaLabel',
-  'ChipInput.wc.svelte:ariaLabel',
-  'Combobox.wc.svelte:ariaLabel',
-  'EmptyState.wc.svelte:title',
-  'HITL.wc.svelte:title',
-  'IframeViewer.wc.svelte:title',
-  'Input.wc.svelte:id',
-  'Input.wc.svelte:ariaLabel',
-  'LottiePlayer.wc.svelte:ariaHidden',
-  'Menu.wc.svelte:ariaLabel',
-  'Pill.wc.svelte:title',
-  'Sheet.wc.svelte:title',
-  'StatCard.wc.svelte:title'
-];
+const KNOWN_HOST_RESERVED_DECLARATIONS: readonly string[] = [];
 
 describe('host-reserved names are excluded deliberately, not forgotten', () => {
   it('adds no new prop that would replace an HTMLElement accessor', () => {

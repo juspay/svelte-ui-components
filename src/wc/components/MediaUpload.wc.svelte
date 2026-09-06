@@ -23,9 +23,6 @@
       files: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onFilesChange: { type: 'Object' },
-      onRemove: { type: 'Object' },
-      onRejected: { type: 'Object' },
       onchange: { type: 'Object' },
       onremove: { type: 'Object' },
       onerror: { type: 'Object' }

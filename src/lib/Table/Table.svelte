@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { TableProperties, TableCheckboxSelectionConfig, TableRow } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { normalizeColumns } from './normalizeColumns';
   import BuiltinCell from './BuiltinCell.svelte';
   import type { JSONValue } from 'type-decoder';
@@ -37,19 +36,14 @@
     sortDefaultIcon,
     cell,
     empty,
-    onRowClick: onRowClickProp,
     onrowclick,
-    onSort: onSortProp,
     onsort,
-    onCellChange,
-    oncellchange,
     classes,
     paginatorSlot,
     getRowTestId,
     getCellTestId,
     checkboxSelection,
     searchConfig,
-    onSearchChange: onSearchChangeProp,
     onsearchchange,
     pagination,
     toolbarSlot,
@@ -60,29 +54,6 @@
     headerTooltipPosition,
     usePortal = false
   }: TableProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onRowClick = $derived(
-    resolveDeprecatedProp('Table', 'onRowClick', 'onrowclick', onRowClickProp, onrowclick)
-  );
-  const onSort = $derived(resolveDeprecatedProp('Table', 'onSort', 'onsort', onSortProp, onsort));
-  const _onCellChange = $derived(
-    resolveDeprecatedProp('Table', 'onCellChange', 'oncellchange', onCellChange, oncellchange)
-  );
-  const onSearchChange = $derived(
-    resolveDeprecatedProp(
-      'Table',
-      'onSearchChange',
-      'onsearchchange',
-      onSearchChangeProp,
-      onsearchchange
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onRowClick, onSort, _onCellChange, onSearchChange);
-  });
 
   // ─── Keyed column model → positional projection ─────────────────────────────
   // When `columns` is provided, the keyed model is normalized once and the
@@ -139,12 +110,12 @@
       sortColumn = colIndex;
       sortDirection = 'asc';
     }
-    onSort?.(colIndex, sortDirection);
+    onsort?.(colIndex, sortDirection);
   };
 
   // ─── Row click ───────────────────────────────────────────────────────────────
   const handleRowClick = (rowIndex: number, rowData: JSONValue[], originalIndex: number): void => {
-    onRowClick?.(rowIndex, rowData, originalIndex);
+    onrowclick?.(rowIndex, rowData, originalIndex);
   };
 
   const handleRowKeydown = (
@@ -155,11 +126,11 @@
   ): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      onRowClick?.(rowIndex, rowData, originalIndex);
+      onrowclick?.(rowIndex, rowData, originalIndex);
     }
   };
 
-  let isRowClickable = $derived(typeof onRowClick === 'function');
+  let isRowClickable = $derived(typeof onrowclick === 'function');
   let isStickyHeader = $derived(stickyHeader || isTableScrollable);
 
   // ─── Horizontal-scroll affordance ────────────────────────────────────────
@@ -196,7 +167,7 @@
   // ─── C2-3: Search ─────────────────────────────────────────────────────────
   let searchTerm = $state('');
   let hasSearchConfig = $derived(!!searchConfig);
-  let isServerSearch = $derived(typeof onSearchChange === 'function');
+  let isServerSearch = $derived(typeof onsearchchange === 'function');
   let searchInputRef = $state<HTMLInputElement | null>(null);
   let inlineSearchInputRef = $state<{ focus: () => void } | null>(null);
   let inlineSearchTriggerRef = $state<HTMLElement | null>(null);
@@ -208,7 +179,7 @@
     pageOverride = 1;
     pagination?.onPageChange?.(1);
     if (isServerSearch) {
-      onSearchChange?.(term);
+      onsearchchange?.(term);
     }
   };
 
@@ -245,7 +216,7 @@
 
   // The expanded guard matters: collapsing unmounts the focused input, which can
   // fire blur on the way out. Without it, an Escape (or close-button) collapse
-  // re-enters clearSearch and fires a second onSearchChange('') — a duplicate
+  // re-enters clearSearch and fires a second onsearchchange('') — a duplicate
   // request on the server-search path.
   const collapseInlineSearchIfEmpty = (): void => {
     if (isInlineSearchExpanded && searchTerm.trim() === '') {
@@ -333,7 +304,7 @@
   });
 
   /**
-   * Client-side filtered rows. When `onSearchChange` is provided (server
+   * Client-side filtered rows. When `onsearchchange` is provided (server
    * delegation) or `searchConfig` is absent, the sorted data passes through
    * untouched.
    */
@@ -434,7 +405,7 @@
   /**
    * Offset that converts the render loop's page-local index back into an index
    * into the consumer-supplied rows. Client-mode pagination slices internally,
-   * so page 2+ would otherwise hand handlers (onRowClick, column handlers,
+   * so page 2+ would otherwise hand handlers (onrowclick, column handlers,
    * cell snippets, test-id callbacks) an index that mis-addresses the
    * consumer's full array. Server mode supplies the current page as the whole
    * array, so no offset applies.

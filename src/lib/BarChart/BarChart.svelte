@@ -7,7 +7,6 @@
     BarFillGradient,
     BarFillPattern
   } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { ChartHighlightAPI } from '../_chart/highlight';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
@@ -83,7 +82,6 @@
     tooltipSnippet,
     empty,
     renderOverlay,
-    onChartReady: onChartReadyProp,
     onchartready,
     highlightedIndex = null,
     normaliseToFirstPoint = false,
@@ -93,36 +91,11 @@
     interactiveLegend = false,
     hideLegendBelow = 360,
     tooltipPortal = false,
-    onbarclick: onbarclickProp,
-    onBarClick,
-    onbarhover: onbarhoverProp,
-    onBarHover,
+    onbarclick,
+    onbarhover,
     testId,
     classes
   }: BarChartProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onbarclick = $derived(
-    resolveDeprecatedProp('BarChart', 'onBarClick', 'onbarclick', onBarClick, onbarclickProp)
-  );
-  const onbarhover = $derived(
-    resolveDeprecatedProp('BarChart', 'onBarHover', 'onbarhover', onBarHover, onbarhoverProp)
-  );
-
-  const onChartReady = $derived(
-    resolveDeprecatedProp(
-      'BarChart',
-      'onChartReady',
-      'onchartready',
-      onChartReadyProp,
-      onchartready
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onbarclick, onbarhover, onChartReady);
-  });
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -135,15 +108,15 @@
   let mouseY = $state(0);
   let anchor = $state<TooltipAnchor | null>(null);
   let valueFontSize = $state(14);
-  /** Internal tracking for the imperative highlight API (onChartReady). */
+  /** Internal tracking for the imperative highlight API (onchartready). */
   let apiHighlightedIndex = $state<number | null>(null);
   const hiddenSeries = new SvelteSet<number>();
 
-  // ── onMount: emit ChartHighlightAPI via onChartReady ──────────
+  // ── onMount: emit ChartHighlightAPI via onchartready ──────────
 
   onMount(() => {
     valueFontSize = readCssVarPx(containerEl, '--barchart-value-font-size', 14);
-    if (typeof onChartReady !== 'function') {
+    if (typeof onchartready !== 'function') {
       return;
     }
     const api: ChartHighlightAPI = {
@@ -153,7 +126,7 @@
       getCategories: () => labels,
       type: 'bar-chart'
     };
-    onChartReady(api);
+    onchartready(api);
   });
 
   // ── Layout ─────────────────────────────────────────────────────

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { CheckListItemProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Checkbox from '../Checkbox/Checkbox.svelte';
 
   let {
@@ -9,20 +8,9 @@
     disabled = false,
     checkboxLabel,
     testId,
-    onclick: onclickProp,
-    onClick,
+    onclick,
     classes
   }: CheckListItemProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclick = $derived(
-    resolveDeprecatedProp('CheckListItem', 'onClick', 'onclick', onClick, onclickProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onclick);
-  });
 
   function handleClick(value: boolean): void {
     checked = value;

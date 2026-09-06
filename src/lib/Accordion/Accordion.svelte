@@ -1,29 +1,17 @@
 <script lang="ts">
   import type { AccordionProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     expand = $bindable(false),
     children,
     trigger,
-    ontoggle: ontoggleProp,
-    onToggle,
+    ontoggle,
     triggerClasses,
     classes,
     testId,
     disabled = false,
     panelId
   }: AccordionProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const ontoggle = $derived(
-    resolveDeprecatedProp('Accordion', 'onToggle', 'ontoggle', onToggle, ontoggleProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(ontoggle);
-  });
 
   /* The trigger and the panel are siblings, not ancestor/descendant, so nothing in the
      markup tells assistive technology which region the trigger's aria-expanded refers to.

@@ -5,7 +5,6 @@
   import SplitInput from '$lib/SplitInput/SplitInput.svelte';
   import swapVerticalSvg from '$lib/assets/swap-vertical.svg?raw';
   import type { ColorPickerProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import {
     hexToHsv,
     hsvToHex,
@@ -23,25 +22,10 @@
     disabled = false,
     showValue = false,
     testId,
-    onchange: onchangeProp,
-    onChange,
-    oninput: oninputProp,
-    onInput,
+    onchange,
+    oninput,
     classes
   }: ColorPickerProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('ColorPicker', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const oninput = $derived(
-    resolveDeprecatedProp('ColorPicker', 'onInput', 'oninput', onInput, oninputProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange, oninput);
-  });
 
   // ── Internal state ──────────────────────────────────────────────
 

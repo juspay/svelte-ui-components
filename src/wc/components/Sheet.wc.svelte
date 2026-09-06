@@ -5,7 +5,7 @@
     props: {
       open: { type: 'Boolean', reflect: true },
       side: { type: 'String', reflect: true },
-      title: { type: 'String', reflect: true },
+      sheetTitle: { type: 'String', reflect: true, attribute: 'title' },
       showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },
       showCloseButton: { type: 'Boolean', reflect: true, attribute: 'show-close-button' },
       testId: { type: 'String', attribute: 'test-id' },
@@ -15,20 +15,17 @@
       onafterclose: { type: 'Object' },
       dismissOnOutsideClick: { type: 'Boolean', attribute: 'dismiss-on-outside-click' },
       content: { type: 'Object' },
-      footer: { type: 'Object' },
-      onClose: { type: 'Object' },
-      onAfterOpen: { type: 'Object' },
-      onAfterClose: { type: 'Object' }
+      footer: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import Sheet from '$lib/Sheet/Sheet.svelte';
-  let props = $props();
+  let { sheetTitle, ...props } = $props();
 </script>
 
-<Sheet {...props}>
+<Sheet {...props} title={sheetTitle}>
   {#snippet content()}
     <slot></slot>
   {/snippet}

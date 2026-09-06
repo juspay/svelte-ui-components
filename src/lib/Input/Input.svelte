@@ -1,7 +1,6 @@
 <script lang="ts">
   import { validateInput } from '$lib/utils';
   import type { InputProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import type { ValidationState } from '$lib/types';
 
   let {
@@ -31,21 +30,14 @@
     testId = '',
     textTransformers = [],
     textViewPresentation = [],
-    onFocus: onFocusProp,
     onfocus,
-    onFocusout: onFocusoutProp,
     onfocusout,
-    onBlur: onBlurProp,
     onblur,
-    onInput: onInputProp,
     oninput,
-    onPaste: onPasteProp,
     onpaste,
-    onStateChange: onStateChangeProp,
-    onstatechange,
-    onClick: onClickProp,
+    // Called unguarded below, so it keeps the no-op default the resolver gave it.
+    onstatechange = () => {},
     onclick,
-    onKeyDown: onKeyDownProp,
     onkeydown,
     classes,
     role,
@@ -56,9 +48,7 @@
     ariaActivedescendant,
     leftIcon,
     rightIcon,
-    onLeftIconClick: onLeftIconClickProp,
     onlefticonclick,
-    onRightIconClick: onRightIconClickProp,
     onrighticonclick,
     leftIconLabel = 'Leading action',
     rightIconLabel = 'Trailing action',
@@ -71,71 +61,6 @@
     resize = 'none',
     showCount = false
   }: InputProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onBlur = $derived(resolveDeprecatedProp('Input', 'onBlur', 'onblur', onBlurProp, onblur));
-  const onClick = $derived(
-    resolveDeprecatedProp('Input', 'onClick', 'onclick', onClickProp, onclick)
-  );
-  const onFocus = $derived(
-    resolveDeprecatedProp('Input', 'onFocus', 'onfocus', onFocusProp, onfocus)
-  );
-  const onFocusout = $derived(
-    resolveDeprecatedProp('Input', 'onFocusout', 'onfocusout', onFocusoutProp, onfocusout)
-  );
-  const onInput = $derived(
-    resolveDeprecatedProp('Input', 'onInput', 'oninput', onInputProp, oninput)
-  );
-  const onKeyDown = $derived(
-    resolveDeprecatedProp('Input', 'onKeyDown', 'onkeydown', onKeyDownProp, onkeydown)
-  );
-  const onPaste = $derived(
-    resolveDeprecatedProp('Input', 'onPaste', 'onpaste', onPasteProp, onpaste)
-  );
-
-  const onLeftIconClick = $derived(
-    resolveDeprecatedProp(
-      'Input',
-      'onLeftIconClick',
-      'onlefticonclick',
-      onLeftIconClickProp,
-      onlefticonclick
-    )
-  );
-  const onRightIconClick = $derived(
-    resolveDeprecatedProp(
-      'Input',
-      'onRightIconClick',
-      'onrighticonclick',
-      onRightIconClickProp,
-      onrighticonclick
-    )
-  );
-  const onStateChange = $derived(
-    resolveDeprecatedProp(
-      'Input',
-      'onStateChange',
-      'onstatechange',
-      onStateChangeProp,
-      onstatechange
-    ) ?? (() => {})
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      onBlur,
-      onClick,
-      onFocus,
-      onFocusout,
-      onInput,
-      onKeyDown,
-      onPaste,
-      onLeftIconClick,
-      onRightIconClick,
-      onStateChange
-    );
-  });
 
   /* `for` on a <label> resolves against an element's id, never its name. The label
      was emitted with for={name} while the field itself carried only name={name},
@@ -191,7 +116,7 @@
 
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
-    onStateChange(validationState);
+    onstatechange(validationState);
   });
 
   const showErrorMessage = $derived(validationState === 'Invalid');
@@ -296,7 +221,7 @@
       inputElement.value = currentValue;
     }
     value = inputElement.value;
-    onInput?.(inputElement.value, event);
+    oninput?.(inputElement.value, event);
   }
 
   /**
@@ -310,11 +235,11 @@
     }
 
     // Everything below the tel branch is tel-specific digit normalisation, and
-    // onPaste was only ever invoked from inside it — so a non-tel field (notably
+    // onpaste was only ever invoked from inside it — so a non-tel field (notably
     // useTextArea) had no way to observe a paste at all. Hand the event over
     // before that branch and return, leaving tel's behaviour byte-identical.
     if (dataType !== 'tel') {
-      onPaste?.(event);
+      onpaste?.(event);
       return;
     }
 
@@ -348,11 +273,11 @@
           );
           // Adding reactivity
           value = finalValue;
-          onPaste?.(event);
+          onpaste?.(event);
           event.preventDefault(); // prevent bubble and let finalValue be entered
         }
         /**
-         * if numeric pasted text has length less than max length, bubble to onInput.
+         * if numeric pasted text has length less than max length, bubble to oninput.
          */
       }
     }
@@ -369,8 +294,8 @@
     if (validationState === 'InProgress' && value.length > 0) {
       validationState = 'Invalid';
     }
-    onFocusout?.(event);
-    onBlur?.(event);
+    onfocusout?.(event);
+    onblur?.(event);
   }
 </script>
 
@@ -400,12 +325,12 @@
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
         required={mandatory || null}
-        onfocus={onFocus}
+        {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}
         onpaste={handleOnPaste}
-        onclick={onClick}
-        onkeydown={onKeyDown}
+        {onclick}
+        {onkeydown}
         data-pw={testId}
         testID={testId}
         class:action-input={actionInput}
@@ -438,12 +363,12 @@
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
         required={mandatory || null}
-        onfocus={onFocus}
+        {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}
         onpaste={handleOnPaste}
-        onclick={onClick}
-        onkeydown={onKeyDown}
+        {onclick}
+        {onkeydown}
         data-pw={testId}
         testID={testId}
         class:action-input={actionInput}
@@ -466,12 +391,12 @@
       class:has-right-icon={hasRightIcon}
     >
       {#if hasLeftIcon}
-        {#if onLeftIconClick}
+        {#if onlefticonclick}
           <button
             type="button"
             class="input-icon input-icon-left input-icon-button"
             aria-label={leftIconLabel}
-            onclick={onLeftIconClick}
+            onclick={onlefticonclick}
           >
             {@render leftIcon?.()}
           </button>
@@ -481,12 +406,12 @@
       {/if}
       {@render fieldElement()}
       {#if hasRightIcon}
-        {#if onRightIconClick}
+        {#if onrighticonclick}
           <button
             type="button"
             class="input-icon input-icon-right input-icon-button"
             aria-label={rightIconLabel}
-            onclick={onRightIconClick}
+            onclick={onrighticonclick}
           >
             {@render rightIcon?.()}
           </button>

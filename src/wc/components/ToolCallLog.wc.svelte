@@ -6,8 +6,7 @@
       chips: { type: 'Array' },
       onchipclick: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' },
-      onChipClick: { type: 'Object' }
+      classes: { type: 'String' }
     }
   }}
 />

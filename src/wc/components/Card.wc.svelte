@@ -3,7 +3,7 @@
     tag: 'sui-card',
     shadow: 'open',
     props: {
-      title: { type: 'String', reflect: true },
+      cardTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },
       stretch: { type: 'Boolean', reflect: true },
@@ -24,10 +24,10 @@
 
 <script lang="ts">
   import Card from '$lib/Card/Card.svelte';
-  let props = $props();
+  let { cardTitle, ...props } = $props();
 </script>
 
-<Card {...props}>
+<Card {...props} title={cardTitle}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

@@ -4,7 +4,6 @@
     DateRangePreset,
     TimeDisplayBoundary
   } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { tick, untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
@@ -55,62 +54,13 @@
     initialPresetLabel,
     compareTrigger,
     openCompare = $bindable(false),
-    onapply: onapplyProp,
-    onApply,
-    onapplysingle: onapplysingleProp,
-    onApplySingle,
-    onapplycompare: onapplycompareProp,
-    onApplyCompare,
-    oncancel: oncancelProp,
-    onCancel,
-    onopentoggle: onopentoggleProp,
-    onOpenToggle,
-    onclear: onclearProp,
-    onClear
+    onapply,
+    onapplysingle,
+    onapplycompare,
+    oncancel,
+    onopentoggle,
+    onclear
   }: DateRangePickerProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onapply = $derived(
-    resolveDeprecatedProp('DateRangePicker', 'onApply', 'onapply', onApply, onapplyProp)
-  );
-  const onapplycompare = $derived(
-    resolveDeprecatedProp(
-      'DateRangePicker',
-      'onApplyCompare',
-      'onapplycompare',
-      onApplyCompare,
-      onapplycompareProp
-    )
-  );
-  const onapplysingle = $derived(
-    resolveDeprecatedProp(
-      'DateRangePicker',
-      'onApplySingle',
-      'onapplysingle',
-      onApplySingle,
-      onapplysingleProp
-    )
-  );
-  const oncancel = $derived(
-    resolveDeprecatedProp('DateRangePicker', 'onCancel', 'oncancel', onCancel, oncancelProp)
-  );
-  const onclear = $derived(
-    resolveDeprecatedProp('DateRangePicker', 'onClear', 'onclear', onClear, onclearProp)
-  );
-  const onopentoggle = $derived(
-    resolveDeprecatedProp(
-      'DateRangePicker',
-      'onOpenToggle',
-      'onopentoggle',
-      onOpenToggle,
-      onopentoggleProp
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onapply, onapplycompare, onapplysingle, oncancel, onclear, onopentoggle);
-  });
 
   const isDualMonth: boolean = $derived(
     typeof dualMonth === 'boolean' ? dualMonth : mode === 'range'

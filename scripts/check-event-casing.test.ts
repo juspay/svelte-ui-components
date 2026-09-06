@@ -156,6 +156,41 @@ describe('the event-casing gate', () => {
     expect(out).toContain('0 event-casing violation(s)');
   });
 
+  it('catches an event prop that borrows its type by indexed access', () => {
+    // The shape that got past this gate in 3.x. `Chat` declared
+    // `onScrollState?: ChatMessageListProperties['onscrollstate']` — an event
+    // prop with no `=>` of its own, so the callback check skipped it, and an
+    // uppercase spelling shipped undeprecated. Worse, the lowercase twin beside
+    // it carried the `@deprecated` tag, pointing consumers at the camelCase
+    // name and inverting the rule for one component.
+    const root = fixture(
+      'Chat',
+      'export type ChatProperties = {\n' +
+        "  onScrollState?: ChatMessageListProperties['onscrollstate'];\n" +
+        '};\n'
+    );
+
+    const { code, out } = run(root);
+
+    expect(code, 'an indexed-access event prop slipped past the gate').toBe(1);
+    expect(out).toContain('onScrollState');
+  });
+
+  it('still ignores an indexed access that is not an event', () => {
+    // The narrowing has to stay narrow: only a key that reads like an event
+    // makes the declaration one.
+    const root = fixture(
+      'Chat',
+      'export type ChatProperties = {\n' +
+        "  onErrorMessage?: InputProperties['errorMessage'];\n" +
+        '};\n'
+    );
+
+    const { code } = run(root);
+
+    expect(code, 'a non-event indexed access was treated as an event').toBe(0);
+  });
+
   it('reports every offending file, not just the first', () => {
     const root = mkdtempSync(join(tmpdir(), 'sui-event-casing-'));
     roots.push(root);

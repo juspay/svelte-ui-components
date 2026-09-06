@@ -1,7 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import type { TabItem, TabsProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Img from '../Img/Img.svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
@@ -19,24 +18,9 @@
     scrollRightIcon,
     tab,
     classes,
-    onchange: onchangeProp,
-    onChange,
-    onkeychange: onkeychangeProp,
-    onKeyChange
+    onchange,
+    onkeychange
   }: TabsProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('Tabs', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const onkeychange = $derived(
-    resolveDeprecatedProp('Tabs', 'onKeyChange', 'onkeychange', onKeyChange, onkeychangeProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange, onkeychange);
-  });
 
   const isVertical = $derived(orientation === 'vertical');
 

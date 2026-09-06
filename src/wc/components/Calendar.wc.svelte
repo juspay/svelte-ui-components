@@ -19,10 +19,7 @@
       onselect: { type: 'Object' },
       onrangeselect: { type: 'Object' },
       onmonthchange: { type: 'Object' },
-      initialMonth: { type: 'Object' },
-      onSelect: { type: 'Object' },
-      onRangeSelect: { type: 'Object' },
-      onMonthChange: { type: 'Object' }
+      initialMonth: { type: 'Object' }
     }
   }}
 />

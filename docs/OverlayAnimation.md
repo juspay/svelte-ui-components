@@ -17,14 +17,14 @@ A wrapper that applies a fade-out transition (350ms) to its children when they a
 
 ## Props
 
-| Prop   | Type      | Required | Default | Description                                                                        |
-| ------ | --------- | -------- | ------- | ------------------------------------------------------------------------------------ |
+| Prop   | Type      | Required | Default | Description                                                                                                               |
+| ------ | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
 | fadeIn | `boolean` | No       | `false` | When true, also fades in on mount (350ms, matching the fade-out). Default preserves the original instant-appear behavior. |
 
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
 
-| Snippet  | Type      | Description                                |
-| -------- | --------- | ------------------------------------------ |
+| Snippet  | Type      | Description                           |
+| -------- | --------- | ------------------------------------- |
 | children | `Snippet` | Content to render inside the overlay. |

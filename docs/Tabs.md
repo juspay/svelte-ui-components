@@ -152,10 +152,10 @@ Tag: `<sui-tabs>`
 
 ### Slots
 
-| Slot Name           | Maps to Snippet   | Description                                                                                          |
-| ------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
-| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.                                                               |
-| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow.                                                              |
+| Slot Name           | Maps to Snippet   | Description                                                                                                                                                       |
+| ------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.                                                                                                                            |
+| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow.                                                                                                                           |
 | `tab`               | `tab`             | Custom tab content. Receives `label`, `index`, `active`, and — when the item came from a `TabItem[]` — `subtitle`, `icon` and `status`. Falls back to label text. |
 
 > **Note:** The `items` prop is an array and `tab` is a parameterized Snippet — set them via JavaScript properties.

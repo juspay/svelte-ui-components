@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { StepProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     stepIndex,
@@ -13,20 +12,9 @@
     ariaLabel,
     testId,
     suppressRoleAndTabindex,
-    onclick: onclickProp,
-    onClick,
+    onclick,
     onkeydown
   }: StepProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclick = $derived(
-    resolveDeprecatedProp('Step', 'onClick', 'onclick', onClick, onclickProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onclick);
-  });
 
   const handleStepClick = (): void => {
     onclick?.({ selectedIndex: stepIndex });

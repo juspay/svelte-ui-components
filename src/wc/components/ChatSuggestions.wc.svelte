@@ -13,8 +13,7 @@
       classes: { type: 'String' },
       chipClasses: { type: 'String', attribute: 'chip-classes' },
       onselect: { type: 'Object' },
-      icon: { type: 'Object' },
-      onSelect: { type: 'Object' }
+      icon: { type: 'Object' }
     }
   }}
 />

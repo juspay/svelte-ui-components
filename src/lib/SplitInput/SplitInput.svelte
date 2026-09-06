@@ -2,7 +2,6 @@
   import { tick } from 'svelte';
   import Input from '$lib/Input/Input.svelte';
   import type { FieldConfig, SplitInputProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     values = $bindable([]),
@@ -13,29 +12,10 @@
     separator,
     testId,
     classes,
-    onchange: onchangeProp,
-    onChange,
-    oninput: oninputProp,
-    onInput,
-    oncomplete: oncompleteProp,
-    onComplete
+    onchange,
+    oninput,
+    oncomplete
   }: SplitInputProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onchange = $derived(
-    resolveDeprecatedProp('SplitInput', 'onChange', 'onchange', onChange, onchangeProp)
-  );
-  const oncomplete = $derived(
-    resolveDeprecatedProp('SplitInput', 'onComplete', 'oncomplete', onComplete, oncompleteProp)
-  );
-  const oninput = $derived(
-    resolveDeprecatedProp('SplitInput', 'onInput', 'oninput', onInput, oninputProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onchange, oncomplete, oninput);
-  });
 
   let fieldCount = $derived(typeof fields !== 'undefined' ? fields.length : length);
 

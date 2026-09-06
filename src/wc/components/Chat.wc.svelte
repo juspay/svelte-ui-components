@@ -5,7 +5,7 @@
     props: {
       messages: { type: 'Object' },
       value: { type: 'String' },
-      title: { type: 'String', reflect: true },
+      chatTitle: { type: 'String', reflect: true, attribute: 'title' },
       subtitle: { type: 'String', reflect: true },
       image: { type: 'String', reflect: true },
       imageAlt: { type: 'String', attribute: 'image-alt' },
@@ -49,23 +49,14 @@
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' },
       onscrollstate: { type: 'Object' },
-      headerContent: { type: 'Object' },
-      onSend: { type: 'Object' },
-      onSuggestion: { type: 'Object' },
-      onClose: { type: 'Object' },
-      onStop: { type: 'Object' },
-      onVoice: { type: 'Object' },
-      onAttach: { type: 'Object' },
-      onRetry: { type: 'Object' },
-      onFeedback: { type: 'Object' },
-      onScrollState: { type: 'Object' }
+      headerContent: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import Chat from '$lib/Chat/Chat.svelte';
-  let props = $props();
+  let { chatTitle, ...props } = $props();
 </script>
 
-<Chat {...props} />
+<Chat {...props} title={chatTitle} />

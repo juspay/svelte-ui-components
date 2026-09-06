@@ -13,15 +13,11 @@
       step: { type: 'Number' },
       disabled: { type: 'Boolean', reflect: true },
       handleLabel: { type: 'String', attribute: 'handle-label' },
-      children: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onresize: { type: 'Object' },
       onresizestart: { type: 'Object' },
-      onresizeend: { type: 'Object' },
-      onResize: { type: 'Object' },
-      onResizeStart: { type: 'Object' },
-      onResizeEnd: { type: 'Object' }
+      onresizeend: { type: 'Object' }
     }
   }}
 />

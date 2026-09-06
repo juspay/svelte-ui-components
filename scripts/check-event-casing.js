@@ -88,7 +88,16 @@ function checkFile(path) {
       return;
     }
     const name = m[1];
-    if (!declarationText(lines, i).includes('=>')) {
+    // An event prop usually declares an inline arrow type. It can also borrow
+    // another component's declaration by indexed access, which carries no `=>`
+    // of its own: Chat shipped `onScrollState?:
+    // ChatMessageListProperties['onscrollstate']` in 3.x, invisible to this
+    // check, with the `@deprecated` tag on the lowercase twin beside it — so
+    // one component told consumers to migrate towards camelCase. The key is
+    // what makes it an event, which keeps `onErrorMessage?:
+    // InputProperties['errorMessage']` out of scope.
+    const declaration = declarationText(lines, i);
+    if (!declaration.includes('=>') && !/\[\s*'on\w+'\s*\]/.test(declaration)) {
       return;
     }
     if (name === name.toLowerCase()) {

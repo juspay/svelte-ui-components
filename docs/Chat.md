@@ -19,7 +19,7 @@ Markdown is bundled: set a message's `markdown` field and it renders in the bubb
   }
 </script>
 
-<Chat {messages} bind:value title="Assistant" placeholder="Ask anything…" onsend={onsend} />
+<Chat {messages} bind:value title="Assistant" placeholder="Ask anything…" {onsend} />
 ```
 
 ## Usage (with the decoupled controller)
@@ -61,15 +61,15 @@ Markdown is bundled: set a message's `markdown` field and it renders in the bubb
 
 ### `ChatController`
 
-| Member | Type | Description |
-| ------ | ---- | ----------- |
-| `messages` | `ChatMessageData[]` | Reactive message list. |
-| `isStreaming` | `boolean` | True while a response is in flight. |
-| `toolStatus` | `ChatToolStatus \| null` | Current tool/typing status. |
-| `send(text)` | `Promise<void>` | Append the sender's message and stream the reply. |
-| `retry()` | `Promise<void>` | Drop the last reply and re-run the most recent sender message. |
-| `stop()` | `void` | Abort the in-flight response. |
-| `reset()` | `void` | Clear all messages and state. |
+| Member        | Type                     | Description                                                    |
+| ------------- | ------------------------ | -------------------------------------------------------------- |
+| `messages`    | `ChatMessageData[]`      | Reactive message list.                                         |
+| `isStreaming` | `boolean`                | True while a response is in flight.                            |
+| `toolStatus`  | `ChatToolStatus \| null` | Current tool/typing status.                                    |
+| `send(text)`  | `Promise<void>`          | Append the sender's message and stream the reply.              |
+| `retry()`     | `Promise<void>`          | Drop the last reply and re-run the most recent sender message. |
+| `stop()`      | `void`                   | Abort the in-flight response.                                  |
+| `reset()`     | `void`                   | Clear all messages and state.                                  |
 
 `ChatControllerOptions`: `transport` (required `ChatTransport`), `initialMessages?`, `typewriter?` (reveal text char-by-char), `generateId?` (defaults to `crypto.randomUUID()`).
 
@@ -84,7 +84,7 @@ Two snippets, and the difference matters. `message` replaces the whole message �
 It receives the whole `ChatMessageData`, so render on whatever field you like — a custom field of your own, or `attachments`, which `ChatController` fills from a transport's `handlers.onAttachment(...)`:
 
 ```svelte
-<Chat {messages} bind:value allowCopy onretry={() => chat.retry()} onsend={onsend}>
+<Chat {messages} bind:value allowCopy onretry={() => chat.retry()} {onsend}>
   {#snippet messageAttachments(msg)}
     {#each msg.attachments ?? [] as item, index (index)}
       <YourComponent data={item} />
@@ -105,7 +105,7 @@ Give it a viewport-sized box (use `100dvh` so the mobile URL bar doesn't clip th
 
 ```svelte
 <div style="height: 100dvh; width: 100vw">
-  <Chat {messages} bind:value title="Assistant" onsend={onsend} />
+  <Chat {messages} bind:value title="Assistant" {onsend} />
 </div>
 ```
 
@@ -122,7 +122,7 @@ The component ships no launcher button or fixed positioning — compose those, a
 
 {#if open}
   <div class="chat-panel">
-    <Chat {messages} bind:value title="Assistant" onsend={onsend} onclose={() => (open = false)} />
+    <Chat {messages} bind:value title="Assistant" {onsend} onclose={() => (open = false)} />
   </div>
 {/if}
 
@@ -157,72 +157,72 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 
 ## Props
 
-| Prop            | Type                          | Required | Default | Description                                                                 |
-| --------------- | ----------------------------- | -------- | ------- | --------------------------------------------------------------------------- |
-| messages        | `ChatMessageData[]`           | Yes      | `-`     | The conversation to render.                                                 |
-| value           | `string`                      | No       | `''`    | Bindable. The composer draft text.                                          |
-| title           | `string`                      | No       | `''`    | Header title. Header is hidden when there is no title/subtitle/image/close/avatar.|
-| subtitle        | `string`                      | No       | `''`    | Header subtitle.                                                             |
-| image           | `string`                      | No       | `-`     | Optional header brand image URL (rendered via `Img`). Off by default.       |
-| imageAlt        | `string`                      | No       | `''`    | Alt text for the header image.                                              |
-| placeholder     | `string`                      | No       | `''`    | Composer placeholder.                                                       |
-| disabled        | `boolean`                     | No       | `false` | Disable the composer entirely.                                             |
-| streaming       | `boolean`                     | No       | `false` | A reply is streaming — the send button becomes a stop button.              |
-| recording       | `boolean`                     | No       | `false` | Visual active state for the composer voice button.                         |
-| autoscroll      | `boolean`                     | No       | `true`  | Auto-scroll to the latest message (only when already near the bottom).     |
-| scrollPolicy    | `'near-bottom' \| 'pin-sender-turn'` | No | `'near-bottom'` | Follow policy for new messages. `pin-sender-turn` pins each new sender message to the top so its reply streams beneath it. |
-| pinHold         | `boolean`                     | No       | `false` | With `pin-sender-turn`, retain the reserved reply headroom while the current turn is busy; set false when it finishes. |
-| jump            | `boolean`                     | No       | `true`  | Render the built-in jump-to-latest button. Set false when providing your own affordance. |
-| jumpLabel       | `string`                      | No       | `'Jump to latest'` | Accessible label for the built-in jump-to-latest button. |
-| jumpIcon        | `Snippet`                     | No       | `-`     | Custom icon for the built-in jump-to-latest button. |
-| toolStatus      | `ChatToolStatus \| null`      | No       | `null`  | Tool/typing status shown above the composer.                               |
-| suggestions     | `ChatSuggestion[]`            | No       | `[]`    | Prompt chips shown when the conversation is empty.                          |
-| attachments     | `File[]`                      | No       | `[]`    | Bindable. Pending composer attachments.                                    |
-| accept          | `string`                      | No       | `''`    | Accepted file types for the attach button.                                |
-| multiple        | `boolean`                     | No       | `false` | Allow multiple files per attach pick.                                     |
-| allowCopy       | `boolean`                     | No       | `false` | Show copy buttons on assistant messages.                                  |
-| closeLabel      | `string`                      | No       | `'Close'`| Aria-label for the header close button.                                    |
-| showClose       | `boolean`                     | No       | `-`     | Force the close button on/off (defaults to showing when `onclose` is set). |
-| headerAvatar    | `Snippet`                     | No       | `-`     | Brand/avatar mark in the header (takes precedence over `image`).            |
-| headerActions   | `Snippet`                     | No       | `-`     | Extra inline header actions.                                                |
-| headerContent   | `Snippet`                     | No       | `-`     | Extra content as a full-width second row in the header (toolbar, status…).  |
-| message         | `Snippet<[ChatMessageData]>`  | No       | `-`     | Custom per-message rendering. Replaces the default bubble entirely.        |
-| messageBody | `Snippet<[ChatMessageData]>` | No | `-` | Per-message bubble body, threaded to `ChatMessageList`. |
-| messageAttachments | `Snippet<[ChatMessageData]>` | No     | `-`     | Your own UI rendered below each bubble, keeping the default bubble and its actions. |
-| empty           | `Snippet`                     | No       | `-`     | Empty-state content.                                                        |
-| composerLeading | `Snippet`                     | No       | `-`     | Content before the composer input.                                         |
-| sendIcon / stopIcon / voiceIcon / attachIcon | `Snippet`        | No       | `-`     | Custom composer icons; each falls back to a built-in asset.                 |
-| testId          | `string`                      | No       | `-`     | `data-pw` on the root element.                                              |
-| classes         | `string`                      | No       | `-`     | Class string on the root element.                                           |
+| Prop                                         | Type                                 | Required | Default            | Description                                                                                                                |
+| -------------------------------------------- | ------------------------------------ | -------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| messages                                     | `ChatMessageData[]`                  | Yes      | `-`                | The conversation to render.                                                                                                |
+| value                                        | `string`                             | No       | `''`               | Bindable. The composer draft text.                                                                                         |
+| title                                        | `string`                             | No       | `''`               | Header title. Header is hidden when there is no title/subtitle/image/close/avatar.                                         |
+| subtitle                                     | `string`                             | No       | `''`               | Header subtitle.                                                                                                           |
+| image                                        | `string`                             | No       | `-`                | Optional header brand image URL (rendered via `Img`). Off by default.                                                      |
+| imageAlt                                     | `string`                             | No       | `''`               | Alt text for the header image.                                                                                             |
+| placeholder                                  | `string`                             | No       | `''`               | Composer placeholder.                                                                                                      |
+| disabled                                     | `boolean`                            | No       | `false`            | Disable the composer entirely.                                                                                             |
+| streaming                                    | `boolean`                            | No       | `false`            | A reply is streaming — the send button becomes a stop button.                                                              |
+| recording                                    | `boolean`                            | No       | `false`            | Visual active state for the composer voice button.                                                                         |
+| autoscroll                                   | `boolean`                            | No       | `true`             | Auto-scroll to the latest message (only when already near the bottom).                                                     |
+| scrollPolicy                                 | `'near-bottom' \| 'pin-sender-turn'` | No       | `'near-bottom'`    | Follow policy for new messages. `pin-sender-turn` pins each new sender message to the top so its reply streams beneath it. |
+| pinHold                                      | `boolean`                            | No       | `false`            | With `pin-sender-turn`, retain the reserved reply headroom while the current turn is busy; set false when it finishes.     |
+| jump                                         | `boolean`                            | No       | `true`             | Render the built-in jump-to-latest button. Set false when providing your own affordance.                                   |
+| jumpLabel                                    | `string`                             | No       | `'Jump to latest'` | Accessible label for the built-in jump-to-latest button.                                                                   |
+| jumpIcon                                     | `Snippet`                            | No       | `-`                | Custom icon for the built-in jump-to-latest button.                                                                        |
+| toolStatus                                   | `ChatToolStatus \| null`             | No       | `null`             | Tool/typing status shown above the composer.                                                                               |
+| suggestions                                  | `ChatSuggestion[]`                   | No       | `[]`               | Prompt chips shown when the conversation is empty.                                                                         |
+| attachments                                  | `File[]`                             | No       | `[]`               | Bindable. Pending composer attachments.                                                                                    |
+| accept                                       | `string`                             | No       | `''`               | Accepted file types for the attach button.                                                                                 |
+| multiple                                     | `boolean`                            | No       | `false`            | Allow multiple files per attach pick.                                                                                      |
+| allowCopy                                    | `boolean`                            | No       | `false`            | Show copy buttons on assistant messages.                                                                                   |
+| closeLabel                                   | `string`                             | No       | `'Close'`          | Aria-label for the header close button.                                                                                    |
+| showClose                                    | `boolean`                            | No       | `-`                | Force the close button on/off (defaults to showing when `onclose` is set).                                                 |
+| headerAvatar                                 | `Snippet`                            | No       | `-`                | Brand/avatar mark in the header (takes precedence over `image`).                                                           |
+| headerActions                                | `Snippet`                            | No       | `-`                | Extra inline header actions.                                                                                               |
+| headerContent                                | `Snippet`                            | No       | `-`                | Extra content as a full-width second row in the header (toolbar, status…).                                                 |
+| message                                      | `Snippet<[ChatMessageData]>`         | No       | `-`                | Custom per-message rendering. Replaces the default bubble entirely.                                                        |
+| messageBody                                  | `Snippet<[ChatMessageData]>`         | No       | `-`                | Per-message bubble body, threaded to `ChatMessageList`.                                                                    |
+| messageAttachments                           | `Snippet<[ChatMessageData]>`         | No       | `-`                | Your own UI rendered below each bubble, keeping the default bubble and its actions.                                        |
+| empty                                        | `Snippet`                            | No       | `-`                | Empty-state content.                                                                                                       |
+| composerLeading                              | `Snippet`                            | No       | `-`                | Content before the composer input.                                                                                         |
+| sendIcon / stopIcon / voiceIcon / attachIcon | `Snippet`                            | No       | `-`                | Custom composer icons; each falls back to a built-in asset.                                                                |
+| testId                                       | `string`                             | No       | `-`                | `data-pw` on the root element.                                                                                             |
+| classes                                      | `string`                             | No       | `-`                | Class string on the root element.                                                                                          |
 
 ## Events
 
-| Event        | Type                                  | Description                                                            |
-| ------------ | ------------------------------------- | --------------------------------------------------------------------- |
-| onsend       | `(value: string, attachments: File[]) => void` | Fires when a message is submitted from the composer.         |
-| onsuggestion | `(value: string, index: number) => void` | Fires when a suggestion chip is picked. Falls back to `onsend`.    |
-| onclose      | `() => void`                          | Fires when the header close button is pressed.                        |
-| onstop       | `() => void`                          | Enables the stop button (e.g. `chat.stop`).                           |
-| onvoice      | `() => void`                          | Enables the composer voice button.                                    |
-| onattach     | `(files: File[]) => void`             | Enables the composer attach button.                                   |
-| onretry      | `() => void`                          | Enables retry on the latest assistant message (e.g. `chat.retry`).    |
-| onfeedback   | `(value: 'up' \| 'down', message: ChatMessageData) => void` | Enables 👍/👎 on assistant messages.            |
+| Event         | Type                                                          | Description                                                                                                         |
+| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| onsend        | `(value: string, attachments: File[]) => void`                | Fires when a message is submitted from the composer.                                                                |
+| onsuggestion  | `(value: string, index: number) => void`                      | Fires when a suggestion chip is picked. Falls back to `onsend`.                                                     |
+| onclose       | `() => void`                                                  | Fires when the header close button is pressed.                                                                      |
+| onstop        | `() => void`                                                  | Enables the stop button (e.g. `chat.stop`).                                                                         |
+| onvoice       | `() => void`                                                  | Enables the composer voice button.                                                                                  |
+| onattach      | `(files: File[]) => void`                                     | Enables the composer attach button.                                                                                 |
+| onretry       | `() => void`                                                  | Enables retry on the latest assistant message (e.g. `chat.retry`).                                                  |
+| onfeedback    | `(value: 'up' \| 'down', message: ChatMessageData) => void`   | Enables 👍/👎 on assistant messages.                                                                                |
 | onscrollstate | `(state: { atBottom: boolean; scrollable: boolean }) => void` | Reports whether the reader is at the bottom and whether the list overflows, for an external jump-to-latest control. |
 
 ## CSS Variables
 
-| Variable                      | Default       | CSS Property     | Description                          |
-| ----------------------------- | ------------- | ---------------- | ------------------------------------ |
-| `--chat-height`               | `100%`        | height           | Height of the chat surface.          |
-| `--chat-width`                | `100%`        | width            | Width of the chat surface.           |
-| `--chat-background`           | `#ffffff`     | background       | Background of the chat surface.      |
-| `--chat-border`               | `none`        | border           | Border of the chat surface.          |
-| `--chat-border-radius`        | `0`           | border-radius    | Corner rounding of the chat surface. |
-| `--chat-footer-gap`           | `10px`        | gap              | Gap between footer rows.             |
-| `--chat-footer-padding`       | `12px 1.5rem` | padding          | Padding of the footer area.          |
-| `--chat-footer-background`    | `transparent` | background       | Footer background.                   |
-| `--chat-footer-border-top`    | `none`        | border-top       | Border above the footer.             |
-| `--chat-tool-status-justify`  | `center`      | justify-content  | Alignment of the tool-status row.    |
+| Variable                     | Default       | CSS Property    | Description                          |
+| ---------------------------- | ------------- | --------------- | ------------------------------------ |
+| `--chat-height`              | `100%`        | height          | Height of the chat surface.          |
+| `--chat-width`               | `100%`        | width           | Width of the chat surface.           |
+| `--chat-background`          | `#ffffff`     | background      | Background of the chat surface.      |
+| `--chat-border`              | `none`        | border          | Border of the chat surface.          |
+| `--chat-border-radius`       | `0`           | border-radius   | Corner rounding of the chat surface. |
+| `--chat-footer-gap`          | `10px`        | gap             | Gap between footer rows.             |
+| `--chat-footer-padding`      | `12px 1.5rem` | padding         | Padding of the footer area.          |
+| `--chat-footer-background`   | `transparent` | background      | Footer background.                   |
+| `--chat-footer-border-top`   | `none`        | border-top      | Border above the footer.             |
+| `--chat-tool-status-justify` | `center`      | justify-content | Alignment of the tool-status row.    |
 
 Child components (`ChatHeader`, `ChatMessageList`, `ChatComposer`, `ThinkingIndicator`, `ChatSuggestions`, `ChatMessage`) are themed through their own CSS variables, which cascade into `Chat`. The tool-status row's pill itself is `ThinkingIndicator`'s `chip` variant internally, not the deprecated `ChatToolStatus` component — but its public theming contract is unchanged: every `--chat-tool-status-*` variable still controls it (mapped internally onto the chip's own `--thinking-indicator-chip-*` variables), so existing overrides keep working exactly as before. Reach for `--thinking-indicator-chip-*` directly only when using `<ThinkingIndicator variant="chip">` outside of `Chat`.
 

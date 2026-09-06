@@ -9,11 +9,8 @@
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       onstepclick: { type: 'Object' },
-      onhandleStepClick: { type: 'Object' },
       suppressRoleAndTabindex: { type: 'Boolean', attribute: 'suppress-role-and-tabindex' },
       suppressContainerTestId: { type: 'Boolean', attribute: 'suppress-container-test-id' },
-      onStepClick: { type: 'Object' },
-      onHandleStepClick: { type: 'Object' },
       onhandlestepclick: { type: 'Object' }
     }
   }}

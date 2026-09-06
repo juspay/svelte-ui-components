@@ -9,20 +9,18 @@
       loop: { type: 'Boolean', reflect: true },
       speed: { type: 'Number', reflect: true },
       renderer: { type: 'String', reflect: true },
-      ariaHidden: { type: 'Boolean', reflect: true, attribute: 'aria-hidden' },
+      lottiePlayerAriaHidden: { type: 'Boolean', reflect: true, attribute: 'aria-hidden' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       oncomplete: { type: 'Object' },
-      onerror: { type: 'Object' },
-      onComplete: { type: 'Object' },
-      onError: { type: 'Object' }
+      onerror: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
-  let props = $props();
+  let { lottiePlayerAriaHidden, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's name
   // minus its `$` with the rune itself (sveltejs/svelte#13715, same class as `state` vs
@@ -44,4 +42,9 @@
   }
 </script>
 
-<LottiePlayer {...props} oncomplete={handleComplete} onerror={handleError} />
+<LottiePlayer
+  {...props}
+  ariaHidden={lottiePlayerAriaHidden}
+  oncomplete={handleComplete}
+  onerror={handleError}
+/>

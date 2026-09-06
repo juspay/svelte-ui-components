@@ -11,9 +11,7 @@
       classes: { type: 'String' },
       onfiles: { type: 'Object' },
       onerror: { type: 'Object' },
-      trigger: { type: 'Object' },
-      onFiles: { type: 'Object' },
-      onError: { type: 'Object' }
+      trigger: { type: 'Object' }
     }
   }}
 />

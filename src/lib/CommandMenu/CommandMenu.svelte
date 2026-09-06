@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { CommandMenuProperties, CommandItem } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import { tick, onMount, onDestroy } from 'svelte';
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { SvelteMap } from 'svelte/reactivity';
@@ -15,25 +14,10 @@
     testId,
     itemIcon,
     searchIcon,
-    onselect: onselectProp,
-    onSelect,
-    onclose: oncloseProp,
-    onClose,
+    onselect,
+    onclose,
     classes
   }: CommandMenuProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onclose = $derived(
-    resolveDeprecatedProp('CommandMenu', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-  const onselect = $derived(
-    resolveDeprecatedProp('CommandMenu', 'onSelect', 'onselect', onSelect, onselectProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onclose, onselect);
-  });
 
   let query = $state('');
   let activeIndex = $state(0);

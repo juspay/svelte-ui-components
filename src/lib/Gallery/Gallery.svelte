@@ -3,7 +3,6 @@
   import type { Snippet } from 'svelte';
   import { fade } from 'svelte/transition';
   import type { GalleryImage, GalleryProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import Img from '../Img/Img.svelte';
   import Button from '../Button/Button.svelte';
   import Icon from '../Icon/Icon.svelte';
@@ -29,50 +28,15 @@
     deleteIcon,
     itemFooter,
     testId,
-    onImageClick: onImageClickProp,
     onimageclick,
-    onEditClick: onEditClickProp,
     oneditclick,
-    onDeleteClick: onDeleteClickProp,
     ondeleteclick,
-    onOpen: onOpenProp,
     onopen,
-    onDismiss: onDismissProp,
     onclose,
-    onIndexChange: onIndexChangeProp,
     onchange,
     onkeydown,
     classes
   }: GalleryProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onImageClick = $derived(
-    resolveDeprecatedProp('Gallery', 'onImageClick', 'onimageclick', onImageClickProp, onimageclick)
-  );
-  const onEditClick = $derived(
-    resolveDeprecatedProp('Gallery', 'onEditClick', 'oneditclick', onEditClickProp, oneditclick)
-  );
-  const onDeleteClick = $derived(
-    resolveDeprecatedProp(
-      'Gallery',
-      'onDeleteClick',
-      'ondeleteclick',
-      onDeleteClickProp,
-      ondeleteclick
-    )
-  );
-  const onOpen = $derived(resolveDeprecatedProp('Gallery', 'onOpen', 'onopen', onOpenProp, onopen));
-  const onDismiss = $derived(
-    resolveDeprecatedProp('Gallery', 'onDismiss', 'onclose', onDismissProp, onclose)
-  );
-  const onIndexChange = $derived(
-    resolveDeprecatedProp('Gallery', 'onIndexChange', 'onchange', onIndexChangeProp, onchange)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onImageClick, onEditClick, onDeleteClick, onOpen, onDismiss, onIndexChange);
-  });
 
   let lightboxDiv: HTMLDivElement | null = $state(null);
   let closeButtonWrap: HTMLDivElement | null = $state(null);
@@ -83,10 +47,10 @@
   let activeImage = $derived(images.at(activeIndex));
   let hasPrevious = $derived(loop ? images.length > 1 : activeIndex > 0);
   let hasNext = $derived(loop ? images.length > 1 : activeIndex < images.length - 1);
-  let itemsAreInteractive = $derived(enableLightbox || typeof onImageClick === 'function');
+  let itemsAreInteractive = $derived(enableLightbox || typeof onimageclick === 'function');
   let hasItemFooter = $derived(view === 'grid' && typeof itemFooter === 'function');
-  let showEditButton = $derived(typeof onEditClick === 'function');
-  let showDeleteButton = $derived(typeof onDeleteClick === 'function');
+  let showEditButton = $derived(typeof oneditclick === 'function');
+  let showDeleteButton = $derived(typeof ondeleteclick === 'function');
   let showItemActions = $derived(showEditButton || showDeleteButton);
 
   function lightboxAction(node: HTMLElement) {
@@ -114,12 +78,12 @@
     }
     activeIndex = index;
     open = true;
-    onOpen?.(index);
+    onopen?.(index);
   }
 
   function closeLightbox(): void {
     open = false;
-    onDismiss?.();
+    onclose?.();
   }
 
   async function goToIndex(index: number): Promise<void> {
@@ -127,7 +91,7 @@
       return;
     }
     activeIndex = index;
-    onIndexChange?.(activeIndex);
+    onchange?.(activeIndex);
     await tick();
     if (lightboxDiv !== null && !lightboxDiv.contains(document.activeElement)) {
       lightboxDiv.focus();
@@ -151,18 +115,18 @@
   }
 
   function handleImageClick(index: number, event: MouseEvent): void {
-    onImageClick?.(index, event);
+    onimageclick?.(index, event);
     if (enableLightbox) {
       openLightbox(index, event.currentTarget);
     }
   }
 
   function handleEditClick(index: number, event: MouseEvent): void {
-    onEditClick?.(index, event);
+    oneditclick?.(index, event);
   }
 
   function handleDeleteClick(index: number, event: MouseEvent): void {
-    onDeleteClick?.(index, event);
+    ondeleteclick?.(index, event);
   }
 
   function trapFocus(event: KeyboardEvent): void {

@@ -424,9 +424,14 @@ Pass `searchConfig` to show a search input above the table. By default the table
 />
 ```
 
-### Editable Cells (onCellChange pattern)
+### Editable Cells
 
-`oncellchange` is accepted as a prop for components that want to pass a handler via the standard props channel (e.g. for type-checking at the call site), but Table does **not** call it internally. The correct wiring pattern is to close over your own handler directly inside the `cell` snippet, which runs in consumer scope:
+Table has no cell-change prop. 3.x accepted `oncellchange` so a call site could
+type-check a handler, but never called it; 4.0.0 removes it rather than keep a
+prop that reads like wiring and does nothing.
+
+The pattern was always this, and is unchanged: close over your own handler
+directly inside the `cell` snippet, which runs in consumer scope.
 
 ```svelte
 <script>

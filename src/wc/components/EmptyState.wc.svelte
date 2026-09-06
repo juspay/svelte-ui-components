@@ -3,7 +3,7 @@
     tag: 'sui-empty-state',
     shadow: 'open',
     props: {
-      title: { type: 'String', reflect: true },
+      emptyStateTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
@@ -16,10 +16,10 @@
 
 <script lang="ts">
   import EmptyState from '$lib/EmptyState/EmptyState.svelte';
-  let props = $props();
+  let { emptyStateTitle, ...props } = $props();
 </script>
 
-<EmptyState {...props}>
+<EmptyState {...props} title={emptyStateTitle}>
   {#snippet icon()}
     <slot name="icon"></slot>
   {/snippet}

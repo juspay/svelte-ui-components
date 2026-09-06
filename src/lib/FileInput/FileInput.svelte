@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { FileInputProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     trigger,
@@ -10,24 +9,9 @@
     disabled = false,
     testId,
     classes,
-    onfiles: onfilesProp,
-    onFiles,
-    onerror: onerrorProp,
-    onError
+    onfiles,
+    onerror
   }: FileInputProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onerror = $derived(
-    resolveDeprecatedProp('FileInput', 'onError', 'onerror', onError, onerrorProp)
-  );
-  const onfiles = $derived(
-    resolveDeprecatedProp('FileInput', 'onFiles', 'onfiles', onFiles, onfilesProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onerror, onfiles);
-  });
 
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);

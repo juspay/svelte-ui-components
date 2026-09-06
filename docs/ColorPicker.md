@@ -81,7 +81,12 @@ Override these custom properties to theme the component.
 Available as `<sui-color-picker>`.
 
 ```html
-<sui-color-picker value="#2f81f7" label="Brand colour" show-value test-id="brand-colour"></sui-color-picker>
+<sui-color-picker
+  value="#2f81f7"
+  label="Brand colour"
+  show-value
+  test-id="brand-colour"
+></sui-color-picker>
 ```
 
 Attributes are kebab-case: `show-value`, `test-id`. `onchange` / `oninput` are set as properties.

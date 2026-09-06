@@ -55,11 +55,11 @@ only the offending selection is dropped, with a single summary error message.
 
 ## Events
 
-| Event         | Type                                           | Description                                                       |
-| ------------- | ---------------------------------------------- | ----------------------------------------------------------------- |
+| Event    | Type                                           | Description                                                       |
+| -------- | ---------------------------------------------- | ----------------------------------------------------------------- |
 | onchange | `(files: File[]) => void`                      | Fires whenever the staged file list changes (add or remove).      |
-| onremove      | `(file: File) => void`                         | Fires when a single file is removed via its card's remove button. |
-| onerror    | `(rejections: MediaUploadRejection[]) => void` | Fires when one or more files in a selection/drop fail validation. |
+| onremove | `(file: File) => void`                         | Fires when a single file is removed via its card's remove button. |
+| onerror  | `(rejections: MediaUploadRejection[]) => void` | Fires when one or more files in a selection/drop fail validation. |
 
 Named `onchange`/`onremove`/`onerror`, not `onchange`/`onremove`/`onerror`: none
 of the three relay a native event object (they carry `File[]`, a single `File`, and a

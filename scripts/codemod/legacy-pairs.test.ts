@@ -40,17 +40,26 @@ const propertiesOf = (component: string): string =>
   );
 
 describe('LEGACY_PAIRS', () => {
-  it('has exactly 191 entries — every @deprecated event prop in src/lib', () => {
-    expect(LEGACY_PAIRS.length).toBe(191);
+  it('has exactly 190 entries — every prop 4.0.0 renamed', () => {
+    // 191 spellings were deprecated in 3.x. Table's `onCellChange` is not here
+    // because 4.0.0 deletes that prop rather than renaming it, and a rename
+    // table that pointed at it would move a consumer onto a prop that no longer
+    // exists. docs/MIGRATION_4.0.md covers it in prose instead.
+    expect(LEGACY_PAIRS.length).toBe(190);
   });
 
-  it('matches what generate-maps.ts derives from the @deprecated tags', () => {
-    // `computeLegacyPairs` re-reads every properties.ts and takes each
-    // deprecated prop's replacement from its own tag. Asserting the committed
-    // array equals its output means every entry here really is what the
-    // library declares, and a new deprecation fails this test until
-    // `LEGACY_PAIRS` is regenerated to match.
-    expect(LEGACY_PAIRS).toEqual(computeLegacyPairs());
+  it('is frozen: src/lib no longer derives it, because the tags are gone', () => {
+    // In 3.x this table was regenerated from the `@deprecated` tags and
+    // asserted equal to them. 4.0.0 removed the tags, so the derivation now
+    // yields nothing — which is itself the proof that the removal is complete,
+    // and the reason this table is a fixed historical record from here on
+    // rather than a projection of the source.
+    //
+    // It still ships: `npx sui-codemod` reads it to move a 3.x consumer's call
+    // sites onto the 4.0.0 spellings, which is work that outlives the aliases
+    // it describes. Regenerating it now would silently empty the codemod.
+    expect(computeLegacyPairs()).toEqual([]);
+    expect(LEGACY_PAIRS.length).toBe(190);
   });
 
   it('never claims a legacy spelling equals its own correction', () => {
@@ -61,21 +70,16 @@ describe('LEGACY_PAIRS', () => {
     expect(noOps).toEqual([]);
   });
 
-  it('marks every legacy spelling @deprecated where the component declares it', () => {
-    // The codemod only earns its keep if the spelling it moves a consumer off
-    // is really the one on notice. A legacy prop without the tag would be a
-    // rename nobody asked for.
-    const wrong = LEGACY_PAIRS.flatMap((pair) => {
-      const block = docBlockFor(propertiesOf(pair.component), pair.legacy);
-      if (block === null) {
-        return [`${pair.component}.${pair.legacy} is not declared`];
-      }
-      return block.includes('@deprecated')
-        ? []
-        : [`${pair.component}.${pair.legacy} is not marked @deprecated`];
-    });
+  it('moves a consumer off a spelling the library no longer declares', () => {
+    // In 3.x the check was that every legacy spelling carried an `@deprecated`
+    // tag. In 4.0.0 the stronger statement holds: it is not declared at all,
+    // so a consumer still writing it gets a prop the component ignores. That is
+    // exactly who the codemod is for.
+    const surviving = LEGACY_PAIRS.filter(
+      (pair) => docBlockFor(propertiesOf(pair.component), pair.legacy) !== null
+    ).map((pair) => `${pair.component}.${pair.legacy}`);
 
-    expect(wrong).toEqual([]);
+    expect(surviving).toEqual([]);
   });
 
   it('never rewrites a consumer onto a deprecated prop', () => {

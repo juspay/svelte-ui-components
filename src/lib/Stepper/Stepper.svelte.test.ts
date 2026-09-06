@@ -1,7 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import { flushSync } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { resetDeprecationWarnings } from '../deprecation';
 import Step from './Step.svelte';
 import Stepper from './Stepper.svelte';
 
@@ -9,7 +7,6 @@ const steps = [{ label: 'Cart' }, { label: 'Address' }, { label: 'Pay' }];
 
 describe('Stepper', () => {
   beforeEach(() => {
-    resetDeprecationWarnings();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -18,9 +15,9 @@ describe('Stepper', () => {
   });
 
   it('reports a step click through onhandlestepclick', async () => {
-    // Stepper hands its resolved handler to <Step> under the corrected
-    // spelling, so Step has to read that spelling — a Step that only reads
-    // the legacy `onclick` silently drops every click.
+    // Stepper hands its handler to <Step> under this spelling, so Step has to
+    // read the same one — a Step reading anything else silently drops every
+    // click. 3.x had four names for this event; 4.0.0 has one.
     const onhandlestepclick = vi.fn();
     const { getAllByRole } = render(Stepper, { steps, currentStepIndex: 0, onhandlestepclick });
 
@@ -31,21 +28,13 @@ describe('Stepper', () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
-  it('still reports a step click through the deprecated onStepClick, with one warning', async () => {
-    const onStepClick = vi.fn();
-    const { getAllByRole } = render(Stepper, { steps, currentStepIndex: 0, onStepClick });
-
-    await fireEvent.click(getAllByRole('button')[2]);
-
-    expect(onStepClick).toHaveBeenCalledWith({ selectedIndex: 3 });
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(console.warn).mock.calls[0][0]).toContain('onhandlestepclick');
-  });
+  // Stepper's three other 3.x spellings are asserted gone in
+  // src/legacy-spellings-removed.test.ts, which reads the declarations for all
+  // 191 pairs. Passing one here would not compile.
 });
 
 describe('Step', () => {
   beforeEach(() => {
-    resetDeprecationWarnings();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -53,27 +42,13 @@ describe('Step', () => {
     vi.restoreAllMocks();
   });
 
-  it('fires the lowercase onclick silently', async () => {
-    const onClick = vi.fn();
-    const { getByRole } = render(Step, { stepIndex: 1, label: 'Cart', onclick: onClick });
-
-    await fireEvent.click(getByRole('button'));
-
-    expect(onClick).toHaveBeenCalledWith({ selectedIndex: 1 });
-    expect(console.warn).not.toHaveBeenCalled();
-  });
-
-  it('fires the deprecated onClick and warns once, at mount', async () => {
+  it('fires onclick with the step index', async () => {
     const onclick = vi.fn();
-    const { getByRole } = render(Step, { stepIndex: 1, label: 'Cart', onClick: onclick });
-
-    flushSync();
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(console.warn).mock.calls[0][0]).toContain('onclick');
+    const { getByRole } = render(Step, { stepIndex: 1, label: 'Cart', onclick });
 
     await fireEvent.click(getByRole('button'));
 
     expect(onclick).toHaveBeenCalledWith({ selectedIndex: 1 });
-    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

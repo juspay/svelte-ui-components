@@ -4,7 +4,7 @@
     shadow: 'open',
     props: {
       url: { type: 'String', reflect: true },
-      title: { type: 'String', reflect: true },
+      browserTitle: { type: 'String', reflect: true, attribute: 'title' },
       showAddressBar: { type: 'Boolean', reflect: true, attribute: 'show-address-bar' },
       showTabBar: { type: 'Boolean', reflect: true, attribute: 'show-tab-bar' },
       variant: { type: 'String', reflect: true },
@@ -19,10 +19,10 @@
 
 <script lang="ts">
   import Browser from '$lib/Browser/Browser.svelte';
-  let props = $props();
+  let { browserTitle, ...props } = $props();
 </script>
 
-<Browser {...props}>
+<Browser {...props} title={browserTitle}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

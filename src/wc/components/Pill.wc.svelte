@@ -7,14 +7,13 @@
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
-      title: { type: 'String', reflect: true },
+      pillTitle: { type: 'String', reflect: true, attribute: 'title' },
       leadingIcon: { type: 'Object' },
       dismissIcon: { type: 'Object' },
       dismissLabel: { type: 'String', attribute: 'dismiss-label' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      ondismiss: { type: 'Object' },
-      onDismiss: { type: 'Object' }
+      ondismiss: { type: 'Object' }
     }
   }}
 />
@@ -22,10 +21,10 @@
 <script lang="ts">
   import Pill from '$lib/Pill/Pill.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
-  let props = $props();
+  let { pillTitle, ...props } = $props();
 </script>
 
-<Pill {...props}>
+<Pill {...props} title={pillTitle}>
   {#snippet leadingIcon()}
     <slot name="leading-icon"></slot>
   {/snippet}

@@ -19,18 +19,18 @@ A security-conscious iframe embed. It renders an `<iframe>` for the given `src` 
 
 ## Props
 
-| Prop           | Type                | Required | Default              | Description                                                                                                                      |
-| -------------- | ------------------- | -------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| src            | `string`            | Yes      | `-`                  | URL loaded into the iframe.                                                                                                      |
-| title          | `string`            | No       | `'Embedded Content'` | Accessible title for the iframe.                                                                                                 |
-| allowedOrigins | `string[]`          | No       | `[]`                 | Origins allowed to send `postMessage` events to `onmessage`. An empty array (the default) processes nothing — secure by default. |
-| allow          | `string`            | No       | `'fullscreen'`       | Permissions policy applied to the iframe `allow` attribute.                                                                      |
-| sandbox        | `string`            | No       | `-`                  | Value for the iframe `sandbox` attribute. Omitted when not set.                                                                  |
+| Prop           | Type                | Required | Default              | Description                                                                                                                                                                              |
+| -------------- | ------------------- | -------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| src            | `string`            | Yes      | `-`                  | URL loaded into the iframe.                                                                                                                                                              |
+| title          | `string`            | No       | `'Embedded Content'` | Accessible title for the iframe.                                                                                                                                                         |
+| allowedOrigins | `string[]`          | No       | `[]`                 | Origins allowed to send `postMessage` events to `onmessage`. An empty array (the default) processes nothing — secure by default.                                                         |
+| allow          | `string`            | No       | `'fullscreen'`       | Permissions policy applied to the iframe `allow` attribute.                                                                                                                              |
+| sandbox        | `string`            | No       | `-`                  | Value for the iframe `sandbox` attribute. Omitted when not set.                                                                                                                          |
 | credentialless | `boolean`           | No       | `-`                  | Sets the iframe's `credentialless` attribute. Applied in the same render statement as `src`, so it is present before the iframe's first load — no dependency on effect-scheduling order. |
-| loading        | `'eager' \| 'lazy'` | No       | `-`                  | Loading strategy for the iframe. Omitted when not set.                                                                           |
-| referrerpolicy | `ReferrerPolicy`    | No       | `-`                  | Referrer policy for the iframe. Omitted when not set.                                                                            |
-| testId         | `string`            | No       | `-`                  | Test selector applied as `data-pw` on the container.                                                                             |
-| classes        | `string`            | No       | `-`                  | Additional CSS classes applied to the container.                                                                                 |
+| loading        | `'eager' \| 'lazy'` | No       | `-`                  | Loading strategy for the iframe. Omitted when not set.                                                                                                                                   |
+| referrerpolicy | `ReferrerPolicy`    | No       | `-`                  | Referrer policy for the iframe. Omitted when not set.                                                                                                                                    |
+| testId         | `string`            | No       | `-`                  | Test selector applied as `data-pw` on the container.                                                                                                                                     |
+| classes        | `string`            | No       | `-`                  | Additional CSS classes applied to the container.                                                                                                                                         |
 
 ## Events
 
@@ -57,8 +57,8 @@ Event handler props with callback signatures.
 </button>
 ```
 
-| Method                                                | Description                                                                                        |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Method                                                | Description                                                                                                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `postMessage(message: unknown, targetOrigin: string)` | Posts `message` to the embedded iframe's `contentWindow` at `targetOrigin`. No-op before the iframe mounts (`src` unset) or once it unmounts. |
 
 This is a Svelte-only accessor via `bind:this` (same pattern as `FileInput`'s `openFilePicker`) — it is not bridged onto the `<sui-iframe-viewer>` custom element; see Web Component section below.

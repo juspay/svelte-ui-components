@@ -10,8 +10,7 @@
       panelId: { type: 'String', attribute: 'panel-id' },
       trigger: { type: 'Object' },
       ontoggle: { type: 'Object' },
-      disabled: { type: 'Boolean', reflect: true, attribute: 'disabled' },
-      onToggle: { type: 'Object' }
+      disabled: { type: 'Boolean', reflect: true, attribute: 'disabled' }
     }
   }}
 />

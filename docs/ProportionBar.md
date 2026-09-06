@@ -40,7 +40,8 @@ Pass `valueFormat` `(value, percent) => string` to control the legend value colu
 
 ```svelte
 <script>
-  const currencyFormat = (value, percent) => `₹${(value / 100).toFixed(1)}L (${Math.round(percent)}%)`;
+  const currencyFormat = (value, percent) =>
+    `₹${(value / 100).toFixed(1)}L (${Math.round(percent)}%)`;
 </script>
 
 <ProportionBar segments={revenueSegments} valueFormat={currencyFormat} trackHeight="14px" />
@@ -73,40 +74,40 @@ When `showLegend={false}`, the legend list is removed and the SVG itself carries
 
 ## Props
 
-| Prop        | Type                                       | Required | Default | Description                                                                                                       |
-| ----------- | ------------------------------------------ | -------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| segments    | `ProportionBarSegment[]`                   | Yes      | `-`     | Segments whose values define the proportions. Each is `{ label: string; value: number; color?: string }`.       |
-| showLegend  | `boolean`                                  | No       | `true`  | Whether to render the legend list below the bar.                                                                |
-| valueFormat | `(value: number, percent: number) => string` | No    | `-`     | Custom formatter for the legend value column. Defaults to `"N (X%)"`.                                            |
-| trackHeight | `string`                                   | No       | `-`     | Height of the bar track (e.g. `"8px"`). Also settable via `--proportion-bar-track-height`.                       |
-| testId      | `string`                                   | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                      |
-| classes     | `string`                                   | No       | `-`     | Extra CSS class names appended to the root element. Useful for theming via CSS-variable overrides.              |
+| Prop        | Type                                         | Required | Default | Description                                                                                               |
+| ----------- | -------------------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| segments    | `ProportionBarSegment[]`                     | Yes      | `-`     | Segments whose values define the proportions. Each is `{ label: string; value: number; color?: string }`. |
+| showLegend  | `boolean`                                    | No       | `true`  | Whether to render the legend list below the bar.                                                          |
+| valueFormat | `(value: number, percent: number) => string` | No       | `-`     | Custom formatter for the legend value column. Defaults to `"N (X%)"`.                                     |
+| trackHeight | `string`                                     | No       | `-`     | Height of the bar track (e.g. `"8px"`). Also settable via `--proportion-bar-track-height`.                |
+| testId      | `string`                                     | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                |
+| classes     | `string`                                     | No       | `-`     | Extra CSS class names appended to the root element. Useful for theming via CSS-variable overrides.        |
 
 ### ProportionBarSegment
 
-| Field | Type     | Required | Description                                                       |
-| ----- | -------- | -------- | ----------------------------------------------------------------- |
-| label | `string` | Yes      | Display label for the segment.                                    |
+| Field | Type     | Required | Description                                                                                      |
+| ----- | -------- | -------- | ------------------------------------------------------------------------------------------------ |
+| label | `string` | Yes      | Display label for the segment.                                                                   |
 | value | `number` | Yes      | Absolute value used to compute the proportion. Negative / non-finite values are treated as zero. |
-| color | `string` | No       | Override fill colour. Falls back to the default palette by index. |
+| color | `string` | No       | Override fill colour. Falls back to the default palette by index.                                |
 
 ## CSS Variables
 
 Override these custom properties to theme the component.
 
-| Variable                                    | Default   | CSS Property  | Description                                  |
-| ------------------------------------------- | --------- | ------------- | -------------------------------------------- |
-| `--proportion-bar-gap`                      | `10px`    | gap           | Vertical gap between the track and legend.   |
-| `--proportion-bar-width`                    | `100%`    | width         | Width of the component.                      |
-| `--proportion-bar-track-height`             | `10px`    | height        | Height of the bar track.                     |
-| `--proportion-bar-track-border-radius`      | `4px`     | border-radius | Corner radius of the track.                  |
-| `--proportion-bar-track-bg`                 | `#f0f0f0` | background    | Background of the empty track.               |
-| `--proportion-bar-legend-gap`               | `6px`     | gap           | Vertical gap between legend items.           |
-| `--proportion-bar-legend-item-gap`          | `8px`     | gap           | Horizontal gap within a legend item.         |
-| `--proportion-bar-swatch-size`              | `10px`    | width/height  | Size of a legend colour swatch.              |
-| `--proportion-bar-swatch-border-radius`     | `2px`     | border-radius | Corner radius of a legend swatch.            |
-| `--proportion-bar-legend-label-color`       | `#374151` | color         | Colour of legend labels.                     |
-| `--proportion-bar-legend-value-color`       | `#111827` | color         | Colour of legend values.                     |
+| Variable                                | Default   | CSS Property  | Description                                |
+| --------------------------------------- | --------- | ------------- | ------------------------------------------ |
+| `--proportion-bar-gap`                  | `10px`    | gap           | Vertical gap between the track and legend. |
+| `--proportion-bar-width`                | `100%`    | width         | Width of the component.                    |
+| `--proportion-bar-track-height`         | `10px`    | height        | Height of the bar track.                   |
+| `--proportion-bar-track-border-radius`  | `4px`     | border-radius | Corner radius of the track.                |
+| `--proportion-bar-track-bg`             | `#f0f0f0` | background    | Background of the empty track.             |
+| `--proportion-bar-legend-gap`           | `6px`     | gap           | Vertical gap between legend items.         |
+| `--proportion-bar-legend-item-gap`      | `8px`     | gap           | Horizontal gap within a legend item.       |
+| `--proportion-bar-swatch-size`          | `10px`    | width/height  | Size of a legend colour swatch.            |
+| `--proportion-bar-swatch-border-radius` | `2px`     | border-radius | Corner radius of a legend swatch.          |
+| `--proportion-bar-legend-label-color`   | `#374151` | color         | Colour of legend labels.                   |
+| `--proportion-bar-legend-value-color`   | `#111827` | color         | Colour of legend values.                   |
 
 ## Web Component
 

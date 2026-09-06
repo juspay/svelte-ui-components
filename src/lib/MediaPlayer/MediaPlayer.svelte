@@ -6,7 +6,6 @@
   import volumeSvg from '$lib/assets/volume.svg?raw';
   import muteSvg from '$lib/assets/mute.svg?raw';
   import type { MediaPlayerProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     src,
@@ -27,27 +26,10 @@
     captionsSrcLang,
     onplay,
     onpause,
-    onvolumechange: onvolumechangeProp,
-    onVolumeChange,
+    onvolumechange,
     testId,
     classes
   }: MediaPlayerProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onvolumechange = $derived(
-    resolveDeprecatedProp(
-      'MediaPlayer',
-      'onVolumeChange',
-      'onvolumechange',
-      onVolumeChange,
-      onvolumechangeProp
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onvolumechange);
-  });
 
   let videoPlayer: HTMLVideoElement | null = $state(null);
 

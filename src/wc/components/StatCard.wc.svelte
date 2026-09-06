@@ -3,7 +3,7 @@
     tag: 'sui-stat-card',
     shadow: 'open',
     props: {
-      title: { type: 'String', reflect: true },
+      statCardTitle: { type: 'String', reflect: true, attribute: 'title' },
       value: { type: 'String', reflect: true },
       delta: { type: 'String', reflect: true },
       deltaPositive: { type: 'Boolean', attribute: 'delta-positive', reflect: true },
@@ -15,7 +15,6 @@
       rowsDirection: { type: 'String', attribute: 'rows-direction' },
       tooltip: { type: 'Object' },
       checkbox: { type: 'Object' },
-      onCheckboxChange: { type: 'Object' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       onclick: { type: 'Object' },
@@ -29,10 +28,10 @@
 
 <script lang="ts">
   import StatCard from '$lib/StatCard/StatCard.svelte';
-  let props = $props();
+  let { statCardTitle, ...props } = $props();
 </script>
 
-<StatCard {...props}>
+<StatCard {...props} title={statCardTitle}>
   {#snippet headerRight()}
     <slot name="header-right"></slot>
   {/snippet}

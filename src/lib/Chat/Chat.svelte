@@ -5,7 +5,6 @@
   import ChatSuggestions from '../ChatSuggestions/ChatSuggestions.svelte';
   import ThinkingIndicator from '../ThinkingIndicator/ThinkingIndicator.svelte';
   import type { ChatProperties } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
 
   let {
     messages,
@@ -44,73 +43,18 @@
     stopIcon,
     voiceIcon,
     attachIcon,
-    onsend: onsendProp,
-    onSend,
-    onsuggestion: onsuggestionProp,
-    onSuggestion,
-    onclose: oncloseProp,
-    onClose,
-    onstop: onstopProp,
-    onStop,
-    onvoice: onvoiceProp,
-    onVoice,
-    onattach: onattachProp,
-    onAttach,
-    onretry: onretryProp,
-    onRetry,
-    onfeedback: onfeedbackProp,
-    onFeedback,
-    onscrollstate: onscrollstateLegacy,
-    onScrollState,
+    onsend,
+    onsuggestion,
+    onclose,
+    onstop,
+    onvoice,
+    onattach,
+    onretry,
+    onfeedback,
+    onscrollstate,
     testId,
     classes
   }: ChatProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onattach = $derived(
-    resolveDeprecatedProp('Chat', 'onAttach', 'onattach', onAttach, onattachProp)
-  );
-  const onclose = $derived(
-    resolveDeprecatedProp('Chat', 'onClose', 'onclose', onClose, oncloseProp)
-  );
-  const onfeedback = $derived(
-    resolveDeprecatedProp('Chat', 'onFeedback', 'onfeedback', onFeedback, onfeedbackProp)
-  );
-  const onretry = $derived(
-    resolveDeprecatedProp('Chat', 'onRetry', 'onretry', onRetry, onretryProp)
-  );
-  const onscrollstate = $derived(
-    resolveDeprecatedProp(
-      'Chat',
-      'onscrollstate',
-      'onScrollState',
-      onscrollstateLegacy,
-      onScrollState
-    )
-  );
-  const onsend = $derived(resolveDeprecatedProp('Chat', 'onSend', 'onsend', onSend, onsendProp));
-  const onstop = $derived(resolveDeprecatedProp('Chat', 'onStop', 'onstop', onStop, onstopProp));
-  const onsuggestion = $derived(
-    resolveDeprecatedProp('Chat', 'onSuggestion', 'onsuggestion', onSuggestion, onsuggestionProp)
-  );
-  const onvoice = $derived(
-    resolveDeprecatedProp('Chat', 'onVoice', 'onvoice', onVoice, onvoiceProp)
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(
-      onattach,
-      onclose,
-      onfeedback,
-      onretry,
-      onscrollstate,
-      onsend,
-      onstop,
-      onsuggestion,
-      onvoice
-    );
-  });
 
   let showHeader = $derived(
     title.length > 0 ||

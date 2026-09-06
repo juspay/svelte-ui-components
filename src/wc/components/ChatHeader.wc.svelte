@@ -3,7 +3,7 @@
     tag: 'sui-chat-header',
     shadow: 'open',
     props: {
-      title: { type: 'String', reflect: true },
+      chatHeaderTitle: { type: 'String', reflect: true, attribute: 'title' },
       subtitle: { type: 'String', reflect: true },
       image: { type: 'String', reflect: true },
       imageAlt: { type: 'String', attribute: 'image-alt' },
@@ -14,15 +14,14 @@
       showClose: { type: 'Boolean', attribute: 'show-close' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
-      onclose: { type: 'Object' },
-      onClose: { type: 'Object' }
+      onclose: { type: 'Object' }
     }
   }}
 />
 
 <script lang="ts">
   import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
-  let props = $props();
+  let { chatHeaderTitle, ...props } = $props();
 </script>
 
-<ChatHeader {...props} />
+<ChatHeader {...props} title={chatHeaderTitle} />

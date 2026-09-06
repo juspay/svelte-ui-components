@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { FunnelChartProperties, FunnelStage } from './properties';
-  import { readDeprecatedProps, resolveDeprecatedProp } from '../deprecation';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { getColor, getContrastColor } from '$lib/_chart/colors';
@@ -29,36 +28,9 @@
     testId,
     classes,
     empty,
-    onstageclick: onstageclickProp,
-    onStageClick,
-    onstagehover: onstagehoverProp,
-    onStageHover
+    onstageclick,
+    onstagehover
   }: FunnelChartProperties = $props();
-
-  // Every spelling this component still accepts resolves to one value; the lowercase one wins.
-  const onstageclick = $derived(
-    resolveDeprecatedProp(
-      'FunnelChart',
-      'onStageClick',
-      'onstageclick',
-      onStageClick,
-      onstageclickProp
-    )
-  );
-  const onstagehover = $derived(
-    resolveDeprecatedProp(
-      'FunnelChart',
-      'onStageHover',
-      'onstagehover',
-      onStageHover,
-      onstagehoverProp
-    )
-  );
-
-  // Read once at mount so an old spelling is reported even if the event never fires.
-  $effect.pre(() => {
-    readDeprecatedProps(onstageclick, onstagehover);
-  });
 
   // ── State ──────────────────────────────────────────────────────
 

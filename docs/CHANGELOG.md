@@ -2,7 +2,79 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.0.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.0)
+
+`Determine version bump type` read `git log -1`. That published 3.5.1: the
+range since 3.5.0 held `feat(events)!: remove the 3.x legacy spellings and
+host-reserved element props`, but `fix(wc): restore the type coverage...`
+sat on top, so the workflow computed `patch`. A breaking removal went to
+npm under a patch number, `^3.5.0` resolved to it on a routine install,
+and because Svelte drops an unknown prop without erroring, consumers'
+handlers stopped running with no build failure and no runtime error.
+
+The bump is now the strongest one any commit since the last release asks
+for. Classification of a single commit is unchanged -- the regexes are
+carried over verbatim, including the asymmetry where the type is matched
+case-insensitively and the `!` is not, because widening what counts as
+breaking is a different change from not missing what already counts.
+
+Both jobs are fixed, and doing the second surfaced a trap in the first.
+Two packages release from this branch and each writes its own landmark:
+the root job commits `chore(release): 4.0.0`, the MCP job commits
+`chore(release): mcp 4.0.2`. Both are on this history -- 30b7746 and
+d2fd26e. A boundary matching `^chore(release):` loosely would let an MCP
+release end the root package's range and hide everything below it, which
+is the same failure as reading only the newest commit, one level up. The
+boundaries are now distinct: `chore(release): &lt;digit&gt;` for the root,
+`chore(release): mcp` for MCP. Neither drives a bump.
+
+MCP additionally counts only commits that touched `mcp/`, which is what
+already gates the job running at all.
+
+The boundary is a release commit rather than a tag. The release job pushes
+the commit before the tag, and this workflow's own comments describe the
+window where the publish succeeds and the tag push does not -- so a tag
+can be absent for a version already on the registry, while the release
+commit cannot.
+
+The logic moves out of inline YAML into `scripts/release/version-bump.js`
+so it can be tested at all; it was previously unreachable from any test,
+which is why a rule this load-bearing had none.
+
+Controls, because a gate nobody has seen fail proves nothing:
+
+- Replayed against the real history. At `d6066e9`, the commit that
+actually published 3.5.1, the new rule reads all five unreleased
+commits, finds the `feat(events)!` and returns `major` -- it would have
+cut 4.0.0. At `3013d88` it still returns `major`, so the correct case is
+unchanged.
+- Both CLI modes run against this repository. Root reports MINOR from
+`fix(release)` plus `feat(Table)`; `--mcp` reports PATCH with no commits
+since `chore(release): mcp 4.0.2`.
+- The two cross-package boundary tests were watched failing first, and
+failed for the right reason: `expected 'patch' to be 'major'`, the MCP
+landmark truncating the root range.
+- 17 unit tests, including that five-commit range, a BREAKING CHANGE
+footer appearing mid-sentence in prose (must stay `patch`), an empty
+range, and the Jira-prefixed subjects the workflow has always accepted.
+- `check:release` is new and wired into `check`. Verified it fails:
+returning a bump outside the union gives
+`error TS2322: Type '"PATCH_TYPO"' is not assignable to type 'Bump'`,
+then restored byte-identically. That mirrors the reason this incident
+reached a release at all -- a directory no configured check was reading.
+
+Not touched: two release runs in flight at once still each choose their
+own version and each push a commit and a tag. That race is real and this
+does not address it.
+
+Verified: lint 0, `pnpm check` exit 0 over both configs (867 files and 432
+files, 0 errors each) with `check:release` in the chain, 845 unit tests
+pass.
+
+-
+**BREAKING:** fix(release): derive both packages' versions from every unreleased commit ([a9f2e1c](https://github.com/juspay/svelte-ui-components/commit/a9f2e1c106d4989dc0f7c277fe926e89f552ca2b))
+
+## [4.1.0](https://github.com/juspay/svelte-ui-components/compare/4.1.0..4.0.0) - 6 September 2026
 
 Table hand-rolled its selection control: a role="checkbox" span with its own tri-state,
 keyboard handling and forty lines of CSS that Checkbox already provides. Two implementations

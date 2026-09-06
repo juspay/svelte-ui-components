@@ -8,6 +8,7 @@
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      triggerAriaLabel: { type: 'String', attribute: 'trigger-aria-label' },
       onclick: { type: 'Object' },
       onselect: { type: 'Object' },
       dropdownIcon: { type: 'Object' }

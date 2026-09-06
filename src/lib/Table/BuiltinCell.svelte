@@ -447,11 +447,16 @@
           }))}
           testId={generatedTestId('menu', rowIndex)}
           {usePortal}
+          interactiveTrigger
           onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
         >
-          {#snippet trigger()}
+          {#snippet trigger(triggerProps)}
             <span class="builtin-icon-button">
-              <Button ariaLabel="More actions" testId={generatedTestId('menuTrigger', rowIndex)}>
+              <Button
+                {...triggerProps}
+                ariaLabel="More actions"
+                testId={generatedTestId('menuTrigger', rowIndex)}
+              >
                 {#snippet icon()}
                   <!-- eslint-disable svelte/no-at-html-tags -->
                   <span class="builtin-menu-dots">{@html dotsSvg}</span>
@@ -483,11 +488,13 @@
         }))}
         testId={generatedTestId('popup', rowIndex)}
         {usePortal}
+        interactiveTrigger
         onselect={(menuItem) => column.onMenuAction?.(rowIndex, menuItem.value, originalIndex)}
       >
-        {#snippet trigger()}
+        {#snippet trigger(triggerProps)}
           <span class="builtin-icon-button">
             <Button
+              {...triggerProps}
               ariaLabel={popupData.ariaLabel ?? 'More actions'}
               testId={generatedTestId('popupTrigger', rowIndex)}
             >

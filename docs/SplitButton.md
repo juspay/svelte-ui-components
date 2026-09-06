@@ -30,6 +30,7 @@ A primary action button paired with a dropdown arrow trigger that reveals a menu
 | disabled | `boolean`    | No       | `false` | Whether the entire split button is disabled. When true, both the primary button and dropdown trigger appear dimmed and ignore clicks.                                            |
 | testId   | `string`     | No       | `-`     | Value for the `data-pw` attribute on the container, used for end-to-end testing selectors.                                                                                       |
 | classes  | `string`     | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.           |
+| triggerAriaLabel | `string` | No   | `More {text} options` | Accessible name for the dropdown trigger. The trigger renders only a chevron, so without a name it announces as an unnamed button. Defaults to `More {text} options`, or `More options` when `text` is empty; a blank value falls back to that default rather than leaving the trigger unnamed. |
 
 ## Snippets
 

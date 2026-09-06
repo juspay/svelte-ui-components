@@ -19,6 +19,23 @@
     attributes
   }: CheckboxProperties = $props();
 
+  // Visible text wins over `ariaLabel`, which is what `properties.ts` has always
+  // promised and what WCAG 2.5.3 requires: a control showing "Accept terms" must
+  // carry that text in its accessible name, so letting an explicit label replace
+  // it outright would swap the name a speech-input user says for one they cannot
+  // see. `ariaLabel` names the box only when there is no visible text to use —
+  // the icon-only and label-in-a-table-header cases it exists for.
+  //
+  // A blank `ariaLabel` is treated as absent rather than as an empty name, since
+  // `aria-label=""` leaves the box unnamed, which is the bug this fixes.
+  const accessibleName: string | null = $derived(
+    text.length > 0
+      ? text
+      : typeof ariaLabel === 'string' && ariaLabel.trim() !== ''
+        ? ariaLabel
+        : null
+  );
+
   function handleClick(): void {
     if (disabled) {
       return;
@@ -82,7 +99,7 @@
     aria-checked={indeterminate ? 'mixed' : checked}
     aria-disabled={disabled}
     aria-controls={ariaControls ?? null}
-    aria-label={text.length === 0 ? (ariaLabel ?? null) : null}
+    aria-label={accessibleName}
     onkeydown={handleKeyDown}
     data-pw={typeof testId === 'string' ? `${testId}-box` : null}
     testID={typeof testId === 'string' ? `${testId}-box` : null}

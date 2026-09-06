@@ -23,9 +23,29 @@ npx sui-codemod --dry-run ./src
 
 The codemod is component-aware. It rewrites `onClick` on `<Toggle>` because
 that is a prop this library renamed, and leaves `onClick` on your own
-components alone. It also leaves callback keys inside config objects untouched
-— `columns={[{ id: 'a', onToggle: fn }]}` on `<Table>` keeps its spelling,
-because that is a key you write inside a value, not a prop on a tag.
+components alone.
+
+### "Lowercase throughout" means props, not every callback
+
+The rule governs **props you write on a tag**. Callback keys inside a config
+object you build are a different thing — they are members of a value, not
+attributes — and they were never deprecated, so 4.0.0 does not touch them and
+neither does the codemod. They stay camelCase:
+
+| Where                          | Keys that stay camelCase                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------- |
+| `TableColumn`                  | `onToggle`, `onSelect`, `onInput`, `onButtonClick`, `onPrimaryAction`, `onMenuAction` |
+| `TableCheckboxSelectionConfig` | `onSelectionChange`                                                                   |
+| `TablePaginationConfig`        | `onPageChange`, `onPageSizeChange`, `onLoadMore`                                      |
+| `ComboboxAction`               | `onClick`                                                                             |
+
+```svelte
+<!-- onrowclick is a prop and was renamed; onToggle is a key in a value and was not. -->
+<Table onrowclick={fn} columns={[{ id: 'a', onToggle: fn }]} />
+```
+
+So `<Table>` legitimately shows both spellings at once. If you expected
+`onselectionchange` and did not find it, this is why.
 
 ### What it cannot do for you
 

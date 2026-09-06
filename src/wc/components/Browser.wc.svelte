@@ -19,10 +19,10 @@
 
 <script lang="ts">
   import Browser from '$lib/Browser/Browser.svelte';
-  let { browserTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<Browser {...props} title={browserTitle}>
+<Browser {...props} title={props.browserTitle}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

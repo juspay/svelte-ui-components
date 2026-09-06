@@ -33,7 +33,7 @@
 
 <script lang="ts">
   import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  let { chatMessageRole, ...props } = $props();
+  let props = $props();
 </script>
 
-<ChatMessage {...props} role={chatMessageRole} />
+<ChatMessage {...props} role={props.chatMessageRole} />

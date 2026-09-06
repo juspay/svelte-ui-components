@@ -56,7 +56,11 @@
 
 <script lang="ts">
   import Chat from '$lib/Chat/Chat.svelte';
-  let { chatTitle, ...props } = $props();
+  // Bound whole rather than destructured: a rest element narrows the spread to
+  // `{}`, and `<Chat {...props}>` then stops satisfying the component's
+  // mandatory props. Only `check:wc` type-checks this directory, so that
+  // regression reached a release before anything caught it.
+  let props = $props();
 </script>
 
-<Chat {...props} title={chatTitle} />
+<Chat {...props} title={props.chatTitle} />

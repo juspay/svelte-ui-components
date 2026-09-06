@@ -16,10 +16,10 @@
 
 <script lang="ts">
   import EmptyState from '$lib/EmptyState/EmptyState.svelte';
-  let { emptyStateTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<EmptyState {...props} title={emptyStateTitle}>
+<EmptyState {...props} title={props.emptyStateTitle}>
   {#snippet icon()}
     <slot name="icon"></slot>
   {/snippet}

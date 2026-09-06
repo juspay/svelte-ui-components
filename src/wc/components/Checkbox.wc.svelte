@@ -20,10 +20,10 @@
 
 <script lang="ts">
   import Checkbox from '$lib/Checkbox/Checkbox.svelte';
-  let { checkboxAriaLabel, ...props } = $props();
+  let props = $props();
 </script>
 
-<Checkbox {...props} ariaLabel={checkboxAriaLabel}>
+<Checkbox {...props} ariaLabel={props.checkboxAriaLabel}>
   {#snippet checkedIcon()}
     <slot name="checked-icon"></slot>
   {/snippet}

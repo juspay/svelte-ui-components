@@ -4,7 +4,7 @@
     shadow: 'open',
     props: {
       confirmationId: { type: 'String', attribute: 'confirmation-id' },
-      hITLTitle: { type: 'String', reflect: true, attribute: 'title' },
+      hitlTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String' },
       sections: { type: 'Object' },
       functionArguments: { type: 'Object' },
@@ -37,7 +37,7 @@
 
 <script lang="ts">
   import HITL from '$lib/HITL/HITL.svelte';
-  let { hITLTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<HITL {...props} title={hITLTitle} />
+<HITL {...props} title={props.hitlTitle} />

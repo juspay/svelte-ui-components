@@ -21,10 +21,10 @@
 <script lang="ts">
   import Pill from '$lib/Pill/Pill.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
-  let { pillTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<Pill {...props} title={pillTitle}>
+<Pill {...props} title={props.pillTitle}>
   {#snippet leadingIcon()}
     <slot name="leading-icon"></slot>
   {/snippet}

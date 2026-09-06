@@ -67,7 +67,7 @@
 
 <script lang="ts">
   import Input from '$lib/Input/Input.svelte';
-  let { inputAriaLabel, inputId, ...props } = $props();
+  let props = $props();
 
   // Restores the tri-state the attribute string flattens: absent stays null so
   // the browser default is untouched, "false" is honoured, and a bare
@@ -92,7 +92,7 @@
 
 <Input
   {...props}
-  id={inputId}
-  ariaLabel={inputAriaLabel}
+  id={props.inputId}
+  ariaLabel={props.inputAriaLabel}
   spellcheck={asSpellcheck(props.spellcheck)}
 />

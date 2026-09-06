@@ -28,7 +28,7 @@
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run build:wc && npm run build:codemod && npm run package",
     "test": "npm run test:integration && npm run test:unit",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:codemod && npm run check:migrate && npm run check:wc-parity",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && npm run check:wc && npm run check:codemod && npm run check:migrate && npm run check:wc-parity",
     "check:codemod": "tsc -p scripts/codemod/tsconfig.json",
     "codemod": "node scripts/codemod/cli.ts",
     "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",

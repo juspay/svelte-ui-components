@@ -21,7 +21,7 @@
 
 <script lang="ts">
   import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
-  let { chatHeaderTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<ChatHeader {...props} title={chatHeaderTitle} />
+<ChatHeader {...props} title={props.chatHeaderTitle} />

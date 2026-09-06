@@ -24,12 +24,12 @@
 
 <script lang="ts">
   import Menu from '$lib/Menu/Menu.svelte';
-  let { menuAriaLabel, ...props } = $props();
+  let props = $props();
 </script>
 
 <!-- A property-assigned trigger wins; the slot is the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. -->
-<Menu {...props} ariaLabel={menuAriaLabel}>
+<Menu {...props} ariaLabel={props.menuAriaLabel}>
   {#snippet trigger()}
     {#if props.trigger}{@render props.trigger()}{:else}<slot name="trigger"></slot>{/if}
   {/snippet}

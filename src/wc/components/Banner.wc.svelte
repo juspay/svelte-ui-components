@@ -21,7 +21,7 @@
 
 <script lang="ts">
   import Banner from '$lib/Banner/Banner.svelte';
-  let { bannerRole, ...props } = $props();
+  let props = $props();
 </script>
 
 <!--
@@ -33,7 +33,7 @@
   `$$props` binding that is not in scope there, and the element renders nothing
   at all. `title` keeps no property branch: it is host-reserved, never declared.
 -->
-<Banner {...props} role={bannerRole}>
+<Banner {...props} role={props.bannerRole}>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}

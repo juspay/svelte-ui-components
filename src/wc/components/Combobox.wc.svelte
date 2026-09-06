@@ -65,7 +65,11 @@
     highlightedIndex = $bindable(-1),
     selected = $bindable([]),
     ...rest
-  }: ComboboxProperties = $props();
+    // `comboboxAriaLabel` is this element's name for the component's
+    // `ariaLabel`, renamed because ARIAMixin already defines `ariaLabel` on
+    // every Element. It is not part of ComboboxProperties, so the annotation
+    // has to admit it.
+  }: ComboboxProperties & { comboboxAriaLabel?: string } = $props();
 </script>
 
 <Combobox

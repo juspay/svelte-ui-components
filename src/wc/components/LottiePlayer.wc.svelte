@@ -20,7 +20,7 @@
 
 <script lang="ts">
   import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
-  let { lottiePlayerAriaHidden, ...props } = $props();
+  let props = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's name
   // minus its `$` with the rune itself (sveltejs/svelte#13715, same class as `state` vs
@@ -44,7 +44,7 @@
 
 <LottiePlayer
   {...props}
-  ariaHidden={lottiePlayerAriaHidden}
+  ariaHidden={props.lottiePlayerAriaHidden}
   oncomplete={handleComplete}
   onerror={handleError}
 />

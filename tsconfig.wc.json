@@ -11,5 +11,6 @@
     "src/lib/**/*.svelte",
     ".svelte-kit/ambient.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "//": "Tests are excluded because this config exists to type-check the web-component build, whose `types` is `vite/client` only. A test importing `node:fs` is correct and is checked by the main tsconfig; here it would fail for the wrong reason. src/lib/docs-index.test.ts made that concrete.",
+  "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

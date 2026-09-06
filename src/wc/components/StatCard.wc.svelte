@@ -28,10 +28,10 @@
 
 <script lang="ts">
   import StatCard from '$lib/StatCard/StatCard.svelte';
-  let { statCardTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<StatCard {...props} title={statCardTitle}>
+<StatCard {...props} title={props.statCardTitle}>
   {#snippet headerRight()}
     <slot name="header-right"></slot>
   {/snippet}

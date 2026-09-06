@@ -20,7 +20,7 @@
 
 <script lang="ts">
   import IframeViewer from '$lib/IframeViewer/IframeViewer.svelte';
-  let { iframeViewerTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<IframeViewer {...props} title={iframeViewerTitle} />
+<IframeViewer {...props} title={props.iframeViewerTitle} />

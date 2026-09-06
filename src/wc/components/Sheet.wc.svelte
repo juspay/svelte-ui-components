@@ -22,10 +22,10 @@
 
 <script lang="ts">
   import Sheet from '$lib/Sheet/Sheet.svelte';
-  let { sheetTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<Sheet {...props} title={sheetTitle}>
+<Sheet {...props} title={props.sheetTitle}>
   {#snippet content()}
     <slot></slot>
   {/snippet}

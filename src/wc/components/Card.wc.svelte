@@ -24,10 +24,10 @@
 
 <script lang="ts">
   import Card from '$lib/Card/Card.svelte';
-  let { cardTitle, ...props } = $props();
+  let props = $props();
 </script>
 
-<Card {...props} title={cardTitle}>
+<Card {...props} title={props.cardTitle}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

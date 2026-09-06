@@ -1,4 +1,5 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
+import { VISUAL, playwrightPort, reuseExistingServer } from './scripts/pw-port.js';
 
 // Separate from playwright.config.ts on purpose. Screenshot baselines are only
 // meaningful against a fixed renderer, so this suite runs ONLY inside the
@@ -6,13 +7,16 @@ import type { PlaywrightTestConfig } from '@playwright/test';
 // CI, via the same image. Folding these specs into the functional project would
 // make `pnpm run test:integration` fail on macOS for reasons that have nothing
 // to do with the code under test.
-const port = Number(process.env.PW_PORT ?? 43200);
+//
+// VISUAL sits one above this checkout's functional port; see scripts/pw-port.ts.
+const port = playwrightPort(VISUAL);
 
 const config: PlaywrightTestConfig = {
   webServer: {
     command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
     port,
-    reuseExistingServer: !process.env.CI,
+    // See playwright.config.ts — reuse only a deliberately named port.
+    reuseExistingServer: reuseExistingServer(),
     timeout: 180_000
   },
   testDir: 'tests/visual',

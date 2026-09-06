@@ -21,6 +21,7 @@
     typewriter = false,
     typewriterSpeed,
     clampLines = 0,
+    marker = false,
     status,
     avatar,
     header,
@@ -205,10 +206,15 @@
       <div
         class="bubble"
         class:clampable
+        class:has-marker={marker}
         style={clampable ? `--chat-message-clamp-lines-prop: ${clampLines};` : null}
         data-clamped={clampActive ? 'true' : null}
         data-expanded={clampable ? String(expanded) : null}
       >
+        {#if marker}
+          <span class="marker" aria-hidden="true"></span>
+        {/if}
+
         {#if hasBody}
           <div class="body" id={bodyId}>{@render body?.()}</div>
         {:else if typewriterActive}
@@ -369,6 +375,27 @@
     box-shadow: var(--chat-message-box-shadow, none);
     word-wrap: break-word;
     overflow-wrap: anywhere;
+  }
+
+  /* Only the marker variant becomes a containing block: making every bubble relative
+     would silently re-base any absolutely-positioned content a consumer renders in a
+     body snippet. */
+  .bubble.has-marker {
+    position: relative;
+  }
+
+  .marker {
+    /* Decorative and absolutely positioned, so it sits over the bubble's leading
+       padding — where a link at the start of a responder message also sits. Without
+       this it silently eats those clicks. */
+    pointer-events: none;
+    position: absolute;
+    inset-block: var(--chat-message-marker-inset-block, 0);
+    /* Logical, so the bar follows `role` alignment into RTL instead of pinning left. */
+    inset-inline-start: var(--chat-message-marker-offset, 0px);
+    width: var(--chat-message-marker-width, 2px);
+    border-radius: var(--chat-message-marker-border-radius, 0);
+    background: var(--chat-message-marker-color, #6d28d9);
   }
 
   .chat-message.party-sender .bubble {

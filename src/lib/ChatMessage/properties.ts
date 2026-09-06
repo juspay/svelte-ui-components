@@ -43,6 +43,13 @@ export type OptionalChatMessageProperties = {
    * the line count for every message without touching each call site.
    */
   clampLines?: number;
+  /**
+   * Draw an accent bar along the bubble's leading edge — the quote-bar shape a chat
+   * surface uses to mark one party's turns without giving them a filled bubble.
+   * Decorative: it carries no text and is hidden from assistive technology, so the
+   * distinction it makes must also be carried by `role`, which it is.
+   */
+  marker?: boolean;
   streaming?: boolean;
   /**
    * Reveal the message progressively instead of all at once, using `TypewriterText`.

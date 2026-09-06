@@ -12,6 +12,7 @@
       typewriter: { type: 'Boolean', reflect: true },
       typewriterSpeed: { type: 'Number', attribute: 'typewriter-speed' },
       clampLines: { type: 'Number', attribute: 'clamp-lines' },
+      marker: { type: 'Boolean', reflect: true },
       status: { type: 'String', reflect: true },
       avatar: { type: 'Object' },
       header: { type: 'Object' },

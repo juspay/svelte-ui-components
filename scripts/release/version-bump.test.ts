@@ -132,3 +132,26 @@ describe('choosing the range', () => {
     expect(unreleasedCommits([commit('chore(release): 4.0.0'), commit('feat(a): b')])).toEqual([]);
   });
 });
+
+describe('a history window that did not reach the boundary', () => {
+  // The window has to be capped, or a repository with a long history blows the
+  // subprocess buffer. But "no boundary in the window" has two very different
+  // causes, and silently treating them alike is how a released `feat!` gets
+  // counted a second time and inflates the next bump.
+  it('treats a complete history with no release commit as all-unreleased', () => {
+    const log = [commit('feat(a): b'), commit('fix(c): d')];
+    expect(unreleasedCommits(log, 'root', { truncated: false })).toHaveLength(2);
+  });
+
+  it('refuses to answer when the window was truncated before any boundary', () => {
+    const log = [commit('feat(a): b'), commit('fix(c): d')];
+    expect(() => unreleasedCommits(log, 'root', { truncated: true })).toThrowError(
+      /truncated|boundary/i
+    );
+  });
+
+  it('is unbothered by truncation when the boundary is inside the window', () => {
+    const log = [commit('feat(a): b'), commit('chore(release): 4.0.0'), commit('feat(old): x')];
+    expect(unreleasedCommits(log, 'root', { truncated: true })).toHaveLength(1);
+  });
+});

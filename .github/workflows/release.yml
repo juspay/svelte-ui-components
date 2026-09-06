@@ -227,59 +227,16 @@ jobs:
       # Linting moved to the `verify` job this one now needs, so it gates the
       # publish rather than running beside it.
 
+      # Reads EVERY commit since the last `chore(release):`, not just the newest
+      # one. `git log -1` published 3.5.1 as a patch while the range held
+      # `feat(events)!: remove the 3.x legacy spellings` four commits down.
+      # The rules for classifying a single commit are unchanged; what changed
+      # is that a `fix:` on top can no longer hide a `feat!:` underneath.
+      # `scripts/release/version-bump.test.ts` pins this, including a replay of
+      # that exact range.
       - name: Determine version bump type
         id: version-type
-        run: |
-          # Get the latest commit message
-          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          echo "Latest commit: $COMMIT_MSG"
-
-          # Check for BREAKING CHANGE in commit body
-          COMMIT_BODY=$(git log -1 --pretty=format:"%b")
-          HAS_BREAKING_CHANGE=false
-          if echo "$COMMIT_BODY" | grep -iE "^BREAKING CHANGE:" > /dev/null; then
-            HAS_BREAKING_CHANGE=true
-          fi
-
-          # Determine version bump based on commit message (with optional Jira prefix like BZ-1234:)
-          # Pattern: [JIRA-123: ]feat[!|scope!]: message
-          if echo "$COMMIT_MSG" | grep -iE "(^|: )feat(\(.+\))?!?:" > /dev/null; then
-            # Check for breaking change indicator (!) or BREAKING CHANGE in body
-            if echo "$COMMIT_MSG" | grep -E "feat(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=minor" >> $GITHUB_OUTPUT
-              echo "Version bump: MINOR (new feature)"
-            fi
-          elif echo "$COMMIT_MSG" | grep -iE "(^|: )fix(\(.+\))?!?:" > /dev/null; then
-            # Check for breaking change in fix commits
-            if echo "$COMMIT_MSG" | grep -E "fix(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change in fix)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (bug fix)"
-            fi
-          elif echo "$COMMIT_MSG" | grep -iE "(^|: )(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!?:" > /dev/null; then
-            # Check for breaking change in other commit types
-            if echo "$COMMIT_MSG" | grep -E "(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (maintenance)"
-            fi
-          else
-            # Default to patch, but check for breaking change
-            if [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (default)"
-            fi
-          fi
+        run: node scripts/release/version-bump.js
 
       - name: Configure Git
         run: |
@@ -561,53 +518,13 @@ jobs:
         working-directory: mcp
         run: npm ci
 
+      # `--mcp` changes two things from the root job: the range stops at
+      # `chore(release): mcp X`, MCP's own landmark rather than the root
+      # package's, and it counts only commits that touched `mcp/`, which is
+      # also what gates this job running at all.
       - name: Determine MCP version bump type
         id: version-type
-        run: |
-          # Use the latest non-release commit so the root job's auto "chore(release):"
-          # commit doesn't drive the MCP version bump.
-          COMMIT_MSG=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%s")
-          COMMIT_BODY=$(git log --grep="^chore(release):" --invert-grep -1 --pretty=format:"%b")
-          echo "MCP release driven by commit: $COMMIT_MSG"
-
-          HAS_BREAKING_CHANGE=false
-          if echo "$COMMIT_BODY" | grep -iE "^BREAKING CHANGE:" > /dev/null; then
-            HAS_BREAKING_CHANGE=true
-          fi
-
-          if echo "$COMMIT_MSG" | grep -iE "(^|: )feat(\(.+\))?!?:" > /dev/null; then
-            if echo "$COMMIT_MSG" | grep -E "feat(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=minor" >> $GITHUB_OUTPUT
-              echo "Version bump: MINOR (new feature)"
-            fi
-          elif echo "$COMMIT_MSG" | grep -iE "(^|: )fix(\(.+\))?!?:" > /dev/null; then
-            if echo "$COMMIT_MSG" | grep -E "fix(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change in fix)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (bug fix)"
-            fi
-          elif echo "$COMMIT_MSG" | grep -iE "(^|: )(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!?:" > /dev/null; then
-            if echo "$COMMIT_MSG" | grep -E "(build|chore|ci|docs|style|refactor|perf|test)(\(.+\))?!:" > /dev/null || [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (maintenance)"
-            fi
-          else
-            if [ "$HAS_BREAKING_CHANGE" = true ]; then
-              echo "version_type=major" >> $GITHUB_OUTPUT
-              echo "Version bump: MAJOR (breaking change)"
-            else
-              echo "version_type=patch" >> $GITHUB_OUTPUT
-              echo "Version bump: PATCH (default)"
-            fi
-          fi
+        run: node scripts/release/version-bump.js --mcp
 
       - name: Bump MCP version
         id: version-bump

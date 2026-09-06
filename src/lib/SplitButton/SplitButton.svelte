@@ -12,11 +12,26 @@
     testId,
     dropdownIcon,
     classes,
+    triggerAriaLabel,
     onclick,
     onselect
   }: SplitButtonProperties = $props();
 
   let menuOpen = $state(false);
+
+  // The dropdown trigger renders a chevron and nothing else, so without a name it is a
+  // focusable control that announces as an unnamed button.
+  // A blank `triggerAriaLabel` falls back rather than being honoured: `??` only
+  // rejects null and undefined, so an empty string would have been passed
+  // through as `aria-label=""` and left the trigger unnamed — the very thing
+  // this generated fallback exists to prevent.
+  let resolvedTriggerAriaLabel = $derived(
+    typeof triggerAriaLabel === 'string' && triggerAriaLabel.trim() !== ''
+      ? triggerAriaLabel
+      : text.length > 0
+        ? `More ${text} options`
+        : 'More options'
+  );
 
   function handlePrimaryClick(event: MouseEvent): void {
     if (disabled) {
@@ -40,7 +55,12 @@
     <Button {text} onclick={handlePrimaryClick} {disabled} />
   </div>
   <div class="split-button-trigger">
-    <Menu {items} bind:open={menuOpen} onselect={handleMenuSelect}>
+    <Menu
+      {items}
+      bind:open={menuOpen}
+      triggerAriaLabel={resolvedTriggerAriaLabel}
+      onselect={handleMenuSelect}
+    >
       {#snippet trigger()}
         <span class="split-button-arrow">
           {#if typeof dropdownIcon === 'function'}

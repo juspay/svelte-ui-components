@@ -45,6 +45,17 @@
   <span data-pw="checkbox-controlled-declines-count">{declinedClicks}</span>
 </div>
 
+<h3>Accessible name</h3>
+<div class="demo-row">
+  <Checkbox text="Named by its visible text" testId="checkbox-named-by-text" />
+  <Checkbox
+    text="Visible text always names it"
+    ariaLabel="This explicit name is deliberately ignored"
+    testId="checkbox-named-by-aria-label"
+  />
+  <Checkbox text="" ariaLabel="Named with no visible text" testId="checkbox-named-without-text" />
+</div>
+
 <h3>Attributes on the box</h3>
 <div class="demo-row">
   <Checkbox

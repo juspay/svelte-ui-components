@@ -758,19 +758,21 @@
                           }))}
                           selectedValue={filter.selectedValue ?? null}
                           role="listbox"
+                          interactiveTrigger
                           testId={headerColumn.testId && `${headerColumn.testId}-filter`}
                           onselect={(menuItem) =>
                             filter.onFilterChange?.(
                               menuItem.value === filter.selectedValue ? null : menuItem.value
                             )}
                         >
-                          {#snippet trigger()}
+                          {#snippet trigger(triggerProps)}
                             <span
                               class="table-header-filter-trigger"
                               class:table-header-filter-active={typeof filter.selectedValue ===
                                 'string'}
                             >
                               <Button
+                                {...triggerProps}
                                 ariaLabel="Filter by {header}"
                                 testId={headerColumn.testId &&
                                   `${headerColumn.testId}-filter-trigger`}

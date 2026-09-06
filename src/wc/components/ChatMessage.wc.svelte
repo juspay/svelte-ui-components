@@ -9,6 +9,8 @@
       markdown: { type: 'String' },
       body: { type: 'Object' },
       streaming: { type: 'Boolean', reflect: true },
+      typewriter: { type: 'Boolean', reflect: true },
+      typewriterSpeed: { type: 'Number', attribute: 'typewriter-speed' },
       clampLines: { type: 'Number', attribute: 'clamp-lines' },
       status: { type: 'String', reflect: true },
       avatar: { type: 'Object' },

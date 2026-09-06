@@ -44,6 +44,17 @@ export type OptionalChatMessageProperties = {
    */
   clampLines?: number;
   streaming?: boolean;
+  /**
+   * Reveal the message progressively instead of all at once, using `TypewriterText`.
+   * Drives off `markdown` or `content` — never `html`, since typing a pre-rendered
+   * string would put its tags on screen — and types `markdown` through the same
+   * pipeline the static branch uses, so rich text reveals as rich text. `streaming`
+   * decides the mode: while it is true, text keeps typing as it grows; the moment it
+   * turns false the remainder is shown at once. Ignored when a `body` snippet is set.
+   */
+  typewriter?: boolean;
+  /** Milliseconds between characters while typing, clamped to a minimum of 1. A non-finite value is ignored. Defaults to `TypewriterText`'s own. */
+  typewriterSpeed?: number;
   status?: ChatMessageStatus;
   avatar?: Snippet;
   header?: Snippet;

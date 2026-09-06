@@ -30,6 +30,29 @@
     }
   ];
 
+  // Per-message typewriter: the list forwards `typewriter`/`typewriterSpeed` off each
+  // ChatMessageData, so one message reveals while its neighbours stay static.
+  const REVEAL_TEXT =
+    'Yes — the list forwards the reveal per message, so only this one types itself out.';
+  let revealMessages = $state<ChatMessageData[]>([
+    { id: 'tw1', role: 'sender', content: 'Does the list forward the typewriter?' },
+    { id: 'tw2', role: 'responder', content: '', typewriter: true, streaming: true }
+  ]);
+
+  const startReveal = (): void => {
+    revealMessages = [
+      revealMessages[0],
+      { id: 'tw2', role: 'responder', content: REVEAL_TEXT, typewriter: true, streaming: true }
+    ];
+  };
+
+  const finishReveal = (): void => {
+    revealMessages = [
+      revealMessages[0],
+      { id: 'tw2', role: 'responder', content: REVEAL_TEXT, typewriter: true, streaming: false }
+    ];
+  };
+
   let feedbackLog = $state('—');
 
   // pin-sender-turn demo: sending pins the question to the top; the reply streams
@@ -209,6 +232,21 @@
   />
 </div>
 <button type="button" class="pin-send" onclick={sendNoHold} data-pw="pin-nohold-send">Send</button>
+
+<h2>Per-message typewriter forwarded by the list</h2>
+<p class="demo-note">
+  Only the responder carries <code>typewriter</code>. The sender above it is identical data without
+  the flag, so it renders at once — that difference is the forwarding.
+</p>
+<div class="chat-theme chat-card list-frame">
+  <ChatMessageList messages={revealMessages} testId="reveal-list" />
+</div>
+<button type="button" class="pin-send" onclick={startReveal} data-pw="reveal-start">
+  Stream reply
+</button>
+<button type="button" class="pin-send" onclick={finishReveal} data-pw="reveal-finish">
+  End turn
+</button>
 
 <style>
   .list-frame {

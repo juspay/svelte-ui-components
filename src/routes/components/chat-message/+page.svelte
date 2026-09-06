@@ -20,6 +20,33 @@
   // its clamped default when it is restored, rather than staying open.
   let toggleClampLines = $state(4);
 
+  // A streamed assistant turn: text arrives in pieces and the reveal continues from
+  // where it left off, then completes the moment streaming stops.
+  let streamedMarkdown = $state('');
+  let isStreamingDemo = $state(false);
+  const startStreamingDemo = () => {
+    streamedMarkdown = '';
+    isStreamingDemo = true;
+    streamedMarkdown = 'Here is a **streamed** reply that types as it arrives.';
+  };
+  // A deliberately slow reveal. The demo above is paced for a human to watch; at 30ms
+  // over 51 characters its partial window is ~1.5s, which a stalled CI runner can step
+  // clean over. This one is for the mid-reveal assertion and nothing else.
+  let slowMarkdown = $state('');
+  let isSlowStreaming = $state(false);
+  const startSlowDemo = () => {
+    slowMarkdown = '';
+    isSlowStreaming = true;
+    slowMarkdown = 'A deliberately slow reveal, so the partial window stays open.';
+  };
+  const finishSlowDemo = () => {
+    isSlowStreaming = false;
+  };
+
+  const finishStreamingDemo = () => {
+    isStreamingDemo = false;
+  };
+
   const markdownReply =
     'Same thing from **markdown** — parsed and sanitized internally:\n\n- Wireless earbuds\n- A scented candle set';
 
@@ -108,6 +135,47 @@
   >
     Toggle clamping
   </button>
+</div>
+
+<div class="demo-col">
+  <h2>Progressive reveal</h2>
+  <ChatMessage
+    role="assistant"
+    testId="typewriter-demo"
+    typewriter
+    typewriterSpeed={30}
+    streaming={isStreamingDemo}
+    markdown={streamedMarkdown}
+  />
+  <button type="button" data-pw="typewriter-start" onclick={startStreamingDemo}>Start</button>
+  <button type="button" data-pw="typewriter-finish" onclick={finishStreamingDemo}>Finish</button>
+
+  <ChatMessage
+    role="assistant"
+    testId="typewriter-slow"
+    typewriter
+    typewriterSpeed={200}
+    streaming={isSlowStreaming}
+    markdown={slowMarkdown}
+  />
+  <button type="button" data-pw="typewriter-slow-start" onclick={startSlowDemo}>Start slow</button>
+  <button type="button" data-pw="typewriter-slow-finish" onclick={finishSlowDemo}>
+    Finish slow
+  </button>
+
+  <ChatMessage
+    role="assistant"
+    testId="typewriter-at-load"
+    typewriter
+    markdown="A **bold** claim present at first paint."
+  />
+
+  <ChatMessage
+    role="assistant"
+    testId="typewriter-static"
+    typewriter
+    content="A message that is not streaming shows in full immediately."
+  />
 </div>
 
 <style>

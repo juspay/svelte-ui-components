@@ -75,12 +75,22 @@ function escapeHtml(value: string): string {
  * instead of a hole. Casing is normalised so `'HTTPS:'` narrows the same as
  * `'https:'`, matching how `hasSafeProtocol` reads `URL.protocol` (always
  * lower-case).
+ *
+ * A plain-JS or web-component consumer can hand this anything at runtime --
+ * the type is only enforced at compile time for a Svelte caller. Anything
+ * other than an array (and any non-string element inside it) is ignored
+ * rather than crashing `.map`/`.toLowerCase`, degrading to the unrestricted
+ * default instead of throwing an uncaught TypeError.
  */
 function narrow(defaults: Set<string>, allowedProtocols?: string[]): Set<string> {
-  if (!allowedProtocols) {
+  if (!Array.isArray(allowedProtocols)) {
     return defaults;
   }
-  const requested = new Set(allowedProtocols.map((protocol) => protocol.toLowerCase()));
+  const requested = new Set(
+    allowedProtocols
+      .filter((protocol) => typeof protocol === 'string')
+      .map((protocol) => protocol.toLowerCase())
+  );
   return new Set([...defaults].filter((protocol) => requested.has(protocol)));
 }
 
@@ -99,9 +109,24 @@ function resolveProtocolSets(sanitize?: MarkdownSanitizeOptions): {
  * output can produce renders normally) -- unlike the protocol allow-lists,
  * there is no built-in default set to fall back to once this exists, so its
  * absence is what keeps old behaviour byte-for-byte.
+ *
+ * Names are normalised to lower-case, matching the normalisation
+ * `allowedProtocols` already gets -- every name `tagAllowed` is called with
+ * (`'a'`, `'img'`, `'h1'`, ...) is lower-case, so an unnormalised `['STRONG']`
+ * would otherwise never match and silently drop the tag it meant to keep.
+ *
+ * As with `narrow`, a plain-JS or web-component consumer can hand this
+ * anything at runtime, so anything other than an array (and any non-string
+ * element inside it) is ignored rather than crashing `.map`/`.toLowerCase`,
+ * degrading to "no restriction" instead of throwing an uncaught TypeError.
  */
 function resolveTagAllowList(allowedTags?: string[]): Set<string> | null {
-  return allowedTags ? new Set(allowedTags) : null;
+  if (!Array.isArray(allowedTags)) {
+    return null;
+  }
+  return new Set(
+    allowedTags.filter((tag) => typeof tag === 'string').map((tag) => tag.toLowerCase())
+  );
 }
 
 function tagAllowed(allowed: Set<string> | null, tag: string): boolean {

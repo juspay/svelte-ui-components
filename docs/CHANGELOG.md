@@ -2,7 +2,36 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.4.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.5.0)
+
+KeyboardInput unconditionally maps recognised key names through KEY_SYMBOLS
+('space' -&gt; ␣, 'tab' -&gt; ⇥, 'cmd' -&gt; ⌘, ...). A consumer whose caption needs
+the word itself — e.g. "Hold SPACE" — had no way to opt out: the substituted
+glyph reads as a blank pill mid-sentence, so TARA (migrating onto this
+library) hand-rolled a plain &lt;kbd&gt;/&lt;span&gt; instead of using the component at
+all in ConversationLog.svelte and TalkBar.svelte.
+
+Add an optional `literal?: boolean` prop (default `false`). When true,
+getSymbol() returns each key exactly as given and the KEY_SYMBOLS lookup is
+bypassed entirely; when omitted, behaviour is byte-for-byte unchanged from
+today. Mirrored onto the web-component wrapper
+(`literal: { type: 'Boolean', reflect: true }`) to keep prop parity, and
+documented in docs/KeyboardInput.md (props table, Key Symbols section, type
+reference). A demo fixture and tests/keyboardinput-literal.spec.ts cover both
+the unchanged default (substituted) and the new literal rendering.
+
+Regenerated the keyboard-input visual baseline
+(tests/visual/__screenshots__/keyboard-input.png) via `pnpm run
+test:visual:update` inside the pinned Playwright container, to reflect the new
+"literal" demo section added to
+src/routes/components/keyboard-input/+page.svelte.
+
+Closes #527
+
+-
+feat(keyboardinput): add a literal opt-out from KEY_SYMBOLS substitution ([61836d4](https://github.com/juspay/svelte-ui-components/commit/61836d4735f3a035c91f9af1d44969cd846fe902))
+
+## [4.5.0](https://github.com/juspay/svelte-ui-components/compare/4.5.0..4.4.0) - 7 September 2026
 
 Closes #524.
 

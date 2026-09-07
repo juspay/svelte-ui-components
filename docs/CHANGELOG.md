@@ -2,7 +2,92 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.2)
+
+MediaPlayer could play, pause and mute, and nothing more, so any consumer wanting a
+scrubber, a running time or a fullscreen button had to hand-roll a player around the
+library's Button and Slider instead of using this one. Lighthouse has exactly that:
+a 393-line VideoPlayer composing three library components, which its component-reuse
+audit could not close because the gap was here rather than there.
+
+Three controls, each opt-in and off by default, so a player showing only play and
+mute keeps showing only play and mute:
+
+seekBar          a Slider bound to position; dragging scrubs, playback moves it
+timeDisplay      m:ss, widening to h:mm:ss only past an hour
+fullscreenButton enters and exits, with its own icons overridable by snippet
+
+currentTime and duration are bindable, so a host can restore a saved position or
+drive its own scrubber, and three events report what happened: onseek for a
+deliberate scrub, ontimeupdate for playback advancing, onfullscreenchange for the
+state it is now in. All lowercase, per the 4.0.0 rule.
+
+Two decisions worth stating because the obvious alternative is wrong. Fullscreen is
+requested on the player's container, not on the video element: a fullscreen video
+paints over everything and would take the overlay's play, mute and seek controls off
+screen with it. And turning any control on also sets preload="metadata", because a
+seek bar and a clock are unusable until the length is known and a paused player is
+not otherwise obliged to fetch it.
+
+The metadata handling needed a second path, found by measurement rather than
+reasoning: loadedmetadata is one-shot, and a cached or fast-loading file reaches
+HAVE_METADATA before hydration attaches the handler. The element reported readyState
+4 and duration 4 while the component still held 0, and nothing fires it again, so a
+clock that only listened stayed dead for exactly the media that loaded well. The
+component now also adopts what the element already knows when it binds.
+
+Five new integration tests: the controls are absent by default, present when asked
+for, duration binds out and formats, seeking moves the element and reports through
+onseek, and fullscreen asks the container rather than the video. Sixteen pass in the
+file. check (including check:wc), lint, event-casing and the 828 unit tests are clean,
+and the wrapper declares every new prop, so wc prop-parity still passes.
+
+The media-player visual baseline is regenerated: the demo route gains a transport
+player, so main.content grows from 1684px to 2225px and the committed image no longer
+matches. It was regenerated inside the pinned playwright:v1.60.0-noble container that
+visual.yml runs in, not on the host, and the whole suite then passes 93/1 skipped
+against it. Both the transport player and its readout sit inside .demo-row, which
+MASKS['media-player'] already paints over, so the clock and the decoded frame stay out
+of the comparison and the new baseline is height-only.
+
+Review follow-up. currentTime was documented as bindable both ways but only ever
+reported outward: a host writing it changed the number and never moved the media, so
+restoring a saved position silently did nothing. It now seeks, clamped to duration,
+guarded by a plain (non-reactive) syncedTime so an outward update is not read back as an
+inward one and re-seeked into a feedback loop. An inward write deliberately does not fire
+onseek, which means "the user scrubbed"; a restore is not a scrub.
+
+The seek bar had no accessible name, announcing only its numeric value. Slider gains an
+optional ariaLabel, following the ariaLabel pattern the rest of the library already uses,
+forwarded through the web-component wrapper as sliderAriaLabel with the aria-label
+attribute because the platform defines ariaLabel on every HTMLElement. MediaPlayer passes
+"Seek", matching the hardcoded English labels its play and mute controls already carry.
+
+Fullscreen state was resolved through document.fullscreenElement, which retargets to the
+shadow host in the web-component build and so never equals the container: the icon would
+stay stuck and onfullscreenchange stay silent for every sui-media-player consumer. Both
+the toggle and the fullscreenchange listener now resolve through the container's own root.
+
+labelFormatter was passed to the seek Slider but showValue was not, so it was dead. Gone.
+docs/MediaPlayer.md gains the seven props, three events and nine CSS variables, and
+docs/Slider.md the new prop.
+
+Three tests added, each watched failing first: an external write seeks, an external write
+is not echoed as onseek, and the seek bar carries its name. Nineteen pass in the file,
+828 unit tests pass, and the media-player baseline is regenerated again for the demo
+button the first of those tests needs.
+
+Second review round. An inward write arriving before HAVE_METADATA is now held rather
+than assigned: with no timeline the value cannot be clamped, assigning currentTime is
+specified to set a default start position rather than seek, and some engines throw. It is
+applied, clamped, when metadata arrives, which is when a restored position first means
+anything. A keyboard-reachability test is added for the transport row: focus the video,
+Tab twice, and the seek bar is focused and visible with no hover involved.
+
+-
+feat(media-player): add a seek bar, an elapsed/total clock and a fullscreen toggle ([962f218](https://github.com/juspay/svelte-ui-components/commit/962f2181da60ca1e8858066d510526f6b0e42ae1))
+
+## [4.1.2](https://github.com/juspay/svelte-ui-components/compare/4.1.2..4.1.1) - 7 September 2026
 
 Follow-up to a9f2e1c, closing the review findings raised on #558 after it
 merged. All three are in the version-bump logic that release now depends

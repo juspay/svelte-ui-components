@@ -2,7 +2,56 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.2.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.3.0)
+
+Closes #523. TARA's own EmptyState wrapper (apps/web/src/lib/components/
+EmptyState.svelte) and its override sheet (packages/ui/src/styles/
+components.css) hand-rolled two things the library had no hook for:
+
+1. A page-vs-panel density concept, expressed as .tara-ui-empty-page /
+.tara-ui-empty-panel classes reaching in through the `classes` prop to
+override --empty-state-padding, --empty-state-gap and friends per
+context (a full route vs. a popover/rail panel).
+2. Left alignment, set as a bare `align-items: flex-start` on
+.tara-ui-activity-rail-empty because the root element's align-items was
+hardcoded 'center' with no CSS variable reaching it (only the unrelated
+--empty-state-actions-align-items existed, scoped to the actions child).
+
+This adds:
+
+- `density?: 'page' | 'panel'` (properties.ts), reflected onto the root as
+`data-density`. Omitting it (the default) reproduces today's exact
+padding/gap. `density="page"` and `density="panel"` each supply their
+own padding/gap fallback via an attribute-selector rule scoped under
+`.empty-state[data-density='...']` — more specific than the base rule,
+so it only ever applies when `data-density` is actually set. Either
+density can still be overridden per-instance with the existing
+`--empty-state-padding` / `--empty-state-gap` variables, which are read
+first in both rules and so always win.
+- `--empty-state-align-items` CSS variable, replacing the hardcoded
+`align-items: center` with `var(--empty-state-align-items, center)` —
+same default, now reachable without a wrapper class.
+
+Both are additive: default markup and computed styles are byte-for-byte
+unchanged when `density` is omitted and no `--empty-state-align-items`
+override is set (verified via the new Playwright spec, which fails on 3
+of its 4 cases against the pre-change component). The `sui-empty-state`
+web-component wrapper gets `density` added to its `props` map to keep
+wc-parity; docs/EmptyState.md documents both under Props, CSS Variables
+and a new Density / Left-Aligned usage section, Svelte and web-component
+alike.
+
+The two new demo sections added to the empty-state route (Density,
+Left-aligned via --empty-state-align-items) grew the demo's rendered
+height from 1640px to 2239px, which the committed visual baseline had not
+caught up to. Regenerated tests/visual/__screenshots__/empty-state.png
+via `pnpm run test:visual:update` against the pinned Playwright container
+so the `visual` CI job compares against the current demo markup.
+
+-
+feat(emptystate): add density variant and --empty-state-align-items ([d88bceb](https://github.com/juspay/svelte-ui-components/commit/d88bceb15b86ad1ecf536d28670c00c9d496a16e))
+
+## [4.3.0](https://github.com/juspay/svelte-ui-components/compare/4.3.0..4.2.0) - 7 September 2026
 
 Pill had no way to express a semantic status (accent/ok/warn/danger/muted)
 without a consumer hand-rolling its own tone-* class per call site and

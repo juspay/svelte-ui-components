@@ -2,7 +2,76 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.5.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.6.0)
+
+HITL supported exactly one decision (confirm/cancel), so a third
+disposition (e.g. "deny with instructions") or any free-text/multi-select
+control had nowhere to live. Consumers hand-rolled a separate Card next to
+(or instead of) HITL to add one — see TARA's ApprovalCard.svelte, which
+renders its own extra button plus an entirely separate composing-mode Card
+purely because "HITL's own footer is exactly two buttons with no slot for
+a third path."
+
+Adds two optional, additive props:
+
+- `actions?: HITLExtraAction[]` — extra buttons rendered between cancel and
+confirm. Selecting one never settles the card (no completion state, no
+`onconfirm`); it only pauses the countdown like any other interaction and
+calls the action's own `onSelect`. Each entry is
+`{ label, onSelect, testId?, classes?, ariaLabel? }`.
+- `children?: Snippet` — arbitrary extra controls (free-text input,
+multi-select chips) rendered in the body above the action row, only
+while the card is pending.
+
+With neither passed, the card renders exactly as before: two buttons and
+no extra content block. `children` is intentionally not forwarded through
+the `sui-hitl` web-component wrapper (it's a reserved custom-element prop
+name); `actions` is.
+
+selectExtraAction() now also guards on `decisionPending`, not just
+isProcessing/isCompleted: decide() latches decisionPending synchronously
+but only sets isProcessing (inside settle()) after awaiting
+restoreMicState(), so an extra action click landing in that await window
+used to slip past the guard and fire onSelect while a confirm/cancel/auto
+decision was still settling.
+
+HITLExtraAction gains an optional `ariaLabel?: string`, forwarded to the
+extra-action Button, matching the accessible-name override Button already
+supports elsewhere in the library.
+
+Adds tests/hitl-extra-actions.test.ts (Playwright, this repo's convention
+for tests/) covering: an extra action firing onSelect without settling the
+card, confirm still settling normally with an extra action present, and
+the unchanged two-button default. Updates docs/HITL.md and the component
+demo page accordingly, and regenerates tests/visual/__screenshots__/hitl.png
+for the demo page's new "Extra actions + children" section.
+
+Rebased onto release at 7b44a5a (previously e96ec81), picking up #533's
+`onConfirm`/`onMicToggle` -&gt; `onconfirm`/`onmictoggle` lowercase rename,
+the follow-up 4.0.0-scoped removal of the camelCase aliases, `marker` on
+ChatMessage, and the type-coverage fix that renamed HITL's wrapper prop
+`title` -&gt; `hITLTitle` and typed it as `Omit&lt;HITLProperties, 'title'&gt; &
+{ hITLTitle: HITLProperties['title'] }`. Every file rebased cleanly: this
+PR's `actions`-in-the-props-object and children-not-forwarded comment sit
+on lines untouched by that typed-destructuring change, so both land in
+`sui-hitl`'s wrapper together with no manual resolution needed. No file
+required a second look for a reintroduced legacy spelling.
+
+`pnpm check` passes 0 errors on both tsconfig.json (868 files) and
+tsconfig.wc.json (432 files, check:wc-parity's gate), confirming the
+`actions` addition satisfies the type coverage the host-reserved rename
+restored. The `hitl` Playwright visual baseline (regenerated against
+e96ec81) still matches byte-for-byte against 7b44a5a — the demo page it
+covers isn't touched by any commit between the two tips — so it did not
+need regenerating again; `git status` after the full check/lint/build/
+visual run confirms nothing else moved.
+
+Closes #528
+
+-
+feat(hitl): add extra actions and a children snippet for multi-action approval ([ab8ab96](https://github.com/juspay/svelte-ui-components/commit/ab8ab96b3736e302db361a859e89f70ef8211892))
+
+## [4.6.0](https://github.com/juspay/svelte-ui-components/compare/4.6.0..4.5.0) - 7 September 2026
 
 KeyboardInput unconditionally maps recognised key names through KEY_SYMBOLS
 ('space' -&gt; ␣, 'tab' -&gt; ⇥, 'cmd' -&gt; ⌘, ...). A consumer whose caption needs

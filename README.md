@@ -243,6 +243,33 @@ import '@juspay/svelte-ui-components/wc';
 Theming works identically to the Svelte components — the same `--{component}-{element}-{property}`
 CSS custom properties apply across the shadow DOM boundary.
 
+### Event handlers: use `addEventListener`, not `element.onclick`
+
+Handlers are passed as **props**, and 91 of those props are named after event-handler
+accessors that already exist on `HTMLElement` — `onclick`, `onchange`, `oninput`,
+`onkeydown` and 21 others. On a custom element the component's prop wins, so assigning
+the property does not register a DOM handler the way it would anywhere else:
+
+```js
+const checkbox = document.querySelector('sui-checkbox');
+
+// Sets the component's prop. On sui-checkbox and sui-toggle that prop is called
+// with a boolean, so `event` here is `true` / `false`, not a MouseEvent.
+checkbox.onclick = (event) => console.log(event.clientX); // undefined
+
+// Always does what you expect.
+checkbox.addEventListener('click', (event) => console.log(event.clientX));
+```
+
+Two things are **not** affected: the inline HTML attribute (`<sui-button onclick="...">`)
+never used this accessor, and `addEventListener` is untouched. Only the JavaScript
+property assignment differs.
+
+Renaming these is a breaking change to every element's JavaScript API, so the whole set
+has to move at once at a major — the same way the `aria*` collisions were renamed in
+4.0.0. Until then the existing declarations are recorded in
+`scripts/wc-parity/prop-parity.test.ts`, which fails the build on a new one.
+
 ---
 
 ## Theming

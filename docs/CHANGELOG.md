@@ -2,7 +2,149 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.2)
+
+Eight Playwright specs covering the keyboard and ARIA contracts of
+Accordion, Choicebox, CommandMenu, ContextMenu, Pagination, Radio, Slider
+and Stepper — written against the WAI-ARIA pattern each component claims
+to implement, rather than against its markup.
+
+Defects the specs found, fixed here:
+
+- ContextMenu never restored focus. Closing by Escape or by selecting an
+item left focus on &lt;body&gt;, so a keyboard user lost their place. It now
+captures what had focus when the menu opened and returns focus there —
+but only when nothing else has claimed it. Closing by clicking a
+focusable element outside means the browser has already moved focus
+there, and pulling it back would fight the user.
+- Slider had no way to carry an accessible name: reachable by Tab and
+announced as nothing. `962f218` reached the same conclusion from the
+MediaPlayer side and landed `ariaLabel` first, independently choosing
+the same `sliderAriaLabel` rename on the custom element for the same
+host-collision reason. This adds `ariaLabelledby` alongside it, for the
+case where the name is already on screen — the pairing Toggle already
+has.
+- CommandMenu's ARIA references were not instance-scoped, so two menus
+mounted at once pointed at each other's listbox. Ids derive from
+`$props.id()`.
+- Stepper built `aria-labelledby` from the step index alone, so two
+Steppers on one page collided and a step could be named after a
+different Stepper's label. Also per-instance now.
+
+Review findings from the first revision, each addressed:
+
+- CommandMenu's Tab handler pinned focus to the input. The input is the
+only tab stop today, so pinning and cycling are equivalent — but it
+would break silently the moment the dialog gained a second one. It now
+cycles the actually-tabbable set. Writing that surfaced a bug of its
+own, caught by the existing test: the options are real &lt;button&gt;s held
+out of the tab order with tabindex="-1", so a `button:not([disabled])`
+selector matched them anyway.
+- `role="application"` sat on the container permanently. It tells a
+screen reader to pass every keystroke through, which is right while a
+menu owns the keyboard and wrong for the arbitrary consumer content
+this wraps the rest of the time. Now scoped to while the menu is open.
+- CommandMenu's `aria-expanded` was hard-coded true; it now tracks
+whether the listbox has options.
+- The ContextMenu demo target was a bare `tabindex="0"` div: a tab stop
+that announced nothing and did nothing on Enter. It has a role, a
+haspopup hint and keyboard activation.
+- The Choicebox radio demo had no grouping, so three radios announced as
+unrelated. Wrapped in a named `role="radiogroup"`. Roving focus across
+siblings is still absent — Choicebox has no concept of a group — and
+that remains the documented `test.fixme`.
+- `openerElement` is `$state` for consistency with the surrounding
+declarations.
+- Slider's props were absent from the custom element. Added — as
+`sliderAriaLabel` and `sliderAriaLabelledby`, because ARIAMixin defines
+`ariaLabel` on every HTMLElement and declaring it would replace the
+platform accessor. The repo's own parity guard caught that on the first
+attempt: `new host-accessor overrides: Slider.wc.svelte:ariaLabel`.
+The attributes are unchanged.
+- docs/Slider.md documents both props and the element's renamed
+properties.
+
+One finding is declined on the evidence. `ariaLabel` was reported as
+inconsistent with library convention; it is the convention — Badge,
+Breadcrumb, Button, Checkbox, ChipInput, Combobox, Gauge, Progress,
+Toggle and five others already use it, and Toggle already pairs it with
+`ariaLabelledby`.
+
+One gap is recorded rather than fixed. Choicebox in `mode="radio"` gives
+each instance `role="radio"` but nothing groups siblings, so the APG's
+single-tab-stop-plus-roving-selection pattern does not hold. Fixing it
+needs a grouping concept the component does not have, which is a feature
+rather than a keyboard-handler fix. Left visible as `test.fixme` with the
+reason inline.
+
+Controls, since passing is not evidence a test can fail:
+
+- Removing ContextMenu's focus restoration fails exactly the two
+restoration tests. Removing only the "has anything else claimed focus"
+guard fails the click-outside test while the Escape test still passes,
+which is the discrimination that matters.
+- Removing Slider's aria-label fails four tests — the name assertion and
+the three that locate the control by its accessible name.
+- Every sabotage was reverted and the tree confirmed clean before the
+final measurement.
+
+Verified: lint 0, `pnpm check` 0 errors over both configs (876 files and
+432 files), 845 unit, 541 Playwright with the one documented fixme
+skipped, 93 visual. One baseline moved — context-menu, because the demo
+gained a second focusable control — regenerated alone in the pinned
+container and the whole suite re-run against it.
+
+Second review round:
+
+- `aria-labelledby` on `&lt;sui-slider&gt;` could never have worked. The element
+is `shadow: 'open'`, and ARIA id references do not cross a shadow root,
+so forwarding the caller's id left the slider with no accessible name
+at all — the declared-but-inert failure the parity guard exists to
+catch, in the very prop added to fix naming. The element now resolves
+the reference against the host's own root and forwards the text as
+`aria-label`, which is a string and crosses fine. Written as a failing
+test first. The name is copied when it resolves rather than bound;
+docs/Slider.md says so, and `ariaLabelledby` stays forwarded as an
+inert fallback that Slider.svelte drops whenever aria-label is set.
+- ContextMenu swallowed a quick Escape and then did the opposite of what
+it asked for. Escape was handled only on the menu element, but for one
+frame after the right-click the menu is open and focus has not moved
+into it yet: the keystroke reached nothing, the menu stayed open, and
+the pending frame then pulled focus into it. Escape is handled on the
+document too now, and the opening frame is cancelled on close, so the
+menu closes and focus stays where it was. Found by writing the test
+below rather than by review.
+- A new ContextMenu spec pins the case the others cannot see: focus
+starts elsewhere, then the target is right-clicked. Review asked for
+`event.target` over `document.activeElement` here; the browser focuses
+a focusable right-click target itself, so the two are the same element
+and the test passes as written.
+- The Slider spec was named "Tab reaches the slider" and called
+`focus()`, which succeeds on a control removed from the tab order — it
+would have passed on the exact regression it is named for. It uses Tab
+now: focus the slider, Shift+Tab away, Tab back. The first attempt
+walked the tab order from the top of the document with a bound of 40
+presses, which passed on macOS and failed on Linux — the demo sits
+behind ~90 nav links, of 99 focusable elements on the page, so the
+bound could not reach it there. Stepping back and forward asks the same
+question without depending on how much site chrome renders.
+- The Choicebox radios were located by test id, so the spec passed with
+`role="radiogroup"` removed. Scoped through the named group.
+
+Verification ran on Linux in the pinned Playwright image as well as
+locally, because the first Tab test passed here and failed on CI: lint 0,
+`pnpm check` 0 errors over both configs, 912 unit, the full functional
+suite with the one documented fixme skipped, 93 visual. No baseline moved.
+
+Both component fixes were checked against a control rather than assumed:
+reverting the tab-order fix fails that spec and only that spec, and the
+residual flakiness in the ContextMenu spec reproduces on the unmodified
+component too, so it is the container's timing rather than anything here.
+
+-
+feat(a11y): keyboard and ARIA coverage for eight components, and the gaps it found ([93d22cb](https://github.com/juspay/svelte-ui-components/commit/93d22cb4c84217f0cc7c42a95af160eae99f54c9))
+
+## [4.9.2](https://github.com/juspay/svelte-ui-components/compare/4.9.2..4.9.1) - 7 September 2026
 
 A duplicated key is last-wins in JavaScript, so the object stays
 structurally valid, every existing parity check still sees a complete

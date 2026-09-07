@@ -552,12 +552,89 @@ jobs:
         working-directory: mcp
         run: npm run build
 
-      # Before the publish, for the reason the root release job already does it:
-      # an npm version cannot be re-published and unpublishing is restricted, while
-      # a commit and a tag can both be deleted. Published first, anything that stops
-      # this step strands a version on the registry that this repository has no
-      # record of -- which is exactly how 3.4.1 ended up on npm with no tag, no
-      # `chore(release)` commit and no GitHub Release.
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
+
+      # Publishing runs BEFORE the commit and tag here, which is the opposite of
+      # the root release job above. That job's ordering is right for it and this
+      # one is right for this job; the difference is which failure each is
+      # actually exposed to.
+      #
+      # The root job puts its git writes first because a publish cannot be
+      # undone: if the branch push is rejected, the run stops with the registry
+      # untouched. That is the failure it meets in practice — a rejected push
+      # during concurrent releases, which is exactly what happened to 4.9.0.
+      #
+      # This job's real failure is the publish itself, and git-writes-first
+      # turns that into the one state nothing recovers from. `chore(release):
+      # mcp 4.0.3` was committed and pushed, the publish then failed with
+      # ENEEDAUTH, and the version was stranded: the landmark had advanced, so
+      # the next run computes 4.0.4 and 4.0.3 can never exist. The security fix
+      # it carried sat unpublished on the branch looking released.
+      #
+      # Published first, both failures self-heal:
+      #
+      #   publish fails  -> nothing is written to git, the branch still points
+      #                     at the previous landmark, and the next run retries
+      #                     the SAME version rather than skipping past it.
+      #   push fails     -> the version is on the registry without a landmark,
+      #                     and the `npm view ... && exit 0` guard below makes
+      #                     the next run skip the publish and write the landmark
+      #                     it is missing.
+      #
+      # The risk this accepts is the root job's: a published version this repo
+      # has no record of, the way 3.4.1 was. That is recoverable — the guard
+      # below reconciles it on the next run — whereas a landmark for a version
+      # that was never published is not.
+      # The tarball's contents are fixed at build time, but the landmark's
+      # position is not decided until the push below, which rebases onto
+      # whatever has landed meanwhile. An MCP commit arriving in that window
+      # ends up UNDER a landmark for a version built without it, so the next
+      # run reads it as already released and its `feat` or `fix` never reaches
+      # the bump — the same semver understatement that shipped a breaking
+      # change as 3.5.1.
+      #
+      # Checked before the publish rather than reconciled after it, because
+      # this is the last moment the run can still stop for free: nothing is on
+      # the registry yet, so aborting costs a red X and the next run releases a
+      # version that genuinely contains the new commit.
+      - name: Abort if MCP commits landed during this run
+        run: |
+          git fetch origin release
+          LANDED="$(git rev-list HEAD..origin/release -- mcp/)"
+          if [ -n "$LANDED" ]; then
+            echo "::error::MCP commits landed on release while this run was building:"
+            git log --oneline HEAD..origin/release -- mcp/
+            echo "Aborting before publish so the next run releases a version that includes them."
+            exit 1
+          fi
+          echo "No MCP commits landed during this run; safe to publish."
+
+      - name: Publish MCP to NPM
+        id: npm-publish
+        working-directory: mcp
+        run: |
+          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
+          # short-lived publish credential itself, via the trusted-publisher
+          # config on npmjs.com for this repo + this workflow file.
+
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
+            exit 0
+          fi
+
+          # Scoped package -> publish publicly
+          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
+          npm publish --access public --provenance
+          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+
+      # Only now, with the version actually on the registry, is the landmark
+      # written. A failure from here leaves a published version without a
+      # landmark, which the publish guard above reconciles on the next run.
       - name: Commit and tag MCP release
         run: |
           NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
@@ -590,28 +667,3 @@ jobs:
           git push origin "$TAG_NAME"
 
           echo "Released @juspay/svelte-ui-components-mcp $NEW_VERSION"
-
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
-
-      - name: Publish MCP to NPM
-        id: npm-publish
-        working-directory: mcp
-        run: |
-          # No token: npm >=11.15 exchanges this workflow's OIDC token for a
-          # short-lived publish credential itself, via the trusted-publisher
-          # config on npmjs.com for this repo + this workflow file.
-
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
-
-          echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
-          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
-            echo "Version $NEW_VERSION already exists on NPM, skipping publish"
-            exit 0
-          fi
-
-          # Scoped package -> publish publicly
-          echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
-          npm publish --access public --provenance
-          echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"

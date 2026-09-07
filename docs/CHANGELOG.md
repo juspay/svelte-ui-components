@@ -2,7 +2,56 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.7.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.8.0)
+
+Card had no way to put an arbitrary data-*/aria-* attribute on its root or
+render a tag other than &lt;div&gt;/&lt;a&gt;. Migrating TARA onto Card, that forced two
+workarounds: SessionActivityCard.svelte encoded `[data-state="waiting"]` as a
+second `classes` modifier instead of a real attribute, and backdrops/+page.svelte
+kept a hand-rolled &lt;figure&gt; wrapping an appearance-only Card because Card's own
+root could never itself be the &lt;figure&gt;.
+
+Two additive props close both gaps:
+
+- `attrs?: Record&lt;string, string&gt;` spreads onto the card root, for consumers
+that key off attribute-selector CSS the way the rest of their app does.
+- `as?: 'div' | 'a' | 'figure'` overrides the rendered tag independent of
+`href`, for real sectioning-content semantics with no wrapper element.
+
+Both are omitted by default, so the existing behaviour is unchanged: the root
+tag resolution stays exactly `&lt;a&gt;` when `href` is set, `&lt;div&gt;` otherwise, and
+no extra attributes are rendered. `as` set to anything but `'a'` suppresses
+`href`/`target`/`rel` and the synthetic role/tabindex/keydown shim applies
+instead when `onclick` is given, same as today's plain interactive `&lt;div&gt;`.
+`as="a"` with no `href` gets that same shim too, rather than being treated as
+an anchor with nothing to navigate to and no native focus/keyboard behaviour
+to fall back on -- the anchor/shim split checks `href` is actually set, not
+just that the resolved tag is `'a'`. A new spec covers Tab-reachability and
+Enter/Space activation for that case.
+
+`attrs` is spread first on the element, before Card's own class/style/
+data-pw/testID/role/tabindex/href/target/rel/onclick/onkeydown -- a later key
+in a Svelte attribute object wins over an earlier one of the same name, so
+attrs can only add attributes Card doesn't already manage, never override one
+(a new spec pins this: an attrs object trying to hijack data-pw/class/role is
+proven not to).
+
+Wires `attrs`/`as` through the web-component wrapper for check:wc-parity,
+reflecting `as` as an attribute to match what docs/Card.md already claimed,
+adds the two to docs/Card.md and the props table, and demos both (plus the
+collision guard and the as="a"-without-href case) on the Card gallery page.
+
+The new demo cards grow the /components/card gallery page further, so
+tests/visual/__screenshots__/card.png is regenerated via
+scripts/visual-test.sh --update-snapshots against the pinned Playwright
+container to match.
+
+Closes #521
+
+-
+feat(card): add attribute passthrough and a root-tag override ([9fdaff1](https://github.com/juspay/svelte-ui-components/commit/9fdaff1b2a4fdd594d2871eb9c04554682c40346))
+
+## [4.8.0](https://github.com/juspay/svelte-ui-components/compare/4.8.0..4.7.0) - 7 September 2026
 
 Adds two optional props to Snippet's built-in copy affordance:
 `copiedLabel` (text shown in place of the icon after a copy, default

@@ -2,7 +2,60 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.3)
+
+Closes #550
+
+`.accordion` carries `overflow: hidden` so it can animate
+`grid-template-rows` 0fr -&gt; 1fr, but `overflow` other than `visible`
+also drops an element's automatic minimum size to zero. Placed
+directly inside a consumer's own `display: grid` container, the panel
+was then free to be stretched down to whatever height that grid
+happened to hand it -- independent of its own children's real height,
+down to as little as zero -- so the fold opened with correct content
+already in the DOM but no visible box around it. The trigger still
+toggled and any chevron still rotated, which read as "the content
+failed to render" when the content was fine all along.
+
+Adds `align-self: var(--accordion-align-self, start)` to `.accordion`,
+which opts the panel out of that stretch so it always sizes from its
+own expanded content instead. It is inert when the panel is not a grid
+or flex item, so every other placement is unaffected, and it does not
+touch the collapse animation: collapsed still resolves to 0px exactly
+as before.
+
+Exposed as a custom property rather than a hardcoded value: Svelte's
+scoped class raises `.accordion`'s specificity above a plain global
+class, so a consumer who legitimately wants the panel stretched (or
+who passes their own alignment through the `classes` hook, which the
+docs already describe as "define classes with CSS variable overrides")
+would otherwise find their choice silently overridden with no
+supported way to opt out. `--accordion-align-self` (default `start`)
+follows the same pattern already used for `--accordion-transition` and
+documents the escape hatch instead of leaving it undiscoverable.
+
+Reproduced first against the unfixed build (measured 300px against a
+300px-tall grid parent whose real content needs ~500px), then verified
+the fix decouples the panel's height from the parent's entirely across
+a range of parent heights (1px to 600px all yield the same, correct,
+content-derived height).
+
+Adds a Playwright spec (tests/accordion-grid-collapse.spec.ts) and a
+grid-nesting demo section to the Accordion page reproducing the exact
+nesting, regenerates the Accordion visual baseline for the grown demo
+page, and confirms the existing Accordion specs (a11y-accordion.spec.ts,
+accordion-aria-controls.test.ts) still pass unchanged.
+
+The spec waits on the panel's box going frame-stable rather than on a
+fixed 400ms. A transitionend listener races -- if the transition has
+already ended when the listener attaches it never fires -- while frame
+stability settles correctly whether the animation is running, finished,
+or never started (reduced-motion, or a zero duration from a consumer).
+
+-
+fix(accordion): expanded panel keeps zero height inside a grid parent ([4ba6957](https://github.com/juspay/svelte-ui-components/commit/4ba6957ad2691c2ff7d8d66ad07ae9adc0d2ee60))
+
+## [4.10.3](https://github.com/juspay/svelte-ui-components/compare/4.10.3..4.10.2) - 7 September 2026
 
 #565 built `HOST_EVENT_HANDLER_PROPS` by walking `HTMLElement.prototype`'s chain
 in Chromium and recording every `on*` name it found: 110. Four are missing from

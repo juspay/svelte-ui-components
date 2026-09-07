@@ -14,7 +14,8 @@
       dismissLabel: { type: 'String', attribute: 'dismiss-label' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
-      ondismiss: { type: 'Object' }
+      ondismiss: { type: 'Object' },
+      attrs: { type: 'Object' }
     }
   }}
 />

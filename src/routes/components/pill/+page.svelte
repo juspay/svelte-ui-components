@@ -181,6 +181,35 @@
   </div>
 </section>
 
+<!-- #545: attrs spreads arbitrary data-*/aria-* attributes onto the pill root
+     so a consumer keying off attribute-selector CSS elsewhere in their app
+     doesn't have to wrap Pill in an extra element just to hold the attribute. -->
+<section data-pw="pill-attrs-fixtures">
+  <h2>Attribute Passthrough (attrs)</h2>
+  <div class="demo-row">
+    <Pill
+      text="Syncing"
+      testId="attrs-data-state-pill"
+      attrs={{ 'data-state': 'waiting', 'data-density': 'compact' }}
+    />
+    <!-- attrs tries to override data-pw/class/role/tabindex — Pill's own values win. -->
+    <Pill
+      text="Collision"
+      testId="attrs-collision-pill"
+      classes="attrs-collision-marker-class"
+      onclick={() => {}}
+      attrs={{
+        'data-pw': 'hijacked',
+        class: 'attrs-injected-class',
+        role: 'not-a-button',
+        tabindex: '5'
+      }}
+    />
+    <!-- Regression guard: a pill given no attrs still renders with nothing extra. -->
+    <Pill text="Plain" testId="attrs-none-pill" />
+  </div>
+</section>
+
 <style>
   :global(.pill-info) {
     --pill-background: #d1ecf1;

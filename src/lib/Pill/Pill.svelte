@@ -16,7 +16,8 @@
     leadingIcon,
     onclick,
     ondismiss,
-    classes
+    classes,
+    attrs
   }: PillProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
@@ -51,6 +52,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
+  {...attrs ?? {}}
   class="pill {pillToneClass(tone)} {classes ?? ''}"
   class:disabled
   onclick={interactive ? handleClick : null}
@@ -120,6 +122,11 @@
 
   .pill[role='button'] {
     cursor: var(--pill-cursor, pointer);
+  }
+
+  .pill[role='button']:focus-visible {
+    outline: var(--pill-focus-outline, 2px solid currentColor);
+    outline-offset: var(--pill-focus-outline-offset, 2px);
   }
 
   /* Tone defaults — an internal --_pill-tone-* layer, mirroring how Button's

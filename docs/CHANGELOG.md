@@ -2,7 +2,86 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.2.0)
+
+Pill had no way to express a semantic status (accent/ok/warn/danger/muted)
+without a consumer hand-rolling its own tone-* class per call site and
+repeating the same background/color pair everywhere a status chip was
+needed. TARA's own web app does exactly this today: apps/web's
+TalkStatusPill.svelte and every Pill status badge in the settings page pass
+classes="tara-ui-pill-status-badge tara-ui-pill-status-badge-{accent,ok,warn,
+danger,muted}", and packages/ui/src/styles/components.css spells out, in its
+own comment, "Pill has no tone prop and ... no letter-spacing or
+text-transform variable" as the reason those five classes and their
+uppercase/tracking rules exist. This closes that gap at the source. Filed as
+#520.
+
+## `tone` prop
+
+`tone?: 'accent' | 'ok' | 'warn' | 'danger' | 'muted'` (`PillTone`, exported
+from `src/lib/Pill/properties.ts`). Unset by default — no class added, no CSS
+variable read, rendering byte-for-byte unchanged from before this prop
+existed. The mapping from tone to CSS class is a pure, unit-tested function
+(`pillToneClass` in `src/lib/Pill/pillTone.ts`, covered by
+`src/lib/Pill/pill-tone.test.ts`) rather than five inline `class:` directives,
+since this repo's vitest suite runs no browser and cannot assert on rendered
+DOM.
+
+Each tone sets an internal `--_pill-tone-background` / `--_pill-tone-color`
+pair through `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color`
+(each with a built-in default, documented in `docs/Pill.md`), read by
+`--pill-background` / `--pill-color` as a fallback layer — the same
+intermediate-variable precedence Button's `variant` already uses relative to
+`--button-color`. An explicit `--pill-background` / `--pill-color`, set
+directly or via `classes`, always wins over the tone default, so a one-off
+recolor never has to fork the tone.
+
+## `--pill-cursor` no longer implies clickability
+
+The issue named this directly: `--pill-cursor` defaulted to `pointer`
+unconditionally, so a purely informational pill (no `onclick`) looked
+clickable. The default is now `default`, with `pointer` restored only once
+the pill is actually interactive (`role="button"`, set exactly when `onclick`
+is supplied). An explicit `--pill-cursor` still wins in both cases.
+
+This changes the rendered cursor for an already-shipped, non-interactive Pill
+that relied on the old implicit `pointer` default without setting
+`--pill-cursor` itself. It is deliberately released as a minor rather than a
+major: the effect is a cursor affordance on pills that never had a working
+click handler, and a consumer that wants the old look sets
+`--pill-cursor: pointer`. docs/Pill.md documents the change and that
+one-line opt-back-in.
+
+## `--pill-letter-spacing` / `--pill-text-transform`
+
+Two new CSS variables (`normal` / `none` defaults, matching every other
+already-`normal`/`none`-defaulted Pill property) so a status-chip theme can
+set `text-transform: uppercase` without a bespoke class — the exact rule
+`.tara-ui-pill-status-badge` above has to apply itself today.
+
+## Also
+
+- `src/wc/components/Pill.wc.svelte`: `tone` added to the custom element's
+declared props (`check:wc-parity`).
+- `docs/Pill.md`: new prop row, CSS variable rows, a "Theming with tone"
+section alongside the existing classes-based theming section, and a
+breaking-change callout for the `--pill-cursor` default.
+- `src/routes/components/pill/+page.svelte`: a `pill-tone-fixtures` demo
+section exercising every tone, the tone/override precedence, the cursor
+default, and letter-spacing/text-transform.
+- `tests/visual/__screenshots__/pill.png`: regenerated for the added demo
+section (980x1092, up from 980x800).
+
+data-attribute passthrough, also named in the issue's "Need" section, is not
+part of the "Proposal" this issue actually asked for and is left for a
+separate issue.
+
+Closes #520
+
+-
+feat(pill): add a semantic tone prop, and stop assuming every pill is clickable ([d1f3178](https://github.com/juspay/svelte-ui-components/commit/d1f317840f2981c0c5220b425b26e908d3f3e9ba))
+
+## [4.2.0](https://github.com/juspay/svelte-ui-components/compare/4.2.0..4.1.2) - 7 September 2026
 
 MediaPlayer could play, pause and mute, and nothing more, so any consumer wanting a
 scrubber, a running time or a fullscreen button had to hand-roll a player around the

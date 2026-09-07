@@ -147,6 +147,8 @@ const KNOWN_HOST_EVENT_HANDLER_DECLARATIONS: readonly string[] = [
   'Button.wc.svelte:onmousedown',
   'Button.wc.svelte:onmouseup',
   'Button.wc.svelte:onmouseleave',
+  'Button.wc.svelte:ontouchstart',
+  'Button.wc.svelte:ontouchend',
   'Calendar.wc.svelte:onselect',
   'Card.wc.svelte:onclick',
   'Carousel.wc.svelte:onkeydown',

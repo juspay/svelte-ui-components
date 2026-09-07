@@ -245,10 +245,11 @@ CSS custom properties apply across the shadow DOM boundary.
 
 ### Event handlers: use `addEventListener`, not `element.onclick`
 
-Handlers are passed as **props**, and 91 of those props are named after event-handler
+Handlers are passed as **props**, and 93 of those props are named after event-handler
 accessors that already exist on `HTMLElement` — `onclick`, `onchange`, `oninput`,
-`onkeydown` and 21 others. On a custom element the component's prop wins, so assigning
-the property does not register a DOM handler the way it would anywhere else:
+`onkeydown`, `ontouchstart` and 22 others. On a custom element the component's prop
+wins, so assigning the property does not register a DOM handler the way it would
+anywhere else:
 
 ```js
 const checkbox = document.querySelector('sui-checkbox');

@@ -273,12 +273,23 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
  * that. Reviewed and corrected before merge.
  *
  * Enumerated in Chromium rather than curated by hand: every `on*` own-property
- * name reachable by walking `HTMLElement.prototype`'s chain — 110 of them,
+ * name reachable by walking `HTMLElement.prototype`'s chain — 114 of them,
  * through Element, Node and EventTarget. That is the same "ask the browser, do
  * not reason about it" method the ARIAMixin list above was built with, and it is
  * why `onselect` is here (a genuine host accessor) while `onopen`, `ondismiss`,
  * `onretry` and the library's other 80-odd bespoke handler names are not: they
  * collide with nothing.
+ *
+ * **Enumerate with touch support on.** Four of the 114 — `ontouchstart`,
+ * `ontouchend`, `ontouchmove`, `ontouchcancel` — are only defined when the
+ * browser reports touch, so a plain desktop context reports 110 and quietly
+ * omits them. The first version of this list was built that way and missed all
+ * four, while `Button.wc.svelte` was already declaring two: asking the browser
+ * is only better than reasoning if you ask a browser configured like the ones
+ * consumers use. Playwright's `hasTouch: true` is what makes the difference:
+ *
+ *   without touch -> []
+ *   with touch    -> ontouchstart, ontouchend, ontouchmove, ontouchcancel
  *
  * Re-enumerate if a browser adds handlers. A name missing from this list is not
  * flagged, so the list being complete is what the guard rests on.
@@ -381,6 +392,10 @@ export const HOST_EVENT_HANDLER_PROPS: ReadonlySet<string> = new Set([
   'onsuspend',
   'ontimeupdate',
   'ontoggle',
+  'ontouchcancel',
+  'ontouchend',
+  'ontouchmove',
+  'ontouchstart',
   'ontransitioncancel',
   'ontransitionend',
   'ontransitionrun',

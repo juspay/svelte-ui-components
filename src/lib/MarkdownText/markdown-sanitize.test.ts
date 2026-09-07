@@ -82,6 +82,26 @@ describe('renderMarkdown — configurable protocol allow-list (sanitize.allowedP
     // have been left narrowed by a shared cache entry.
     expect(renderMarkdown('[a](mailto:x@y.z)')).toContain('href="mailto:x@y.z"');
   });
+
+  // A plain-JS or web-component consumer bypasses the `string[]` type at
+  // compile time -- `sanitize` is declared `type: 'Object'` on the custom
+  // element with no runtime validation, so anything can arrive here.
+  it('degrades to the default allow-list when allowedProtocols is not an array', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sanitize = { allowedProtocols: 'https:' as any };
+    expect(() => renderMarkdown('[a](https://example.com)', { sanitize })).not.toThrow();
+    expect(renderMarkdown('[a](mailto:x@y.z)', { sanitize })).toContain('href="mailto:x@y.z"');
+  });
+
+  it('ignores non-string entries in allowedProtocols instead of throwing', () => {
+    const sanitize = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      allowedProtocols: [null, 42, 'https:'] as any
+    };
+    expect(() => renderMarkdown('[a](https://example.com)', { sanitize })).not.toThrow();
+    const output = renderMarkdown('[a](https://example.com)', { sanitize });
+    expect(output).toContain('href="https://example.com"');
+  });
 });
 
 // Regression coverage for #524's second half: the only escape hatch from a
@@ -154,6 +174,39 @@ describe('renderMarkdown — configurable tag allow-list (sanitize.allowedTags)'
     expect(() =>
       renderMarkdown('**bold**', { sanitize: { allowedTags: ['not-a-real-tag'] } })
     ).not.toThrow();
+  });
+
+  it('normalises allowedTags to lower-case, matching allowedProtocols', () => {
+    const output = renderMarkdown('**bold**', { sanitize: { allowedTags: ['STRONG'] } });
+    expect(output).toContain('<strong>bold</strong>');
+  });
+
+  it('a nested allowed tag still renders as real markup, not flattened text', () => {
+    const output = renderMarkdown('# **Loud** Title', {
+      sanitize: { allowedTags: ['strong'] }
+    });
+    expect(output).not.toContain('<h1>');
+    expect(output).toContain('<strong>Loud</strong>');
+  });
+
+  // Same runtime-shape hazard as allowedProtocols: a plain-JS or web-component
+  // consumer can hand this anything, bypassing the `string[]` compile-time type.
+  it('degrades to no restriction when allowedTags is not an array', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sanitize = { allowedTags: 'strong' as any };
+    expect(() => renderMarkdown('# Title\n\n**bold**', { sanitize })).not.toThrow();
+    const output = renderMarkdown('# Title\n\n**bold**', { sanitize });
+    expect(output).toContain('<h1>');
+    expect(output).toContain('<strong>');
+  });
+
+  it('ignores non-string entries in allowedTags instead of throwing', () => {
+    const sanitize = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      allowedTags: [null, 42, 'strong'] as any
+    };
+    expect(() => renderMarkdown('**bold**', { sanitize })).not.toThrow();
+    expect(renderMarkdown('**bold**', { sanitize })).toContain('<strong>bold</strong>');
   });
 });
 

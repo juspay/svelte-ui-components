@@ -180,8 +180,8 @@ This pattern gives full layout control to the consumer (any number of zones, any
 consumer that already keys state off attribute-selector CSS (`[data-state="waiting"]`,
 `[data-density="compact"]`) elsewhere in their app, instead of encoding the same state as
 a second `classes` modifier. `as` overrides the rendered tag independent of `href`, for a
-card that needs real `<figure>` semantics (so a `<figcaption>` inside it is valid markup)
-without a separate wrapper element around an appearance-only Card.
+card that needs the root element itself to carry real `<figure>` semantics instead of a
+`<div>`.
 
 ```svelte
 <script>
@@ -193,10 +193,9 @@ without a separate wrapper element around an appearance-only Card.
   <p>Waiting for input…</p>
 </Card>
 
-<!-- Card's root IS the <figure> -- no wrapper element needed for the semantics -->
+<!-- Card's root IS the <figure> — no wrapper element needed for the tag itself -->
 <Card as="figure" title="Aurora">
   <div class="stage">…</div>
-  <figcaption>Aurora backdrop, 40% opacity</figcaption>
 </Card>
 ```
 
@@ -208,6 +207,40 @@ those props control. `as`, when omitted, keeps Card's existing tag resolution ex
 suppresses `href`/`target`/`rel` and the synthetic `role="button"`/`tabindex`/keydown shim
 applies instead when `onclick` is provided — the same interactive behavior a plain `<div>`
 gets today. Both props are omitted by default, so existing consumers are unaffected.
+
+**`as="figure"` does not give you a place to put a caption.** The HTML spec requires
+`<figcaption>` to be a *direct* child of `<figure>` — first or last, nothing else. Card
+always wraps `children` in an inner `.card-content` div (and `title`/`headerRight` in
+`.card-header`, `footer` in a `<footer>` element), so anything passed through those slots,
+`<figcaption>` included, lands one level too deep. A `<figcaption>` inside `children` or
+`footer` renders visually but is not exposed as the figure's accessible caption by any
+browser or assistive technology — it is just a mislabeled paragraph. Do not try to caption
+Card's own `as="figure"` root with a `<figcaption>` in the current version.
+
+This is a limit on captioning *Card's* root, not a ban on the element. A `<figure>` you
+nest inside a Card can carry its own `<figcaption>` as a direct child, and that caption is
+valid and correctly exposed — it captions the inner figure, which is a different element
+from the Card root.
+
+If you need a real captioned figure today, build it outside Card instead of trying to make
+Card's root serve as the `<figure>`:
+
+```svelte
+<figure>
+  <Card testId="aurora-card">
+    <div class="stage">…</div>
+  </Card>
+  <figcaption>Aurora backdrop, 40% opacity</figcaption>
+</figure>
+```
+
+Here `<figcaption>` is a direct child of the outer `<figure>` — valid markup, correctly
+announced as a caption — at the cost of the one extra wrapper element `as="figure"` was
+meant to avoid. `as="figure"` itself remains useful on its own for cases that want the
+`<figure>` tag/semantics without a caption (e.g. a self-contained media block referenced
+elsewhere via `aria-describedby`). A first-class caption slot on Card (rendering
+`<figcaption>` as a direct child of the root) would resolve this properly; it is not
+implemented today and is not part of this change.
 
 ### Card with Header Right Slot
 
@@ -292,7 +325,7 @@ priority over the matching string prop — only one of the two is rendered.
 | scrollable         | `boolean`                          | No       | `false` | When true, the content area becomes vertically scrollable (max-height via `--card-content-max-height`, default 400px). The region also gains `role="region"` and `tabindex="0"` for keyboard accessibility.                                                                                                                      |
 | cssVars            | `Record<string, string \| number>` | No       | `-`     | Per-instance CSS custom properties applied as inline `style` on the card root (e.g. `{ '--bottom-sections-count': 3 }`). Feeds a dynamic value into a recipe class whose selectors/media queries read that variable — something a static `classes` string cannot express. Omit to render no `style` attribute.                   |
 | attrs              | `Record<string, string>`           | No       | `-`     | Arbitrary attributes (e.g. `data-*`, `aria-*`) spread onto the card root, for attribute-selector CSS. Applied before Card's own class/style/data-pw/testID/role/tabindex/href/target/rel/onclick/onkeydown, so it can only add attributes Card does not already manage. Omit to render no extra attributes.                      |
-| as                 | `'div' \| 'a' \| 'figure'`         | No       | `-`     | Overrides the root element's tag independent of `href` — e.g. `'figure'` for real `<figure>` semantics. Omit to keep today's rule: `<a>` when `href` is set, `<div>` otherwise. A value other than `'a'` suppresses `href`/`target`/`rel` and applies the same interactive shim a plain `<div>` gets when `onclick` is provided. `as="a"` without `href` gets that same shim too — there is nothing to navigate to, so it behaves like an interactive `<div>` rendered as an `<a>` tag rather than a broken anchor. |
+| as                 | `'div' \| 'a' \| 'figure'`         | No       | `-`     | Overrides the root element's tag independent of `href` — e.g. `'figure'` for a real `<figure>` root tag. Omit to keep today's rule: `<a>` when `href` is set, `<div>` otherwise. A value other than `'a'` suppresses `href`/`target`/`rel` and applies the same interactive shim a plain `<div>` gets when `onclick` is provided. `as="a"` without `href` gets that same shim too — there is nothing to navigate to, so it behaves like an interactive `<div>` rendered as an `<a>` tag rather than a broken anchor. **Does not provide a caption slot** — `children`/`footer` are wrapped in inner elements, so a `<figcaption>` placed there is not a direct child of the figure and is not exposed as its caption; see "Attribute Passthrough and Custom Root Tag" above. |
 
 ## Events
 

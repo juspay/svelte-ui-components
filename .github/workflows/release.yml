@@ -366,14 +366,53 @@ jobs:
       # the registry stays clean. The reverse failure (pushed, then publish fails)
       # leaves a version commit for an unpublished version, which the existing
       # `npm view ... && exit 0` guard below makes safe to resolve by re-running.
+      # The artifacts were built from this run's checkout, which is pinned to the
+      # SHA that triggered it, but the push below rebases the release commit onto
+      # whatever has landed since. A commit arriving in that window ends up UNDER
+      # a landmark for a version built without it: the repository records it as
+      # released, the tarball does not contain it, and because the landmark has
+      # moved past it its `feat` or `fix` can never reach a later bump.
+      #
+      # 4.10.4 is that, already shipped. Five commits merged in under two minutes;
+      # the run triggered by the first built after four of them had landed, then
+      # rebased its release commit above all five and published. The tarball has
+      # `overlayAriaLabel` from the fourth commit and not `modalAriaLabel` from
+      # the fifth, while `chore(release): 4.10.4` sits on top of both -- so a
+      # `feat(modal)` is recorded as released, is absent from the registry, and
+      # will ship inside whatever patch comes next.
+      #
+      # The check lives inside the push step, between its fetch and its rebase,
+      # rather than in a step of its own. A separate step would have to do its
+      # own fetch, and this one would then fetch again -- so a commit landing in
+      # between would pass the guard and still be rebased over, which is the bug
+      # with extra ceremony. Adjacent to the fetch it depends on, the window is
+      # the two lines below.
+      #
+      # `mcp/` and `.github/` are excluded for the same reason detect-changes
+      # excludes them: neither is part of this package's build, so neither makes
+      # these artifacts stale, and a CI-only release must not block on its own
+      # commit.
       - name: Push changes (without tags)
         run: |
           # Pull latest changes to avoid conflicts
           git fetch origin release
 
-          # Check if we're behind
+          STALE_AGAINST=". :(exclude)mcp/ :(exclude).github/"
+          LANDED="$(git rev-list HEAD..origin/release -- $STALE_AGAINST)"
+          if [ -n "$LANDED" ]; then
+            echo "::error::Commits landed on release while this run was building:"
+            git log --oneline HEAD..origin/release -- $STALE_AGAINST
+            echo "They are not in the artifacts this run built, and rebasing onto them"
+            echo "would put the release commit above code it does not contain."
+            echo "Aborting before anything is written, so the next run publishes a"
+            echo "version that contains them and derives its bump from them."
+            exit 1
+          fi
+
+          # Only refs this build is unaffected by can be below us here, so the
+          # rebase can no longer move the release commit over unbuilt code.
           if [ $(git rev-list --count HEAD..origin/release) -gt 0 ]; then
-            echo "Local branch is behind remote. Attempting to rebase..."
+            echo "Local branch is behind remote on excluded paths only; rebasing..."
             git rebase origin/release
           fi
 
@@ -658,8 +697,24 @@ jobs:
           fi
           git tag -a "$TAG_NAME" -m "Release @juspay/svelte-ui-components-mcp $NEW_VERSION"
 
-          # Rebase on any concurrent changes, then push commit + tag
+          # Same check as the pre-publish one, repeated here because this fetch is
+          # a second look at the branch: an MCP commit landing between the two
+          # would otherwise be rebased under a landmark for a version published
+          # without it. Failing here is the recoverable outcome -- the version is
+          # on the registry with no landmark, and the `npm view ... && exit 0`
+          # guard above lets a re-run write the landmark instead of republishing.
           git fetch origin release
+          LANDED="$(git rev-list HEAD..origin/release -- mcp/)"
+          if [ -n "$LANDED" ]; then
+            echo "::error::MCP commits landed after this version was published:"
+            git log --oneline HEAD..origin/release -- mcp/
+            echo "The MCP package at $NEW_VERSION is on the registry but does not"
+            echo "contain them. Not rebasing the landmark over them; re-run once they"
+            echo "are released so the landmark lands where the build actually was."
+            exit 1
+          fi
+
+          # Rebase on any concurrent changes, then push commit + tag
           if [ "$(git rev-list --count HEAD..origin/release)" -gt 0 ]; then
             git rebase origin/release
           fi

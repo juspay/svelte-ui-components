@@ -2,7 +2,51 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.6.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.7.0)
+
+Adds two optional props to Snippet's built-in copy affordance:
+`copiedLabel` (text shown in place of the icon after a copy, default
+`'Copied!'`) and `copyResetMs` (delay before it reverts, default
+`2000`). Neither prop changes anything for an existing consumer that
+passes neither -- the defaults reproduce today's hardcoded text and
+timing exactly.
+
+The reset timer itself moves into `copyResetTimer.ts`, a small
+Svelte-free module (`copyResetTimer.test.ts` unit-tests it directly,
+the way `Tooltip/tooltip-action.ts` keeps its DOM timing outside the
+component). It guarantees only one timer is ever pending -- a second
+copy before the first one's flash reverted used to leave two timers
+racing over `copied` -- and Snippet now clears it from `onDestroy`, so
+navigating away mid-flash no longer fires against a destroyed
+component.
+
+The consumer that hit this is TARA's ShareSheet.svelte, which renders a
+share URL through Snippet and wanted its own copied label and a shorter
+flash than the hardcoded 2s. (TARA also has a CopyButton.svelte with
+the same affordance hand-rolled over Button, including a 1.5s timer
+with effect cleanup -- that one is not Snippet-based and these props do
+not replace it, but they do remove the reason a future Snippet-based
+consumer would hand-roll it again.)
+
+The `.snippet-copied` span now carries `aria-live="polite"`, matching
+the convention already used for transient feedback text elsewhere in
+the library (Toast, ChatToolStatus, Gallery's lightbox counter). The
+now-configurable `copiedLabel` made the gap more visible, though the
+fixed `ariaLabel="Copy to clipboard"` alongside it and the previously
+un-announced text both predate this change.
+
+docs/Snippet.md, docs/_index.json, the wc wrapper and its parity, and
+the component demo page are updated to match; docs/CHANGELOG.md is
+release-generated and untouched here. tests/visual/__screenshots__/
+snippet.png is regenerated in the pinned Playwright container for the
+new demo section and re-verified by eye.
+
+Closes #530
+
+-
+feat(snippet): configurable copy feedback and unmount-safe reset timer ([23b4900](https://github.com/juspay/svelte-ui-components/commit/23b4900593b4b33a5a74aa6759ee52bbe9215672))
+
+## [4.7.0](https://github.com/juspay/svelte-ui-components/compare/4.7.0..4.6.0) - 7 September 2026
 
 HITL supported exactly one decision (confirm/cancel), so a third
 disposition (e.g. "deny with instructions") or any free-text/multi-select

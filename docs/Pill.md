@@ -84,6 +84,27 @@ once per theme, then pass `tone` at each call site:
 directly, or via `classes`) always wins over the tone default, so a one-off recolor doesn't
 need to fork the tone.
 
+### Attribute Passthrough
+
+`attrs` spreads arbitrary `data-*`/`aria-*` attributes onto the pill root — for a consumer
+that already keys state off attribute-selector CSS (`[data-state="waiting"]`,
+`[data-density="compact"]`) elsewhere in their app, instead of wrapping Pill in an extra
+element just to hold the attribute and then styling that wrapper not to disturb layout.
+
+```svelte
+<script>
+  import { Pill } from '@juspay/svelte-ui-components';
+</script>
+
+<!-- data-state drives a CSS rule the app already writes for other components -->
+<Pill text="Syncing" attrs={{ 'data-state': 'waiting' }} />
+```
+
+`attrs` is applied before Pill's own `class`/`onclick`/`onkeydown`/`role`/`tabindex`/
+`aria-disabled`/`data-pw`/`title`/`testID` attributes, so it can only add attributes Pill does
+not already manage — it cannot be used to override the click/keyboard/dismiss behavior those
+props control. Omitted by default, so existing consumers are unaffected.
+
 ## Props
 
 | Prop         | Type      | Required | Default   | Description                                                                                                                                                              |
@@ -96,6 +117,7 @@ need to fork the tone.
 | testId       | `string`  | No       | `-`       | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                  |
 | title        | `string`  | No       | `-`       | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                            |
 | classes      | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.   |
+| attrs        | `Record<string, string>` | No | `-` | Arbitrary attributes (e.g. `data-*`, `aria-*`) spread onto the pill root, for attribute-selector CSS. Applied before Pill's own class/onclick/onkeydown/role/tabindex/aria-disabled/data-pw/title/testID, so it can only add attributes Pill does not already manage. Omit to render no extra attributes. |
 
 ## Snippets
 
@@ -162,6 +184,8 @@ Keyboard activation of the dismiss button does not activate the pill body.
 | `--pill-tone-danger-color`      | `#721c24`                             | color            | `tone="danger"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
 | `--pill-tone-muted-background`  | `#f1f1f1`                             | background-color | `tone="muted"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
 | `--pill-tone-muted-color`       | `#6b7280`                             | color            | `tone="muted"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
+| `--pill-focus-outline`          | `2px solid currentColor`              | outline          | Focus ring shown on the pill when interactive (`role="button"`) and focused via keyboard. |
+| `--pill-focus-outline-offset`   | `2px`                                 | outline-offset   | Offset of the focus ring from the pill edge.                              |
 
 ## Internal Dependencies
 
@@ -176,6 +200,9 @@ Tag: `<sui-pill>`
 ```html
 <sui-pill text="Active" dismissible></sui-pill>
 ```
+
+`attrs` is object-valued (set as a property, e.g. `el.attrs = { 'data-state': 'waiting' }`),
+like Card's.
 
 ### Slots
 

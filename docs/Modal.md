@@ -37,6 +37,11 @@ A dialog overlay component that renders on top of the page with configurable siz
 | ariaLabel                | `string`                                                                                                                                                  | No       | `-`             | Accessible name for the modal, rendered as `aria-label` on the content panel (the element carrying `role`/`aria-modal` when `role` is set). Without it a screen reader announces an unnamed dialog.                                                                                                                                                                                             |
 | role                     | `ModalRole = 'dialog' \| 'alertdialog'`                                                                                                                   | No       | `-` (unset)     | ARIA role for the content panel. Unset by default — the panel renders no `role` and no `aria-modal`, matching behavior before this prop existed, so an existing consumer who never touches `role` sees no DOM/ARIA change. Set explicitly to opt in: the panel then also carries `aria-modal="true"`. Use `'alertdialog'` for a dialog that interrupts to demand an immediate response (e.g. a destructive confirmation).                                                                                                                                                                                             |
 
+`<sui-modal>` adds two props that do not exist on the Svelte component: `modalRole` and
+`modalAriaLabel` (attributes `modal-role` / `modal-aria-label`). They are forwarding aliases
+for the `role` and `ariaLabel` rows above, and exist only because `role` and `aria-label` are
+reserved accessors on every custom element. See the Web Component section below.
+
 ## Snippets
 
 Svelte 5 Snippet props — pass content blocks to the component.
@@ -248,7 +253,15 @@ Tag: `<sui-modal>`
 </sui-modal>
 ```
 
-`aria-label` and `role` are not props on `<sui-modal>` — they're reserved accessors on every custom element (`ARIAMixin`/`role`), so declaring them as component props would replace the native ones instead of adding to them. Set them as native attributes directly on the host, e.g. `<sui-modal role="alertdialog" aria-label="Delete account">`. `ondismiss` (and `overlayAriaLabel`) are ordinary props and work the same way as on the Svelte component.
+`aria-label` and `role` are not props on `<sui-modal>` — they're reserved accessors on every custom element (`ARIAMixin`/`role`), so declaring them as component props would replace the native ones instead of adding to them. Setting them as native attributes directly on the host (`<sui-modal role="alertdialog" aria-label="Delete account">`) does not name the dialog: it lands on the host element, which the shadow tree wraps around its whole full-screen overlay, not on the `.modal-content` panel that actually carries the accessible name and `aria-modal`. Use `modal-role` / `modal-aria-label` (properties `modalRole` / `modalAriaLabel`) instead — same prefixed-alias pattern as `<sui-toggle>`'s `input-aria-label` — which forward to the panel's `role`/`aria-label`:
+
+```html
+<sui-modal modal-role="alertdialog" modal-aria-label="Delete account">
+  <p>This can't be undone.</p>
+</sui-modal>
+```
+
+The host's own `role`/`aria-label` stay free for whatever the page around the modal wants to do with them. `ondismiss` (and `overlayAriaLabel`) are ordinary props and work the same way as on the Svelte component.
 
 ### Slots
 

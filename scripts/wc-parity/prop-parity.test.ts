@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HOST_RESERVED_PROPS, readWrapperParity } from './prop-parity.ts';
+import { HOST_EVENT_HANDLER_PROPS, HOST_RESERVED_PROPS, readWrapperParity } from './prop-parity.ts';
 
 /**
  * Adding a prop to a Svelte component and forgetting its custom-element wrapper
@@ -117,5 +117,145 @@ describe('host-reserved names are excluded deliberately, not forgotten', () => {
     // API decision rather than a mechanical fix. Printing them keeps the count
     // honest instead of letting an exclusion list quietly absorb them.
     expect(Array.isArray(wanted)).toBe(true);
+  });
+});
+
+/**
+ * Every wrapper prop whose name is already an event-handler accessor on
+ * `HTMLElement`. Recorded rather than failed on, because renaming a public prop
+ * is a breaking change to each element's JavaScript API and the whole set has to
+ * move at once, at a major — the same reasoning that held the `aria*` names
+ * above until 4.0.0.
+ *
+ * Recording is not nothing: it bounds the debt. A wrapper that declares a
+ * twenty-sixth native handler name fails here instead of shipping, and one that
+ * gets fixed has to be deleted from this list rather than quietly re-added.
+ *
+ * The attributes are unaffected either way — `<sui-button onclick="...">` never
+ * used this accessor, and `addEventListener` is untouched. What is affected is
+ * the JavaScript property: `element.onclick = fn` sets the component prop, and
+ * for `sui-checkbox` / `sui-toggle` that prop is called with a boolean rather
+ * than the `MouseEvent` the platform would have given.
+ */
+const KNOWN_HOST_EVENT_HANDLER_DECLARATIONS: readonly string[] = [
+  'Accordion.wc.svelte:ontoggle',
+  'Avatar.wc.svelte:onclick',
+  'Banner.wc.svelte:onclick',
+  'Button.wc.svelte:onclick',
+  'Button.wc.svelte:onkeydown',
+  'Button.wc.svelte:onkeyup',
+  'Button.wc.svelte:onmousedown',
+  'Button.wc.svelte:onmouseup',
+  'Button.wc.svelte:onmouseleave',
+  'Calendar.wc.svelte:onselect',
+  'Card.wc.svelte:onclick',
+  'Carousel.wc.svelte:onkeydown',
+  'Chat.wc.svelte:onclose',
+  'ChatBubble.wc.svelte:onclose',
+  'ChatBubble.wc.svelte:ontoggle',
+  'ChatComposer.wc.svelte:onsubmit',
+  'ChatComposer.wc.svelte:oninput',
+  'ChatComposer.wc.svelte:onkeydown',
+  'ChatComposer.wc.svelte:onpaste',
+  'ChatHeader.wc.svelte:onclose',
+  'ChatMessage.wc.svelte:oncopy',
+  'ChatSuggestions.wc.svelte:onselect',
+  'CheckListItem.wc.svelte:onclick',
+  'Checkbox.wc.svelte:onclick',
+  'ChipInput.wc.svelte:onchange',
+  'Choicebox.wc.svelte:onclick',
+  'ColorPicker.wc.svelte:onchange',
+  'ColorPicker.wc.svelte:oninput',
+  'Combobox.wc.svelte:onselect',
+  'Combobox.wc.svelte:oninput',
+  'Combobox.wc.svelte:onclose',
+  'Combobox.wc.svelte:onkeydown',
+  'Combobox.wc.svelte:onfocus',
+  'Combobox.wc.svelte:onblur',
+  'Combobox.wc.svelte:onchange',
+  'CommandMenu.wc.svelte:onselect',
+  'CommandMenu.wc.svelte:onclose',
+  'ContextMenu.wc.svelte:onselect',
+  'ContextMenu.wc.svelte:onclose',
+  'DateRangePicker.wc.svelte:oncancel',
+  'FileDropzoneTrigger.wc.svelte:onclick',
+  'FileInput.wc.svelte:onerror',
+  'Gallery.wc.svelte:onkeydown',
+  'Gallery.wc.svelte:onclose',
+  'Gallery.wc.svelte:onchange',
+  'GridItem.wc.svelte:onclick',
+  'GridItem.wc.svelte:onkeydown',
+  'Icon.wc.svelte:onclick',
+  'Icon.wc.svelte:onkeydown',
+  'Img.wc.svelte:onerror',
+  'Input.wc.svelte:onfocus',
+  'Input.wc.svelte:onblur',
+  'Input.wc.svelte:oninput',
+  'Input.wc.svelte:onpaste',
+  'Input.wc.svelte:onclick',
+  'Input.wc.svelte:onkeydown',
+  'KeyboardInput.wc.svelte:onclick',
+  'ListItem.wc.svelte:onkeydown',
+  'LottiePlayer.wc.svelte:onerror',
+  'MediaPlayer.wc.svelte:onplay',
+  'MediaPlayer.wc.svelte:onpause',
+  'MediaPlayer.wc.svelte:onvolumechange',
+  'MediaPlayer.wc.svelte:ontimeupdate',
+  'MediaPlayer.wc.svelte:onfullscreenchange',
+  'MediaUpload.wc.svelte:onchange',
+  'MediaUpload.wc.svelte:onerror',
+  'Menu.wc.svelte:onselect',
+  'Menu.wc.svelte:onclose',
+  'Modal.wc.svelte:onclose',
+  'Modal.wc.svelte:onkeydown',
+  'Pagination.wc.svelte:onchange',
+  'Pill.wc.svelte:onclick',
+  'Radio.wc.svelte:onchange',
+  'Resizable.wc.svelte:onresize',
+  'Select.wc.svelte:onchange',
+  'Select.wc.svelte:onclose',
+  'Sheet.wc.svelte:onclose',
+  'Slider.wc.svelte:oninput',
+  'Slider.wc.svelte:onchange',
+  'Snippet.wc.svelte:oncopy',
+  'SplitButton.wc.svelte:onclick',
+  'SplitButton.wc.svelte:onselect',
+  'SplitInput.wc.svelte:onchange',
+  'SplitInput.wc.svelte:oninput',
+  'StatCard.wc.svelte:onclick',
+  'Tabs.wc.svelte:onchange',
+  'ThemeSwitcher.wc.svelte:onchange',
+  'ThinkingIndicator.wc.svelte:ontoggle',
+  'Toggle.wc.svelte:onclick',
+  'Toolbar.wc.svelte:onkeydown',
+  'TypewriterText.wc.svelte:onprogress'
+];
+
+describe('native event-handler names are recorded, not silently shadowed', () => {
+  const offenders = (): string[] =>
+    parity.flatMap((entry) =>
+      entry.declared
+        .filter((name) => HOST_EVENT_HANDLER_PROPS.has(name))
+        .map((name) => `${entry.wrapper}:${name}`)
+    );
+
+  it('adds no new prop that would replace an HTMLElement event-handler accessor', () => {
+    const added = offenders().filter(
+      (name) => !KNOWN_HOST_EVENT_HANDLER_DECLARATIONS.includes(name)
+    );
+
+    expect(added, `new host event-handler overrides: ${added.join(', ')}`).toEqual([]);
+  });
+
+  it('keeps the recorded set honest, so a fixed one cannot be quietly re-added', () => {
+    const current = offenders();
+    const goneButStillListed = KNOWN_HOST_EVENT_HANDLER_DECLARATIONS.filter(
+      (name) => !current.includes(name)
+    );
+
+    expect(
+      goneButStillListed,
+      `fixed — delete from KNOWN_HOST_EVENT_HANDLER_DECLARATIONS: ${goneButStillListed.join(', ')}`
+    ).toEqual([]);
   });
 });

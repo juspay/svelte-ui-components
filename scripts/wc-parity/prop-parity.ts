@@ -250,6 +250,152 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   'ariaRoleDescription'
 ]);
 
+/**
+ * Event-handler IDL attributes that already exist on `HTMLElement`. Declaring
+ * one as a custom-element prop replaces the host's own accessor, so
+ * `element.onclick = fn` sets this library's prop instead of registering a DOM
+ * handler. On `sui-checkbox` and `sui-toggle` that is not just a shadowed
+ * accessor but a changed signature: their `onclick` is typed
+ * `(checked: boolean) => void`, so the assignment receives a boolean where every
+ * other element in the document hands back a `MouseEvent`.
+ *
+ * Deliberately NOT folded into `HOST_RESERVED_PROPS`. That set is *excluded*
+ * from the parity requirement, so putting these there would stop a wrapper that
+ * simply forgot to declare `onclick` from being reported missing — masking the
+ * exact class of gap this suite exists to catch. These get recorded separately
+ * instead: existing declarations are listed, and a new one fails.
+ *
+ * This is the platform's whole set, not the subset this library happens to use.
+ * The first version listed only the 25 names currently declared somewhere, which
+ * reads as thorough and is not: a guard built from present usage cannot fail on
+ * a name nobody has used yet, so a wrapper adding `oncontextmenu` or `ondblclick`
+ * tomorrow would have walked straight past the check whose entire job is to catch
+ * that. Reviewed and corrected before merge.
+ *
+ * Enumerated in Chromium rather than curated by hand: every `on*` own-property
+ * name reachable by walking `HTMLElement.prototype`'s chain — 110 of them,
+ * through Element, Node and EventTarget. That is the same "ask the browser, do
+ * not reason about it" method the ARIAMixin list above was built with, and it is
+ * why `onselect` is here (a genuine host accessor) while `onopen`, `ondismiss`,
+ * `onretry` and the library's other 80-odd bespoke handler names are not: they
+ * collide with nothing.
+ *
+ * Re-enumerate if a browser adds handlers. A name missing from this list is not
+ * flagged, so the list being complete is what the guard rests on.
+ */
+export const HOST_EVENT_HANDLER_PROPS: ReadonlySet<string> = new Set([
+  'onabort',
+  'onanimationcancel',
+  'onanimationend',
+  'onanimationiteration',
+  'onanimationstart',
+  'onauxclick',
+  'onbeforecopy',
+  'onbeforecut',
+  'onbeforeinput',
+  'onbeforematch',
+  'onbeforepaste',
+  'onbeforetoggle',
+  'onbeforexrselect',
+  'onblur',
+  'oncancel',
+  'oncanplay',
+  'oncanplaythrough',
+  'onchange',
+  'onclick',
+  'onclose',
+  'oncommand',
+  'oncontentvisibilityautostatechange',
+  'oncontextlost',
+  'oncontextmenu',
+  'oncontextrestored',
+  'oncopy',
+  'oncuechange',
+  'oncut',
+  'ondblclick',
+  'ondrag',
+  'ondragend',
+  'ondragenter',
+  'ondragleave',
+  'ondragover',
+  'ondragstart',
+  'ondrop',
+  'ondurationchange',
+  'onemptied',
+  'onended',
+  'onerror',
+  'onfocus',
+  'onformdata',
+  'onfullscreenchange',
+  'onfullscreenerror',
+  'ongotpointercapture',
+  'oninput',
+  'oninvalid',
+  'onkeydown',
+  'onkeypress',
+  'onkeyup',
+  'onload',
+  'onloadeddata',
+  'onloadedmetadata',
+  'onloadstart',
+  'onlostpointercapture',
+  'onmousedown',
+  'onmouseenter',
+  'onmouseleave',
+  'onmousemove',
+  'onmouseout',
+  'onmouseover',
+  'onmouseup',
+  'onmousewheel',
+  'onpaste',
+  'onpause',
+  'onplay',
+  'onplaying',
+  'onpointercancel',
+  'onpointerdown',
+  'onpointerenter',
+  'onpointerleave',
+  'onpointermove',
+  'onpointerout',
+  'onpointerover',
+  'onpointerrawupdate',
+  'onpointerup',
+  'onprogress',
+  'onratechange',
+  'onreset',
+  'onresize',
+  'onscroll',
+  'onscrollend',
+  'onscrollsnapchange',
+  'onscrollsnapchanging',
+  'onsearch',
+  'onsecuritypolicyviolation',
+  'onseeked',
+  'onseeking',
+  'onselect',
+  'onselectionchange',
+  'onselectstart',
+  'onslotchange',
+  'onstalled',
+  'onsubmit',
+  'onsuspend',
+  'ontimeupdate',
+  'ontoggle',
+  'ontransitioncancel',
+  'ontransitionend',
+  'ontransitionrun',
+  'ontransitionstart',
+  'onvolumechange',
+  'onwaiting',
+  'onwebkitanimationend',
+  'onwebkitanimationiteration',
+  'onwebkitanimationstart',
+  'onwebkitfullscreenchange',
+  'onwebkitfullscreenerror',
+  'onwebkittransitionend',
+  'onwheel'
+]);
+
 export type WrapperParity = {
   readonly wrapper: string;
   readonly tag: string | null;

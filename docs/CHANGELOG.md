@@ -2,7 +2,46 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.2)
+
+#565 built `HOST_EVENT_HANDLER_PROPS` by walking `HTMLElement.prototype`'s chain
+in Chromium and recording every `on*` name it found: 110. Four are missing from
+that number, because `ontouchstart`, `ontouchend`, `ontouchmove` and
+`ontouchcancel` are only defined when the browser reports touch support, and the
+context it was enumerated in did not:
+
+without touch -&gt; []
+with touch    -&gt; ontouchstart, ontouchend, ontouchmove, ontouchcancel
+
+So the guard shipped in 4.10.2 with a hole in exactly the shape it was written
+to close, and the hole was already occupied: `Button.wc.svelte` declares
+`ontouchstart` and `ontouchend`, both real host accessors on every touch-capable
+browser, and neither was recorded. Widening the set to 114 surfaces them
+immediately, and they join the recorded list at 93.
+
+The lesson is the one the enumeration was supposed to embody. Asking the browser
+beats reasoning about the spec only if the browser is configured like the ones
+consumers use; a headless desktop context is not. Playwright's `hasTouch: true`
+is the difference, and the comment now says so, because the next person to
+re-enumerate will otherwise reproduce the same 110.
+
+Nothing is renamed. This is still a recorded debt that a major has to clear, and
+the two touch declarations are recorded rather than fixed for the same reason as
+the other 91.
+
+Verified: adding `ontouchmove` to a wrapper that did not have it now fails by
+name, where before the widening it would have passed silently — that is the
+specific hole this closes. lint 0, `pnpm check` 0 errors over both configs, 915
+unit.
+
+-
+fix(release): publish the MCP package before writing its release landmark ([1811375](https://github.com/juspay/svelte-ui-components/commit/1811375479a639afa072ee475a49e2b9b0ef0ec8))
+-
+build(deps): bump body-parser ([5a42c2c](https://github.com/juspay/svelte-ui-components/commit/5a42c2c91889a20feeffa7acc4e8508c669387ac))
+-
+fix(wc): enumerate host event handlers with touch support, catching four it missed ([69958f7](https://github.com/juspay/svelte-ui-components/commit/69958f7d4da0b739211ff0d483a327eefa6609a3))
+
+## [4.10.2](https://github.com/juspay/svelte-ui-components/compare/4.10.2..4.10.1) - 7 September 2026
 
 Follow-up to a review finding on #560, which flagged `onclick` on
 SplitButton.wc.svelte as a host-accessor collision. Declining it there was

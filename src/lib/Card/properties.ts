@@ -100,10 +100,18 @@ export type OptionalCardProperties = {
   attrs?: Record<string, string>;
   /**
    * Overrides the tag `svelte:element` renders for the card root — e.g.
-   * `'figure'` for a card that needs real `<figure>` semantics (so a
-   * `<figcaption>` inside `children` or `footer` is valid markup, and the
-   * element carries sectioning-content semantics no wrapper `<figure>` around
-   * a `<div>`-rooted Card could give it).
+   * `'figure'` for a card whose root needs real `<figure>` sectioning-content
+   * semantics, without a separate wrapper element around a `<div>`-rooted
+   * Card.
+   *
+   * This does NOT provide a place for a `<figcaption>`: `children` is always
+   * wrapped in an inner `.card-content` div (and `title`/`headerRight` in
+   * `.card-header`, `footer` in a `<footer>` element), so a `<figcaption>`
+   * passed through any of those slots is not a direct child of the `<figure>`
+   * root and per spec is not exposed as its caption by any browser or
+   * assistive technology — do not put one there. If a `<figure>` needs a real
+   * caption today, wrap a plain (non-`as="figure"`) Card in your own
+   * `<figure>`/`<figcaption>` pair instead; Card has no caption slot.
    *
    * When omitted, the root keeps its existing behaviour exactly: `'a'` when
    * `href` is set, `'div'` otherwise. Setting `as` to anything other than

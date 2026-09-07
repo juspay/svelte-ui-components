@@ -2,7 +2,57 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.3.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.4.0)
+
+Closes #524.
+
+TARA's chat UI (apps/web/src/lib/components/ApprovalCard.svelte,
+DecisionBubble.svelte, Transcript.svelte) could not use MarkdownText's
+`markdown` prop directly: the component's sanitizer had no way to drop
+markdown-generated elements it didn't want (images in particular), so
+the app pre-mangled the raw source through DOMPurify's `sanitiseMarkdownSource`
+before ever handing it to MarkdownText, and kept a second, unused,
+hand-rolled `renderMarkdown`/DOMPurify pipeline around as a fallback.
+
+MarkdownText gains an optional `sanitize` object (type
+`MarkdownSanitizeOptions`) with three narrowing options, all of them new
+in this commit and all off by default:
+
+- `allowedProtocols?: string[]` -- restricts which URL protocols survive
+on rendered links and images, intersected with the library's own
+defaults for each surface (`http:`/`https:`/`mailto:`/`tel:` for links,
+`http:`/`https:` for images). Because it intersects, it can only narrow
+what already renders, never widen it: listing `javascript:` cannot
+resurrect it. An empty array drops every link and image, keeping their
+text.
+- `allowedTags?: string[]` -- restricts which markdown-generated tags
+render as themselves (`a`, `img`, `strong`, `em`, `del`, `code`,
+`pre`, `blockquote`, `ul`, `ol`, `table`, `hr`, `h1`-`h6`). There is
+no preset default to intersect with here, unlike `allowedProtocols`:
+omitting it keeps every tag rendering exactly as it does today.
+A disallowed tag keeps its parsed inner content as plain text instead
+of the element -- the same "keep the text, drop the element" contract
+the protocol allow-list uses for an unsafe link or image.
+Raw HTML is still escaped unconditionally regardless of this list;
+there is still no opt-out from that guarantee.
+- `disableTaskLists?: boolean` -- renders GFM task-list items
+(`- [ ] done`) as plain list text instead of a checkbox. The checkbox
+already renders `disabled` by default, so this is a presentation
+choice, not a safety one. Defaults to `false`.
+
+All three are additive and off by default, so `renderMarkdown`/`MarkdownText`
+without a `sanitize` prop (or without these keys inside it) behave
+byte-for-byte as before. Implemented as per-token `RendererObject`
+overrides in a `Marked` instance cached by a key that folds in the
+resolved protocol sets, tag set and task-list toggle, so a
+differently-configured `sanitize` never shares a renderer with another.
+
+Also documents the options in docs/MarkdownText.md and docs/_index.json.
+
+-
+feat(markdowntext): add a sanitize prop with protocol and tag allow-lists ([17f0f4d](https://github.com/juspay/svelte-ui-components/commit/17f0f4dbc6d89ebfd1e1ec93f38748b777ddbe3d))
+
+## [4.4.0](https://github.com/juspay/svelte-ui-components/compare/4.4.0..4.3.0) - 7 September 2026
 
 Closes #523. TARA's own EmptyState wrapper (apps/web/src/lib/components/
 EmptyState.svelte) and its override sheet (packages/ui/src/styles/

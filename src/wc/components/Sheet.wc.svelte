@@ -7,6 +7,7 @@
       side: { type: 'String', reflect: true },
       sheetTitle: { type: 'String', reflect: true, attribute: 'title' },
       showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },
+      overlayAriaLabel: { type: 'String', reflect: true, attribute: 'overlay-aria-label' },
       showCloseButton: { type: 'Boolean', reflect: true, attribute: 'show-close-button' },
       headingLevel: { type: 'Number', reflect: true, attribute: 'heading-level' },
       testId: { type: 'String', attribute: 'test-id' },

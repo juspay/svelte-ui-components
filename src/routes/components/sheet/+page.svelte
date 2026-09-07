@@ -14,6 +14,7 @@
   let showBlocking = $state(false);
   let showCentered = $state(false);
   let showHeading = $state(false);
+  let showCustomOverlayLabel = $state(false);
 </script>
 
 <div class="page-header">
@@ -23,7 +24,7 @@
 
 <h3>Right (default)</h3>
 <div class="demo-row">
-  <Button text="Open right" onclick={() => (showRight = true)} />
+  <Button text="Open right" onclick={() => (showRight = true)} testId="sheet-right-trigger" />
   <Sheet bind:open={showRight} side="right" title="Settings" testId="sheet-right">
     {#snippet content()}
       <p>Side panel sliding in from the right. Use for settings, details, or editing forms.</p>
@@ -53,8 +54,8 @@
 
 <h3>Bottom</h3>
 <div class="demo-row">
-  <Button text="Open bottom" onclick={() => (showBottom = true)} />
-  <Sheet bind:open={showBottom} side="bottom" title="Actions">
+  <Button text="Open bottom" onclick={() => (showBottom = true)} testId="sheet-bottom-trigger" />
+  <Sheet bind:open={showBottom} side="bottom" title="Actions" testId="sheet-bottom">
     {#snippet content()}
       <p>Panel sliding up from the bottom. Use for action sheets or mobile drawers.</p>
     {/snippet}
@@ -117,7 +118,11 @@
 
 <h3>Anchored corner panel (dismissible, no dimming backdrop)</h3>
 <div class="demo-row" style="position: relative; height: 160px;">
-  <Button text="Open account menu" onclick={() => (showAnchored = true)} />
+  <Button
+    text="Open account menu"
+    onclick={() => (showAnchored = true)}
+    testId="sheet-anchored-trigger"
+  />
   <Sheet
     bind:open={showAnchored}
     side="right"
@@ -139,7 +144,11 @@
 
 <h3>Blocking backdrop (dimmed, not click-dismissible)</h3>
 <div class="demo-row">
-  <Button text="Open blocking sheet" onclick={() => (showBlocking = true)} />
+  <Button
+    text="Open blocking sheet"
+    onclick={() => (showBlocking = true)}
+    testId="sheet-blocking-trigger"
+  />
   <Sheet
     bind:open={showBlocking}
     side="right"
@@ -153,6 +162,30 @@
         A dimmed backdrop that blocks interaction with the page underneath but does not close when
         the overlay is clicked — the user must use the close button or an explicit action. Escape
         still closes.
+      </p>
+    {/snippet}
+  </Sheet>
+</div>
+
+<h3>Custom overlay label (overlayAriaLabel)</h3>
+<div class="demo-row">
+  <Button
+    text="Open with custom overlay label"
+    onclick={() => (showCustomOverlayLabel = true)}
+    testId="sheet-custom-overlay-label-trigger"
+  />
+  <Sheet
+    bind:open={showCustomOverlayLabel}
+    side="left"
+    title="Menu"
+    dismissOnOutsideClick={true}
+    overlayAriaLabel="Fermer"
+    testId="sheet-custom-overlay-label"
+  >
+    {#snippet content()}
+      <p>
+        The dismissible overlay's accessible name is overridden here via
+        <code>overlayAriaLabel</code>, instead of the default "Close sheet".
       </p>
     {/snippet}
   </Sheet>

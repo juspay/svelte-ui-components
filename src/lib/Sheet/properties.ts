@@ -23,6 +23,14 @@ export type OptionalSheetProperties = {
    * dimming backdrop — e.g. an anchored dropdown-style panel.
    */
   dismissOnOutsideClick?: boolean;
+  /**
+   * Accessible name (rendered as `aria-label`) for the overlay's `role="button"`
+   * wrapper. Only meaningful when the overlay is dismissible
+   * (`dismissOnOutsideClick`) — that's the only state where the overlay is
+   * announced as a button at all (see Accessibility below). Defaults to
+   * `"Close sheet"`; override for a more specific or localized wording.
+   */
+  overlayAriaLabel?: string;
   showCloseButton?: boolean;
   /**
    * Renders `title` through a real `<h1>`-`<h6>` heading element instead of

@@ -11,6 +11,7 @@
     title,
     showOverlay = true,
     dismissOnOutsideClick = showOverlay,
+    overlayAriaLabel,
     showCloseButton = true,
     headingLevel,
     testId,
@@ -58,6 +59,23 @@
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
+      close();
+      return;
+    }
+
+    // The overlay only carries role="button" while it is dismissible, and a
+    // role="button" has to answer Enter/Space as well as click (WCAG 2.1
+    // SC 2.1.1) -- tabindex="-1" keeps it out of the Tab sequence, but the
+    // focus trap can still park focus here, and browse-mode AT reaches it.
+    // The target check is what stops an Enter pressed on a focusable
+    // descendant from bubbling up and reading as an activation of the overlay
+    // itself, exactly as handleOverlayClick already guards the click case.
+    if (
+      (event.key === 'Enter' || event.key === ' ') &&
+      dismissOnOutsideClick &&
+      event.target === overlayDiv
+    ) {
+      event.preventDefault();
       close();
       return;
     }
@@ -123,6 +141,20 @@
 </script>
 
 {#if open}
+  <!-- The overlay only carries role="button" -- and therefore an accessible
+       name -- while it is actually dismissible (dismissOnOutsideClick):
+       clicking it is already a guarded no-op otherwise (see
+       handleOverlayClick), and announcing a no-op as a focusable "button" is
+       worse for assistive tech than leaving it out of the accessibility tree
+       entirely. Modal's overlay applies the same reasoning for the same
+       shape of problem. When it IS dismissible, a role="button" node with no
+       accessible name would be announced as an unlabelled button, so it gets
+       one -- "Close sheet" by default, overridable via `overlayAriaLabel`.
+       The fallback is `||` on a trimmed value rather than `??`: an empty or
+       whitespace-only override is a name a screen reader cannot announce, so
+       it has to fall back like an absent one. `??` would forward it and leave
+       the overlay silently unnamed, which is the defect this whole block
+       exists to prevent. -->
   <div
     bind:this={overlayDiv}
     use:scrollLockAction
@@ -132,7 +164,8 @@
       : 'overlay-noninteractive'} {classes ?? ''}"
     onclick={handleOverlayClick}
     onkeydown={handleKeyDown}
-    role="button"
+    role={dismissOnOutsideClick ? 'button' : null}
+    aria-label={dismissOnOutsideClick ? overlayAriaLabel?.trim() || 'Close sheet' : null}
     tabindex="-1"
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
@@ -221,6 +254,22 @@
     z-index: var(--sheet-z-index, 16);
     pointer-events: auto;
     outline: none;
+  }
+
+  /* The panel itself is the initial focus target on open (scrollLockAction
+     focuses it directly, and it's the Tab-trap's own boundary), so removing
+     its outline unconditionally left a keyboard user with no visible sign
+     focus had moved into the sheet at all -- particularly visible on the
+     "Raw" variant, which has no focusable child for focus to land on
+     instead. :focus-visible restores a ring precisely when the browser
+     judges it's from keyboard/programmatic focus rather than a mouse click,
+     so clicking the trigger still shows nothing new. outline-offset is
+     negative (inset) rather than the usual positive offset other components
+     in this library use, because left/right/top/bottom panels sit flush
+     against a viewport edge -- a positive offset would clip there. */
+  .sheet-panel:focus-visible {
+    outline: var(--sheet-panel-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--sheet-panel-focus-outline-offset, -2px);
   }
 
   /* --sheet-top/-right/-bottom/-left all default to the previous hardcoded

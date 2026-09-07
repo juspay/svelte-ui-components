@@ -47,6 +47,7 @@ A centered confirmation dialog, with the title rendered as a real `<h2>`:
 | title                 | `string`           | No       | `-`                   | Text displayed in the sheet header. When provided, a header bar is rendered at the top of the panel with this title.                                                                                                                                                                                                                                                                                                                                    |
 | showOverlay           | `boolean`          | No       | `true`                | When true, shows a dark semi-transparent overlay behind the sheet panel. When false, the overlay is transparent with pointer-events disabled on the backdrop.                                                                                                                                                                                                                                                                                           |
 | dismissOnOutsideClick | `boolean`          | No       | mirrors `showOverlay` | Whether clicking outside the panel dismisses the sheet, independent of `showOverlay`'s visual tint. Defaults to mirroring `showOverlay`. Set `true` alongside `showOverlay={false}` for a dismissible sheet with no dimming backdrop — e.g. an anchored dropdown-style panel.                                                                                                                                                                           |
+| overlayAriaLabel      | `string`           | No       | `'Close sheet'`       | Accessible name (rendered as `aria-label`) for the overlay's `role="button"` wrapper. Only meaningful when `dismissOnOutsideClick` is true — that's the only state in which the overlay is announced as a button at all. An empty or whitespace-only value falls back to the default rather than being forwarded, since an unannounceable name is worse than none. See Accessibility below.                                                                                                                                                                                                       |
 | showCloseButton       | `boolean`          | No       | `true`                | When true, renders a close button (X) in the sheet header. Clicking it closes the sheet and fires the onclose event.                                                                                                                                                                                                                                                                                                                                    |
 | headingLevel          | `1\|2\|3\|4\|5\|6` | No       | `-`                   | Renders `title` through a real `<h1>`-`<h6>` element instead of the default `<span>`. Omit to keep the existing `<span>` markup. Pick the level that is correct for the surrounding document outline.                                                                                                                                                                                                                                                   |
 | testId                | `string`           | No       | `-`                   | Value for data-pw on the overlay container element. The close button gets `{testId}-close` as its data-pw value. Used for Playwright test selectors.                                                                                                                                                                                                                                                                                                    |
@@ -112,14 +113,18 @@ Override these custom properties to theme the component.
 | `--sheet-footer-padding`                | `16px 20px`                      | padding          | Inner padding of the footer area.                                                                                                                                                    |
 | `--sheet-footer-background`             | `inherit`                        | background-color | Background color of the footer area.                                                                                                                                                 |
 | `--sheet-footer-border-top`             | `1px solid #e0e0e0`              | border-top       | Top border of the footer, visually separating it from the content area.                                                                                                              |
+| `--sheet-panel-focus-outline`           | `2px solid #2563eb`              | outline          | Focus ring drawn on the panel when it (not one of its children) holds keyboard/programmatic focus — e.g. immediately on open, or on the "Raw" variant with no focusable content.     |
+| `--sheet-panel-focus-outline-offset`    | `-2px`                           | outline-offset   | Offset of that ring. Negative (inset) by default so it stays visible on edge-anchored sides, which sit flush against the viewport edge.                                              |
 
 ## Accessibility
 
 - The sheet panel has `role="dialog"` and `aria-modal="true"` for screen reader support.
-- Focus is automatically moved to the sheet panel when it opens.
+- Focus is automatically moved to the sheet panel when it opens, and shows a visible focus ring (`--sheet-panel-focus-outline`) when that focus is keyboard/programmatic rather than from a mouse click.
 - Focus is trapped within the sheet panel using Tab/Shift+Tab cycling.
 - Pressing the Escape key closes the sheet.
 - The close button has `aria-label="Close"` for screen reader identification.
+- The overlay carries `role="button"` and an accessible name (`overlayAriaLabel`, default `"Close sheet"`) only while `dismissOnOutsideClick` is true — clicking it is a no-op otherwise, so it is left out of the accessibility tree entirely rather than announced as a button that does nothing (the same rule Modal's overlay follows).
+- While it carries that role, the overlay answers Enter and Space as well as click, as WCAG 2.1 SC 2.1.1 requires of anything announced as a button. It stays out of the Tab sequence (`tabindex="-1"`); the focus trap and browse-mode assistive tech are what reach it.
 
 ## Type Reference
 
@@ -155,6 +160,14 @@ A centered dialog with a real heading (`heading-level`, reflecting `headingLevel
 ```html
 <sui-sheet open side="center" title="Delete project?" heading-level="2">
   <p>This can't be undone.</p>
+</sui-sheet>
+```
+
+A dismissible sheet with a localized overlay label (`overlay-aria-label`, reflecting `overlayAriaLabel`):
+
+```html
+<sui-sheet open dismiss-on-outside-click overlay-aria-label="Fermer">
+  <p>Sheet body content</p>
 </sui-sheet>
 ```
 

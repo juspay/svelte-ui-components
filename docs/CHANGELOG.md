@@ -2,7 +2,57 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.1.1)
+
+Follow-up to a9f2e1c, closing the review findings raised on #558 after it
+merged. All three are in the version-bump logic that release now depends
+on, so they are worth landing before the next release rather than after.
+
+`readLog` capped history at 200 commits. If more than 200 landed since
+the last release, the boundary commit was not in the window,
+`unreleasedCommits` fell back to returning the whole range, and commits
+from already-released versions could be counted again — inflating the
+bump. That silently undermines the exact property the module exists to
+guarantee.
+
+"No boundary found" has two causes that were being conflated:
+
+- the whole history was read and holds no release commit, which is a
+fresh repository and genuinely all-unreleased;
+- the window ran out first, where the boundary exists but was not read.
+
+`readLog` now reports whether it truncated, and the second case throws.
+A release that stops is recoverable; a release that silently picks the
+wrong number is the failure this module was written to prevent. The cap
+moves to 5000, far past this repository's whole history (677 commits,
+360 KB with bodies), so it is a backstop against an unbounded read
+rather than a limit anything meets, and `maxBuffer` is raised because
+the 1 MB default is already only about three times the full log.
+
+The CLI guard compared `process.argv[1]` to `import.meta.filename`
+directly. Those are the path as invoked and the resolved module path, so
+a symlink or a differently-normalised invocation would skip `main()` and
+emit no version at all — silently, since the step would still exit 0.
+Both sides are now resolved with `realpathSync`.
+
+`release.yml`'s concurrency comment still described the race in terms of
+`git log -1`, which a9f2e1c replaced. The race is real and unchanged,
+but its mechanism is not what the comment said: each run now reads the
+full unreleased range from its own checkout, which is pinned to the SHA
+that triggered it, so two quick merges can still compute the same next
+version and the queued run fails at `npm publish` rather than racing.
+
+Verified: 20 unit tests, with the truncation case written first and
+watched failing (`expected [Function] to throw an error`). Both CLI
+modes run against the real repository — root reports PATCH with nothing
+since `chore(release): 4.1.1`, `--mcp` reports PATCH with nothing since
+`chore(release): mcp 4.0.2`. Lint 0, `pnpm check` exit 0 over both
+configs, 848 unit tests, release.yml still parses.
+
+-
+fix(release): stop a truncated history window inflating the version bump ([21509ac](https://github.com/juspay/svelte-ui-components/commit/21509acb22bd1030b838bc7ecddcf29d9f4e0f28))
+
+## [4.1.1](https://github.com/juspay/svelte-ui-components/compare/4.1.1..4.1.0) - 6 September 2026
 
 `Determine version bump type` read `git log -1`. That published 3.5.1: the
 range since 3.5.0 held `feat(events)!: remove the 3.x legacy spellings and

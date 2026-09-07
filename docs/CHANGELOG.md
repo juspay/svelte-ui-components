@@ -2,54 +2,108 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.8.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.0)
 
-Card had no way to put an arbitrary data-*/aria-* attribute on its root or
-render a tag other than &lt;div&gt;/&lt;a&gt;. Migrating TARA onto Card, that forced two
-workarounds: SessionActivityCard.svelte encoded `[data-state="waiting"]` as a
-second `classes` modifier instead of a real attribute, and backdrops/+page.svelte
-kept a hand-rolled &lt;figure&gt; wrapping an appearance-only Card because Card's own
-root could never itself be the &lt;figure&gt;.
+Both configs used a constant port — 43199 functional, 43200 visual —
+together with `reuseExistingServer`. That is safe with one checkout and
+wrong with several: the second run finds a server already listening,
+reuses it, and asserts against the other checkout's build.
 
-Two additive props close both gaps:
+It fails silently in both directions. Two sessions hit it here on the
+same day: one had a committed fix reported as absent because another
+worktree's build answered, and a full-suite run went from 539 passing to
+538 passing and one failure purely by moving to a private port.
 
-- `attrs?: Record&lt;string, string&gt;` spreads onto the card root, for consumers
-that key off attribute-selector CSS the way the rest of their app does.
-- `as?: 'div' | 'a' | 'figure'` overrides the rendered tag independent of
-`href`, for real sectioning-content semantics with no wrapper element.
+The port now comes from a hash of the checkout path, and two things make
+that a fix rather than a smaller version of the same gamble.
 
-Both are omitted by default, so the existing behaviour is unchanged: the root
-tag resolution stays exactly `&lt;a&gt;` when `href` is set, `&lt;div&gt;` otherwise, and
-no extra attributes are rendered. `as` set to anything but `'a'` suppresses
-`href`/`target`/`rel` and the synthetic role/tabindex/keydown shim applies
-instead when `onclick` is given, same as today's plain interactive `&lt;div&gt;`.
-`as="a"` with no `href` gets that same shim too, rather than being treated as
-an anchor with nothing to navigate to and no native focus/keyboard behaviour
-to fall back on -- the anchor/shim split checks `href` is actually set, not
-just that the resolved tag is `'a'`. A new spec covers Tab-reachability and
-Enter/Space activation for that case.
+The residual is loud. A collision only causes the original bug while
+`reuseExistingServer` is on, because that is what turns a clash into
+"asserted against the wrong build". Reuse is now limited to a port
+someone named deliberately; on a derived port vite's `--strictPort`
+refuses to start instead.
 
-`attrs` is spread first on the element, before Card's own class/style/
-data-pw/testID/role/tabindex/href/target/rel/onclick/onkeydown -- a later key
-in a Svelte attribute object wins over an earlier one of the same name, so
-attrs can only add attributes Card doesn't already manage, never override one
-(a new spec pins this: an attrs object trying to hijack data-pw/class/role is
-proven not to).
+And the range avoids the kernel. The ceiling is set by the ephemeral
+range, where the two platforms disagree: macOS starts at 49152 but
+Linux's `net.ipv4.ip_local_port_range` defaults to 32768, and CI runs on
+Linux. An earlier revision of this change reached 47999 and cited the
+macOS floor, which would have handed out ports the kernel may already
+have assigned to an outbound socket — EADDRINUSE for reasons unrelated to
+any checkout. The range is 10000-32000, below the lower of the two.
 
-Wires `attrs`/`as` through the web-component wrapper for check:wc-parity,
-reflecting `as` as an attribute to match what docs/Card.md already claimed,
-adds the two to docs/Card.md and the props table, and demos both (plus the
-collision guard and the as="a"-without-href case) on the Card gallery page.
+That costs width, and width is what keeps collisions rare: 11000 slots
+puts 34 worktrees near 5% rather than the 4% a wider range gave. Worth
+it, because a rare loud failure beats a rarer silent one. For scale, the
+first revision used 950 slots — about 45% across the worktrees on this
+machine, a coin flip on whether the fix worked at all.
 
-The new demo cards grow the /components/card gallery page further, so
-tests/visual/__screenshots__/card.png is regenerated via
-scripts/visual-test.sh --update-snapshots against the pinned Playwright
-container to match.
+`PW_PORT` is validated. It previously went through `Number()` unchecked,
+so `PW_PORT=foo` became NaN and surfaced later as an opaque "server never
+came up". A non-blank value that is not a whole number in range now fails
+immediately, naming it, and the message quotes the bound actually
+enforced for that offset — VISUAL sits at +1, so its highest usable
+override is one below MAX_PORT.
 
-Closes #521
+The tests pin their inputs rather than reading the environment. Both
+`override` and `ci` are explicit, because leaving either implicit makes
+the assertions depend on the machine: verified by running the suite with
+`PW_PORT=45000`, which failed 5 of 13, and earlier by `CI=true`, which
+failed 1 and broke the build after this had passed locally.
+
+The container is unaffected. `scripts/visual-test.sh` passes no `-p`, so
+the preview server and the tests share the container's own network
+namespace; every checkout mounts at /work and derives the same port
+there, which is correct because nothing outside can reach it.
+
+Verified: this checkout derives 24756/24757, `fix/close-audit-gaps`
+18420, the container 18282 — all below 32768. 12 unit tests, passing
+identically with a clean environment, with `PW_PORT=45000`, and with
+`CI=true`. Lint 0, `pnpm check` exit 0 over both configs, 885 unit, 521
+Playwright, 93 visual with no baselines moved.
 
 -
+fix(test): derive Playwright's port from the checkout instead of fixing it ([72adbbd](https://github.com/juspay/svelte-ui-components/commit/72adbbdf2db2686c88e54ec819ff195a577d4eb9))
+
+## [4.9.0](https://github.com/juspay/svelte-ui-components/compare/4.9.0..4.8.0) - 7 September 2026
+
+Follow-up to #524, which shipped in 4.x before these two defects were
+caught. Both are reachable only from a plain-JS or web-component
+consumer, where nothing enforces the TypeScript shape of `sanitize`.
+
+`narrow()` and `resolveTagAllowList()` assumed `allowedProtocols` and
+`allowedTags` were arrays of strings. A consumer passing a string, an
+object, or null — which the type system cannot stop across the custom
+element boundary — reached `.map()` on a non-array and threw an
+uncaught TypeError out of the render, taking the whole component with
+it. Both now check with `Array.isArray` and a `typeof` filter and fall
+back to today's defaults, which is what every other option in this
+prop already does when omitted.
+
+`allowedTags` was also compared case-sensitively while
+`allowedProtocols` was already lower-cased on the way in. So
+`allowedTags: ['STRONG']` silently dropped every `&lt;strong&gt;` instead of
+allowing it — the one outcome a caller writing that could not have
+intended. It is now normalised the same way its sibling is.
+
+The spec covers both: a non-array and a wrong-typed member for each
+option, and an upper-case tag surviving. `docs/MarkdownText.md` gains
+the matching note that the list is case-insensitive.
+
+No behaviour changes for a caller passing well-formed lower-case
+options, which is every caller the types allow.
+
+-
+feat(chatcomposer): support async boolean onsubmit and per-control disable ([6806370](https://github.com/juspay/svelte-ui-components/commit/6806370e43c61568e58981ae3e5f65796b8f0011))
+-
+feat(modal): accessible name, ARIA dialog semantics, a real focus trap and a unified ondismiss ([ee69c9d](https://github.com/juspay/svelte-ui-components/commit/ee69c9dbf3bdd34ffd14e9ed55270f42dd10df08))
+-
 feat(card): add attribute passthrough and a root-tag override ([9fdaff1](https://github.com/juspay/svelte-ui-components/commit/9fdaff1b2a4fdd594d2871eb9c04554682c40346))
+-
+feat(sheet): add a centered dialog variant and a real heading option ([481ecd4](https://github.com/juspay/svelte-ui-components/commit/481ecd4424eb443be86bee152d297533626a7f9e))
+-
+feat(toolbar): add backHref to render the back control as a real link ([17d3bac](https://github.com/juspay/svelte-ui-components/commit/17d3bac78e317f5d02da586a5471e40cd968afeb))
+-
+fix(markdowntext): guard malformed sanitize options and lower-case the tag allow-list ([3cf493f](https://github.com/juspay/svelte-ui-components/commit/3cf493fbbfce734037595e4c05888473a0ae6937))
 
 ## [4.8.0](https://github.com/juspay/svelte-ui-components/compare/4.8.0..4.7.0) - 7 September 2026
 

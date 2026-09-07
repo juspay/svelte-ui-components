@@ -2,7 +2,77 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.0)
+
+An accessibility-tree sweep over 87 Lighthouse routes — Chrome's own AX tree, the tree a
+screen reader consumes — reported control-has-no-accessible-name against three shapes in
+this library. All three are fixed here, along with two further instances of the same
+defect that the sweep could not reach.
+
+Checkbox set aria-label on its role="checkbox" box only when `text` was empty, so a
+checkbox showing a visible label exposed an unnamed node. The visible text is a sibling
+span, and the wrapping label does not name the box either — label/for names form
+controls, not an element that merely carries a role. The box now takes the visible text
+when there is any, an explicit ariaLabel only when there is none, and stays unnamed only
+when there is neither.
+
+That precedence is the point, and the first version of this fix had it backwards: it let
+ariaLabel win over visible text, which WCAG 2.5.3 forbids. A control reading "Accept
+terms" must carry that text in its accessible name, or a speech-input user is left saying
+a name they cannot see. properties.ts had documented exactly this all along — "Ignored
+when `text` is non-empty: a visible label must stay part of the accessible name (WCAG
+2.5.3)" — so the implementation contradicted its own contract, and a test and a demo had
+been written to assert the contradiction. All three now agree.
+
+A blank ariaLabel is treated as absent rather than as an empty name, in Checkbox and in
+SplitButton's triggerAriaLabel: `??` rejects only null and undefined, so an empty string
+was passed through as aria-label="" and left the control unnamed, which is the bug both
+of these exist to fix.
+
+Table rendered a real, correctly named Button inside Menu's inert-trigger branch at three
+call sites: the action-group row menu, the popup row menu, and the column header filter.
+That branch wraps the snippet in a focusable role="button" whose aria-label resolves to
+null, so each contributed two tab stops for one control and left the outer one nameless.
+All three now set interactiveTrigger and spread the wiring Menu hands the snippet onto
+the Button, which is the shape the docs pages already use. The header filter is a third
+site the sweep never reached, since no audited route renders a filterable column.
+
+SplitButton is the opposite case and needs the opposite fix. Its trigger snippet holds no
+control — only a chevron — so Menu's inert branch is correct there; what was missing is
+that Menu names that wrapper from triggerAriaLabel and SplitButton never passed one. The
+trigger was therefore a focusable role="button" with no accessible name and no text to
+fall back on. It gains an optional triggerAriaLabel, defaulting to `More &lt;text&gt; options`
+so it stays distinct from the primary button beside it, and the custom element exposes it
+as trigger-aria-label.
+
+Tests assert the computed accessible name rather than the label text, because the old
+behaviour passes any test that reads the visible text, and count focusable descendants
+rather than looking for the Button, because the old shape passes any test that only looks
+for the Button. Negative controls, run with the tests kept and each fix reverted in turn:
+8 of 9 fail for Checkbox and Table, 3 of 4 for SplitButton. In both cases the test that
+still passes is the behaviour the old code already had right — the no-visible-text
+checkbox, and the menu still opening — which is what makes the failing ones meaningful.
+
+The page-wide sweep asserts the computed accessible name rather than the presence of
+aria-label or aria-labelledby. An aria-labelledby pointing at an id that does not exist
+is a non-null attribute and an unnamed control, so the attribute check would have
+reported the page clean in precisely the case the sweep exists to catch.
+
+Docs: SplitButton.md gains triggerAriaLabel and its default naming behaviour, and
+Menu.md's props table gains interactiveTrigger and usePortal, which were reachable props
+with no row.
+
+The checkbox and split-button visual baselines are regenerated, in the pinned container,
+because both demo pages gained sections. The diffs are additive only — every control that
+existed before is byte-identical.
+
+Closes #553
+Closes #554
+
+-
+fix(a11y): name every control that Menu and Checkbox left anonymous ([f576063](https://github.com/juspay/svelte-ui-components/commit/f576063211ea9eed14a22c3ec09f3bee1824dfb7))
+
+## [4.10.0](https://github.com/juspay/svelte-ui-components/compare/4.10.0..4.9.2) - 7 September 2026
 
 Eight Playwright specs covering the keyboard and ARIA contracts of
 Accordion, Choicebox, CommandMenu, ContextMenu, Pagination, Radio, Slider

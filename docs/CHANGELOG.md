@@ -2,7 +2,65 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.1)
+
+Follow-up to a review finding on #560, which flagged `onclick` on
+SplitButton.wc.svelte as a host-accessor collision. Declining it there was
+right — that PR added one line to the file and `onclick` was pre-existing — but
+the finding itself was sound, and larger than the one prop it named.
+
+The reserved set is the platform's whole list of event-handler accessors: every
+`on*` own-property name reachable by walking `HTMLElement.prototype`'s chain in
+Chromium, 110 of them through Element, Node and EventTarget. Enumerated rather
+than curated, which is the same "ask the browser" method the ARIAMixin list was
+built with, and why `onselect` is included (a genuine host accessor) while
+`onopen`, `ondismiss`, `onretry` and the library's other 80-odd bespoke handler
+names are not: they collide with nothing.
+
+The first version of this listed only the 25 names some wrapper currently
+declares. That reads as thorough and is not — a guard built from present usage
+cannot fail on a name nobody has used yet, so a wrapper adding `oncontextmenu`
+tomorrow would have walked straight past the check whose entire job is catching
+that. Caught in review before merge.
+
+Of those 110, 25 are declared somewhere, accounting for 91 declarations across
+the 86 wrappers. Each one replaces the host's own accessor, so
+`element.onclick = fn` sets the component prop instead of registering a DOM
+handler. On `sui-checkbox` and `sui-toggle`
+that is not merely a shadowed accessor but a changed signature: their `onclick`
+is typed `(checked: boolean) =&gt; void`, so the assignment is called with a
+boolean where every other element in the document hands back a MouseEvent.
+
+Two things are unaffected, and the note in the README says so rather than
+overstating the problem: the inline attribute never used this accessor, so
+`&lt;sui-button onclick="..."&gt;` is unchanged, and `addEventListener` is untouched.
+
+Nothing is renamed here. Renaming is a breaking change to every element's
+JavaScript API and the set has to move at once, at a major — the same reasoning
+that held the `aria*` collisions until 4.0.0. What this does is stop the debt
+growing: the 91 are recorded, a wrapper that declares a ninety-second fails, and
+one that gets fixed has to be deleted from the list rather than quietly
+re-added.
+
+Deliberately a separate list from HOST_RESERVED_PROPS rather than an addition to
+it. That set is *excluded* from the parity requirement, so folding these in
+would have stopped a wrapper that simply forgot to declare `onclick` from being
+reported missing — masking the exact class of gap this suite exists to catch.
+Confirmed rather than assumed: removing `onclick` from Avatar.wc.svelte fails
+both the new "delete from KNOWN_HOST_EVENT_HANDLER_DECLARATIONS" assertion and
+the original "Avatar.wc.svelte is missing: onclick", so parity is intact.
+
+Adding `onblur` to a wrapper that did not have it fails the new guard by name,
+and so does `oncontextmenu` — one of the names the first version would have
+missed, which is the specific hole the widened set closes.
+
+Verified: lint 0, `pnpm check` 0 errors over both configs, 915 unit. No runtime
+code is touched — the change is the parity script, its tests, and the README.
+
+-
+test(wc): record the 91 wrapper props that shadow native event handlers ([3d16f17](https://github.com/juspay/svelte-ui-components/commit/3d16f17839f8a6403b5d8db81f9991c1302d51b9))
+
+## [4.10.1](https://github.com/juspay/svelte-ui-components/compare/4.10.1..4.10.0) - 7 September 2026
 
 An accessibility-tree sweep over 87 Lighthouse routes — Chrome's own AX tree, the tree a
 screen reader consumes — reported control-has-no-accessible-name against three shapes in

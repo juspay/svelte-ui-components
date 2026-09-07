@@ -58,6 +58,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | `--accordion-trigger-cursor`          | `pointer`       | Cursor style for the trigger element.                         |
 | `--accordion-trigger-disabled-cursor` | `not-allowed`   | Cursor style for the trigger element when `disabled` is true. |
 | `--accordion-transition`              | `0.2s ease-out` | Transition value for the `grid-template-rows` animation.      |
+| `--accordion-align-self`              | `start`         | `align-self` for the panel when it is a grid/flex item of a consumer's own container (see [#550](https://github.com/juspay/svelte-ui-components/issues/550)). Override to `stretch` if you want the panel stretched to the container's row/column instead. |
 
 ## Web Component
 

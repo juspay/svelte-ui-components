@@ -83,6 +83,22 @@
     display: grid;
     grid-template-rows: 0fr;
     overflow: hidden;
+    /* overflow: hidden drops this element's automatic minimum size to zero, so
+       when it is placed as an item of a consumer's own grid or flex container
+       it is otherwise free to be stretched down to whatever size that
+       container hands it -- as small as 0px -- independent of how tall its
+       own children actually are (issue #550). align-self: start opts the
+       panel out of that stretch so it always sizes from its own expanded
+       content instead. It is inert when the panel is not a grid or flex item,
+       and does not change the collapse animation: collapsed still resolves
+       to 0px either way.
+
+       Exposed as --accordion-align-self rather than hardcoded: Svelte's
+       scoped class raises .accordion's specificity above a plain utility
+       class passed through `classes`, so a consumer who legitimately wants
+       the panel stretched (or centered, etc.) could not otherwise override
+       this one declaration without reaching for :global() or !important. */
+    align-self: var(--accordion-align-self, start);
     transition: grid-template-rows var(--accordion-transition, 0.2s ease-out);
   }
 

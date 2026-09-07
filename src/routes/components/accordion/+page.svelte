@@ -3,6 +3,7 @@
 
   let accordionExpanded = $state(false);
   let latePanelId = $state<string>();
+  let gridAccordionExpanded = $state(false);
 </script>
 
 <div class="page-header">
@@ -97,4 +98,57 @@
       <p>Two-year manufacturer warranty.</p>
     </div>
   </Accordion>
+</div>
+
+<h3>Inside a grid container</h3>
+<p>
+  A <code>display: grid</code> parent stretches its items into an auto-sized row by default. The
+  panel needs <code>overflow: hidden</code> to animate <code>grid-template-rows</code>, but
+  <code>overflow</code> other than <code>visible</code> also drops an element's automatic minimum
+  size to zero — so as a grid item the panel is squeezed down to whatever height the grid happens to
+  hand it, disconnected from what its own content actually needs, rather than growing to fit.
+  Depending on the surrounding layout that can mean a sliver, or nothing at all. The children are
+  still in the DOM and correctly rendered; only the box around them is wrong.
+  <code>align-self: start</code> on the panel opts it out of that stretch so it always sizes from its
+  own expanded content instead.
+</p>
+<div class="demo-row" style="flex-direction: column; max-width: 500px;">
+  <button
+    class="toggle-btn"
+    data-pw="accordion-grid-toggle"
+    onclick={() => (gridAccordionExpanded = !gridAccordionExpanded)}
+  >
+    {gridAccordionExpanded ? 'Collapse' : 'Expand'} Accordion (grid parent)
+  </button>
+  <div
+    data-pw="accordion-grid-parent"
+    style="display: grid; align-content: start; overflow-y: auto; height: 300px; border: 1px solid #ccc; border-radius: 8px;"
+  >
+    <Accordion expand={gridAccordionExpanded} testId="accordion-grid-nested">
+      <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+        <p>
+          This paragraph must stay visible once the accordion above is expanded, even though its
+          direct parent is a grid container rather than a block one.
+        </p>
+        <p>
+          A second paragraph of the same content keeps the panel's expanded height comfortably
+          taller than the 300px grid parent, proving the fix reads real content height rather than
+          coincidentally fitting inside a squeezed row.
+        </p>
+        <p>
+          A third paragraph pads the expanded height further still, so a regression that shrinks the
+          row back down is unmistakably a missing few hundred pixels, not a rounding difference.
+        </p>
+        <p>
+          A fourth paragraph, for the same reason: the more of this content a broken build hides,
+          the less plausible it is that a future change could pass this check by accident.
+        </p>
+        <p>
+          A fifth and final paragraph brings the panel's true content height well past the grid
+          parent's own 300px, so the parent's <code>overflow-y: auto</code> is the thing that scrolls
+          once the fix is in place — not the panel silently discarding the rest.
+        </p>
+      </div>
+    </Accordion>
+  </div>
 </div>

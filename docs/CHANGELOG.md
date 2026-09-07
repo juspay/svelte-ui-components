@@ -2,7 +2,38 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.9.1)
+
+A duplicated key is last-wins in JavaScript, so the object stays
+structurally valid, every existing parity check still sees a complete
+map, and the only symptom is that the earlier declaration's `attribute`
+quietly does not exist at runtime. Nothing was looking for it.
+
+Not hypothetical. Resolving a rebase where two branches had each added
+`sliderAriaLabel` to `Slider.wc.svelte`, git's auto-merge kept both — two
+entries for one prop whose `attribute` differed, one `aria-label` and one
+`aria-labelledby`. It was caught by reading the merged file, which is not
+a control, and a rebase is exactly where nobody reads the parts that
+merged cleanly.
+
+The check is over `WrapperParity.declared`, which is the raw array from
+the parser. Everything downstream funnels it through `new Set(props)` for
+lookups, and that is where the duplicate disappears.
+
+Controls:
+
+- Planting the real duplicate back into Slider.wc.svelte fails the new
+test with `declared more than once: Slider.wc.svelte:sliderAriaLabel`,
+and the other 90 assertions in the file still pass — which is the gap
+stated as a measurement rather than an argument.
+- Restored, all 91 pass.
+
+Verified: lint 0, `check:wc-parity` clean, 874 unit tests.
+
+-
+test(wc): catch a prop declared twice in a customElement props map ([419b921](https://github.com/juspay/svelte-ui-components/commit/419b921ec235b12ddc6e2434a5f4fb0b1ace8ae8))
+
+## [4.9.1](https://github.com/juspay/svelte-ui-components/compare/4.9.1..4.9.0) - 7 September 2026
 
 Both configs used a constant port — 43199 functional, 43200 visual —
 together with `reuseExistingServer`. That is safe with one checkout and

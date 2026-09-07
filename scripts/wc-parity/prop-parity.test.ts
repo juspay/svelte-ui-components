@@ -82,6 +82,31 @@ describe('host-reserved names are excluded deliberately, not forgotten', () => {
     ).toEqual([]);
   });
 
+  it('declares no prop twice in one customElement props map', () => {
+    // A duplicated key is last-wins in JavaScript, so the object stays
+    // structurally valid, every other check still sees a complete map, and the
+    // only symptom is that the *earlier* declaration's `attribute` quietly does
+    // not exist at runtime. Nothing here was looking for it.
+    //
+    // Not hypothetical: a git auto-merge of two branches that had each added
+    // `sliderAriaLabel` to Slider.wc.svelte produced exactly this, with two
+    // entries whose `attribute` differed. It was caught by reading the merged
+    // file, which is not a control.
+    const duplicated = parity.flatMap((entry) => {
+      const seen = new Set<string>();
+      const twice = new Set<string>();
+      for (const prop of entry.declared) {
+        if (seen.has(prop)) {
+          twice.add(prop);
+        }
+        seen.add(prop);
+      }
+      return [...twice].map((prop) => `${entry.wrapper}:${prop}`);
+    });
+
+    expect(duplicated, `declared more than once: ${duplicated.join(', ')}`).toEqual([]);
+  });
+
   it('reports which components want a reserved name, so the debt stays visible', () => {
     const wanted = parity
       .filter((entry) => entry.reserved.length > 0)

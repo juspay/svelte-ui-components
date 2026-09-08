@@ -2,7 +2,27 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.2)
+
+The descendant sanitizer stripped every href-like attribute not starting
+with '#'. Brand marks encode their art as a pattern fill whose &lt;image
+xlink:href&gt; carries a data:image/* payload — the payload IS the artwork,
+so those logo icons rendered as valid but invisible SVGs (lighthouse
+BZ-6079/6080: Modal header logos, marketing-channel table icons).
+
+A data:image/* value cannot fetch (it carries its bytes), so allow it —
+but only on image-rendering elements (&lt;image&gt;, &lt;feImage&gt;), where the
+payload is rasterized with no script context. Everywhere else (&lt;use&gt;,
+&lt;a&gt;, …) stays fragment-only, and javascript:/remote URLs stay stripped
+on all elements. Media-type matching is case-insensitive, as MIME types
+are. Addresses CodeRabbit's element-scoping and case-sensitivity findings.
+
+Covered by the new spec (pattern art + use-fragment survive; data: on
+&lt;use&gt;/&lt;a&gt;, remote, and javascript: hrefs stripped) plus the existing
+allowlist/descendant suites — all green; the new spec fails against the
+pre-fix predicate.
+
+## [4.11.2](https://github.com/juspay/svelte-ui-components/compare/4.11.2..4.11.1) - 8 September 2026
 
 Two things #466 asked for, plus a correction to the issue's own premise.
 

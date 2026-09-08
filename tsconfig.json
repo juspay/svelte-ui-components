@@ -10,7 +10,8 @@
     "sourceMap": true,
     "strict": true,
     "module": "ES2022",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "types": ["node"]
   },
   "exclude": ["node_modules", "src/wc"]
 }

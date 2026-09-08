@@ -1,4 +1,5 @@
 import { partyOf } from './roles';
+import { prefersReducedMotion } from '../utils';
 import type {
   ChatControllerOptions,
   ChatMessageData,
@@ -8,14 +9,6 @@ import type {
 
 const REVEAL_CHARS_PER_TICK = 2;
 const REVEAL_INTERVAL_MS = 22;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
 
 let idCounter = 0;
 

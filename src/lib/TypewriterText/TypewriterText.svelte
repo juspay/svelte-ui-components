@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, untrack } from 'svelte';
+  import { prefersReducedMotion } from '../utils';
   import type { TypewriterTextProperties, TypewriterCharacterDelayRange } from './properties';
 
   let {
@@ -75,7 +76,34 @@
     return speed;
   };
 
+  // Disclose everything still pending at once. The whitespace count has to be rebuilt
+  // from the text itself because the per-character path that normally maintains it is
+  // skipped entirely, and a later continuation would otherwise resume from a count that
+  // never saw the revealed suffix.
+  const revealRemainingText = (): void => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    const hadRemainingText = currentIndex < text.length;
+    displayedText = text;
+    currentIndex = text.length;
+    revealedWordCount = countWhitespace(text);
+    if (hadRemainingText) {
+      onprogress?.({ index: currentIndex, total: text.length, displayedText });
+    }
+  };
+
   const typeNextCharacter = (): void => {
+    // Typing IS the animation here, so a reduced-motion request has to suppress the
+    // reveal itself rather than a transition around it: disclose the text instead.
+    // `ChatController` already bypasses its own drain loop on this setting, and the two
+    // reveal implementations have to answer it identically — a consumer composing this
+    // component through `Chat`'s `messageBody` snippet is running both at once.
+    if (prefersReducedMotion()) {
+      revealRemainingText();
+      return;
+    }
     if (currentIndex < text.length) {
       const revealedCharacter = text[currentIndex];
       const revealedCharacterIndex = currentIndex;
@@ -122,6 +150,7 @@
         if (currentIndex >= previousTextLength) {
           if (timeoutId !== null) {
             clearTimeout(timeoutId);
+            timeoutId = null;
           }
           typeNextCharacter();
         }
@@ -133,16 +162,7 @@
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
     if (!isStreaming && text.length > 0) {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      const hadRemainingText = currentIndex < text.length;
-      displayedText = text;
-      currentIndex = text.length;
-      revealedWordCount = countWhitespace(text);
-      if (hadRemainingText) {
-        onprogress?.({ index: currentIndex, total: text.length, displayedText });
-      }
+      revealRemainingText();
     }
   });
 

@@ -2,7 +2,98 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.5)
+
+Pill's root is a non-interactive `&lt;div&gt;`, with a synthetic `role="button"` /
+`tabindex="0"` / keydown shim bolted on when `onclick` is supplied. That covers a
+plain click target, but it cannot express a chip that is a real control -- a
+disclosure chip owning `aria-expanded`, or a toggle chip owning `aria-pressed`.
+This is why ToolCallLog kept bespoke `&lt;button&gt;` chips instead of composing Pill,
+recorded in its own docs as a deliberate deviation.
+
+`as="button"` renders a real `&lt;button type="button"&gt;` root, so focus, activation
+and announcement come from the platform. `ariaExpanded` and `ariaPressed` are
+forwarded, and applied only when the pill actually is a control -- a button root,
+or a div with `onclick` -- since both attributes are meaningless on a label.
+
+With a button root Pill deliberately emits NO `role` and NO `tabindex`, and
+registers no keydown handler. Adding them on top of native semantics would
+duplicate the platform's own activation: Enter would fire the handler twice.
+
+`as` defaults to `'div'`, so every existing consumer renders byte-for-byte as
+before. Naming follows `Card`, which already types its root override as
+`as?: 'div' | 'a' | 'figure'`.
+
+Three things this surfaced that are worth stating rather than burying.
+
+**A button may not contain another button.** A dismissible pill is inherently two
+controls, so `as="button"` with `dismissible` cannot be honoured. Rather than emit
+invalid markup it degrades to the div root -- the same graceful-degradation rule
+Card applies to `as="a"` with no `href`. Asserted, including that the resulting
+subtree contains exactly one button.
+
+**`disabled` stays `aria-disabled`, not the native attribute.** A natively
+disabled button leaves the tab order entirely, so a keyboard user never reaches it
+and never learns it is disabled. Keeping `aria-disabled` matches the div root and
+keeps the chip discoverable while the handlers stay inert.
+
+**Opting into better semantics must not restyle the chip**, and my first attempt
+did. A native button arrives with user-agent styling a div never had, so I
+neutralised it with `font: inherit` -- which is a shorthand that also resets
+`line-height`, and `button.pill` outranks `.pill` on specificity. The result was a
+button chip 30px tall against the identical div's 25px. The visual-parity test
+caught it; the rule now touches only `margin`, `font-family` and `appearance`, and
+carries a comment saying why `font: inherit` must not come back.
+
+The web-component layer renames the two new props to `pillAriaExpanded` /
+`pillAriaPressed`, exactly as it already renames `title` to `pillTitle`: ARIAMixin
+reflects `ariaExpanded` and `ariaPressed` as accessors on every Element, so
+declaring them would replace the platform's own. The prop-parity guard caught this
+before it shipped, which is what it is for. The attributes are unchanged --
+`&lt;sui-pill as="button" aria-expanded="true"&gt;` works as written.
+
+The review caught a real defect that this change itself introduced, and it is
+worth recording rather than folding in quietly.
+
+`aria-disabled` was gated on `interactive` -- i.e. on an `onclick` being supplied
+-- while `aria-expanded` and `aria-pressed` were correctly gated on
+`exposesControlState`. A button root is a real, focusable control whether or not a
+handler was passed, so `&lt;Pill as="button" disabled text="X" /&gt;` rendered a
+focusable native `&lt;button&gt;` carrying neither `disabled` nor `aria-disabled`: a
+keyboard user could land on it with nothing announcing it was inert.
+
+This PR is what created that. Before it, the same props rendered a non-focusable
+`&lt;div&gt;` nobody could tab to, so the missing attribute cost nothing.
+
+The tests here missed it because every `as="button"` fixture had an `onclick`.
+The one shape that breaks is the one that was never rendered. Fixed by gating on
+`exposesControlState`, with a demo fixture that carries no handler and a test that
+fails without the fix (`Expected "true", Received ""`). The `exposesControlState`
+declaration now says why it must not be re-tightened onto `onclick`.
+
+The docs are corrected by the same change rather than merely clarified: a button
+root emits `aria-disabled` regardless of `onclick`, a div root only once an
+`onclick` makes it a control.
+
+Closes #469.
+
+The `pill.png` visual baseline is regenerated, because the demo page gained a
+section for these fixtures. The baseline was NOT updated blind: the failing
+comparison was inspected first (980x1219 -&gt; 980x1406, 3011 differing pixels), and
+the diff image confirms every pixel above the new section is unchanged, so the
+update records the addition rather than blessing a regression.
+
+Verified: lint 0, check 0, build 0, 919 unit (including the wc prop-parity guard),
+31 Playwright across the full Pill surface -- new interactive-root tests plus the
+pre-existing attrs, dismiss-colour, line-height and EmptyState-pill specs -- 605
+full functional, and 93 visual with 1 skipped.
+Red-green confirmed by disabling the button root and watching the root-element
+assertion fail while the rest held.
+
+-
+feat(pill): render a real button root for interactive chips ([a581f1e](https://github.com/juspay/svelte-ui-components/commit/a581f1e5a2b0ddeb2340ca24318d695049e4c58e))
+
+## [4.10.5](https://github.com/juspay/svelte-ui-components/compare/4.10.5..4.10.4) - 8 September 2026
 
 Two components in this library reveal text progressively, and only one of them
 answered the reader's motion preference.

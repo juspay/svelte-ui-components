@@ -64,7 +64,7 @@
 | 33  | Modal        | :white_check_mark: | Popup dialog for focused content or confirmations           |
 | 34  | Command Menu | :white_check_mark: | Full-screen action palette triggered by keyboard shortcut   |
 | 35  | Context Menu | :white_check_mark: | Right-click or long-press contextual action list            |
-| 36  | Drawer       | :x:                | Panel that slides in from a screen edge                     |
+| 36  | Drawer       | :white_check_mark: | Panel that slides in from a screen edge (ships as `Sheet`)  |
 | 37  | Menu         | :white_check_mark: | Dropdown action menu with typeahead and keyboard navigation |
 | 38  | Sheet        | :white_check_mark: | Side panel sliding from left or right screen edge           |
 
@@ -121,13 +121,37 @@
 
 ---
 
+## AI / Chat Primitives
+
+The library already ships a full chat surface — `Chat`, `ChatController`, `ChatMessage`,
+`ChatMessageList`, `ChatComposer`, `ChatHeader`, `ChatSuggestions`, `ChatToolStatus`,
+`ChatBubble`, `HITL`, `ThinkingIndicator`, `ToolCallLog`, `TaskList`, `TypewriterText`,
+`AttachmentChipRow`, `MarkdownText`, `SoundKit`. The entries below are the next layer of
+answer-rendering primitives, none of which exist yet.
+
+These are **proposals, not specs.** None is scoped, named definitively, or estimated; each
+needs its own issue before implementation. Listed here so they stop being invisible.
+
+| #   | Component      | Status | Description                                                                                    |
+| --- | -------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| 55  | Sources        | :x:    | Collapsible list of the citations a response drew from, shown with or below a `ChatMessage`    |
+| 56  | InlineCitation | :x:    | Inline numbered reference inside message text that expands to a source — pairs with `Sources`  |
+| 57  | Context        | :x:    | Compact context-window / token-usage indicator for the active conversation                     |
+| 58  | Checkpoint     | :x:    | Marker in the message list denoting a restorable point; composes with `ChatController.retry()` |
+| 59  | Queue          | :x:    | Indicator for a prompt queued while one is still streaming, or for multi-step agent task lists |
+
+Naming note: `Context` is proposed for context-window usage and is unrelated to the existing
+`ContextMenu`, which is a right-click/dropdown menu. If both ever ship, one needs renaming.
+
+---
+
 ## Summary
 
 | Metric                              | Count |
 | ----------------------------------- | ----- |
-| **Total Components (this roadmap)** | 54    |
-| **Available**                       | 44    |
-| **To Build**                        | 10    |
+| **Total Components (this roadmap)** | 59    |
+| **Available**                       | 45    |
+| **To Build**                        | 14    |
 
 ---
 

@@ -2,7 +2,65 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.1)
+
+Two things #466 asked for, plus a correction to the issue's own premise.
+
+## The AI / Chat primitives section
+
+The library ships a full chat surface -- Chat, ChatController, ChatMessage,
+ChatMessageList, ChatComposer, ChatHeader, ChatSuggestions, ChatToolStatus,
+ChatBubble, HITL, ThinkingIndicator, ToolCallLog, TaskList, TypewriterText,
+AttachmentChipRow, MarkdownText, SoundKit -- and the roadmap had no AI or chat
+section at all, so the next layer of answer-rendering primitives was invisible to
+anyone reading it.
+
+Added as a section of five: Sources, InlineCitation, Context, Checkpoint, Queue.
+Each is marked explicitly as a proposal rather than a spec, needing its own issue
+before implementation, so nobody reads the table as a commitment.
+
+Recorded a naming collision while it is cheap to notice: the proposed `Context`
+(context-window / token usage) is unrelated to the shipped `ContextMenu`
+(right-click menu). If both ever ship, one needs renaming.
+
+## The duplicate entry
+
+Row 36 `Drawer` -- "Panel that slides in from a screen edge" -- was marked as not
+built, while row 38 `Sheet` -- "Side panel sliding from left or right screen edge"
+-- sat two rows below it marked shipped. They are the same component listed twice.
+docs/Sheet.md opens "A panel component that slides in from any edge of the screen
+(left, right, top, or bottom)", which is row 36's description verbatim.
+
+Marked shipped and annotated "(ships as `Sheet`)" rather than deleted, so the
+numbering that the rest of the file and the Summary depend on stays stable.
+
+## Correcting the issue's premise
+
+#466 lists Checkbox, Radio, Avatar, Combobox, Pagination, Menu, Sheet, Tabs,
+Calendar and EmptyState as wrongly marked `:x:`. None of those carries an `:x:`
+today -- they were corrected at some point after the issue was filed. The ten
+entries still marked unbuilt are a different set (Feedback, Code Block,
+Description, Entity, Error, Drawer, Show More, Material, Project Banner, Context
+Card), and of those only Drawer is demonstrably already shipped.
+
+I checked each of the ten against `src/lib/` rather than trusting the list. Two
+others are arguable -- `Material` ("elevated surface with shadow and blur") is
+close to `Card`, and `Project Banner` is close to `Banner` -- but neither is the
+verbatim match Drawer/Sheet is, so both are left alone rather than resolved by my
+own reading of a one-line description.
+
+Summary counts are recomputed from the tables themselves, not adjusted by hand:
+45 available, 14 to build, 59 total.
+
+Closes #466.
+
+Verified: lint 0, build 0, 919 unit. Documentation only; no component, demo or
+test file is touched.
+
+-
+docs(roadmap): add the AI/chat primitives section and correct a duplicate entry ([eccaf0b](https://github.com/juspay/svelte-ui-components/commit/eccaf0b3663c415a7988b333d071520f71ec1544))
+
+## [4.11.1](https://github.com/juspay/svelte-ui-components/compare/4.11.1..4.11.0) - 8 September 2026
 
 Thirteen dependabot alerts were open. This clears eleven of them, including all
 ten highs, by refreshing transitive resolutions inside their existing ranges. No

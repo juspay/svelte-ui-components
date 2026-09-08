@@ -24,15 +24,82 @@ A copyable command-line code snippet with a prompt prefix symbol and an inline c
 
 ## Props
 
-| Prop           | Type      | Required | Default | Description                                                                                                                                                            |
-| -------------- | --------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text           | `string`  | Yes      | `-`     | The code or command string displayed in the snippet. This is the value copied to the clipboard.                                                                        |
-| prompt         | `string`  | No       | `$`     | The prefix symbol shown before the text (e.g. '$', '>', '#'). Visually indicates a terminal prompt.                                                                    |
-| showCopyButton | `boolean` | No       | `true`  | Whether to show the copy-to-clipboard button on the right side. Set to false for display-only snippets.                                                                |
-| testId         | `string`  | No       | `-`     | Test identifier applied as `data-pw` attribute on the container for Playwright selectors.                                                                              |
-| copiedLabel    | `string`  | No       | `Copied!` | Text shown in place of the copy icon after a successful copy.                                                                                                         |
-| copyResetMs    | `number`  | No       | `2000`  | Milliseconds before the copied feedback reverts to the copy icon.                                                                                                       |
-| classes        | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop           | Type      | Required | Default   | Description                                                                                                                                                            |
+| -------------- | --------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text           | `string`  | Yes      | `-`       | The code or command string displayed in the snippet. This is the value copied to the clipboard.                                                                        |
+| prompt         | `string`  | No       | `$`       | The prefix symbol shown before the text (e.g. '$', '>', '#'). Visually indicates a terminal prompt.                                                                    |
+| showCopyButton | `boolean` | No       | `true`    | Whether to show the copy-to-clipboard button on the right side. Set to false for display-only snippets.                                                                |
+| testId         | `string`  | No       | `-`       | Test identifier applied as `data-pw` attribute on the container for Playwright selectors.                                                                              |
+| copiedLabel    | `string`  | No       | `Copied!` | Text shown in place of the copy icon after a successful copy.                                                                                                          |
+| copyResetMs    | `number`  | No       | `2000`    | Milliseconds before the copied feedback reverts to the copy icon.                                                                                                      |
+| classes        | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+
+## The copy affordance on its own — `createCopyState`
+
+`Snippet` couples two separable things: the copy-and-flash behaviour, and the `<code>` box with its `$`-style prompt. When you want the first without the second — a copy control beside a hostname in a settings row, a token, a URL — import the state machine directly instead of hand-rolling a lookalike:
+
+```svelte
+<script>
+  import { onDestroy } from 'svelte';
+  import { createCopyState, Button } from '@juspay/svelte-ui-components';
+
+  const host = 'ssh://runner-04.internal.example.com:2222';
+  const copy = createCopyState({ copyResetMs: 1500 });
+  onDestroy(copy.destroy);
+</script>
+
+<code class="host">{host}</code>
+<Button onclick={() => void copy.copy(host)}>
+  {copy.copied ? 'Copied!' : 'Copy'}
+</Button>
+<span class="copy-status" role="status" aria-live="polite">
+  {copy.copied ? 'Copied to clipboard' : ''}
+</span>
+
+<style>
+  .copy-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
+```
+
+Why the example is shaped that way, since you own the presentation here and `Snippet`'s own markup is not doing it for you:
+
+- **No `ariaLabel`.** It would override the visible text, leaving a screen-reader user hearing the label while the button reads "Copied!" (WCAG 2.5.3, Label in Name). Let the visible text be the accessible name; reach for `ariaLabel` only when the control has no visible text at all.
+- **Provide a polite live region, and render it before the change.** A live region only announces when it is already in the DOM and its _text_ changes; inserting the element and its text together is what many screen-reader/browser pairs miss. Keep the visible label swapping inside the button, and put a separate, visually hidden `role="status"` sibling **outside** it that is always rendered and holds `{copy.copied ? 'Copied to clipboard' : ''}`. This is exactly what `Snippet` itself does. `createCopyState` injects no DOM: the caller owns the announcement markup.
+
+This is the exact state machine `Snippet` itself runs on, so the single-pending-timer guarantee and the unmount cleanup come with it rather than needing to be rebuilt — which is the failure mode it exists to prevent, since a hand-rolled duplicate typically ships a bare `setTimeout` that nothing clears.
+
+| Member       | Type                                 | Description                                                                                                                                                                  |
+| ------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `copied`     | `boolean` (readonly)                 | `true` from a successful copy until the reset delay elapses. Reactive — read it directly in the template.                                                                    |
+| `copy(text)` | `(text: string) => Promise<boolean>` | Writes to the clipboard. Resolves `true` on success, `false` if the clipboard was unavailable or refused. **Never rejects**, so no `try`/`catch` is needed at the call site. |
+| `destroy()`  | `() => void`                         | Cancels a pending reset. Call from `onDestroy`.                                                                                                                              |
+
+| Option        | Type         | Default | Description                                                                                                                                                               |
+| ------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `copyResetMs` | `number`     | `2000`  | Milliseconds before `copied` reverts. A value that is not a finite number ≥ 0 — or a getter that throws — falls back to the default rather than arming an unusable timer. |
+| `oncopy`      | `() => void` | `-`     | Called once per **successful** copy. Never called when the write fails.                                                                                                   |
+
+Options are read at copy time rather than captured at creation, so a caller with reactive values passes getters — which is how `Snippet` forwards its own props:
+
+```ts
+const copy = createCopyState({
+  get copyResetMs() {
+    return copyResetMs;
+  }
+});
+```
+
+A failed write does not start or extend feedback and does not fire `oncopy`; an earlier successful copy's feedback can remain until its existing deadline. Overlapping writes are acknowledged in completion order, and each successful completion restarts the single timer. `destroy()` permanently disables the helper: later calls and pending completions return `false`, without notifications or new timers. Exceptions from `oncopy` are contained because they cannot undo a successful clipboard write.
+
+The factory is safe to create during SSR; clipboard writes require a browser. Import it from the package's main entry. The `./wc` entry registers custom elements and exports no utilities; it does not re-export this factory. This is the existing entry-point contract, not a missing custom-element registration.
 
 ## Snippets
 

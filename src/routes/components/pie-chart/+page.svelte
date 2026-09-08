@@ -18,6 +18,20 @@
     { label: 'Entertainment', value: 150, color: '#59a14f' }
   ];
 
+  // Test contract for piechart-legend-right.spec.ts: seven categories capped
+  // at five must produce '+2 more'. Update the assertions with this fixture.
+  const channels = [
+    { label: 'Organic', value: 4200 },
+    { label: 'Direct', value: 3100 },
+    { label: 'Paid social', value: 2400 },
+    { label: 'Email', value: 1800 },
+    { label: 'Referral', value: 900 },
+    { label: 'Affiliate', value: 500 },
+    { label: 'Other', value: 300 }
+  ];
+
+  let legendMoreClicks = $state(0);
+
   // Crowded pie — many categories, long labels, a fat head and a long tail of
   // slivers. This is the shape that used to stack every label into an
   // unreadable pile around the 3 o'clock / 9 o'clock regions.
@@ -182,6 +196,47 @@
     legendShowValues
     changePercentage={5.2}
     highlightedIndex={0}
+  />
+</div>
+
+<h3>Right-side value legend, capped with an expander</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <PieChart
+    data={channels}
+    innerRadius={0.6}
+    showLegend
+    legendShowValues
+    legendPosition="right"
+    legendMaxItems={5}
+    testId="pie-legend-right"
+  />
+</div>
+
+<h3>Expander delegated to the consumer (onlegendmore)</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <PieChart
+    data={channels}
+    innerRadius={0.6}
+    showLegend
+    legendShowValues
+    legendPosition="right"
+    legendMaxItems={5}
+    onlegendmore={() => (legendMoreClicks += 1)}
+    testId="pie-legend-more-callback"
+  />
+</div>
+<p class="state-display" data-pw="pie-legend-more-count">more clicks: {legendMoreClicks}</p>
+
+<h3>Default legend placement is unchanged</h3>
+<div class="demo-row" style="max-width: 400px;">
+  <!-- Regression guard: no legendPosition/legendMaxItems, so this stays the
+       below-chart list with every item shown. -->
+  <PieChart
+    data={channels}
+    innerRadius={0.6}
+    showLegend
+    legendShowValues
+    testId="pie-legend-default"
   />
 </div>
 

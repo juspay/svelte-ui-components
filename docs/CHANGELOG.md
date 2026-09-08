@@ -2,7 +2,56 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.4)
+
+Dependabot's kit 2.63.1 -&gt; 2.70 bump (#584) fails `check` with 28 errors that
+name no cause:
+
+Cannot find name 'node:fs'.
+Cannot find name 'process'.
+Property 'dirname' does not exist on type 'ImportMeta'.
+
+@types/node is declared, locked and installed throughout. It simply stops
+resolving, on a bump that touches no source file.
+
+The cause is a one-line difference in a file nobody wrote. tsconfig.json
+extends ./.svelte-kit/tsconfig.json, which SvelteKit GENERATES, and kit 2.63
+emitted `types: ["node"]` into it while 2.70 does not:
+
+"target": "esnext",
+-"types": ["node"]
+
+The root config was the only place in the repo relying on that injection. The
+four tsconfigs under scripts/ already declare `types` explicitly and were
+unaffected; tsconfig.wc.json sets its own. So the fix is not a workaround for
+the bump -- it brings the one outlier in line with the convention the rest of
+the repo already follows, and makes type resolution here independent of what a
+generated file happens to contain.
+
+Verified as a controlled experiment rather than inferred: at kit 2.70.3 with
+the line absent, svelte-check reports 28 errors; with the line present and
+nothing else changed, 0. Bumped to 2.70.3 rather than Dependabot's 2.70.2,
+since it is the current patch and carries the same advisory fix.
+
+A regression test comes with it. The line looks redundant beside a generated
+config that used to supply it, which is exactly what makes it easy to delete,
+and deleting it costs an investigation: this one cost two, once here when kit
+was excluded from #582 and once on Dependabot's own PR. The test turns that
+deletion into a failure that names the cause instead of a wall of
+unresolved-global errors that names nothing.
+
+Not in scope: svelte-check also warns that `moduleResolution: "Node"` (node10)
+is deprecated and stops working in TypeScript 7. That is pre-existing, is not
+caused by this bump, and bundling it would blur what this commit proves.
+
+Closes #584
+
+Verified: lint 0, check 0, unit 0, build 0, integration 0.
+
+-
+fix(deps): declare node types so SvelteKit 2.70 can be adopted ([14ff602](https://github.com/juspay/svelte-ui-components/commit/14ff6027efab55bcc9f479267536b2ab5dcb3138))
+
+## [4.11.4](https://github.com/juspay/svelte-ui-components/compare/4.11.4..4.11.3) - 8 September 2026
 
 #414 item 1 asks for sm/md/lg trigger sizes. Lighthouse hand-rolled a
 light-theme-only `36px !important` in shopify.css rather than do it, which is the

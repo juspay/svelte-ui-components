@@ -4,6 +4,7 @@
   import Pill from '$lib/Pill/Pill.svelte';
   import Img from '$lib/Img/Img.svelte';
   import { computeSelectDropdownPosition } from './dropdownPosition';
+  import { selectSizeClass } from './selectSize';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
@@ -11,6 +12,7 @@
     items: rawItems,
     value = $bindable([]),
     multiple = false,
+    size,
     searchable = false,
     placeholder = '',
     disabled = false,
@@ -385,7 +387,7 @@
 </script>
 
 <div
-  class="select {classes ?? ''}"
+  class="select {selectSizeClass(size)} {classes ?? ''}"
   class:open
   class:disabled
   class:ghost={hierarchy === 'ghost'}
@@ -634,8 +636,25 @@
     position: relative;
     width: var(--select-width, 100%);
     font-family: var(--select-font-family, inherit);
-    font-size: var(--select-font-size, 14px);
+    font-size: var(--select-font-size, var(--_select-size-font-size, 14px));
     color: var(--select-color, #333333);
+  }
+
+  /* Size presets — an internal --_select-size-* layer, mirroring how Pill's tone classes
+     set --_pill-tone-*: an explicit --select-trigger-min-height / --select-trigger-padding
+     / --select-font-size (set directly, or via `classes`) always wins over the preset,
+     because it sits earlier in each var() chain. `md` emits no class at all, so the
+     default geometry below is untouched for every consumer who never sets `size`. */
+  .select.size-sm {
+    --_select-size-min-height: 32px;
+    --_select-size-padding: 4px 10px;
+    --_select-size-font-size: 13px;
+  }
+
+  .select.size-lg {
+    --_select-size-min-height: 48px;
+    --_select-size-padding: 12px 14px;
+    --_select-size-font-size: 15px;
   }
 
   .select.disabled {
@@ -649,8 +668,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--select-trigger-gap, 4px);
-    min-height: var(--select-trigger-min-height, 40px);
-    padding: var(--select-trigger-padding, 8px 12px);
+    min-height: var(--select-trigger-min-height, var(--_select-size-min-height, 40px));
+    padding: var(--select-trigger-padding, var(--_select-size-padding, 8px 12px));
     background: var(--select-trigger-background, #ffffff);
     border: var(--select-trigger-border, 1px solid #cccccc);
     border-radius: var(--select-trigger-border-radius, var(--radius, 4px));

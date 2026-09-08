@@ -6,6 +6,7 @@
       items: { type: 'Object' },
       value: { type: 'Object' },
       multiple: { type: 'Boolean', reflect: true },
+      size: { type: 'String', reflect: true, attribute: 'size' },
       searchable: { type: 'Boolean', reflect: true },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },

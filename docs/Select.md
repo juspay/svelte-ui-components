@@ -92,6 +92,7 @@ An SVG source is **inlined into the component's DOM**, so an icon drawn with `cu
 | value            | `string[]`                 | No       | `[]`           | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                                                                                                                                                                                                                                                                       |
 | open             | `boolean`                  | No       | `false`        | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state.                                                                                                                                                                                                                                                     |
 | multiple         | `boolean`                  | No       | `false`        | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                                                                                                                                                                                                                                                                      |
+| size             | `'sm' \| 'md' \| 'lg'`     | No       | `'md'`         | Trigger size preset, setting min-height, padding and font-size together. `'md'` (or omitting it) emits no class and renders exactly as before this prop existed. An explicit `--select-trigger-min-height` / `--select-trigger-padding` / `--select-font-size` always wins over the preset. See **Sizing** below.                                                                                                                |
 | searchable       | `boolean`                  | No       | `false`        | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                                                                                                                                                                                                                                              |
 | placeholder      | `string`                   | No       | `''`           | Text shown when no item is selected (or in the search input when empty).                                                                                                                                                                                                                                                                                                                                                         |
 | disabled         | `boolean`                  | No       | `false`        | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                                                                                                                                                                                                                                                  |
@@ -124,6 +125,40 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | onchange | `(value: string[]) => void` | Fires when the selection changes. Receives the full array of selected item IDs. In single-select mode, the array has one element. |
 | onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                    |
 | onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                   |
+
+## Sizing
+
+The trigger's `min-height`, `padding` and `font-size` have always been themeable
+individually. `size` names the coherent combinations, so a denser or roomier control does
+not require knowing which three variables to set and keeping them in step:
+
+```svelte
+<Select {items} size="sm" placeholder="Compact" />
+<Select {items} placeholder="Default" />
+<Select {items} size="lg" placeholder="Roomy" />
+```
+
+| size           | min-height | padding   | font-size |
+| -------------- | ---------- | --------- | --------- |
+| `sm`           | 32px       | 4px 10px  | 13px      |
+| `md` (default) | 40px       | 8px 12px  | 14px      |
+| `lg`           | 48px       | 12px 14px | 15px      |
+
+`md` emits no class at all, so a consumer who never sets `size` renders exactly what they
+rendered before the prop existed.
+
+**An explicit token still wins.** The preset sits behind your own value in each `var()`
+chain, so overriding one dimension keeps the rest of the preset:
+
+```svelte
+<Select {items} size="sm" classes="taller-trigger" />
+
+<style>
+  :global(.taller-trigger) {
+    --select-trigger-min-height: 60px; /* wins; font-size stays 13px from `sm` */
+  }
+</style>
+```
 
 ## CSS Variables
 
@@ -336,6 +371,7 @@ Tag: `<sui-select>`
 | `disabled`          | `disabled`       | boolean | Disables the select.                                                                           |
 | `multiple`          | `multiple`       | boolean | Enables multi-select mode.                                                                     |
 | `searchable`        | `searchable`     | boolean | Enables search filtering.                                                                      |
+| `size`              | `size`           | string  | Reflected. Trigger size preset — `'sm'`, `'md'` or `'lg'`. Defaults to `'md'`. See **Sizing**. |
 | `open`              | `open`           | boolean | Reflected. Controls dropdown open state.                                                       |
 | `dropdown-align`    | `dropdownAlign`  | string  | `'left'` or `'right'` — anchors the dropdown panel horizontally.                               |
 | `left-icon`         | `leftIcon`       | string  | Image src for the leading trigger icon.                                                        |

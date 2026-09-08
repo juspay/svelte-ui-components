@@ -4,6 +4,18 @@ export type SelectProperties = MandatorySelectProperties &
   OptionalSelectProperties &
   SelectEventProperties;
 
+/**
+ * Trigger size preset. The underlying `--select-trigger-min-height`,
+ * `--select-trigger-padding` and `--select-font-size` variables have always been
+ * themeable individually; this names the coherent combinations so a consumer picking a
+ * denser control does not have to know which three to set and keep in step.
+ *
+ * `'md'` is the default and renders exactly as before this prop existed. An explicit
+ * `--select-trigger-*` / `--select-font-size` always wins over the preset — the same
+ * precedence `Pill`'s `tone` uses relative to `--pill-background`.
+ */
+export type SelectSize = 'sm' | 'md' | 'lg';
+
 export type SelectItem = {
   id: string;
   label: string;
@@ -30,6 +42,12 @@ export type SelectHierarchy = 'default' | 'ghost';
 export type OptionalSelectProperties = {
   value?: string[];
   multiple?: boolean;
+  /**
+   * Trigger size preset — `'sm'` / `'md'` / `'lg'`. Omitted (or `'md'`) renders exactly as
+   * before this prop existed: no class is emitted at all, so the trigger's geometry is
+   * unchanged. See `SelectSize` for the override precedence.
+   */
+  size?: SelectSize;
   searchable?: boolean;
   placeholder?: string;
   disabled?: boolean;

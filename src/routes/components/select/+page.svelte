@@ -360,7 +360,38 @@
   </div>
 </div>
 
+<!-- #414 item 1: a size preset, so a consumer wanting a denser control does not have to
+     know which three CSS variables to set and keep in step. -->
+<h3>Size presets</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} placeholder="Small" size="sm" testId="select-size-sm" />
+</div>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} placeholder="Medium (default)" size="md" testId="select-size-md" />
+</div>
+<div class="demo-row" style="max-width: 300px;">
+  <Select items={fruits} placeholder="Large" size="lg" testId="select-size-lg" />
+</div>
+<div class="demo-row" style="max-width: 300px;">
+  <!-- No size prop at all: must render identically to size="md". -->
+  <Select items={fruits} placeholder="Unset" testId="select-size-unset" />
+</div>
+<div class="demo-row" style="max-width: 300px;">
+  <!-- An explicit token beats the preset — the Pill `tone` precedence rule. -->
+  <Select
+    items={fruits}
+    placeholder="Small + override"
+    size="sm"
+    classes="select-size-override"
+    testId="select-size-override"
+  />
+</div>
+
 <style>
+  :global(.select-size-override) {
+    --select-trigger-min-height: 60px;
+  }
+
   /* Small, fixed-height, overflow-clipping boxes to demonstrate the difference
      between the in-flow and portaled dropdown. */
   .overflow-demo-grid {

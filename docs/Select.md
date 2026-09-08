@@ -125,6 +125,57 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                    |
 | onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                   |
 
+## Sizing
+
+There is no `size` prop, and none is needed: the trigger's geometry is already themeable.
+Define a class in your app's CSS that sets the three variables together, then pass it via
+`classes` — the same pattern as **Theming with Classes** on `Pill`:
+
+```css
+/* app.css */
+.select-sm {
+  --select-trigger-min-height: 32px;
+  --select-trigger-padding: 4px 10px;
+  --select-font-size: 13px;
+}
+
+.select-lg {
+  --select-trigger-min-height: 48px;
+  --select-trigger-padding: 12px 14px;
+  --select-font-size: 15px;
+}
+```
+
+```svelte
+<Select {items} classes="select-sm" placeholder="Compact" />
+<Select {items} placeholder="Default" />
+<Select {items} classes="select-lg" placeholder="Roomy" />
+```
+
+Measured against the unmodified component, those recipes give:
+
+|              | `--select-trigger-min-height` | `--select-trigger-padding` | `--select-font-size` | rendered height |
+| ------------ | ----------------------------- | -------------------------- | -------------------- | --------------- |
+| `.select-sm` | 32px                          | 4px 10px                   | 13px                 | 42px            |
+| default      | 40px                          | 8px 12px                   | 14px                 | 58px            |
+| `.select-lg` | 48px                          | 12px 14px                  | 15px                 | 74px            |
+
+Those rendered heights are for a **single-line trigger**; a multi-select whose pills wrap
+onto a second row grows past them.
+
+They are also worth reading carefully, because they are `min-height` **plus** the vertical
+padding and border, not the `min-height` itself — 32 + 8 + 2 = 42, 40 + 16 + 2 = 58,
+48 + 24 + 2 = 74. So raising `--select-trigger-padding` raises the control even when
+`--select-trigger-min-height` is untouched.
+
+That is also why the three move together: setting `min-height` alone leaves the padding and
+label at their default scale, which is what makes a hand-tuned single override look wrong
+and tempts an `!important`. Set all three, or none.
+
+Because these are your classes rather than ours, the scale is yours too: add an `xs`, match
+a host application's density, or drive them from a `[data-density]` attribute. Nothing here
+is version-locked to this library.
+
 ## CSS Variables
 
 Override these custom properties to theme the component.

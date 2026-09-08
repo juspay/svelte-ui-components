@@ -145,16 +145,27 @@
   const URL_ATTRIBUTES: ReadonlySet<string> = new Set(['href', 'xlink:href', 'src']);
 
   /**
-   * Whether a URL attribute points inside this same document (`#gradient`).
+   * Whether a URL attribute is safe to adopt into the live document.
    *
-   * Only a fragment survives. A `javascript:` URL is the classic vector, but
-   * an ordinary remote URL is not safe either: on `<image href>` or `<use
-   * href>` it fetches on adoption, which is a request the consumer's page
-   * never asked to make, from markup the consumer did not write. A same
-   * document reference can do neither.
+   * A fragment (`#gradient`) points inside this same document and is safe on
+   * any element. A `data:image/*` payload also carries its art inline and makes
+   * no network request on adoption — but it is only safe on image-rendering
+   * elements (`<image>`, `<feImage>`), where the payload is rasterized with no
+   * script context. On any other element (`<use>`, `<a>`, …) the allowance
+   * stays fragment-only. Media type comparison is case-insensitive because
+   * MIME types are. Everything else is unsafe: a `javascript:` URL is the
+   * classic vector, and an ordinary remote URL fetches on adoption, which is
+   * a request the consumer's page never asked to make, from markup the
+   * consumer did not write.
    */
-  function isSameDocumentReference(value: string): boolean {
-    return value.trim().startsWith('#');
+  function isSafeInlineUrlValue(element: Element, value: string): boolean {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('#')) {
+      return true;
+    }
+    const localName = element.localName.toLowerCase();
+    const isImageSink = localName === 'image' || localName === 'feimage';
+    return isImageSink && trimmed.toLowerCase().startsWith('data:image/');
   }
 
   /**
@@ -185,7 +196,7 @@
           element.removeAttribute(attribute.name);
           continue;
         }
-        if (URL_ATTRIBUTES.has(name) && !isSameDocumentReference(attribute.value)) {
+        if (URL_ATTRIBUTES.has(name) && !isSafeInlineUrlValue(element, attribute.value)) {
           element.removeAttribute(attribute.name);
         }
       }

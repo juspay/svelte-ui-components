@@ -2,6 +2,15 @@
 
 Reveals text one character at a time, the way a streaming model answer reads. Built for streaming: while `isStreaming` is `true`, typing follows the growing `text` without restarting; the moment it turns `false`, the remainder appears at once.
 
+Typing is an animation, so it honours `prefers-reduced-motion: reduce`: when the reader has asked for less motion, text is disclosed as it arrives instead of being typed, and `speed` / `variableDelay` / `resolveDelay` are not consulted. `onprogress` still fires, once per disclosure rather than once per character.
+
+> **Already using `ChatController` with `typewriter: true`? Do not also wrap `msg.content` in this component.**
+>
+> Both reveal text progressively, and they compose badly: the controller is already growing `msg.content` character by character, so a `messageBody` snippet that renders `<TypewriterText text={msg.content} isStreaming={msg.streaming} />` re-types every increment on its own cadence — a compounding double-reveal, not merely duplicated work. Pick one:
+>
+> - **Reveal handled by the controller** — set `typewriter: true` and render `msg.content` as plain text. Simplest, and what `Chat`'s own examples use.
+> - **Reveal handled here** — leave `typewriter` unset (or `false`) on the controller and wrap `msg.content` in `TypewriterText`. Reach for this when you want per-character control the controller does not expose: `variableDelay`, `resolveDelay`, `renderCharacter`, or `onprogress`.
+
 ## Usage
 
 ```svelte

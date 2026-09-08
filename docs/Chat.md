@@ -73,6 +73,10 @@ Markdown is bundled: set a message's `markdown` field and it renders in the bubb
 
 `ChatControllerOptions`: `transport` (required `ChatTransport`), `initialMessages?`, `typewriter?` (reveal text char-by-char), `generateId?` (defaults to `crypto.randomUUID()`).
 
+**`typewriter` and the standalone `TypewriterText` component are two ways to do one job — use exactly one.** The controller's reveal drains buffered chunks into `msg.content` itself, so it needs no extra component and is what the example above uses. `TypewriterText` is the standalone alternative, worth reaching for when you want pacing control the option does not expose (`variableDelay`, `resolveDelay`, `renderCharacter`, `onprogress`).
+
+Combining them is the one thing to avoid: with `typewriter: true` **and** a `messageBody` snippet rendering `<TypewriterText text={msg.content} … />`, `msg.content` is already growing character by character, and `TypewriterText` re-types each increment on its own cadence — a compounding double-reveal. Set `typewriter: false` (or leave it unset) whenever a snippet owns the reveal. Both honour `prefers-reduced-motion: reduce` and disclose text without animating it.
+
 `ChatTransport`: `(input: { message, history, sessionId, signal }, handlers: ChatStreamHandlers) => Promise<void>`. Handlers: `onText` (required), `onToolStatus?`, `onAttachment?`, `onError?`, `onDone?`. The controller threads sessions for you: whatever a transport reports via `onDone({ sessionId })` is passed back on the next request's `input.sessionId`.
 
 **Roles.** Messages use the two-party primitive `role` — `sender` / `responder` (see `ChatMessage`). The controller emits those, and `partyOf(role)` resolves any role (including the `user`/`assistant`/`system` extensions) to its party. Map the primitive to your provider's roles inside the transport, where the API-specific terms belong: `history.map((m) => ({ role: partyOf(m.role) === 'sender' ? 'user' : 'assistant', content: m.content }))`.

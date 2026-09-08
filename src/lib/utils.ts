@@ -315,6 +315,23 @@ export function clampInt(v: string, min: number, max: number): number {
 
 // ── Misc ────────────────────────────────────────────────────────
 
+/**
+ * Whether the user has asked the OS to minimise animation.
+ *
+ * Shared rather than per-component: two independent character-reveal
+ * implementations ship in this library — `ChatController`'s buffered drain and
+ * `TypewriterText`'s typing loop — and a reveal that honours this setting in one
+ * but not the other means the same OS preference silences an animation in a chat
+ * bubble and leaves it running in the message body rendered inside it.
+ */
+export function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
 export function createDebouncer(delay: number) {
   let lastCallTime = 0;
   return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {

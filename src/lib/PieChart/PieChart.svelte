@@ -40,6 +40,9 @@
     classes,
     semiCircle = false,
     legendShowValues = false,
+    legendPosition = 'bottom',
+    legendMaxItems,
+    onlegendmore,
     percentDecimals = 0,
     onchartready,
     highlightedIndex = null,
@@ -49,6 +52,7 @@
 
   // ── State ──────────────────────────────────────────────────────
 
+  let legendExpanded = $state(false);
   let containerEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
@@ -152,6 +156,57 @@
       };
     });
   });
+
+  /* A cap only counts when it actually hides something: a legendMaxItems of 5
+     over 5 rows must render no control, since a control that reveals nothing
+     is worse than none. Non-positive and non-finite values are ignored rather
+     than clamping the list to empty -- a plain-JS or web-component caller can
+     hand this anything. */
+  const legendCap = $derived(
+    typeof legendMaxItems === 'number' && Number.isFinite(legendMaxItems) && legendMaxItems > 0
+      ? Math.max(1, Math.floor(legendMaxItems))
+      : null
+  );
+  /* A changed list or cap starts a new collapsed view, not a stale expansion.
+     This has to be an effect rather than a derived key: collapsing depends on
+     the TRANSITION, not on the current values. A list that shrinks below the
+     cap and then returns to its former length must stay collapsed, and a key
+     built from (cap, length) would match its earlier self and silently
+     re-expand -- which is what the regression tests here caught when this was
+     written that way. The two values are passed as ordinary arguments so the
+     dependencies are real reads rather than `void` expressions. */
+  const collapseLegend = (_cap: number | null, _rowCount: number): void => {
+    legendExpanded = false;
+  };
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    collapseLegend(legendCap, data.length);
+  });
+  const legendHiddenCount = $derived(legendCap === null ? 0 : Math.max(0, data.length - legendCap));
+  const legendRows = $derived(
+    legendCap === null || legendExpanded ? data : data.slice(0, legendCap)
+  );
+
+  /* Excludes the empty state: with no rows there is no legend column to sit
+     beside, and turning the root into a flex row would make the empty message
+     a flex item rather than the full-width block it is documented to be. */
+  const legendBesideChart = $derived(
+    !isEmpty && showLegend && legendShowValues && legendPosition === 'right'
+  );
+
+  const instanceId = $props.id();
+  const legendListId = `pie-legend-${instanceId}`;
+
+  const handleLegendMore = (): void => {
+    /* A consumer opening their own modal must not also get the list expanding
+       underneath it, so the callback replaces the built-in behaviour rather
+       than firing alongside it. */
+    if (typeof onlegendmore === 'function') {
+      onlegendmore();
+      return;
+    }
+    legendExpanded = !legendExpanded;
+  };
 
   let legendItems = $derived<LegendItem[]>(
     data.map((d, i) => ({ label: d.label, color: d.color ?? getColor(i) }))
@@ -290,6 +345,7 @@
 
 <div
   class="pie-chart {classes ?? ''}"
+  class:legend-right={legendBesideChart}
   bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
@@ -358,17 +414,30 @@
     {/if}
 
     {#if showLegend && legendShowValues}
-      <ul class="pie-legend-values">
-        {#each data as d, i (i)}
-          <li class="pie-legend-row">
-            <span class="pie-legend-swatch" style="background: {d.color ?? getColor(i)}"></span>
-            <span class="pie-legend-label">{d.label}</span>
-            <span class="pie-legend-value">
-              {format(d.value)}&nbsp;{pctFormat(d.value)}
-            </span>
-          </li>
-        {/each}
-      </ul>
+      <div class="pie-legend-column">
+        <ul class="pie-legend-values" id={legendListId}>
+          {#each legendRows as d, i (i)}
+            <li class="pie-legend-row">
+              <span class="pie-legend-swatch" style="background: {d.color ?? getColor(i)}"></span>
+              <span class="pie-legend-label">{d.label}</span>
+              <span class="pie-legend-value">
+                {format(d.value)}&nbsp;{pctFormat(d.value)}
+              </span>
+            </li>
+          {/each}
+        </ul>
+        {#if legendHiddenCount > 0}
+          <button
+            type="button"
+            class="pie-legend-more"
+            aria-expanded={typeof onlegendmore === 'function' ? null : legendExpanded}
+            {...typeof onlegendmore === 'function' ? {} : { 'aria-controls': legendListId }}
+            onclick={handleLegendMore}
+          >
+            {legendExpanded ? 'Show less' : `+${legendHiddenCount} more`}
+          </button>
+        {/if}
+      </div>
     {/if}
 
     {#if typeof tooltipSnippet === 'function' && hoveredIndex !== null && data[hoveredIndex]}
@@ -468,5 +537,61 @@
     color: var(--piechart-legend-value-color, #333);
     min-width: var(--piechart-legend-value-min-width, 60px);
     text-align: right;
+  }
+
+  /* The column wrapper is present in both placements so the markup does not
+     fork; as a plain block it changes nothing about the default below-chart
+     rendering. */
+  .pie-legend-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Only the values legend moves beside the chart -- the plain top legend is
+     mutually exclusive with it, and the delta badge and tooltip are both
+     absolutely positioned, so they stay out of this flex row entirely. */
+  .pie-chart.legend-right {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--piechart-legend-column-gap, 16px);
+  }
+
+  .pie-chart.legend-right :global(.chart-container) {
+    /* flex-basis 0 rather than auto: the container carries width:100%, which
+       as a flex item would otherwise claim the whole row and squeeze the
+       legend to nothing. */
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .pie-chart.legend-right .pie-legend-column {
+    flex: 0 0 auto;
+    max-width: var(--piechart-legend-column-max-width, 50%);
+  }
+
+  .pie-chart.legend-right .pie-legend-values {
+    padding: var(--piechart-legend-column-padding, 0);
+  }
+
+  .pie-legend-more {
+    align-self: flex-start;
+    margin-top: var(--piechart-legend-more-margin-top, 8px);
+    padding: var(--piechart-legend-more-padding, 2px 4px);
+    border: none;
+    background: none;
+    cursor: var(--cursor, pointer);
+    font-size: var(--piechart-legend-more-font-size, 12px);
+    font-family: inherit;
+    color: var(--piechart-legend-more-color, #2563eb);
+  }
+
+  .pie-legend-more:hover {
+    text-decoration: underline;
+  }
+
+  .pie-legend-more:focus-visible {
+    outline: var(--piechart-legend-more-focus-outline, 2px solid currentColor);
+    outline-offset: 2px;
   }
 </style>

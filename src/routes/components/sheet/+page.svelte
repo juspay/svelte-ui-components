@@ -15,6 +15,8 @@
   let showCentered = $state(false);
   let showHeading = $state(false);
   let showCustomOverlayLabel = $state(false);
+  let showCappedBottom = $state(false);
+  let showWidthTokenBottom = $state(false);
 </script>
 
 <div class="page-header">
@@ -44,8 +46,8 @@
 
 <h3>Top</h3>
 <div class="demo-row">
-  <Button text="Open top" onclick={() => (showTop = true)} />
-  <Sheet bind:open={showTop} side="top" title="Notifications">
+  <Button text="Open top" onclick={() => (showTop = true)} testId="sheet-top-trigger" />
+  <Sheet bind:open={showTop} side="top" title="Notifications" testId="sheet-top">
     {#snippet content()}
       <p>Panel sliding down from the top. Use for notifications or alerts.</p>
     {/snippet}
@@ -230,11 +232,68 @@
   </Sheet>
 </div>
 
+<h3>Width-capped bottom sheet (centred, fully bordered)</h3>
+<div class="demo-row">
+  <Button
+    text="Open capped bottom"
+    onclick={() => (showCappedBottom = true)}
+    testId="sheet-capped-bottom-trigger"
+  />
+  <Sheet
+    bind:open={showCappedBottom}
+    side="bottom"
+    title="Launch"
+    testId="sheet-capped-bottom"
+    classes="capped-bottom-sheet"
+  >
+    {#snippet content()}
+      <p>
+        A centred card rather than a full-bleed band: <code>--sheet-band-width</code> caps it and
+        <code>--sheet-band-border</code> gives it all four edges, which a floating card needs and an edge-anchored
+        panel does not.
+      </p>
+    {/snippet}
+  </Sheet>
+</div>
+
+<h3>--sheet-width does not leak into top/bottom</h3>
+<div class="demo-row">
+  <Button
+    text="Open width-token bottom"
+    onclick={() => (showWidthTokenBottom = true)}
+    testId="sheet-width-token-trigger"
+  />
+  <!-- Regression guard: this sets --sheet-width, the left/right token. A
+       bottom sheet must ignore it and stay full-bleed, or every consumer
+       theming their side sheets would silently reshape their bottom ones. -->
+  <Sheet
+    bind:open={showWidthTokenBottom}
+    side="bottom"
+    title="Unaffected"
+    testId="sheet-width-token-bottom"
+    classes="width-token-bottom-sheet"
+  >
+    {#snippet content()}
+      <p>Still edge-to-edge, because <code>--sheet-width</code> governs left/right only.</p>
+    {/snippet}
+  </Sheet>
+</div>
+
 <style>
   :global(.anchored-sheet) {
     --sheet-top: 56px;
     --sheet-right: 16px;
     --sheet-bottom: auto;
+    --sheet-width: 280px;
+  }
+
+  :global(.capped-bottom-sheet) {
+    --sheet-band-width: min(560px, 100vw);
+    --sheet-band-box-sizing: border-box;
+    --sheet-band-border: 1px solid #d4d4d8;
+  }
+
+  :global(.width-token-bottom-sheet) {
     --sheet-width: 280px;
   }
 </style>

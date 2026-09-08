@@ -136,10 +136,10 @@ layer is never consulted — every `tone="ok"` and `tone="danger"` chip renders 
 grey as an untoned one, with no error and no visual hint that the prop stopped working. Measured
 on a real `tone="ok"` pill:
 
-| | background | color |
-| --- | --- | --- |
-| tone alone | `#d4edda` | `#155724` |
-| tone + a global `--pill-background`/`--pill-color` | `#252535` | `#d1d5db` |
+|                                                    | background | color     |
+| -------------------------------------------------- | ---------- | --------- |
+| tone alone                                         | `#d4edda`  | `#155724` |
+| tone + a global `--pill-background`/`--pill-color` | `#252535`  | `#d1d5db` |
 
 This library's own demo site had exactly that bug: all five tones rendered byte-identical in dark
 mode. If you have no convenient container to scope to, exclude the tone classes instead —
@@ -218,24 +218,49 @@ element just to hold the attribute and then styling that wrapper not to disturb 
 `attrs` is applied before Pill's own `class`/`onclick`/`onkeydown`/`role`/`tabindex`/
 `aria-disabled`/`data-pw`/`title`/`testID` attributes, so it can only add attributes Pill does
 not already manage — it cannot be used to override the click/keyboard/dismiss behavior those
-props control. Omitted by default, so existing consumers are unaffected.
+props control. Those managed names are marked `@deprecated` on the `attrs` type, so an
+editor strikes one through and explains what owns it — `classes` for `class`, `testId` for
+`data-pw`/`testID`, the `title`/`onclick` props, and the `disabled`/`ariaExpanded`/
+`ariaPressed` props that derive the `aria-*` state — rather than the entry vanishing at
+spread time with nothing saying so. Omitted by default, so existing consumers are
+unaffected.
+
+Deprecated, not rejected: `attrs` is still `Record<string, string>` and still accepts every
+key it ever accepted, so no existing code stops compiling. Rejecting `class` outright is a
+breaking change, and [#576](https://github.com/juspay/svelte-ui-components/issues/576) asks
+for it in a major. `PillStrictAttrs` is that rejecting type, shipped now so it can be opted
+into per object:
+
+```svelte
+<script lang="ts">
+  import type { PillStrictAttrs } from '@juspay/svelte-ui-components';
+
+  // Compile error: 'aria-pressed' is derived from the ariaPressed prop. Without
+  // the annotation this object compiles, as it always has, and the entry is discarded.
+  const attrs: PillStrictAttrs = { 'data-state': 'waiting', 'aria-pressed': true };
+</script>
+```
+
+It intentionally differs from `CardStrictAttrs`: Pill writes no `style`, so `style` is
+usable on Pill and rejected on Card, while Card writes no `aria-*` state. Forbidding a key
+a component never touches would be a fake restriction.
 
 ## Props
 
-| Prop         | Type      | Required | Default   | Description                                                                                                                                                              |
-| ------------ | --------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| text         | `string`  | Yes      | `-`       | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                     |
-| tone         | `'accent' \| 'ok' \| 'warn' \| 'danger' \| 'muted'` | No | `-` | Semantic tone for a status/category chip. Sets the background/text color from the matching `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color` variables (each with a built-in default). An explicit `--pill-background` / `--pill-color` (set directly, or via `classes`) always wins over the tone default. Omitted by default, which renders exactly as before this prop existed. |
-| as           | `'div' \| 'button'` | No | `'div'` | Root element. `'div'` renders exactly as before this prop existed. `'button'` renders a real `<button type="button">`, giving a chip native focus, keyboard activation and announcement instead of the `role="button"`/`tabindex`/keydown shim. Falls back to `'div'` when combined with `dismissible`, since a button may not contain another button. |
-| ariaExpanded | `boolean` | No       | `-`       | Expanded state of a disclosure chip, rendered as `aria-expanded`. Applied only when the pill is interactive (a button root, or a div with `onclick`). Web component attribute: `aria-expanded`. |
-| ariaPressed  | `boolean` | No       | `-`       | Pressed state of a toggle chip, rendered as `aria-pressed`. Applied only when the pill is interactive. Web component attribute: `aria-pressed`.                          |
-| dismissible  | `boolean` | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked. Forces the `div` root — see `as`.                                       |
-| dismissLabel | `string`  | No       | `Dismiss` | Accessible name of the dismiss button. Pass a translated string for localised products; blank values fall back to the default. Web component attribute: `dismiss-label`. |
-| disabled     | `boolean` | No       | `false`   | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                            |
-| testId       | `string`  | No       | `-`       | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                  |
-| title        | `string`  | No       | `-`       | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                            |
-| classes      | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.   |
-| attrs        | `Record<string, string>` | No | `-` | Arbitrary attributes (e.g. `data-*`, `aria-*`) spread onto the pill root, for attribute-selector CSS. Applied before Pill's own class/onclick/onkeydown/role/tabindex/aria-disabled/data-pw/title/testID, so it can only add attributes Pill does not already manage. Omit to render no extra attributes. |
+| Prop         | Type                                                | Required | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text         | `string`                                            | Yes      | `-`       | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                                                                                                                                                                                                                                          |
+| tone         | `'accent' \| 'ok' \| 'warn' \| 'danger' \| 'muted'` | No       | `-`       | Semantic tone for a status/category chip. Sets the background/text color from the matching `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color` variables (each with a built-in default). An explicit `--pill-background` / `--pill-color` (set directly, or via `classes`) always wins over the tone default. Omitted by default, which renders exactly as before this prop existed. |
+| as           | `'div' \| 'button'`                                 | No       | `'div'`   | Root element. `'div'` renders exactly as before this prop existed. `'button'` renders a real `<button type="button">`, giving a chip native focus, keyboard activation and announcement instead of the `role="button"`/`tabindex`/keydown shim. Falls back to `'div'` when combined with `dismissible`, since a button may not contain another button.                                        |
+| ariaExpanded | `boolean`                                           | No       | `-`       | Expanded state of a disclosure chip, rendered as `aria-expanded`. Applied only when the pill is interactive (a button root, or a div with `onclick`). Web component attribute: `aria-expanded`.                                                                                                                                                                                               |
+| ariaPressed  | `boolean`                                           | No       | `-`       | Pressed state of a toggle chip, rendered as `aria-pressed`. Applied only when the pill is interactive. Web component attribute: `aria-pressed`.                                                                                                                                                                                                                                               |
+| dismissible  | `boolean`                                           | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked. Forces the `div` root — see `as`.                                                                                                                                                                                                                                                            |
+| dismissLabel | `string`                                            | No       | `Dismiss` | Accessible name of the dismiss button. Pass a translated string for localised products; blank values fall back to the default. Web component attribute: `dismiss-label`.                                                                                                                                                                                                                      |
+| disabled     | `boolean`                                           | No       | `false`   | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                                                                                                                                                                                                                                                 |
+| testId       | `string`                                            | No       | `-`       | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                                                                                                                                                                                                                                       |
+| title        | `string`                                            | No       | `-`       | Native HTML tooltip text applied to the pill root. Omitted when not provided.                                                                                                                                                                                                                                                                                                                 |
+| classes      | `string`                                            | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                                                                        |
+| attrs        | `Record<string, string>`                            | No       | `-`       | Arbitrary attributes (e.g. `data-*`, `aria-*`) spread onto the pill root, for attribute-selector CSS. Applied before Pill's own class/onclick/onkeydown/role/tabindex/aria-disabled/data-pw/title/testID, so it can only add attributes Pill does not already manage. Omit to render no extra attributes.                                                                                     |
 
 ## Snippets
 
@@ -263,47 +288,47 @@ at rest, hover and press, and the glyph reads `--pill-dismiss-color` and
 Consumer disabled colours and keyboard focus indicators remain available.
 Keyboard activation of the dismiss button does not activate the pill body.
 
-| Variable                     | Default                                   | CSS Property     | Description                                                               |
-| ---------------------------- | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------- |
-| `--pill-background`          | `#e0e0e0`                                 | background-color | Background color of the pill.                                             |
-| `--pill-color`               | `#333333`                                 | color            | Text color of the pill label.                                             |
-| `--pill-font-size`           | `13px`                                    | font-size        | Font size of the pill text.                                               |
-| `--pill-font-weight`         | `500`                                     | font-weight      | Font weight of the pill text.                                             |
-| `--pill-font-family`         | `-`                                       | font-family      | Font family of the pill text.                                             |
-| `--pill-line-height`         | `1`                                       | line-height      | Line height of the pill text.                                             |
-| `--pill-padding`             | `6px 10px`                                | padding          | Inner padding of the pill.                                                |
-| `--pill-border-radius`       | `999px`                                   | border-radius    | Corner rounding of the pill (999px creates a fully rounded shape).        |
-| `--pill-border`              | `none`                                    | border           | Border style of the pill.                                                 |
-| `--pill-gap`                 | `4px`                                     | gap              | Spacing between the text and the dismiss button.                          |
-| `--pill-cursor`              | `pointer` when interactive (an `onclick` is supplied), `default` otherwise | cursor | Cursor style when hovering over the pill. A non-interactive pill (no `onclick`) no longer implies it's clickable. |
-| `--pill-letter-spacing`      | `normal`                                  | letter-spacing   | Letter spacing of the pill text.                                          |
-| `--pill-text-transform`      | `none`                                    | text-transform   | Text transform of the pill text (e.g. `uppercase` for a badge look).      |
-| `--pill-width`               | `auto`                                    | width            | Chip width. Set to `100%` to fill a column.                               |
-| `--pill-justify-content`     | `center`                                  | justify-content  | Content alignment inside the pill.                                        |
-| `--pill-text-align`          | `center`                                  | text-align       | Label alignment.                                                          |
-| `--pill-max-width`           | `-`                                       | max-width        | Maximum width of the pill. Text is truncated with ellipsis when exceeded. |
-| `--pill-flex-shrink`         | `-`                                       | flex-shrink      | Flex shrink behavior of the pill.                                         |
-| `--pill-text-overflow`       | `ellipsis`                                | text-overflow    | How overflowing text is displayed (e.g., ellipsis or clip).               |
-| `--pill-text-white-space`    | `nowrap`                                  | white-space      | Whether the pill's text wraps.                                            |
-| `--pill-hover-background`    | `var(--pill-background, #d0d0d0)`         | background-color | Background color when hovering over the pill.                             |
-| `--pill-hover-color`         | `var(--pill-color, #333333)`              | color            | Text color when hovering over the pill.                                   |
-| `--pill-disabled-opacity`    | `0.4`                                     | opacity          | Opacity of the pill when disabled.                                        |
-| `--pill-disabled-cursor`     | `not-allowed`                             | cursor           | Cursor style when the pill is disabled.                                   |
-| `--pill-dismiss-size`        | `14px`                                    | width, height    | Size of the dismiss button icon (X).                                      |
-| `--pill-dismiss-color`       | `currentColor`                            | color            | Color of the dismiss button icon.                                         |
-| `--pill-dismiss-hover-color` | `var(--pill-dismiss-color, currentColor)` | color            | Color of the dismiss button icon on hover.                                |
-| `--pill-tone-accent-background` | `#d1ecf1`                             | background-color | `tone="accent"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
-| `--pill-tone-accent-color`      | `#0c5460`                             | color            | `tone="accent"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
-| `--pill-tone-ok-background`     | `#d4edda`                             | background-color | `tone="ok"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
-| `--pill-tone-ok-color`          | `#155724`                             | color            | `tone="ok"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
-| `--pill-tone-warn-background`   | `#fff3cd`                             | background-color | `tone="warn"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
-| `--pill-tone-warn-color`        | `#856404`                             | color            | `tone="warn"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
-| `--pill-tone-danger-background` | `#f8d7da`                             | background-color | `tone="danger"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
-| `--pill-tone-danger-color`      | `#721c24`                             | color            | `tone="danger"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
-| `--pill-tone-muted-background`  | `#f1f1f1`                             | background-color | `tone="muted"` background. Ignored unless `tone` is set; overridden by `--pill-background`. |
-| `--pill-tone-muted-color`       | `#6b7280`                             | color            | `tone="muted"` text color. Ignored unless `tone` is set; overridden by `--pill-color`. |
-| `--pill-focus-outline`          | `2px solid currentColor`              | outline          | Focus ring shown on the pill when interactive (`role="button"`) and focused via keyboard. |
-| `--pill-focus-outline-offset`   | `2px`                                 | outline-offset   | Offset of the focus ring from the pill edge.                              |
+| Variable                        | Default                                                                    | CSS Property     | Description                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `--pill-background`             | `#e0e0e0`                                                                  | background-color | Background color of the pill.                                                                                     |
+| `--pill-color`                  | `#333333`                                                                  | color            | Text color of the pill label.                                                                                     |
+| `--pill-font-size`              | `13px`                                                                     | font-size        | Font size of the pill text.                                                                                       |
+| `--pill-font-weight`            | `500`                                                                      | font-weight      | Font weight of the pill text.                                                                                     |
+| `--pill-font-family`            | `-`                                                                        | font-family      | Font family of the pill text.                                                                                     |
+| `--pill-line-height`            | `1`                                                                        | line-height      | Line height of the pill text.                                                                                     |
+| `--pill-padding`                | `6px 10px`                                                                 | padding          | Inner padding of the pill.                                                                                        |
+| `--pill-border-radius`          | `999px`                                                                    | border-radius    | Corner rounding of the pill (999px creates a fully rounded shape).                                                |
+| `--pill-border`                 | `none`                                                                     | border           | Border style of the pill.                                                                                         |
+| `--pill-gap`                    | `4px`                                                                      | gap              | Spacing between the text and the dismiss button.                                                                  |
+| `--pill-cursor`                 | `pointer` when interactive (an `onclick` is supplied), `default` otherwise | cursor           | Cursor style when hovering over the pill. A non-interactive pill (no `onclick`) no longer implies it's clickable. |
+| `--pill-letter-spacing`         | `normal`                                                                   | letter-spacing   | Letter spacing of the pill text.                                                                                  |
+| `--pill-text-transform`         | `none`                                                                     | text-transform   | Text transform of the pill text (e.g. `uppercase` for a badge look).                                              |
+| `--pill-width`                  | `auto`                                                                     | width            | Chip width. Set to `100%` to fill a column.                                                                       |
+| `--pill-justify-content`        | `center`                                                                   | justify-content  | Content alignment inside the pill.                                                                                |
+| `--pill-text-align`             | `center`                                                                   | text-align       | Label alignment.                                                                                                  |
+| `--pill-max-width`              | `-`                                                                        | max-width        | Maximum width of the pill. Text is truncated with ellipsis when exceeded.                                         |
+| `--pill-flex-shrink`            | `-`                                                                        | flex-shrink      | Flex shrink behavior of the pill.                                                                                 |
+| `--pill-text-overflow`          | `ellipsis`                                                                 | text-overflow    | How overflowing text is displayed (e.g., ellipsis or clip).                                                       |
+| `--pill-text-white-space`       | `nowrap`                                                                   | white-space      | Whether the pill's text wraps.                                                                                    |
+| `--pill-hover-background`       | `var(--pill-background, #d0d0d0)`                                          | background-color | Background color when hovering over the pill.                                                                     |
+| `--pill-hover-color`            | `var(--pill-color, #333333)`                                               | color            | Text color when hovering over the pill.                                                                           |
+| `--pill-disabled-opacity`       | `0.4`                                                                      | opacity          | Opacity of the pill when disabled.                                                                                |
+| `--pill-disabled-cursor`        | `not-allowed`                                                              | cursor           | Cursor style when the pill is disabled.                                                                           |
+| `--pill-dismiss-size`           | `14px`                                                                     | width, height    | Size of the dismiss button icon (X).                                                                              |
+| `--pill-dismiss-color`          | `currentColor`                                                             | color            | Color of the dismiss button icon.                                                                                 |
+| `--pill-dismiss-hover-color`    | `var(--pill-dismiss-color, currentColor)`                                  | color            | Color of the dismiss button icon on hover.                                                                        |
+| `--pill-tone-accent-background` | `#d1ecf1`                                                                  | background-color | `tone="accent"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                      |
+| `--pill-tone-accent-color`      | `#0c5460`                                                                  | color            | `tone="accent"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                           |
+| `--pill-tone-ok-background`     | `#d4edda`                                                                  | background-color | `tone="ok"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                          |
+| `--pill-tone-ok-color`          | `#155724`                                                                  | color            | `tone="ok"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                               |
+| `--pill-tone-warn-background`   | `#fff3cd`                                                                  | background-color | `tone="warn"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                        |
+| `--pill-tone-warn-color`        | `#856404`                                                                  | color            | `tone="warn"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                             |
+| `--pill-tone-danger-background` | `#f8d7da`                                                                  | background-color | `tone="danger"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                      |
+| `--pill-tone-danger-color`      | `#721c24`                                                                  | color            | `tone="danger"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                           |
+| `--pill-tone-muted-background`  | `#f1f1f1`                                                                  | background-color | `tone="muted"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                       |
+| `--pill-tone-muted-color`       | `#6b7280`                                                                  | color            | `tone="muted"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                            |
+| `--pill-focus-outline`          | `2px solid currentColor`                                                   | outline          | Focus ring shown on the pill when interactive (`role="button"`) and focused via keyboard.                         |
+| `--pill-focus-outline-offset`   | `2px`                                                                      | outline-offset   | Offset of the focus ring from the pill edge.                                                                      |
 
 ## Internal Dependencies
 

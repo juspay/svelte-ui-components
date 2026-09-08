@@ -1,6 +1,55 @@
 import type { Snippet } from 'svelte';
+import type { AttrsEscapeHatch, LegacyAttrs } from '../types';
 
 export type CardProperties = OptionalCardProperties;
+
+/**
+ * The attributes Card writes on its own root, named so each carries the prop to
+ * use instead. Card spreads `attrs` first and these after, so an entry for one
+ * of these keys has never reached the DOM — declaring them optional and
+ * `string`-valued keeps that code compiling, and the `@deprecated` tag is what
+ * makes the discard visible at the point it is written.
+ */
+type CardManagedAttrs = {
+  /** @deprecated Card writes its own `class`. Use `classes`; this entry is discarded. */
+  class?: string;
+  /** @deprecated Card writes its own `style`. Use `cssVars`; this entry is discarded. */
+  style?: string;
+  /**
+   * @deprecated Card derives `role` from `onclick`/`href` and writes it (or removes
+   * it) itself. There is no prop for it; this entry is discarded.
+   */
+  role?: string;
+  /**
+   * @deprecated Card derives `tabindex` from `onclick`/`href` and writes it (or
+   * removes it) itself. There is no prop for it; this entry is discarded.
+   */
+  tabindex?: string;
+  /** @deprecated Card writes its own `href`. Use `href`; this entry is discarded. */
+  href?: string;
+  /** @deprecated Card writes its own `target`. Use `target`; this entry is discarded. */
+  target?: string;
+  /** @deprecated Card writes its own `rel`. Use `rel`; this entry is discarded. */
+  rel?: string;
+  /** @deprecated Card writes its own `onclick`. Use `onclick`; this entry is discarded. */
+  onclick?: string;
+  /**
+   * @deprecated Card binds its own `onkeydown` on an interactive card, to make
+   * Enter and Space activate it. There is no prop for it; this entry is discarded.
+   */
+  onkeydown?: string;
+  /** @deprecated Card writes its own `data-pw`. Use `testId`; this entry is discarded. */
+  'data-pw'?: string;
+  /** @deprecated Card writes its own `testID`. Use `testId`; this entry is discarded. */
+  testID?: string;
+};
+
+/**
+ * `attrs` with Card's managed attributes rejected instead of deprecated — the
+ * shape the prop takes in the next major (#576). Annotate an object with it to
+ * get the compile error today.
+ */
+export type CardStrictAttrs = AttrsEscapeHatch<Extract<keyof CardManagedAttrs, string>>;
 
 export type MandatoryCardProperties = Record<string, never>;
 
@@ -93,11 +142,13 @@ export type OptionalCardProperties = {
    * second `classes` modifier for the same state. Applied before Card's own
    * `class`/`style`/`data-pw`/`testID`/`role`/`tabindex`/`href`/`target`/`rel`/
    * `onclick`/`onkeydown` attributes, so an entry here can never override one
-   * of those — only add attributes Card does not already manage. Omitted by
-   * default, so existing consumers render exactly the same attributes as
-   * before.
+   * of those. Those keys are deprecated rather than rejected, so code that
+   * passes one keeps compiling exactly as before while saying, where it is
+   * written, that it has no effect. `CardStrictAttrs` rejects them outright
+   * for consumers who want that today. Omitted by default, so existing
+   * consumers render exactly the same attributes as before.
    */
-  attrs?: Record<string, string>;
+  attrs?: LegacyAttrs<CardManagedAttrs>;
   /**
    * Overrides the tag `svelte:element` renders for the card root — e.g.
    * `'figure'` for a card whose root needs real `<figure>` sectioning-content

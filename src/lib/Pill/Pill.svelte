@@ -9,6 +9,9 @@
     dismissible = false,
     disabled = false,
     tone,
+    as,
+    ariaExpanded,
+    ariaPressed,
     testId,
     title,
     dismissIcon,
@@ -21,6 +24,26 @@
   }: PillProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
+
+  // A <button> may not contain another button, and a dismissible pill is inherently two
+  // controls. Rather than emit invalid markup, that combination degrades to the div root —
+  // the same graceful-degradation rule Card applies to `as="a"` with no `href`.
+  const isButtonRoot = $derived(as === 'button' && !dismissible);
+  const rootTag = $derived(isButtonRoot ? 'button' : 'div');
+
+  // The synthetic shim exists only because a <div> has no button semantics. A real button
+  // already has them, and adding role/tabindex/keydown on top would duplicate the platform's
+  // own activation — Enter would fire the handler twice.
+  const needsInteractiveShim = $derived(interactive && !isButtonRoot);
+
+  // aria-expanded / aria-pressed / aria-disabled describe a control's state, so they are
+  // meaningless on a plain label and are emitted only once the pill actually is one.
+  //
+  // Note this is deliberately NOT gated on `onclick`: a button root is a real, focusable
+  // control whether or not a handler was supplied, so `<Pill as="button" disabled />` alone
+  // still has to announce that it is disabled. Gating on the handler left it reachable by
+  // keyboard with nothing saying it was inert.
+  const exposesControlState = $derived(isButtonRoot || needsInteractiveShim);
 
   function handleClick(event: MouseEvent): void {
     if (disabled) {
@@ -50,16 +73,19 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
+<svelte:element
+  this={rootTag}
   {...attrs ?? {}}
   class="pill {pillToneClass(tone)} {classes ?? ''}"
   class:disabled
+  type={isButtonRoot ? 'button' : null}
   onclick={interactive ? handleClick : null}
-  onkeydown={interactive ? handleKeydown : null}
-  role={interactive ? 'button' : null}
-  tabindex={interactive ? 0 : null}
-  aria-disabled={interactive && disabled ? true : null}
+  onkeydown={needsInteractiveShim ? handleKeydown : null}
+  role={needsInteractiveShim ? 'button' : null}
+  tabindex={needsInteractiveShim ? 0 : null}
+  aria-disabled={exposesControlState && disabled ? true : null}
+  aria-expanded={exposesControlState && typeof ariaExpanded === 'boolean' ? ariaExpanded : null}
+  aria-pressed={exposesControlState && typeof ariaPressed === 'boolean' ? ariaPressed : null}
   data-pw={typeof testId === 'string' ? testId : null}
   title={title ?? null}
   testID={typeof testId === 'string' ? testId : null}
@@ -87,7 +113,7 @@
       </Button>
     </div>
   {/if}
-</div>
+</svelte:element>
 
 <style>
   .pill {
@@ -120,13 +146,30 @@
     flex-shrink: var(--pill-flex-shrink);
   }
 
-  .pill[role='button'] {
+  .pill[role='button'],
+  button.pill {
     cursor: var(--pill-cursor, pointer);
   }
 
-  .pill[role='button']:focus-visible {
+  .pill[role='button']:focus-visible,
+  button.pill:focus-visible {
     outline: var(--pill-focus-outline, 2px solid currentColor);
     outline-offset: var(--pill-focus-outline-offset, 2px);
+  }
+
+  /* A button root arrives with user-agent styling a div never had: a default margin, the
+     native control appearance, and its own font stack. Neutralise exactly those three and
+     nothing else, so `as="button"` is a semantics change and not a visual one.
+
+     Deliberately NOT `font: inherit` here: that shorthand also resets line-height, and this
+     rule outranks .pill on specificity, so it would silently override
+     `--pill-line-height` and make a button chip 5px taller than the identical div. Every
+     other typographic property is already owned by .pill and needs no restatement. */
+  button.pill {
+    margin: 0;
+    font-family: var(--pill-font-family, inherit);
+    appearance: none;
+    -webkit-appearance: none;
   }
 
   /* Tone defaults — an internal --_pill-tone-* layer, mirroring how Button's

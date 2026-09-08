@@ -5,6 +5,9 @@
   let pillItems = $state(['Svelte', 'React', 'Vue', 'Angular']);
   let dismissCount = $state(0);
   let pillClickCount = $state(0);
+  let interactiveExpanded = $state(false);
+  let interactivePressed = $state(false);
+  let interactiveActivations = $state(0);
 </script>
 
 <div class="page-header">
@@ -207,6 +210,66 @@
     />
     <!-- Regression guard: a pill given no attrs still renders with nothing extra. -->
     <Pill text="Plain" testId="attrs-none-pill" />
+  </div>
+</section>
+
+<!-- #469: as="button" gives a chip-shaped control real button semantics, so a
+     disclosure or toggle chip no longer has to be hand-rolled outside Pill. -->
+<section data-pw="pill-interactive-fixtures">
+  <h2>Interactive root (as="button")</h2>
+  <div class="demo-row">
+    <Pill
+      text="Disclosure chip"
+      as="button"
+      ariaExpanded={interactiveExpanded}
+      onclick={() => (interactiveExpanded = !interactiveExpanded)}
+      testId="pill-as-button-expanded"
+    />
+    <Pill
+      text="Toggle chip"
+      as="button"
+      ariaPressed={interactivePressed}
+      onclick={() => (interactivePressed = !interactivePressed)}
+      testId="pill-as-button-pressed"
+    />
+    <Pill
+      text="Counts activations"
+      as="button"
+      onclick={() => (interactiveActivations += 1)}
+      testId="pill-as-button-activate"
+    />
+    <span data-pw="pill-as-button-activation-count">{interactiveActivations}</span>
+  </div>
+  <div class="demo-row">
+    <!-- A disabled button root still exposes itself, rather than dropping out of
+         the tab order, so a keyboard user can discover that it is disabled. -->
+    <Pill
+      text="Disabled button"
+      as="button"
+      disabled
+      onclick={() => (interactiveActivations += 1)}
+      testId="pill-as-button-disabled"
+    />
+    <!-- No onclick: still a real, focusable <button>, so the disabled state has to
+         be announced on its own rather than riding on the click handler. -->
+    <Pill
+      text="Disabled, no handler"
+      as="button"
+      disabled
+      testId="pill-as-button-disabled-no-handler"
+    />
+    <!-- A button may not contain another button, so this combination degrades to
+         the div root with the interactive shim. -->
+    <Pill
+      text="Dismissible button"
+      as="button"
+      dismissible
+      onclick={() => {}}
+      ondismiss={() => {}}
+      testId="pill-as-button-dismissible"
+    />
+    <!-- Default root is unchanged: still a div. -->
+    <Pill text="Default root" onclick={() => {}} testId="pill-default-root" />
   </div>
 </section>
 

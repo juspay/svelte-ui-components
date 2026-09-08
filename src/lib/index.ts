@@ -103,6 +103,7 @@ export { default as Gallery } from './Gallery/Gallery.svelte';
 export { ChatController } from './Chat/controller.svelte';
 export { partyOf } from './Chat/roles';
 export { SpeechToTextController } from './SpeechToText/controller.svelte';
+export { createCopyState } from './Snippet/copyState.svelte';
 
 export type * from './Button/properties';
 export type * from './Modal/properties';
@@ -144,6 +145,7 @@ export type * from './Progress/properties';
 export type * from './Pill/properties';
 export type * from './Pagination/properties';
 export type * from './Snippet/properties';
+export type * from './Snippet/copyState.svelte';
 export type * from './Gauge/properties';
 export type * from './SplitButton/properties';
 export type * from './KeyboardInput/properties';

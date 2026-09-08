@@ -3,7 +3,7 @@
   import type { SnippetProperties } from './properties';
   import Button from '../Button/Button.svelte';
   import copySvg from '$lib/assets/copy.svg?raw';
-  import { createCopyResetTimer } from './copyResetTimer';
+  import { createCopyState } from './copyState.svelte';
 
   let {
     text,
@@ -17,29 +17,25 @@
     classes
   }: SnippetProperties = $props();
 
-  let copied = $state(false);
-
-  // The reset timer used to be a bare setTimeout with nothing clearing it: a
-  // second copy before the first one's timer fired left two timers racing to
-  // flip `copied`, and navigating away mid-flash left the timer armed against
-  // a destroyed component. `createCopyResetTimer` (unit-tested on its own in
-  // copyResetTimer.test.ts) guarantees only one timer is ever pending, and
-  // onDestroy guarantees it never outlives the component it targets.
-  const resetTimer = createCopyResetTimer();
-  onDestroy(resetTimer.cancel);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      oncopy?.();
-      resetTimer.arm(() => {
-        copied = false;
-      }, copyResetMs);
-    } catch {
-      // Clipboard API unavailable (non-secure context, iframe restrictions)
+  // The whole copy affordance -- clipboard write, `copied` flag, the reset
+  // timer's single-pending guarantee from #530, and teardown -- lives in
+  // `createCopyState` so a consumer who wants the behaviour without this
+  // component's `<code>` box can have it (#574). Getters rather than plain
+  // values, because the factory reads its options at copy time and these are
+  // props: passing them by value would freeze whatever they were at mount.
+  const copyState = createCopyState({
+    get copyResetMs() {
+      return copyResetMs;
+    },
+    get oncopy() {
+      return oncopy;
     }
-  }
+  });
+  onDestroy(copyState.destroy);
+
+  const handleCopy = (): void => {
+    void copyState.copy(text);
+  };
 </script>
 
 <div
@@ -53,9 +49,13 @@
   </code>
   {#if showCopyButton}
     <div class="snippet-copy">
-      <Button onclick={handleCopy} ariaLabel="Copy to clipboard">
-        {#if copied}
-          <span class="snippet-copied" aria-live="polite">{copiedLabel}</span>
+      <!-- The label is only supplied while the button shows an icon and has no
+           visible text of its own. Keeping it once the label swaps to
+           "Copied!" would leave a screen reader announcing "Copy to clipboard"
+           over the visible feedback (WCAG 2.5.3, Label in Name). -->
+      <Button onclick={handleCopy} {...copyState.copied ? {} : { ariaLabel: 'Copy to clipboard' }}>
+        {#if copyState.copied}
+          <span class="snippet-copied">{copiedLabel}</span>
         {:else if typeof copyIcon === 'function'}
           {@render copyIcon()}
         {:else}
@@ -64,6 +64,13 @@
         {/if}
       </Button>
     </div>
+    <!-- A live region has to be in the DOM *before* its text changes, or many
+         screen-reader/browser pairs never announce it. The visible label is
+         swapped inside the button, so the announcement lives here instead:
+         always rendered, outside the button, with only its text changing. -->
+    <span class="snippet-status" role="status" aria-live="polite"
+      >{copyState.copied ? copiedLabel : ''}</span
+    >
   {/if}
 </div>
 
@@ -130,6 +137,20 @@
   .snippet-copy-icon :global(svg) {
     width: 100%;
     height: 100%;
+  }
+
+  /* Announced, never shown: the visible "Copied!" is the label inside the
+     button, and repeating it on screen would read as a duplicate. */
+  .snippet-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   .snippet-copied {

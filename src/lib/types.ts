@@ -1,4 +1,5 @@
 import type { FlyParams } from 'svelte/transition';
+import type { HTMLAttributes } from 'svelte/elements';
 
 /**
  * @name InputDataType
@@ -56,6 +57,42 @@ export type FlyAnimationConfig = {
   in: FlyParams;
   out: FlyParams;
 };
+
+/**
+ * The strict form of the escape-hatch `attrs` prop: every HTML attribute the
+ * component does not manage, and a compile error naming any it does.
+ *
+ * `attrs` itself is NOT typed this way. It stays `Record<string, string>`,
+ * which is what it has always been, so nothing that compiles today stops
+ * compiling. Each component instead names its managed keys as `@deprecated`
+ * members, which an editor strikes through and
+ * `@typescript-eslint/no-deprecated` reports, so the entry is called out where
+ * it is written rather than vanishing silently at spread time.
+ *
+ * Annotate an object with a component's `*StrictAttrs` alias to opt into the
+ * compile error today:
+ *
+ *   const attrs: CardStrictAttrs = { class: 'mine' }; // error: class is managed
+ *
+ * Optional `never` properties reject managed keys through predeclared objects,
+ * not just excess-property checks, and override the broader `data-*` index.
+ * Other HTML attributes retain Svelte's native value and event types. `attrs`
+ * adopts this shape in the next major — see #576, which specifies the
+ * narrowing as a major precisely because rejecting `class` is a break.
+ */
+export type AttrsEscapeHatch<TManagedKeys extends string> = Omit<
+  HTMLAttributes<HTMLElement>,
+  TManagedKeys
+> & { [Key in TManagedKeys]?: never };
+
+/**
+ * The wide `attrs` value type, unchanged from before #576: any attribute name
+ * mapped to a string. Intersected with a component's managed-key map so those
+ * keys carry a deprecation, which constrains nothing — every managed key is
+ * declared optional and `string`-valued, exactly what the index signature
+ * already allowed.
+ */
+export type LegacyAttrs<TManagedAttrs> = Record<string, string> & TManagedAttrs;
 
 export type Rgb = { r: number; g: number; b: number };
 export type Hsv = { h: number; s: number; v: number };

@@ -1,6 +1,62 @@
 import type { Snippet } from 'svelte';
+import type { AttrsEscapeHatch, LegacyAttrs } from '../types';
 
 export type PillProperties = MandatoryPillProperties & OptionalPillProperties & PillEventProperties;
+
+/**
+ * The attributes Pill writes on its own root, named so each carries the prop to
+ * use instead. Pill spreads `attrs` first and these after, so an entry for one
+ * of these keys has never reached the DOM — declaring them optional and
+ * `string`-valued keeps that code compiling, and the `@deprecated` tag is what
+ * makes the discard visible at the point it is written.
+ */
+type PillManagedAttrs = {
+  /** @deprecated Pill writes its own `class`. Use `classes`; this entry is discarded. */
+  class?: string;
+  /**
+   * @deprecated Pill always supplies `type="button"` on a `<button>` root, so a
+   * pill never submits a form by accident. There is no prop for it; this entry
+   * is discarded.
+   */
+  type?: string;
+  /** @deprecated Pill writes its own `data-pw`. Use `testId`; this entry is discarded. */
+  'data-pw'?: string;
+  /** @deprecated Pill writes its own `testID`. Use `testId`; this entry is discarded. */
+  testID?: string;
+  /**
+   * @deprecated Pill derives `role` from whether it is interactive on a
+   * non-button root. There is no prop for it; this entry is discarded.
+   */
+  role?: string;
+  /**
+   * @deprecated Pill derives `tabindex` from whether it is interactive on a
+   * non-button root. There is no prop for it; this entry is discarded.
+   */
+  tabindex?: string;
+  /** @deprecated Pill writes its own `title`. Use `title`; this entry is discarded. */
+  title?: string;
+  /** @deprecated Pill derives `aria-disabled` from `disabled`; this entry is discarded. */
+  'aria-disabled'?: string;
+  /** @deprecated Pill derives `aria-expanded` from `ariaExpanded`; this entry is discarded. */
+  'aria-expanded'?: string;
+  /** @deprecated Pill derives `aria-pressed` from `ariaPressed`; this entry is discarded. */
+  'aria-pressed'?: string;
+  /** @deprecated Pill writes its own `onclick`. Use `onclick`; this entry is discarded. */
+  onclick?: string;
+  /**
+   * @deprecated Pill binds its own `onkeydown` on an interactive non-button
+   * root, to make Enter and Space activate it. There is no prop for it; this
+   * entry is discarded.
+   */
+  onkeydown?: string;
+};
+
+/**
+ * `attrs` with Pill's managed attributes rejected instead of deprecated — the
+ * shape the prop takes in the next major (#576). Annotate an object with it to
+ * get the compile error today.
+ */
+export type PillStrictAttrs = AttrsEscapeHatch<Extract<keyof PillManagedAttrs, string>>;
 
 export type MandatoryPillProperties = {
   text: string;
@@ -82,11 +138,14 @@ export type OptionalPillProperties = {
    * just to hold the attribute, or adding a second `classes` modifier for the
    * same state. Applied before Pill's own `class`/`onclick`/`onkeydown`/
    * `role`/`tabindex`/`aria-disabled`/`data-pw`/`title`/`testID` attributes, so
-   * an entry here can never override one of those — only add attributes Pill
-   * does not already manage. Omitted by default, so existing consumers render
-   * exactly the same attributes as before.
+   * an entry here can never override one of those. Those keys are deprecated
+   * rather than rejected, so code that passes one keeps compiling exactly as
+   * before while saying, where it is written, that it has no effect.
+   * `PillStrictAttrs` rejects them outright for consumers who want that today.
+   * Omitted by default, so existing consumers render exactly the same
+   * attributes as before.
    */
-  attrs?: Record<string, string>;
+  attrs?: LegacyAttrs<PillManagedAttrs>;
 };
 
 export type PillEventProperties = {

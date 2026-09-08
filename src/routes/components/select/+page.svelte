@@ -58,6 +58,10 @@
   let errorValue: string[] = $state([]);
   let clearableValue: string[] = $state(['apple']);
   let clearCount = $state(0);
+  let menuSearchValue: string[] = $state([]);
+  let menuMultiValue: string[] = $state(['nyc']);
+  let menuMultiOpen = $state(false);
+  let menuApplied = $state('');
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
@@ -79,6 +83,22 @@
   {#if singleValue.length > 0}
     <p class="demo-info">Selected ID: {singleValue.at(0)}</p>
   {/if}
+</div>
+
+<h3>In-menu search (DS keyboard contract)</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <!-- The search box lives inside the open menu and is reached by Tab AFTER
+       opening, rather than being focused for you. That is what lets a keyboard
+       user open the menu and arrow straight through the options without
+       typing first. -->
+  <Select
+    items={cities}
+    bind:value={menuSearchValue}
+    searchable
+    searchPosition="menu"
+    placeholder="Choose a city"
+    testId="select-menu-search"
+  />
 </div>
 
 <h3>Error state</h3>
@@ -135,7 +155,14 @@
 
 <h3>Single select + searchable</h3>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={cities} bind:value={searchValue} searchable placeholder="Search cities..." />
+  <!-- Regression guard: no searchPosition, so the input stays in the trigger. -->
+  <Select
+    items={cities}
+    bind:value={searchValue}
+    searchable
+    placeholder="Search cities..."
+    testId="select-search-demo"
+  />
   {#if searchValue.length > 0}
     <p class="demo-info">Selected ID: {searchValue.at(0)}</p>
   {/if}
@@ -400,6 +427,48 @@
       testId="select-portal-demo"
     />
   </div>
+</div>
+
+<h3>Portaled in-menu search</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={cities}
+    searchable
+    searchPosition="menu"
+    usePortal
+    placeholder="Search cities"
+    testId="select-menu-portal"
+  />
+  <button data-pw="select-menu-portal-next">Next field</button>
+</div>
+
+<h3>In-menu multi-select with pinned actions</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={cities}
+    multiple
+    searchable
+    searchPosition="menu"
+    showSelectAll
+    bind:value={menuMultiValue}
+    bind:open={menuMultiOpen}
+    testId="select-menu-multi"
+  >
+    {#snippet triggerSummary({ value })}<span>{value.length} selected</span>{/snippet}
+    {#snippet bottomContent()}
+      <button data-pw="select-menu-clear-all" onclick={() => (menuMultiValue = [])}
+        >Clear all</button
+      >
+      <button
+        data-pw="select-menu-apply"
+        onclick={() => {
+          menuApplied = menuMultiValue.join(',');
+          menuMultiOpen = false;
+        }}>Select ({menuMultiValue.length})</button
+      >
+    {/snippet}
+  </Select>
+  <p data-pw="select-menu-applied">Applied: {menuApplied}</p>
 </div>
 
 <style>

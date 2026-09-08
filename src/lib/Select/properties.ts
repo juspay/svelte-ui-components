@@ -27,10 +27,29 @@ export type MandatorySelectProperties = {
 
 export type SelectHierarchy = 'default' | 'ghost';
 
+/** Placement of the `searchable` filter input. See `searchPosition`. */
+export type SelectSearchPosition = 'trigger' | 'menu';
+
 export type OptionalSelectProperties = {
   value?: string[];
   multiple?: boolean;
   searchable?: boolean;
+  /**
+   * Where the `searchable` filter input lives. `'trigger'` (the default) keeps
+   * today's behaviour: the input replaces the trigger's label and is focused
+   * automatically on open.
+   *
+   * `'menu'` puts it inside the open dropdown instead, which is what the
+   * design-system keyboard contract specifies — the trigger stays a plain
+   * combobox, and the search box is reached by Tab AFTER opening rather than
+   * by being focused for you. That difference is the point: with the input in
+   * the trigger there is no way to open the menu and keep focus on the
+   * combobox, so a keyboard user who wanted to arrow through the options had
+   * to type first.
+   *
+   * No effect unless `searchable` is also set.
+   */
+  searchPosition?: SelectSearchPosition;
   placeholder?: string;
   disabled?: boolean;
   /**

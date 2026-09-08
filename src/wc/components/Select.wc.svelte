@@ -7,6 +7,7 @@
       value: { type: 'Object' },
       multiple: { type: 'Boolean', reflect: true },
       searchable: { type: 'Boolean', reflect: true },
+      searchPosition: { type: 'String', attribute: 'search-position' },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       error: { type: 'Boolean', reflect: true },

@@ -33,6 +33,28 @@ export type OptionalSelectProperties = {
   searchable?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  /**
+   * Renders the error treatment on the trigger — a red border that outranks
+   * the hover and focus border colours, so the field still reads as invalid
+   * while the user is in it. Independent of any validation the consumer runs;
+   * this is the server- or form-driven flag, matching `Input.forceError`.
+   */
+  error?: boolean;
+  /**
+   * Message shown below the trigger while `error` is true, in a `role="alert"`
+   * region wired to the combobox through `aria-describedby`. A string rather
+   * than a snippet, following `Input`'s `onErrorMessage`: the content is a
+   * sentence, and making it a snippet would mean every consumer rebuilds the
+   * alert semantics that make it announce.
+   */
+  errorMessage?: string;
+  /**
+   * Adds a clear (×) button to the trigger whenever there is a selection. It
+   * resets the value WITHOUT opening the menu, which is the whole point —
+   * clearing through the menu costs an open, a hunt and a second click.
+   * Hidden while `disabled`, and never rendered when nothing is selected.
+   */
+  clearable?: boolean;
   bottomContent?: Snippet;
   /**
    * Snippet for rendering a custom multi-select option indicator, receiving `{ checked, indeterminate }`.
@@ -99,6 +121,12 @@ export type OptionalSelectProperties = {
 
 export type SelectEventProperties = {
   onchange?: (value: string[]) => void;
+  /**
+   * Fires when the clear button empties the selection, after `onchange` has
+   * already reported the new empty value. Use it to distinguish "cleared" from
+   * "deselected the last item", which `onchange` alone cannot tell apart.
+   */
+  onclear?: () => void;
   onopen?: () => void;
   onclose?: () => void;
 };

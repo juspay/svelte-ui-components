@@ -55,6 +55,9 @@
   let iconTintValue: string[] = $state([]);
   let portalValue: string[] = $state([]);
   let inflowValue: string[] = $state([]);
+  let errorValue: string[] = $state([]);
+  let clearableValue: string[] = $state(['apple']);
+  let clearCount = $state(0);
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
@@ -76,6 +79,45 @@
   {#if singleValue.length > 0}
     <p class="demo-info">Selected ID: {singleValue.at(0)}</p>
   {/if}
+</div>
+
+<h3>Error state</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruits}
+    bind:value={errorValue}
+    placeholder="Choose a fruit"
+    error
+    errorMessage="Pick a fruit to continue"
+    testId="select-invalid"
+  />
+</div>
+
+<h3>Error border survives focus</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <!-- Regression guard: a field that stops looking invalid the moment it is
+       focused is invalid exactly when nobody can see it. -->
+  <Select items={fruits} placeholder="Choose a fruit" error testId="select-invalid-plain" />
+</div>
+
+<h3>Clearable trigger</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruits}
+    bind:value={clearableValue}
+    placeholder="Choose a fruit"
+    clearable
+    onclear={() => (clearCount += 1)}
+    testId="select-clearable"
+  />
+  <p class="demo-info" data-pw="select-clear-count">clears: {clearCount}</p>
+</div>
+
+<h3>Clearable with nothing selected</h3>
+<div class="demo-row" style="max-width: 300px;">
+  <!-- No selection, so no clear control: a × that never clears anything reads
+       as broken. -->
+  <Select items={fruits} placeholder="Choose a fruit" clearable testId="select-clearable-empty" />
 </div>
 
 <h3>Single select with selected tick</h3>

@@ -4,7 +4,7 @@ export type MarkdownTextProperties = OptionalMarkdownTextProperties &
 export type MandatoryMarkdownTextProperties = {
   /**
    * Markdown source. Rendered through the library's sanitized-by-construction
-   * pipeline: raw HTML (block and inline) is escaped and shown as text, and
+   * pipeline: raw HTML is escaped by default (or stripped via sanitize.rawHtml), and
    * link/image URLs outside the safe-protocol allow-list are stripped while
    * their text is kept.
    */
@@ -38,8 +38,9 @@ export type OptionalMarkdownTextProperties = {
  * with the library's own allow-list for each surface, so it can only NARROW
  * what already renders, never widen it (listing `javascript:` here can never
  * resurrect it). Omitting `sanitize`, or `allowedProtocols`, keeps today's
- * defaults untouched. This is independent of the "raw HTML is always escaped"
- * guarantee, which has no opt-out.
+ * defaults untouched. This is independent of how raw HTML is disposed of,
+ * which `rawHtml` governs separately; raw HTML is never inserted as markup
+ * either way, so neither option can widen what renders.
  */
 export type MarkdownSanitizeOptions = {
   /**
@@ -62,9 +63,8 @@ export type MarkdownSanitizeOptions = {
    * `'blockquote'`, `'ul'`, `'ol'`, `'table'`, `'hr'`, and `'h1'`–`'h6'`. An
    * unrecognised name is simply ignored — it narrows nothing, it does not
    * error. Omitting `allowedTags` keeps today's defaults untouched: every tag
-   * renders as it does now. This is independent of the "raw HTML is always
-   * escaped" guarantee, which has no opt-out and is never affected by this
-   * list.
+   * renders as it does now. This list governs markdown-GENERATED tags only and
+   * never affects raw HTML from the source, whose disposal is `rawHtml`'s job.
    */
   allowedTags?: string[];
   /**
@@ -75,7 +75,28 @@ export type MarkdownSanitizeOptions = {
    * safety one. Defaults to `false`, keeping today's checkbox rendering.
    */
   disableTaskLists?: boolean;
+  /**
+   * What to do with raw HTML typed literally into the markdown source, as
+   * opposed to the tags markdown itself generates (which `allowedTags`
+   * governs). Defaults to `'escape'` — today's behaviour, where
+   * `<script>alert(1)</script>` renders as visible escaped tag text.
+   *
+   * `'strip'` removes raw tags and comments while retaining their text:
+   * `<div>hello</div>` becomes `hello`. An inert HTML parser handles quoted
+   * delimiters and entities; every retained text node is escaped before output.
+   * Script/style contents remain visible text, never executable elements.
+   * Fenced code and ordinary angle-bracket prose are not raw HTML tokens and
+   * keep their existing rendering. Neither mode inserts source HTML into the DOM.
+   */
+  rawHtml?: MarkdownRawHtmlMode;
 };
+
+/**
+ * `'escape'` renders raw HTML as visible escaped text (the default, and what
+ * the component has always done); `'strip'` removes it. See
+ * `MarkdownSanitizeOptions.rawHtml`.
+ */
+export type MarkdownRawHtmlMode = 'escape' | 'strip';
 
 export type RenderMarkdownOptions = {
   /** Render single newlines as `<br>` (GFM "breaks" mode). */
@@ -83,8 +104,8 @@ export type RenderMarkdownOptions = {
   /**
    * Parse as inline markdown: no block elements (`<p>`, lists, tables) are
    * produced, so the output can sit inside an existing `<p>` or `<span>`.
-   * The same sanitization applies — inline raw HTML is escaped and unsafe
-   * link/image protocols are stripped.
+   * The same sanitization applies — inline raw HTML is escaped (or dropped,
+   * per `sanitize.rawHtml`) and unsafe link/image protocols are stripped.
    */
   inline?: boolean;
   /** Accessible name for the scroll region wrapping each table. See `MarkdownTextProperties.tableLabel`. */

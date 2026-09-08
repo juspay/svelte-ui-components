@@ -201,5 +201,8 @@
   },
   "engines": {
     "node": ">=22.18"
+  },
+  "dependencies": {
+    "parse5": "^8.0.1"
   }
 }

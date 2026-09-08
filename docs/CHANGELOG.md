@@ -2,7 +2,55 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.5)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.0)
+
+Thirteen dependabot alerts were open. This clears eleven of them, including all
+ten highs, by refreshing transitive resolutions inside their existing ranges. No
+manifest change -- the lockfile alone moves.
+
+fast-uri                 3.1.2  -&gt; 3.1.7   6 high
+js-yaml                  4.2.0  -&gt; 4.3.2   2 high
+postcss                  8.5.15 -&gt; 8.5.28  1 high + 1 medium
+brace-expansion          5.0.6  -&gt; 5.0.9   1 high
+postcss-selector-parser  7.1.1  -&gt; 7.1.6   1 low
+
+(nanoid 3.3.12 -&gt; 3.3.18 comes along as a postcss transitive.)
+
+Worth stating plainly, because it changes how urgent this was: every one of the
+thirteen is `development` scope. The published package declares NO runtime
+dependencies at all -- only peers (lottie-web, marked, svelte, type-decoder,
+typescript), none of which appear in any advisory. So nothing vulnerable has ever
+reached a consumer's node_modules. This is build-toolchain exposure, not shipped
+exposure. Still worth fixing; not worth alarm.
+
+## The two left open, and why
+
+`cookie` (low, CVE-2024-47764) is pinned by SvelteKit, not by us. @sveltejs/kit
+2.70.3 is the current latest and STILL declares `cookie: ^0.6.0`, so there is no
+version to upgrade to. Forcing a pnpm override against kit's own declared range,
+to clear one low-severity dev-only advisory in a project that ships no server and
+reads no cookies, is a worse trade than the advisory. Left deliberately; it
+resolves when upstream moves.
+
+`@sveltejs/kit` (medium, needs 2.69.1) is deliberately NOT bundled here, because
+2.70.3 breaks `pnpm check` with 28 errors -- `Cannot find name 'node:fs'`,
+`'process'`, and friends across tests/ and scripts/. The cause is structural
+rather than incidental: `tsconfig.json` extends `.svelte-kit/tsconfig.json`, which
+kit GENERATES, so the upgrade changes type resolution underneath the repo's own
+config.
+
+That was isolated rather than assumed. With kit pinned back to 2.63.1 and all six
+transitive bumps kept, `check` returns 0 -- so the bumps are provably not the
+cause, and this change is safe to land on its own. The kit upgrade needs its own
+PR that actually fixes the type resolution, and folding a broken `check` into a
+security fix to make one number go down would be the wrong trade.
+
+Verified: lint 0, check 0, build 0, 919 unit, 629 Playwright functional, 93 visual
+with 1 skipped. The visual run is not ceremony here -- postcss processes every
+stylesheet in the library, and a CSS-processor bump is exactly the kind of change
+that moves rendering by a pixel without touching a line of source.
+
+## [4.11.0](https://github.com/juspay/svelte-ui-components/compare/4.11.0..4.10.5) - 8 September 2026
 
 Pill's root is a non-interactive `&lt;div&gt;`, with a synthetic `role="button"` /
 `tabindex="0"` / keydown shim bolted on when `onclick` is supplied. That covers a

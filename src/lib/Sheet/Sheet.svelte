@@ -99,16 +99,26 @@
     }
   }
 
-  function scrollLockAction(_node: HTMLElement) {
+  function scrollLockAction(node: HTMLElement) {
+    const previousFocus = document.activeElement;
+    let active = true;
     lockBodyScroll();
     tick().then(() => {
-      if (sheetPanel !== null) {
+      if (active && sheetPanel !== null) {
         sheetPanel.focus();
       }
     });
     return {
       destroy() {
+        active = false;
         unlockBodyScroll();
+        if (
+          previousFocus instanceof HTMLElement &&
+          previousFocus.isConnected &&
+          (document.activeElement === document.body || node.contains(document.activeElement))
+        ) {
+          previousFocus.focus();
+        }
       }
     };
   }
@@ -295,22 +305,45 @@
     border-left: var(--sheet-border, none);
   }
 
+  /* Top/bottom stretch edge to edge by default, exactly as before: --sheet-
+     band-width is `auto`, so `margin-inline: auto` has nothing to distribute
+     and the panel still spans --sheet-left to --sheet-right.
+
+     Setting --sheet-band-width (or --sheet-band-max-width) caps it, and the
+     auto margins then centre it between those same two insets -- which is the
+     shape a bottom "launch" sheet wants above phone widths, and previously
+     had to be faked with hand-computed calc() offsets.
+
+     Deliberately NOT --sheet-width/--sheet-max-width, even though the issue
+     proposed those names. Those already mean "the width of a left/right
+     panel", so a consumer who themes them for their side sheets would find
+     their bottom sheets silently reshaped by an upgrade. side="center" avoids
+     the same collision the same way, with its own --sheet-center-* tokens. */
   .sheet-panel.top,
   .sheet-panel.bottom {
     left: var(--sheet-left, 0);
     right: var(--sheet-right, 0);
     height: var(--sheet-height, 300px);
     max-height: var(--sheet-max-height, 100vh);
+    width: var(--sheet-band-width, auto);
+    max-width: var(--sheet-band-max-width, none);
+    box-sizing: var(--sheet-band-box-sizing, content-box);
+    margin-inline: auto;
+    border: var(--sheet-band-border, none);
   }
 
+  /* A capped panel is a floating card and needs all four edges; an
+     edge-to-edge one deliberately draws only the edge it enters from. The
+     entering edge falls back through --sheet-border so an existing theme that
+     sets only that keeps rendering exactly as it did. */
   .sheet-panel.top {
     top: var(--sheet-top, 0);
-    border-bottom: var(--sheet-border, none);
+    border-bottom: var(--sheet-band-border, var(--sheet-border, none));
   }
 
   .sheet-panel.bottom {
     bottom: var(--sheet-bottom, 0);
-    border-top: var(--sheet-border, none);
+    border-top: var(--sheet-band-border, var(--sheet-border, none));
   }
 
   /* `side="center"` is a fixed-size floating dialog, not an edge-anchored

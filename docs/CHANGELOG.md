@@ -2,58 +2,144 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.10.4)
 
-Closes #550
+Two components in this library reveal text progressively, and only one of them
+answered the reader's motion preference.
 
-`.accordion` carries `overflow: hidden` so it can animate
-`grid-template-rows` 0fr -&gt; 1fr, but `overflow` other than `visible`
-also drops an element's automatic minimum size to zero. Placed
-directly inside a consumer's own `display: grid` container, the panel
-was then free to be stretched down to whatever height that grid
-happened to hand it -- independent of its own children's real height,
-down to as little as zero -- so the fold opened with correct content
-already in the DOM but no visible box around it. The trigger still
-toggled and any chevron still rotated, which read as "the content
-failed to render" when the content was fine all along.
+`ChatController` bypasses its drain loop entirely when `prefers-reduced-motion:
+reduce` is set. `TypewriterText` -- which exists to do the same job, and whose own
+tagline is "reveals text one character at a time, the way a streaming model answer
+reads" -- had no such handling at all. So the same OS setting silenced the reveal
+in a chat bubble and left it running in a message body rendered inside that very
+bubble, which is a supported composition: `Chat`'s `messageBody` snippet.
 
-Adds `align-self: var(--accordion-align-self, start)` to `.accordion`,
-which opts the panel out of that stretch so it always sizes from its
-own expanded content instead. It is inert when the panel is not a grid
-or flex item, so every other placement is unaffected, and it does not
-touch the collapse animation: collapsed still resolves to 0px exactly
-as before.
+Typing IS the animation here, so honouring the setting means suppressing the
+reveal itself rather than a transition around it. Under `reduce`, text is now
+disclosed as it arrives; `speed`, `variableDelay` and `resolveDelay` are not
+consulted. `onprogress` still fires, once per disclosure instead of once per
+character -- the same contract the existing `isStreaming: false` bulk path
+already had.
 
-Exposed as a custom property rather than a hardcoded value: Svelte's
-scoped class raises `.accordion`'s specificity above a plain global
-class, so a consumer who legitimately wants the panel stretched (or
-who passes their own alignment through the `classes` hook, which the
-docs already describe as "define classes with CSS variable overrides")
-would otherwise find their choice silently overridden with no
-supported way to opt out. `--accordion-align-self` (default `start`)
-follows the same pattern already used for `--accordion-transition` and
-documents the escape hatch instead of leaving it undiscoverable.
+The predicate moves to `src/lib/utils.ts` and both implementations import it,
+rather than a second hand-written copy. That is the point: a duplicated
+reduced-motion check is exactly how the two reveals drifted apart in the first
+place. `lockBodyScroll` set the precedent for a shared browser-level concern.
+It is not exported from the public index -- this is a fix, not new API.
 
-Reproduced first against the unfixed build (measured 300px against a
-300px-tall grid parent whose real content needs ~500px), then verified
-the fix decouples the panel's height from the parent's entirely across
-a range of parent heights (1px to 600px all yield the same, correct,
-content-derived height).
+`revealRemainingText()` is extracted from the `isStreaming: false` effect, which
+already did precisely this, so the reduced-motion path and the end-of-stream path
+are now one implementation rather than two that must be kept in agreement.
 
-Adds a Playwright spec (tests/accordion-grid-collapse.spec.ts) and a
-grid-nesting demo section to the Accordion page reproducing the exact
-nesting, regenerates the Accordion visual baseline for the grown demo
-page, and confirms the existing Accordion specs (a11y-accordion.spec.ts,
-accordion-aria-controls.test.ts) still pass unchanged.
+Verified with a real red-green cycle, not a test written after the fact:
 
-The spec waits on the panel's box going frame-stable rather than on a
-fixed 400ms. A transitionend listener races -- if the transition has
-already ended when the listener attaches it never fires -- while frame
-stability settles correctly whether the animation is running, finished,
-or never started (reduced-motion, or a zero duration from a consumer).
+guard disabled -&gt; reduce test FAILS (38 mutations, one per character)
+control test PASSES
+guard enabled  -&gt; both PASS
+
+The control is deliberate. Without it, `mutations === 1` would also pass if the
+reveal were broken outright or the observer never attached, so it proves the
+measurement distinguishes the two states rather than always reporting "instant".
+
+One trap worth recording, since it cost a wrong diagnosis: the idiomatic
+`test.use({ reducedMotion: 'reduce' })` does NOT reach the page under this
+config -- `matchMedia(...).matches` stays false, so the test renders an
+un-emulated page and fails for a reason unrelated to the component. The test
+uses `page.emulateMedia()` and asserts the emulation actually landed before
+asserting anything about the reveal.
+
+Docs: both pages now warn against the double-reveal that combining
+`typewriter: true` with a `TypewriterText` `messageBody` produces -- the
+controller is already growing `msg.content` character by character, so
+`TypewriterText` re-types each increment on its own cadence. Cross-links use
+plain backticked names, not relative `.md` links: those resolve to
+`/components/&lt;name&gt;.md` and fail the prerender build outright.
+
+## Review follow-ups
+
+Three findings, all addressed; one of them turned out not to be a defect.
+
+The review flagged as MAJOR that the reduced-motion check is "not reactive to
+media-query changes" -- that a reveal already in flight would keep typing until
+the text changed or completed, and that a `matchMedia` subscription was needed.
+
+That is not what happens, and the review's own second suggestion is what proves
+it. `typeNextCharacter()` re-enters through its own `setTimeout` chain and
+re-reads the preference at the top of every call, so a mid-stream switch is
+picked up on the very next character -- one `speed` interval, 20ms on the test
+fixture. The suggested mid-stream test is now written, and it discriminates
+exactly this:
+
+per-call check (shipped)   3 mutations after the toggle
+mount-only check           27 mutations -- typing continues
+
+The other two tests pass under both, so this new one covers precisely the gap the
+review was worried about. A subscription would buy nothing here and would add a
+listener to unregister.
+
+The MINOR finding was correct and is fixed: the growth `$effect` cleared
+`timeoutId` without resetting it to `null`, which is inconsistent with
+`revealRemainingText()` and `onDestroy()` and can mislead a reader about whether a
+timer is live.
+
+The mid-stream test needed two revisions to be trustworthy rather than merely
+green. A first bound of `&lt;= 2` was pinned to an observed number and failed at 3.
+A scaled bound then failed its own meaningfulness guard, because the default poll
+cadence let 57 of 74 characters type before it first reported. The bound is now
+absolute, because the two behaviours differ in kind -- disclosing costs one
+mutation plus the CDP round-trip regardless of how much text remains, whereas
+typing costs one per character -- and the poll uses a 10ms interval so the toggle
+lands early. Stable across 6 repeats.
+
+Closes #465 (partly -- the ~114 LOC of duplicated reveal logic remains; this
+closes the behavioural divergence and the documented failure mode).
+
+Verified: lint 0, check 0, 919 unit, and all 18 Playwright tests across
+typewriter pacing, resolveDelay, reduced motion and ChatMessage typewriter.
 
 -
+fix(typewriter): honour prefers-reduced-motion, matching ChatController ([c34b93f](https://github.com/juspay/svelte-ui-components/commit/c34b93f2c32fff159e9a225aa1b93b7b1062fe38))
+-
+docs(pill): document the dark-theme recipe, and stop the demo silently killing tone ([1587358](https://github.com/juspay/svelte-ui-components/commit/1587358f03a2df10eedc43d0eb5c339eb310d9d7))
+-
+fix(release): abort a release whose build is already stale, and clear the MCP advisories ([a3dcc92](https://github.com/juspay/svelte-ui-components/commit/a3dcc920415f856ade3481f90d7bf3877efe15dc))
+-
+fix(mcp): declare the repository so provenance can be verified ([7b65816](https://github.com/juspay/svelte-ui-components/commit/7b65816606d83a3dad728b24f0e37cec7d7fa2bd))
+
+## [4.10.4](https://github.com/juspay/svelte-ui-components/compare/4.10.4..4.10.3) - 7 September 2026
+
+role and aria-label set on &lt;sui-modal&gt; land on the custom-element host --
+the ARIAMixin accessors every element already has -- not on
+.modal-content, the panel two levels inside the shadow tree that
+actually carries aria-modal and the accessible name. The host wraps the
+whole full-screen overlay, so the attribute looks wired and isn't:
+assistive tech finds an unnamed, unroled panel.
+
+Add modalAriaLabel/modalRole (attributes modal-aria-label/modal-role),
+the same prefixed-alias pattern Toggle.wc.svelte already uses for
+inputAriaLabel, forwarded to the inner Modal's ariaLabel/role. Purely
+additive: a consumer setting neither alias sees the panel exactly as
+before, and the host's own role/aria-label are untouched.
+
+Separate from other work on this branch because it's an unrelated
+web-component wrapper fix, not part of the same change.
+
+The props table now points at the two wc-only aliases, which a reader
+scanning it would otherwise miss, and a fourth spec pins the additive
+guarantee directly: role/aria-label set on the host stay on the host and
+still do not reach the panel. That is the trap the aliases exist for, and
+asserting it makes the no-op claim testable rather than stated.
+
+-
+fix(sheet): name the dismissible overlay and restore the panel's focus ring ([6162f5f](https://github.com/juspay/svelte-ui-components/commit/6162f5f1fa661be1b08e4baf294f56bc2f5cf86f))
+-
 fix(accordion): expanded panel keeps zero height inside a grid parent ([4ba6957](https://github.com/juspay/svelte-ui-components/commit/4ba6957ad2691c2ff7d8d66ad07ae9adc0d2ee60))
+-
+feat(modal): forward aria-label and role to sui-modal's content panel ([754694c](https://github.com/juspay/svelte-ui-components/commit/754694cf563aee87eedc68be7b3403b69386a710))
+-
+feat(pill): let a consumer put arbitrary attributes on the root ([d4c8a91](https://github.com/juspay/svelte-ui-components/commit/d4c8a914ca04cf88570bf239a8097bb429413336))
+-
+docs(card): stop documenting figcaption inside as="figure" as valid ([c6f0382](https://github.com/juspay/svelte-ui-components/commit/c6f0382bba13856d66441a7d97fb63706f1280ba))
 
 ## [4.10.3](https://github.com/juspay/svelte-ui-components/compare/4.10.3..4.10.2) - 7 September 2026
 

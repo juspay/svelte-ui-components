@@ -12,6 +12,7 @@
     value = $bindable([]),
     multiple = false,
     searchable = false,
+    searchPosition = 'trigger',
     placeholder = '',
     disabled = false,
     error = false,
@@ -63,6 +64,12 @@
   const instanceId = $props.id();
   const listboxId = `select-listbox-${instanceId}`;
   const errorMessageId = `${listboxId}-error`;
+
+  /* `searchable` alone no longer says where the input goes, so every place
+     that used to branch on it now asks which of the two it meant. Filtering
+     still keys off `searchable`, since that is true in both placements. */
+  const searchInTrigger = $derived(searchable && searchPosition !== 'menu');
+  const searchInMenu = $derived(searchable && searchPosition === 'menu');
 
   const hasErrorMessage = $derived(
     error && typeof errorMessage === 'string' && errorMessage.trim().length > 0
@@ -222,7 +229,7 @@
     onopen?.();
     highlightedIndex = -1;
     query = '';
-    if (searchable) {
+    if (searchInTrigger) {
       await tick();
       if (searchInputEl !== null) {
         searchInputEl.focus();
@@ -246,6 +253,11 @@
     } else {
       value = [id];
       close();
+      // Focus was in the menu's own search box, which is now gone; without
+      // this it falls back to <body> and the keyboard user loses their place.
+      if (searchInMenu) {
+        triggerEl?.focus();
+      }
     }
     onchange?.(value);
   }
@@ -319,6 +331,28 @@
     }
   }
 
+  const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  /* Options carry tabindex="-1", so this is the search box plus whatever the
+     consumer pinned via bottomContent -- the panel's real tab stops. */
+  function menuFocusables(): HTMLElement[] {
+    return dropdownEl === null ? [] : [...dropdownEl.querySelectorAll<HTMLElement>(FOCUSABLE)];
+  }
+
+  /* Leaving the menu forwards should continue from the trigger, as if the
+     panel had never been in the tab order -- which is literally true for a
+     portaled one, whose DOM position is the end of <body>. */
+  function focusAfterTrigger(): void {
+    if (triggerEl === null || typeof document === 'undefined') {
+      return;
+    }
+    const tabbable = [...document.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      (element) => element.closest('.select-dropdown') === null
+    );
+    tabbable.at(tabbable.indexOf(triggerEl) + 1)?.focus();
+  }
+
   function handleKeydown(event: KeyboardEvent): void {
     if (disabled) {
       return;
@@ -357,7 +391,7 @@
       case 'Escape':
         if (open) {
           close();
-          if (!searchable && triggerEl !== null) {
+          if (!searchInTrigger && triggerEl !== null) {
             triggerEl.focus();
           }
         }
@@ -370,13 +404,68 @@
           }
         }
         break;
-      case 'Tab':
-        if (open) {
+      case 'Tab': {
+        if (!open) {
+          break;
+        }
+        /* Outside the in-menu variant, Tab always means focus is leaving. */
+        if (!searchInMenu) {
           close();
+          break;
+        }
+        const active = document.activeElement;
+        if (event.shiftKey) {
+          /* Backwards out of the trigger genuinely leaves the widget; every
+             other Shift+Tab walks back through the menu and must not close
+             it, or the search box could never be left and re-entered. */
+          if (active === triggerEl) {
+            close();
+          } else if (active === searchInputEl) {
+            /* The trigger is not the portaled panel's DOM predecessor, so
+               native Shift+Tab would land outside the widget entirely. */
+            event.preventDefault();
+            triggerEl?.focus();
+          }
+          break;
+        }
+        if (active === triggerEl) {
+          /* A portaled panel is appended to <body>, so it is not the
+             trigger's DOM-order successor and native Tab would skip the whole
+             menu. Moving focus explicitly makes the in-flow and portaled
+             variants answer Tab identically. */
+          event.preventDefault();
+          searchInputEl?.focus();
+          break;
+        }
+        /* Forward Tab only leaves once there is nothing left to reach: the
+           search box is followed by any pinned bottom actions, which were
+           unreachable while Tab from the search closed the menu outright. */
+        if (active === menuFocusables().at(-1)) {
+          event.preventDefault();
+          close();
+          focusAfterTrigger();
         }
         break;
+      }
     }
   }
+
+  /* The panel handler exists for the pinned bottom actions, which have no
+     handler of their own. The search box already carries one, and letting its
+     bubbled event run a second time here moved the highlight twice per key. */
+  function handleMenuKeydown(event: KeyboardEvent): void {
+    if (event.target !== searchInputEl) {
+      handleKeydown(event);
+    }
+  }
+
+  /* Attached imperatively: the panel is a plain container, and a keydown
+     handler written in the template would demand an ARIA role that the
+     wrapper around the search box and the listbox must not claim. */
+  const menuKeys = (node: HTMLElement) => {
+    node.addEventListener('keydown', handleMenuKeydown);
+    return { destroy: () => node.removeEventListener('keydown', handleMenuKeydown) };
+  };
 
   function handleSearchInput(event: Event): void {
     if (!(event.target instanceof HTMLInputElement)) {
@@ -442,7 +531,7 @@
       aria-invalid={error ? 'true' : null}
       aria-describedby={hasErrorMessage ? errorMessageId : null}
       {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
-      tabindex={disabled ? -1 : searchable ? -1 : 0}
+      tabindex={disabled ? -1 : searchInTrigger ? -1 : 0}
     >
       {#if typeof leftIcon === 'string' && leftIcon.length > 0}
         <Img
@@ -457,7 +546,7 @@
       {#if multiple}
         {#if typeof triggerSummary === 'function'}
           {@render triggerSummary({ value, items })}
-          {#if searchable}
+          {#if searchInTrigger}
             <input
               class="select-search"
               type="text"
@@ -485,7 +574,7 @@
               {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
             />
           {/each}
-          {#if searchable}
+          {#if searchInTrigger}
             <input
               class="select-search"
               type="text"
@@ -506,7 +595,7 @@
             <span class="select-placeholder">{placeholder}</span>
           {/if}
         {/if}
-      {:else if searchable}
+      {:else if searchInTrigger}
         <input
           class="select-search"
           type="text"
@@ -562,146 +651,199 @@
     </div>
   {/if}
 
-  {#if open && !disabled}
-    <div
-      class="select-dropdown"
-      class:select-dropdown-right={dropdownAlign === 'right'}
-      class:select-dropdown-portal={usePortal}
-      bind:this={dropdownEl}
-      bind:clientWidth={dropdownWidth}
-      bind:clientHeight={dropdownHeight}
-      role="listbox"
-      id={listboxId}
-      aria-multiselectable={multiple}
-      style={portalStyle}
-      use:portalToBody
-    >
-      {#if filteredItems.length === 0}
-        <div class="select-empty">No results</div>
-      {:else}
-        {#each optionRows as row, index (row.kind === 'select-all' ? 'select-all' : row.item.id)}
-          {#if row.kind === 'select-all'}
-            <div
-              class="select-option select-all"
-              class:multi={multiple}
-              class:selected={allFilteredSelected}
-              class:highlighted={index === highlightedIndex}
-              role="option"
-              id={`${listboxId}-option-${index}`}
-              aria-selected={allFilteredSelected}
-              aria-label={selectAllIndeterminate
-                ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
-                : selectAllLabel}
-              tabindex="-1"
-              {...typeof testId === 'string'
-                ? { 'data-pw': `${testId}-select-all`, testID: `${testId}-select-all` }
-                : {}}
-              onclick={toggleSelectAll}
-              onmouseenter={() => (highlightedIndex = index)}
-            >
+  {#snippet menuOptions()}
+    {#if filteredItems.length === 0}
+      <div class="select-empty">No results</div>
+    {:else}
+      {#each optionRows as row, index (row.kind === 'select-all' ? 'select-all' : row.item.id)}
+        {#if row.kind === 'select-all'}
+          <div
+            class="select-option select-all"
+            class:multi={multiple}
+            class:selected={allFilteredSelected}
+            class:highlighted={index === highlightedIndex}
+            role="option"
+            id={`${listboxId}-option-${index}`}
+            aria-selected={allFilteredSelected}
+            aria-label={selectAllIndeterminate
+              ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
+              : selectAllLabel}
+            tabindex="-1"
+            {...typeof testId === 'string'
+              ? { 'data-pw': `${testId}-select-all`, testID: `${testId}-select-all` }
+              : {}}
+            onclick={toggleSelectAll}
+            onmouseenter={() => (highlightedIndex = index)}
+          >
+            {#if typeof optionIndicator === 'function'}
+              {@render optionIndicator({
+                checked: allFilteredSelected,
+                indeterminate: selectAllIndeterminate
+              })}
+            {:else}
+              <span
+                class="select-option-indicator"
+                class:checked={allFilteredSelected}
+                class:indeterminate={selectAllIndeterminate}
+                aria-hidden="true"
+                data-checked={allFilteredSelected ? 'true' : 'false'}
+                data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
+                testID={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
+              >
+                {#if allFilteredSelected}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  <span class="select-option-check">{@html checkmarkSvg}</span>
+                {:else if selectAllIndeterminate}
+                  <span
+                    class="select-option-dash"
+                    data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                    testID={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                  ></span>
+                {/if}
+              </span>
+            {/if}
+            {selectAllLabel}
+          </div>
+        {:else}
+          <div
+            class="select-option"
+            class:multi={multiple}
+            class:tickable={showSelectedTick && !multiple}
+            class:selected={value.includes(row.item.id)}
+            class:highlighted={index === highlightedIndex}
+            role="option"
+            id={`${listboxId}-option-${index}`}
+            aria-selected={value.includes(row.item.id)}
+            tabindex="-1"
+            {...typeof row.item.testId === 'string'
+              ? { 'data-pw': row.item.testId, testID: row.item.testId }
+              : typeof itemTestId === 'string'
+                ? {
+                    'data-pw': `${itemTestId}-${row.item.id}`,
+                    testID: `${itemTestId}-${row.item.id}`
+                  }
+                : typeof testId === 'string'
+                  ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
+                  : {}}
+            onclick={() => selectItem(row.item.id)}
+            onmouseenter={() => (highlightedIndex = index)}
+          >
+            {#if multiple}
               {#if typeof optionIndicator === 'function'}
                 {@render optionIndicator({
-                  checked: allFilteredSelected,
-                  indeterminate: selectAllIndeterminate
+                  checked: value.includes(row.item.id),
+                  indeterminate: false
                 })}
               {:else}
                 <span
                   class="select-option-indicator"
-                  class:checked={allFilteredSelected}
-                  class:indeterminate={selectAllIndeterminate}
+                  class:checked={value.includes(row.item.id)}
                   aria-hidden="true"
-                  data-checked={allFilteredSelected ? 'true' : 'false'}
-                  data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
-                  testID={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
+                  data-checked={value.includes(row.item.id) ? 'true' : 'false'}
+                  data-pw={typeof testId === 'string'
+                    ? `${testId}-option-indicator-${row.item.id}`
+                    : null}
+                  testID={typeof testId === 'string'
+                    ? `${testId}-option-indicator-${row.item.id}`
+                    : null}
                 >
-                  {#if allFilteredSelected}
+                  {#if value.includes(row.item.id)}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     <span class="select-option-check">{@html checkmarkSvg}</span>
-                  {:else if selectAllIndeterminate}
-                    <span
-                      class="select-option-dash"
-                      data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
-                      testID={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
-                    ></span>
                   {/if}
                 </span>
               {/if}
-              {selectAllLabel}
-            </div>
-          {:else}
-            <div
-              class="select-option"
-              class:multi={multiple}
-              class:tickable={showSelectedTick && !multiple}
-              class:selected={value.includes(row.item.id)}
-              class:highlighted={index === highlightedIndex}
-              role="option"
-              id={`${listboxId}-option-${index}`}
-              aria-selected={value.includes(row.item.id)}
-              tabindex="-1"
-              {...typeof row.item.testId === 'string'
-                ? { 'data-pw': row.item.testId, testID: row.item.testId }
-                : typeof itemTestId === 'string'
-                  ? {
-                      'data-pw': `${itemTestId}-${row.item.id}`,
-                      testID: `${itemTestId}-${row.item.id}`
-                    }
-                  : typeof testId === 'string'
-                    ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
-                    : {}}
-              onclick={() => selectItem(row.item.id)}
-              onmouseenter={() => (highlightedIndex = index)}
-            >
-              {#if multiple}
-                {#if typeof optionIndicator === 'function'}
-                  {@render optionIndicator({
-                    checked: value.includes(row.item.id),
-                    indeterminate: false
-                  })}
-                {:else}
-                  <span
-                    class="select-option-indicator"
-                    class:checked={value.includes(row.item.id)}
-                    aria-hidden="true"
-                    data-checked={value.includes(row.item.id) ? 'true' : 'false'}
-                    data-pw={typeof testId === 'string'
-                      ? `${testId}-option-indicator-${row.item.id}`
-                      : null}
-                    testID={typeof testId === 'string'
-                      ? `${testId}-option-indicator-${row.item.id}`
-                      : null}
-                  >
-                    {#if value.includes(row.item.id)}
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      <span class="select-option-check">{@html checkmarkSvg}</span>
-                    {/if}
-                  </span>
-                {/if}
-              {/if}
-              {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
-                <Img
-                  inlineSvg
-                  src={row.item.icon}
-                  alt=""
-                  fallback=""
-                  classes="select-option-icon"
-                />
-              {/if}
-              <span class="select-option-label">{row.item.label}</span>
-              {#if showSelectedTick && !multiple && value.includes(row.item.id)}
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                <span class="select-option-tick" aria-hidden="true">{@html checkmarkSvg}</span>
-              {/if}
-            </div>
-          {/if}
-        {/each}
-      {/if}
-      {#if typeof bottomContent === 'function'}
-        <div class="select-bottom-content">
-          {@render bottomContent()}
+            {/if}
+            {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
+              <Img inlineSvg src={row.item.icon} alt="" fallback="" classes="select-option-icon" />
+            {/if}
+            <span class="select-option-label">{row.item.label}</span>
+            {#if showSelectedTick && !multiple && value.includes(row.item.id)}
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              <span class="select-option-tick" aria-hidden="true">{@html checkmarkSvg}</span>
+            {/if}
+          </div>
+        {/if}
+      {/each}
+    {/if}
+    {#if typeof bottomContent === 'function' && !searchInMenu}
+      <div class="select-bottom-content">
+        {@render bottomContent()}
+      </div>
+    {/if}
+  {/snippet}
+
+  {#if open && !disabled}
+    {#if searchInMenu}
+      <!-- The panel itself carries no role here: a listbox may only contain
+           options, so the search box has to be a SIBLING of the listbox rather
+           than a child of it. `aria-controls` on the trigger still points at
+           the inner element that actually holds the options. -->
+      <div
+        class="select-dropdown"
+        class:select-dropdown-right={dropdownAlign === 'right'}
+        class:select-dropdown-portal={usePortal}
+        bind:this={dropdownEl}
+        bind:clientWidth={dropdownWidth}
+        bind:clientHeight={dropdownHeight}
+        style={portalStyle}
+        use:menuKeys
+        use:portalToBody
+      >
+        <input
+          class="select-menu-search"
+          type="search"
+          value={query}
+          oninput={handleSearchInput}
+          onkeydown={handleKeydown}
+          bind:this={searchInputEl}
+          placeholder={placeholder.length > 0 ? placeholder : 'Search'}
+          aria-label="Search options"
+          aria-controls={listboxId}
+          autocomplete="off"
+          data-pw={typeof testId === 'string' ? `${testId}-menu-search` : null}
+          testID={typeof testId === 'string' ? `${testId}-menu-search` : null}
+        />
+        <!-- tabindex="-1" because the list scrolls, and a scroll container is
+             a tab stop of its own in Chromium -- which swallowed the Tab that
+             should reach the pinned bottom actions. The options are navigated
+             from the search box via aria-activedescendant, so the list itself
+             never needs to hold focus. -->
+        <div
+          class="select-menu-list"
+          role="listbox"
+          id={listboxId}
+          aria-multiselectable={multiple}
+          tabindex="-1"
+        >
+          {@render menuOptions()}
         </div>
-      {/if}
-    </div>
+        {#if typeof bottomContent === 'function'}
+          <!-- Outside the listbox: a listbox may only contain options, so
+               pinned actions (clear-all, apply) would be invalid children and
+               assistive tech would announce them as options. -->
+          <div class="select-bottom-content">
+            {@render bottomContent()}
+          </div>
+        {/if}
+      </div>
+    {:else}
+      <div
+        class="select-dropdown"
+        class:select-dropdown-right={dropdownAlign === 'right'}
+        class:select-dropdown-portal={usePortal}
+        bind:this={dropdownEl}
+        bind:clientWidth={dropdownWidth}
+        bind:clientHeight={dropdownHeight}
+        role="listbox"
+        id={listboxId}
+        aria-multiselectable={multiple}
+        style={portalStyle}
+        use:portalToBody
+      >
+        {@render menuOptions()}
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -908,6 +1050,41 @@
     max-height: var(--select-dropdown-max-height, 200px);
     overflow-y: auto;
     z-index: var(--select-dropdown-z-index, 10);
+  }
+
+  /* With the search box inside the panel, the PANEL must stop scrolling and
+     the list scroll instead -- otherwise the search box scrolls away as soon
+     as the user moves down the results, which is the one control they still
+     need. The max-height moves down with the scrolling, so the panel keeps
+     growing to fit the search box plus a list of the same height as before. */
+  .select-dropdown:has(> .select-menu-list) {
+    max-height: none;
+    overflow-y: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .select-menu-list {
+    max-height: var(--select-dropdown-max-height, 200px);
+    overflow-y: auto;
+  }
+
+  .select-menu-search {
+    flex: none;
+    margin: var(--select-menu-search-margin, 6px);
+    padding: var(--select-menu-search-padding, 6px 8px);
+    border: var(--select-menu-search-border, 1px solid #cccccc);
+    border-radius: var(--select-menu-search-border-radius, var(--radius, 4px));
+    background: var(--select-menu-search-background, #ffffff);
+    color: var(--select-menu-search-color, inherit);
+    font-family: inherit;
+    font-size: var(--select-menu-search-font-size, inherit);
+    outline: none;
+  }
+
+  .select-menu-search:focus-visible {
+    border-color: var(--select-menu-search-focus-border-color, #2563eb);
+    box-shadow: var(--select-menu-search-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
   }
 
   .select-dropdown-right {

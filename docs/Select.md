@@ -92,7 +92,8 @@ An SVG source is **inlined into the component's DOM**, so an icon drawn with `cu
 | value            | `string[]`                 | No       | `[]`           | Bindable. Array of selected item IDs. In single-select mode, contains at most one element.                                                                                                                                                                                                                                                                                                                                       |
 | open             | `boolean`                  | No       | `false`        | Bindable. Controls whether the dropdown is open; writes back on open/close so a parent can `bind:open` to observe or drive it. Unbound, the component manages its own state.                                                                                                                                                                                                                                                     |
 | multiple         | `boolean`                  | No       | `false`        | Enables multi-select mode. Items are toggled on/off and displayed as dismissible pills in the trigger area.                                                                                                                                                                                                                                                                                                                      |
-| searchable       | `boolean`                  | No       | `false`        | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                                                                                                                                                                                                                                              |
+| searchable       | `boolean`                  | No       | `false`        | Enables a text input for filtering items by label. Works in both single and multi-select modes. See `searchPosition` for where it renders.                                                                                                                                                                                                                                                                                       |
+| searchPosition   | `'trigger' \| 'menu'`      | No       | `'trigger'`    | Where the `searchable` input renders. `'trigger'` keeps today's behaviour (input replaces the trigger label, focused on open); `'menu'` puts it inside the open dropdown, reached by Tab after opening — the DS keyboard contract. No effect unless `searchable` is set.                                                                                                                                                         |
 | placeholder      | `string`                   | No       | `''`           | Text shown when no item is selected (or in the search input when empty).                                                                                                                                                                                                                                                                                                                                                         |
 | disabled         | `boolean`                  | No       | `false`        | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                                                                                                                                                                                                                                                  |
 | error            | `boolean`                  | No       | `false`        | Renders the error treatment: a red trigger border that outranks the hover and focus colours, plus `aria-invalid` on the combobox. Independent of any validation you run — this is the server- or form-driven flag.                                                                                                                                                                                                               |
@@ -128,6 +129,24 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                                                                                                   |
 | onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                                                                                                  |
 | onclear  | `() => void`                | Fires when the clear button empties the selection, after `onchange` has reported the new empty value. Use it to distinguish "cleared" from "deselected the last item", which `onchange` alone cannot tell apart. |
+
+## Search placement
+
+`searchable` puts the filter input in the trigger and focuses it on open. `searchPosition="menu"` puts it **inside the open dropdown** instead, which is what the design-system keyboard contract specifies:
+
+```svelte
+<Select {items} searchable searchPosition="menu" placeholder="Choose a city" />
+```
+
+The difference is not cosmetic. With the input in the trigger there is no way to open the menu and keep focus on the combobox, so a keyboard user who wanted to arrow through the options had to type first. With `searchPosition="menu"` the trigger stays a plain combobox, and the search box is reached by **Tab after opening** rather than being focused for you.
+
+Consequences worth knowing:
+
+- **Tab from the trigger does not close the menu** in this variant — that keypress is how the search box is reached. Tab _from_ the search box still closes, since focus is genuinely leaving the widget; Shift+Tab back to the trigger does not.
+- **The panel carries no `role`**, and an inner `.select-menu-list` owns `role="listbox"`. A listbox may only contain options, so the search box has to be a sibling of the list rather than a child of it. `aria-controls` points at the list.
+- **The list scrolls, not the panel**, so the search box stays put as the user moves down the results.
+
+Defaults to `'trigger'`, so an existing `searchable` Select is unchanged.
 
 ## Error state
 
@@ -289,6 +308,20 @@ Override these custom properties to theme the component.
 | `--select-dropdown-min-width`     | `auto`                          | min-width     | Minimum width of the dropdown panel. Set to `100%` to keep it at least as wide as the trigger.                        |
 | `--select-dropdown-max-width`     | `none`                          | max-width     | Maximum width of the dropdown panel (e.g. `70vw` to cap growth on wide content).                                      |
 | `--select-dropdown-width`         | `auto`                          | width         | Width of the dropdown panel. Set to `max-content` to size to the longest option instead of the trigger width.         |
+
+### In-menu search
+
+| Variable                                  | Default                            | Purpose                 |
+| ----------------------------------------- | ---------------------------------- | ----------------------- |
+| `--select-menu-search-margin`             | `6px`                              | Space around the input. |
+| `--select-menu-search-padding`            | `6px 8px`                          | Input padding.          |
+| `--select-menu-search-border`             | `1px solid #cccccc`                | Input border.           |
+| `--select-menu-search-border-radius`      | `var(--radius, 4px)`               | Input corner radius.    |
+| `--select-menu-search-background`         | `#ffffff`                          | Input background.       |
+| `--select-menu-search-color`              | `inherit`                          | Input text colour.      |
+| `--select-menu-search-font-size`          | `inherit`                          | Input font size.        |
+| `--select-menu-search-focus-border-color` | `#2563eb`                          | Focus border colour.    |
+| `--select-menu-search-focus-shadow`       | `0 0 0 2px rgba(37, 99, 235, 0.2)` | Focus ring.             |
 
 ### Options
 

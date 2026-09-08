@@ -84,6 +84,75 @@ once per theme, then pass `tone` at each call site:
 directly, or via `classes`) always wins over the tone default, so a one-off recolor doesn't
 need to fork the tone.
 
+### Dark Theme
+
+Every fallback baked into Pill is a light value (`--pill-background` falls back to `#e0e0e0`,
+`--pill-color` to `#333333`, and each `tone` to a pastel pair), so a pill dropped onto a dark
+page keeps its light chip until you override the variables.
+
+Theme the **tone** variables at the theme root. These are always safe to set globally — each one
+only reaches the pills carrying that tone:
+
+```css
+/* app.css */
+[data-theme='dark'] {
+  --pill-tone-accent-background: #11262e;
+  --pill-tone-accent-color: #7dd3fc;
+  --pill-tone-ok-background: #10281a;
+  --pill-tone-ok-color: #6ee7a8;
+  --pill-tone-warn-background: #2e2410;
+  --pill-tone-warn-color: #fcd34d;
+  --pill-tone-danger-background: #2d1416;
+  --pill-tone-danger-color: #fca5a5;
+  --pill-tone-muted-background: #252535;
+  --pill-tone-muted-color: #9ca3af;
+}
+```
+
+Those pairs all clear WCAG AA for normal text (5.9:1 at the lowest, `muted`; the rest sit
+between 9:1 and 10.6:1). Reusing the light defaults on a dark ground is what fails — `#155724`
+on `#252535` is 1.74:1, well under the 4.5:1 floor.
+
+For pills that carry **no** tone, set the base pair — but scope it to the containers those pills
+live in, rather than the theme root:
+
+```css
+/* app.css — the filter bar and tag row hold untoned pills */
+[data-theme='dark'] .filter-bar,
+[data-theme='dark'] .tag-row {
+  --pill-background: #252535;
+  --pill-color: #d1d5db;
+  --pill-hover-background: #2f2f45;
+  --pill-hover-color: #e5e7eb;
+  --pill-dismiss-color: #9ca3af;
+  --pill-dismiss-hover-color: #e5e7eb;
+}
+```
+
+**The scoping is the whole point, and skipping it is easy to do: a global `--pill-background` /
+`--pill-color` silently disables `tone`.** Pill resolves colour as
+`var(--pill-background, var(--_pill-tone-background, …))`, so an explicit value wins and the tone
+layer is never consulted — every `tone="ok"` and `tone="danger"` chip renders in the same neutral
+grey as an untoned one, with no error and no visual hint that the prop stopped working. Measured
+on a real `tone="ok"` pill:
+
+| | background | color |
+| --- | --- | --- |
+| tone alone | `#d4edda` | `#155724` |
+| tone + a global `--pill-background`/`--pill-color` | `#252535` | `#d1d5db` |
+
+This library's own demo site had exactly that bug: all five tones rendered byte-identical in dark
+mode. If you have no convenient container to scope to, exclude the tone classes instead —
+`[data-theme='dark'] .pill:not(.tone-accent, .tone-ok, .tone-warn, .tone-danger, .tone-muted)` —
+though that couples your stylesheet to Pill's internal class names, so prefer your own containers
+where you have them.
+
+The `pill-success` / `pill-warning` / `pill-error` / `pill-info` class recipes in **Theming with
+Classes** above are light-only by design: they are example CSS you own once you paste them into
+your app, not something Pill ships. If you use them and support a dark theme, give them dark
+counterparts the same way — or prefer `tone`, which exists precisely so the colour pair lives in
+one themeable place instead of being repeated per call site.
+
 ### Attribute Passthrough
 
 `attrs` spreads arbitrary `data-*`/`aria-*` attributes onto the pill root — for a consumer

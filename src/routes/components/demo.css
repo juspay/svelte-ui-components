@@ -164,11 +164,21 @@
   --attachment-chip-row-file-glyph-color: #9ca3af;
   --attachment-chip-row-file-glyph-fold-color: #1e1e2e;
 
-  /* Pill — chat suggestion chips and composer attachment pills */
-  --pill-background: #252535;
-  --pill-color: #d1d5db;
-  --pill-hover-background: #2f2f45;
-  --pill-hover-color: #e5e7eb;
+  /* Pill — dark counterparts for the semantic tones. Without these a status chip
+     falls back to Pill's built-in light pastels, which are unreadable on this
+     ground: the `ok` text #155724 on the neutral chip below is 1.74:1. Every pair
+     here clears WCAG AA (5.93:1 at the lowest, `muted`). The neutral chip itself
+     is scoped separately, below this block — see the note there. */
+  --pill-tone-accent-background: #11262e;
+  --pill-tone-accent-color: #7dd3fc;
+  --pill-tone-ok-background: #10281a;
+  --pill-tone-ok-color: #6ee7a8;
+  --pill-tone-warn-background: #2e2410;
+  --pill-tone-warn-color: #fcd34d;
+  --pill-tone-danger-background: #2d1416;
+  --pill-tone-danger-color: #fca5a5;
+  --pill-tone-muted-background: #252535;
+  --pill-tone-muted-color: #9ca3af;
 
   /* ThinkingTrace */
   --thinking-indicator-trace-connector-color: #2a2a3c;
@@ -220,6 +230,25 @@
   --task-list-retry-background: #2a1416;
   --task-list-retry-color: #f87171;
   --task-list-retry-hover-background: #3b1a1c;
+}
+
+/* Pill — the neutral dark chip for chat suggestion chips and composer attachment
+   pills, which carry no tone.
+
+   Deliberately NOT set alongside the other tokens in the block above. Pill resolves
+   colour as `var(--pill-background, var(--_pill-tone-background, …))`, so a bare
+   --pill-background on the theme root wins over the tone layer by design (see
+   docs/Pill.md). Set there, it silently flattened every tone="…" chip to this same
+   grey — all five tones rendered byte-identical in dark mode, so the Pill demo
+   showed five indistinguishable chips labelled Accent/Ok/Warn/Danger/Muted.
+
+   Excluding the tone classes keeps the neutral chip for the untoned pills that
+   wanted it, and lets the tone variables above reach the ones that carry a tone. */
+[data-theme='dark'] .pill:not(.tone-accent, .tone-ok, .tone-warn, .tone-danger, .tone-muted) {
+  --pill-background: #252535;
+  --pill-color: #d1d5db;
+  --pill-hover-background: #2f2f45;
+  --pill-hover-color: #e5e7eb;
 }
 
 .page-header {

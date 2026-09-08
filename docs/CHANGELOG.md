@@ -2,7 +2,60 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.3)
+
+#414 item 1 asks for sm/md/lg trigger sizes. Lighthouse hand-rolled a
+light-theme-only `36px !important` in shopify.css rather than do it, which is the
+evidence the gap is real.
+
+But the gap is not capability. `--select-trigger-min-height`,
+`--select-trigger-padding` and `--select-font-size` are already themeable, so
+sizing works on the shipped library with no code at all -- a consumer just has to
+know the three variables move together. That is a documentation gap, and it is
+fixed here with documentation.
+
+.select-sm { --select-trigger-min-height: 32px; ... }
+&lt;Select {items} classes="select-sm" /&gt;
+
+Measured against the unmodified component rather than asserted:
+
+.select-sm   32px min-height   4px 10px padding   13px font
+default      40px              8px 12px           14px
+.select-lg   48px             12px 14px           15px
+
+A first attempt at this shipped a typed `size` prop instead (PR #585, closed
+unmerged). It cost a SelectSize type, a selectSize.ts resolver, a unit-test file, a
+reflected web-component attribute, a prop-parity entry and an internal
+`--_select-size-*` CSS layer -- to deliver three numbers a consumer can already
+set, and to version-lock a scale that ought to belong to the application. Closing
+it was the right call.
+
+The counter-argument deserves recording, because this repo's own history supports
+it: docs/Pill.md documents "Theming with Classes", and #520 later promoted exactly
+that pattern to a `tone` prop, because a hand-rolled class per call site was worse.
+The distinction taken here is that `tone` is semantic and design-system-governed,
+while trigger geometry is not -- a consumer who wants a 36px trigger should not
+need us to ship a `size` value for it.
+
+The docs make the actual trap explicit, since it is what produced the `!important`
+in the first place: setting `min-height` alone leaves the padding and label at
+their default scale, so the control looks wrong and the next move is to fight the
+computed property. Set all three, or none.
+
+No component, demo, test or visual baseline is touched. #414 items 2-4 (error
+state, trigger clear button, pressed state) and #415 remain open and are
+unaffected -- those are real behaviour rather than token bundles, and will need
+actual props.
+
+Verified: lint 0, check 0, build 0, 919 unit. The documented values were confirmed
+by applying the recipe to the shipped component and reading the computed trigger
+geometry back (32/40/48px min-height, rendering at 42/58/74px), then removing the
+probe -- the numbers in the table are measurements, not intentions.
+
+-
+docs(select): document the trigger sizing recipe ([24f3981](https://github.com/juspay/svelte-ui-components/commit/24f3981c35856e8e3ba70318d2dc4e15d262521f))
+
+## [4.11.3](https://github.com/juspay/svelte-ui-components/compare/4.11.3..4.11.2) - 8 September 2026
 
 The descendant sanitizer stripped every href-like attribute not starting
 with '#'. Brand marks encode their art as a pattern fill whose &lt;image

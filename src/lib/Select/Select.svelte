@@ -14,6 +14,10 @@
     searchable = false,
     placeholder = '',
     disabled = false,
+    error = false,
+    errorMessage,
+    clearable = false,
+    onclear,
     bottomContent,
     optionIndicator,
     showSelectAll = false,
@@ -40,6 +44,7 @@
 
   let items: SelectItem[] = $derived(normalizeItems(rawItems));
   let query = $state('');
+  let restoringFocus = false;
   let highlightedIndex = $state(-1);
   let containerEl: HTMLDivElement | null = $state(null);
   let searchInputEl: HTMLInputElement | null = $state(null);
@@ -55,7 +60,38 @@
   // default. The in-flow panel still honours the CSS var via its margin-top.
   const PORTAL_DROPDOWN_GAP = 4;
 
-  const listboxId = `select-listbox-${Math.random().toString(36).slice(2, 9)}`;
+  const instanceId = $props.id();
+  const listboxId = `select-listbox-${instanceId}`;
+  const errorMessageId = `${listboxId}-error`;
+
+  const hasErrorMessage = $derived(
+    error && typeof errorMessage === 'string' && errorMessage.trim().length > 0
+  );
+
+  /* Nothing selected means nothing to clear, so the control is not rendered at
+     all rather than rendered inert -- a disabled × that never enables reads as
+     broken. Same for `disabled`, where the whole field is inert already. */
+  const showClearButton = $derived(clearable && !disabled && value.length > 0);
+
+  function handleClear(event: MouseEvent): void {
+    /* The point of a trigger-level clear is that it does NOT open the menu.
+       The trigger's own click handler sits on the ancestor, so without this
+       the click would clear and then immediately open. */
+    event.stopPropagation();
+    if (value.length === 0) {
+      return;
+    }
+    value = [];
+    onchange?.(value);
+    onclear?.();
+    if (searchable && searchInputEl !== null) {
+      restoringFocus = true;
+      searchInputEl.focus();
+      restoringFocus = false;
+    } else {
+      triggerEl?.focus();
+    }
+  }
 
   function getLabel(id: string): string {
     const found = items.find((item) => item.id === id);
@@ -354,7 +390,7 @@
   }
 
   function handleSearchFocus(): void {
-    if (!open) {
+    if (!open && !restoringFocus) {
       openDropdown();
     }
   }
@@ -388,103 +424,143 @@
   class="select {classes ?? ''}"
   class:open
   class:disabled
+  class:error
   class:ghost={hierarchy === 'ghost'}
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
 >
-  <div
-    class="select-trigger"
-    bind:this={triggerEl}
-    onclick={handleTriggerClick}
-    onkeydown={handleKeydown}
-    role="combobox"
-    aria-expanded={open}
-    aria-haspopup="listbox"
-    aria-controls={listboxId}
-    {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
-    tabindex={disabled ? -1 : searchable ? -1 : 0}
-  >
-    {#if typeof leftIcon === 'string' && leftIcon.length > 0}
-      <Img
-        inlineSvg
-        src={leftIcon}
-        alt=""
-        fallback=""
-        classes="select-left-icon"
-        {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
-      />
-    {/if}
-    {#if multiple}
-      {#if typeof triggerSummary === 'function'}
-        {@render triggerSummary({ value, items })}
-        {#if searchable}
-          <input
-            class="select-search"
-            type="text"
-            value={query}
-            oninput={handleSearchInput}
-            onfocus={handleSearchFocus}
-            bind:this={searchInputEl}
-            placeholder={value.length === 0 ? placeholder : ''}
-            {disabled}
-            autocomplete="off"
-            tabindex={disabled ? -1 : 0}
-            data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-            testID={typeof testId === 'string' ? `${testId}-search` : null}
-          />
-        {/if}
-      {:else}
-        {#each value as id (id)}
-          <Pill
-            text={getLabel(id)}
-            dismissible
-            {disabled}
-            ondismiss={() => removeItem(id)}
-            {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
-          />
-        {/each}
-        {#if searchable}
-          <input
-            class="select-search"
-            type="text"
-            value={query}
-            oninput={handleSearchInput}
-            onfocus={handleSearchFocus}
-            bind:this={searchInputEl}
-            placeholder={value.length === 0 ? placeholder : ''}
-            {disabled}
-            autocomplete="off"
-            tabindex={disabled ? -1 : 0}
-            data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-            testID={typeof testId === 'string' ? `${testId}-search` : null}
-          />
-        {:else if value.length === 0}
-          <span class="select-placeholder">{placeholder}</span>
-        {/if}
+  <div class="select-control" class:has-clear={showClearButton}>
+    <div
+      class="select-trigger"
+      bind:this={triggerEl}
+      onclick={handleTriggerClick}
+      onkeydown={handleKeydown}
+      role="combobox"
+      aria-expanded={open}
+      aria-haspopup="listbox"
+      aria-controls={listboxId}
+      aria-invalid={error ? 'true' : null}
+      aria-describedby={hasErrorMessage ? errorMessageId : null}
+      {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
+      tabindex={disabled ? -1 : searchable ? -1 : 0}
+    >
+      {#if typeof leftIcon === 'string' && leftIcon.length > 0}
+        <Img
+          inlineSvg
+          src={leftIcon}
+          alt=""
+          fallback=""
+          classes="select-left-icon"
+          {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
+        />
       {/if}
-    {:else if searchable}
-      <input
-        class="select-search"
-        type="text"
-        value={open ? query : displayText}
-        oninput={handleSearchInput}
-        onfocus={handleSearchFocus}
-        bind:this={searchInputEl}
-        placeholder={searchPlaceholder}
-        {disabled}
-        autocomplete="off"
-        tabindex={disabled ? -1 : 0}
-        data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-        testID={typeof testId === 'string' ? `${testId}-search` : null}
-      />
-    {:else}
-      <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
-        {displayText.length > 0 ? displayText : placeholder}
-      </span>
+      {#if multiple}
+        {#if typeof triggerSummary === 'function'}
+          {@render triggerSummary({ value, items })}
+          {#if searchable}
+            <input
+              class="select-search"
+              type="text"
+              value={query}
+              oninput={handleSearchInput}
+              onfocus={handleSearchFocus}
+              bind:this={searchInputEl}
+              placeholder={value.length === 0 ? placeholder : ''}
+              {disabled}
+              aria-invalid={error ? 'true' : null}
+              aria-describedby={hasErrorMessage ? errorMessageId : null}
+              autocomplete="off"
+              tabindex={disabled ? -1 : 0}
+              data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+              testID={typeof testId === 'string' ? `${testId}-search` : null}
+            />
+          {/if}
+        {:else}
+          {#each value as id (id)}
+            <Pill
+              text={getLabel(id)}
+              dismissible
+              {disabled}
+              ondismiss={() => removeItem(id)}
+              {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
+            />
+          {/each}
+          {#if searchable}
+            <input
+              class="select-search"
+              type="text"
+              value={query}
+              oninput={handleSearchInput}
+              onfocus={handleSearchFocus}
+              bind:this={searchInputEl}
+              placeholder={value.length === 0 ? placeholder : ''}
+              {disabled}
+              aria-invalid={error ? 'true' : null}
+              aria-describedby={hasErrorMessage ? errorMessageId : null}
+              autocomplete="off"
+              tabindex={disabled ? -1 : 0}
+              data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+              testID={typeof testId === 'string' ? `${testId}-search` : null}
+            />
+          {:else if value.length === 0}
+            <span class="select-placeholder">{placeholder}</span>
+          {/if}
+        {/if}
+      {:else if searchable}
+        <input
+          class="select-search"
+          type="text"
+          value={open ? query : displayText}
+          oninput={handleSearchInput}
+          onfocus={handleSearchFocus}
+          bind:this={searchInputEl}
+          placeholder={searchPlaceholder}
+          {disabled}
+          aria-invalid={error ? 'true' : null}
+          aria-describedby={hasErrorMessage ? errorMessageId : null}
+          autocomplete="off"
+          tabindex={disabled ? -1 : 0}
+          data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+          testID={typeof testId === 'string' ? `${testId}-search` : null}
+        />
+      {:else}
+        <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
+          {displayText.length > 0 ? displayText : placeholder}
+        </span>
+      {/if}
+      <!-- eslint-disable svelte/no-at-html-tags -->
+      <span class="select-arrow">{@html chevronDownSvg}</span>
+    </div>
+    {#if showClearButton}
+      <button
+        type="button"
+        class="select-clear"
+        aria-label="Clear selection"
+        onkeydown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.stopPropagation();
+          }
+        }}
+        onclick={handleClear}
+        data-pw={typeof testId === 'string' ? `${testId}-clear` : null}
+        testID={typeof testId === 'string' ? `${testId}-clear` : null}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
     {/if}
-    <!-- eslint-disable svelte/no-at-html-tags -->
-    <span class="select-arrow">{@html chevronDownSvg}</span>
   </div>
+
+  {#if hasErrorMessage}
+    <div
+      id={errorMessageId}
+      role="alert"
+      class="select-error-message"
+      data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+      testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+    >
+      {errorMessage}
+    </div>
+  {/if}
 
   {#if open && !disabled}
     <div
@@ -684,6 +760,84 @@
     box-shadow: var(--select-trigger-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
   }
 
+  /* Pressed feedback on the trigger. `:active` only, so it lasts exactly as
+     long as the pointer is down and never lingers as a stuck state the way a
+     class-driven one can. */
+  .select:not(.disabled) .select-trigger:active {
+    background: var(--select-trigger-pressed-background, #ededed);
+  }
+
+  /* The error border has to outrank BOTH hover and focus/open, or the field
+     stops reading as invalid the moment the user enters it -- which is the one
+     moment they most need to see it. Listed after them, at equal or higher
+     specificity, rather than reached for with !important. */
+  .select.error .select-trigger,
+  .select.error .select-trigger:hover,
+  .select.error .select-trigger:focus-within,
+  .select.error.open .select-trigger {
+    border-color: var(--select-trigger-error-border-color, #dc2626);
+  }
+
+  .select.error .select-trigger:focus-within,
+  .select.error.open .select-trigger {
+    box-shadow: var(--select-trigger-error-shadow, 0 0 0 2px rgba(220, 38, 38, 0.2));
+  }
+
+  .select-error-message {
+    margin-top: var(--select-error-message-margin-top, 4px);
+    font-size: var(--select-error-message-font-size, 12px);
+    color: var(--select-error-message-color, #dc2626);
+  }
+
+  .select-control {
+    position: relative;
+  }
+
+  .select-control.has-clear .select-trigger {
+    padding-inline-end: calc(var(--select-clear-size, 18px) + 36px);
+  }
+
+  .select-control.has-clear .select-arrow {
+    position: absolute;
+    right: 12px;
+  }
+
+  .select-clear {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--select-clear-size, 18px);
+    height: var(--select-clear-size, 18px);
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--select-clear-border-radius, var(--radius, 4px));
+    background: var(--select-clear-background, transparent);
+    color: var(--select-clear-color, #666666);
+    font-size: var(--select-clear-font-size, 16px);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .select-clear:focus-visible {
+    outline: var(--select-clear-focus-outline, 2px solid currentColor);
+    outline-offset: 2px;
+  }
+
+  .select-clear:hover {
+    background: var(--select-clear-hover-background, #ededed);
+    color: var(--select-clear-hover-color, #111111);
+  }
+
+  .select-clear:active {
+    background: var(--select-clear-pressed-background, #e0e0e0);
+  }
+
   .select-value {
     flex: 1;
     white-space: nowrap;
@@ -819,6 +973,18 @@
       --select-option-selected-hover-background,
       var(--select-option-selected-background, #e8f0fe)
     );
+  }
+
+  /* Pressed feedback comes last, and each selector carries enough specificity
+     to outrank its non-active counterpart above. An option is always hovered
+     when pressed and is often selected too, so a single low-specificity rule
+     earlier in the sheet would be correct in isolation and invisible in
+     practice -- which is how a pressed state ends up shipping as dead CSS.
+     A press on an already-selected row still has to confirm the tap landed. */
+  .select-option:active,
+  .select-option.selected:active,
+  .select-option.selected.highlighted:active {
+    background: var(--select-option-pressed-background, #ededed);
   }
 
   .select-option-indicator {

@@ -95,6 +95,9 @@ An SVG source is **inlined into the component's DOM**, so an icon drawn with `cu
 | searchable       | `boolean`                  | No       | `false`        | Enables a text input in the trigger area for filtering items by label. Works in both single and multi-select modes.                                                                                                                                                                                                                                                                                                              |
 | placeholder      | `string`                   | No       | `''`           | Text shown when no item is selected (or in the search input when empty).                                                                                                                                                                                                                                                                                                                                                         |
 | disabled         | `boolean`                  | No       | `false`        | When true, the select is non-interactive, has reduced opacity, and pointer events are disabled.                                                                                                                                                                                                                                                                                                                                  |
+| error            | `boolean`                  | No       | `false`        | Renders the error treatment: a red trigger border that outranks the hover and focus colours, plus `aria-invalid` on the combobox. Independent of any validation you run — this is the server- or form-driven flag.                                                                                                                                                                                                               |
+| errorMessage     | `string`                   | No       | `-`            | Message shown below the trigger while `error` is true, in a `role="alert"` region wired to the combobox via `aria-describedby`. Ignored when `error` is false.                                                                                                                                                                                                                                                                   |
+| clearable        | `boolean`                  | No       | `false`        | Adds a clear (×) button to the trigger whenever there is a selection. It resets the value **without opening the menu**. Never rendered when nothing is selected, or while `disabled`.                                                                                                                                                                                                                                            |
 | testId           | `string`                   | No       | -              | Value for the `data-pw` attribute on the container element, and the fallback per-option prefix when neither `itemTestId` nor `item.testId` is set (emits `{testId}-{item.id}` per option).                                                                                                                                                                                                                                       |
 | itemTestId       | `string`                   | No       | -              | Fallback per-option `data-pw` prefix. Each option emits `data-pw="{itemTestId}-{item.id}"` unless the option's own `item.testId` is set. Takes precedence over the `testId`-derived fallback.                                                                                                                                                                                                                                    |
 | classes          | `string`                   | No       | -              | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                                                                                                           |
@@ -119,11 +122,34 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event    | Type                        | Description                                                                                                                       |
-| -------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| onchange | `(value: string[]) => void` | Fires when the selection changes. Receives the full array of selected item IDs. In single-select mode, the array has one element. |
-| onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                    |
-| onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                   |
+| Event    | Type                        | Description                                                                                                                                                                                                      |
+| -------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onchange | `(value: string[]) => void` | Fires when the selection changes. Receives the full array of selected item IDs. In single-select mode, the array has one element.                                                                                |
+| onopen   | `() => void`                | Fires when the dropdown opens.                                                                                                                                                                                   |
+| onclose  | `() => void`                | Fires when the dropdown closes.                                                                                                                                                                                  |
+| onclear  | `() => void`                | Fires when the clear button empties the selection, after `onchange` has reported the new empty value. Use it to distinguish "cleared" from "deselected the last item", which `onchange` alone cannot tell apart. |
+
+## Error state
+
+`error` renders the red trigger border and sets `aria-invalid`. Add `errorMessage` for the hint below it, which renders in a `role="alert"` region wired to the combobox through `aria-describedby` — so it is announced, not merely visible:
+
+```svelte
+<Select {items} bind:value error errorMessage="Pick a fruit to continue" />
+```
+
+The error border deliberately outranks both the hover and the focus/open border colours. A field that stops looking invalid the moment the user enters it is invalid exactly when nobody can see it.
+
+`error` on its own is valid — you get the border and `aria-invalid` with no message region. Empty or whitespace-only messages render no alert and no description reference. Searchable variants also place error semantics on the actual focused input. Instance IDs are stable across SSR hydration.
+
+## Clearable trigger
+
+`clearable` puts a × beside the trigger whenever there is a selection. It is visually inside the control but is a sibling of the combobox, not a nested interactive descendant. Enter/Space activate it, and focus returns to the trigger or search input after it disappears without opening the menu. Its focus ring is themeable through `--select-clear-focus-outline` (default `2px solid currentColor`). It resets the value **without opening the menu**, which is the whole point: clearing through the menu costs an open, a hunt and a second click.
+
+```svelte
+<Select {items} bind:value clearable onclear={() => reset()} />
+```
+
+The control is not rendered when nothing is selected, or while `disabled` — a × that never clears anything reads as broken. `onclear` fires after `onchange`, so a consumer that only needs the new value can ignore it.
 
 ## Sizing
 
@@ -198,18 +224,33 @@ Override these custom properties to theme the component.
 
 ### Trigger
 
-| Variable                              | Default                                | CSS Property  | Description                                                 |
-| ------------------------------------- | -------------------------------------- | ------------- | ----------------------------------------------------------- |
-| `--select-trigger-gap`                | `4px`                                  | gap           | Gap between items (pills, input, value) inside the trigger. |
-| `--select-trigger-min-height`         | `40px`                                 | min-height    | Minimum height of the trigger area.                         |
-| `--select-trigger-padding`            | `8px 12px`                             | padding       | Inner padding of the trigger area.                          |
-| `--select-trigger-background`         | `#ffffff`                              | background    | Background color of the trigger area.                       |
-| `--select-trigger-border`             | `1px solid #cccccc`                    | border        | Border of the trigger area.                                 |
-| `--select-trigger-border-radius`      | `6px`                                  | border-radius | Corner rounding of the trigger area.                        |
-| `--select-trigger-transition`         | `border-color 0.15s, box-shadow 0.15s` | transition    | Transition for trigger hover/focus effects.                 |
-| `--select-trigger-hover-border-color` | `#999999`                              | border-color  | Border color of the trigger on hover.                       |
-| `--select-trigger-focus-border-color` | `#2563eb`                              | border-color  | Border color of the trigger when focused or open.           |
-| `--select-trigger-focus-shadow`       | `0 0 0 2px rgba(37, 99, 235, 0.2)`     | box-shadow    | Box shadow of the trigger when focused or open.             |
+| Variable                              | Default                                | CSS Property  | Description                                                                                                                                     |
+| ------------------------------------- | -------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--select-trigger-gap`                | `4px`                                  | gap           | Gap between items (pills, input, value) inside the trigger.                                                                                     |
+| `--select-trigger-min-height`         | `40px`                                 | min-height    | Minimum height of the trigger area.                                                                                                             |
+| `--select-trigger-padding`            | `8px 12px`                             | padding       | Inner padding of the trigger area.                                                                                                              |
+| `--select-trigger-background`         | `#ffffff`                              | background    | Background color of the trigger area.                                                                                                           |
+| `--select-trigger-border`             | `1px solid #cccccc`                    | border        | Border of the trigger area.                                                                                                                     |
+| `--select-trigger-border-radius`      | `6px`                                  | border-radius | Corner rounding of the trigger area.                                                                                                            |
+| `--select-trigger-transition`         | `border-color 0.15s, box-shadow 0.15s` | transition    | Transition for trigger hover/focus effects.                                                                                                     |
+| `--select-trigger-hover-border-color` | `#999999`                              | border-color  | Border color of the trigger on hover.                                                                                                           |
+| `--select-trigger-focus-border-color` | `#2563eb`                              | border-color  | Border color of the trigger when focused or open.                                                                                               |
+| `--select-trigger-error-border-color` | `#dc2626`                              | border-color  | Border color of the trigger while `error` is set. Outranks the hover and focus colours.                                                         |
+| `--select-trigger-error-shadow`       | `0 0 0 2px rgba(220, 38, 38, 0.2)`     | box-shadow    | Focus ring shown while `error` is set, in place of the blue one.                                                                                |
+| `--select-trigger-pressed-background` | `#ededed`                              | background    | Trigger background while the pointer is down.                                                                                                   |
+| `--select-option-pressed-background`  | `#ededed`                              | background    | Option background while the pointer is down. Outranks the hover and selected backgrounds, so a press on an already-selected row still confirms. |
+| `--select-error-message-color`        | `#dc2626`                              | color         | Text color of the error message.                                                                                                                |
+| `--select-error-message-font-size`    | `12px`                                 | font-size     | Font size of the error message.                                                                                                                 |
+| `--select-error-message-margin-top`   | `4px`                                  | margin-top    | Space between the trigger and the error message.                                                                                                |
+| `--select-clear-size`                 | `18px`                                 | width/height  | Size of the clear (×) button.                                                                                                                   |
+| `--select-clear-color`                | `#666666`                              | color         | Glyph color of the clear button.                                                                                                                |
+| `--select-clear-background`           | `transparent`                          | background    | Background of the clear button.                                                                                                                 |
+| `--select-clear-hover-background`     | `#ededed`                              | background    | Background of the clear button on hover.                                                                                                        |
+| `--select-clear-hover-color`          | `#111111`                              | color         | Glyph color of the clear button on hover.                                                                                                       |
+| `--select-clear-pressed-background`   | `#e0e0e0`                              | background    | Background of the clear button while pressed.                                                                                                   |
+| `--select-clear-border-radius`        | `var(--radius, 4px)`                   | border-radius | Corner radius of the clear button.                                                                                                              |
+| `--select-clear-font-size`            | `16px`                                 | font-size     | Glyph size of the clear button.                                                                                                                 |
+| `--select-trigger-focus-shadow`       | `0 0 0 2px rgba(37, 99, 235, 0.2)`     | box-shadow    | Box shadow of the trigger when focused or open.                                                                                                 |
 
 ### Left Icon
 

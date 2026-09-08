@@ -235,3 +235,134 @@ describe('renderMarkdown — task-list checkboxes (sanitize.disableTaskLists)', 
     expect(renderMarkdown('- [ ] todo')).toContain('type="checkbox"');
   });
 });
+
+// Regression coverage for #573: `sanitize` could narrow which markdown-GENERATED
+// tags render, but had no effect at all on raw HTML typed literally into the
+// source -- `html()` escaped it unconditionally. Escaping is the right safety
+// default and stays the default; the gap was that "escape it" and "drop it" are
+// different products and only one was expressible, so a consumer who wanted raw
+// HTML removed had to pre-mangle the source before it reached the component.
+describe('renderMarkdown — raw HTML disposal (sanitize.rawHtml)', () => {
+  const RAW_SOURCES = [
+    '<script>alert(1)</script>',
+    'a <b>bold</b> word',
+    '<div>hello</div>',
+    'x <img src=q onerror=alert(1)> y',
+    'line<br/>break'
+  ] as const;
+
+  it('escapes raw HTML when rawHtml is not supplied', () => {
+    expect(renderMarkdown('<script>alert(1)</script>')).toContain('&lt;script&gt;');
+    expect(renderMarkdown('a <b>bold</b> word')).toContain('&lt;b&gt;');
+  });
+
+  it('renders identically with an explicit escape as with no option at all', () => {
+    for (const source of RAW_SOURCES) {
+      expect(renderMarkdown(source, { sanitize: { rawHtml: 'escape' } })).toBe(
+        renderMarkdown(source)
+      );
+      expect(renderMarkdown(source, { sanitize: { rawHtml: 'escape' }, inline: true })).toBe(
+        renderMarkdown(source, { inline: true })
+      );
+    }
+  });
+
+  it('drops inline tags and keeps the text they surrounded when stripping', () => {
+    const output = renderMarkdown('a <b>bold</b> word', { sanitize: { rawHtml: 'strip' } });
+    expect(output).not.toContain('&lt;b&gt;');
+    expect(output).not.toContain('<b>');
+    expect(output).toContain('a bold word');
+  });
+
+  it.each([
+    ['<div>hello <em>world</em></div>', 'hello world'],
+    ['<script>alert(1)</script>', 'alert(1)'],
+    ['<style>.x { color: red }</style>', '.x { color: red }'],
+    ['<div title="a > b">visible</div>', 'visible'],
+    ["<div title='a > b'>visible</div>", 'visible'],
+    ['<div>fish &amp; chips &#60;3</div>', 'fish &amp; chips &lt;3'],
+    ['<div>before<!-- hidden -->after</div>', 'beforeafter'],
+    ['<!-- hidden -->', ''],
+    ['<div><b>unclosed', 'unclosed'],
+    ['<div>before<template>inside</template>after</div>', 'beforeinsideafter'],
+    ['<script>const x = "<div>";</script>', 'const x = &quot;&lt;div&gt;&quot;;']
+  ])('strips tags while retaining safe text content: %s', (source, expected) => {
+    expect(renderMarkdown(source, { sanitize: { rawHtml: 'strip' } }).trim()).toBe(expected);
+  });
+
+  it('keeps text held in a template fragment, which is not a child node', () => {
+    // parse5 puts a <template>'s children in a separate `content` fragment, so
+    // walking childNodes alone silently loses everything inside it. marked
+    // treats a lone <template> as inline rather than block, hence the <p>.
+    expect(
+      renderMarkdown('<template>hidden template text</template>', {
+        sanitize: { rawHtml: 'strip' }
+      }).trim()
+    ).toBe('<p>hidden template text</p>');
+  });
+
+  it('preserves fenced code literally rather than treating it as raw HTML', () => {
+    const source = '```html\n<div>example</div>\n```';
+    expect(renderMarkdown(source, { sanitize: { rawHtml: 'strip' } })).toBe(renderMarkdown(source));
+  });
+
+  it('does not let text preserved from HTML become executable markup', () => {
+    const output = renderMarkdown('<div>&lt;img src=x onerror=alert(1)&gt;</div>', {
+      sanitize: { rawHtml: 'strip' }
+    });
+    expect(output).toContain('&lt;img');
+    expect(output).not.toContain('<img');
+  });
+
+  it('still renders markdown-generated tags while stripping raw ones', () => {
+    const output = renderMarkdown('a <b>raw</b> and **real** bold', {
+      sanitize: { rawHtml: 'strip' }
+    });
+    expect(output).toContain('<strong>real</strong>');
+    expect(output).not.toContain('&lt;b&gt;');
+    expect(output).toContain('raw');
+  });
+
+  it('leaves prose containing stray angle brackets escaped rather than dropping it', () => {
+    // `a < b` is a text token, not an HTML one, so stripping must not reach it.
+    // Getting this wrong would silently delete arithmetic out of a sentence.
+    const output = renderMarkdown('a < b and c > d', { sanitize: { rawHtml: 'strip' } });
+    expect(output).toContain('&lt;');
+    expect(output).toContain('&gt;');
+    expect(output).toContain('b and c');
+  });
+
+  it('strips under inline parsing as well as block parsing', () => {
+    const output = renderMarkdown('a <b>bold</b> word', {
+      sanitize: { rawHtml: 'strip' },
+      inline: true
+    });
+    expect(output).not.toContain('&lt;b&gt;');
+    expect(output).toContain('a bold word');
+  });
+
+  it('does not carry the mode between differently-configured renders', () => {
+    // renderMarkdown caches a Marked instance per resolved option set, so the
+    // mode has to take part in that key or the first render through a source
+    // would decide the disposal for every later one.
+    const stripped = renderMarkdown('a <b>bold</b> word', { sanitize: { rawHtml: 'strip' } });
+    expect(stripped).not.toContain('&lt;b&gt;');
+    expect(renderMarkdown('a <b>bold</b> word')).toContain('&lt;b&gt;');
+  });
+
+  it('falls back to escaping when handed an unrecognised value', () => {
+    const sanitize: import('./properties').MarkdownSanitizeOptions = {};
+    Reflect.set(sanitize, 'rawHtml', 'nonsense');
+    expect(() => renderMarkdown('a <b>bold</b> word', { sanitize })).not.toThrow();
+    expect(renderMarkdown('a <b>bold</b> word', { sanitize })).toContain('&lt;b&gt;');
+  });
+
+  it('composes with allowedTags rather than overriding it', () => {
+    const output = renderMarkdown('a <b>raw</b> and **real** bold', {
+      sanitize: { rawHtml: 'strip', allowedTags: [] }
+    });
+    expect(output).not.toContain('&lt;b&gt;');
+    expect(output).not.toContain('<strong>');
+    expect(output).toContain('real');
+  });
+});

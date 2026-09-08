@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      parse5:
+        specifier: ^8.0.1
+        version: 8.0.1
     devDependencies:
       '@commitlint/cli':
         specifier: ^21.0.2

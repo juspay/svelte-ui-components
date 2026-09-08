@@ -1,11 +1,17 @@
 import { Marked } from 'marked';
+import { parseFragment } from 'parse5';
+import type { DefaultTreeAdapterTypes } from 'parse5';
 import type { RendererObject, Tokens } from 'marked';
-import type { MarkdownSanitizeOptions, RenderMarkdownOptions } from './properties';
+import type {
+  MarkdownRawHtmlMode,
+  MarkdownSanitizeOptions,
+  RenderMarkdownOptions
+} from './properties';
 
 /**
  * Chat content comes from models and users, not from the app's own templates,
  * so the output must be safe without asking consumers to run a sanitizer:
- * raw HTML never passes through (it renders as escaped text), and only these
+ * raw HTML never passes through (escaped by default, tags optionally stripped), and only these
  * URL protocols survive on links. Everything else in the output is built by
  * marked from markdown syntax alone.
  */
@@ -133,14 +139,43 @@ function tagAllowed(allowed: Set<string> | null, tag: string): boolean {
   return allowed === null || allowed.has(tag);
 }
 
+/**
+ * As with `narrow` and `resolveTagAllowList`, a plain-JS or web-component
+ * consumer can hand this anything at runtime, so anything other than the one
+ * recognised opt-in degrades to today's escaping rather than throwing — an
+ * unrecognised value must never be the reason content silently disappears.
+ */
+function resolveRawHtmlMode(rawHtml?: MarkdownRawHtmlMode): MarkdownRawHtmlMode {
+  return rawHtml === 'strip' ? 'strip' : 'escape';
+}
+
+// An inert, server-compatible HTML parser handles quoted delimiters, entities
+// and raw-text elements. Escaping its text nodes prevents decoded entities from
+// becoming markup when the resulting string is rendered by Svelte.
+function rawHtmlText(node: DefaultTreeAdapterTypes.Node): string {
+  if ('value' in node) {
+    return escapeHtml(node.value);
+  }
+  // A <template>'s children live in a separate `content` fragment rather than
+  // in childNodes, so recursing only through childNodes loses its text.
+  if ('content' in node) {
+    return rawHtmlText(node.content);
+  }
+  if ('childNodes' in node) {
+    return node.childNodes.map(rawHtmlText).join('');
+  }
+  return '';
+}
+
 function createSanitizingRenderer(
   protocols: { links: Set<string>; images: Set<string> },
   allowedTags: Set<string> | null,
-  disableTaskLists: boolean
+  disableTaskLists: boolean,
+  rawHtml: MarkdownRawHtmlMode
 ): RendererObject {
   return {
     html(token: Tokens.HTML | Tokens.Tag): string {
-      return escapeHtml(token.text);
+      return rawHtml === 'strip' ? rawHtmlText(parseFragment(token.text)) : escapeHtml(token.text);
     },
     link(token: Tokens.Link): string | false {
       if (hasSafeProtocol(token.href, protocols.links) && tagAllowed(allowedTags, 'a')) {
@@ -272,19 +307,21 @@ function instanceFor(options: RenderMarkdownOptions): Marked {
   const protocols = resolveProtocolSets(options.sanitize);
   const allowedTags = resolveTagAllowList(options.sanitize?.allowedTags);
   const disableTaskLists = options.sanitize?.disableTaskLists === true;
+  const rawHtml = resolveRawHtmlMode(options.sanitize?.rawHtml);
   const key = [
     breaks ? 'breaks' : 'default',
     [...protocols.links].sort().join(','),
     [...protocols.images].sort().join(','),
     allowedTags ? [...allowedTags].sort().join(',') : '*',
-    disableTaskLists ? 'no-tasks' : 'tasks'
+    disableTaskLists ? 'no-tasks' : 'tasks',
+    rawHtml
   ].join('|');
   let instance = instances.get(key);
   if (!instance) {
     instance = new Marked({
       gfm: true,
       breaks,
-      renderer: createSanitizingRenderer(protocols, allowedTags, disableTaskLists)
+      renderer: createSanitizingRenderer(protocols, allowedTags, disableTaskLists, rawHtml)
     });
     instances.set(key, instance);
   }

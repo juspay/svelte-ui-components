@@ -23,6 +23,16 @@
     'Full details in the [orders dashboard](https://example.com/orders).'
   ].join('\n');
 
+  // Strip mode keeps text from both inline and block HTML; ordinary
+  // angle-bracket prose is not HTML and must remain visible in either mode.
+  const rawHtmlSource = [
+    'An inline <b>bold</b> tag, written as HTML.',
+    '',
+    '<div>A whole block of raw HTML.</div>',
+    '',
+    'And prose where a < b and c > d, which is text rather than markup.'
+  ].join('\n');
+
   // Every construct here is an attack in the source and inert text in the
   // output — this block exists so the demo page proves the security model
   // instead of asserting it.
@@ -82,6 +92,29 @@
 </p>
 <div class="demo-panel">
   <MarkdownText markdown={hostileSource} testId="markdown-text-hostile" />
+</div>
+
+<h2>Raw HTML: escaped or stripped</h2>
+<p class="demo-note">
+  The same source under both settings. <code>escape</code> — the default — shows the markup as
+  visible text; <code>strip</code> removes the tags and keeps the text they surrounded, for both inline
+  and block-level HTML. Neither ever inserts it as markup, so this changes what a reader sees, not what
+  the browser runs. Note the last line: prose that merely contains angle brackets is text, not HTML, so
+  it survives both.
+</p>
+<div class="demo-panel demo-row">
+  <div class="demo-half">
+    <h3>rawHtml='escape' (default)</h3>
+    <MarkdownText markdown={rawHtmlSource} testId="markdown-text-raw-escape" />
+  </div>
+  <div class="demo-half">
+    <h3>rawHtml='strip'</h3>
+    <MarkdownText
+      markdown={rawHtmlSource}
+      sanitize={{ rawHtml: 'strip' }}
+      testId="markdown-text-raw-strip"
+    />
+  </div>
 </div>
 
 <h2>A table wider than the message</h2>

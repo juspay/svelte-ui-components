@@ -15,6 +15,15 @@ export type MandatoryPillProperties = {
  */
 export type PillTone = 'accent' | 'ok' | 'warn' | 'danger' | 'muted';
 
+/**
+ * Root element for the pill. `'div'` is the default and renders exactly as before —
+ * non-interactive, or carrying the synthetic `role="button"`/`tabindex`/keydown shim when
+ * an `onclick` is supplied. `'button'` renders a real `<button type="button">` instead, so
+ * a chip-shaped control gets native focus, activation and announcement rather than an
+ * imitation of them.
+ */
+export type PillRootTag = 'div' | 'button';
+
 export type OptionalPillProperties = {
   dismissible?: boolean;
   disabled?: boolean;
@@ -24,6 +33,31 @@ export type OptionalPillProperties = {
    * variable set. See `PillTone` for the mapping and override precedence.
    */
   tone?: PillTone;
+  /**
+   * Root element. Defaults to `'div'`, which renders exactly as before this prop existed.
+   *
+   * `'button'` gives a chip real control semantics — native keyboard activation, focus and
+   * announcement — instead of the `role="button"`/`tabindex`/keydown shim a `<div>` needs.
+   * Reach for it when the chip is a disclosure or a toggle (see `ariaExpanded` /
+   * `ariaPressed`), which a shimmed div cannot express correctly.
+   *
+   * One combination cannot be honoured: a `<button>` may not contain another button, and a
+   * `dismissible` pill is inherently two controls. `as="button"` together with
+   * `dismissible` therefore falls back to the `div` root and its shim rather than emitting
+   * invalid markup — the same rule `Card` applies to `as="a"` with no `href`.
+   */
+  as?: PillRootTag;
+  /**
+   * Expanded state of a disclosure chip, rendered as `aria-expanded`. Applied only when the
+   * pill is interactive (a `button` root, or a `div` with `onclick`), since the attribute is
+   * meaningless on a plain label. Omitted by default.
+   */
+  ariaExpanded?: boolean;
+  /**
+   * Pressed state of a toggle chip, rendered as `aria-pressed`. Applied only when the pill
+   * is interactive, for the same reason as `ariaExpanded`. Omitted by default.
+   */
+  ariaPressed?: boolean;
   testId?: string;
   title?: string;
   dismissIcon?: Snippet;

@@ -153,6 +153,52 @@ your app, not something Pill ships. If you use them and support a dark theme, gi
 counterparts the same way — or prefer `tone`, which exists precisely so the colour pair lives in
 one themeable place instead of being repeated per call site.
 
+### Interactive Chips (`as="button"`)
+
+By default Pill's root is a `<div>`, and supplying an `onclick` bolts a synthetic
+`role="button"` / `tabindex="0"` / keydown shim onto it. That is enough for a plain click
+target, but it cannot express a chip that is a real control — a disclosure chip that owns
+`aria-expanded`, or a toggle chip that owns `aria-pressed`.
+
+`as="button"` renders a real `<button type="button">` root instead, so focus, activation and
+announcement come from the platform rather than an imitation of it:
+
+```svelte
+<script>
+  import { Pill } from '@juspay/svelte-ui-components';
+
+  let open = $state(false);
+  let pinned = $state(false);
+</script>
+
+<!-- Disclosure chip -->
+<Pill text="Details" as="button" ariaExpanded={open} onclick={() => (open = !open)} />
+
+<!-- Toggle chip -->
+<Pill text="Pinned" as="button" ariaPressed={pinned} onclick={() => (pinned = !pinned)} />
+```
+
+With a button root Pill emits no `role` and no `tabindex` — adding them on top of native
+semantics would duplicate the platform's own activation. `ariaExpanded` and `ariaPressed` are
+applied only when the pill is actually interactive (a button root, or a `div` with `onclick`),
+since both attributes are meaningless on a plain label.
+
+`disabled` still uses `aria-disabled` rather than the native `disabled` attribute, matching the
+`div` root. A natively disabled button drops out of the tab order entirely, so a keyboard user
+never reaches it and never learns it is disabled; `aria-disabled` keeps it discoverable while
+the click and dismiss handlers stay inert. A button root emits it whether or not an `onclick`
+was supplied — it is a real, focusable control either way — whereas a `div` root emits it only
+when an `onclick` makes it one.
+
+**`as="button"` and `dismissible` cannot be combined.** A `<button>` may not contain another
+button, and a dismissible pill is inherently two controls. Rather than emit invalid markup,
+that combination falls back to the `div` root and its shim — the same graceful-degradation rule
+`Card` applies to `as="a"` with no `href`. If you need both, render the dismiss control as a
+sibling of the pill rather than inside it.
+
+Opting in changes semantics only, not appearance: a button root is neutralised back to the same
+computed font, padding, margin, border and height as the equivalent `div`.
+
 ### Attribute Passthrough
 
 `attrs` spreads arbitrary `data-*`/`aria-*` attributes onto the pill root — for a consumer
@@ -180,7 +226,10 @@ props control. Omitted by default, so existing consumers are unaffected.
 | ------------ | --------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | text         | `string`  | Yes      | `-`       | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                     |
 | tone         | `'accent' \| 'ok' \| 'warn' \| 'danger' \| 'muted'` | No | `-` | Semantic tone for a status/category chip. Sets the background/text color from the matching `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color` variables (each with a built-in default). An explicit `--pill-background` / `--pill-color` (set directly, or via `classes`) always wins over the tone default. Omitted by default, which renders exactly as before this prop existed. |
-| dismissible  | `boolean` | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked.                                                                         |
+| as           | `'div' \| 'button'` | No | `'div'` | Root element. `'div'` renders exactly as before this prop existed. `'button'` renders a real `<button type="button">`, giving a chip native focus, keyboard activation and announcement instead of the `role="button"`/`tabindex`/keydown shim. Falls back to `'div'` when combined with `dismissible`, since a button may not contain another button. |
+| ariaExpanded | `boolean` | No       | `-`       | Expanded state of a disclosure chip, rendered as `aria-expanded`. Applied only when the pill is interactive (a button root, or a div with `onclick`). Web component attribute: `aria-expanded`. |
+| ariaPressed  | `boolean` | No       | `-`       | Pressed state of a toggle chip, rendered as `aria-pressed`. Applied only when the pill is interactive. Web component attribute: `aria-pressed`.                          |
+| dismissible  | `boolean` | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked. Forces the `div` root — see `as`.                                       |
 | dismissLabel | `string`  | No       | `Dismiss` | Accessible name of the dismiss button. Pass a translated string for localised products; blank values fall back to the default. Web component attribute: `dismiss-label`. |
 | disabled     | `boolean` | No       | `false`   | When true, the pill appears dimmed (opacity 0.4), shows a not-allowed cursor, and ignores all click and dismiss interactions.                                            |
 | testId       | `string`  | No       | `-`       | Value for the data-pw attribute, used for end-to-end testing selectors. The dismiss button receives `{testId}-dismiss`.                                                  |

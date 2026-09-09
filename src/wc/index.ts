@@ -62,6 +62,7 @@ import './components/LottiePlayer.wc.svelte';
 import './components/StatCard.wc.svelte';
 import './components/DeltaIndicator.wc.svelte';
 import './components/ProportionBar.wc.svelte';
+import './components/PieChart.wc.svelte';
 import './components/Resizable.wc.svelte';
 import './components/Draggable.wc.svelte';
 import './components/MediaPlayer.wc.svelte';

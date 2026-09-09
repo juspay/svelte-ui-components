@@ -2,7 +2,85 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.5)
+
+`sanitize` could narrow which markdown-GENERATED tags render, but had no effect
+at all on raw HTML typed literally into the source: `html()` returned
+`escapeHtml(token.text)` with no gate, so `allowedTags: []` behaved identically
+with and without it and a literal `&lt;script&gt;alert(1)&lt;/script&gt;` still rendered as
+visible escaped tag text.
+
+Escaping is the right safety default and stays the default. The gap is that
+"escape it" and "drop it" are different products and only one was expressible,
+so a surface that wanted raw HTML removed had to pre-mangle the source with its
+own regex before it ever reached the component -- which is what TARA does, and
+why it cannot retire that workaround in favour of `sanitize`.
+
+sanitize={{ rawHtml: 'strip' }}
+
+Strip removes tags, attributes, declarations and comments while KEEPING their
+text, which is what #573 asked for:
+
+a &lt;b&gt;bold&lt;/b&gt; word                    -&gt; a bold word
+&lt;div&gt;hello &lt;em&gt;world&lt;/em&gt;&lt;/div&gt;       -&gt; hello world
+&lt;div title="a &gt; b"&gt;visible&lt;/div&gt;      -&gt; visible
+&lt;div&gt;before&lt;!-- hidden --&gt;after&lt;/div&gt; -&gt; beforeafter
+&lt;div&gt;fish &amp; chips &#60;3&lt;/div&gt;    -&gt; fish &amp; chips &lt;3
+&lt;script&gt;alert(1)&lt;/script&gt;             -&gt; alert(1), as text
+
+An earlier revision of this branch dropped block-level tokens whole, because
+marked hands the renderer the entire raw block as one string. That was my
+decision rather than the issue's, and it was the wrong one to make silently:
+`&lt;div&gt;hello&lt;/div&gt;` losing the word "hello" is data loss a consumer cannot see
+happening. Each raw token is now parsed with parse5 -- an inert, DOM-free
+parser, so SSR and browser render identically -- and its text nodes are kept.
+
+Quoted `&gt;` inside an attribute, entity references, unclosed tags and raw-text
+elements are exactly the cases a regex gets wrong, which is why this is a real
+parser rather than a substitution. Every retained text node is escaped on the
+way out, so encoded markup cannot re-enter as markup: a test asserts
+`&lt;div&gt;&lt;img src=x onerror=alert(1)&gt;&lt;/div&gt;` yields `&lt;img` and no `&lt;img`.
+Script and style contents survive as visible text and are never executed.
+
+Purely additive: without the option, output is byte-for-byte what it was. Four
+of the new tests assert exactly that and pass on the pre-change code. Fenced
+code is untouched (a code block is not a raw-HTML token) and prose containing
+bare angle brackets still escapes to a visible `&lt;` -- a strip that reached it
+would silently eat arithmetic out of a sentence.
+
+`renderMarkdown` caches a Marked instance per resolved option set, so the mode
+joins that cache key; without it the first render through a given source would
+have decided disposal for every later one. An unrecognised runtime value
+degrades to escaping rather than throwing, matching how `narrow` and
+`resolveTagAllowList` already treat input from plain-JS and web-component
+callers.
+
+Every doc claim this makes false is corrected rather than left standing: the
+overview's "no way to opt out", the `allowedTags` note, the security-model
+bullet, the `markdown` prop description and the `rawHtml` docstring.
+
+parse5 becomes a runtime dependency of the pipeline. The web component needs no
+change: it already declares `sanitize` as an Object and passes it through whole.
+
+A &lt;template&gt;'s children live in a separate `content` fragment rather than in
+childNodes, so walking childNodes alone lost their text. Handled explicitly,
+with tests for a lone template and one nested in a div.
+
+parse5 is `^8.0.1` rather than a pinned 8.0.0: the lockfile already carried
+8.0.1 transitively, so pinning the older patch installed two copies of the
+same parser for no benefit.
+
+Closes #573
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+940 unit tests (45 over the markdown pipeline, 10 of them new for these cases)
+and 635 functional tests with 1 pre-existing skip, including 5 recorded
+Playwright cases for this feature reviewed frame-by-frame rather than assumed.
+
+-
+feat(markdown-text): let sanitize strip raw HTML instead of escaping it ([c242972](https://github.com/juspay/svelte-ui-components/commit/c2429727b55e0e4fc9777d488ad952c9f2f053d7))
+
+## [4.11.5](https://github.com/juspay/svelte-ui-components/compare/4.11.5..4.11.4) - 8 September 2026
 
 Dependabot's kit 2.63.1 -&gt; 2.70 bump (#584) fails `check` with 28 errors that
 name no cause:

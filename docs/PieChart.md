@@ -294,6 +294,47 @@ Thresholds: ≥ 1 Cr (10 million) → `"1.5Cr"`, ≥ 1 L (100 thousand) → `"2.
 
 ## Web Component
 
-PieChart is currently available through the Svelte entry point only. The web-component bundle does not register `sui-pie-chart`; importing it will not create a functioning chart element. Use `PieChart` from `@juspay/svelte-ui-components` for the APIs documented above.
+`sui-pie-chart` is registered by the web-component bundle:
 
-> **Correction.** Earlier revisions of this page documented `<sui-pie-chart>` with kebab-case attributes and JS-assigned function props. **That wrapper was never built** — there is no `PieChart.wc.svelte` and no `customElements.define('sui-pie-chart', …)`, so the element never upgraded and the markup rendered nothing. If you followed that section and saw an empty space, this is why. Nothing was withdrawn here: the documentation described a component that did not exist, and now says so. Adding a real wrapper is tracked separately.
+```html
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-pie-chart show-legend legend-show-values legend-position="right" legend-max-items="5">
+</sui-pie-chart>
+
+<script>
+  document.querySelector('sui-pie-chart').data = [
+    { label: 'UPI', value: 62 },
+    { label: 'Cards', value: 21 },
+    { label: 'Netbanking', value: 9 }
+  ];
+</script>
+```
+
+**Scalar props are kebab-case attributes**, coerced to their declared type: `inner-radius`, `pad-angle`, `show-labels`, `show-values`, `label-position`, `show-legend`, `start-angle`, `aspect-ratio`, `max-height`, `min-height`, `semi-circle`, `legend-show-values`, `legend-position`, `legend-max-items`, `percent-decimals`, `highlighted-index`, `change-percentage`, `change-invert-colors`, `test-id`, `classes`. Booleans are presence-based, so `show-legend` is on and removing the attribute turns it off.
+
+**Everything else is a JS property**, because arrays, objects and functions cannot cross the HTML-attribute boundary:
+
+```js
+const chart = document.querySelector('sui-pie-chart');
+chart.data = slices;
+chart.valueFormat = (value) => `₹${value}`;
+chart.onsliceclick = ({ index, slice }) => console.log(index, slice.label);
+chart.onlegendmore = () => openBreakdownDrawer();
+chart.onchartready = (api) => narrator.attach(api);
+```
+
+**`center` and `empty` are slots**, not properties — a plain-HTML consumer cannot construct a Svelte snippet:
+
+```html
+<sui-pie-chart inner-radius="0.6">
+  <div slot="center"><strong>₹4.2Cr</strong></div>
+  <span slot="empty">No transactions in this period</span>
+</sui-pie-chart>
+```
+
+Leaving a slot empty keeps the component's own default, so an unslotted element still renders the built-in empty state rather than a blank box.
+
+`tooltipSnippet` has no slot equivalent. It is called with `(slice, index)`, and a slot cannot receive those arguments, so it stays available only to Svelte consumers.
+
+> **Correction.** Revisions of this page before `4.12` documented `<sui-pie-chart>` while no wrapper existed — there was no `PieChart.wc.svelte` and no `customElements.define('sui-pie-chart', …)`, so the element never upgraded and the markup rendered nothing. If you followed that section and saw an empty space, this is why. The wrapper described above is the real one.

@@ -2,7 +2,86 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.11.5)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.12.0)
+
+Snippet coupled two separable things: the copy-and-flash behaviour (clipboard
+call, `copied` flag, reset timer, unmount cleanup) and the presentation (a
+`&lt;code&gt;` box with a `$`-style prompt). A consumer who wanted "copy this value"
+beside arbitrary content -- a hostname in a settings row, a token, a URL --
+could not take the first without the second, so the logic got hand-rolled
+outside the library. That is exactly how #530's timer-safety work fails to
+reach the surfaces that need it most.
+
+const copy = createCopyState({ copyResetMs: 1500 });
+onDestroy(copy.destroy);
+
+Option 2 from the issue rather than a `bare`/`showBox` prop: extraction
+composes with any presentation, where a flag only removes one. Snippet now runs
+on the same state machine it exports, so the two cannot drift.
+
+Options are read at copy time rather than captured at creation, so reactive
+callers pass getters -- which is how Snippet forwards its own props.
+
+Seven defects found by writing the tests against the implementation rather
+than around it, each reproduced before it was fixed:
+
+- A clipboard promise that settles after destroy set state on a torn-down
+owner, fired `oncopy` and armed a timer that outlived the component.
+- `copy()` after destroy still wrote to the clipboard.
+- A throwing `oncopy` rejected the returned promise and skipped the feedback
+reset, so the control stuck on "Copied!" forever.
+- Overlapping writes needed a defined contract: they are acknowledged in
+completion order, each successful completion restarts the single timer, and a
+failed write neither starts nor extends feedback an earlier success is still
+showing.
+- A non-numeric `copyResetMs` reached setTimeout. The type says `number`, but
+plain-JS and web-component callers are not bound by it, and `?? DEFAULT` only
+substitutes for null/undefined -- so NaN arrived as NaN, which setTimeout
+coerces to 0 and fires immediately, making the feedback vanish before it was
+seen. Anything that is not a finite number &gt;= 0 now falls back to the default.
+- A throwing `copyResetMs` getter left `copied` stuck true forever: the throw
+escaped after the flag was set but before the timer was armed. The delay is
+resolved first, so there is no window where one exists without the other.
+- Snippet's live region was inside the button and conditionally rendered. A
+live region only announces when it is already in the DOM and its TEXT
+changes; inserting element and text together is what most screen-reader and
+browser pairs miss. A persistent, visually hidden `role="status"` sibling now
+carries the announcement while the visible label still swaps in the button.
+
+The demo had a real accessibility bug, caught in review: `ariaLabel="Copy host"`
+overrode the visible label, so a screen-reader user heard "Copy host" while the
+button read "Copied!" (WCAG 2.5.3), and the state change announced nothing. The
+example now lets the visible text be the accessible name, and the docs name the
+caveat that a live region inside a button is not announced reliably by every
+screen-reader/browser pair, with the sibling `role="status"` fallback spelled
+out. createCopyState still injects no DOM: a state machine that quietly added a
+live region would reintroduce the coupling this removes.
+
+docs/Snippet.md also records the entry-point contract raised in review -- the
+`./wc` entry registers custom elements and exports no utilities, so this is
+imported from the main entry, as `renderMarkdown` already is.
+
+Two further accessibility defects, both found in review:
+
+- Snippet's Button always carried `ariaLabel="Copy to clipboard"`, so once the
+visible label swapped to "Copied!" the accessible name still said "Copy to
+clipboard" -- WCAG 2.5.3, Label in Name. The label is now supplied only while
+the button is icon-only and has no visible text of its own.
+- The demo modelled the live-region pattern the docs warn against, with
+aria-live inside the button. It now uses the persistent sibling region the
+docs recommend and Snippet itself uses.
+
+Closes #574
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+25 copy-state cases and 6 Playwright cases; the browser tests assert the
+accessible name changes from "Copy" to "Copied!" rather than that a class
+toggled.
+
+-
+feat(snippet): extract the copy affordance as createCopyState ([756408b](https://github.com/juspay/svelte-ui-components/commit/756408bf5bc5d24d268de00f919add59e42aaf14))
+
+## [4.12.0](https://github.com/juspay/svelte-ui-components/compare/4.12.0..4.11.5) - 9 September 2026
 
 `sanitize` could narrow which markdown-GENERATED tags render, but had no effect
 at all on raw HTML typed literally into the source: `html()` returned

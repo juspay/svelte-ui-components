@@ -241,6 +241,8 @@ into per object:
 </script>
 ```
 
+Types only reach consumers who have them. In **dev builds**, Pill also logs a `console.warn` naming any managed key it found in `attrs` and what owns it, so a plain-JS caller — or anyone driving `<sui-pill>` as a web component, where there are no types at all — sees the discard too. It fires once per mounted instance and is compiled out of production builds.
+
 It intentionally differs from `CardStrictAttrs`: Pill writes no `style`, so `style` is
 usable on Pill and rejected on Card, while Card writes no `aria-*` state. Forbidding a key
 a component never touches would be a fake restriction.

@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the ProportionBar: one rect + one legend item per segment, widths that
 // sum to the full track, the accessible SVG summary when the legend is hidden,
 // and sanitization of negative / non-finite segment values.
 test.describe('ProportionBar', () => {
   test('renders one rect and one legend item per segment', async ({ page }) => {
-    await page.goto('/components/proportion-bar');
+    await gotoHydrated(page, '/components/proportion-bar');
 
     const bar = page.getByTestId('payment-methods-bar');
     await expect(bar).toBeVisible();
@@ -20,7 +21,7 @@ test.describe('ProportionBar', () => {
   });
 
   test('segment widths fill the whole track (~100%)', async ({ page }) => {
-    await page.goto('/components/proportion-bar');
+    await gotoHydrated(page, '/components/proportion-bar');
 
     const bar = page.getByTestId('payment-methods-bar');
     const widths = await bar.getByTestId('payment-methods-bar-svg').evaluate((svg) => {
@@ -32,7 +33,7 @@ test.describe('ProportionBar', () => {
   });
 
   test('exposes an accessible SVG summary when the legend is hidden', async ({ page }) => {
-    await page.goto('/components/proportion-bar');
+    await gotoHydrated(page, '/components/proportion-bar');
 
     const bar = page.getByTestId('no-legend-bar');
     await expect(bar.getByTestId('no-legend-bar-legend')).toHaveCount(0);
@@ -43,7 +44,7 @@ test.describe('ProportionBar', () => {
   });
 
   test('ignores negative and non-finite values (widths stay within 0–100)', async ({ page }) => {
-    await page.goto('/components/proportion-bar');
+    await gotoHydrated(page, '/components/proportion-bar');
 
     const bar = page.getByTestId('robust-bar');
     const rectCount = await bar

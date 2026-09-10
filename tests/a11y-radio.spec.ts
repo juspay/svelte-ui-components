@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // <input type="radio"> gets grouping, single-tab-stop, and arrow-key roving selection
 // entirely from the browser once radios share a name — Radio.svelte adds no custom
@@ -8,7 +9,7 @@ test.describe('Radio keyboard interaction (native radio group)', () => {
   test('the checked radio is the only member reachable by Tab (single-tab-stop group)', async ({
     page
   }) => {
-    await page.goto('/components/radio');
+    await gotoHydrated(page, '/components/radio');
 
     const upi = page.getByRole('radio', { name: 'UPI' });
     const card = page.getByRole('radio', { name: 'Card' });
@@ -28,7 +29,7 @@ test.describe('Radio keyboard interaction (native radio group)', () => {
   });
 
   test('ArrowDown/ArrowUp move focus and selection together across the group', async ({ page }) => {
-    await page.goto('/components/radio');
+    await gotoHydrated(page, '/components/radio');
 
     const upi = page.getByRole('radio', { name: 'UPI' });
     const card = page.getByRole('radio', { name: 'Card' });
@@ -52,7 +53,7 @@ test.describe('Radio keyboard interaction (native radio group)', () => {
   test('each radio carries its accessible name from the associated label text', async ({
     page
   }) => {
-    await page.goto('/components/radio');
+    await gotoHydrated(page, '/components/radio');
 
     // The native input is visually replaced by a custom .radio-indicator sibling
     // (width/height 0, opacity 0 — a standard accessible custom-control pattern, not
@@ -66,7 +67,7 @@ test.describe('Radio keyboard interaction (native radio group)', () => {
   });
 
   test('selecting via the keyboard is reflected in the page state', async ({ page }) => {
-    await page.goto('/components/radio');
+    await gotoHydrated(page, '/components/radio');
 
     await page.getByRole('radio', { name: 'UPI' }).focus();
     await page.keyboard.press('ArrowDown');

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Each Step is an independent role="button" tab stop (not a roving-tabindex composite)
 // — a deliberate choice for this "clickable breadcrumb" shape, not an APG tablist or
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // genuinely removes a step from the tab order.
 test.describe('Stepper and Step keyboard interaction', () => {
   test('each step is independently reachable by Tab', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     const cartStep = container.getByRole('button', { name: 'Cart' });
@@ -21,7 +22,7 @@ test.describe('Stepper and Step keyboard interaction', () => {
   });
 
   test('Enter and Space both activate a step, moving aria-current to it', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     const shippingStep = container.getByRole('button', { name: 'Shipping' });
@@ -43,14 +44,14 @@ test.describe('Stepper and Step keyboard interaction', () => {
   });
 
   test('the accessible name comes from the step label, via aria-labelledby', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     await expect(container.getByRole('button', { name: 'Confirm' })).toBeVisible();
   });
 
   test('suppressRoleAndTabindex removes a step from the tab order entirely', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-informational');
     const cartStep = container.locator('.step').filter({ hasText: 'Cart' });

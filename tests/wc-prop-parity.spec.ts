@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readWrapperParity } from '../scripts/wc-parity/prop-parity';
+import { gotoHydrated } from './support/hydrated';
 
 /**
  * The unit guard proves the wrapper *source* declares every prop. This proves
@@ -13,7 +14,7 @@ import { readWrapperParity } from '../scripts/wc-parity/prop-parity';
  * `pnpm run build` (the webServer command) runs build:wc, so the file exists.
  */
 const loadBundle = async (page: Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-status') !== 'undefined', null, {
     timeout: 15_000

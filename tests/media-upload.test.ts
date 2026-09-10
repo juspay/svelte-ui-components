@@ -1,13 +1,14 @@
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gotoHydrated } from './support/hydrated';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.join(__dirname, 'fixtures');
 
 test.describe('MediaUpload', () => {
   test('selecting a file adds a card and updates the counter', async ({ page }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const upload = page.getByTestId('media-upload-demo');
     await expect(upload.locator('.counter')).toHaveText('0 / 3');
@@ -20,7 +21,7 @@ test.describe('MediaUpload', () => {
   });
 
   test('an image card renders a thumbnail via Img', async ({ page }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const upload = page.getByTestId('media-upload-demo');
     await upload.locator('input[type="file"]').setInputFiles(path.join(fixtures, 'tiny.png'));
@@ -31,7 +32,7 @@ test.describe('MediaUpload', () => {
   test('a file over maxFileSize is rejected with a visible alert, no card added', async ({
     page
   }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const upload = page.getByTestId('media-upload-demo');
     await upload.locator('input[type="file"]').setInputFiles(path.join(fixtures, 'too-large.png'));
@@ -42,7 +43,7 @@ test.describe('MediaUpload', () => {
   });
 
   test('removing a card via its remove button updates the counter', async ({ page }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const upload = page.getByTestId('media-upload-demo');
     await upload.locator('input[type="file"]').setInputFiles(path.join(fixtures, 'tiny.png'));
@@ -55,7 +56,7 @@ test.describe('MediaUpload', () => {
   });
 
   test('the drop tile disappears once maxLength is reached', async ({ page }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const upload = page.getByTestId('media-upload-demo');
     await upload

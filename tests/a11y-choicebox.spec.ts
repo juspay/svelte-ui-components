@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Choicebox keyboard interaction', () => {
   test('Tab reaches an enabled Choicebox and Enter/Space toggle it (checkbox mode)', async ({
     page
   }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     const checkA = page.getByTestId('choicebox-check-a');
     await checkA.focus();
@@ -22,7 +23,7 @@ test.describe('Choicebox keyboard interaction', () => {
   test('Space selects a Choicebox in radio mode, and re-pressing an already-selected one is a no-op', async ({
     page
   }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     // Scoped to the group rather than reached by test id alone. Resolving the
     // radios directly would leave the test passing if `role="radiogroup"` or
@@ -51,7 +52,7 @@ test.describe('Choicebox keyboard interaction', () => {
   test('a disabled Choicebox leaves the tab order and ignores keyboard activation', async ({
     page
   }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     const overnight = page.getByTestId('choicebox-radio-overnight');
     await expect(overnight).toHaveAttribute('tabindex', '-1');
@@ -78,7 +79,7 @@ test.describe('Choicebox keyboard interaction', () => {
   test.fixme('sibling radio-mode Choiceboxes form a single-tab-stop group with arrow-key roving selection', async ({
     page
   }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     const standard = page.getByTestId('choicebox-radio-standard');
     const express = page.getByTestId('choicebox-radio-express');

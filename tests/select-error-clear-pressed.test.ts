@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #414 items 2-4. The Breeze DS dropdown sheet specs an error state
 // (red border + hint), a trigger clear button that resets the selection
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // documented class recipe, since the variables were already themeable.
 test.describe('Select — error state (#414 item 2)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
   });
 
   test('renders the error border on the trigger', async ({ page }) => {
@@ -63,7 +64,7 @@ test.describe('Select — error state (#414 item 2)', () => {
 
 test.describe('Select — trigger clear button (#414 item 3)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
   });
 
   test('clears the selection', async ({ page }) => {
@@ -150,7 +151,7 @@ test.describe('Select — pressed state (#414 item 4)', () => {
   // is how it wasted time once already. hover() scrolls into view first, so
   // these stay correct no matter where the fixture sits on the page.
   test('the trigger tints while the pointer is down', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
     const trigger = page.getByTestId('select-clearable').locator('.select-trigger');
 
     await trigger.hover();
@@ -162,7 +163,7 @@ test.describe('Select — pressed state (#414 item 4)', () => {
   });
 
   test('the trigger returns to its normal background on release', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
     const trigger = page.getByTestId('select-clearable').locator('.select-trigger');
 
     await trigger.hover();
@@ -173,7 +174,7 @@ test.describe('Select — pressed state (#414 item 4)', () => {
   });
 
   test('an option tints while the pointer is down', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
     const select = page.getByTestId('select-clearable');
 
     await select.locator('.select-trigger').click();

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers GAP L20: per-chip test ids (so a migrated app's specs keep a working locator per chip,
 // per delete control, and for the add/draft field) and opt-in in-place editing (activate a chip,
@@ -14,7 +15,7 @@ import { expect, test } from '@playwright/test';
 //   - the draft/add field:  `${testId}-add`                   (exact match)
 test.describe('ChipInput — per-chip test ids', () => {
   test('every chip, its delete control, and the add field carry a derived id', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     // "Product tags" demo: values = ['sale', 'featured'], editable not set.
     const chipZero = page.getByTestId('chip-input-tags-item-0');
@@ -31,7 +32,7 @@ test.describe('ChipInput — per-chip test ids', () => {
   });
 
   test('deleting a chip by its derived id removes only that value', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     await page.getByTestId('chip-input-tags-item-0-dismiss').click();
 
@@ -45,7 +46,7 @@ test.describe('ChipInput — per-chip test ids', () => {
 
 test.describe('ChipInput — editable (opt-in in-place editing)', () => {
   test('default: clicking a chip does nothing when `editable` is not set', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const chip = page.getByTestId('chip-input-tags-item-0');
     await expect(chip).toContainText('sale');
@@ -59,7 +60,7 @@ test.describe('ChipInput — editable (opt-in in-place editing)', () => {
   });
 
   test('Enter commits an edit back into values and fires onedit', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const chip = page.getByTestId('chip-input-editable-item-0');
     await expect(chip).toContainText('sale');
@@ -81,7 +82,7 @@ test.describe('ChipInput — editable (opt-in in-place editing)', () => {
   });
 
   test('blurring the edit field also commits', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const chip = page.getByTestId('chip-input-editable-item-1');
     await expect(chip).toContainText('featured');
@@ -99,7 +100,7 @@ test.describe('ChipInput — editable (opt-in in-place editing)', () => {
   });
 
   test('Escape cancels and restores the original value without firing onedit', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const chip = page.getByTestId('chip-input-editable-item-2');
     await expect(chip).toContainText('clearance');
@@ -118,7 +119,7 @@ test.describe('ChipInput — editable (opt-in in-place editing)', () => {
   test('the delete control still works while `editable` is on, on a chip not being edited', async ({
     page
   }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     // Demo state is `sale, featured, clearance` (see +page.svelte); index 2 is the LAST chip, so
     // dismissing it collapses the list to two entries rather than shifting another value into

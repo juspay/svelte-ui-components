@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression coverage for #573, in a real browser rather than over the pure
 // string transform: `renderMarkdown` unit tests can only prove what HTML is
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // assertions below read the rendered text content rather than the HTML.
 test.describe('MarkdownText — raw HTML disposal (sanitize.rawHtml)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
     // Reading offscreen text passes assertions but records the wrong section.
     await page.getByTestId('markdown-text-raw-escape').scrollIntoViewIfNeeded();
   });

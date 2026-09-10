@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Img's inlineSvg path copies the fetched root's allowlisted attributes onto
 // the live <svg> host. Before this test existed, a `src` change cleared the
@@ -32,7 +33,7 @@ test('a src change removes the root attributes the previous file supplied', asyn
   await page.route(SECOND_URL, (route) =>
     route.fulfill({ status: 200, contentType: 'image/svg+xml', body: SECOND })
   );
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-img') !== 'undefined', null, {
     timeout: 15_000

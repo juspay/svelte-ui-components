@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // ChipInput re-declares --pill-* on the pill element to expose its own --chip-input-pill-* API.
 // Because a declaration on the element beats an inherited one, that mapping used to swallow any
@@ -17,7 +18,7 @@ import { expect, test } from '@playwright/test';
 // index 0, before these run.
 test.describe('ChipInput token passthrough', () => {
   test('falls back to the library default when nothing is themed', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const pill = page.getByTestId('chip-input-tags-item-0');
     await expect(pill).toBeVisible();
@@ -27,7 +28,7 @@ test.describe('ChipInput token passthrough', () => {
   });
 
   test('an explicit --chip-input-pill-* override still wins', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const pill = page.getByTestId('chip-input-accent-item-0');
     await expect(pill).toBeVisible();
@@ -38,7 +39,7 @@ test.describe('ChipInput token passthrough', () => {
   });
 
   test("inherits the app's own Pill theme when no component override is set", async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const pill = page.getByTestId('chip-input-inherited-item-0');
     await expect(pill).toBeVisible();
@@ -53,7 +54,7 @@ test.describe('ChipInput token passthrough', () => {
   // so an app whose Pill is a larger, squarer chip still got a 13px 999px-radius one. These assert
   // the passthrough covers appearance as a whole rather than the subset that happened to be noticed.
   test("inherits the app's Pill size and shape, not just its colours", async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const pill = page.getByTestId('chip-input-inherited-item-0');
     await expect(pill).toBeVisible();
@@ -68,7 +69,7 @@ test.describe('ChipInput token passthrough', () => {
   test('keeps the draft field structural tokens regardless of the app Input theme', async ({
     page
   }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     const draft = page.getByTestId('chip-input-inherited-add');
     await expect(draft).toBeVisible();

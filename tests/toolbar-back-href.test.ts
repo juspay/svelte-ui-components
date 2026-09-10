@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Issue #522: Toolbar's built-in back control was callback-only (onbackclick),
 // with no way to make it a real link. Consumers who needed href-based back navigation had to
@@ -9,7 +10,7 @@ test.describe('Toolbar backHref', () => {
   test('an unconfigured toolbar keeps rendering the back control as a <button>, not a link', async ({
     page
   }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-root').locator('.back');
     expect(await back.evaluate((element) => element.tagName.toLowerCase())).toBe('button');
@@ -19,7 +20,7 @@ test.describe('Toolbar backHref', () => {
   test('backHref renders the back control as a real <a> carrying the given href', async ({
     page
   }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-back-href').locator('.back');
     expect(await back.evaluate((element) => element.tagName.toLowerCase())).toBe('a');
@@ -32,7 +33,7 @@ test.describe('Toolbar backHref', () => {
   test('onbackclick still fires as the anchor click handler when backHref is set', async ({
     page
   }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const clicks = page.getByTestId('toolbar-back-href-clicks');
     await expect(clicks).toHaveText('0');
@@ -43,7 +44,7 @@ test.describe('Toolbar backHref', () => {
   });
 
   test('the anchor activates from the keyboard like the default button did', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-back-href').locator('.back');
     await back.focus();
@@ -55,7 +56,7 @@ test.describe('Toolbar backHref', () => {
   test('Space also activates the anchor, which a native <a> would not do on its own', async ({
     page
   }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-back-href').locator('.back');
     await back.focus();
@@ -67,7 +68,7 @@ test.describe('Toolbar backHref', () => {
   test('leftContent still takes precedence over backHref, same as it does over the default button', async ({
     page
   }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const root = page.getByTestId('toolbar-left-content-precedence');
     await expect(root.getByTestId('toolbar-left-content-marker')).toBeVisible();

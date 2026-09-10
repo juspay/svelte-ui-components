@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('MarkdownText — a wide table scrolls, stays a table, and can be reached', () => {
   // The scroll container is a wrapper rather than the table itself. `display: block`
@@ -6,7 +7,7 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
   // also strips the table's semantics for assistive technology — so the box that
   // scrolls and the box that is a table have to be different elements.
   test('the wrapper overflows horizontally while the table stays a table', async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
 
     const scope = page.getByTestId('markdown-text-wide-table');
     const wrapper = scope.locator('.markdown-table-wrapper');
@@ -31,7 +32,7 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
   // A box with overflow-x: auto cannot be scrolled with arrow keys unless it can
   // hold focus, so without a tabindex the scrolling above is mouse-only.
   test('the scroll container is keyboard reachable and really scrolls', async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
 
     const wrapper = page.getByTestId('markdown-text-wide-table').locator('.markdown-table-wrapper');
     await expect(wrapper).toHaveAttribute('tabindex', '0');
@@ -49,7 +50,7 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
   // A tab stop with no visible focus ring is a keyboard user's dead end: they can
   // reach the box and scroll it with no sign of where they are.
   test('the focused wrapper shows a visible focus ring', async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
 
     const wrapper = page.getByTestId('markdown-text-wide-table').locator('.markdown-table-wrapper');
     await wrapper.focus();
@@ -67,7 +68,7 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
   // The width that makes it scroll must not buy that at the cost of the column
   // model — and every row has to hold, not just the first one.
   test('header and body columns stay aligned on every row', async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
 
     const scope = page.getByTestId('markdown-text-wide-table');
     const edges = await scope.evaluate((root) => ({
@@ -89,7 +90,7 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
   // An unnamed region announces a landmark the user cannot identify, so the role
   // is present only when a name is supplied.
   test('the region is named only when the caller supplies a label', async ({ page }) => {
-    await page.goto('/components/markdown-text');
+    await gotoHydrated(page, '/components/markdown-text');
 
     const labelled = page
       .getByTestId('markdown-text-labelled-table')

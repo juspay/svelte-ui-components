@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // WebOTP / Android-SMS autofill drops the WHOLE code into the first field as a
 // single input event (no keyboard, no clipboard paste). With the default
@@ -18,7 +19,7 @@ test.describe('SplitInput autofill/multi-char distribution', () => {
   };
 
   test('whole code injected into field 0 distributes across all fields', async ({ page }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const group = page.getByTestId('split-input-default');
     const inputs = group.locator('input');
@@ -36,7 +37,7 @@ test.describe('SplitInput autofill/multi-char distribution', () => {
   });
 
   test('injected code with separators is digit-sanitized before distribution', async ({ page }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const inputs = page.getByTestId('split-input-sms-otp').locator('input');
 
@@ -49,7 +50,7 @@ test.describe('SplitInput autofill/multi-char distribution', () => {
   });
 
   test('single-character typing still auto-advances field by field', async ({ page }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const inputs = page.getByTestId('split-input-default').locator('input');
 
@@ -66,7 +67,7 @@ test.describe('SplitInput autofill/multi-char distribution', () => {
   test('typing into an already-filled middle field keeps the newest digit and advances', async ({
     page
   }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const inputs = page.getByTestId('split-input-default').locator('input');
 

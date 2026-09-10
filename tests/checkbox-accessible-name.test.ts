@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Checkbox names its role="checkbox" box, and the box is the node assistive technology
 // reads. The visible text is a sibling <span>, and the wrapping <label> does not name the
@@ -7,14 +8,14 @@ import { expect, test } from '@playwright/test';
 // and in any test that reads the label text rather than the computed name.
 test.describe('Checkbox — accessible name', () => {
   test('the visible text names the box', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const box = page.getByTestId('checkbox-named-by-text-box');
     await expect(box).toHaveAccessibleName('Named by its visible text');
   });
 
   test('the visible text wins over an explicit ariaLabel, per WCAG 2.5.3', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     // Label in Name: the accessible name has to carry the text on screen, so an
     // explicit `ariaLabel` cannot replace it. Letting it win would give a
@@ -26,14 +27,14 @@ test.describe('Checkbox — accessible name', () => {
   });
 
   test('ariaLabel still names a checkbox that shows no text', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const box = page.getByTestId('checkbox-named-without-text-box');
     await expect(box).toHaveAccessibleName('Named with no visible text');
   });
 
   test('every checkbox on the page has a name', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     // The sweep that found this reported `control-has-no-accessible-name` against the box
     // on five routes, every one of which passed a visible `text`. Asserting one instance

@@ -3,7 +3,7 @@
   import { base } from '$app/paths';
   import { componentNav } from './components/_nav';
   import ThemeSwitcher from '$lib/ThemeSwitcher/ThemeSwitcher.svelte';
-  import type { Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import './components/demo.css';
 
   let { children }: { children: Snippet } = $props();
@@ -20,6 +20,24 @@
       }))
       .filter((group) => group.items.length > 0)
   );
+
+  /*
+   * Marks the document once the app is interactive, for the Playwright suite.
+   *
+   * Every demo page is server-rendered, so a control exists and passes all of
+   * Playwright's actionability checks -- visible, stable, enabled, receiving
+   * events -- while the page is still inert. Playwright has no way to check
+   * that a listener is attached, so a click that arrives before hydration is
+   * delivered to dead markup and silently does nothing; the assertion that
+   * follows then fails as a timeout with no clue as to why. Under load, with
+   * `video`/`trace` recording on every test, that window is wide enough to hit.
+   *
+   * A parent's onMount runs after its children have mounted, so the root layout
+   * setting this is the app as a whole reporting that it is ready.
+   */
+  onMount(() => {
+    document.documentElement.dataset.hydrated = 'true';
+  });
 
   function handleThemeChange(_value: string, resolved: string): void {
     document.documentElement.dataset.theme = resolved;

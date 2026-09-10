@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The overflow fade used to ramp from transparent at the exact edge, which
 // left the clipped tab label perceptible (~20% opacity) a few px in — reading
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // --tabs-fade-size.
 test.describe('Tabs fade solid zone', () => {
   test('edge fades hold a fully-transparent 8px zone', async ({ page }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     await expect(bar).toHaveClass(/fade-right/);
@@ -22,7 +23,7 @@ test.describe('Tabs fade solid zone', () => {
   });
 
   test('mid-scroll both edges fade through the double-ended mask', async ({ page }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     await bar.evaluate((el) => {

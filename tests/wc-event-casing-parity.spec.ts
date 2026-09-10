@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 import {
   readComponentProps,
   readCustomElementDeclaration,
@@ -25,7 +26,7 @@ import {
 const WC_DIR = join(process.cwd(), 'src/wc/components');
 
 const loadBundle = async (page: Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-status') !== 'undefined', null, {
     timeout: 15_000

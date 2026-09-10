@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Two pre-existing a11y defects on Sheet, shipped on every side since 4.0.0:
 //
@@ -16,7 +17,7 @@ test.describe('Sheet overlay accessible name', () => {
   test('a dismissible overlay (side="right", default dismissOnOutsideClick) is a named button', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-right-trigger').click();
     const overlay = page.getByTestId('sheet-right');
@@ -29,7 +30,7 @@ test.describe('Sheet overlay accessible name', () => {
   test('a non-dismissible overlay (dismissOnOutsideClick=false) carries no role at all', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-blocking-trigger').click();
     const overlay = page.getByTestId('sheet-blocking');
@@ -42,7 +43,7 @@ test.describe('Sheet overlay accessible name', () => {
   });
 
   test('overlayAriaLabel overrides the default name (side="left")', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-custom-overlay-label-trigger').click();
     const overlay = page.getByTestId('sheet-custom-overlay-label');
@@ -55,7 +56,7 @@ test.describe('Sheet overlay accessible name', () => {
   test('an invisible-but-dismissible overlay (showOverlay=false) is still a named button', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-anchored-trigger').click();
     const overlay = page.getByTestId('sheet-anchored');
@@ -70,7 +71,7 @@ test.describe('Sheet panel focus indicator', () => {
   test('a keyboard-opened sheet (side="right") shows a visible focus ring on the panel', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     // .press() dispatches a real key event, which is what puts the browser in
     // keyboard input modality -- the precondition :focus-visible checks before
@@ -94,7 +95,7 @@ test.describe('Sheet panel focus indicator', () => {
   test('a keyboard-opened sheet (side="bottom") shows a visible focus ring on the panel', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-bottom-trigger').press('Enter');
     const panel = page.getByTestId('sheet-bottom-panel');
@@ -113,7 +114,7 @@ test.describe('Sheet panel focus indicator', () => {
   test('a mouse-opened sheet (side="right") keeps the panel default outline unchanged', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-right-trigger').click();
     const panel = page.getByTestId('sheet-right-panel');
@@ -134,7 +135,7 @@ test.describe('Sheet panel focus indicator', () => {
 
 test.describe('Sheet overlay keyboard activation', () => {
   test('a dismissible overlay closes on Enter, as its role="button" promises', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-right-trigger').click();
     const overlay = page.getByTestId('sheet-right');
@@ -149,7 +150,7 @@ test.describe('Sheet overlay keyboard activation', () => {
   });
 
   test('a non-dismissible overlay ignores Enter', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-blocking-trigger').click();
     const overlay = page.getByTestId('sheet-blocking');

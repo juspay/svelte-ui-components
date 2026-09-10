@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table — usePortal escapes clipping containers for in-cell dropdowns', () => {
   // The demo wraps a usePortal table (a type:'select' column) in a 120px-tall
@@ -7,7 +8,7 @@ test.describe('Table — usePortal escapes clipping containers for in-cell dropd
   test('an in-cell select dropdown portals to <body> instead of being clipped', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const table = page.locator('[data-pw="table-portal-cells"]');
     await expect(table).toBeVisible();
@@ -36,7 +37,7 @@ test.describe('Table — usePortal escapes clipping containers for in-cell dropd
   });
 
   test('without usePortal the in-cell select dropdown stays in the table', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     // The interactive demo table (no usePortal) keeps its dropdown in-flow.
     await page

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Menu hands its `trigger` snippet the interaction wiring (MenuTriggerProps) so a consumer
 // whose trigger is itself an interactive element can spread it and set `interactiveTrigger`.
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // whole feature was unreachable. Nothing failed: the menu still opened, the trigger just
 // never received its wiring.
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-menu') !== 'undefined', null, {
     timeout: 15_000

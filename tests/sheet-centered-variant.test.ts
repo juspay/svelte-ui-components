@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #525: Sheet had no centered/floating dialog variant (edge-anchored
 // left/right/top/bottom only) and always rendered its title through a plain
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // using this component at all.
 test.describe('Sheet side="center"', () => {
   test('is a fixed-size dialog centered in the viewport, not edge-anchored', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open centered dialog').click();
     const panel = page.getByTestId('sheet-centered-panel');
@@ -49,7 +50,7 @@ test.describe('Sheet side="center"', () => {
   test('an unconfigured left/right/top/bottom sheet is unaffected (still edge-to-edge)', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
     const panel = page.getByTestId('sheet-right-panel');
@@ -73,7 +74,7 @@ test.describe('Sheet side="center"', () => {
 
 test.describe('Sheet headingLevel', () => {
   test('renders the title through a real heading element when set', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open with headingLevel').click();
     const panel = page.getByTestId('sheet-heading-panel');
@@ -87,7 +88,7 @@ test.describe('Sheet headingLevel', () => {
   test('title stays a <span> when headingLevel is not set (default unchanged)', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
     const panel = page.getByTestId('sheet-right-panel');

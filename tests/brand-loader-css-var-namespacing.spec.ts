@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // BrandLoader's .loader element used to read --loader-width/--loader-height
 // directly. Loader.svelte independently reads the exact same two variable
@@ -13,7 +14,7 @@ test.describe('BrandLoader CSS variable namespacing', () => {
   test('the legacy --loader-width/--loader-height names still size the loader (backward compatibility)', async ({
     page
   }) => {
-    await page.goto('/components/brand-loader');
+    await gotoHydrated(page, '/components/brand-loader');
 
     const loaderBox = page.getByTestId('brand-loader-legacy-demo').locator('.loader');
     const box = await loaderBox.boundingBox();
@@ -25,7 +26,7 @@ test.describe('BrandLoader CSS variable namespacing', () => {
   test('the namespaced --brand-loader-width/--brand-loader-height names size the loader', async ({
     page
   }) => {
-    await page.goto('/components/brand-loader');
+    await gotoHydrated(page, '/components/brand-loader');
 
     const loaderBox = page.getByTestId('brand-loader-namespaced-demo').locator('.loader');
     const box = await loaderBox.boundingBox();
@@ -37,7 +38,7 @@ test.describe('BrandLoader CSS variable namespacing', () => {
   test('the namespaced variable wins when both the legacy and namespaced names are set', async ({
     page
   }) => {
-    await page.goto('/components/brand-loader');
+    await gotoHydrated(page, '/components/brand-loader');
 
     const loaderBox = page.getByTestId('brand-loader-precedence-demo').locator('.loader');
     const box = await loaderBox.boundingBox();

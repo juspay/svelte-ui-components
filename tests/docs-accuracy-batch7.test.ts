@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Proves the behaviors newly documented in this pass are real, not just described.
 // Table.md and Tabs.md previously omitted a substantial slice of their own real, working
@@ -9,7 +10,7 @@ test.describe('Table — newly-documented props are real', () => {
   test('usePortal escapes an in-cell select dropdown from an overflow:hidden ancestor', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const clipper = page.getByTestId('table-portal-clipper');
     const table = page.getByTestId('table-portal-cells');
@@ -41,7 +42,7 @@ test.describe('Table — newly-documented props are real', () => {
   });
 
   test('rowNumberColumn prepends a 1-based sequence column', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const table = page.getByTestId('table-paginated');
     await expect(table).toBeVisible();
@@ -58,7 +59,7 @@ test.describe('Table — newly-documented props are real', () => {
   test('toolbarSlot renders a bulk-action bar only while checkbox selection is non-empty', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const table = page.getByTestId('table-controlled-selection');
     await expect(table).toBeVisible();
@@ -81,7 +82,7 @@ test.describe('Tabs — TabItem[] mode (icon/status/sectionLabel/orientation) is
   test('vertical orientation with TabItem[] renders icons, status dots, a section label, and activeKey/onkeychange work by key', async ({
     page
   }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const tabs = page.getByTestId('tabs-vertical-demo');
     await expect(tabs).toBeVisible();

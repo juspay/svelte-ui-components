@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table — header metadata + controlled sort', () => {
   test('align: right applies to the header and body cells of that column only', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     await expect(table.getByTestId('meta-amount')).toHaveCSS('text-align', 'right');
     const amountCell = table
@@ -21,7 +22,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   test('maxWidth caps the column and ellipsizes scalar cells with a title tooltip', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     const longIdTd = table
       .getByRole('rowgroup')
@@ -36,7 +37,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   });
 
   test('header tooltip renders on hover', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     const nameHeader = table.getByTestId('meta-name');
     // Hover the tooltip's own trigger label, not the wider <th>: this column
@@ -51,7 +52,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   });
 
   test('filter dropdown filters via the consumer and clears on re-select', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(3);
 
@@ -70,7 +71,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   test('headers and cells wrap at word boundaries, not mid-word (word-break fix)', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     const header = table.getByTestId('meta-name');
     await expect(header).toHaveCSS('word-break', 'normal');
@@ -86,7 +87,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   });
 
   test('getSortValue sorts currency numerically, not lexicographically', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-header-meta');
     await table.getByRole('button', { name: 'Sort by Amount' }).click();
     const amounts = await table.getByTestId(/^meta-amount-cell-\d+$/).allInnerTexts();
@@ -100,7 +101,7 @@ test.describe('Table — header metadata + controlled sort', () => {
   test('sortMode server keeps header UI and onSort but lets the consumer reorder', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-server-sort');
     await expect(table.getByTestId('srv-sort-name-cell-0')).toContainText('Gamma');
 

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The checkbox inside Toggle is visually hidden, so a label association is the only way to
 // name it or to activate it from its text. Before these props existed the visible text was
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // editing" text could not activate its own switch.
 test.describe('Toggle label association', () => {
   test('the built-in text is a real label: clicking it toggles the switch', async ({ page }) => {
-    await page.goto('/components/toggle');
+    await gotoHydrated(page, '/components/toggle');
 
     const container = page.getByTestId('toggle-text-label');
     const input = container.locator('input[type="checkbox"]');
@@ -26,7 +27,7 @@ test.describe('Toggle label association', () => {
   test("a consumer-supplied id lets the consumer's own <label for> activate the switch", async ({
     page
   }) => {
-    await page.goto('/components/toggle');
+    await gotoHydrated(page, '/components/toggle');
 
     const input = page
       .getByTestId('toggle-external-label-switch')
@@ -40,7 +41,7 @@ test.describe('Toggle label association', () => {
   });
 
   test('ariaLabel names a switch that has no visible text', async ({ page }) => {
-    await page.goto('/components/toggle');
+    await gotoHydrated(page, '/components/toggle');
 
     const input = page.getByTestId('toggle-aria-label').locator('input[type="checkbox"]');
     await expect(input).toHaveAttribute('aria-label', 'Silent switch');
@@ -52,7 +53,7 @@ test.describe('Toggle label association', () => {
 test('generated ids are unique and preserve keyboard activation of the hidden input', async ({
   page
 }) => {
-  await page.goto('/components/toggle');
+  await gotoHydrated(page, '/components/toggle');
   const inputs = page.locator('input[type="checkbox"]');
   const ids = await inputs.evaluateAll((elements) => elements.map((element) => element.id));
   expect(ids.every((id) => id.length > 0)).toBe(true);
@@ -65,14 +66,14 @@ test('generated ids are unique and preserve keyboard activation of the hidden in
 });
 
 test('ariaLabelledby names the hidden checkbox', async ({ page }) => {
-  await page.goto('/components/toggle');
+  await gotoHydrated(page, '/components/toggle');
   await expect(page.getByTestId('toggle-labelledby').locator('input')).toHaveAccessibleName(
     'Order notifications'
   );
 });
 
 test('disabled text cannot activate the hidden checkbox', async ({ page }) => {
-  await page.goto('/components/toggle');
+  await gotoHydrated(page, '/components/toggle');
   const container = page.getByTestId('toggle-disabled-label');
   await expect(container.locator('input')).toBeDisabled();
   await expect(container.locator('input')).toHaveAccessibleName('Disabled setting');
@@ -82,7 +83,7 @@ test('disabled text cannot activate the hidden checkbox', async ({ page }) => {
 
 test.describe('sui-toggle shadow-DOM labelling', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await gotoHydrated(page, '/');
     await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
     await page.waitForFunction(() => Boolean(customElements.get('sui-toggle')));
     await page.evaluate(() => {
@@ -212,7 +213,7 @@ test.describe('sui-toggle shadow-DOM labelling', () => {
 
 for (const index of [0, 1]) {
   test(`blank id ${index} still names and activates the checkbox`, async ({ page }) => {
-    await page.goto('/components/toggle');
+    await gotoHydrated(page, '/components/toggle');
     const toggle = page.getByTestId(`toggle-blank-id-${index}`);
     const input = toggle.locator('input');
     await expect(input).toHaveAccessibleName(`Blank id setting ${index}`);

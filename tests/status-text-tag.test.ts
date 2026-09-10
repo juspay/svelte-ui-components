@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the Status `statusTextTag` prop: statusText can render as a real
 // heading (h1..h6) instead of the default div, so an app whose design system
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // keeps rendering a plain div, unchanged.
 test.describe('Status statusTextTag', () => {
   test('defaults to a div when statusTextTag is not provided', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const host = page.getByTestId('status-default-icon');
     const statusText = host.locator('.status-text');
@@ -18,7 +19,7 @@ test.describe('Status statusTextTag', () => {
   });
 
   test('renders as the requested heading tag when statusTextTag is set', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const host = page.getByTestId('status-heading-tag');
     const statusText = host.locator('.status-text');
@@ -32,7 +33,7 @@ test.describe('Status statusTextTag', () => {
   test('a heading tag is left to the application typography; only the div takes the defaults', async ({
     page
   }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     // The component's weight/colour defaults live on .status-text-default, which only the plain
     // div receives. A heading must not carry them, or the app's h2 rules could never win.

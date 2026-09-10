@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () => {
   // The start/end date boxes are real <input> elements now, not read-only display text:
@@ -6,7 +7,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   // preset was active (a typed date is a custom selection, same as a calendar click),
   // and leaves Apply enabled since both boundaries are still set.
   test('typing a valid date commits it on Enter and clears the active preset', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -37,7 +38,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   });
 
   test('committing a typed date also works via blur, not just Enter', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -70,7 +71,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   test('unparseable text is rejected and reverts to the last committed value on blur', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -85,7 +86,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   });
 
   test('a date past maxDate is rejected and reverts, leaving Apply enabled', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -106,7 +107,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   });
 
   test('a date before minDate is rejected and reverts', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -128,7 +129,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   test('typing a start date after the committed end date is rejected (boundary crossing)', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -171,7 +172,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   test('a boundary-crossing date is flagged invalid while typing, before any commit', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-dates-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -214,7 +215,7 @@ test.describe('DateRangePicker — typeable date inputs (showDateInputs)', () =>
   test('retyping a boundary cannot stretch a completed range past maxRangeDays', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-typeable-maxrange-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();

@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression test: --pill-line-height is documented and implemented in Pill.svelte (it shipped in
 // 5b7dc9d, before this spec). This spec guards against the hook being removed or falling out of
 // sync with the default (line-height: 1 at --pill-font-size: 13px).
 test.describe('Pill line-height hook', () => {
   test('defaults to line-height: 1 when --pill-line-height is unset', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     const pill = page.getByTestId('pill-line-height-default');
     await expect(pill).toBeVisible();
@@ -15,7 +16,7 @@ test.describe('Pill line-height hook', () => {
   });
 
   test('an explicit --pill-line-height override applies', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     const pill = page.getByTestId('pill-line-height-custom');
     await expect(pill).toBeVisible();

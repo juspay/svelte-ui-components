@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `clampLines` collapses the rendered body and makes the bubble its own control. The
 // behaviour was being rebuilt by consumers around the `body` snippet, which meant each
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // height and the exposed state rather than about the class names that produce them.
 test.describe('ChatMessage — clampLines', () => {
   test('collapses a long message and expands it by click and by keyboard', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const bubble = page.locator('[data-pw="clamp-demo"] .bubble');
     await expect(bubble).toBeVisible();
@@ -37,7 +38,7 @@ test.describe('ChatMessage — clampLines', () => {
   });
 
   test('clampLines drives the clamp, so a different value clamps differently', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const twoBody = page.locator('[data-pw="clamp-demo"] .body');
     const fourBody = page.locator('[data-pw="clamp-demo-four"] .body');
@@ -57,7 +58,7 @@ test.describe('ChatMessage — clampLines', () => {
   });
 
   test('withdrawing clampLines re-clamps the message when it is restored', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const bubble = page.locator('[data-pw="clamp-demo-toggle"] .bubble');
     const toggle = page.locator('[data-pw="clamp-toggle"]');
@@ -77,7 +78,7 @@ test.describe('ChatMessage — clampLines', () => {
   });
 
   test('the clamped bubble is named by what it does and reports its state', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     // The disclosure control is a real button with its own name and state. The bubble
     // must NOT be one: a button flattens the semantics of everything inside it, and a
@@ -105,7 +106,7 @@ test.describe('ChatMessage — clampLines', () => {
   test('a consumer stylesheet outranks the prop, which is what the docs promise', async ({
     page
   }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     const fourBody = page.locator('[data-pw="clamp-demo-four"] .body');
     await expect(fourBody).toHaveCSS('-webkit-line-clamp', '4');
 
@@ -116,7 +117,7 @@ test.describe('ChatMessage — clampLines', () => {
   });
 
   test('activating a link inside a clamped message does not also toggle it', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const bubble = page.locator('[data-pw="clamp-demo-link"] .bubble');
     const link = page.locator('[data-pw="clamp-inner-link"]');
@@ -136,7 +137,7 @@ test.describe('ChatMessage — clampLines', () => {
   });
 
   test('a message without clampLines gets no interactive role', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     const plain = page.locator('.chat-message .bubble').first();
     await expect(plain).not.toHaveAttribute('role', 'button');
   });

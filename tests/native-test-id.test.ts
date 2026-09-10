@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 /**
  * Every component that accepts `testId` must emit the id for BOTH runners:
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
  */
 test.describe('testId emits both web and native test attributes', () => {
   test('Checkbox exposes data-pw and the native testid from one testId prop', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const target = page.locator('[data-pw="checkbox-default"]').first();
     await expect(target).toBeVisible();
@@ -19,7 +20,7 @@ test.describe('testId emits both web and native test attributes', () => {
   });
 
   test('the native attribute is omitted when no testId is supplied', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     // A bare `testid` must never render as the literal string "undefined"/"null";
     // absent ids emit no attribute at all.

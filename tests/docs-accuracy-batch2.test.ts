@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, ChatMessage', () => {
   // Regression guard: docs/Card.md and docs/Checkbox.md claimed --card-border-radius
@@ -9,7 +10,7 @@ test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, 
   test('Card: --card-border-radius truly defaults to 4px, and --radius is a real fallback', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('two-zone-card');
     await expect(card).toHaveCSS('border-radius', '4px');
@@ -23,7 +24,7 @@ test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, 
   test('Checkbox: --checkbox-border-radius truly defaults to 4px, and --radius is a real fallback', async ({
     page
   }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const box = page.getByTestId('checkbox-default').locator('.box');
     await expect(box).toHaveCSS('border-radius', '4px');
@@ -35,7 +36,7 @@ test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, 
   });
 
   test('ChatSuggestions: chipClasses reaches every chip wrapper', async ({ page }) => {
-    await page.goto('/components/chat-suggestions');
+    await gotoHydrated(page, '/components/chat-suggestions');
 
     const group = page.getByTestId('chat-suggestions-chip-classes');
     const hooked = group.locator('.demo-chip-hook');
@@ -45,7 +46,7 @@ test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, 
   test('ChatComposer: --chat-composer-attachments-padding is consumed by the rich attachment row', async ({
     page
   }) => {
-    await page.goto('/components/chat-composer');
+    await gotoHydrated(page, '/components/chat-composer');
 
     const richRow = page.locator('.attachments-rich').first();
     await expect(richRow).toBeVisible();
@@ -63,7 +64,7 @@ test.describe('Docs accuracy — Card, Checkbox, ChatSuggestions, ChatComposer, 
   test('ChatMessage: --chat-message-list-margin/-padding are consumed by rendered markdown lists', async ({
     page
   }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const list = page.getByTestId('chat-message-markdown').locator('ul');
     await expect(list).toBeVisible();

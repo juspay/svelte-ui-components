@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Toolbar gained no props for the page-header shape — only CSS variables. The component's
 // documented position is that presentational structure belongs in a Snippet, so a title with
@@ -6,7 +7,7 @@ import { expect, test } from '@playwright/test';
 // both halves of that contract: the defaults are untouched, and the tokens do the work.
 test.describe('Toolbar page-header shape', () => {
   test('an unconfigured toolbar is untouched by any of this', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const root = page.getByTestId('toolbar-root');
     await expect(root).toBeVisible();
@@ -36,7 +37,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('backIcon={null} still renders no icon', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const root = page.getByTestId('toolbar-no-back-icon');
     await expect(root).toBeVisible();
@@ -44,7 +45,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('a consumer-supplied backIcon still renders as an image', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-custom-back-icon').locator('.back');
     await expect(back.locator('img')).toHaveCount(1);
@@ -54,14 +55,14 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('an empty backLabel falls back to the default accessible name', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-empty-back-label').locator('.back');
     await expect(back).toHaveAttribute('aria-label', 'Back');
   });
 
   test('the button occupies the same box the div did', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     // 20px content + 14px/20px padding per side, content-box: 48 wide, 60 tall — the div's box.
     const box = await page.getByTestId('toolbar-root').locator('.back').boundingBox();
@@ -71,7 +72,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('the back button activates from the keyboard', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const back = page.getByTestId('toolbar-root').locator('.back');
     const activations: string[] = [];
@@ -89,7 +90,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('tokens turn the fixed bar into an in-flow page header', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const header = page.getByTestId('toolbar-page-header');
     await expect(header).toBeVisible();
@@ -112,7 +113,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('the title block keeps the consumer tags, classes and type scale', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     // Semantic tags the library never sees, because the markup is the consumer's.
     const heading = page.getByTestId('toolbar-page-header-heading');
@@ -130,7 +131,7 @@ test.describe('Toolbar page-header shape', () => {
   });
 
   test('the action region absorbs no shrink while the title ellipsizes', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const right = page.getByTestId('toolbar-page-header').locator('.right-content');
     await expect(right).toHaveCSS('flex-shrink', '0');

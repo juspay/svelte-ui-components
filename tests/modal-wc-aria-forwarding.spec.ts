@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `role`/`aria-label` set directly on `<sui-modal>` land on the host element --
 // the ARIAMixin accessors every custom element already has -- not on
@@ -11,7 +12,7 @@ import { expect, test } from '@playwright/test';
 // panel instead -- same prefixed-alias pattern as `<sui-toggle>`'s
 // `inputAriaLabel`, proven by tests/toggle-labelling.spec.ts.
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-modal') !== 'undefined', null, {
     timeout: 15_000

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // 2.120.3 made six icon slots inline their SVG, so a `currentColor` asset finally resolves
 // against the host document instead of painting UA black. That was necessary but not
@@ -16,7 +17,7 @@ import { expect, test } from '@playwright/test';
 // wrapped in an `<img>`.
 test.describe('per-icon colour token', () => {
   test('defaults to inherit — the icon still takes the trigger text colour', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const icon = page.getByTestId('select-left-icon');
     await expect(icon).toBeVisible();
@@ -29,7 +30,7 @@ test.describe('per-icon colour token', () => {
   test('an explicit --select-left-icon-color decouples the icon from the label', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const icon = page.getByTestId('select-tinted-left-icon');
     await expect(icon).toBeVisible();
@@ -45,7 +46,7 @@ test.describe('per-icon colour token', () => {
   });
 
   test('the inlined SVG paints from the token, not merely a wrapper', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     // The asset is drawn with stroke="currentColor". A wrapper carrying the right `color`
     // proves nothing on its own — what matters is that the SVG's own resolved `stroke` picks

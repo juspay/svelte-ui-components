@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // pin-sender-turn reserves headroom on the inner wrapper so the newest sender message can reach
 // the top of the viewport, then scrolls it there. Two things used to conspire to lose that pin on
@@ -16,7 +17,7 @@ test.describe('ChatMessageList — pin-sender-turn without pinHold', () => {
   test('a reply shorter than the frame still leaves the sender message pinned to the top', async ({
     page
   }) => {
-    await page.goto('/components/chat-message-list');
+    await gotoHydrated(page, '/components/chat-message-list');
 
     const list = page.locator('[data-pw="pin-nohold-list"]');
     await expect(list).toBeVisible();
@@ -45,7 +46,7 @@ test.describe('ChatMessageList — pin-sender-turn without pinHold', () => {
   });
 
   test('a second turn re-pins, so the reservation tracks the newest question', async ({ page }) => {
-    await page.goto('/components/chat-message-list');
+    await gotoHydrated(page, '/components/chat-message-list');
     const list = page.locator('[data-pw="pin-nohold-list"]');
     await expect(list).toBeVisible();
 

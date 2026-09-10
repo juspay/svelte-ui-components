@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 /**
  * `statusIcon` defaults to `icons/order-success-icon.svg` — a relative URL
@@ -15,7 +16,7 @@ import { expect, test } from '@playwright/test';
 test('the default icon falls back to the built-in one when the file is absent', async ({
   page
 }) => {
-  await page.goto('/components/status');
+  await gotoHydrated(page, '/components/status');
 
   const icon = page.locator(
     '[data-pw="status-inline"] .status-image img, [data-pw="status-inline"] .status-image svg'
@@ -39,7 +40,7 @@ test('the fallback does not replace an icon the caller supplied', async ({ page 
   // built-in icon then replaced it -- both render as an <svg>.
   await page.route('**/status-success.svg', (route) => route.abort());
 
-  await page.goto('/components/status');
+  await gotoHydrated(page, '/components/status');
 
   const icon = page.locator('[data-pw="status-default-icon"] .status-image');
   // The built-in fallback is inlined into an <svg>; its absence is what proves
@@ -55,7 +56,7 @@ test('the icon takes its accessible name from statusIconAlt, not from its own ma
   // its own would outrank the alt-derived label on every screen that uses it.
   // The fallback is inlined into an <svg> host, where the name lives on
   // `aria-label` rather than on `alt`.
-  await page.goto('/components/status');
+  await gotoHydrated(page, '/components/status');
 
   const icon = page.locator('[data-pw="status-inline"] .status-image svg');
   await expect(icon).toHaveAttribute('aria-label', 'status');
@@ -64,7 +65,7 @@ test('the icon takes its accessible name from statusIconAlt, not from its own ma
 test('statusIconAlt is forwarded, not just defaulted', async ({ page }) => {
   // Asserting only the default would pass even if the prop stopped being
   // forwarded at all.
-  await page.goto('/components/status');
+  await gotoHydrated(page, '/components/status');
 
   await expect(page.locator('[data-pw="status-alt-named"] .status-image svg')).toHaveAttribute(
     'aria-label',
@@ -73,7 +74,7 @@ test('statusIconAlt is forwarded, not just defaulted', async ({ page }) => {
 });
 
 test('an empty statusIconAlt marks the icon decorative', async ({ page }) => {
-  await page.goto('/components/status');
+  await gotoHydrated(page, '/components/status');
 
   const icon = page.locator('[data-pw="status-alt-decorative"] .status-image svg');
   await expect(icon).toHaveAttribute('aria-hidden', 'true');

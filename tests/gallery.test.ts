@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Gallery', () => {
   test('renders one item per image, with edit/delete actions since both handlers are set', async ({
     page
   }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     await expect(gallery.locator('.gallery-item')).toHaveCount(3);
@@ -12,7 +13,7 @@ test.describe('Gallery', () => {
   });
 
   test('clicking an item opens the lightbox on that image', async ({ page }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     await gallery.locator('.gallery-item-content').nth(1).click();
@@ -25,7 +26,7 @@ test.describe('Gallery', () => {
   test('next/previous controls navigate, disabled at the ends when not looping', async ({
     page
   }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     await gallery.locator('.gallery-item-content').first().click();
@@ -44,7 +45,7 @@ test.describe('Gallery', () => {
   });
 
   test('arrow keys navigate and Escape closes the lightbox', async ({ page }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     await gallery.locator('.gallery-item-content').first().click();
@@ -60,7 +61,7 @@ test.describe('Gallery', () => {
   });
 
   test('Tab from the last control wraps to the close button (focus trap)', async ({ page }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     // Open on the middle image so both previous and next controls render -
@@ -83,7 +84,7 @@ test.describe('Gallery', () => {
   });
 
   test('closing the lightbox returns focus to the item that opened it', async ({ page }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-demo');
     const secondItem = gallery.locator('.gallery-item-content').nth(1);

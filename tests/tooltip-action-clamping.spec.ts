@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The use:tooltip action used to centre its bubble on the trigger with a bare
 // translate(-50%) and no edge handling: a trigger near the viewport edge
@@ -10,7 +11,7 @@ test.describe('tooltip action — viewport clamping', () => {
   test('left-edge trigger keeps its bubble inside the viewport with the arrow on the trigger', async ({
     page
   }) => {
-    await page.goto('/components/tooltip');
+    await gotoHydrated(page, '/components/tooltip');
 
     const trigger = page.getByTestId('tooltip-edge-left');
     // Pin the trigger to the exact viewport edge so the test is independent of
@@ -42,7 +43,7 @@ test.describe('tooltip action — viewport clamping', () => {
   });
 
   test('right-edge trigger keeps its bubble inside the viewport', async ({ page }) => {
-    await page.goto('/components/tooltip');
+    await gotoHydrated(page, '/components/tooltip');
 
     const trigger = page.getByTestId('tooltip-edge-right');
     await trigger.evaluate((el) => {
@@ -71,7 +72,7 @@ test.describe('tooltip action — viewport clamping', () => {
   test('bottom-positioned tooltip flips above a trigger sitting at the viewport bottom', async ({
     page
   }) => {
-    await page.goto('/components/tooltip');
+    await gotoHydrated(page, '/components/tooltip');
 
     const trigger = page.getByTestId('tooltip-edge-left');
     // Scroll so the trigger sits ~30px above the viewport bottom — no room below.

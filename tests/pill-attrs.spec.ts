@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Pill had no way to put an arbitrary data-*/aria-* attribute on its root --
 // the gap juspay/svelte-ui-components#545 asks for. A consumer hit this by
@@ -12,7 +13,7 @@ import { expect, test } from '@playwright/test';
 // never reaches the DOM.
 test.describe('Pill attrs', () => {
   test('attrs spreads arbitrary data-* attributes onto the root', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     const pill = page.getByTestId('attrs-data-state-pill');
     await expect(pill).toHaveAttribute('data-state', 'waiting');
@@ -24,7 +25,7 @@ test.describe('Pill attrs', () => {
   test('attrs cannot override the attributes Pill already manages (data-pw, class, role, tabindex)', async ({
     page
   }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     // This pill passes attrs = { 'data-pw': 'hijacked', class: 'attrs-injected-class',
     // role: 'not-a-button', tabindex: '5' } alongside testId="attrs-collision-pill",
@@ -47,7 +48,7 @@ test.describe('Pill attrs', () => {
   });
 
   test('omitting attrs leaves the pill root unaffected (no regression)', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     const pill = page.getByTestId('attrs-none-pill');
     await expect(pill).not.toHaveAttribute('data-state', /.*/);

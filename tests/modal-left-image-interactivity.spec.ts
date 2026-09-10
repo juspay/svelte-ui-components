@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Modal used to wrap ANY non-empty header.leftImage in role="button" + tabindex="0" with click and
 // keydown handlers, whether or not onheaderLeftImageClick was supplied. Consumers pass a decorative
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // now interactive only when a handler is actually supplied.
 test.describe('Modal left image interactivity', () => {
   test('a decorative left image with no click handler is not a control', async ({ page }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
     await page.getByText('Open modal with decorative left image').click();
 
     const modal = page.getByTestId('decorative-left-image-modal');
@@ -28,7 +29,7 @@ test.describe('Modal left image interactivity', () => {
   test('a left image with a click handler stays a fully keyboard-operable button', async ({
     page
   }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
     await page.getByText('Open modal with back button').click();
 
     const modal = page.getByTestId('back-button-modal');

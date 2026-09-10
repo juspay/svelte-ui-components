@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Draggable', () => {
   test('dragging the handle moves the element', async ({ page }) => {
-    await page.goto('/components/draggable');
+    await gotoHydrated(page, '/components/draggable');
 
     const box = page.getByTestId('draggable-demo');
     const before = await box.boundingBox();
@@ -36,7 +37,7 @@ test.describe('Draggable', () => {
   });
 
   test('clicking body content outside the handle does not start a drag', async ({ page }) => {
-    await page.goto('/components/draggable');
+    await gotoHydrated(page, '/components/draggable');
 
     const box = page.getByTestId('draggable-demo');
     const before = await box.boundingBox();
@@ -64,7 +65,7 @@ test.describe('Draggable', () => {
   });
 
   test('arrow keys move the element by step once focused', async ({ page }) => {
-    await page.goto('/components/draggable');
+    await gotoHydrated(page, '/components/draggable');
 
     const box = page.getByTestId('draggable-demo');
     await box.focus();
@@ -86,7 +87,7 @@ test.describe('Draggable', () => {
   });
 
   test('bounds="viewport" keeps the element from being dragged off-screen', async ({ page }) => {
-    await page.goto('/components/draggable');
+    await gotoHydrated(page, '/components/draggable');
 
     const box = page.getByTestId('draggable-demo');
     const handle = page.locator('.drag-handle');

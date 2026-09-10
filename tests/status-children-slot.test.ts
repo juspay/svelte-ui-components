@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the Status `children` snippet: an action area rendered BELOW the
 // description, outside `.status-description`.
@@ -11,7 +12,7 @@ import { expect, test } from '@playwright/test';
 // in the wrong parent, so the containment check is the assertion that matters.
 test.describe('Status children slot', () => {
   test('children renders outside the description box', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const host = page.getByTestId('status-children');
     await expect(host).toBeVisible();
@@ -28,7 +29,7 @@ test.describe('Status children slot', () => {
   });
 
   test('omitting children renders nothing extra', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const host = page.getByTestId('status-default-icon');
     await expect(host.getByTestId('status-children-content')).toHaveCount(0);

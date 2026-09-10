@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The library's own `.choicebox:hover` rule (specificity 0,3,0) outranked
 // `.choicebox.selected` (0,2,0), so hovering a selected card repainted it with
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // #9e9e9e (rgb(158,158,158)). The demo's first radio card is selected on load.
 test.describe('Choicebox selected + hover', () => {
   test('a selected card keeps its selected border while hovered', async ({ page }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     const selected = page.locator('.choicebox.selected').first();
     await expect(selected).toBeVisible();

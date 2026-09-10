@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // #464. The demo shell used to set `--pill-background` / `--pill-color` on
 // `[data-theme='dark']` itself, for the untoned chat suggestion chips and composer
@@ -28,7 +29,7 @@ const paintOf = (page: import('@playwright/test').Page, testId: string) =>
 // waits on a web-first assertion, which retries until the style resolves. Nothing transitions
 // in the demo shell today, so this is future-proofing rather than a live fix.
 test.beforeEach(async ({ page }) => {
-  await page.goto('/components/pill');
+  await gotoHydrated(page, '/components/pill');
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   await expect(page.locator('[data-pw="attrs-none-pill"]')).toHaveCSS(
     'background-color',

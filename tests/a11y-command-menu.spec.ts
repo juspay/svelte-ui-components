@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // WAI-ARIA combobox-with-listbox-popup pattern. Three real gaps were fixed alongside this
 // spec: Tab escaped the dialog entirely despite aria-modal="true" (now trapped on the
@@ -10,7 +11,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   test('opening focuses the input, and Tab/Shift+Tab stay trapped inside the dialog', async ({
     page
   }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
 
     await page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' }).click();
     const input = page.getByTestId('command-menu-demo-input');
@@ -25,7 +26,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   test('Escape closes the menu and returns focus to the button that opened it', async ({
     page
   }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
 
     const openButton = page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' });
     await openButton.click();
@@ -39,7 +40,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   test('ArrowDown/ArrowUp move the highlight without wrapping past either end', async ({
     page
   }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
     await page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' }).click();
 
     const newFile = page.getByTestId('command-menu-demo-item-new-file');
@@ -72,7 +73,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   test('Enter selects the highlighted item, closes the menu, and returns focus to the opener', async ({
     page
   }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
 
     const openButton = page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' });
     await openButton.click();
@@ -93,7 +94,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   test('the input carries the combobox contract, wired to a real listbox and a real active option', async ({
     page
   }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
     await page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' }).click();
 
     const input = page.getByTestId('command-menu-demo-input');
@@ -114,7 +115,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   });
 
   test('typing filters the list and resets the highlight to the first match', async ({ page }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
     await page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' }).click();
 
     const input = page.getByTestId('command-menu-demo-input');
@@ -130,7 +131,7 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
   });
 
   test('the overlay exposes a modal dialog with an accessible name', async ({ page }) => {
-    await page.goto('/components/command-menu');
+    await gotoHydrated(page, '/components/command-menu');
     await page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Command menu' });

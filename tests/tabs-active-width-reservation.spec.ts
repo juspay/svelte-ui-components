@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // .tabs-item.active bumps font-weight from --tabs-item-font-weight (400) to
 // --tabs-active-font-weight (600). Before this fix that weight jump resized
@@ -11,7 +12,7 @@ test.describe('Tabs active-state width reservation', () => {
   test('selecting a different tab does not shift an untouched sibling tab (horizontal)', async ({
     page
   }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     const tabAt = (label: string) => bar.getByRole('tab', { name: label, exact: true });
@@ -34,7 +35,7 @@ test.describe('Tabs active-state width reservation', () => {
   });
 
   test("a tab's own width is identical active vs. inactive (horizontal)", async ({ page }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     const tabAt = (label: string) => bar.getByRole('tab', { name: label, exact: true });
@@ -54,7 +55,7 @@ test.describe('Tabs active-state width reservation', () => {
   });
 
   test("a vertical nav item's label width is identical active vs. inactive", async ({ page }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const rail = page.getByTestId('tabs-vertical-demo');
     const tabAt = (label: string) => rail.getByRole('tab', { name: label });

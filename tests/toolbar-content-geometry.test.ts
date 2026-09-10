@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the Toolbar content-row geometry tokens (--toolbar-content-width/-height/
 // -max-width/-margin): defaults must reproduce the previous rendering exactly, and
 // an instance overriding them must resolve to the overridden values.
 test.describe('Toolbar content-row geometry tokens', () => {
   test('defaults leave an unconfigured toolbar content row unchanged', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const content = page.getByTestId('toolbar-root-content');
     await expect(content).toBeVisible();
@@ -26,7 +27,7 @@ test.describe('Toolbar content-row geometry tokens', () => {
   });
 
   test('an instance can clamp and center its content row via tokens', async ({ page }) => {
-    await page.goto('/components/toolbar');
+    await gotoHydrated(page, '/components/toolbar');
 
     const content = page.getByTestId('toolbar-content-tokens-content');
     await expect(content).toBeVisible();

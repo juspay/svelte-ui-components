@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — active-preset checkmark', () => {
   // With presetCheckmark enabled, the active preset shows a trailing checkmark;
   // inactive presets show none, and no checkmark renders before a preset is picked.
   test('shows a checkmark only on the active preset', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-preset-checkmark-demo');
     await expect(picker).toBeVisible();

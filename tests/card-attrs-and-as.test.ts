@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Card had no way to (a) put an arbitrary data-*/aria-* attribute on its root
 // or (b) render a tag other than <div>/<a> — the two things
@@ -14,7 +15,7 @@ import { expect, test } from '@playwright/test';
 // changes the rendered tag away from its href-derived default.
 test.describe('Card attrs and as', () => {
   test('attrs spreads arbitrary data-* attributes onto the root', async ({ page }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('attrs-data-state-card');
     await expect(card).toHaveAttribute('data-state', 'waiting');
@@ -24,7 +25,7 @@ test.describe('Card attrs and as', () => {
   });
 
   test('as="figure" renders the root as a real <figure>, not a <div>', async ({ page }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('as-figure-card');
     await expect(card).toHaveCount(1);
@@ -37,7 +38,7 @@ test.describe('Card attrs and as', () => {
   test('as overrides the href-derived default: a figure with href renders no href attribute', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('as-figure-with-href-card');
     const tagName = await card.evaluate((el) => el.tagName.toLowerCase());
@@ -48,7 +49,7 @@ test.describe('Card attrs and as', () => {
   test('attrs cannot override the attributes Card already manages (data-pw, class, role)', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     // This card passes attrs = { 'data-pw': 'hijacked', class: 'attrs-injected-class',
     // role: 'not-a-button' } alongside testId="attrs-collision-card" and
@@ -70,7 +71,7 @@ test.describe('Card attrs and as', () => {
   test('omitting attrs/as leaves the default div root unaffected (no regression)', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     // Regression guard for every existing consumer: a card given neither prop
     // still renders a plain <div> with no attributes it didn't have before.
@@ -88,7 +89,7 @@ test.describe('Card attrs and as', () => {
   // Enter/Space-activatable. `isAnchor` now also requires `href` to be set,
   // so this case keeps the shim instead.
   test('as="a" without href still gets the interactive-div keyboard shim', async ({ page }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('as-a-no-href-card');
     const tagName = await card.evaluate((el) => el.tagName.toLowerCase());

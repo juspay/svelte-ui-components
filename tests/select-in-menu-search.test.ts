@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #415. The DS dropdown sheet's keyboard-accessibility guidelines put
 // the search box INSIDE the open menu, reached by Tab after opening, while
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // a keyboard user who wanted to arrow through the options had to type first.
 test.describe('Select — in-menu search (#415)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
   });
 
   const openMenu = async (page: import('@playwright/test').Page) => {

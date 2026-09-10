@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #523. EmptyState hardcoded `align-items: center` with no CSS variable
 // to reach it, and had no page-vs-panel density concept at all — consumers
@@ -10,7 +11,7 @@ test.describe('EmptyState density and align-items (#523)', () => {
   test("default (no density prop) keeps today's padding, gap and centered alignment", async ({
     page
   }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     const root = page.getByTestId('empty-state-density-default');
     await expect(root).toHaveCSS('padding', '32px 16px');
@@ -20,7 +21,7 @@ test.describe('EmptyState density and align-items (#523)', () => {
   });
 
   test('density="page" applies its own padding/gap defaults', async ({ page }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     const root = page.getByTestId('empty-state-density-page');
     await expect(root).toHaveAttribute('data-density', 'page');
@@ -29,7 +30,7 @@ test.describe('EmptyState density and align-items (#523)', () => {
   });
 
   test('density="panel" applies its own, tighter padding/gap defaults', async ({ page }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     const root = page.getByTestId('empty-state-density-panel');
     await expect(root).toHaveAttribute('data-density', 'panel');
@@ -40,7 +41,7 @@ test.describe('EmptyState density and align-items (#523)', () => {
   test('--empty-state-align-items overrides the hardcoded center, no wrapper class needed', async ({
     page
   }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     const root = page.getByTestId('empty-state-align-override');
     await expect(root).toHaveCSS('align-items', 'flex-start');

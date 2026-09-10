@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers `resolveDelay`, added to TypewriterText for BZ-5721/F71: a fully custom,
 // per-character pacing function that receives enough state (character index, running
@@ -56,7 +57,7 @@ test.describe('TypewriterText — resolveDelay', () => {
   test('resolveDelay receives character, index and wordCount in the guaranteed order', async ({
     page
   }) => {
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const host = page.getByTestId('typewriter-resolve-delay-cyclical');
     await expect(host).toBeVisible();
@@ -93,7 +94,7 @@ test.describe('TypewriterText — resolveDelay', () => {
     page
   }) => {
     await installTimingObserver(page, 'typewriter-resolve-delay-cyclical', '__cyclicalTiming');
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const host = page.getByTestId('typewriter-resolve-delay-cyclical');
     await expect(host).toBeVisible();
@@ -115,7 +116,7 @@ test.describe('TypewriterText — resolveDelay', () => {
 
   test('resolveDelay takes priority over variableDelay when both are set', async ({ page }) => {
     await installTimingObserver(page, 'typewriter-resolve-delay-priority', '__priorityTiming');
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const host = page.getByTestId('typewriter-resolve-delay-priority');
     await expect(host).toBeVisible();
@@ -135,7 +136,7 @@ test.describe('TypewriterText — resolveDelay', () => {
   test('omitting resolveDelay leaves variableDelay/speed pacing exactly as before', async ({
     page
   }) => {
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     // Neither of these pre-existing demos ever sets resolveDelay — proving that adding
     // the prop, and the new branch it takes in `resolveTypingDelay`, left the

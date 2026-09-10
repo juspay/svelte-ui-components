@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Body scroll lock — reference counted across surfaces', () => {
   test('closing a nested Modal leaves the outer Modal’s lock in place', async ({ page }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
 
     const overflow = () => page.evaluate(() => document.body.style.overflow);
     const outer = page.locator('[data-pw="nested-lock-outer-modal"]');
@@ -42,7 +43,7 @@ test.describe('Body scroll lock — reference counted across surfaces', () => {
   test('the last release hands back the inline overflow the host had set, not an empty string', async ({
     page
   }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
     const overflow = () => page.evaluate(() => document.body.style.overflow);
     const outer = page.locator('[data-pw="nested-lock-outer-modal"]');
 

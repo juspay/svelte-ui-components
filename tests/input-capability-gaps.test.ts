@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Four capabilities Input could not express, each blocking a real consumer that was
 // forced to hand-roll a native element instead. The last test in this file is the
@@ -6,7 +7,7 @@ import { expect, test } from '@playwright/test';
 // do not opt in.
 test.describe('Input — dataType passthrough, spellcheck, readonly, paste', () => {
   test('dataType renders a native time input', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     // Input renders <input type={dataType}>, so widening the union was the only
     // thing needed — the rendering already supported it.
@@ -16,13 +17,13 @@ test.describe('Input — dataType passthrough, spellcheck, readonly, paste', () 
   });
 
   test('spellcheck={false} reaches the textarea', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     await expect(page.getByTestId('input-spellcheck-off')).toHaveAttribute('spellcheck', 'false');
   });
 
   test('readonly keeps the field focusable and selectable but not editable', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-readonly');
     await expect(field).toHaveAttribute('readonly', '');
@@ -38,7 +39,7 @@ test.describe('Input — dataType passthrough, spellcheck, readonly, paste', () 
   });
 
   test('onPaste fires on a non-tel field', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-paste-textarea');
     await field.focus();
@@ -55,7 +56,7 @@ test.describe('Input — dataType passthrough, spellcheck, readonly, paste', () 
   });
 
   test('fields that do not opt in are unchanged', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     // Regression guard for every existing consumer: no spellcheck attribute is
     // emitted when the prop is not passed, and no readonly attribute either.

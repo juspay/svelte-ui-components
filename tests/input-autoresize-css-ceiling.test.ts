@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // autoResize derived its ceiling from maxRows alone. With the ceiling coming from
 // --input-max-height instead, the computed limit stayed Infinity: the inline height grew
@@ -6,7 +7,7 @@ import { expect, test } from '@playwright/test';
 // size but its overflow became unreachable rather than scrollable.
 test.describe('Input — autoResize honours a CSS max-height', () => {
   test('becomes scrollable at the ceiling instead of clipping', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-autoresize-capped');
     await field.fill(Array.from({ length: 20 }, (_, index) => `line ${index}`).join('\n'));
@@ -23,7 +24,7 @@ test.describe('Input — autoResize honours a CSS max-height', () => {
   });
 
   test('still hides overflow while the content fits', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-autoresize-capped');
     await field.fill('one line');

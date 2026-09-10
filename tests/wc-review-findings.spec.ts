@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 /**
  * MEASUREMENT HARNESS for the review findings on PR #506.
@@ -10,7 +11,7 @@ import { expect, test, type Page } from '@playwright/test';
  * a failure names a real defect rather than a disagreement between bots.
  */
 const loadBundle = async (page: Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-status') === 'function', null, {
     timeout: 15_000

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Img's inlineSvg sanitizer strips every descendant URL attribute whose value
 // does not point inside this document. Brand marks do not encode their art as
@@ -43,7 +44,7 @@ test.describe('Img — inlineSvg preserves data-URI artwork in pattern fills', (
       '</defs>' +
       '</svg>';
     await serveSvg(page, INLINE_DEMO_URL, brandMark);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     const host = page.getByTestId('img-inline-svg-row').locator('svg');
     // Anchor: the intercepted payload really was inlined (the on-disk asset

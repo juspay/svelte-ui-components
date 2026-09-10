@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression coverage for docs/*.md accuracy fixes in this batch (Gauge, GridItem, HITL, Icon,
 // IconStack, Input, InputButton, LineChart). Each assertion proves the prop/behavior the
@@ -6,7 +7,7 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Input — newly-documented readonly/spellcheck', () => {
   test('readonly keeps the field focusable and selectable but not editable', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
     const field = page.getByTestId('input-readonly');
     await expect(field).toHaveAttribute('readonly', '');
     await field.click();
@@ -17,14 +18,14 @@ test.describe('Input — newly-documented readonly/spellcheck', () => {
   });
 
   test('spellcheck={false} renders the native attribute as false', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
     await expect(page.getByTestId('input-spellcheck-off')).toHaveAttribute('spellcheck', 'false');
   });
 });
 
 test.describe('InputButton — newly-documented testId', () => {
   test('testId reaches the root container as data-pw', async ({ page }) => {
-    await page.goto('/components/input-button');
+    await gotoHydrated(page, '/components/input-button');
     const demo = page.getByTestId('input-button-messages-demo');
     await expect(demo).toBeVisible();
     await expect(demo).toHaveAttribute('data-pw', 'input-button-messages-demo');
@@ -33,7 +34,7 @@ test.describe('InputButton — newly-documented testId', () => {
 
 test.describe('HITL — newly-documented test-id override props', () => {
   test('confirm/cancel/completion default test ids derive from testId', async ({ page }) => {
-    await page.goto('/components/hitl');
+    await gotoHydrated(page, '/components/hitl');
     const card = page.getByTestId('demo-confirmation');
     await expect(card).toBeVisible();
     await expect(page.getByTestId('demo-confirmation-confirm')).toBeVisible();
@@ -45,7 +46,7 @@ test.describe('HITL — newly-documented test-id override props', () => {
 
 test.describe('Gauge — newly-documented ariaLabel', () => {
   test('ariaLabel sets the accessible name on the progressbar element', async ({ page }) => {
-    await page.goto('/components/gauge');
+    await gotoHydrated(page, '/components/gauge');
     const gauge = page.getByTestId('gauge-with-arialabel');
     await expect(gauge).toHaveAttribute('role', 'progressbar');
     await expect(gauge).toHaveAttribute('aria-label', 'Storage used, 25 percent');
@@ -54,24 +55,24 @@ test.describe('Gauge — newly-documented ariaLabel', () => {
 
 test.describe('GridItem / Icon / IconStack — newly-documented testId', () => {
   test('GridItem testId reaches the root as data-pw', async ({ page }) => {
-    await page.goto('/components/grid-item');
+    await gotoHydrated(page, '/components/grid-item');
     await expect(page.getByTestId('grid-item-photos')).toBeVisible();
   });
 
   test('Icon testId reaches the root as data-pw', async ({ page }) => {
-    await page.goto('/components/icon');
+    await gotoHydrated(page, '/components/icon');
     await expect(page.getByTestId('icon-home')).toBeVisible();
   });
 
   test('IconStack testId reaches the root as data-pw', async ({ page }) => {
-    await page.goto('/components/icon-stack');
+    await gotoHydrated(page, '/components/icon-stack');
     await expect(page.getByTestId('icon-stack-demo')).toBeVisible();
   });
 });
 
 test.describe('LineChart — newly-documented minHeight/maxHeight', () => {
   test('a wide aspect ratio is still clamped to the exact min/max height', async ({ page }) => {
-    await page.goto('/components/line-chart');
+    await gotoHydrated(page, '/components/line-chart');
     const chart = page.getByTestId('line-height-bounds-chart');
     await expect(chart).toBeVisible();
     const box = await chart.boundingBox();

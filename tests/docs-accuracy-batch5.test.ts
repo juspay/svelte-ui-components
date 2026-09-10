@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression coverage for docs/*.md accuracy fixes: proves each newly-documented (or
 // previously-undocumented-but-real) prop/CSS variable actually does what its doc entry
@@ -7,14 +8,14 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Loader — testId prop (was undocumented)', () => {
   test('testId renders as data-pw on the root element', async ({ page }) => {
-    await page.goto('/components/loader');
+    await gotoHydrated(page, '/components/loader');
     await expect(page.getByTestId('loader-demo')).toBeVisible();
   });
 });
 
 test.describe('MediaUpload — CSS Variables table (was prose-only)', () => {
   test('themed instance reflects every overridden variable', async ({ page }) => {
-    await page.goto('/components/media-upload');
+    await gotoHydrated(page, '/components/media-upload');
 
     const label = page.getByTestId('media-upload-themed-demo').locator('.label');
     await expect(label).toHaveCSS('color', 'rgb(20, 90, 200)');
@@ -29,7 +30,7 @@ test.describe('MediaUpload — CSS Variables table (was prose-only)', () => {
 
 test.describe('Menu — --menu-item-selected-* (was undocumented)', () => {
   test('the selected item uses the themed selected colors', async ({ page }) => {
-    await page.goto('/components/menu');
+    await gotoHydrated(page, '/components/menu');
 
     await page.getByTestId('menu-selected-demo').locator('button').click();
     // .menu-item:hover (specificity 0,2,0) beats .menu-item-selected (0,1,0), so if the
@@ -54,7 +55,7 @@ test.describe('Modal — disabled footer button CSS variables (was undocumented)
   test('disabled primary/secondary buttons reflect their themed disabled variables', async ({
     page
   }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
 
     await page.getByTestId('open-disabled-footer-modal').click();
     const primary = page.getByTestId('disabled-footer-primary');
@@ -71,7 +72,7 @@ test.describe('Modal — disabled footer button CSS variables (was undocumented)
 
 test.describe('PieChart — --chart-legend-* and --chart-empty-* (was undocumented)', () => {
   test('legend rows reflect the themed legend variables', async ({ page }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
 
     const legendLabel = page.getByTestId('pie-legend-themed').locator('.legend-label').first();
     await expect(legendLabel).toBeVisible();
@@ -80,7 +81,7 @@ test.describe('PieChart — --chart-legend-* and --chart-empty-* (was undocument
   });
 
   test('the empty state reflects the themed empty-state variables', async ({ page }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
 
     const empty = page.getByTestId('pie-all-zero').locator('.chart-empty');
     await expect(empty).toBeVisible();
@@ -91,7 +92,7 @@ test.describe('PieChart — --chart-legend-* and --chart-empty-* (was undocument
 
 test.describe('Pill — --pill-text-white-space (was undocumented)', () => {
   test('the wrap-themed pill allows its text to wrap', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     const pill = page.getByTestId('pill-wrap-demo');
     await expect(pill).toBeVisible();

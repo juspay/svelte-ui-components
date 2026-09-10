@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('ThinkingIndicator chip variant', () => {
   test('defaults to a static label, no shimmer animation', async ({ page }) => {
-    await page.goto('/components/thinking-indicator');
+    await gotoHydrated(page, '/components/thinking-indicator');
 
     const chip = page.getByTestId('thinking-indicator-chip-static-demo');
     await expect(chip).toBeVisible();
@@ -10,7 +11,7 @@ test.describe('ThinkingIndicator chip variant', () => {
   });
 
   test('busy shimmers the label (no static-label class)', async ({ page }) => {
-    await page.goto('/components/thinking-indicator');
+    await gotoHydrated(page, '/components/thinking-indicator');
 
     const chip = page.getByTestId('thinking-indicator-chip-busy-demo');
     await expect(chip).toBeVisible();
@@ -20,7 +21,7 @@ test.describe('ThinkingIndicator chip variant', () => {
   test('the chip root is a polite live region, so a screen reader announces status changes', async ({
     page
   }) => {
-    await page.goto('/components/thinking-indicator');
+    await gotoHydrated(page, '/components/thinking-indicator');
 
     await expect(page.getByTestId('thinking-indicator-chip-static-demo')).toHaveAttribute(
       'aria-live',

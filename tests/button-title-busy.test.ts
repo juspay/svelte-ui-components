@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // A menu/filter trigger needs a hover tooltip and a "contents still loading" signal while
 // staying clickable. Button previously derived aria-busy solely from `loading`, which also
 // disables the control, so that state was unreachable; `title` had no prop at all.
 test.describe('Button — title and ariaBusy', () => {
   test('renders both attributes on the button element', async ({ page }) => {
-    await page.goto('/components/button');
+    await gotoHydrated(page, '/components/button');
 
     const button = page.getByTestId('button-title-busy');
     await expect(button).toHaveAttribute('title', 'Filters');
@@ -20,7 +21,7 @@ test.describe('Button — title and ariaBusy', () => {
   test('ariaHaspopup round-trips from Menu onto a Button trigger, and tracks expansion', async ({
     page
   }) => {
-    await page.goto('/components/button');
+    await gotoHydrated(page, '/components/button');
 
     const trigger = page.getByTestId('button-haspopup');
     await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
@@ -33,13 +34,13 @@ test.describe('Button — title and ariaBusy', () => {
   });
 
   test('ariaBusy leaves the button enabled — unlike loading', async ({ page }) => {
-    await page.goto('/components/button');
+    await gotoHydrated(page, '/components/button');
 
     await expect(page.getByTestId('button-title-busy')).toBeEnabled();
   });
 
   test('consumers that pass neither prop are unchanged', async ({ page }) => {
-    await page.goto('/components/button');
+    await gotoHydrated(page, '/components/button');
 
     // Regression guard: both props default to undefined and must render as
     // "attribute absent", not as an empty string.

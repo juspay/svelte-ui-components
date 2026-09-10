@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers Snippet's `copiedLabel` and `copyResetMs` (#530). Before this change the
 // copied-feedback text and its 2000ms reset were hardcoded, so a consumer wanting
@@ -12,7 +13,7 @@ test.describe('Snippet copiedLabel / copyResetMs', () => {
     context
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/snippet');
+    await gotoHydrated(page, '/components/snippet');
 
     const snippet = page.getByTestId('snippet-default');
     await snippet.getByRole('button', { name: 'Copy to clipboard' }).click();
@@ -30,7 +31,7 @@ test.describe('Snippet copiedLabel / copyResetMs', () => {
     context
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/snippet');
+    await gotoHydrated(page, '/components/snippet');
 
     const snippet = page.getByTestId('snippet-copy-options');
     await snippet.getByRole('button', { name: 'Copy to clipboard' }).click();

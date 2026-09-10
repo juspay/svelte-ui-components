@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — trigger toggles the panel', () => {
   // Regression guard: the trigger used to only open the panel, so a second click
@@ -7,7 +8,7 @@ test.describe('DateRangePicker — trigger toggles the panel', () => {
   test('clicking the trigger while open closes the picker, and re-opens on the next click', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-range-demo');
     await expect(picker).toBeVisible();

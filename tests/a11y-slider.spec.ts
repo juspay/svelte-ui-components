@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // <input type="range"> already gets its arrow-key/Home/End behaviour and role="slider"
 // entirely free from the browser — Slider.svelte adds no custom keydown handling. What
@@ -11,7 +12,7 @@ test.describe('Slider keyboard interaction (native range input)', () => {
   test('Tab reaches the slider, which exposes an accessible name via aria-label', async ({
     page
   }) => {
-    await page.goto('/components/slider');
+    await gotoHydrated(page, '/components/slider');
 
     const slider = page.getByRole('slider', { name: 'Volume' });
     await expect(slider).toBeVisible();
@@ -38,7 +39,7 @@ test.describe('Slider keyboard interaction (native range input)', () => {
   test('Arrow keys nudge the value by one step in each direction, reflected in the displayed value', async ({
     page
   }) => {
-    await page.goto('/components/slider');
+    await gotoHydrated(page, '/components/slider');
 
     const slider = page.getByRole('slider', { name: 'Volume' });
     const display = page.locator('.slider-value');
@@ -64,7 +65,7 @@ test.describe('Slider keyboard interaction (native range input)', () => {
   });
 
   test('Home and End jump to the minimum and maximum', async ({ page }) => {
-    await page.goto('/components/slider');
+    await gotoHydrated(page, '/components/slider');
 
     const slider = page.getByRole('slider', { name: 'Volume' });
     await slider.focus();
@@ -77,7 +78,7 @@ test.describe('Slider keyboard interaction (native range input)', () => {
   });
 
   test('the min/max contract is exposed as real DOM attributes', async ({ page }) => {
-    await page.goto('/components/slider');
+    await gotoHydrated(page, '/components/slider');
 
     const slider = page.getByRole('slider', { name: 'Volume' });
     await expect(slider).toHaveAttribute('min', '0');

@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Pagination — cursor / load-more mode', () => {
   test('basic pagination still renders prev/next (backward compatible)', async ({ page }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
     const basic = page.getByTestId('pagination-basic');
     await expect(basic).toBeVisible();
     await expect(basic.getByRole('button', { name: 'Previous page' })).toBeVisible();
@@ -12,7 +13,7 @@ test.describe('Pagination — cursor / load-more mode', () => {
   test('cursor mode swaps the next-button for a load-more CTA on the last page', async ({
     page
   }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
     const cursor = page.getByTestId('pagination-cursor');
     await expect(cursor).toBeVisible();
     // On page 1 of 3 there is no load-more CTA yet — normal next-button is shown.

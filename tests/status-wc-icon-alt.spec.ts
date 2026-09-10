@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `statusIconAlt` was added to the Svelte component without being declared in
 // `Status.wc.svelte`'s customElement.props. An undeclared prop gets no accessor
@@ -14,7 +15,7 @@ import { expect, test } from '@playwright/test';
 // it is injected into a same-origin page instead of being navigated to.
 // `pnpm run build` (the webServer command) runs build:wc, so the file exists.
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-status') !== 'undefined', null, {
     timeout: 15_000

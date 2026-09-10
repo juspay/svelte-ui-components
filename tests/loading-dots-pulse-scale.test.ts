@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('LoadingDots — pulse min-scale token', () => {
   // The pulse variant previously animated opacity only; consumers replacing
@@ -6,7 +7,7 @@ test.describe('LoadingDots — pulse min-scale token', () => {
   // the size component. --loading-dots-pulse-min-scale drives the keyframe's
   // resting scale; the default of 1 keeps existing consumers pixel-identical.
   test('the min-scale token reaches the dots and defaults to 1', async ({ page }) => {
-    await page.goto('/components/loading-dots');
+    await gotoHydrated(page, '/components/loading-dots');
 
     const breathing = page.getByTestId('loading-dots-breathing');
     await expect(breathing).toBeVisible();

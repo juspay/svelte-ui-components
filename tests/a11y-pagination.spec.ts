@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Pagination renders plain native <button> elements, so Tab order, Enter/Space
 // activation and disabled exclusion are the browser's job. These tests pin the
@@ -6,7 +7,7 @@ import { expect, test } from '@playwright/test';
 // wiring the `disabled` prop is supposed to produce.
 test.describe('Pagination keyboard interaction', () => {
   test('Tab reaches a page control and Enter/Space activates it', async ({ page }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
 
     const basic = page.getByTestId('pagination-basic');
     const page2 = basic.getByRole('button', { name: 'Page 2', exact: true });
@@ -28,7 +29,7 @@ test.describe('Pagination keyboard interaction', () => {
   test('aria-current marks only the active page, and prev/next carry their own names', async ({
     page
   }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
 
     const basic = page.getByTestId('pagination-basic');
     await expect(basic.getByRole('button', { name: 'Page 1', exact: true })).toHaveAttribute(
@@ -42,14 +43,14 @@ test.describe('Pagination keyboard interaction', () => {
   test('the previous button is natively disabled (and unreachable by Tab) on the first page', async ({
     page
   }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
 
     const basic = page.getByTestId('pagination-basic');
     await expect(basic.getByRole('button', { name: 'Previous page' })).toBeDisabled();
   });
 
   test('the disabled prop natively disables every button in the group', async ({ page }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
 
     // This instance carries no testId, so scope by the only nav whose buttons are
     // all disabled.
@@ -62,7 +63,7 @@ test.describe('Pagination keyboard interaction', () => {
   test('cursor mode: the load-more control is keyboard-activatable and gets its own name', async ({
     page
   }) => {
-    await page.goto('/components/pagination');
+    await gotoHydrated(page, '/components/pagination');
 
     const cursor = page.getByTestId('pagination-cursor');
     await cursor.getByRole('button', { name: 'Page 3', exact: true }).click();

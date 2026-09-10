@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — built-in date inputs + time selection', () => {
   // showDateInputs renders read-only start/end date boxes; showTimeSelection adds a
@@ -6,7 +7,7 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   test('shows date boxes, toggles time inputs, and gates Apply on time validity', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-datetime-demo');
     await expect(picker).toBeVisible();
@@ -38,7 +39,7 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   });
 
   test('blocks Apply when start time is after end time on the same day', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-datetime-demo');
     await picker.getByRole('button', { name: 'Open date picker' }).click();
@@ -64,7 +65,7 @@ test.describe('DateRangePicker — built-in date inputs + time selection', () =>
   test('inline layout: time inputs sit beside the dates with no toggle, and still gate Apply', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-datetime-inline-demo');
     await expect(picker).toBeVisible();

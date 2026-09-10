@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Input — validation messages reach the accessibility tree', () => {
   // Regression guard: the error text was rendered as a plain <div class="error-message"> with
@@ -6,7 +7,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   // absent from the accessibility tree — a screen-reader user submitted, heard nothing, and was
   // left on a form that had not moved. Nothing visual catches this: the message looks correct.
   test('an invalid field is marked invalid and points at its message', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-announced-error');
     await expect(field).toBeVisible();
@@ -23,7 +24,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   });
 
   test('the message is a live region so it is spoken when it appears', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-announced-error');
     const describedBy = await field.getAttribute('aria-describedby');
@@ -33,7 +34,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   });
 
   test('helper text is associated with the field even when it is valid', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     // infoMessage is guidance a screen-reader user needs BEFORE they trip an error, so it must
     // be referenced whether or not the field is currently invalid.
@@ -47,7 +48,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   });
 
   test('error and helper text are both referenced, error first', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-announced-error');
     const describedBy = (await field.getAttribute('aria-describedby')) ?? '';
@@ -65,7 +66,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   test('an actionInput field in error state is not marked invalid, matching its hidden styling', async ({
     page
   }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
     // actionInput hides the error border, the message and the label. If aria-invalid stayed on,
     // a screen reader would announce an error the field gives no other sign of.
     const field = page.getByTestId('input-action-error');
@@ -77,7 +78,7 @@ test.describe('Input — validation messages reach the accessibility tree', () =
   test('a valid field with no helper text is not marked invalid and describes nothing', async ({
     page
   }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     // Negative side of the contract: the attributes must be ABSENT when there is no error,
     // otherwise every field on every form announces itself as invalid.
@@ -95,7 +96,7 @@ test.describe('ChipInput — the draft field can be named', () => {
   // way for a caller to name it: the caption beside it read on screen and the control reached
   // the accessibility tree unnamed.
   test('ariaLabel names the draft field', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     await expect(page.getByTestId('chip-input-tags-add')).toHaveAttribute(
       'aria-label',
@@ -105,7 +106,7 @@ test.describe('ChipInput — the draft field can be named', () => {
   });
 
   test('an unnamed ChipInput emits no empty aria-label', async ({ page }) => {
-    await page.goto('/components/chip-input');
+    await gotoHydrated(page, '/components/chip-input');
 
     // An empty aria-label is worse than none — it names the control the empty string, which
     // suppresses every other naming path an assistive technology would have fallen back to.

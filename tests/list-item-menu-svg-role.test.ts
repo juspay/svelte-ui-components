@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('ListItem and Menu — SVG transforms and ListItem semantics', () => {
   test('ListItem transforms and inlines both image SVGs', async ({ page }) => {
-    await page.goto('/components/list-item');
+    await gotoHydrated(page, '/components/list-item');
 
     const leftIcon = page.getByTestId('list-item-transform-left').locator('svg');
     const rightIcon = page.getByTestId('list-item-transform-right').locator('svg');
@@ -14,7 +15,7 @@ test.describe('ListItem and Menu — SVG transforms and ListItem semantics', () 
   });
 
   test('Menu transforms and inlines its item SVG icon', async ({ page }) => {
-    await page.goto('/components/menu');
+    await gotoHydrated(page, '/components/menu');
 
     await page.locator('[data-pw="menu-transform-svg"] .menu-trigger').click();
 
@@ -28,7 +29,7 @@ test.describe('ListItem and Menu — SVG transforms and ListItem semantics', () 
   test('ListItem suppression removes synthetic roles and tab stops but keeps clicks', async ({
     page
   }) => {
-    await page.goto('/components/list-item');
+    await gotoHydrated(page, '/components/list-item');
 
     const item = page.getByTestId('list-item-suppressed');
     const topSection = page.getByTestId('list-item-suppressed-top');
@@ -52,7 +53,7 @@ test.describe('ListItem and Menu — SVG transforms and ListItem semantics', () 
   });
 
   test('ListItem defaults retain synthetic button semantics', async ({ page }) => {
-    await page.goto('/components/list-item');
+    await gotoHydrated(page, '/components/list-item');
 
     const item = page.locator('.item').filter({ hasText: 'John Doe' });
     await expect(item).toHaveAttribute('role', 'button');

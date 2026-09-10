@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The roving tabindex (active tab 0, everything else -1) used to pair with a
 // keydown handler that only covered Enter/Space — a keyboard user could Tab
@@ -10,7 +11,7 @@ test.describe('Tabs keyboard navigation (APG tablist contract)', () => {
   test('ArrowRight/ArrowLeft move selection and focus with wrap-around (horizontal, string mode)', async ({
     page
   }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     const tabAt = (label: string) => bar.getByRole('tab', { name: label, exact: true });
@@ -36,7 +37,7 @@ test.describe('Tabs keyboard navigation (APG tablist contract)', () => {
   test('Home/End jump to the first/last tab, scrolling the offscreen target into view', async ({
     page
   }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     const tabAt = (label: string) => bar.getByRole('tab', { name: label, exact: true });
@@ -56,7 +57,7 @@ test.describe('Tabs keyboard navigation (APG tablist contract)', () => {
   test('vertical orientation uses ArrowDown/ArrowUp and ignores ArrowRight (object mode via activeKey)', async ({
     page
   }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const rail = page.getByTestId('tabs-vertical-demo');
     await expect(rail.getByRole('tablist')).toHaveAttribute('aria-orientation', 'vertical');
@@ -79,7 +80,7 @@ test.describe('Tabs keyboard navigation (APG tablist contract)', () => {
   });
 
   test('Enter and Space still activate the focused tab', async ({ page }) => {
-    await page.goto('/components/tabs');
+    await gotoHydrated(page, '/components/tabs');
 
     const bar = page.getByTestId('tabs-overflow-demo').locator('.tabs-bar');
     const tabAt = (label: string) => bar.getByRole('tab', { name: label, exact: true });

@@ -2,7 +2,85 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.18.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.19.0)
+
+The functional suite failed intermittently: a full local run at the default
+worker count failed 8 of 713, a run of the same commit at `--workers=2` failed 0
+of 713, and the failing tests moved from run to run. CI never showed it because
+`retries: process.env.CI ? 2 : 0` re-ran them.
+
+Root cause, confirmed rather than inferred. Every demo page is server-rendered,
+so a control is present, visible, stable and enabled — passing every
+actionability check Playwright makes — before hydration has attached its
+handler. Playwright has no check for "a listener exists", so a click arriving in
+that window is delivered to inert markup and silently does nothing; the
+assertion after it then fails as a timeout naming the missing element, which
+says nothing about the real cause. Recording `video` and `trace` on all 713
+tests makes the window wide enough to hit whenever workers compete.
+
+The confirmation was a probe that delays the module scripts, making the race
+deterministic: the trigger passes `toBeVisible`, the click lands, and the
+dropdown never appears. That probe is kept as
+`tests/hydration-race.spec.ts`, alongside its inverse — the same delayed page
+driven through the new helper, where the click works. Together they fail if
+either half of this regresses.
+
+`src/routes/+layout.svelte` now sets `document.documentElement.dataset.hydrated`
+in `onMount`; a parent's `onMount` runs after its children have mounted, so the
+root layout is the app as a whole reporting it is ready. `gotoHydrated` in
+`tests/support/hydrated.ts` navigates and waits for it, and replaces
+`page.goto` at 579 call sites across 149 spec files. The three remaining raw
+`goto` calls are deliberate: the race probe needs an unhydrated page, the helper
+itself, and the visual suite's templated navigation.
+
+Separately, `typewriter-text-reduced-motion.test.ts` sampled its mutation count
+from the test process on either side of an `emulateMedia` CDP round-trip, so
+every character typed while that call was in flight counted against a bound of
+6. The count is now recorded inside the page, when the media query actually
+flips, which takes the round-trip out of the measured window and lets the bound
+tighten to 2. Writing that exposed a second defect in my own first attempt:
+`readTiming` projects a narrower shape, so the new field never reached the
+assertion, and a `not.toBeNull()` guard passed on `undefined` while the test
+measured the whole reveal. The guard now asserts a real number, which is what
+catches a dropped projection.
+
+Verified on this commit: check 0, lint 0, unit 0, integration 0. The full suite
+at the default worker count that was failing 8 now passes 715 of 715.
+
+The same test also sampled `textContent` from the test process to find the
+moment typing had started. The whole string reveals in roughly 450ms and every
+`expect.poll` iteration costs a round-trip, so on a loaded machine those spent
+most of the window and the flip landed after typing had finished -- failing the
+test's own `remaining &gt; 12` guard, which exists to prove it caught the reveal
+mid-stream. That wait now happens in the page via `waitForFunction`, so it ends
+on the first revealed character and the only round-trip left in the critical
+path is the `emulateMedia` call. The guard reads the in-page count at the flip
+too, rather than a sample taken a round-trip earlier.
+
+The marker means the app hydrated and nothing more. It is strictly earlier than
+custom-element readiness, which was raised in review and then measured: on `/`,
+`data-hydrated` was set at ~755ms while `customElements.get('sui-status')` was
+still undefined and no element had upgraded. That costs nothing here, because
+`dist-wc` is a bundle rather than a route -- a spec injects it with
+`addScriptTag` after navigating, so nothing could be defined at marker time --
+and all 14 custom-element specs already gate on `customElements.get` or
+`whenDefined` themselves. The limit is written into `gotoHydrated`'s
+documentation so the next such spec does not read the marker as covering it.
+
+Fixing it in the demo app was tried first and abandoned: the site is
+prerendered, so a query parameter cannot reach the server-rendered output, and
+slowing the shared fixture outright would break the pacing assertions in
+`typewriter-text-pacing-progress-render.test.ts` and change the visual baseline.
+
+Verified on this commit: check 0, lint 0, unit 0, integration 0. The full suite
+at the default worker count that was failing 8 now passes 715 of 715, and the
+reduced-motion file passes 48 of 48 at `--repeat-each=16 --workers=14`, a load
+at which it previously failed repeatedly.
+
+-
+fix(tests): wait for hydration before driving demo pages ([b1a6ca6](https://github.com/juspay/svelte-ui-components/commit/b1a6ca6f350fb8b29ea6956aa39ccec0879b93b9))
+
+## [4.19.0](https://github.com/juspay/svelte-ui-components/compare/4.19.0..4.18.0) - 10 September 2026
 
 `attrs` is `Record&lt;string, string&gt;` on both Card and Pill. Both spread it FIRST
 and their own managed attributes after, so `attrs={{ class: 'mine' }}` is

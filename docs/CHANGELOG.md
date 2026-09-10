@@ -2,7 +2,69 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.13.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.14.0)
+
+The DS pie sheet shows the donut legend as a right-side column that truncates
+at five items with an in-card "+2 more" expander. PieChart had
+`legendShowValues` -- a below-chart list -- but no right placement, no item cap
+and no expander, so Lighthouse's analytics page hand-rolls a bespoke legend
+`&lt;ul&gt;` plus a view-more modal: the third parallel legend implementation in that
+codebase.
+
+legendPosition="right"   places the values legend beside the chart
+legendMaxItems={5}       caps the visible rows
+onlegendmore             hands the overflow action to the consumer
+
+All three are opt-in. Without them the legend renders exactly where and how it
+did, which four of the tests assert. Only the values legend moves; the simple
+top legend is mutually exclusive with it and is untouched.
+
+Three defects the regression tests found, each reproduced before it was fixed:
+
+- A fractional cap rendered `+1.2999999999999998 more`. The cap is now floored
+and clamped to at least one row.
+- Expansion state survived a data change: expand, shrink the data below the
+cap, restore it, and the legend stayed expanded. It now resets when the data
+length or the cap changes.
+- The expander had no themeable focus ring. It is not that a native button had
+none -- it had the user-agent default -- but that it could not be themed with
+the rest of the library. `--piechart-legend-more-focus-outline` now drives it,
+and the test sets 3px and asserts the computed width, so it fails against the
+browser default rather than passing on it.
+
+`aria-expanded` is present only on the built-in expander, which actually
+controls expansion. When `onlegendmore` is supplied the component expands
+nothing and cannot know what the consumer's handler does -- Lighthouse opens a
+modal, another caller might navigate -- so claiming `aria-expanded="false"` or
+`aria-haspopup="dialog"` would be an assertion about someone else's UI. The
+callback variant is a plain action button and the docs say the ARIA state is
+the consumer's to own.
+
+The docs claimed these props were settable as `sui-pie-chart` attributes. There
+is no PieChart web-component wrapper at all, so that example promised an API
+that does not exist; it is removed and the Svelte-only availability stated.
+Building a first wrapper is a separate change, not something to slip into a
+legend feature.
+
+Two review findings taken: the built-in expander now carries `aria-controls`
+pointing at the list it expands (omitted in callback mode, which controls
+nothing here), and the beside-chart row layout no longer applies to the empty
+state, where it turned the empty message into a flex item.
+
+Closes #417
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+931 unit tests and 642 functional tests with 1 pre-existing skip. 12 Playwright
+cases and 12 DOM cases cover placement, the cap, the computed
+hidden count, expand/collapse, callback override, keyboard activation, the
+focus token, and the boundaries: 0, -1, NaN, Infinity, 0.5 and 5.7 caps, a cap
+at or above the item count, empty data, and 57-character labels in a 280px card
+staying inside the chart's own box.
+
+-
+feat(pie-chart): add a right-side value legend with a capped +N more expander ([5c9f40b](https://github.com/juspay/svelte-ui-components/commit/5c9f40ba3291df4239a4e5da3a11e0f89ef3f7d0))
+
+## [4.14.0](https://github.com/juspay/svelte-ui-components/compare/4.14.0..4.13.0) - 10 September 2026
 
 Sheet's `top` and `bottom` sides had no width-capping mechanism. `left` and
 `right` expose `--sheet-width`; top and bottom were always full-viewport-width

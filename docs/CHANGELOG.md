@@ -2,7 +2,69 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.15.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.16.0)
+
+Closes items 2-4 of the Breeze DS dropdown parity list. Item 1 (sizes) was
+closed separately as a documented class recipe, since the trigger variables
+were already themeable.
+
+error / errorMessage   red border that outranks hover and focus, plus
+aria-invalid and a role="alert" hint
+clearable / onclear    a clear control that resets the value WITHOUT
+opening the menu
+pressed feedback       #ededed tint on the trigger and on options
+
+All opt-in except the pressed tint, which is a `:active` rule on the existing
+elements. Four tests assert an unconfigured Select is unchanged.
+
+The error border deliberately outranks both the hover and the focus/open border
+colours, at equal-or-higher specificity rather than with !important. A field
+that stops looking invalid the moment the user enters it is invalid exactly
+when nobody can see it.
+
+Five defects the acceptance tests found, each reproduced before it was fixed:
+
+- Enter and Space on the clear button reached the combobox's own key handler,
+which opened the menu or selected an option instead of clearing. The button
+now stops propagation of those keys without stopping their default, so native
+activation still works.
+- The clear button was a focusable descendant of `role="combobox"`, which
+expects a single focusable control. It is now a SIBLING of the trigger inside
+a positioned wrapper, placed over the trigger's reserved right padding, so
+the control looks identical and the combobox is single-focus again. Asserted
+with `el.closest('[role="combobox"]') === null`.
+- Clearing dropped focus. The button unmounts the moment the value empties, so
+focus fell to `&lt;body&gt;`. It now returns to the trigger, or to the search input
+in a searchable Select, without opening the menu.
+- A whitespace-only `errorMessage` rendered an empty alert region and pointed
+`aria-describedby` at it, so a screen reader announced nothing. The check
+trims, and clearing `error` now removes `aria-invalid` and the description
+reference together rather than leaving a stale pointer.
+- A searchable Select carried the error semantics on the trigger while focus
+was in the input. `aria-invalid`/`aria-describedby` are now on whichever
+control actually takes focus, in both single and multi mode.
+
+The clear button also gains a themeable `--select-clear-focus-outline`, and the
+listbox id comes from `$props.id()` rather than Math.random(), so it is stable
+across SSR hydration and two instances on one page cannot collide.
+
+Closes #414
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+926 unit tests including 7 new DOM cases for the error and clear contracts, and
+22 Playwright cases for this feature. Pointer tests use hover() rather than a
+raw mouse move to a bounding box, and assert `:active` matched before reading a
+colour -- a press that missed and a colour that is wrong are different bugs.
+
+The `select.png` visual baseline is regenerated because the clear control moved
+out of the trigger into the wrapper. The before/after pair was reviewed, and
+the committed baseline then passed a second comparison run without
+--update-snapshots.
+
+-
+feat(select): add error state, trigger clear button and pressed feedback ([50835c2](https://github.com/juspay/svelte-ui-components/commit/50835c2e48843fe7764ab82de7449e94fe9e2576))
+
+## [4.16.0](https://github.com/juspay/svelte-ui-components/compare/4.16.0..4.15.0) - 10 September 2026
 
 docs/PieChart.md documented `&lt;sui-pie-chart&gt;` with kebab-case attributes and
 JS-assigned function props for several releases, but no wrapper was ever built:

@@ -2,7 +2,39 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.14.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.15.0)
+
+docs/PieChart.md documented `&lt;sui-pie-chart&gt;` with kebab-case attributes and
+JS-assigned function props for several releases, but no wrapper was ever built:
+there was no PieChart.wc.svelte and no customElements.define call, so the
+element never upgraded and the documented markup rendered nothing at all.
+
+This adds the real wrapper, so the documentation and the bundle agree.
+
+- Declares all 30 props. scripts/wc-parity requires a wrapper to cover every
+prop its component accepts, so this is enforced rather than asserted --
+dropping one fails `PieChart.wc.svelte declares every prop`.
+- Scalars map to kebab-case attributes with declared types, so
+legend-max-items="3" arrives as the number 3. Arrays, functions and snippets
+stay JS properties: they cannot cross the attribute boundary.
+- `center` and `empty` are wired to named slots, since a plain-HTML consumer
+cannot construct a Svelte snippet. They are passed only when content is
+actually slotted: PieChart gates its own defaults on
+`typeof snippet === 'function'`, so defining them unconditionally would
+replace the built-in empty state with a blank box.
+- `tooltipSnippet` gets no slot. It is called with (slice, index), and a slot
+cannot receive those arguments.
+
+The snippets are declared inside &lt;PieChart&gt; rather than at the top level of the
+template. A top-level {#snippet} is hoisted to module scope, while the &lt;slot&gt;
+inside it compiles to `$.slot(node, $$props, ...)` -- and $$props exists only
+inside the component function. The hoisted form threw `$$props is not defined`
+at render time and surfaced as a silently empty shadow root, not a build error.
+
+-
+feat(pie-chart): register sui-pie-chart as a web component ([8e2bbc4](https://github.com/juspay/svelte-ui-components/commit/8e2bbc4390e946dca9bfc55313519757dfce8a2d))
+
+## [4.15.0](https://github.com/juspay/svelte-ui-components/compare/4.15.0..4.14.0) - 10 September 2026
 
 The DS pie sheet shows the donut legend as a right-side column that truncates
 at five items with an in-card "+2 more" expander. PieChart had

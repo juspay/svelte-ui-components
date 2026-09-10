@@ -2,7 +2,68 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.19.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.19.1)
+
+4.19.0 deprecated the `attrs` keys Card and Pill overwrite, which turns the
+silent discard into a strikethrough for anyone reading TypeScript in an editor
+— and does nothing at all for anyone else. A plain-JS consumer has no types, and
+`&lt;sui-card&gt;`/`&lt;sui-pill&gt;` callers driving the web components have none either.
+Those are exactly the callers the spread order was always protecting, so they
+were the ones still getting silence.
+
+Dev builds now log, once per mounted instance, which managed key was found in
+`attrs` and what owns it:
+
+[svelte-ui-components] Card: the "class" entry in `attrs` is discarded,
+because Card writes its own "class" after spreading `attrs` — use the
+`classes` prop.
+
+`src/lib/attrs-discard.ts` holds the two key→guidance maps and a pure
+`discardedAttrWarnings`; the components decide whether to report. The maps
+repeat what the `@deprecated` tags say, so the test pins each one against its
+`*StrictAttrs` type — indexing the strict type by the runtime map's keys is
+undefined-only exactly when every key is really managed, so a key that drifted
+out of the type fails `pnpm check`. Verified by mutation: adding an unmanaged
+key to the Card map does fail it.
+
+Three repo rules shaped the implementation rather than the other way round:
+
+- `$effect` is banned, so the check runs once at component init. That is also
+the right frequency: one warning per call site is what a consumer acts on, and
+re-warning on every reactive update would bury it.
+- The built-in `Set` is banned in favour of `SvelteSet`. Warning at init removed
+the need to dedupe at all, so neither is used.
+- The `undefined` keyword is banned, so `attrs` is the optional trailing
+parameter and an absent one is simply not passed.
+
+Only own properties count: an object built on a prototype that happens to carry
+`class` never asked for that attribute to be spread, and warning about it would
+be noise a consumer cannot act on.
+
+Guarded on `import.meta.env?.DEV === true`, read defensively because bundlers
+that do not define `import.meta.env` should stay quiet rather than throw. It
+compiles out of production builds, so nothing ships to end users.
+
+Nothing about the rendered output changes; #576 is still open for the major that
+makes `attrs` itself reject these keys.
+
+Verified on this commit: check 0, lint 0, unit 0. 1021 unit tests, of which 14
+are new, and 25 Card/Pill integration cases. The render tests assert the DOM
+alongside the warning — a test that only checked the message could pass while
+`attrs` had started winning instead — and were mutation-checked by stripping the
+warning from Card, which fails them.
+
+The full integration suite shows 3 failures locally on this branch and 3 on
+`origin/release` with none of this applied, in different tests each run:
+pre-existing flakiness in tooltip/menu placement and table cells, masked in CI
+by `retries: process.env.CI ? 2 : 0`. Not introduced here, and not touched here.
+
+Refs #576
+
+-
+feat(card,pill): warn in dev when an attrs entry is discarded ([dd01fe2](https://github.com/juspay/svelte-ui-components/commit/dd01fe2f3bdbfdd035136827b8ae9fa22855cbe9))
+
+## [4.19.1](https://github.com/juspay/svelte-ui-components/compare/4.19.1..4.19.0) - 10 September 2026
 
 The functional suite failed intermittently: a full local run at the default
 worker count failed 8 of 713, a run of the same commit at `--workers=2` failed 0

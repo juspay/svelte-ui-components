@@ -2,7 +2,74 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.17.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.18.0)
+
+`attrs` is `Record&lt;string, string&gt;` on both Card and Pill. Both spread it FIRST
+and their own managed attributes after, so `attrs={{ class: 'mine' }}` is
+accepted, spread, and then overwritten. The runtime behaviour is right; the type
+is the thing that says nothing.
+
+#576 asks for the type to reject those keys, and specifies a major to do it in,
+because rejecting `class` stops existing code from compiling. This change does
+not take that break. `attrs` keeps its exact accepted set — every managed key,
+every arbitrary attribute name, string values — and each component instead names
+its managed keys as `@deprecated` members carrying whatever owns them:
+
+Card  class → classes, style → cssVars, data-pw/testID → testId,
+href/target/rel/onclick → the named props, and role/tabindex/onkeydown,
+which Card derives from onclick/href and has no prop for
+Pill  class → classes, title/onclick → the named props,
+data-pw/testID → testId, aria-disabled/aria-expanded/aria-pressed
+derived from disabled/ariaExpanded/ariaPressed, and type/role/tabindex/
+onkeydown, which Pill derives and has no prop for
+
+An editor strikes a deprecated entry through and shows the replacement, so the
+discard is visible where it is written rather than silent.
+
+The rejecting type ships alongside as `CardStrictAttrs` / `PillStrictAttrs`,
+built on `AttrsEscapeHatch` in src/lib/types.ts, so a consumer who wants the
+compile error today annotates the object and gets it. Optional `never` members
+are what make it reject managed keys reached through a predeclared object rather
+than only an inline literal, and what override the `data-*` index signature a
+bare `Omit` leaves in place.
+
+The two managed lists deliberately differ. Card writes no aria state, so
+`aria-pressed` stays usable on Card; Pill writes no `style`, so styling stays
+usable on Pill. Forbidding a key a component never touches would be a fake
+restriction.
+
+#576 stays open: it asks for `attrs` itself to reject these keys, which remains
+a major.
+
+The non-breaking claim is asserted directly, as mutual assignability between
+`attrs` and the `Record&lt;string, string&gt;` it replaces, written as assignments the
+compiler enforces. `expectTypeOf().toMatchTypeOf()` was tried first and is not
+fit for it: it is a loose structural match that stays green even when pointed at
+`CardStrictAttrs`, so it would have passed through the exact regression the case
+exists to catch. Both it and the per-key `toEqualTypeOf&lt;undefined&gt;()` assertions
+were checked by mutation — narrowing the wide side, and naming an unmanaged key
+on the strict side — and both fail as they should. The per-key assertions use
+`toBeUndefined()` rather than `toEqualTypeOf&lt;undefined&gt;()`: `?: never` makes the
+property type undefined-only either way, but the repo's `no-restricted-syntax`
+rule bans the `undefined` type keyword, and `null` would make the assertion
+false rather than merely differently spelled.
+
+Verified on this commit, rebased onto 4.18.0: lint 0, check 0, unit 0,
+integration 0. 1007 unit tests,
+and the type-contract cases compiled by `pnpm check`, since `@ts-expect-error`
+and `expectTypeOf` are what assert them. 9 Playwright cases in
+tests/card-attrs-and-as.test.ts and tests/pill-attrs.spec.ts prove the runtime
+spread order still discards a managed key, which is what makes deprecating rather
+than rejecting the correct call. The demo collision fixtures are the pre-#576
+literals again, uncast — that they still compile unchanged is the non-breaking
+claim stated in consumer code.
+
+Refs #576
+
+-
+feat(card,pill): deprecate the attrs keys each component overwrites ([cfaa899](https://github.com/juspay/svelte-ui-components/commit/cfaa899c934ff1d963b802563bafcbbc9b2a7990))
+
+## [4.18.0](https://github.com/juspay/svelte-ui-components/compare/4.18.0..4.17.0) - 10 September 2026
 
 The DS dropdown sheet's keyboard guidelines put the search box INSIDE the open
 menu, reached by Tab after opening. Select's `searchable` puts the filter input

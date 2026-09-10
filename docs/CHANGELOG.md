@@ -2,7 +2,69 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.16.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.17.0)
+
+The DS dropdown sheet's keyboard guidelines put the search box INSIDE the open
+menu, reached by Tab after opening. Select's `searchable` puts the filter input
+in the trigger and focuses it automatically. That difference is not cosmetic:
+with the input in the trigger there is no way to open the menu while keeping
+focus on the combobox.
+
+searchPosition="menu"
+
+Defaults to `'trigger'`, so every existing searchable Select is untouched --
+asserted by a test that the default variant still renders its input in the
+trigger.
+
+A listbox may only contain options, so the panel carries no role in this
+variant: the search input is a SIBLING of an inner `.select-menu-list` that
+owns `role="listbox"`, and `aria-controls` points at that list rather than the
+panel.
+
+Five defects the acceptance tests found, each reproduced before it was fixed:
+
+- Tab always closed the menu, so the search box could never be reached -- the
+entire contract this variant exists to satisfy.
+- A portaled panel is appended to &lt;body&gt;, so it is not the trigger's DOM-order
+successor: native Tab skipped the whole widget and Shift+Tab from the search
+landed outside it. Both directions now move focus explicitly, so the in-flow
+and portaled variants answer Tab identically.
+- Pinned `bottomContent` actions rendered INSIDE the listbox, where they are
+invalid children and announce as options -- and were unreachable anyway,
+because forward Tab from the search closed the menu. They now render outside
+the list, and Tab leaves the menu only once there is nothing left to reach.
+- The scrollable option list was its own tab stop in Chromium, swallowing the
+Tab that should reach those actions. It is `tabindex="-1"`; options are
+navigated from the search box via aria-activedescendant, so the list never
+needs focus.
+- Selecting an option left focus on `&lt;body&gt;`, because the search box holding
+focus was removed with the menu. Focus returns to the trigger.
+
+The panel's key handler is attached imperatively rather than in the template:
+a keydown handler written there would demand an ARIA role that a wrapper around
+a search box and a listbox must not claim.
+
+Stacked on #593 rather than release, since both change Select.svelte; this
+commit is the in-menu delta alone.
+
+Closes #415
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+18 Playwright cases for this variant plus the 22 inherited from the parent
+branch, run together. They cover opening from the keyboard, Tab in and
+Shift+Tab back without closing, filtering, arrow navigation, Enter selection
+and focus return, Escape, the portaled tab cycle in both directions, pinned
+clear-all/apply actions, filtered select-all preserving values outside the
+filter, no-results recovery and query reset on reopen.
+
+The `select.png` visual baseline is regenerated because this adds two demo
+sections. The before/after pair was reviewed, and the committed baseline then
+passed a second comparison run without --update-snapshots.
+
+-
+feat(select): add an in-menu search placement ([e6236d0](https://github.com/juspay/svelte-ui-components/commit/e6236d0a4eefb60fc7de5cb8113283ac06d2db45))
+
+## [4.17.0](https://github.com/juspay/svelte-ui-components/compare/4.17.0..4.16.0) - 10 September 2026
 
 Closes items 2-4 of the Breeze DS dropdown parity list. Item 1 (sizes) was
 closed separately as a documented class recipe, since the trigger variables

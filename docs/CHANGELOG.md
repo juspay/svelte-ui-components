@@ -2,7 +2,65 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.12.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.13.0)
+
+Sheet's `top` and `bottom` sides had no width-capping mechanism. `left` and
+`right` expose `--sheet-width`; top and bottom were always full-viewport-width
+with a border only on the entering edge. That made the shape most mobile-first
+action sheets actually use above phone widths -- a centred, width-capped, fully
+bordered card entering from the bottom -- impossible without faking it through
+hand-computed `--sheet-left`/`--sheet-right` calc() offsets plus a global border
+override, which relocates the consumer's centring maths into a stylesheet
+rather than adopting the component.
+
+--sheet-band-width       caps the panel and centres it between the insets
+--sheet-band-max-width   caps responsively without fixing the width
+--sheet-band-border      draws all four edges, which a floating card needs
+--sheet-band-box-sizing  opt into border-box so borders fit inside the cap
+
+Deliberately NOT --sheet-width/--sheet-max-width, even though the issue
+proposed those names. Those already mean "the width of a left/right panel", so
+a consumer who themes them for their side sheets would find their bottom sheets
+silently reshaped by an upgrade. `side="center"` avoids the same collision the
+same way, with its own --sheet-center-* tokens. A regression test sets
+--sheet-width on a bottom sheet and asserts it stays edge-to-edge.
+
+Two defects the acceptance tests found, both fixed here:
+
+The documented recipe overflowed a phone. A 560px cap plus 1px borders measures
+562px on a 320px-wide viewport, because the panel is content-box like
+`side="center"` is. Changing that rule outright would shift every existing
+top/bottom sheet that sets --sheet-border by a pixel, so box-sizing became an
+opt-in token and the documented recipe uses `min(560px, 100vw)` with
+`border-box` -- verified at 320px, where the panel fits exactly.
+
+Escape did not return focus to the trigger. The scroll-lock action moved focus
+into the panel on open but restored nothing on close, so dismissing a sheet
+from the keyboard dropped focus to `&lt;body&gt;`. It now restores the previously
+focused element, and only when focus is still inside the sheet or on `&lt;body&gt;`
+-- so a consumer who deliberately moves focus elsewhere while closing is not
+overridden.
+
+Both additive: a consumer setting neither token keeps today's full-bleed
+rendering exactly, which four of the tests assert.
+
+The top-sheet test selects its trigger by test id rather than the demo page's
+button copy, which is prose and free to change without the test being wrong.
+
+Closes #572
+
+Verified on this commit: lint 0, check 0, unit 0, build 0, integration 0.
+11 Playwright cases covering the cap, real centring (equal AND non-zero side
+gaps, since equal alone passes on a full-bleed panel), bottom-edge anchoring,
+all four borders, the 320px fit, asymmetric top insets with a responsive
+max-width, focus trap, body scroll lock, Escape focus restoration and
+outside-click dismissal. Transitions are awaited through the Web Animations API
+rather than a fixed sleep.
+
+-
+feat(sheet): let top/bottom panels be width-capped and centred ([21f3975](https://github.com/juspay/svelte-ui-components/commit/21f397587c36a46d08089d9dc829212e55a10367))
+
+## [4.13.0](https://github.com/juspay/svelte-ui-components/compare/4.13.0..4.12.0) - 9 September 2026
 
 Snippet coupled two separable things: the copy-and-flash behaviour (clipboard
 call, `copied` flag, reset timer, unmount cleanup) and the presentation (a

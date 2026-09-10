@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Stepper and Step — suppressRoleAndTabindex', () => {
   test('suppressed steps have no role or tabindex and are not tab-reachable', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-informational');
     const cartStep = container.locator('.step').filter({ hasText: 'Cart' });
@@ -23,7 +24,7 @@ test.describe('Stepper and Step — suppressRoleAndTabindex', () => {
   test('default (unsuppressed) steps keep synthetic button semantics and stay clickable', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     const shippingStep = container.locator('.step').filter({ hasText: 'Shipping' });
@@ -40,7 +41,7 @@ test.describe('Stepper and Step — testId', () => {
   test('an explicit per-step testId renders as data-pw on that step, matching a real migration consumer', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     await expect(page.getByTestId('abandoned-checkouts-recovery-strip-step-1')).toHaveText(/Cart/);
     await expect(page.getByTestId('abandoned-checkouts-recovery-strip-step-2')).toHaveText(
@@ -54,7 +55,7 @@ test.describe('Stepper and Step — testId', () => {
   test('an omitted per-step testId derives "<stepperTestId>-step-<n>" (1-based) from the Stepper testId', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     await expect(container.getByTestId('stepper-horizontal-step-1')).toHaveText(/Cart/);
@@ -66,7 +67,7 @@ test.describe('Stepper and Step — testId', () => {
   test('a step with no testId anywhere in scope renders no data-pw attribute at all', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.locator('#no-testid-demo');
     const cartStep = container.locator('.step').filter({ hasText: 'Cart' });
@@ -78,7 +79,7 @@ test.describe('Stepper — wrapping (--container-flex-wrap / --step-container-fl
   test('off (default): the row stays nowrap and steps keep their content-fit flex-basis', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-wrap-off');
     const flexWrap = await container.evaluate((element) => getComputedStyle(element).flexWrap);
@@ -100,7 +101,7 @@ test.describe('Stepper — wrapping (--container-flex-wrap / --step-container-fl
   test('on: the row wraps and each step claims a full-width flex-basis, stacking one per line', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-wrap-on');
     const flexWrap = await container.evaluate((element) => getComputedStyle(element).flexWrap);
@@ -124,7 +125,7 @@ test.describe('Stepper — separator growth (--step-flex-grow / --stepper-separa
   test('off (default): the separator keeps its fixed --stepper-separator-width', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-separator-growth-off');
     const separator = container.locator('.separator').first();
@@ -137,7 +138,7 @@ test.describe('Stepper — separator growth (--step-flex-grow / --stepper-separa
   });
 
   test('on: the separator grows to absorb the card leftover width', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-separator-growth-on');
     const separator = container.locator('.separator').first();
@@ -152,7 +153,7 @@ test.describe('Stepper — separator growth (--step-flex-grow / --stepper-separa
 
 test.describe('Step — circle border hook (--step-index-container-*-border)', () => {
   test('default: no status sets a border, matching current behaviour exactly', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     const cartCircle = container
@@ -169,7 +170,7 @@ test.describe('Step — circle border hook (--step-index-container-*-border)', (
   test('themed: completed/active/failure each render their own distinct, non-default border', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-themed-border');
     const readBorder = async (label: string) => {
@@ -210,7 +211,7 @@ test.describe('Step — label font-weight hook (--step-text-font-weight)', () =>
   test('default: the label renders at the normal browser-default weight, matching current behaviour exactly', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-horizontal');
     const cartLabel = container.locator('.step').filter({ hasText: 'Cart' }).locator('.step-text');
@@ -222,7 +223,7 @@ test.describe('Step — label font-weight hook (--step-text-font-weight)', () =>
   test('semibold: an ancestor override reaches .step-text through the new hook', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-semibold-label');
     const cartLabel = container.locator('.step').filter({ hasText: 'Cart' }).locator('.step-text');
@@ -236,7 +237,7 @@ test.describe('Stepper — status "muted" (smaller, subtly-tinted marker)', () =
   test('muted renders a smaller circle than the default-sized pending sibling', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-muted');
     const pendingCircle = container
@@ -259,7 +260,7 @@ test.describe('Stepper — status "muted" (smaller, subtly-tinted marker)', () =
   });
 
   test('muted uses its own tint, distinct from the pending default grey', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-muted');
     const pendingCircle = container
@@ -282,7 +283,7 @@ test.describe('Stepper — status "muted" (smaller, subtly-tinted marker)', () =
   test('existing statuses in the same Stepper are unaffected by a sibling muted step', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     const container = page.getByTestId('stepper-muted');
     const completedCircle = container
@@ -304,7 +305,7 @@ test.describe('Stepper — suppressContainerTestId', () => {
   test('off (default): the container still claims testId, colliding with an ancestor that carries the same data-pw', async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     // The demo's wrapping element and the Stepper's own container both render
     // data-pw="checkout-rail-default" — exactly the collision the opt-out exists for.
@@ -314,7 +315,7 @@ test.describe('Stepper — suppressContainerTestId', () => {
   test("on: the container no longer claims testId, leaving only the ancestor's data-pw, while per-step ids are unaffected", async ({
     page
   }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
 
     await expect(page.locator('[data-pw="checkout-rail-suppressed"]')).toHaveCount(1);
 
@@ -342,7 +343,7 @@ test.describe('Step used on its own, outside a Stepper', () => {
       .evaluate((node) => getComputedStyle(node).backgroundColor);
 
   test('a bare Step renders a different marker colour per status', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
     await expect(page.getByTestId('bare-step-completed')).toBeVisible();
 
     const completed = await circleBackground(page, 'bare-step-completed');
@@ -355,7 +356,7 @@ test.describe('Step used on its own, outside a Stepper', () => {
   });
 
   test('a bare muted Step is smaller than a bare pending Step', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
     await expect(page.getByTestId('bare-step-muted')).toBeVisible();
 
     const muted = await page
@@ -397,7 +398,7 @@ test.describe('muted status legibility', () => {
   };
 
   test('a muted step index reads against its own circle', async ({ page }) => {
-    await page.goto('/components/stepper');
+    await gotoHydrated(page, '/components/stepper');
     const marker = page.locator('[data-pw="bare-step-muted"] .step-index-container').first();
     await expect(marker).toBeVisible();
 

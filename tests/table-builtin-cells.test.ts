@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table — built-in cell renderers', () => {
   test('tag and tag-array cells render Pills with consumer classes', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     await expect(table).toBeVisible();
     await expect(table.getByTestId('builtin-state-0')).toContainText('Active');
@@ -15,7 +16,7 @@ test.describe('Table — built-in cell renderers', () => {
   });
 
   test('two-line-text cells render primary and secondary lines', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstPlanCell = bodyRows.first().getByRole('cell').first();
@@ -24,7 +25,7 @@ test.describe('Table — built-in cell renderers', () => {
   });
 
   test('avatar-stack caps at 4 chips and shows the +N overflow', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     const secondRow = table.getByRole('rowgroup').last().getByRole('row').nth(1);
     await expect(secondRow).toContainText('+2');
@@ -33,7 +34,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('compare cells render primary, comparison, and colored trend; scalar rows fall back to text', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstRevenue = bodyRows.nth(0).getByRole('cell').nth(4);
@@ -49,7 +50,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('toggle cells emit the column onToggle with row index and the NEW post-flip state', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     // Row 0 starts checked: true — flipping off must report the new state (false).
     // Click the switch wrapper, not the checkbox role: the native input is
@@ -65,7 +66,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('link cells render an anchor, copy affordance opt-out, and null fallback', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     const firstLink = table.getByTestId('builtin-docs-link-0');
     await expect(firstLink).toHaveAttribute('href', 'https://example.com/plans/42');
@@ -89,7 +90,7 @@ test.describe('Table — built-in cell renderers', () => {
     context
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     await table.getByTestId('builtin-docs-copy-0').click();
     await expect(table.getByTestId('builtin-docs-link-copied')).toContainText('Copied');
@@ -100,7 +101,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('icon-label cells render leading icons with the label, icon-less rows label only', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-media-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstGateway = bodyRows.first().getByRole('cell').first();
@@ -115,7 +116,7 @@ test.describe('Table — built-in cell renderers', () => {
   test('image-two-line-text cells render a thumbnail or placeholder plus both lines', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-media-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstProduct = bodyRows.first().getByRole('cell').nth(1);

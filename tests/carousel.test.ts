@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Carousel', () => {
   test('spreads each slide view.properties onto its component, not nested under a properties prop', async ({
     page
   }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
 
     const carousel = page.getByTestId('carousel-manual-demo');
     // Regression test: view.component previously received a single `properties` prop
@@ -17,7 +18,7 @@ test.describe('Carousel', () => {
   test('clicking a dot navigates to that slide, rendering its own spread properties', async ({
     page
   }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
 
     const carousel = page.getByTestId('carousel-manual-demo');
     const dot1 = page.getByTestId('carousel-manual-dot-1');
@@ -46,7 +47,7 @@ test.describe('Carousel', () => {
   });
 
   test('the active dot is exposed as aria-current, and only that one', async ({ page }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
     const dot1 = page.getByTestId('carousel-manual-dot-1');
     const dot2 = page.getByTestId('carousel-manual-dot-2');
 
@@ -65,7 +66,7 @@ test.describe('Carousel', () => {
   });
 
   test('pressing Enter on a focused dot navigates to that slide', async ({ page }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
 
     const carousel = page.getByTestId('carousel-manual-demo');
     const dot1 = page.getByTestId('carousel-manual-dot-1');
@@ -88,7 +89,7 @@ test.describe('Carousel', () => {
 
 test.describe('Carousel backward compatibility and announcements', () => {
   test('a wrapper that declares `properties` still receives the bag', async ({ page }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
     const legacy = page.getByTestId('carousel-legacy-demo');
     await expect(legacy).toBeVisible();
     // Spreading the bag was the fix, but the pre-existing wrapper shape has to
@@ -99,7 +100,7 @@ test.describe('Carousel backward compatibility and announcements', () => {
   });
 
   test('the active slide position is announced to assistive technology', async ({ page }) => {
-    await page.goto('/components/carousel');
+    await gotoHydrated(page, '/components/carousel');
     const carousel = page.getByTestId('carousel-manual-demo');
     const live = carousel.locator('[aria-live="polite"]');
     await expect(live).toHaveText('Slide 1 of 3');

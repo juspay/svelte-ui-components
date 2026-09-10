@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the `showSelectAll` multi-select feature: the synthetic "select all" row,
 // toggle-all / deselect-all, the indeterminate (dash) state + its accessible label,
 // keyboard reachability, and search-scoped selection.
 test.describe('Select — select all (multi-select)', () => {
   test('renders a select-all row that selects and deselects every option', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-all-demo');
     await expect(select).toBeVisible();
@@ -56,7 +57,7 @@ test.describe('Select — select all (multi-select)', () => {
   test('shows an indeterminate dash and accessible state when only some are selected', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-all-demo');
     await select.getByRole('combobox').click();
@@ -74,7 +75,7 @@ test.describe('Select — select all (multi-select)', () => {
   });
 
   test('keyboard navigation reaches the select-all row', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-all-demo');
     await select.getByRole('combobox').focus();
@@ -93,7 +94,7 @@ test.describe('Select — select all (multi-select)', () => {
   });
 
   test('searchable: select-all toggles only the filtered options', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-all-search-demo');
     await expect(select).toBeVisible();

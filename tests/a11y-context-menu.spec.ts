@@ -1,18 +1,19 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // WAI-ARIA APG menu pattern. ContextMenu previously never returned focus to whatever
 // opened it (see the openerElement fix alongside this spec) — every one of these tests
 // after the first exercises a real keyboard-only round trip through the menu.
 test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => {
   test('right-clicking the target opens the menu and focuses the first item', async ({ page }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     await page.getByTestId('context-menu-target').click({ button: 'right' });
     await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
   });
 
   test('ArrowDown/ArrowUp move focus between items and wrap at the ends', async ({ page }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
     await page.getByTestId('context-menu-target').click({ button: 'right' });
 
     const cut = page.getByRole('menuitem', { name: 'Cut' });
@@ -35,7 +36,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   });
 
   test('Home and End jump to the first and last item', async ({ page }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
     await page.getByTestId('context-menu-target').click({ button: 'right' });
 
     await page.keyboard.press('End');
@@ -48,7 +49,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   test('Escape closes the menu and returns focus to the element that opened it', async ({
     page
   }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     const target = page.getByTestId('context-menu-target');
     await target.focus();
@@ -62,7 +63,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   });
 
   test('Tab closes the menu instead of trapping focus inside it', async ({ page }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     await page.getByTestId('context-menu-target').click({ button: 'right' });
     await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
@@ -74,7 +75,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   test('Enter selects the focused item, closes the menu, and returns focus to the opener', async ({
     page
   }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     const target = page.getByTestId('context-menu-target');
     await target.focus();
@@ -98,7 +99,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   test('closing by clicking a focusable element outside leaves focus there, not on the opener', async ({
     page
   }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     const target = page.getByTestId('context-menu-target');
     const outside = page.getByTestId('context-menu-outside-button');
@@ -118,7 +119,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   test('right-clicking a focusable target while focus is elsewhere returns focus to the target', async ({
     page
   }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     const target = page.getByTestId('context-menu-target');
     const outside = page.getByTestId('context-menu-outside-button');
@@ -142,7 +143,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   });
 
   test('closing with Escape still returns focus to the opener', async ({ page }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     const target = page.getByTestId('context-menu-target');
     await target.focus();
@@ -164,7 +165,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
   test('the application role is scoped to while the menu is open, and the menu carries menu/menuitem roles', async ({
     page
   }) => {
-    await page.goto('/components/context-menu');
+    await gotoHydrated(page, '/components/context-menu');
 
     // role="application" makes a screen reader pass every keystroke through.
     // That is right while a menu owns the keyboard and wrong the rest of the

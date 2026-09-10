@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — committed preset persists across the open cycle', () => {
   // Regression guard: after applying a preset, re-opening the picker must
@@ -8,7 +9,7 @@ test.describe('DateRangePicker — committed preset persists across the open cyc
   test('re-opening after applying a same-day preset highlights only the applied preset', async ({
     page
   }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-same-day-presets-demo');
     await expect(picker).toBeVisible();
@@ -33,7 +34,7 @@ test.describe('DateRangePicker — committed preset persists across the open cyc
   // Before the fix the open panel date-matched and could highlight more than the
   // seeded preset; now exactly the seeded preset is active on first open.
   test('initialPresetLabel highlights only the seeded preset on first open', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-initial-preset-demo');
     await expect(picker).toBeVisible();

@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Checkbox — controlled mode and box attributes', () => {
   test('a controlled checkbox whose parent adopts the click behaves like an uncontrolled one', async ({
     page
   }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const checkbox = page.getByTestId('checkbox-controlled-adopts');
     const box = checkbox.getByRole('checkbox');
@@ -21,7 +22,7 @@ test.describe('Checkbox — controlled mode and box attributes', () => {
   });
 
   test('a controlled checkbox whose parent declines the click does not flip', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const checkbox = page.getByTestId('checkbox-controlled-declines');
     const box = checkbox.getByRole('checkbox');
@@ -44,7 +45,7 @@ test.describe('Checkbox — controlled mode and box attributes', () => {
   test('attributes land on the checkbox element and win over the component test id', async ({
     page
   }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const box = page.locator('#checkbox-attributes-demo');
     await expect(box).toHaveAttribute('role', 'checkbox');

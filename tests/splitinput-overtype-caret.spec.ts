@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The existing overtype test passed on macOS and failed on Linux CI, because it
 // relied on where Chromium happens to put the caret when you click a filled
@@ -30,7 +31,7 @@ async function typeAtCaret(
 test.describe('SplitInput — overtyping is independent of caret position', () => {
   for (const caret of [0, 1]) {
     test(`the newly typed digit wins when the caret sits at offset ${caret}`, async ({ page }) => {
-      await page.goto('/components/split-input');
+      await gotoHydrated(page, '/components/split-input');
 
       const inputs = page.getByTestId('split-input-default').locator('input');
       await inputs.nth(0).evaluate(inject, '1234');
@@ -52,7 +53,7 @@ test.describe('SplitInput — overtyping is independent of caret position', () =
   test('overtyping a digit with the same digit still clears the extra character', async ({
     page
   }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const inputs = page.getByTestId('split-input-default').locator('input');
     await inputs.nth(0).evaluate(inject, '1234');

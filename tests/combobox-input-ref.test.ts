@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Combobox — accessing the underlying input element', () => {
   // Regression guard for a docs defect: docs/Combobox.md documented a `bind:inputElement` prop
@@ -8,7 +9,7 @@ test.describe('Combobox — accessing the underlying input element', () => {
   // the component instance plus the exported `getInputRef()` method, the same pattern Input
   // itself documents. This test proves the corrected docs' example is real, not just plausible.
   test('getInputRef() returns the real DOM node, usable for focus management', async ({ page }) => {
-    await page.goto('/components/combobox');
+    await gotoHydrated(page, '/components/combobox');
 
     const combobox = page.getByTestId('combobox-input-ref-demo');
     const input = combobox.locator('input');

@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Input — leading icon colour', () => {
   test('the leading override does not recolour the trailing icon', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const leftIcon = page.getByTestId('input-independent-left-icon');
     const rightIcon = page.getByTestId('input-independent-right-icon');
@@ -17,7 +18,7 @@ test.describe('Input — leading icon colour', () => {
   test('the generic token continues to colour both icons when no leading override exists', async ({
     page
   }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     await expect(page.getByTestId('input-generic-left-icon')).toHaveCSS(
       'color',

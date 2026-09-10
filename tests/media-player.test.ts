@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('MediaPlayer', () => {
   test('image type renders through Img, no video controls', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const imagePlayer = page.getByTestId('media-player-image-demo');
     await expect(imagePlayer.locator('img')).toBeVisible();
@@ -10,7 +11,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('video type renders a video element with an accessible toggle role', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const videoPlayer = page.getByTestId('media-player-video-demo');
     const video = videoPlayer.locator('video');
@@ -20,7 +21,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('clicking the video toggles its aria-label between play and pause', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const video = page.getByTestId('media-player-video-demo').locator('video');
     await video.evaluate((el: HTMLVideoElement) => {
@@ -36,7 +37,7 @@ test.describe('MediaPlayer', () => {
   test('hovering reveals the overlay controls, which are real Button instances', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const videoPlayer = page.getByTestId('media-player-video-demo');
     await videoPlayer.hover();
@@ -47,7 +48,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('the mute control toggles aria-label between Mute and Unmute', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const videoPlayer = page.getByTestId('media-player-video-demo');
     await videoPlayer.hover();
@@ -60,7 +61,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('keyboard focus (not just mouse hover) reveals the overlay controls', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const videoPlayer = page.getByTestId('media-player-video-demo');
     const playButton = videoPlayer.locator('.center-control button');
@@ -75,7 +76,7 @@ test.describe('MediaPlayer', () => {
   test('native controls mode omits the custom button role/tabindex from the video', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const video = page.getByTestId('media-player-native-controls-demo').locator('video');
     await expect(video).toBeVisible();
@@ -87,7 +88,7 @@ test.describe('MediaPlayer', () => {
   test('playing bindable, pause direction: an external host setting it false actually pauses', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const video = page.getByTestId('media-player-external-pause-demo').locator('video');
     const button = page.getByTestId('external-pause-toggle');
@@ -104,7 +105,7 @@ test.describe('MediaPlayer', () => {
   test('playing bindable, play direction: an external host setting it true actually plays', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const video = page.getByTestId('media-player-external-play-demo').locator('video');
     const button = page.getByTestId('external-play-toggle');
@@ -117,7 +118,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('no captionsSrc renders no track element at all', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const video = page.getByTestId('media-player-video-demo').locator('video');
     await expect(video.locator('track')).toHaveCount(0);
@@ -128,7 +129,7 @@ test.describe('MediaPlayer', () => {
   test('the three transport controls are opt-in: a default player renders none of them', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const plain = page.getByTestId('media-player-video-demo');
     await plain.hover();
@@ -143,7 +144,7 @@ test.describe('MediaPlayer', () => {
   test('a transport player renders the seek bar, the time and the fullscreen button', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     await player.hover();
@@ -158,7 +159,7 @@ test.describe('MediaPlayer', () => {
   test('duration binds out once metadata loads, and the time display reads m:ss', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     const video = player.locator('video');
@@ -177,7 +178,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('seeking moves the media and reports the position through onseek', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     const video = player.locator('video');
@@ -209,7 +210,7 @@ test.describe('MediaPlayer', () => {
   test('currentTime bindable, inward direction: an external host write actually seeks', async ({
     page
   }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     const video = player.locator('video');
@@ -229,7 +230,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('an external write is not echoed back as a deliberate seek', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     await expect(page.getByTestId('transport-readout')).not.toContainText('duration=0.0');
@@ -247,7 +248,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('the seek bar carries an accessible name', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     await player.hover();
@@ -259,7 +260,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('the transport controls are reachable by keyboard, not hover only', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     const seek = player.getByTestId('media-player-transport-demo-seek').locator('input');
@@ -289,7 +290,7 @@ test.describe('MediaPlayer', () => {
         return Promise.resolve();
       };
     });
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const player = page.getByTestId('media-player-transport-demo');
     await player.hover();
@@ -305,7 +306,7 @@ test.describe('MediaPlayer', () => {
   });
 
   test('a supplied captionsSrc renders a real track element', async ({ page }) => {
-    await page.goto('/components/media-player');
+    await gotoHydrated(page, '/components/media-player');
 
     const track = page.getByTestId('media-player-captions-demo').locator('track');
     await expect(track).toHaveAttribute('kind', 'captions');

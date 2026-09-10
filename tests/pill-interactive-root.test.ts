@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // #469: Pill's root is a non-interactive <div>, with a synthetic
 // role="button"/tabindex/keydown shim bolted on when `onclick` is supplied. Anything
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // deliberate deviation). `as="button"` renders a real <button type="button"> instead.
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/components/pill');
+  await gotoHydrated(page, '/components/pill');
 });
 
 test('as="button" renders a real button element, not a div with role=button', async ({ page }) => {

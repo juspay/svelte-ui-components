@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Accordion — the trigger is linked to the panel it controls', () => {
   // The trigger and the collapsible panel are siblings, not ancestor/descendant, so
@@ -9,7 +10,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   test('aria-controls points at the panel element, which really carries that id', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const panel = page.getByTestId('accordion-linked');
     const trigger = page.locator('.accordion-trigger').first();
@@ -22,7 +23,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   });
 
   test('aria-expanded tracks the real open state on the linked panel', async ({ page }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const trigger = page.locator('.accordion-trigger').first();
     const panel = page.getByTestId('accordion-linked');
@@ -39,7 +40,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   test('each instance generates its own panel id, so two accordions never collide', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const triggers = page.locator('.accordion-trigger');
     const first = await triggers.nth(0).getAttribute('aria-controls');
@@ -53,7 +54,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   test('the panel is a region named by its trigger, so the link runs both ways', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const trigger = page.locator('.accordion-trigger').first();
     const panel = page.getByTestId('accordion-linked');
@@ -69,7 +70,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   test('an explicit panelId is used verbatim for both the panel and the reference', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const panel = page.getByTestId('accordion-custom-panel');
     await expect(panel).toHaveAttribute('id', 'returns-policy-panel');
@@ -81,7 +82,7 @@ test.describe('Accordion — the trigger is linked to the panel it controls', ()
   test('the trigger id is stable: assigning panelId later moves the panel id, not the trigger', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const panel = page.getByTestId('accordion-late-id');
     const trigger = page.locator('.accordion-trigger', {

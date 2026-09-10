@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Menu — usePortal escapes clipping containers', () => {
   // The demo wraps two Menus in 90px-tall overflow:hidden boxes. The default
@@ -7,7 +8,7 @@ test.describe('Menu — usePortal escapes clipping containers', () => {
   test('portals the dropdown to <body> so an overflow:hidden ancestor cannot clip it', async ({
     page
   }) => {
-    await page.goto('/components/menu');
+    await gotoHydrated(page, '/components/menu');
 
     const portalMenu = page.locator('[data-pw="menu-portal-demo"]');
     await expect(portalMenu).toBeVisible();
@@ -35,7 +36,7 @@ test.describe('Menu — usePortal escapes clipping containers', () => {
   });
 
   test('the default (in-flow) dropdown stays inside the .menu-container', async ({ page }) => {
-    await page.goto('/components/menu');
+    await gotoHydrated(page, '/components/menu');
 
     const inflowMenu = page.locator('[data-pw="menu-inflow-demo"]');
     await inflowMenu.locator('.menu-trigger').click();

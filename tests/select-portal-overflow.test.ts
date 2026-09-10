@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Select — usePortal escapes clipping containers', () => {
   // The demo wraps two Selects in 90px-tall overflow:hidden boxes. The default
@@ -7,7 +8,7 @@ test.describe('Select — usePortal escapes clipping containers', () => {
   test('portals the dropdown to <body> so an overflow:hidden ancestor cannot clip it', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const portalSelect = page.locator('[data-pw="select-portal-demo"]');
     await expect(portalSelect).toBeVisible();
@@ -35,7 +36,7 @@ test.describe('Select — usePortal escapes clipping containers', () => {
   });
 
   test('the default (in-flow) dropdown stays inside the .select container', async ({ page }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const inflowSelect = page.locator('[data-pw="select-inflow-demo"]');
     await inflowSelect.getByRole('combobox').click();

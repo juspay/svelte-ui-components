@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table — built-in pagination + row numbers', () => {
   test('client mode slices rows, shows the range, and pages forward', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(5);
     await expect(table.getByTestId('table-paginated-paginator-range')).toContainText('1-5 of 23');
@@ -18,7 +19,7 @@ test.describe('Table — built-in pagination + row numbers', () => {
   });
 
   test('row numbers are pagination-aware', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     await expect(
       table.getByRole('rowgroup').last().getByRole('row').first().getByRole('cell').first()
@@ -33,7 +34,7 @@ test.describe('Table — built-in pagination + row numbers', () => {
   test('handlers receive GLOBAL row indices under client pagination, not page-local', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     // Page 1: first row is global index 0.
     await expect(table.getByTestId('paged-idx-0')).toHaveCount(1);
@@ -44,7 +45,7 @@ test.describe('Table — built-in pagination + row numbers', () => {
   });
 
   test('page-size change re-slices and snaps back to page 1', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     await table.getByTestId('paged-pages').getByRole('button', { name: 'Page 2' }).click();
     await expect(table.getByTestId('table-paginated-paginator-range')).toContainText('6-10 of 23');
@@ -60,7 +61,7 @@ test.describe('Table — built-in pagination + row numbers', () => {
   });
 
   test('search filters across all pages and snaps back to page 1', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     await table.getByTestId('paged-pages').getByRole('button', { name: 'Page 2' }).click();
     // The search bar renders above the table wrapper, outside the testId element.
@@ -81,7 +82,7 @@ test.describe('Table — pagination footer on a single page (showFooterOnSingleP
   test('showFooterOnSinglePage keeps the footer (incl. page-size selector) visible', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-single-page-pagination');
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(3);
     const footer = table.getByTestId('single-page-paged');
@@ -97,7 +98,7 @@ test.describe('Table — count-only pagination footer (pagination.hideControls)'
   test('hideControls renders the range text with no page-size selector or steppers', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-count-only-pagination');
     const footer = table.getByTestId('count-only-paged');
     await expect(footer).toBeVisible();
@@ -114,7 +115,7 @@ test.describe('Table — server-mode pagination', () => {
   test('server mode renders consumer rows untouched with chrome from page/totalItems', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-server-paginated');
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(5);
     await expect(table.getByRole('rowgroup').last().getByRole('row').first()).toContainText(
@@ -130,7 +131,7 @@ test.describe('Table — server-mode pagination', () => {
   test('page change reports to the consumer, which swaps the rows (incl. short last page)', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-server-paginated');
     await table.getByTestId('srv-paged-pages').getByRole('button', { name: 'Page 3' }).click();
     await expect(table.getByRole('rowgroup').last().getByRole('row')).toHaveCount(2);
@@ -143,7 +144,7 @@ test.describe('Table — server-mode pagination', () => {
   });
 
   test('getRowTestId emits row-level data-pw for keyed rows', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-server-paginated');
     await expect(table.getByTestId('srv-row-Record 01')).toHaveCount(1);
   });
@@ -153,7 +154,7 @@ test.describe('Table — page-scoped select-all under client pagination', () => 
   test('header select-all selects ONLY the current page (skipping disabled rows); second click clears it', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paged-select');
     const log = page.getByTestId('paged-select-log');
 
@@ -176,7 +177,7 @@ test.describe('Table — page-scoped select-all under client pagination', () => 
   });
 
   test('header toggle on page 2 leaves page-1 selections intact', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paged-select');
     const log = page.getByTestId('paged-select-log');
 
@@ -196,7 +197,7 @@ test.describe('Table — page-scoped select-all under client pagination', () => 
   test('row checkboxes expose DataGrid-parity aria-labels; header keeps its own label', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paged-select');
     await expect(table.getByRole('checkbox', { name: 'Select row Member 1' })).toHaveCount(1);
     await expect(
@@ -215,7 +216,7 @@ test.describe('Table — controlled selection + toolbar', () => {
   test('controlled selection renders from the consumer set and reports next sets', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-controlled-selection');
     await expect(page.getByTestId('bulk-count')).toHaveCount(0);
 
@@ -228,7 +229,7 @@ test.describe('Table — controlled selection + toolbar', () => {
   });
 
   test('toolbar action consumes the selection and clearing hides the toolbar', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-controlled-selection');
     await table.getByTestId('table-controlled-selection-row-checkbox-Bob').click();
     await table.getByTestId('table-controlled-selection-row-checkbox-Carol').click();
@@ -243,7 +244,7 @@ test.describe('Table — controlled selection + toolbar', () => {
   test('getRowAttributes spreads onto the row checkboxes (header gets -1 sentinel)', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-controlled-selection');
     await expect(
       table.getByTestId('table-controlled-selection-row-checkbox-Alice')

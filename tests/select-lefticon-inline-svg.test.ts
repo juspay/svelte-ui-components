@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Select — leftIcon inlines SVG so currentColor themes it', () => {
   // An <img> renders its source as an isolated document: currentColor inside it
@@ -12,7 +13,7 @@ test.describe('Select — leftIcon inlines SVG so currentColor themes it', () =>
   test('renders the leading icon as an inline <svg> that inherits the trigger colour', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const icon = page.getByTestId('select-left-icon');
     await expect(icon).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 const expectBareDismiss = async (
   dismiss: import('@playwright/test').Locator,
@@ -12,7 +13,7 @@ const expectBareDismiss = async (
 
 test.describe('Pill dismiss glyph colour', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
     await page.mouse.move(0, 0);
   });
 
@@ -106,7 +107,7 @@ test.describe('Pill dismiss glyph colour', () => {
 test('interactive Pill does not intercept keyboard activation of its dismiss button', async ({
   page
 }) => {
-  await page.goto('/components/pill');
+  await gotoHydrated(page, '/components/pill');
   const dismiss = page.getByTestId('pill-interactive-dismiss');
   await dismiss.press('Space');
   await expect(page.getByTestId('pill-dismiss-count')).toHaveText('1');
@@ -121,7 +122,7 @@ test('interactive Pill does not intercept keyboard activation of its dismiss but
 test('sui-pill supplies a visible default dismiss glyph and honours a slotted glyph', async ({
   page
 }) => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => Boolean(customElements.get('sui-pill')));
   await page.evaluate(() => {

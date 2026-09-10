@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Waits for an element's box to stop changing, rather than for a fixed
 // duration. A `transitionend` listener is the obvious alternative but races:
@@ -53,7 +54,7 @@ test.describe('Accordion inside a grid container (#550)', () => {
   test('the expanded panel sizes from its own content, not from whatever height the grid parent happens to have', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const panel = page.getByTestId('accordion-grid-nested');
     const toggle = page.getByTestId('accordion-grid-toggle');
@@ -104,7 +105,7 @@ test.describe('Accordion inside a grid container (#550)', () => {
   test('the grid parent itself is unaffected — its own box stays the same collapsed or expanded', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const parent = page.getByTestId('accordion-grid-parent');
     const toggle = page.getByTestId('accordion-grid-toggle');

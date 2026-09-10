@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `typewriter` renders the message through TypewriterText instead of painting it at once.
 // The risk in wiring two components together is that the reveal silently stops being a
@@ -8,7 +9,7 @@ test.describe('ChatMessage — typewriter', () => {
   test('reveals a streamed message progressively and completes when streaming stops', async ({
     page
   }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     // Deliberately the slow demo (200ms/char), not the human-paced one. At the demo's
     // own 30ms a 51-character reveal closes in ~1.5s, which a stalled runner can step
@@ -37,7 +38,7 @@ test.describe('ChatMessage — typewriter', () => {
   });
 
   test('types markdown through the markdown pipeline, not as raw syntax', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     await page.locator('[data-pw="typewriter-start"]').click();
     await page.locator('[data-pw="typewriter-finish"]').click();
 
@@ -48,7 +49,7 @@ test.describe('ChatMessage — typewriter', () => {
   });
 
   test('the revealing body is silenced for the surrounding live region', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     // The demo starts with no text, so nothing renders until a stream begins.
     await page.locator('[data-pw="typewriter-start"]').click();
 
@@ -94,7 +95,7 @@ test.describe('ChatMessage — typewriter', () => {
     // The markdown renderer loads asynchronously, so a message whose markdown is already
     // set when the component mounts races it. What must hold is that the settled message
     // is rendered markdown, never the source string.
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const body = page.locator('[data-pw="typewriter-at-load"] .body');
     await expect(body.locator('strong')).toHaveText('bold');
@@ -102,13 +103,13 @@ test.describe('ChatMessage — typewriter', () => {
   });
 
   test('a non-streaming typewriter message is shown in full', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     const body = page.locator('[data-pw="typewriter-static"] .body');
     await expect(body).toHaveText('A message that is not streaming shows in full immediately.');
   });
 
   test('without the prop the message is painted at once, with no typewriter', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     const plain = page.locator('[data-pw="chat-message-settled-bubble"]');
     await expect(plain.locator('.typewriter-text')).toHaveCount(0);
   });
@@ -119,7 +120,7 @@ test.describe('ChatMessage — typewriter', () => {
 // just all at once, which looks correct in a screenshot and is only visible over time.
 test.describe('ChatMessageList — forwards the per-message typewriter', () => {
   test('reveals only the message that carries the flag', async ({ page }) => {
-    await page.goto('/components/chat-message-list');
+    await gotoHydrated(page, '/components/chat-message-list');
 
     const list = page.locator('[data-pw="reveal-list"]');
     const responder = list.locator('.chat-message').nth(1).locator('.body');

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Input / InputButton — error text and helper text are no longer the same color', () => {
   // Regression guard for both defects filed in #481: .info-message defaulted to the exact
@@ -9,7 +10,7 @@ test.describe('Input / InputButton — error text and helper text are no longer 
   test('Input: error and helper text render in different, AA-compliant colors', async ({
     page
   }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const errorMessage = page.getByTestId('input-announced-error-error-message');
     const infoMessage = page.getByTestId('input-announced-error-info-message');
@@ -35,7 +36,7 @@ test.describe('Input / InputButton — error text and helper text are no longer 
   test("InputButton: external error and helper text share Input's color tokens, not the same value", async ({
     page
   }) => {
-    await page.goto('/components/input-button');
+    await gotoHydrated(page, '/components/input-button');
 
     const demo = page.getByTestId('input-button-messages-demo');
     const externalError = demo.locator('.external-error-message');

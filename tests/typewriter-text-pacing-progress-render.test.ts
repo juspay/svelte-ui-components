@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers three additive TypewriterText capabilities — none change behaviour
 // for a consumer that doesn't opt in:
@@ -36,7 +37,7 @@ test.describe('TypewriterText — variable pacing, progress, per-character rende
       };
       requestAnimationFrame(attach);
     });
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const baselineText = 'Baseline pacing check text stays fast.';
     const host = page.getByTestId('typewriter-default-pacing');
@@ -103,7 +104,7 @@ test.describe('TypewriterText — variable pacing, progress, per-character rende
       };
       requestAnimationFrame(attach);
     });
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     // "Total: 4 items, $9!" — 2 digits (200ms fixed), 3 spaces (10ms fixed),
     // 2 punctuation (120ms fixed), 12 default chars incl. ':' and '$' (5ms
@@ -140,7 +141,7 @@ test.describe('TypewriterText — variable pacing, progress, per-character rende
   test('onProgress is called once per revealed character and reaches the total', async ({
     page
   }) => {
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const progressText =
       'Progress reporting keeps a scroll container pinned to the newest character.';
@@ -162,7 +163,7 @@ test.describe('TypewriterText — variable pacing, progress, per-character rende
   });
 
   test('renderCharacter decorates exactly the characters the snippet targets', async ({ page }) => {
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     const host = page.getByTestId('typewriter-render-character');
     await expect(host).toBeVisible();
@@ -186,7 +187,7 @@ test.describe('TypewriterText — variable pacing, progress, per-character rende
     const consoleErrors: string[] = [];
     page.on('pageerror', (error) => consoleErrors.push(error.message));
 
-    await page.goto('/components/typewriter-text');
+    await gotoHydrated(page, '/components/typewriter-text');
 
     // These demos never pass onProgress/renderCharacter/variableDelay.
     await expect(page.getByTestId('typewriter-default-pacing')).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Only .fit-content used to carry a max-height, so a size class whose height
 // var was overridden to fit-content (the common app-level sizing) grew past
@@ -12,7 +13,7 @@ test.describe('Modal viewport containment', () => {
   test('a tall fit-content modal stays inside a short viewport with its footer visible', async ({
     page
   }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
 
     await page.getByText('Open tall modal (viewport containment)').click();
     const modal = page.getByTestId('tall-modal');
@@ -45,7 +46,7 @@ test.describe('Modal viewport containment', () => {
   });
 
   test('default medium modal keeps its 50vh height (defaults unchanged)', async ({ page }) => {
-    await page.goto('/components/modal');
+    await gotoHydrated(page, '/components/modal');
 
     await page.getByText('Open Modal', { exact: true }).click();
     const content = page.locator('.modal-content.medium');

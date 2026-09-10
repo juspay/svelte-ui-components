@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The crowded demo (24 sources, long labels, sliver slices) is the shape that
 // used to render every label unconditionally at its mid-angle — stacked
@@ -9,7 +10,7 @@ test.describe('PieChart label engine', () => {
   test('crowded pie renders zero overlapping labels, all inside the chart box', async ({
     page
   }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
 
     const chart = page.getByTestId('pie-crowded-chart');
     await expect(chart.locator('.slice').first()).toBeVisible();
@@ -48,7 +49,7 @@ test.describe('PieChart label engine', () => {
   });
 
   test('all-zero data renders the empty state with no NaN geometry', async ({ page }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
 
     const chart = page.getByTestId('pie-all-zero');
     await expect(chart.locator('.chart-empty')).toBeVisible();
@@ -60,7 +61,7 @@ test.describe('PieChart label engine', () => {
   });
 
   test('sparse pie keeps every label (defaults unchanged)', async ({ page }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
 
     // The 5-slice expenses demo has ample room — the engine must not drop or
     // truncate anything there.

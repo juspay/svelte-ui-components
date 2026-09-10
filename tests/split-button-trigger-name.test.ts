@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // SplitButton's second control renders a chevron and nothing else, inside Menu's
 // inert-trigger branch. That branch is the right one here — the snippet holds no real
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // a weak name, none, since there is no text to fall back on either.
 test.describe('SplitButton — the dropdown trigger has a name', () => {
   test('it defaults to a name derived from the primary text', async ({ page }) => {
-    await page.goto('/components/split-button');
+    await gotoHydrated(page, '/components/split-button');
 
     const trigger = page.locator('[data-pw="split-button-default"] .menu-trigger');
     await expect(trigger).toHaveAttribute('role', 'button');
@@ -15,14 +16,14 @@ test.describe('SplitButton — the dropdown trigger has a name', () => {
   });
 
   test('triggerAriaLabel overrides the default', async ({ page }) => {
-    await page.goto('/components/split-button');
+    await gotoHydrated(page, '/components/split-button');
 
     const trigger = page.locator('[data-pw="split-button-named"] .menu-trigger');
     await expect(trigger).toHaveAccessibleName('Choose an export format');
   });
 
   test('the primary button keeps its own name, distinct from the trigger', async ({ page }) => {
-    await page.goto('/components/split-button');
+    await gotoHydrated(page, '/components/split-button');
 
     // The two controls sit side by side and must not announce identically, which is the
     // reason the default derives from the text rather than being a bare "More options".
@@ -32,7 +33,7 @@ test.describe('SplitButton — the dropdown trigger has a name', () => {
   });
 
   test('naming the trigger does not stop it opening the menu', async ({ page }) => {
-    await page.goto('/components/split-button');
+    await gotoHydrated(page, '/components/split-button');
 
     const trigger = page.locator('[data-pw="split-button-named"] .menu-trigger');
     await trigger.click();

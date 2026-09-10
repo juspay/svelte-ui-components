@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('ChatComposer — async onsubmit and independent per-control disable', () => {
   // #526: an onsubmit resolving to `false` must leave the draft (value +
@@ -9,7 +10,7 @@ test.describe('ChatComposer — async onsubmit and independent per-control disab
   test('a failed async send keeps the typed draft; a successful one clears it', async ({
     page
   }) => {
-    await page.goto('/components/chat-composer');
+    await gotoHydrated(page, '/components/chat-composer');
 
     const input = page.getByTestId('async-submit-input');
     const send = page.getByTestId('async-submit-send');
@@ -43,7 +44,7 @@ test.describe('ChatComposer — async onsubmit and independent per-control disab
   test('a rejected async send keeps the typed draft, same as a resolved false', async ({
     page
   }) => {
-    await page.goto('/components/chat-composer');
+    await gotoHydrated(page, '/components/chat-composer');
 
     const input = page.getByTestId('async-submit-input');
     const send = page.getByTestId('async-submit-send');
@@ -63,7 +64,7 @@ test.describe('ChatComposer — async onsubmit and independent per-control disab
   // other control stay interactive. Proven here by typing into the input
   // while a send is in flight (sendDisabled is bound to the pending flag).
   test('sendDisabled bound to a pending flag blocks only the send button', async ({ page }) => {
-    await page.goto('/components/chat-composer');
+    await gotoHydrated(page, '/components/chat-composer');
 
     const input = page.getByTestId('async-submit-input');
     const send = page.getByTestId('async-submit-send');
@@ -81,7 +82,7 @@ test.describe('ChatComposer — async onsubmit and independent per-control disab
   // with the other control (and the shared `disabled` prop, left `false`
   // throughout this demo) left untouched.
   test('textDisabled and voiceDisabled each gate only their own control', async ({ page }) => {
-    await page.goto('/components/chat-composer');
+    await gotoHydrated(page, '/components/chat-composer');
 
     const input = page.getByTestId('per-control-disable-input');
     const voice = page.getByTestId('per-control-disable-voice');

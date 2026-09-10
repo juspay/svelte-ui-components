@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Img's inlineSvg path fetches remote markup and copies the fetched root's
 // attributes onto the live <svg> host — an element in the host document. The
@@ -35,7 +36,7 @@ test.describe('Img — inlineSvg copies only safe root attributes from fetched m
       ' id="evil-root" style="outline: 6px solid red" data-pw="hijacked" tabindex="0">' +
       '<circle cx="12" cy="12" r="8" fill="currentColor" /></svg>';
     await serveSvg(page, INLINE_DEMO_URL, hostile);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     // Located through the wrapper row, not data-pw on the host itself — a
     // successful data-pw clobber must fail an assertion, not hide the element.
@@ -76,7 +77,7 @@ test.describe('Img — inlineSvg copies only safe root attributes from fetched m
       ' role="img" aria-label="Fetched success" focusable="false">' +
       '<path d="M15 24.5l6.5 6.5L33 19.5" /></svg>';
     await serveSvg(page, INLINE_DEMO_URL, benign);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     const host = page.getByTestId('img-inline-svg-row').locator('svg');
 
@@ -103,7 +104,7 @@ test.describe('Img — inlineSvg copies only safe root attributes from fetched m
       " onload=\"document.documentElement.setAttribute('data-svg-transform-onload-ran', '1')\">" +
       '<rect width="64" height="64" fill="currentColor" /></svg>';
     await serveSvg(page, TRANSFORM_DEMO_URL, hostile);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     const host = page.getByTestId('img-inline-svg-transform-row').locator('svg');
 
@@ -137,7 +138,7 @@ test.describe('Img — inlineSvg strips executable content from fetched descenda
       '<script>document.documentElement.setAttribute("data-child-script-ran", "1")</script>' +
       '</svg>';
     await serveSvg(page, INLINE_DEMO_URL, hostile);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     const host = page.getByTestId('img-inline-svg-row').locator('svg');
     // Anchor: the intercepted payload really was inlined.
@@ -165,7 +166,7 @@ test.describe('Img — inlineSvg strips executable content from fetched descenda
       '<path d="M4 12l6 6 10-14" stroke="currentColor" stroke-width="2" fill="none" transform="translate(1,1)" />' +
       '</svg>';
     await serveSvg(page, INLINE_DEMO_URL, legitimate);
-    await page.goto('/components/img');
+    await gotoHydrated(page, '/components/img');
 
     const path = page.getByTestId('img-inline-svg-row').locator('svg path');
     await expect(path).toHaveAttribute('d', 'M4 12l6 6 10-14');

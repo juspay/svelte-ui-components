@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The crowded-funnel demo reproduces the two historical label failures:
 // uppercase-heavy middle-column labels sliding under the next column's bars
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // node bar — dropped labels stay reachable via the node's hover <title>.
 test.describe('SankeyChart label engine', () => {
   test('crowded funnel renders zero label/label and label/node overlaps', async ({ page }) => {
-    await page.goto('/components/sankey-chart');
+    await gotoHydrated(page, '/components/sankey-chart');
 
     const chart = page.getByTestId('sankey-crowded-chart');
     await expect(chart.locator('.sankey-node').first()).toBeVisible();
@@ -56,7 +57,7 @@ test.describe('SankeyChart label engine', () => {
   });
 
   test('labels stay inside the chart box on both edges', async ({ page }) => {
-    await page.goto('/components/sankey-chart');
+    await gotoHydrated(page, '/components/sankey-chart');
 
     const chart = page.getByTestId('sankey-crowded-chart');
     await expect(chart.locator('.sankey-label').first()).toBeVisible();
@@ -79,7 +80,7 @@ test.describe('SankeyChart label engine', () => {
   // the sink gutter, must now give them full room. A clipped label still fits
   // inside the chart box, so the edge test above cannot catch this.
   test('first-column source labels render their full text (not clipped)', async ({ page }) => {
-    await page.goto('/components/sankey-chart');
+    await gotoHydrated(page, '/components/sankey-chart');
 
     const chart = page.getByTestId('sankey-crowded-chart');
     await expect(chart.locator('.sankey-label').first()).toBeVisible();

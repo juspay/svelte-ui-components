@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('interactive legend', () => {
   test('clicking a legend item hides that series and rescales', async ({ page }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-legend-toggle-chart');
     await expect(chart.getByTestId(/^bar-\d+$/)).toHaveCount(12); // 3 series × 4 categories
     const firstToggle = chart.getByTestId('legend-toggle-0');
@@ -16,7 +17,7 @@ test.describe('interactive legend', () => {
 
 test.describe('bar value labels', () => {
   test('bars at the axis max flip their label inside', async ({ page }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-inside-flip-chart');
     // Bars at the axis max flip their label inside
     await expect
@@ -43,7 +44,7 @@ test.describe('bar value labels', () => {
 
 test.describe('tooltip clamping', () => {
   test('anchored tooltip never overflows the chart box', async ({ page }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-inside-flip-chart');
     await chart
       .getByTestId(/^bar-\d+$/)
@@ -63,7 +64,7 @@ test.describe('tooltip clamping', () => {
 test.describe('axis crowding', () => {
   test('crowded category labels rotate and thin instead of overlapping', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 720 });
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     // The docs layout has no mobile breakpoint: wide <pre> blocks pin the
     // content column near 800px, so the chart never actually narrows. Collapse
     // the chrome (same override as the visual mobile project) so the chart
@@ -91,7 +92,7 @@ test.describe('bar value label override', () => {
   test('a data point with valueLabel renders that exact text; others keep the default valueFormat', async ({
     page
   }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-value-label-chart');
     // valueLabel is set: rendered verbatim instead of the formatted value.
     await expect(chart.getByTestId('bar-value-0')).toHaveText('5,000 visits');
@@ -101,7 +102,7 @@ test.describe('bar value label override', () => {
   });
 
   test('an empty valueLabel is treated as absent, not as a blank label', async ({ page }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-value-label-chart');
     // Pins the non-empty-only contract: `valueLabel: ''` falls back to the
     // formatter rather than rendering an empty value label. If that contract is
@@ -112,7 +113,7 @@ test.describe('bar value label override', () => {
 
 test.describe('line hover', () => {
   test('hover shows a halo and a shared tooltip listing all series', async ({ page }) => {
-    await page.goto('/components/line-chart');
+    await gotoHydrated(page, '/components/line-chart');
     const chart = page.getByTestId('line-shared-tooltip-chart');
     await chart.getByTestId('hover-overlay').hover({ position: { x: 200, y: 100 } });
     await expect(chart.getByTestId(/^dot-halo-\d+$/)).toHaveCount(3);
@@ -124,7 +125,7 @@ test.describe('line hover', () => {
 
 test.describe('keyboard', () => {
   test('Enter on a focused category fires onbarclick', async ({ page }) => {
-    await page.goto('/components/dual-axis-bar-chart');
+    await gotoHydrated(page, '/components/dual-axis-bar-chart');
     const chart = page.getByTestId('demo-custom-tooltip');
     const target = chart.getByTestId('hover-target-0');
     await target.focus();
@@ -139,7 +140,7 @@ test.describe('touch', () => {
   test.use({ hasTouch: true });
 
   test('tapping a funnel stage shows the tooltip; tapping outside dismisses', async ({ page }) => {
-    await page.goto('/components/funnel-chart');
+    await gotoHydrated(page, '/components/funnel-chart');
     const chart = page.getByTestId('funnel-many-stages-chart');
     await chart.getByTestId('funnel-bar-0').tap();
     await expect(chart.getByTestId('chart-tooltip')).toBeVisible();
@@ -148,7 +149,7 @@ test.describe('touch', () => {
   });
 
   test('keyboard focus on a bar shows its tooltip', async ({ page }) => {
-    await page.goto('/components/bar-chart');
+    await gotoHydrated(page, '/components/bar-chart');
     const chart = page.getByTestId('bar-inside-flip-chart');
     await chart
       .getByTestId(/^bar-\d+$/)

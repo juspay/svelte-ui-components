@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers Card's `titleSnippet` / `descriptionSnippet`. The reason they exist:
 // `title` and `description` are plain strings, so a consumer whose heading
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // containers, so the header keeps its normal typography.
 test.describe('Card title/description snippets', () => {
   test('titleSnippet renders the header even when no title string is passed', async ({ page }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('card-snippet-header');
     await expect(card).toBeVisible();
@@ -21,7 +22,7 @@ test.describe('Card title/description snippets', () => {
   test('snippet content renders inside the card-title / card-description containers', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     const card = page.getByTestId('card-snippet-header');
 
@@ -40,7 +41,7 @@ test.describe('Card title/description snippets', () => {
   test('string title/description still render unchanged when no snippet is given', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
 
     // Regression guard for every existing consumer: the string path is untouched.
     const stringCard = page.locator('.card', { hasText: 'Order Summary' }).first();

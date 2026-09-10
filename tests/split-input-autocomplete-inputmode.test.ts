@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('SplitInput — autoComplete / inputMode field passthrough', () => {
   // OTP consumers need `autocomplete="one-time-code"` (WebOTP / SMS autofill
@@ -6,7 +7,7 @@ test.describe('SplitInput — autoComplete / inputMode field passthrough', () =>
   // FieldConfig previously had no way to express either, forcing hand-rolled
   // segmented inputs for exactly the use case SplitInput exists for.
   test('per-field autoComplete and inputMode render on the native inputs', async ({ page }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     const group = page.getByTestId('split-input-sms-otp');
     await expect(group).toBeVisible();
@@ -22,7 +23,7 @@ test.describe('SplitInput — autoComplete / inputMode field passthrough', () =>
   });
 
   test('fields without the new config keep the previous defaults', async ({ page }) => {
-    await page.goto('/components/split-input');
+    await gotoHydrated(page, '/components/split-input');
 
     // The plain OTP demo (length-based default fields) is unchanged: default
     // autocomplete stays 'on' and no inputmode attribute is rendered.

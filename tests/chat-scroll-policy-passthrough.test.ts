@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Chat scroll policy passthrough', () => {
   test('forwards scroll policy, pin hold, jump controls, and scroll state to its message list', async ({
     page
   }) => {
-    await page.goto('/components/chat');
+    await gotoHydrated(page, '/components/chat');
 
     const pinChat = page.getByTestId('chat-scroll-policy-pin');
     const pinList = pinChat.locator('.chat-message-list');

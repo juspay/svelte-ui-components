@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression coverage for documentation fixes in this batch: props/CSS vars that existed
 // in code but were undocumented are only worth documenting if they're real -- these tests
@@ -9,7 +10,7 @@ test.describe('Accordion — disabled trigger (previously undocumented)', () => 
   test('a disabled trigger cannot be toggled by click, leaves the tab order, and is marked aria-disabled', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const content = page.getByTestId('accordion-disabled');
     // The page has several built-in triggers; pick the one wrapping this demo's label rather

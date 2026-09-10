@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the three Sheet gaps: anchor-position tokens (turning an edge-to-edge
 // slide-in into a floating anchored panel), an invisible-but-dismissible overlay
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // while the other is still open).
 test.describe('Sheet anchor position tokens', () => {
   test('an unconfigured sheet stays edge-to-edge (defaults unchanged)', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
     const panel = page.getByTestId('sheet-right-panel');
@@ -27,7 +28,7 @@ test.describe('Sheet anchor position tokens', () => {
   });
 
   test('anchor tokens turn the panel into a floating, content-sized box', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open account menu').click();
     const panel = page.getByTestId('sheet-anchored-panel');
@@ -56,7 +57,7 @@ test.describe('Sheet anchor position tokens', () => {
 
 test.describe('Sheet dismissOnOutsideClick', () => {
   test('an invisible overlay is still click-dismissible when requested', async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open account menu').click();
     const overlay = page.getByTestId('sheet-anchored');
@@ -76,7 +77,7 @@ test.describe('Sheet dismissOnOutsideClick', () => {
   test('a visible, non-dismissible overlay blocks the page but does not close on click', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open blocking sheet').click();
     const overlay = page.getByTestId('sheet-blocking');
@@ -106,7 +107,7 @@ test.describe('Sheet reference-counted scroll lock', () => {
   test('closing one of two open sheets keeps the page scroll-locked for the other', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByText('Open right', { exact: true }).click();
     await expect(page.getByTestId('sheet-right-panel')).toBeVisible();

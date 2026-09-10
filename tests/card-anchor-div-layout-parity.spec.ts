@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The anchor-rendering PR swaps Card's root between <div> and <a> via
 // svelte:element, but .card had no explicit `display`, so its layout
@@ -17,7 +18,7 @@ test.describe('Card anchor/div layout parity', () => {
   test('an anchor-rendered card has the same bounding box as an identical div-rendered card', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
     const divBox = await page.getByTestId('parity-div-card').boundingBox();
     const anchorBox = await page.getByTestId('parity-anchor-card').boundingBox();
 
@@ -30,7 +31,7 @@ test.describe('Card anchor/div layout parity', () => {
   test('the anchor-rendered card computes display:block, not the browser default inline', async ({
     page
   }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
     const display = await page
       .getByTestId('parity-anchor-card')
       .evaluate((el) => getComputedStyle(el).display);
@@ -38,7 +39,7 @@ test.describe('Card anchor/div layout parity', () => {
   });
 
   test('the anchor-rendered card has no underline (text-decoration reset)', async ({ page }) => {
-    await page.goto('/components/card');
+    await gotoHydrated(page, '/components/card');
     const textDecorationLine = await page
       .getByTestId('parity-anchor-card')
       .evaluate((el) => getComputedStyle(el).textDecorationLine);

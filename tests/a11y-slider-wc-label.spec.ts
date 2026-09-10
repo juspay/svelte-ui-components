@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `sui-slider` renders the native range input inside an open shadow root, and
 // ARIA IDREF attributes do not cross a shadow boundary: an `aria-labelledby` on
@@ -13,7 +14,7 @@ import { expect, test } from '@playwright/test';
 // text. These tests pin both halves: the resolved name, and the fact that a
 // plain `aria-label` still wins where both are absent.
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-slider') !== 'undefined', null, {
     timeout: 15_000

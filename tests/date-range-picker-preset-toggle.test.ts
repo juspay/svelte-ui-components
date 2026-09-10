@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('DateRangePicker — preset toggle-off', () => {
   // With presetToggle, re-clicking the currently-active preset deselects it and
   // reverts the highlight to the committed selection (seeded via initialPresetLabel),
   // so a toggle-style preset can be switched back off without picking a calendar date.
   test('re-clicking the active preset reverts to the committed preset', async ({ page }) => {
-    await page.goto('/components/date-range-picker');
+    await gotoHydrated(page, '/components/date-range-picker');
 
     const picker = page.getByTestId('drp-preset-toggle-demo');
     await expect(picker).toBeVisible();

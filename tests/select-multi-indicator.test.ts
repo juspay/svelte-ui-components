@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Select — multi-select checkbox indicator', () => {
   // The default multi-select option indicator is a design-system checkbox box:
@@ -7,7 +8,7 @@ test.describe('Select — multi-select checkbox indicator', () => {
   test('renders a checkbox box that fills with a checkmark when an option is selected', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-multi-demo');
     await expect(select).toBeVisible();

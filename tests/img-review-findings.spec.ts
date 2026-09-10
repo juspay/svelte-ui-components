@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { join } from 'node:path';
+import { gotoHydrated } from './support/hydrated';
 
 /**
  * The two findings the review raised against `Img`'s inline-SVG path, each
@@ -12,7 +13,7 @@ import { join } from 'node:path';
 const BUNDLE = join(process.cwd(), 'dist-wc/index.js');
 
 async function loadBundle(page: import('@playwright/test').Page): Promise<void> {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: BUNDLE, type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-img') === 'function');
 }

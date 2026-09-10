@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #417: PieChart had `legendShowValues` (a below-chart list) but no
 // right-position layout, no item cap and no expander, so Lighthouse's
@@ -9,7 +10,7 @@ import { expect, test } from '@playwright/test';
 // legend renders exactly where and how it did.
 test.describe('PieChart — right-side value legend (#417)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/pie-chart');
+    await gotoHydrated(page, '/components/pie-chart');
   });
 
   test('the default value legend is still below the chart', async ({ page }) => {

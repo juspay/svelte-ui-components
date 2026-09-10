@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('EmptyState and Pill native attributes', () => {
   test('EmptyState exposes stable title and description locators for text and snippets', async ({
     page
   }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     await expect(page.getByTestId('empty-state-attributes-title')).toHaveText('Fallback title');
     await expect(page.getByTestId('empty-state-attributes-description')).toHaveText(
@@ -21,7 +22,7 @@ test.describe('EmptyState and Pill native attributes', () => {
   test('EmptyState does not render a description locator when no description is rendered', async ({
     page
   }) => {
-    await page.goto('/components/empty-state');
+    await gotoHydrated(page, '/components/empty-state');
 
     await expect(page.getByTestId('empty-state-without-description-title')).toHaveText(
       'Title only'
@@ -30,7 +31,7 @@ test.describe('EmptyState and Pill native attributes', () => {
   });
 
   test('Pill exposes an optional native title only when supplied', async ({ page }) => {
-    await page.goto('/components/pill');
+    await gotoHydrated(page, '/components/pill');
 
     await expect(page.getByTestId('pill-title')).toHaveAttribute('title', 'Pill tooltip');
     await expect(page.getByTestId('pill-without-title')).not.toHaveAttribute('title', /.*/);

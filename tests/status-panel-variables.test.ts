@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers the Status panel CSS variables. Status is styled as a standalone
 // full-screen result page: 100vh tall, with a translucent white backdrop-filter
@@ -10,7 +11,7 @@ import { expect, test } from '@playwright/test';
 // values, so an existing consumer sees no change.
 test.describe('Status panel variables', () => {
   test('defaults keep the full-screen panel exactly as it was', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const panel = page.getByTestId('status-default-icon').locator('.order-status');
     await expect(panel).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.6)');
@@ -23,7 +24,7 @@ test.describe('Status panel variables', () => {
   });
 
   test('the variables neutralise the panel for inline embedding', async ({ page }) => {
-    await page.goto('/components/status');
+    await gotoHydrated(page, '/components/status');
 
     const host = page.getByTestId('status-inline');
     await expect(host).toBeVisible();

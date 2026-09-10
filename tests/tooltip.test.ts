@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Tooltip component', () => {
   test('shows bubble on hover and hides on mouse leave', async ({ page }) => {
-    await page.goto('/components/tooltip');
+    await gotoHydrated(page, '/components/tooltip');
 
     const trigger = page.getByTestId('tooltip-container').first();
     await expect(trigger).toBeVisible();
@@ -23,7 +24,7 @@ test.describe('Tooltip component', () => {
 
 test.describe('tooltip action — use:tooltip directive', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/tooltip');
+    await gotoHydrated(page, '/components/tooltip');
   });
 
   test('shows bubble with correct text on hover', async ({ page }) => {

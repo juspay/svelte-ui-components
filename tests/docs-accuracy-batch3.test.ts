@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression coverage for the documentation-accuracy pass on this batch of components.
 // Each test proves that a CSS variable this batch newly added/corrected in the docs
@@ -8,7 +9,7 @@ test.describe('Choicebox — indicator CSS variables actually theme the indicato
   test('--choicebox-indicator-selected-background/-border/-size reach the indicator span', async ({
     page
   }) => {
-    await page.goto('/components/choicebox');
+    await gotoHydrated(page, '/components/choicebox');
 
     const card = page.getByTestId('choicebox-themed-indicator');
     await expect(card).toBeVisible();
@@ -24,7 +25,7 @@ test.describe('Gallery — CSS variables actually theme the grid layout', () => 
   test('--gallery-columns, --gallery-gap, and --gallery-item-border-radius reach the grid', async ({
     page
   }) => {
-    await page.goto('/components/gallery');
+    await gotoHydrated(page, '/components/gallery');
 
     const gallery = page.getByTestId('gallery-themed-demo');
     await expect(gallery).toBeVisible();

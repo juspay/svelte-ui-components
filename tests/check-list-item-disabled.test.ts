@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('CheckListItem — disabled control styling', () => {
   test('keeps supplied label content opaque while dimming and disabling the checkbox control', async ({
     page
   }) => {
-    await page.goto('/components/check-list-item');
+    await gotoHydrated(page, '/components/check-list-item');
 
     const disabledItem = page.getByTestId('check-list-item-disabled');
     const labelContent = page.getByTestId('check-list-item-disabled-content');

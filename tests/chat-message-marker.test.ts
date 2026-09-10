@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The marker is a decorative accent bar. The two things that can silently go wrong are
 // that it is not painted at all (a token resolving to nothing, a dropped class) and that
@@ -7,7 +8,7 @@ import { expect, test } from '@playwright/test';
 // bubble's own styling rather than trusting a single absolute value.
 test.describe('ChatMessage — marker', () => {
   test('paints an accent bar only on the message that asks for one', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const withMarker = page.locator('[data-pw="marker-demo"] .marker');
     const withoutMarker = page.locator('[data-pw="marker-demo-off"] .marker');
@@ -33,7 +34,7 @@ test.describe('ChatMessage — marker', () => {
   });
 
   test('is hidden from assistive technology', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
     const marker = page.locator('[data-pw="marker-demo"] .marker');
     await expect(marker).toHaveAttribute('aria-hidden', 'true');
     // It must not contribute text either — a bar that reads out is worse than no bar.
@@ -41,7 +42,7 @@ test.describe('ChatMessage — marker', () => {
   });
 
   test('the offset token moves it into the gutter, outside the bubble', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const inside = await page.locator('[data-pw="marker-demo"] .marker').boundingBox();
     const insideBubble = await page.locator('[data-pw="marker-demo"] .bubble').boundingBox();
@@ -61,7 +62,7 @@ test.describe('ChatMessage — marker', () => {
   // it would swallow those clicks silently — the link still looks and reads fine, it just
   // stops working in a strip a few pixels wide.
   test('does not intercept clicks meant for content underneath it', async ({ page }) => {
-    await page.goto('/components/chat-message');
+    await gotoHydrated(page, '/components/chat-message');
 
     const marker = page.locator('[data-pw="marker-demo-link"] .marker');
     await expect(marker).toHaveCount(1);

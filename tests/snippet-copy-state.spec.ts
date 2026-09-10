@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Coverage for #574: the copy affordance was only reachable by also taking
 // Snippet's `<code>` box and `$` prompt, so consumers who wanted a bare copy
@@ -11,7 +12,7 @@ import { expect, test } from '@playwright/test';
 test.describe('createCopyState — copy affordance without the presentation', () => {
   test.beforeEach(async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/snippet');
+    await gotoHydrated(page, '/components/snippet');
   });
 
   test('copies the value to the real clipboard', async ({ page }) => {

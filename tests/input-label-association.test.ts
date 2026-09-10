@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Input — the <label> actually names the field', () => {
   // Regression guard: the label was emitted as <label for={name}> while the
@@ -10,7 +11,7 @@ test.describe('Input — the <label> actually names the field', () => {
   // Note on locators: testId lands on the <input>/<textarea> itself (data-pw),
   // not on a wrapper — so getByTestId here IS the field.
   test('a field with label + name is reachable by its visible label text', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-datatype-time');
     await expect(field).toBeVisible();
@@ -31,7 +32,7 @@ test.describe('Input — the <label> actually names the field', () => {
   });
 
   test('clicking the label focuses the field it names', async ({ page }) => {
-    await page.goto('/components/input');
+    await gotoHydrated(page, '/components/input');
 
     const field = page.getByTestId('input-datatype-time');
     const id = await field.getAttribute('id');

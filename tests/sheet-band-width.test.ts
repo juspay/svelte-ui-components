@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #572: Sheet's top/bottom sides had no width-capping mechanism. left
 // and right expose --sheet-width; top and bottom were always full-viewport-
@@ -48,7 +49,7 @@ const viewportOf = (page: import('@playwright/test').Page) => {
 
 test.describe('Sheet — width-capped top/bottom (#572)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
   });
 
   test('an unconfigured bottom sheet is still edge-to-edge', async ({ page }) => {

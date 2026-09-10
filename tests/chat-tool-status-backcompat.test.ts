@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Chat tool-status backward compatibility', () => {
   test('overriding the old --chat-tool-status-* variables still themes the internal chip', async ({
     page
   }) => {
-    await page.goto('/components/chat');
+    await gotoHydrated(page, '/components/chat');
 
     const chip = page.getByTestId('chat-backcompat-demo').locator('.thinking-indicator-chip');
     await chip.scrollIntoViewIfNeeded();

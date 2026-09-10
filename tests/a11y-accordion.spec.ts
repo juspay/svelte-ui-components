@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The accordion trigger (WAI-ARIA disclosure pattern) already had aria-controls/aria-expanded
 // wiring exercised via .click() elsewhere, but nothing drove it from the keyboard — the actual
@@ -7,7 +8,7 @@ test.describe('Accordion keyboard interaction (WAI-ARIA disclosure pattern)', ()
   test('Tab reaches the trigger, which is focusable with a visible focus target', async ({
     page
   }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const trigger = page.getByRole('button', { name: /Shipping details/ });
     await trigger.focus();
@@ -16,7 +17,7 @@ test.describe('Accordion keyboard interaction (WAI-ARIA disclosure pattern)', ()
   });
 
   test('Enter and Space both toggle aria-expanded and the panel', async ({ page }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const trigger = page.getByRole('button', { name: /Shipping details/ });
     const panel = page.getByTestId('accordion-linked');
@@ -35,7 +36,7 @@ test.describe('Accordion keyboard interaction (WAI-ARIA disclosure pattern)', ()
   });
 
   test('the accessible name comes from the rendered trigger content', async ({ page }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     // getByRole with a name only resolves if accessible-name computation reaches the
     // trigger's snippet content — a regression here would make every getByRole lookup
@@ -44,7 +45,7 @@ test.describe('Accordion keyboard interaction (WAI-ARIA disclosure pattern)', ()
   });
 
   test('a disabled trigger leaves the tab order and ignores Enter/Space', async ({ page }) => {
-    await page.goto('/components/accordion');
+    await gotoHydrated(page, '/components/accordion');
 
     const trigger = page.locator('.accordion-trigger', {
       has: page.getByTestId('accordion-disabled-trigger-label')

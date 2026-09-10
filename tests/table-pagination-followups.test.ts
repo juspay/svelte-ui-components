@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table follow-up API', () => {
   test('forwards explicit pagination button ids while keeping default generated ids unchanged', async ({
@@ -6,7 +7,7 @@ test.describe('Table follow-up API', () => {
     context
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const defaults = page.getByTestId('table-builtin-cells');
     await expect(defaults.getByTestId('builtin-docs-link-0')).toBeVisible();
@@ -26,7 +27,7 @@ test.describe('Table follow-up API', () => {
     context
   }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
 
     const table = page.getByTestId('table-followups');
     await expect(table.getByTestId('followup-name')).toHaveCSS('width', '176px');
@@ -47,7 +48,7 @@ test.describe('Table — pagination.rangeTestId', () => {
   test('an explicit rangeTestId wins over the id derived from the table testId', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     // table-followups carries its own load-bearing testId (built-in cell ids
     // derive from it), so the range span would otherwise be locked to
     // `table-followups-paginator-range`. rangeTestId overrides that.
@@ -57,7 +58,7 @@ test.describe('Table — pagination.rangeTestId', () => {
   });
 
   test('unset rangeTestId keeps deriving from the table testId', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-paginated');
     await expect(table.getByTestId('table-paginated-paginator-range')).toContainText('1-5 of 23');
   });
@@ -67,7 +68,7 @@ test.describe('Table — independent pagination control suppression', () => {
   test('hidePageSizeSelector hides only the page-size Select, steppers keep working', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-split-selector-hidden');
     await expect(table.getByTestId('split-selector-hidden-page-size')).toHaveCount(0);
     await expect(table.getByTestId('table-split-selector-hidden-paginator-range')).toContainText(
@@ -88,7 +89,7 @@ test.describe('Table — independent pagination control suppression', () => {
   test('hideSteppers hides only the Pagination steppers, the page-size Select keeps working', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-split-steppers-hidden');
     await expect(table.getByTestId('split-steppers-hidden-pages')).toHaveCount(0);
     await expect(table.getByRole('navigation')).toHaveCount(0);
@@ -110,7 +111,7 @@ test.describe('Table — independent pagination control suppression', () => {
   test('hideControls still hides both, unaffected by the new independent flags', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-count-only-pagination');
     await expect(table.getByTestId('count-only-paged-page-size')).toHaveCount(0);
     await expect(table.getByTestId('count-only-paged-pages')).toHaveCount(0);

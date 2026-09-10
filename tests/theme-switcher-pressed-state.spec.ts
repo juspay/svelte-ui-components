@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The toggle button had a hover rule but no `:active` rule at all, so pressing it
 // looked identical to hovering it and the control gave no confirmation of the press.
@@ -20,7 +21,7 @@ const settlesTo = (locator: Locator, expected: string) =>
 
 test.describe('ThemeSwitcher pressed state', () => {
   test('the toggle button paints three distinct states', async ({ page }) => {
-    await page.goto('/components/theme-switcher');
+    await gotoHydrated(page, '/components/theme-switcher');
 
     const toggle = page.locator('.toggle-button').first();
     await expect(toggle).toBeVisible();
@@ -44,7 +45,7 @@ test.describe('ThemeSwitcher pressed state', () => {
   });
 
   test('the pressed colour is driven by --theme-switcher-bg-pressed', async ({ page }) => {
-    await page.goto('/components/theme-switcher');
+    await gotoHydrated(page, '/components/theme-switcher');
 
     const toggle = page.locator('.toggle-button').first();
     await expect(toggle).toBeVisible();

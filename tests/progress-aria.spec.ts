@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Progress previously rendered with no ARIA at all -- a screen reader had no
 // way to know the .container div was a progress indicator, let alone its
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // the same regardless of what value/max the consumer actually passed).
 test.describe('Progress ARIA', () => {
   test('determinate progress bar exposes role, value, and label attributes', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-determinate-demo');
     await expect(bar).toHaveAttribute('role', 'progressbar');
@@ -21,7 +22,7 @@ test.describe('Progress ARIA', () => {
   });
 
   test('aria-valuenow tracks the visible label for whole-number percentages', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-determinate-demo');
     await page.getByRole('button', { name: '+10' }).click();
@@ -43,7 +44,7 @@ test.describe('Progress ARIA', () => {
   test('aria-valuenow uses 2-decimal precision to stay in step with the bar width', async ({
     page
   }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     // value=1, max=3 -> a repeating-decimal 33.333...% bar width. Whole-number
     // rounding (the old behavior) would report aria-valuenow="33", a full
@@ -60,7 +61,7 @@ test.describe('Progress ARIA', () => {
   test('indeterminate progress bar omits aria-valuenow and announces busy state', async ({
     page
   }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-indeterminate-demo');
     await expect(bar).toHaveAttribute('role', 'progressbar');
@@ -77,7 +78,7 @@ test.describe('Progress ARIA', () => {
   });
 
   test('all demo instances are discoverable via the progressbar role', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     await expect(page.getByRole('progressbar')).toHaveCount(8);
   });
@@ -91,7 +92,7 @@ test.describe('Progress ARIA', () => {
 // reaches the DOM, and the bar renders exactly as an empty progress bar would.
 test.describe('Progress invalid range fallback', () => {
   test('value=0, max=0 renders a 0% bar instead of NaN', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-zero-range-demo');
     await expect(bar).toHaveAttribute('role', 'progressbar');
@@ -103,7 +104,7 @@ test.describe('Progress invalid range fallback', () => {
   });
 
   test('a negative max is an invalid range and also falls back to 0%', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-negative-max-demo');
     await expect(bar).toHaveAttribute('aria-valuenow', '0');
@@ -111,7 +112,7 @@ test.describe('Progress invalid range fallback', () => {
   });
 
   test('a non-finite max is an invalid range and also falls back to 0%', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-nan-max-demo');
     await expect(bar).toHaveAttribute('aria-valuenow', '0');
@@ -119,7 +120,7 @@ test.describe('Progress invalid range fallback', () => {
   });
 
   test('a non-finite value is an invalid range, not indeterminate', async ({ page }) => {
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     // NaN < 0 is false, so a NaN value doesn't trip the isIndeterminate check
     // on its own -- it must be caught by the same finite-range guard as an
@@ -135,7 +136,7 @@ test.describe('Progress invalid range fallback', () => {
     // scoped to `percentage`/`aria-valuenow` and must not suppress the
     // pre-existing negative-value indeterminate behavior, since indeterminate
     // mode never reads `percentage` in the markup anyway.
-    await page.goto('/components/progress');
+    await gotoHydrated(page, '/components/progress');
 
     const bar = page.getByTestId('progress-negative-value-invalid-max-demo');
     await expect(bar).toHaveAttribute('aria-busy', 'true');

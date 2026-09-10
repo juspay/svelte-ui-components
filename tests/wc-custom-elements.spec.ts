@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // The four form custom elements (sui-chip-input, sui-color-picker, sui-combobox,
 // sui-split-input) had no browser-level coverage: the build emitting a tag string is not
@@ -11,7 +12,7 @@ import { expect, test } from '@playwright/test';
 const TAGS = ['sui-chip-input', 'sui-color-picker', 'sui-combobox', 'sui-split-input'] as const;
 
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(
     (tags) => tags.every((tag) => typeof customElements.get(tag) !== 'undefined'),

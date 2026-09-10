@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Closes #528: HITL supported exactly one decision (confirm/cancel), so a
 // third disposition (e.g. "deny with instructions") or any free-text/
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // only while the card is pending. Both are additive and off by default.
 test.describe('HITL — extra actions and children (#528)', () => {
   test('an extra action never settles the card and calls its own onSelect', async ({ page }) => {
-    await page.goto('/components/hitl');
+    await gotoHydrated(page, '/components/hitl');
 
     const card = page.getByTestId('demo-extra');
     await expect(card).toBeVisible();
@@ -31,7 +32,7 @@ test.describe('HITL — extra actions and children (#528)', () => {
   });
 
   test('confirm still settles the card normally with an extra action present', async ({ page }) => {
-    await page.goto('/components/hitl');
+    await gotoHydrated(page, '/components/hitl');
 
     await page.getByTestId('demo-extra-confirm').click();
 
@@ -44,7 +45,7 @@ test.describe('HITL — extra actions and children (#528)', () => {
   test('default HITL usage (no actions, no children) renders unchanged: exactly two buttons', async ({
     page
   }) => {
-    await page.goto('/components/hitl');
+    await gotoHydrated(page, '/components/hitl');
 
     const card = page.getByTestId('demo-confirmation');
     await expect(card).toBeVisible();

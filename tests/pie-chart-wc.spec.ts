@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // `docs/PieChart.md` described `<sui-pie-chart>` for several releases while no
 // wrapper existed, so the element never upgraded and the documented snippets
@@ -10,7 +11,7 @@ import { expect, test, type Page } from '@playwright/test';
 // it is injected into a same-origin page instead of being navigated to.
 // `pnpm run build` (the webServer command) runs build:wc, so the file exists.
 const loadBundle = async (page: Page): Promise<void> => {
-  await page.goto('/');
+  await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(
     () => typeof customElements.get('sui-pie-chart') !== 'undefined',

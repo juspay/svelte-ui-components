@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Covers #527: KeyboardInput's KEY_SYMBOLS table substitutes 'space' -> ␣
 // and 'tab' -> ⇥ unconditionally, with no way to render the word itself.
@@ -8,7 +9,7 @@ import { expect, test } from '@playwright/test';
 // renders exactly as given and the KEY_SYMBOLS lookup is bypassed entirely.
 test.describe('KeyboardInput literal opt-out', () => {
   test('default behaviour substitutes recognised key names with their glyph', async ({ page }) => {
-    await page.goto('/components/keyboard-input');
+    await gotoHydrated(page, '/components/keyboard-input');
 
     // Regression guard: today's substituting behaviour is unchanged when
     // `literal` is not passed at all.
@@ -18,7 +19,7 @@ test.describe('KeyboardInput literal opt-out', () => {
   });
 
   test('literal renders the word itself instead of the substituted glyph', async ({ page }) => {
-    await page.goto('/components/keyboard-input');
+    await gotoHydrated(page, '/components/keyboard-input');
 
     const literalSpace = page.getByTestId('keyboard-input-literal-space');
     await expect(literalSpace.locator('.key')).toHaveText('Space');

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Checkbox — native input stays in sync with the rendered state', () => {
   // Regression guard: clicking the label used to fire handleClick (flipping the
@@ -10,7 +11,7 @@ test.describe('Checkbox — native input stays in sync with the rendered state',
   test('clicking the label toggles the box, aria-checked, and the native input together', async ({
     page
   }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const checkbox = page.getByTestId('checkbox-default');
     await expect(checkbox).toBeVisible();
@@ -31,7 +32,7 @@ test.describe('Checkbox — native input stays in sync with the rendered state',
   });
 
   test('keyboard toggling via the box keeps the native input in sync', async ({ page }) => {
-    await page.goto('/components/checkbox');
+    await gotoHydrated(page, '/components/checkbox');
 
     const checkbox = page.getByTestId('checkbox-default');
     const nativeInput = checkbox.getByTestId('checkbox-default-native-input');

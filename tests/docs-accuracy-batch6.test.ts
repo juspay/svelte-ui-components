@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 // Regression guards for docs/*.md accuracy fixes to ProportionBar through SpeechToText
 // (batch 6 of the library-wide documentation audit). Each test proves a prop the docs
@@ -9,7 +10,7 @@ test.describe('SankeyChart — radius and maxHeight (previously undocumented pro
   test('radius sets node corner rounding and maxHeight caps the rendered height', async ({
     page
   }) => {
-    await page.goto('/components/sankey-chart');
+    await gotoHydrated(page, '/components/sankey-chart');
 
     const chart = page.getByTestId('sankey-radius-demo');
     await expect(chart).toBeVisible();
@@ -31,7 +32,7 @@ test.describe('Select — showSelectAll and usePortal (previously undocumented p
   test('showSelectAll toggles every listed option and shows an indeterminate state for a partial selection', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-all-demo');
     await select.locator('.select-trigger').click();
@@ -58,7 +59,7 @@ test.describe('Select — showSelectAll and usePortal (previously undocumented p
   test('usePortal renders the dropdown panel as a child of document.body, not the select container', async ({
     page
   }) => {
-    await page.goto('/components/select');
+    await gotoHydrated(page, '/components/select');
 
     const select = page.getByTestId('select-portal-demo');
     await select.locator('.select-trigger').click();
@@ -75,7 +76,7 @@ test.describe('Sheet — dismissOnOutsideClick (previously undocumented prop)', 
   test('dismissOnOutsideClick={true} with showOverlay={false} still closes on an outside click', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByRole('button', { name: 'Open account menu' }).click();
     const panel = page.getByTestId('sheet-anchored-panel');
@@ -89,7 +90,7 @@ test.describe('Sheet — dismissOnOutsideClick (previously undocumented prop)', 
   test('dismissOnOutsideClick={false} with showOverlay={true} ignores an outside click but still closes on Escape', async ({
     page
   }) => {
-    await page.goto('/components/sheet');
+    await gotoHydrated(page, '/components/sheet');
 
     await page.getByRole('button', { name: 'Open blocking sheet' }).click();
     const panel = page.getByTestId('sheet-blocking-panel');

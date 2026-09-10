@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated } from './support/hydrated';
 
 test.describe('Table — keyed column model', () => {
   test('keyed table renders identically to its positional twin', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const keyed = page.getByTestId('table-keyed-basic');
     const positional = page.getByTestId('table-positional-twin');
     await expect(keyed).toBeVisible();
@@ -18,7 +19,7 @@ test.describe('Table — keyed column model', () => {
   });
 
   test('sorting behaves identically on keyed and positional twins', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const keyed = page.getByTestId('table-keyed-basic');
     const positional = page.getByTestId('table-positional-twin');
 
@@ -37,7 +38,7 @@ test.describe('Table — keyed column model', () => {
   });
 
   test('per-column sortable: false suppresses that column sort button only', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const features = page.getByTestId('table-keyed-features');
     await expect(features).toBeVisible();
     await expect(features.getByRole('button', { name: 'Sort by Name' })).toBeVisible();
@@ -46,7 +47,7 @@ test.describe('Table — keyed column model', () => {
   });
 
   test('column-scoped custom cell snippet renders per row with the keyed row', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const features = page.getByTestId('table-keyed-features');
     // The Status column renders a Pill per row via the column's cell snippet
     await expect(features.getByTestId('keyed-status-active')).toBeVisible();
@@ -55,7 +56,7 @@ test.describe('Table — keyed column model', () => {
   });
 
   test('missing row keys render as empty cells, not "undefined"', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const features = page.getByTestId('table-keyed-features');
     const thirdRowCells = await features
       .getByRole('rowgroup')
@@ -69,7 +70,7 @@ test.describe('Table — keyed column model', () => {
   });
 
   test('column testId is emitted as data-pw on the header cell', async ({ page }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     const features = page.getByTestId('table-keyed-features');
     await expect(features.getByTestId('keyed-header-name')).toHaveCount(1);
     await expect(features.getByTestId('keyed-header-name')).toContainText('Name');
@@ -78,7 +79,7 @@ test.describe('Table — keyed column model', () => {
   test('positional API is untouched: the basic positional table renders as before', async ({
     page
   }) => {
-    await page.goto('/components/table');
+    await gotoHydrated(page, '/components/table');
     // The pre-existing Basic demo (positional props, no columns/rows)
     const basicHeaders = page.getByRole('table').first().getByRole('columnheader');
     await expect(basicHeaders).toHaveCount(3);

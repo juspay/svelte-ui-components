@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PillProperties } from './properties';
+  import { PILL_MANAGED_ATTRS, discardedAttrWarnings } from '../attrs-discard';
   import Button from '../Button/Button.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
   import { pillToneClass } from './pillTone';
@@ -22,6 +23,27 @@
     classes,
     attrs
   }: PillProperties = $props();
+
+  /*
+   * The runtime half of the `attrs` deprecation (#576). The `@deprecated`
+   * markers on the managed keys only reach someone reading TypeScript; a
+   * plain-JS caller, or anyone driving this as a web component, has no types
+   * and would otherwise still get silence.
+   *
+   * Dev builds only: this is an authoring aid, and warning on every production
+   * render would be noise nobody asked for. `import.meta.env` is absent under
+   * bundlers that do not define it, so the guard reads it defensively and stays
+   * quiet there rather than throwing.
+   *
+   * Deliberately at init rather than in an `$effect`, which this repo bans:
+   * once per mounted instance is what a consumer needs to act on, and it costs
+   * nothing on subsequent updates.
+   */
+  if (import.meta.env?.DEV === true) {
+    for (const message of discardedAttrWarnings('Pill', PILL_MANAGED_ATTRS, attrs)) {
+      console.warn(message);
+    }
+  }
 
   let interactive = $derived(typeof onclick === 'function');
 

@@ -224,6 +224,8 @@ into per object:
 </script>
 ```
 
+Types only reach consumers who have them. In **dev builds**, Card also logs a `console.warn` naming any managed key it found in `attrs` and what owns it, so a plain-JS caller — or anyone driving `<sui-card>` as a web component, where there are no types at all — sees the discard too. It fires once per mounted instance and is compiled out of production builds.
+
 `CardStrictAttrs` also types native attributes properly — `onfocus` is a function, not a
 string — and rejects managed keys reached through a predeclared variable, not just an
 inline literal. It intentionally differs from `PillStrictAttrs`: Card writes no `aria-*`

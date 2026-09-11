@@ -103,6 +103,7 @@ export { default as Gallery } from './Gallery/Gallery.svelte';
 export { ChatController } from './Chat/controller.svelte';
 export { partyOf } from './Chat/roles';
 export { SpeechToTextController } from './SpeechToText/controller.svelte';
+export { SpeechSynthesisController } from './SpeechSynthesis/controller.svelte';
 export { createCopyState } from './Snippet/copyState.svelte';
 
 export type * from './Button/properties';
@@ -195,6 +196,7 @@ export type * from './_chart/narrationHighlighter';
 export type * from './Chat/properties';
 export type * from './Chat/types';
 export type * from './SpeechToText/types';
+export type * from './SpeechSynthesis/types';
 export type * from './ChatHeader/properties';
 export type * from './ChatMessage/properties';
 export type * from './ChatMessageList/properties';

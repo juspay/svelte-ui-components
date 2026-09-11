@@ -24,12 +24,8 @@
     "description": "A notification banner with optional icon snippet, text content, inline link text, right content slot, and a dismissible close button. Supports click interaction with keyboard accessibility. The `visible` prop is bindable for dismiss state control. Uses slide transition for show/hide."
   },
   {
-    "name": "Breadcrumb",
-    "description": "A navigation trail component that enforces nav/ol/li semantics and aria-label. Delegates visual rendering of each crumb to a required item snippet (receives href, label, isLast, index), enabling icons, dropdown crumbs, and overflow menus. An optional separator snippet replaces the default '/' text node between items."
-  },
-  {
     "name": "BarChart",
-    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, click events, declarative and imperative bar highlighting via highlightedIndex and onChartReady, first-point normalisation for cross-series relative growth comparison, top-N clipping with overflow aggregation into a configurable label, and a graphics-free mode that renders axes and legend without bar rectangles. Zero external dependencies — built from pure SVG with CSS custom property theming."
+    "description": "A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal orientations, single or multi-series data (grouped/stacked), value labels, custom colors per data point, hover tooltips, click events, declarative and imperative bar highlighting via highlightedIndex and onChartReady, first-point normalisation for cross-series relative growth comparison, top-N clipping with overflow aggregation into a configurable label, and a graphics-free mode that renders axes and legend without bar rectangles. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
   },
   {
     "name": "Book",
@@ -38,6 +34,10 @@
   {
     "name": "BrandLoader",
     "description": "A full-screen loading screen that displays a brand logo image, main text, optional subtext, and an animated bouncing ellipsis spinner. Uses backdrop-filter blur for a frosted-glass visual effect. Ideal for app loading / splash screens."
+  },
+  {
+    "name": "Breadcrumb",
+    "description": "A navigation trail component that enforces nav/ol/li semantics and aria-label. Delegates visual rendering of each crumb to a required item snippet (receives href, label, isLast, index), enabling icons, dropdown crumbs, and overflow menus. An optional separator snippet replaces the default '/' text node between items."
   },
   {
     "name": "Browser",
@@ -53,27 +53,51 @@
   },
   {
     "name": "Card",
-    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults — no consumer overrides required for basic usage. Custom multi-zone layouts (metric tiles, integration rows) are achieved via the children snippet using plain flexbox in the consumer."
+    "description": "A generic layout container with an optional title/description header and a content body. Supports box-shadow, width/min-width/max-width/max-height/margin CSS vars for sizing, and an onclick prop that makes the card an accessible interactive button (role=button, tabindex=0, Enter/Space keyboard support) when provided. All visual properties are CSS-var driven with sensible defaults \u2014 no consumer overrides required for basic usage. Custom multi-zone layouts (metric tiles, integration rows) are achieved via the children snippet using plain flexbox in the consumer."
   },
   {
     "name": "Carousel",
     "description": "An auto-playing slideshow that renders Svelte components as slides. Supports touch swipe and mouse drag for navigation. Shows optional dot indicators below the slides for direct navigation."
   },
   {
-    "name": "Checkbox",
-    "description": "A styled checkbox input with a custom SVG checkmark. Supports checked state binding, disabled state, and configurable size and colors via CSS variables."
+    "name": "Chat",
+    "description": "A full chat surface composing ChatHeader, ChatMessageList, ChatSuggestions, ChatToolStatus, and ChatComposer. Fully controlled (pass `messages`, handle `onsend`) with no baked-in transport. Opt-in features: header image, stop-generation, voice mic, file attachments, prompt suggestions, smart autoscroll, and per-message copy/retry/feedback. Render your own UI below any bubble with the `messageAttachments` snippet. Pair with the decoupled `ChatController` runes class \u2014 message state, streaming, typewriter reveal, retry, and session threading \u2014 which delegates the network call to a pluggable `ChatTransport` (adapt SSE, WebSocket, or polling). Markdown is bundled \u2014 set a message's `markdown` field and it renders through the sanitized pipeline (see MarkdownText); pre-sanitized HTML on `html` still works."
   },
   {
-    "name": "ColorPicker",
-    "description": "A color selection component with a custom popover containing a saturation/brightness panel, hue slider, and editable HEX/RGB/HSL input fields. The trigger shows a color swatch with an optional hex text input. Uses Button, Input, and Slider components internally."
+    "name": "ChatBubble",
+    "description": "A floating launcher button (FAB) pinned to a viewport corner that toggles a floating panel (role=dialog). Drop a Chat (or anything) inside via the children snippet \u2014 ChatBubble owns only the launcher, corner positioning, bindable `open` state, focus management (focus into panel on open, Escape to close and return focus), and reuses the Button component for the launcher. Optionally `draggable` (grab the launcher to reposition the whole widget, with click-vs-drag detection and viewport clamping; bindable `dragX`/`dragY`). `dragMode` controls drag style: `'snap'` (default) anchors to the nearest left/right screen edge on release like a mobile chat head (panel re-opens toward center), `'free'` stays where dropped. Optionally `resizable` (resize the open panel; bindable `panelWidth`/`panelHeight`, handles derived from the corner via the Resizable component). Decoupled from its contents; fully themeable via CSS variables."
   },
   {
-    "name": "Combobox",
-    "description": "A text input with a filtered dropdown list implementing the WAI-ARIA combobox pattern. Supports keyboard navigation, disabled items, custom item rendering, and bindable value/inputValue/open state. Use for autocomplete, search suggestions, and typeahead inputs."
+    "name": "ChatComposer",
+    "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable."
+  },
+  {
+    "name": "ChatHeader",
+    "description": "A header bar for a chat surface: an optional brand image (via the Img component) or avatar snippet, title and subtitle, extra actions snippet, and a close button (the Button component) shown when `onclose` is provided. Close icon falls back to a built-in asset and is overridable via snippet."
+  },
+  {
+    "name": "ChatMessage",
+    "description": "A single chat bubble. The primitive is the two-party `role`: `sender` (right, accent bubble) or `responder` (left). `user`/`assistant`/`system` and any custom string are recognized extensions that map onto a party (sender/user \u2192 sender; everything else \u2192 responder), so LLM message arrays drop in unchanged; the exported `partyOf(role)` resolves a role to its party. Renders `markdown` through the library's sanitized-by-construction pipeline (see MarkdownText), else pre-sanitized `html`, else plain `content`; shows a typing indicator (LoadingDots) while streaming with no content, and accepts avatar, header, and attachments snippets. Opt-in hover actions on responder messages: built-in copy (with checkmark feedback), retry (onretry), and \ud83d\udc4d/\ud83d\udc4e (onfeedback). Basic markdown elements are styled via :global."
+  },
+  {
+    "name": "ChatMessageList",
+    "description": "A scrollable conversation container with smart auto-scroll: it sticks to the bottom only while you're already near it, and shows a jump-to-latest button when you've scrolled up. Renders each message with ChatMessage by default, adds your own UI below any bubble via the per-message `messageAttachments` snippet, or replaces a message entirely with the `message` snippet, shows an `empty` snippet when there are no messages, and forwards opt-in message actions (allowCopy, onretry, onfeedback). Uses a Svelte action (no effects), respecting reduced-motion."
+  },
+  {
+    "name": "ChatSuggestions",
+    "description": "A row of tappable prompt chips (the Pill component), typically shown on an empty conversation. Each item is a string or `{ label, value }`; selecting a chip fires `onselect` with the value and index."
+  },
+  {
+    "name": "ChatToolStatus",
+    "description": "A compact status pill pairing a spinner (the Loader component) with a label to show what the assistant is doing (searching, calling a tool, thinking). The leading indicator is overridable via snippet."
   },
   {
     "name": "CheckListItem",
     "description": "A checkbox list item with an HTML-capable text label. When clicked, toggles the `checked` state and fires `onclick` with the new boolean value. Supports a custom `checkboxLabel` snippet and disabled state. The checked state is bindable."
+  },
+  {
+    "name": "Checkbox",
+    "description": "A styled checkbox input with a custom SVG checkmark. Supports checked state binding, disabled state, and configurable size and colors via CSS variables."
   },
   {
     "name": "ChipInput",
@@ -82,6 +106,14 @@
   {
     "name": "Choicebox",
     "description": "A selectable option group with single-select (radio) or multi-select (checkbox) behavior. Each item renders a children snippet with custom content. Supports disabled items, keyboard navigation, and configurable layout via CSS grid variables."
+  },
+  {
+    "name": "ColorPicker",
+    "description": "A color selection component with a custom popover containing a saturation/brightness panel, hue slider, and editable HEX/RGB/HSL input fields. The trigger shows a color swatch with an optional hex text input. Uses Button, Input, and Slider components internally."
+  },
+  {
+    "name": "Combobox",
+    "description": "A text input with a filtered dropdown list implementing the WAI-ARIA combobox pattern. Supports keyboard navigation, disabled items, custom item rendering, and bindable value/inputValue/open state. Use for autocomplete, search suggestions, and typeahead inputs."
   },
   {
     "name": "CommandMenu",
@@ -96,16 +128,36 @@
     "description": "A compound date-range picker built on top of Calendar. Provides a trigger button, optional preset sidebar, dual-month or single-month calendar layout, snippet-based time-picker and compare-range slots, and an apply/cancel footer with draft-state isolation. Supports range and single-date modes, min/max constraints, disabled dates, locale-aware formatting, and full CSS theming. Opt-in: clearable (Clear button in single mode), initialPresetLabel (seed active preset label on mount without firing onapply), and preset groups with dividers via the group field on DateRangePreset."
   },
   {
+    "name": "DeltaIndicator",
+    "description": "A compact inline indicator that conveys change direction and magnitude using a directional arrow and formatted text. Positive values render in green, negative in red, and values within the neutral threshold in muted gray. Supports inverted color semantics for lower-is-better metrics (e.g. bounce rate, RTO), an optional arrow-hide mode for text-only display, a configurable neutral threshold, and a custom format function for full control over the displayed text."
+  },
+  {
+    "name": "Draggable",
+    "description": "A wrapper that makes its content user-movable via pointer drag or arrow keys, applied as a transform (never affects layout flow). Dragging updates the bindable `x`/`y` offset, optionally constrained to one `axis`, a `handle` sub-selector, or the viewport (`bounds=\"viewport\"`); `onMoveStart`/`onMove`/`onMoveEnd` fire too. The root is a focusable, aria-labelled region; without a `handle`, pointer-downs on nested native controls (input, button, a, ...) never start a drag. Position only, not size \u2014 pair with `Resizable` for a panel that's both movable and resizable."
+  },
+  {
+    "name": "DualAxisBarChart",
+    "description": "A pure-SVG dual-axis chart with two completely independent Y-axes \u2014 left (yAxisIndex 0) and right (yAxisIndex 1) \u2014 sharing one categorical X-axis. Each series independently declares its axis and render type (column or line), making it ideal for comparing metrics at very different scales such as absolute revenue versus percentage CTR. Hover highlights the entire category column with a vertical guideline, and the shared tooltip displays all series values formatted by their respective axis formatters. Built from the shared _chart primitives (ChartContainer, Axis, ChartTooltip, Legend, scales, paths) with full CSS custom property theming and zero external dependencies."
+  },
+  {
     "name": "EmptyState",
     "description": "A centered placeholder component for empty lists, search results, or views. Renders an optional icon snippet above a required title, an optional description (omitted entirely when absent), and an optional action area (e.g. buttons) below; all colors inherit from the parent for seamless light/dark theme support."
   },
   {
     "name": "FileDropzoneTrigger",
-    "description": "The visual body for a FileInput trigger snippet — an icon plus heading and optional caption, built on the library's own Img and Button. Supports a compact variant (bare icon-sm + heading, no Button wrapper or caption) for inline/dense placements. Pass onclick={openFilePicker} from FileInput's trigger snippet in the non-compact variant; compact relies on FileInput's own whole-area click/drop handling. Use for upload dropzones, CSV/image pickers, or any file-picker trigger that needs the icon+heading+caption recipe instead of hand-rolled markup."
+    "description": "The visual body for a FileInput trigger snippet \u2014 an icon plus heading and optional caption, built on the library's own Img and Button. Supports a compact variant (bare icon-sm + heading, no Button wrapper or caption) for inline/dense placements. Pass onclick={openFilePicker} from FileInput's trigger snippet in the non-compact variant; compact relies on FileInput's own whole-area click/drop handling. Use for upload dropzones, CSV/image pickers, or any file-picker trigger that needs the icon+heading+caption recipe instead of hand-rolled markup."
   },
   {
     "name": "FileInput",
     "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, and `disabled`."
+  },
+  {
+    "name": "FunnelChart",
+    "description": "A horizontal funnel chart built entirely from pure SVG, with no external charting library dependency. Renders sequential stages as rectangles whose height is proportional to each stage's value relative to the maximum, joined by trapezoidal connector polygons that visually convey drop-off between steps. Supports per-stage color overrides, a custom value-and-percentage label formatter, configurable slope connector width, hover-expansion animation, click and hover events, an empty-state snippet, and full CSS-variable theming through the shared chart token system."
+  },
+  {
+    "name": "Gallery",
+    "description": "An image gallery with grid or list layout and an optional full-screen lightbox (previous/next nav, counter, caption, focus-trapped keyboard control - arrows, Home/End, Escape, Tab). open/activeIndex are bindable. Optional per-item edit/delete actions appear only when their handler prop (onEditClick/onDeleteClick) is provided - no separate show flags. Grid items can render fully custom content via the itemFooter snippet. Events are onImageClick/onEditClick/onDeleteClick/onOpen/onDismiss/onIndexChange (camelCase, synthesized) plus onkeydown (lowercase, a genuine native KeyboardEvent relay) - onDismiss specifically avoids onClose since no real <dialog> element is involved."
   },
   {
     "name": "Gauge",
@@ -114,6 +166,10 @@
   {
     "name": "GridItem",
     "description": "A square grid cell with a header icon (top-right), centered main icon, and text label below. Clicking toggles a loading overlay animation (clip-path radial sweep). The `showLoader` state is bindable."
+  },
+  {
+    "name": "HITL",
+    "description": "Human-in-the-loop approval: the assistant wants to run an action, and the person approves or cancels it before it executes. Unless disabled, a countdown sweeps across the confirm button and auto-approves the action when it completes. Interacting with any HITL pauses every sibling card's countdown, so an auto-approval never fires while the user is actively deciding."
   },
   {
     "name": "Icon",
@@ -125,7 +181,7 @@
   },
   {
     "name": "IframeViewer",
-    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window — an empty list (the default) processes nothing, so it is secure by default. Supports an optional `credentialless` attribute (applied in the same render statement as `src`, no effect-timing dependency) and an exported `postMessage(message, targetOrigin)` instance method for sending messages into the embedded frame. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
+    "description": "A security-conscious iframe embed. Renders an `<iframe>` for the given `src` and forwards `postMessage` events to `onMessage` only when the message origin is in `allowedOrigins` and the source is the embedded iframe window \u2014 an empty list (the default) processes nothing, so it is secure by default. Supports an optional `credentialless` attribute (applied in the same render statement as `src`, no effect-timing dependency) and an exported `postMessage(message, targetOrigin)` instance method for sending messages into the embedded frame. Themeable size/border via CSS variables; ships a `sui-iframe-viewer` web component."
   },
   {
     "name": "Img",
@@ -140,12 +196,16 @@
     "description": "A composite component that combines an Input field with optional left, right, and bottom Button components. The right and bottom buttons are automatically disabled until the input validation state becomes Valid."
   },
   {
+    "name": "KeyValue",
+    "description": "A read-only label/value grid for rendering detail views \u2014 offer summaries, customer profiles, order metadata, and similar \"field: value\" layouts. Pairs flow row-major across a configurable number of columns, collapsing to a single column on narrow screens. Empty values are skipped by default (so optional fields disappear cleanly), and either side can be fully customised with a snippet for rendering tags, links, avatars, or formatted values. For a single prominent metric with a delta badge and dashboard framing, use `StatCard` instead."
+  },
+  {
     "name": "KeyboardInput",
     "description": "A keyboard shortcut display component that renders key combinations in styled key caps. Supports single keys, multi-key combos with a separator, and light/dark variants. Optionally clickable with keyboard accessibility."
   },
   {
     "name": "LineChart",
-    "description": "A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, five curve interpolations (linear, monotone, spline, step, natural), gradient fill under the line, a showArea mode that fills the area under each line with a fully-customisable vertical gradient via areaGradient, an xAxisCategories prop that maps string labels to the numeric x indices so callers can use named categories on the axis and in tooltips, an onChartReady callback that hands back a ChartHighlightAPI for imperative point highlighting from external orchestrators (e.g. voice narration sync, step-through animations), a declarative highlightedIndex prop for controlled highlight state, an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltip snippets. Zero external dependencies — built from pure SVG with CSS custom property theming."
+    "description": "A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series, five curve interpolations (linear, monotone, spline, step, natural), gradient fill under the line, a showArea mode that fills the area under each line with a fully-customisable vertical gradient via areaGradient, an xAxisCategories prop that maps string labels to the numeric x indices so callers can use named categories on the axis and in tooltips, an onChartReady callback that hands back a ChartHighlightAPI for imperative point highlighting from external orchestrators (e.g. voice narration sync, step-through animations), a declarative highlightedIndex prop for controlled highlight state, an overlay hover tracker that finds the nearest point even when dots are hidden, crosshair vertical line, data point labels, legend, and custom tooltip snippets. Zero external dependencies \u2014 built from pure SVG with CSS custom property theming."
   },
   {
     "name": "ListItem",
@@ -158,6 +218,22 @@
   {
     "name": "LoadingDots",
     "description": "Animated dot sequence for inline loading indication. Three dots animate in sequence with configurable bounce or pulse animation, size variants (small/medium/large), and adjustable duration."
+  },
+  {
+    "name": "LottiePlayer",
+    "description": "A lightweight Lottie animation player that dynamically loads lottie-web and renders animations from a URL or inline JSON data. Supports SVG, canvas, and HTML renderers, imperative play/pause/stop control via bind:this, configurable loop and autoplay, and optional callbacks for completion and load errors."
+  },
+  {
+    "name": "MarkdownText",
+    "description": "Renders markdown as HTML through a sanitized-by-construction pipeline built for chat/agent content: raw HTML (block and inline) is escaped to visible text, and link/image URLs keep their href only on an allow-listed protocol (http/https/mailto/tel for links, http/https for images; relative URLs pass). GFM enabled; optional `breaks` mode renders single newlines as <br>. The optional `sanitize` prop narrows further per instance: `allowedProtocols` narrows the protocol allow-list, `allowedTags` narrows which markdown-generated tags render as themselves (everything renders until supplied), and `disableTaskLists` renders task-list items as plain text instead of a checkbox \u2014 all default to today's behavior when omitted. `tableLabel` names the scrollable region wrapping a rendered table. Pure string transform \u2014 SSR-identical, no DOM. The same pipeline is exported as `renderMarkdown(markdown, {breaks?, inline?, tableLabel?, sanitize?})` and powers ChatMessage's `markdown` prop."
+  },
+  {
+    "name": "MediaPlayer",
+    "description": "An image or video player with a hover-revealed control overlay, reusing Img (image type, with fallback) and Button (video controls). Video shows a centered play/pause and bottom-aligned mute/unmute on hover; the video element itself is a focusable role=button that toggles playback directly. `playing`/`muted` are bindable; `onplay`/`onpause`/`onvolumechange` relay the video's native events. Set `controls` to fall back to native browser controls. Built-in play/pause/volume/mute icons are swappable via snippet props. Fully CSS-variable driven."
+  },
+  {
+    "name": "MediaUpload",
+    "description": "A file picker: a grid of thumbnail cards for staged files plus a drop tile, with drag-and-drop, per-file validation (type/size/count via `accept`/`maxFileSize`/`maxLength`), and a bindable `files` array. Image files get a lazy data-URL thumbnail (via Img, Shimmer placeholder while it loads); non-images get a generic file icon. Each card has a hover-revealed remove button (Button). A rejected selection drops only the offending files and shows one summary error (role=alert) \u2014 already-staged files are untouched. Events are onFilesChange/onRemove/onRejected (not onchange/onremove/onerror \u2014 none relay a native event, so they're camelCase per DESIGN_PRINCIPLES.md)."
   },
   {
     "name": "Menu",
@@ -197,7 +273,7 @@
   },
   {
     "name": "ProportionBar",
-    "description": "A horizontal stacked bar that visualizes how a total is distributed across labelled segments. Renders proportional coloured bands in an SVG track with a palette fallback and an optional legend listing each segment's label and formatted value. Negative and non-finite segment values are sanitized to zero so widths stay within 0–100%. When the legend is hidden the SVG exposes the full breakdown as its accessible name. Supports a custom value formatter, configurable track height, and CSS-variable theming."
+    "description": "A horizontal stacked bar that visualizes how a total is distributed across labelled segments. Renders proportional coloured bands in an SVG track with a palette fallback and an optional legend listing each segment's label and formatted value. Negative and non-finite segment values are sanitized to zero so widths stay within 0\u2013100%. When the legend is hidden the SVG exposes the full breakdown as its accessible name. Supports a custom value formatter, configurable track height, and CSS-variable theming."
   },
   {
     "name": "Radio",
@@ -208,12 +284,12 @@
     "description": "Displays a human-readable relative time string (e.g., '5 minutes ago') that auto-updates at a configurable interval. Uses Intl.RelativeTimeFormat for locale-aware formatting. Renders a semantic <time> element. Optionally wraps in a Tooltip showing the full date."
   },
   {
-    "name": "SankeyChart",
-    "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones (opt-out via disableDimOnHover). Supports a configurable minimum link/node thickness (minLinkWidth) so tiny flows remain visible at any scale, and a horizontal label offset (dataLabelOffsetX) for fine-grained spacing between node bars and their text labels."
+    "name": "Resizable",
+    "description": "A wrapper that makes its content user-resizable via drag handles on chosen edges/corners (`handles`). Dragging updates the bindable `width`/`height` (clamped to min/max) so size is observable and persistable; `onresize`/`onresizestart`/`onresizeend` fire too. Each handle is a focusable WAI-ARIA splitter \u2014 arrow keys resize by `step`, with role=separator and aria-valuenow/min/max. Resize changes size only (not position), so pick handle edges that match how the element is anchored. Layout-agnostic: wrap a Chat panel, Modal, image, or card."
   },
   {
-    "name": "LottiePlayer",
-    "description": "A lightweight Lottie animation player that dynamically loads lottie-web and renders animations from a URL or inline JSON data. Supports SVG, canvas, and HTML renderers, imperative play/pause/stop control via bind:this, configurable loop and autoplay, and optional callbacks for completion and load errors."
+    "name": "SankeyChart",
+    "description": "A responsive SVG Sankey diagram for visualizing flows between nodes. Automatically positions nodes into columns via topological ordering and iterative relaxation. Link widths are proportional to flow values. Hovering highlights all connected nodes and dims unrelated ones (opt-out via disableDimOnHover). Supports a configurable minimum link/node thickness (minLinkWidth) so tiny flows remain visible at any scale, and a horizontal label offset (dataLabelOffsetX) for fine-grained spacing between node bars and their text labels."
   },
   {
     "name": "Scroller",
@@ -238,6 +314,14 @@
   {
     "name": "Snippet",
     "description": "A copyable command-line code snippet with a prompt prefix and copy-to-clipboard button. Shows 'Copied!' feedback (customizable via copiedLabel/copyResetMs) after copying, with unmount-safe timer cleanup. Supports custom copy icon snippet. Clipboard errors are silently handled for non-secure contexts."
+  },
+  {
+    "name": "SoundKit",
+    "description": "A synthesized, SSR-safe UI sound engine (module export `createSoundKit`, not a component): five Web Audio recipes (press/tick/release/page/pulse), a master gain, opt-in enablement persisted to localStorage, and a capture-phase click listener mapping controls to sounds semantically with `data-sound` overrides."
+  },
+  {
+    "name": "SpeechToText",
+    "description": "Headless speech-to-text controller over the browser SpeechRecognition API: support detection, one-shot host permission hook, start-with-retry, interim/final transcript assembly, and a self-hiding error toast. Renders nothing; pair with ChatComposer's voice control."
   },
   {
     "name": "SplitButton",
@@ -272,8 +356,16 @@
     "description": "A horizontal tab bar with clickable tab items and an animated active indicator. Supports overflow scrolling with arrow buttons, custom tab content via a parameterized Snippet, and keyboard activation (Enter/Space). All visuals customizable via CSS variables."
   },
   {
+    "name": "TaskList",
+    "description": "An agent work-plan list with a host-driven per-row status machine: pending, running, failed (with an inline retry button firing `onretry`), and done. Rows stagger in batch-relative and status glyphs crossfade on change."
+  },
+  {
     "name": "ThemeSwitcher",
     "description": "A segmented control for switching between light, dark, and system theme modes. Displays icons for each mode with an animated sliding indicator. Fires a callback with the selected theme value."
+  },
+  {
+    "name": "ThinkingIndicator",
+    "description": "An AI status line for chat turns: a shimmering label while the model works, an optional expandable detail \u2014 either a plain reasoning paragraph or a kind-aware trace (steps checklist with a live frontier spinner, prose reasoning, linked search sources with toned badges, or selectable file edits with diff stats) \u2014 plus a host-driven busy machine (auto-open, once-only `onsettled`, post-settle auto-collapse a user toggle overrides) and an opt-in live elapsed-seconds counter that ticks while busy and freezes on settle."
   },
   {
     "name": "Toast",
@@ -284,6 +376,10 @@
     "description": "A labeled on/off switch with sliding ball animation. The `checked` prop controls the toggle state and the `onclick` event returns the new boolean state after toggling."
   },
   {
+    "name": "ToolCallLog",
+    "description": "A persistent chip log of an agent turn's tool calls (contrast with ChatToolStatus, the transient one-line status). Chips carry running/done/error states, mono metas, +N/-N diff pills, and an optional per-chip detail popover; new chips stagger in batch-relative."
+  },
+  {
     "name": "Toolbar",
     "description": "A fixed-position header bar with a back button, center title, and customizable left/center/right content areas via Snippet slots. Supports an additional content row below the main toolbar."
   },
@@ -292,103 +388,11 @@
     "description": "A hover-triggered tooltip that displays text content above, below, left, or right of its trigger element. Supports configurable position, delay, and styling via CSS variables."
   },
   {
-    "name": "DeltaIndicator",
-    "description": "A compact inline indicator that conveys change direction and magnitude using a directional arrow and formatted text. Positive values render in green, negative in red, and values within the neutral threshold in muted gray. Supports inverted color semantics for lower-is-better metrics (e.g. bounce rate, RTO), an optional arrow-hide mode for text-only display, a configurable neutral threshold, and a custom format function for full control over the displayed text."
-  },
-  {
-    "name": "DualAxisBarChart",
-    "description": "A pure-SVG dual-axis chart with two completely independent Y-axes — left (yAxisIndex 0) and right (yAxisIndex 1) — sharing one categorical X-axis. Each series independently declares its axis and render type (column or line), making it ideal for comparing metrics at very different scales such as absolute revenue versus percentage CTR. Hover highlights the entire category column with a vertical guideline, and the shared tooltip displays all series values formatted by their respective axis formatters. Built from the shared _chart primitives (ChartContainer, Axis, ChartTooltip, Legend, scales, paths) with full CSS custom property theming and zero external dependencies."
-  },
-  {
-    "name": "FunnelChart",
-    "description": "A horizontal funnel chart built entirely from pure SVG, with no external charting library dependency. Renders sequential stages as rectangles whose height is proportional to each stage's value relative to the maximum, joined by trapezoidal connector polygons that visually convey drop-off between steps. Supports per-stage color overrides, a custom value-and-percentage label formatter, configurable slope connector width, hover-expansion animation, click and hover events, an empty-state snippet, and full CSS-variable theming through the shared chart token system."
-  },
-  {
-    "name": "Chat",
-    "description": "A full chat surface composing ChatHeader, ChatMessageList, ChatSuggestions, ChatToolStatus, and ChatComposer. Fully controlled (pass `messages`, handle `onsend`) with no baked-in transport. Opt-in features: header image, stop-generation, voice mic, file attachments, prompt suggestions, smart autoscroll, and per-message copy/retry/feedback. Render your own UI below any bubble with the `messageAttachments` snippet. Pair with the decoupled `ChatController` runes class — message state, streaming, typewriter reveal, retry, and session threading — which delegates the network call to a pluggable `ChatTransport` (adapt SSE, WebSocket, or polling). Markdown is bundled — set a message's `markdown` field and it renders through the sanitized pipeline (see MarkdownText); pre-sanitized HTML on `html` still works."
-  },
-  {
-    "name": "ChatHeader",
-    "description": "A header bar for a chat surface: an optional brand image (via the Img component) or avatar snippet, title and subtitle, extra actions snippet, and a close button (the Button component) shown when `onclose` is provided. Close icon falls back to a built-in asset and is overridable via snippet."
-  },
-  {
-    "name": "ChatMessage",
-    "description": "A single chat bubble. The primitive is the two-party `role`: `sender` (right, accent bubble) or `responder` (left). `user`/`assistant`/`system` and any custom string are recognized extensions that map onto a party (sender/user → sender; everything else → responder), so LLM message arrays drop in unchanged; the exported `partyOf(role)` resolves a role to its party. Renders `markdown` through the library's sanitized-by-construction pipeline (see MarkdownText), else pre-sanitized `html`, else plain `content`; shows a typing indicator (LoadingDots) while streaming with no content, and accepts avatar, header, and attachments snippets. Opt-in hover actions on responder messages: built-in copy (with checkmark feedback), retry (onretry), and 👍/👎 (onfeedback). Basic markdown elements are styled via :global."
-  },
-  {
-    "name": "ChatMessageList",
-    "description": "A scrollable conversation container with smart auto-scroll: it sticks to the bottom only while you're already near it, and shows a jump-to-latest button when you've scrolled up. Renders each message with ChatMessage by default, adds your own UI below any bubble via the per-message `messageAttachments` snippet, or replaces a message entirely with the `message` snippet, shows an `empty` snippet when there are no messages, and forwards opt-in message actions (allowCopy, onretry, onfeedback). Uses a Svelte action (no effects), respecting reduced-motion."
-  },
-  {
-    "name": "MarkdownText",
-    "description": "Renders markdown as HTML through a sanitized-by-construction pipeline built for chat/agent content: raw HTML (block and inline) is escaped to visible text, and link/image URLs keep their href only on an allow-listed protocol (http/https/mailto/tel for links, http/https for images; relative URLs pass). GFM enabled; optional `breaks` mode renders single newlines as <br>. The optional `sanitize` prop narrows further per instance: `allowedProtocols` narrows the protocol allow-list, `allowedTags` narrows which markdown-generated tags render as themselves (everything renders until supplied), and `disableTaskLists` renders task-list items as plain text instead of a checkbox — all default to today's behavior when omitted. `tableLabel` names the scrollable region wrapping a rendered table. Pure string transform — SSR-identical, no DOM. The same pipeline is exported as `renderMarkdown(markdown, {breaks?, inline?, tableLabel?, sanitize?})` and powers ChatMessage's `markdown` prop."
-  },
-  {
-    "name": "ChatComposer",
-    "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable."
-  },
-  {
-    "name": "SpeechToText",
-    "description": "Headless speech-to-text controller over the browser SpeechRecognition API: support detection, one-shot host permission hook, start-with-retry, interim/final transcript assembly, and a self-hiding error toast. Renders nothing; pair with ChatComposer's voice control."
-  },
-  {
-    "name": "ChatSuggestions",
-    "description": "A row of tappable prompt chips (the Pill component), typically shown on an empty conversation. Each item is a string or `{ label, value }`; selecting a chip fires `onselect` with the value and index."
-  },
-  {
-    "name": "ChatToolStatus",
-    "description": "A compact status pill pairing a spinner (the Loader component) with a label to show what the assistant is doing (searching, calling a tool, thinking). The leading indicator is overridable via snippet."
-  },
-  {
-    "name": "ChatBubble",
-    "description": "A floating launcher button (FAB) pinned to a viewport corner that toggles a floating panel (role=dialog). Drop a Chat (or anything) inside via the children snippet — ChatBubble owns only the launcher, corner positioning, bindable `open` state, focus management (focus into panel on open, Escape to close and return focus), and reuses the Button component for the launcher. Optionally `draggable` (grab the launcher to reposition the whole widget, with click-vs-drag detection and viewport clamping; bindable `dragX`/`dragY`). `dragMode` controls drag style: `'snap'` (default) anchors to the nearest left/right screen edge on release like a mobile chat head (panel re-opens toward center), `'free'` stays where dropped. Optionally `resizable` (resize the open panel; bindable `panelWidth`/`panelHeight`, handles derived from the corner via the Resizable component). Decoupled from its contents; fully themeable via CSS variables."
-  },
-  {
-    "name": "Resizable",
-    "description": "A wrapper that makes its content user-resizable via drag handles on chosen edges/corners (`handles`). Dragging updates the bindable `width`/`height` (clamped to min/max) so size is observable and persistable; `onresize`/`onresizestart`/`onresizeend` fire too. Each handle is a focusable WAI-ARIA splitter — arrow keys resize by `step`, with role=separator and aria-valuenow/min/max. Resize changes size only (not position), so pick handle edges that match how the element is anchored. Layout-agnostic: wrap a Chat panel, Modal, image, or card."
-  },
-  {
-    "name": "Draggable",
-    "description": "A wrapper that makes its content user-movable via pointer drag or arrow keys, applied as a transform (never affects layout flow). Dragging updates the bindable `x`/`y` offset, optionally constrained to one `axis`, a `handle` sub-selector, or the viewport (`bounds=\"viewport\"`); `onMoveStart`/`onMove`/`onMoveEnd` fire too. The root is a focusable, aria-labelled region; without a `handle`, pointer-downs on nested native controls (input, button, a, ...) never start a drag. Position only, not size — pair with `Resizable` for a panel that's both movable and resizable."
-  },
-  {
-    "name": "MediaPlayer",
-    "description": "An image or video player with a hover-revealed control overlay, reusing Img (image type, with fallback) and Button (video controls). Video shows a centered play/pause and bottom-aligned mute/unmute on hover; the video element itself is a focusable role=button that toggles playback directly. `playing`/`muted` are bindable; `onplay`/`onpause`/`onvolumechange` relay the video's native events. Set `controls` to fall back to native browser controls. Built-in play/pause/volume/mute icons are swappable via snippet props. Fully CSS-variable driven."
-  },
-  {
-    "name": "MediaUpload",
-    "description": "A file picker: a grid of thumbnail cards for staged files plus a drop tile, with drag-and-drop, per-file validation (type/size/count via `accept`/`maxFileSize`/`maxLength`), and a bindable `files` array. Image files get a lazy data-URL thumbnail (via Img, Shimmer placeholder while it loads); non-images get a generic file icon. Each card has a hover-revealed remove button (Button). A rejected selection drops only the offending files and shows one summary error (role=alert) — already-staged files are untouched. Events are onFilesChange/onRemove/onRejected (not onchange/onremove/onerror — none relay a native event, so they're camelCase per DESIGN_PRINCIPLES.md)."
-  },
-  {
-    "name": "Gallery",
-    "description": "An image gallery with grid or list layout and an optional full-screen lightbox (previous/next nav, counter, caption, focus-trapped keyboard control - arrows, Home/End, Escape, Tab). open/activeIndex are bindable. Optional per-item edit/delete actions appear only when their handler prop (onEditClick/onDeleteClick) is provided - no separate show flags. Grid items can render fully custom content via the itemFooter snippet. Events are onImageClick/onEditClick/onDeleteClick/onOpen/onDismiss/onIndexChange (camelCase, synthesized) plus onkeydown (lowercase, a genuine native KeyboardEvent relay) - onDismiss specifically avoids onClose since no real <dialog> element is involved."
-  },
-  {
-    "name": "HITL",
-    "description": "Human-in-the-loop approval: the assistant wants to run an action, and the person approves or cancels it before it executes. Unless disabled, a countdown sweeps across the confirm button and auto-approves the action when it completes. Interacting with any HITL pauses every sibling card's countdown, so an auto-approval never fires while the user is actively deciding."
-  },
-  {
-    "name": "KeyValue",
-    "description": "A read-only label/value grid for rendering detail views — offer summaries, customer profiles, order metadata, and similar \"field: value\" layouts. Pairs flow row-major across a configurable number of columns, collapsing to a single column on narrow screens. Empty values are skipped by default (so optional fields disappear cleanly), and either side can be fully customised with a snippet for rendering tags, links, avatars, or formatted values. For a single prominent metric with a delta badge and dashboard framing, use `StatCard` instead."
-  },
-  {
-    "name": "ThinkingIndicator",
-    "description": "An AI status line for chat turns: a shimmering label while the model works, an optional expandable detail — either a plain reasoning paragraph or a kind-aware trace (steps checklist with a live frontier spinner, prose reasoning, linked search sources with toned badges, or selectable file edits with diff stats) — plus a host-driven busy machine (auto-open, once-only `onsettled`, post-settle auto-collapse a user toggle overrides) and an opt-in live elapsed-seconds counter that ticks while busy and freezes on settle."
-  },
-  {
-    "name": "ToolCallLog",
-    "description": "A persistent chip log of an agent turn's tool calls (contrast with ChatToolStatus, the transient one-line status). Chips carry running/done/error states, mono metas, +N/-N diff pills, and an optional per-chip detail popover; new chips stagger in batch-relative."
-  },
-  {
-    "name": "TaskList",
-    "description": "An agent work-plan list with a host-driven per-row status machine: pending, running, failed (with an inline retry button firing `onretry`), and done. Rows stagger in batch-relative and status glyphs crossfade on change."
-  },
-  {
-    "name": "SoundKit",
-    "description": "A synthesized, SSR-safe UI sound engine (module export `createSoundKit`, not a component): five Web Audio recipes (press/tick/release/page/pulse), a master gain, opt-in enablement persisted to localStorage, and a capture-phase click listener mapping controls to sounds semantically with `data-sound` overrides."
-  },
-  {
     "name": "TypewriterText",
     "description": "Reveals text one character at a time, the way a streaming model answer reads. Built for streaming: while `isStreaming` is `true`, typing follows the growing `text` without restarting; the moment it turns `false`, the remainder appears at once."
+  },
+  {
+    "name": "VoiceOrb",
+    "description": "An ambient particle sphere for voice and assistant surfaces: a thousand seeded points on a rotating sphere drawn to a canvas, with an 'idle' variant that rotates steadily and a 'listening' variant that breathes in both speed and scale. Optionally audio-reactive: pass an AnalyserNode and the listening state is driven by the sound itself, with a fast-attack slow-release envelope; without one it breathes on a timer. The component never opens a microphone or creates an AudioContext -- the caller owns the node. Placement is seeded so the same seed reproduces the same orb; rotation can optionally persist across mounts under a caller-namespaced localStorage key; pointer movement repels particles unless disabled. Draws in the inherited text colour by default, so it is legible and theme-correct without configuration; override with --sui-orb-particle-color."
   }
 ]

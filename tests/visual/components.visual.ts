@@ -25,7 +25,15 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
   'lottie-player': ['.demo-row'],
   // Renders a real <video>; the decoded frame shown at screenshot time depends on
   // decoder timing rather than on anything this library controls.
-  'media-player': ['.demo-row']
+  'media-player': ['.demo-row'],
+  // Same reason as lottie-player: VoiceOrb draws to a canvas from rAF, so the
+  // frame captured depends on when the screenshot lands, not on the component.
+  // The moving orbs are masked; `.orb-still` deliberately is NOT, because a
+  // `speedMultiplier={0}` orb paints the same pixels on every frame. Masking
+  // every canvas on the route -- which the first revision of this entry did --
+  // left a baseline of nothing but headings, and a passing visual suite that
+  // would not have noticed the orb going blank. It did go blank.
+  'voice-orb': ['.demo-row', '.orb-grid']
 };
 
 /**

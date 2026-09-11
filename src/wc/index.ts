@@ -26,6 +26,7 @@ import './components/Progress.wc.svelte';
 import './components/Radio.wc.svelte';
 import './components/RelativeTime.wc.svelte';
 import './components/Shimmer.wc.svelte';
+import './components/VoiceOrb.wc.svelte';
 import './components/Slider.wc.svelte';
 import './components/SplitInput.wc.svelte';
 import './components/Status.wc.svelte';

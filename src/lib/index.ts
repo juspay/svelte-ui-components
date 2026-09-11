@@ -37,6 +37,7 @@ export { default as Tooltip } from './Tooltip/Tooltip.svelte';
 export { default as TypewriterText } from './TypewriterText/TypewriterText.svelte';
 export { tooltip } from './Tooltip/tooltip-action';
 export { default as Shimmer } from './Shimmer/Shimmer.svelte';
+export { default as VoiceOrb } from './VoiceOrb/VoiceOrb.svelte';
 export { default as Progress } from './Progress/Progress.svelte';
 export { default as Pill } from './Pill/Pill.svelte';
 export { default as Pagination } from './Pagination/Pagination.svelte';
@@ -190,6 +191,7 @@ export type * from './ProportionBar/properties';
 export type * from './ChipInput/properties';
 export type * from './FileDropzoneTrigger/properties';
 export type * from './_chart/highlight';
+export type * from './VoiceOrb/properties';
 
 export type * from './Chat/properties';
 export type * from './Chat/types';

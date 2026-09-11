@@ -8,10 +8,13 @@
     testId,
     classes,
     tableLabel,
+    tableWrapperClass,
     sanitize
   }: MarkdownTextProperties = $props();
 
-  let html = $derived(renderMarkdown(markdown, { breaks, tableLabel, sanitize }));
+  let html = $derived(
+    renderMarkdown(markdown, { breaks, tableLabel, tableWrapperClass, sanitize })
+  );
 </script>
 
 <div

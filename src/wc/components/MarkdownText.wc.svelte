@@ -8,6 +8,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       tableLabel: { type: 'String', attribute: 'table-label' },
+      tableWrapperClass: { type: 'String', attribute: 'table-wrapper-class' },
       sanitize: { type: 'Object' }
     }
   }}

@@ -24,6 +24,15 @@ export type OptionalMarkdownTextProperties = {
    */
   tableLabel?: string;
   /**
+   * Extra class name added to the scrollable region wrapping each table,
+   * alongside the built-in `markdown-table-wrapper` rather than replacing it
+   * (the wrapper's scroll/focus behaviour is scoped to that class and cannot
+   * be retargeted). Lets a consumer whose own stylesheet targets a different
+   * class keep that styling too. Omitting it, or passing an empty or
+   * whitespace-only string, keeps only `markdown-table-wrapper`.
+   */
+  tableWrapperClass?: string;
+  /**
    * Narrow which URL protocols survive on rendered links/images. See
    * `MarkdownSanitizeOptions`.
    */
@@ -110,6 +119,8 @@ export type RenderMarkdownOptions = {
   inline?: boolean;
   /** Accessible name for the scroll region wrapping each table. See `MarkdownTextProperties.tableLabel`. */
   tableLabel?: string;
+  /** Class name for the scroll region wrapping each table. See `MarkdownTextProperties.tableWrapperClass`. */
+  tableWrapperClass?: string;
   /** Narrow the protocol allow-list. See `MarkdownSanitizeOptions`. */
   sanitize?: MarkdownSanitizeOptions;
 };

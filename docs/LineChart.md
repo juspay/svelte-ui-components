@@ -130,6 +130,62 @@ Receive a `ChartHighlightAPI` after mount to drive point highlighting from an ex
 <LineChart {series} xAxisCategories={months} onchartready={onChartReady} />
 ```
 
+### Narration sync — createNarrationHighlighter
+
+The orchestrator the hook above was built for, so it does not have to be written per app.
+Feed it the transcript as an assistant speaks and it highlights the slice being named,
+clearing itself after a pause.
+
+```svelte
+<script lang="ts">
+  import { createNarrationHighlighter } from '@juspay/svelte-ui-components';
+  import type { NarrationHighlighter } from '@juspay/svelte-ui-components';
+
+  let highlighter: NarrationHighlighter | null = null;
+
+  const onChartReady = (api) => {
+    highlighter = createNarrationHighlighter({ chart: api });
+  };
+
+  // as each transcript chunk arrives — pass the transcript SO FAR, not the delta
+  const onTranscript = (textSoFar: string) => highlighter?.processText(textSoFar);
+
+  // when the assistant begins a new answer
+  const onTurnStart = () => highlighter?.reset();
+
+  $effect(() => () => highlighter?.destroy());
+</script>
+
+<LineChart {series} xAxisCategories={months} onchartready={onChartReady} />
+```
+
+`createNarrationHighlighter` itself is SSR-safe, but the highlighter it returns
+schedules a `setTimeout` for its auto-clear, so instantiate it where the browser
+exists -- inside `onchartready` (as above) or `onMount`, never at module scope.
+
+It takes the `ChartHighlightAPI` directly — no registry of charts, because `getCategories()`
+is already the label list and `highlight(null)` is already the clear path. `processText`
+returns the index it highlighted, or `null` when the narration named nothing new; a category
+fires at most once per turn, until `reset()`.
+
+| Option          | Default    | What it does                                                                |
+| --------------- | ---------- | --------------------------------------------------------------------------- |
+| `chart`         | —          | The `ChartHighlightAPI` from `onchartready`.                                |
+| `autoClearMs`   | `2000`     | How long a highlight stays up. An unusable value falls back to the default. |
+| `caseSensitive` | `false`    | Match labels case-sensitively.                                              |
+| `match`         | whole-word | Replaces the matching rule entirely.                                        |
+
+**On the matching rule, because the default is a deliberate choice.** A label matches only as
+a whole word. Substring matching is available — `match: (narration, category) =>
+narration.includes(category)` — but makes a poor default: labels are often ordinary words
+like `Other`, `All` or `None`, especially when they come from a model's tool output rather
+than a curated list, and a substring rule fires `Other` on `otherwise` and `others`.
+
+Whole-word matching narrows that surface without closing it. In _"on the other hand"_,
+`other` is genuinely a standalone word, so the label still matches — no lexical rule could
+decide otherwise without reading the sentence. If your labels are not yours to curate, pass
+a stricter `match`, and call `reset()` between turns so a mis-fire cannot outlive one answer.
+
 ### highlightedIndex — Declarative Prop
 
 Highlight a point without a callback. Set `highlightedIndex` to a zero-based point index. The chart enlarges that dot, draws the crosshair, and dims all other dots. Set to `null` to clear.

@@ -190,6 +190,7 @@ export type * from './ProportionBar/properties';
 export type * from './ChipInput/properties';
 export type * from './FileDropzoneTrigger/properties';
 export type * from './_chart/highlight';
+export type * from './_chart/narrationHighlighter';
 
 export type * from './Chat/properties';
 export type * from './Chat/types';
@@ -212,3 +213,4 @@ export type * from './Gallery/properties';
 export { createSoundKit } from './SoundKit/SoundKit';
 export { validateInput, lockBodyScroll, unlockBodyScroll } from './utils';
 export { formatNumberIndian } from './_chart/format';
+export { createNarrationHighlighter } from './_chart/narrationHighlighter';

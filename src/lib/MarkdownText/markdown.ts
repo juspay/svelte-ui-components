@@ -290,15 +290,35 @@ function annotateExternalLinks(html: string): string {
 const TABLE_OPEN = /<table>/g;
 const TABLE_CLOSE = /<\/table>/g;
 
-function wrapTables(html: string, label?: string): string {
+const DEFAULT_TABLE_WRAPPER_CLASS = 'markdown-table-wrapper';
+
+function wrapTables(html: string, label?: string, wrapperClass?: string): string {
   /* `role="region"` without an accessible name announces a landmark the user
      cannot identify, which is worse than no landmark, so the role appears only
      when the caller supplies a name. The tabindex does not depend on it:
      keyboard scrolling should work either way. */
+  /* A caller's class is ADDED, never substituted. The wrapper's own styling --
+     `overflow-x: auto`, the `:focus-visible` ring, and the table's max-content
+     width -- is scoped to `.markdown-table-wrapper` in MarkdownText.svelte, and
+     a Svelte scoped selector cannot be templated to a name supplied at runtime.
+     Substituting the class would leave a `tabindex="0"` element that cannot
+     scroll and shows no focus ring, undoing the fix that made a wide table
+     keyboard-scrollable in the first place. Adding costs a consumer nothing:
+     their own selector still matches, and they can still override by
+     specificity. */
+  const custom = typeof wrapperClass === 'string' ? wrapperClass.trim() : '';
+  // The caller's value lands inside a double-quoted HTML attribute, same as
+  // `label` below -- escaping it the same way is what stops a value like
+  // `" onmouseover="alert(1)` from closing the attribute early and injecting a
+  // new one. The built-in name is a literal and needs no escaping.
+  const classAttr =
+    custom.length > 0
+      ? `${DEFAULT_TABLE_WRAPPER_CLASS} ${escapeHtml(custom)}`
+      : DEFAULT_TABLE_WRAPPER_CLASS;
   const open =
     typeof label === 'string' && label.length > 0
-      ? `<div class="markdown-table-wrapper" tabindex="0" role="region" aria-label="${escapeHtml(label)}">`
-      : '<div class="markdown-table-wrapper" tabindex="0">';
+      ? `<div class="${classAttr}" tabindex="0" role="region" aria-label="${escapeHtml(label)}">`
+      : `<div class="${classAttr}" tabindex="0">`;
   return html.replace(TABLE_OPEN, `${open}<table>`).replace(TABLE_CLOSE, '</table></div>');
 }
 
@@ -341,5 +361,7 @@ export function renderMarkdown(markdown: string, options: RenderMarkdownOptions 
   }
   /* Inline parsing produces no block elements, so there is no table to wrap. */
   const linked = annotateExternalLinks(output);
-  return options.inline === true ? linked : wrapTables(linked, options.tableLabel);
+  return options.inline === true
+    ? linked
+    : wrapTables(linked, options.tableLabel, options.tableWrapperClass);
 }

@@ -226,4 +226,59 @@ describe('renderMarkdown — table wrapping', () => {
   it('leaves markdown without a table untouched', () => {
     expect(renderMarkdown('plain **text**')).not.toContain('markdown-table-wrapper');
   });
+
+  it('adds tableWrapperClass so a consumer selector matches the wrapper', () => {
+    const output = renderMarkdown(table, { tableWrapperClass: 'markdown-table-scroll' });
+    expect(output).toContain(
+      '<div class="markdown-table-wrapper markdown-table-scroll" tabindex="0"><table>'
+    );
+  });
+
+  it('falls back to the default wrapper class when tableWrapperClass is empty', () => {
+    const output = renderMarkdown(table, { tableWrapperClass: '' });
+    expect(output).toContain('<div class="markdown-table-wrapper" tabindex="0"><table>');
+  });
+
+  it('falls back to the default wrapper class when tableWrapperClass is whitespace-only', () => {
+    // Pins that a whitespace-only value is trimmed to empty rather than
+    // surviving as a meaningless custom class, matching the documented
+    // "empty string keeps the default" behaviour for the empty case above.
+    const output = renderMarkdown(table, { tableWrapperClass: '   ' });
+    expect(output).toContain('<div class="markdown-table-wrapper" tabindex="0"><table>');
+  });
+
+  it('combines a custom tableWrapperClass with tableLabel', () => {
+    const output = renderMarkdown(table, {
+      tableWrapperClass: 'markdown-table-scroll',
+      tableLabel: 'Recent orders'
+    });
+    expect(output).toContain(
+      '<div class="markdown-table-wrapper markdown-table-scroll" tabindex="0" role="region" aria-label="Recent orders"><table>'
+    );
+  });
+
+  it('keeps the built-in wrapper class alongside a custom one', () => {
+    // The wrapper is a `tabindex="0"` scroll container (5cb4df4). Its
+    // overflow-x, its focus ring and the table's max-content width are all
+    // scoped to `.markdown-table-wrapper` in MarkdownText.svelte, and a Svelte
+    // scoped selector cannot be templated to a caller's class name. Replacing
+    // the class would leave a focusable element that cannot scroll and shows no
+    // focus ring -- undoing the accessibility fix that made it focusable.
+    const output = renderMarkdown(table, { tableWrapperClass: 'markdown-table-scroll' });
+    expect(output).toContain('class="markdown-table-wrapper markdown-table-scroll"');
+  });
+
+  it('adds nothing when no custom class is given', () => {
+    const output = renderMarkdown(table, {});
+    expect(output).toContain('class="markdown-table-wrapper"');
+  });
+
+  it('escapes tableWrapperClass so it cannot break out of the attribute', () => {
+    const output = renderMarkdown(table, { tableWrapperClass: '" onmouseover="alert(1)' });
+    // The hostile value must never appear as a live, unescaped attribute --
+    // that would close `class="..."` early and inject a new attribute.
+    expect(output).not.toContain('" onmouseover="alert(1)"');
+    expect(output).not.toContain('<div class="" onmouseover=');
+    expect(output).toContain('class="markdown-table-wrapper &quot; onmouseover=&quot;alert(1)"');
+  });
 });

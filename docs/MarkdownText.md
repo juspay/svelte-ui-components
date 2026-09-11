@@ -36,14 +36,15 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 
 ## Props
 
-| Prop       | Type                      | Required | Default | Description                                                                                                                                                                                                         |
-| ---------- | ------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| markdown   | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                         |
-| breaks     | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                               |
-| testId     | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                |
-| classes    | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                   |
-| tableLabel | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                        |
-| sanitize   | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped or dropped. See the Security model section below. |
+| Prop              | Type                      | Required | Default | Description                                                                                                                                                                                                         |
+| ----------------- | ------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| markdown          | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                         |
+| breaks            | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                               |
+| testId            | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                |
+| classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                   |
+| tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                        |
+| tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                              |
+| sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped or dropped. See the Security model section below. |
 
 ## Security model
 
@@ -120,6 +121,39 @@ That adds `role="region"` and `aria-label`. Without it the wrapper stays
 keyboard-scrollable but announces no landmark, since a region the user cannot
 identify is worse than no region at all.
 
+`markdown-table-wrapper` is itself a stable public class name — style it
+directly in your own stylesheet if you would rather theme the wrapper that way
+than reach for CSS variables. If your app already has its own class for this
+(its own scroll/border/token treatment) and you want the rendered markup to
+carry that class instead, pass `tableWrapperClass`:
+
+```svelte
+<MarkdownText {markdown} tableWrapperClass="markdown-table-scroll" />
+```
+
+The wrapper then carries both: `class="markdown-table-wrapper markdown-table-scroll"`.
+
+**It is added, never substituted, and that is deliberate.** The wrapper is a
+`tabindex="0"` scroll container, and the three things that make it one —
+`overflow-x: auto`, the `:focus-visible` ring, and the table's `max-content`
+width — are scoped to `.markdown-table-wrapper` in the component's own styles.
+A Svelte scoped selector cannot be templated to a class name supplied at
+runtime, so replacing the class would leave a focusable element that cannot
+scroll and shows no focus ring: a keyboard dead end, and a regression of the
+fix that made wide tables scrollable in the first place.
+
+Adding costs you nothing. Your own selector matches the wrapper exactly as it
+would have, and you can still override any built-in declaration by specificity
+if you want different scroll or focus treatment.
+
+`markdown-table-wrapper` is a stable public class. Theme against it directly if
+you would rather not pass a prop at all.
+
+Omitting `tableWrapperClass`, or passing an empty or whitespace-only string,
+leaves the wrapper with just `markdown-table-wrapper`. The value is
+HTML-attribute-escaped the same way `tableLabel` is, so it cannot break out of
+the `class="..."` attribute it is placed in.
+
 ## CSS Variables
 
 | Variable                                  | Default                   | Description                    |
@@ -153,6 +187,7 @@ export type MarkdownTextProperties = {
   testId?: string;
   classes?: string;
   tableLabel?: string;
+  tableWrapperClass?: string;
   sanitize?: MarkdownSanitizeOptions;
 };
 
@@ -178,6 +213,7 @@ export type RenderMarkdownOptions = {
   breaks?: boolean;
   inline?: boolean;
   tableLabel?: string;
+  tableWrapperClass?: string;
   sanitize?: MarkdownSanitizeOptions;
 };
 ```

@@ -18,6 +18,7 @@
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { roundedRectPath, linePath } from '$lib/_chart/paths';
+  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
   import type {
     LegendItem,
     TooltipData,
@@ -280,7 +281,17 @@
     series.map((s, si) => ({
       label: s.name,
       color: resolvedColor(s, si),
-      hidden: hiddenSeries.has(si)
+      hidden: hiddenSeries.has(si),
+      // Defaults to the same per-axis formatter (leftFormat/rightFormat, used
+      // for ticks/tooltip above) as whichever axis this series is plotted
+      // against, so a left-axis currency series and a right-axis percentage
+      // series each get a sensible default without either specifying
+      // `aggregateFormat`.
+      aggregateLabel: formatSeriesAggregate(
+        s.data,
+        s.aggregate ?? 'none',
+        s.aggregateFormat ?? (s.yAxisIndex === 0 ? leftFormat : rightFormat)
+      )
     }))
   );
 

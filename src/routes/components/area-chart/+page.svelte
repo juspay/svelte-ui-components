@@ -78,3 +78,21 @@
 <div class="demo-row">
   <AreaChart series={singleSeries} fillOpacity={0.6} />
 </div>
+
+<h3>Legend aggregates (<code>aggregate</code> + <code>aggregateFormat</code>)</h3>
+<p>
+  Aggregates are always per-series, even when <code>stacked</code> — the legend total for "Direct" below
+  is the sum of its own six points, never the per-category stack total.
+</p>
+<div class="demo-row">
+  <AreaChart
+    series={[
+      { ...stackedSeries[0], aggregate: 'sum', aggregateFormat: (v) => `${v} visits` },
+      { ...stackedSeries[1], aggregate: 'average' },
+      stackedSeries[2]
+    ]}
+    stacked
+    showLegend
+    testId="area-legend-aggregate-chart"
+  />
+</div>

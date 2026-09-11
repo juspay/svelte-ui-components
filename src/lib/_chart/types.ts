@@ -150,6 +150,14 @@ export type LegendItem = {
   color: string;
   /** True when the series is toggled off via an interactive legend. */
   hidden?: boolean;
+  /**
+   * Formatted per-series aggregate (e.g. `"$1.2K"`, `"45%"`) shown beside the
+   * label. `null`/omitted renders nothing -- both the "no `aggregate` was
+   * configured for this series" and "the series had no data to aggregate"
+   * cases resolve here, via `computeSeriesAggregate`/`formatSeriesAggregate`
+   * in `_chart/aggregate.ts`.
+   */
+  aggregateLabel?: string | null;
 };
 
 /** Data-space anchor for point/category-anchored tooltips (coords are container px). */

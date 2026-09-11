@@ -410,6 +410,41 @@
   />
 </div>
 
+<h3>Legend aggregates (<code>aggregate</code> + <code>aggregateFormat</code>)</h3>
+<div class="demo-row">
+  <LineChart
+    series={[
+      {
+        name: 'Product A',
+        data: [
+          { x: 1, y: 20 },
+          { x: 2, y: 35 },
+          { x: 3, y: 28 },
+          { x: 4, y: 42 },
+          { x: 5, y: 38 },
+          { x: 6, y: 50 }
+        ],
+        aggregate: 'sum',
+        aggregateFormat: (v) => `${v} units`
+      },
+      {
+        name: 'Product B',
+        data: [
+          { x: 1, y: 12 },
+          { x: 2, y: 18 },
+          { x: 3, y: 15 },
+          { x: 4, y: 22 },
+          { x: 5, y: 19 },
+          { x: 6, y: 25 }
+        ],
+        aggregate: 'average'
+      }
+    ]}
+    showLegend
+    testId="line-legend-aggregate-chart"
+  />
+</div>
+
 <style>
   .highlight-controls {
     display: flex;

@@ -283,6 +283,39 @@
   />
 </div>
 
+<h3>Legend aggregates (<code>aggregate</code> + <code>aggregateFormat</code>)</h3>
+<div class="demo-row">
+  <BarChart
+    series={[
+      {
+        name: 'Revenue',
+        data: [
+          { label: 'Q1', value: 1200 },
+          { label: 'Q2', value: 1800 },
+          { label: 'Q3', value: 1400 },
+          { label: 'Q4', value: 2100 }
+        ],
+        aggregate: 'sum',
+        aggregateFormat: (v) => `$${v.toLocaleString()}`
+      },
+      {
+        name: 'Conversion Rate',
+        data: [
+          { label: 'Q1', value: 2.4 },
+          { label: 'Q2', value: 3.1 },
+          { label: 'Q3', value: 2.8 },
+          { label: 'Q4', value: 3.6 }
+        ],
+        aggregate: 'average',
+        aggregateFormat: (v) => `${v.toFixed(1)}%`
+      }
+    ]}
+    showLegend={true}
+    interactiveLegend
+    testId="bar-legend-aggregate-chart"
+  />
+</div>
+
 <style>
   .intro {
     max-width: 680px;

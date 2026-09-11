@@ -29,6 +29,7 @@
     placedLabelRect,
     dropOverlapping
   } from '$lib/_chart/labels';
+  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { TooltipAnchor } from '$lib/_chart/types';
@@ -583,10 +584,22 @@
 
   let legendItems = $derived<LegendItem[]>(
     isMulti
-      ? resolvedSeries.map((s, i) => ({
+      ? rawSeries.map((s, i) => ({
           label: s.name,
           color: fallbackColor(s.color ?? getColor(i), i),
-          hidden: hiddenSeries.has(i)
+          hidden: hiddenSeries.has(i),
+          // Aggregates this series' own raw `value`s, from `rawSeries` rather
+          // than `resolvedSeries`: the latter may hold normaliseToFirstPoint
+          // percentages or topN-clipped/overflow values, neither of which is
+          // the series' real data (never the cross-series stack total either,
+          // which is an unrelated existing computation). Defaults to the
+          // chart's own `valueFormat`/number formatter, matching the "reuse
+          // the axis/tooltip formatting mechanism" rule.
+          aggregateLabel: formatSeriesAggregate(
+            s.data.map((d) => d.value),
+            s.aggregate ?? 'none',
+            s.aggregateFormat ?? format
+          )
         }))
       : []
   );

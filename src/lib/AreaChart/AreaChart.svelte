@@ -13,6 +13,7 @@
   import { measureText } from '$lib/_chart/measure';
   import { resolvePointLabels } from '$lib/_chart/labels';
   import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
   import type { LegendItem, Point } from '$lib/_chart/types';
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
@@ -171,7 +172,15 @@
   });
 
   let legendItems = $derived<LegendItem[]>(
-    series.map((s, i) => ({ label: s.name, color: s.color ?? getColor(i) }))
+    series.map((s, i) => ({
+      label: s.name,
+      color: s.color ?? getColor(i),
+      aggregateLabel: formatSeriesAggregate(
+        s.data.map((d) => d.y),
+        s.aggregate ?? 'none',
+        s.aggregateFormat ?? yTickFormat ?? formatNumber
+      )
+    }))
   );
 
   // ── Tooltip ────────────────────────────────────────────────────

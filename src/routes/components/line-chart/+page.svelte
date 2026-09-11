@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import LineChart from '$lib/LineChart/LineChart.svelte';
   import type { ChartHighlightAPI } from '$lib/_chart/highlight';
+  import { createNarrationHighlighter } from '$lib/_chart/narrationHighlighter';
+  import type { NarrationHighlighter } from '$lib/_chart/narrationHighlighter';
 
   const monthLabels = [
     'Jan',
@@ -80,6 +83,56 @@
 
   const onChartReady = (api: ChartHighlightAPI): void => {
     highlightApi = api;
+    // A remount fires onChartReady again with a new api. Without this, the
+    // previous narrator's pending auto-clear timer survives and later calls
+    // highlight(null) on the stale api it closed over.
+    narrator?.destroy();
+    narrator = createNarrationHighlighter({ chart: api, autoClearMs: 1200 });
+  };
+
+  // ── Narration sync demo ────────────────────────────────────────
+  //
+  // What an assistant speaking over the chart looks like: the transcript grows
+  // a word at a time and the slice being named lights up as it is reached.
+
+  const NARRATION_SCRIPT =
+    'Sales were slow in Feb, recovered by Jun, and peaked in Nov before easing off.';
+
+  let narrator: NarrationHighlighter | null = null;
+  let narrationTranscript = $state('');
+  let narrationIndex = $state<number | null>(null);
+  let narrationTimer: ReturnType<typeof setInterval> | null = null;
+
+  const stopNarration = (): void => {
+    if (narrationTimer !== null) {
+      clearInterval(narrationTimer);
+      narrationTimer = null;
+    }
+  };
+
+  // Navigating away mid-narration would otherwise leave the interval running and
+  // calling processText on a destroyed component.
+  onDestroy(stopNarration);
+
+  const playNarration = (): void => {
+    stopNarration();
+    narrator?.reset();
+    narrationTranscript = '';
+    narrationIndex = null;
+
+    const words = NARRATION_SCRIPT.split(' ');
+    let spoken = 0;
+    narrationTimer = setInterval(() => {
+      spoken += 1;
+      narrationTranscript = words.slice(0, spoken).join(' ');
+      const hit = narrator?.processText(narrationTranscript) ?? null;
+      if (hit !== null) {
+        narrationIndex = hit;
+      }
+      if (spoken >= words.length) {
+        stopNarration();
+      }
+    }, 140);
   };
 
   const setHighlight = (index: number | null): void => {
@@ -253,6 +306,24 @@
   />
 </div>
 
+<h3>Narration sync — createNarrationHighlighter</h3>
+<p>
+  The orchestrator the hook above exists for. <code>processText</code> receives the transcript as it
+  grows and highlights the month being named — <code>Feb</code>, then <code>Jun</code>, then
+  <code>Nov</code> — clearing itself after a pause.
+</p>
+<div class="demo-row">
+  <button class="highlight-btn" data-pw="narration-play" onclick={playNarration}>
+    Play narration
+  </button>
+  <span data-pw="narration-highlighted" class="narration-readout" aria-live="polite">
+    {narrationIndex === null
+      ? 'nothing highlighted'
+      : `last matched ${monthLabels[narrationIndex]}`}
+  </span>
+</div>
+<p data-pw="narration-transcript" class="narration-transcript">{narrationTranscript}</p>
+
 <h3>Highlight Hook — onChartReady + imperative API</h3>
 <p>
   Use <code>onChartReady</code> to receive a <code>ChartHighlightAPI</code> with a
@@ -265,6 +336,7 @@
     xAxisCategories={monthLabels}
     onchartready={onChartReady}
     showDots
+    testId="line-highlight-hook-chart"
   />
 </div>
 <div class="highlight-controls">
@@ -357,6 +429,16 @@
     background: #6366f1;
     color: #fff;
     border-color: #6366f1;
+  }
+  .narration-readout {
+    margin-left: 12px;
+    font-size: 13px;
+    color: #4b5563;
+  }
+  .narration-transcript {
+    min-height: 1.4em;
+    font-style: italic;
+    color: #6b7280;
   }
   .clear-btn {
     margin-left: 8px;

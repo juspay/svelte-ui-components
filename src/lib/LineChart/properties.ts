@@ -1,6 +1,7 @@
 import type { Snippet } from 'svelte';
 import type { CurveType } from '$lib/_chart/types';
 import type { ChartHighlightAPI } from '$lib/_chart/highlight';
+import type { SeriesAggregate } from '$lib/_chart/aggregate';
 
 export type LineChartDataPoint = {
   x: number;
@@ -18,6 +19,19 @@ export type LineChartSeries = {
    * custom SVG `stroke-dasharray`. Omit for a solid line.
    */
   dash?: boolean | string;
+  /**
+   * Shows an aggregate of this series' `y` values beside its legend label
+   * (e.g. "Revenue  $128K"). Omit (or `'none'`, the default) to show no
+   * aggregate; every chart renders unchanged without it.
+   */
+  aggregate?: SeriesAggregate;
+  /**
+   * Formatter for this series' legend aggregate. Defaults to the chart's own
+   * `yTickFormat` (or the built-in number formatter) -- set this only when
+   * the aggregate needs a different unit than the axis, e.g. a percentage
+   * average alongside a count-formatted axis.
+   */
+  aggregateFormat?: (value: number) => string;
 };
 
 export type LineChartTooltipContext = {

@@ -225,6 +225,26 @@
   />
 </div>
 
+<h3>Legend aggregates (<code>aggregate</code> + <code>aggregateFormat</code>)</h3>
+<p>
+  Aggregates default to formatting with whichever axis (<code>leftAxis</code>/<code>rightAxis</code
+  >) the series is plotted against — a left-axis currency sum and a right-axis percentage average
+  each pick up a sensible default without either series specifying <code>aggregateFormat</code>.
+</p>
+<div class="demo-row">
+  <DualAxisBarChart
+    categories={monthlyCategories}
+    series={[
+      { ...revenueCtrSeries[0], aggregate: 'sum' },
+      { ...revenueCtrSeries[1], aggregate: 'average' }
+    ]}
+    leftAxis={{ title: 'Revenue', valueFormat: (v) => '$' + v.toLocaleString() }}
+    rightAxis={{ title: 'CTR', valueFormat: (v) => v.toFixed(1) + '%' }}
+    showLegend
+    testId="dual-axis-legend-aggregate-chart"
+  />
+</div>
+
 <style>
   .page-intro {
     margin-bottom: 24px;

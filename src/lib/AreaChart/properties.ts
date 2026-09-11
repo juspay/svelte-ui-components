@@ -1,5 +1,6 @@
 import type { Snippet } from 'svelte';
 import type { CurveType } from '$lib/_chart/types';
+import type { SeriesAggregate } from '$lib/_chart/aggregate';
 
 export type AreaChartDataPoint = {
   x: number;
@@ -11,6 +12,20 @@ export type AreaChartSeries = {
   name: string;
   data: AreaChartDataPoint[];
   color?: string;
+  /**
+   * Shows an aggregate of this series' `y` values beside its legend label
+   * (e.g. "Revenue  $128K"). Aggregates that series' own values only -- when
+   * `stacked` is true this is never the per-category stack total, which is a
+   * separate, existing computation. Omit (or `'none'`, the default) to show
+   * no aggregate; every chart renders unchanged without it.
+   */
+  aggregate?: SeriesAggregate;
+  /**
+   * Formatter for this series' legend aggregate. Defaults to the chart's own
+   * `yTickFormat` (or the built-in number formatter) -- set this only when
+   * the aggregate needs a different unit than the axis.
+   */
+  aggregateFormat?: (value: number) => string;
 };
 
 export type AreaChartTooltipContext = {

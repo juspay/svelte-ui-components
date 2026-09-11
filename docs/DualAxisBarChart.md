@@ -81,29 +81,65 @@ A pure-SVG dual-axis chart with two completely independent Y-axes — left (`yAx
 />
 ```
 
+### Legend Aggregates
+
+**The aggregate sits beside the legend control, never inside it.** When the
+legend is interactive (`interactiveLegend`), each entry is a toggle button, and
+every bit of text inside a button becomes part of its accessible name. Rendering
+the figure inside the toggle would make that name change whenever the data does
+— `Revenue $6,500` one load, something else the next. A name that moves breaks
+voice-control targeting, breaks any consumer test matching it exactly (Testing
+Library's `getByRole` matches the whole string by default), and announces a
+figure as the control's identity rather than as information about the series.
+
+So the button is named by its series alone, the aggregate is its sibling, and
+clicking the figure does not toggle the series.
+
+Set `aggregate` on a series to show a computed value beside its legend label. Omitted (or `'none'`),
+the default, shows nothing — the legend renders exactly as before. `aggregateFormat` defaults to the
+`valueFormat` of whichever axis (`leftAxis`/`rightAxis`) the series' `yAxisIndex` points at, so a
+left-axis currency sum and a right-axis percentage average each get a sensible default without either
+series specifying `aggregateFormat`. Every kind, `sum` included, skips non-finite values rather than
+treating them as zero (this only changes the result for `'average'`, which shrinks its denominator,
+and `'min'`/`'max'`, which an absent point can never set); an aggregate over zero real points
+renders nothing rather than `NaN` or a fabricated `0`, `sum` included.
+
+```svelte
+<DualAxisBarChart
+  {categories}
+  series={[
+    { ...revenueSeries, aggregate: 'sum' },
+    { ...ctrSeries, aggregate: 'average' }
+  ]}
+  leftAxis={{ valueFormat: (v) => `$${v.toLocaleString()}` }}
+  rightAxis={{ valueFormat: (v) => `${v.toFixed(1)}%` }}
+  showLegend
+/>
+```
+
 ## Props
 
-| Prop              | Type                                | Required | Default                                        | Description                                                                                                                                                                 |
-| ----------------- | ----------------------------------- | -------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| categories        | `string[]`                          | Yes      | —                                              | Ordered category labels for the shared X-axis (e.g. `['Jan', 'Feb', 'Mar']`). All series `data` arrays must have the same length as `categories`.                           |
-| series            | `DualAxisSeries[]`                  | Yes      | —                                              | Array of series descriptors. Each series declares `yAxisIndex` (0=left, 1=right), `data` values, an optional render `type`, and an optional `color`.                        |
-| leftAxis          | `DualAxisConfig`                    | No       | `{}`                                           | Configuration for the left (primary) Y-axis. Accepts `title`, `color`, and `valueFormat`.                                                                                   |
-| rightAxis         | `DualAxisConfig`                    | No       | `{}`                                           | Configuration for the right (secondary) Y-axis. Accepts `title`, `color`, and `valueFormat`.                                                                                |
-| showGridlines     | `boolean`                           | No       | `true`                                         | Whether to render dashed horizontal gridlines from the left-axis ticks.                                                                                                     |
-| showLegend        | `boolean`                           | No       | `true`                                         | Whether to render the shared series legend above the chart.                                                                                                                 |
-| barRadius         | `number`                            | No       | `3`                                            | Corner radius of column/bar shapes in pixels.                                                                                                                               |
-| barPadding        | `number`                            | No       | `0.25`                                         | Padding between category bands as a fraction of band width (0–1).                                                                                                           |
-| aspectRatio       | `number`                            | No       | `16/9`                                         | Width-to-height ratio for the chart. Passed to ChartContainer's ResizeObserver sizing.                                                                                      |
-| tooltipSnippet    | `Snippet<[DualAxisTooltipContext]>` | No       | —                                              | Custom tooltip content rendered on hover. Receives a `DualAxisTooltipContext` with the hovered category and all series values. Replaces the default tooltip.                |
-| testId            | `string`                            | No       | —                                              | Value for the `data-pw` attribute on the root element for test targeting.                                                                                                   |
-| classes           | `string`                            | No       | —                                              | Extra CSS class string on the root `<div>`. Useful for applying scoped CSS variable overrides.                                                                              |
-| minBarHeight      | `number`                            | No       | `2`                                            | Minimum rendered bar height in pixels. Set `0` so an all-zero/dormant series renders nothing (e.g. to show an empty state instead of indistinguishable 2px baseline stubs). |
-| maxHeight         | `number`                            | No       | `420`                                          | Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height can't balloon on wide surfaces.                                                           |
-| minHeight         | `number`                            | No       | `0`                                            | Lower bound (px) on the rendered chart height.                                                                                                                              |
-| margin            | `{ top?; right?; bottom?; left? }`  | No       | `{ top: 24, right: 56, bottom: 40, left: 56 }` | Override plot margins (px) for axis titles/labels, merged over the defaults. Widen `left`/`right` for long currency tick labels in narrow containers.                       |
-| tooltipPortal     | `boolean`                           | No       | `false`                                        | Render the hover tooltip on `document.body` with `position: fixed` viewport coords so it is not clipped by an `overflow`/scroll ancestor (e.g. a scrollable sheet).         |
-| interactiveLegend | `boolean`                           | No       | `false`                                        | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data.                     |
-| hideLegendBelow   | `number`                            | No       | `360`                                          | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior.                                                                         |
+| Prop              | Type                                | Required | Default                                        | Description                                                                                                                                                                                                                  |
+| ----------------- | ----------------------------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| categories        | `string[]`                          | Yes      | —                                              | Ordered category labels for the shared X-axis (e.g. `['Jan', 'Feb', 'Mar']`). All series `data` arrays must have the same length as `categories`.                                                                            |
+| series            | `DualAxisSeries[]`                  | Yes      | —                                              | Array of series descriptors. Each series declares `yAxisIndex` (0=left, 1=right), `data` values, an optional render `type`, an optional `color`, and optional `aggregate`/`aggregateFormat` (see "Legend Aggregates" below). |
+| leftAxis          | `DualAxisConfig`                    | No       | `{}`                                           | Configuration for the left (primary) Y-axis. Accepts `title`, `color`, and `valueFormat`.                                                                                                                                    |
+| rightAxis         | `DualAxisConfig`                    | No       | `{}`                                           | Configuration for the right (secondary) Y-axis. Accepts `title`, `color`, and `valueFormat`.                                                                                                                                 |
+| showGridlines     | `boolean`                           | No       | `true`                                         | Whether to render dashed horizontal gridlines from the left-axis ticks.                                                                                                                                                      |
+| showLegend        | `boolean`                           | No       | `true`                                         | Whether to render the shared series legend above the chart.                                                                                                                                                                  |
+| barRadius         | `number`                            | No       | `3`                                            | Corner radius of column/bar shapes in pixels.                                                                                                                                                                                |
+| barPadding        | `number`                            | No       | `0.25`                                         | Padding between category bands as a fraction of band width (0–1).                                                                                                                                                            |
+| aspectRatio       | `number`                            | No       | `16/9`                                         | Width-to-height ratio for the chart. Passed to ChartContainer's ResizeObserver sizing.                                                                                                                                       |
+| tooltipSnippet    | `Snippet<[DualAxisTooltipContext]>` | No       | —                                              | Custom tooltip content rendered on hover. Receives a `DualAxisTooltipContext` with the hovered category and all series values. Replaces the default tooltip.                                                                 |
+| testId            | `string`                            | No       | —                                              | Value for the `data-pw` attribute on the root element for test targeting.                                                                                                                                                    |
+| classes           | `string`                            | No       | —                                              | Extra CSS class string on the root `<div>`. Useful for applying scoped CSS variable overrides.                                                                                                                               |
+| minBarHeight      | `number`                            | No       | `2`                                            | Minimum rendered bar height in pixels. Set `0` so an all-zero/dormant series renders nothing (e.g. to show an empty state instead of indistinguishable 2px baseline stubs).                                                  |
+| maxHeight         | `number`                            | No       | `420`                                          | Upper bound (px) on the rendered chart height, so the aspect-ratio-derived height can't balloon on wide surfaces.                                                                                                            |
+| minHeight         | `number`                            | No       | `0`                                            | Lower bound (px) on the rendered chart height.                                                                                                                                                                               |
+| margin            | `{ top?; right?; bottom?; left? }`  | No       | `{ top: 24, right: 56, bottom: 40, left: 56 }` | Override plot margins (px) for axis titles/labels, merged over the defaults. Widen `left`/`right` for long currency tick labels in narrow containers.                                                                        |
+| tooltipPortal     | `boolean`                           | No       | `false`                                        | Render the hover tooltip on `document.body` with `position: fixed` viewport coords so it is not clipped by an `overflow`/scroll ancestor (e.g. a scrollable sheet).                                                          |
+| interactiveLegend | `boolean`                           | No       | `false`                                        | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data.                                                                      |
+| hideLegendBelow   | `number`                            | No       | `360`                                          | Hide the legend when the measured chart width is below this pixel value; `0` disables the behavior.                                                                                                                          |
 
 ## Events
 

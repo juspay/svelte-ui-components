@@ -14,6 +14,7 @@
   import { formatNumber, defaultTickFormat } from '$lib/_chart/format';
   import { measureText } from '$lib/_chart/measure';
   import { resolvePointLabels } from '$lib/_chart/labels';
+  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
   import type { LegendItem, Point, TooltipAnchor } from '$lib/_chart/types';
   import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { SvelteSet } from 'svelte/reactivity';
@@ -236,7 +237,12 @@
     series.map((s, i) => ({
       label: s.name,
       color: s.color ?? getColor(i),
-      hidden: hiddenSeries.has(i)
+      hidden: hiddenSeries.has(i),
+      aggregateLabel: formatSeriesAggregate(
+        s.data.map((d) => d.y),
+        s.aggregate ?? 'none',
+        s.aggregateFormat ?? yTickFormat ?? formatNumber
+      )
     }))
   );
 

@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { SeriesAggregate } from '$lib/_chart/aggregate';
 
 // ── Axis config ───────────────────────────────────────────────
 
@@ -43,6 +44,20 @@ export type DualAxisSeries = {
    * `'line'`   — line with optional dots drawn over the column layer.
    */
   type?: 'column' | 'line';
+  /**
+   * Shows an aggregate of this series' values beside its legend label (e.g.
+   * "Revenue  $128K"). Omit (or `'none'`, the default) to show no aggregate;
+   * every chart renders unchanged without it.
+   */
+  aggregate?: SeriesAggregate;
+  /**
+   * Formatter for this series' legend aggregate. Defaults to the `valueFormat`
+   * of whichever axis (`leftAxis`/`rightAxis`) this series' `yAxisIndex`
+   * points at -- reusing the same per-axis formatting the chart already has,
+   * rather than a parallel mechanism. Set this only when the aggregate needs
+   * a different unit than its axis.
+   */
+  aggregateFormat?: (value: number) => string;
 };
 
 // ── Tooltip context ───────────────────────────────────────────

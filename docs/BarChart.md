@@ -144,12 +144,38 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 <BarChart {data} hideBarGraphics showXAxis showYAxis />
 ```
 
+### Legend Aggregates
+
+**The aggregate sits beside the legend control, never inside it.** When the
+legend is interactive (`interactiveLegend`), each entry is a toggle button, and
+every bit of text inside a button becomes part of its accessible name. Rendering
+the figure inside the toggle would make that name change whenever the data does
+— `Revenue $6,500` one load, something else the next. A name that moves breaks
+voice-control targeting, breaks any consumer test matching it exactly (Testing
+Library's `getByRole` matches the whole string by default), and announces a
+figure as the control's identity rather than as information about the series.
+
+So the button is named by its series alone, the aggregate is its sibling, and
+clicking the figure does not toggle the series.
+
+Set `aggregate` on a series to show a computed value beside its legend label — e.g. a running total or an average. Omitted (or `'none'`), the default, shows nothing and the legend renders exactly as before. Every kind, `sum` included, skips `null`/non-finite points rather than treating them as zero (this only changes the result for `'average'`, which shrinks its denominator, and `'min'`/`'max'`, which an absent point can never set); an aggregate over zero real points (an empty series, or one with only `null`/non-finite values) renders nothing rather than `NaN` or a fabricated `0`, `sum` included. `aggregateFormat` defaults to the chart's own `valueFormat`, so pass it only when the aggregate needs a different unit (e.g. a percentage average on a currency-formatted chart).
+
+```svelte
+<BarChart
+  series={[
+    { name: 'Revenue', data: [...], aggregate: 'sum', aggregateFormat: (v) => `$${v.toLocaleString()}` },
+    { name: 'Conversion Rate', data: [...], aggregate: 'average', aggregateFormat: (v) => `${v.toFixed(1)}%` }
+  ]}
+  showLegend
+/>
+```
+
 ## Props
 
 | Prop                  | Type                                   | Required | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | --------------------- | -------------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | data                  | `BarChartDataPoint[]`                  | No       | `-`          | Array of `{label, value, range?, color?, valueLabel?}` for a single series. Provide either `data` or `series`. Each data point maps to one bar. `range` enables floating/range bars (`[low, high]`). `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`). A non-empty `valueLabel` renders verbatim as that bar's value label, overriding the default `valueFormat(value)` output; an empty string (`''`) is treated the same as an absent field and falls back to `valueFormat(value)`. |
-| series                | `BarChartSeries[]`                     | No       | `-`          | Array of `{name, data, color?}` for multi-series charts. When provided, overrides `data`. `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`).                                                                                                                                                                                                                                                                                                                                           |
+| series                | `BarChartSeries[]`                     | No       | `-`          | Array of `{name, data, color?, aggregate?, aggregateFormat?}` for multi-series charts. When provided, overrides `data`. `color` accepts a plain color string, a pattern fill, or a gradient fill (`BarFill`). `aggregate` (`'sum' \| 'average' \| 'min' \| 'max' \| 'none'`, default `'none'`) shows a computed value beside that series' legend label; `aggregateFormat` defaults to the chart's `valueFormat`. See "Legend Aggregates" below.                                                                           |
 | groupMode             | `'grouped' \| 'stacked'`               | No       | `'grouped'`  | Layout mode for multi-series. `grouped` places bars side-by-side; `stacked` stacks them.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | orientation           | `'vertical' \| 'horizontal'`           | No       | `'vertical'` | Bar orientation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | showValues            | `boolean`                              | No       | `false`      | Whether to render the numeric value as a text label at the end of each bar. Disabled in stacked mode.                                                                                                                                                                                                                                                                                                                                                                                                                     |

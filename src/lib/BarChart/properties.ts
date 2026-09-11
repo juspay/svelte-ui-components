@@ -1,5 +1,6 @@
 import type { Snippet } from 'svelte';
 import type { ChartHighlightAPI } from '../_chart/highlight';
+import type { SeriesAggregate } from '../_chart/aggregate';
 
 // ── Fill types (A1-2 pattern, A1-3 gradient) ──────────────────
 
@@ -62,6 +63,21 @@ export type BarChartSeries = {
   data: BarChartDataPoint[];
   /** Series-level fill: plain color, pattern, or gradient. */
   color?: BarFill;
+  /**
+   * Shows an aggregate of this series' `value`s beside its legend label (e.g.
+   * "Revenue  $128K"). Aggregates that series' own values only -- in
+   * `groupMode="stacked"` this is never the per-category stack total, which
+   * is a separate, existing computation. Omit (or `'none'`, the default) to
+   * show no aggregate; every chart renders unchanged without it.
+   */
+  aggregate?: SeriesAggregate;
+  /**
+   * Formatter for this series' legend aggregate. Defaults to the chart's own
+   * `valueFormat` (or the built-in number formatter) -- set this only when
+   * the aggregate needs a different unit than the axis, e.g. a percentage
+   * average alongside a currency-formatted axis.
+   */
+  aggregateFormat?: (value: number) => string;
 };
 
 // ── Render-overlay escape hatch (A1-4) ───────────────────────

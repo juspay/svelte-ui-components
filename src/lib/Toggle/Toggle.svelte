@@ -10,7 +10,9 @@
     id,
     ariaLabel,
     ariaLabelledby,
-    onclick
+    onclick,
+    name,
+    value
   }: ToggleProperties = $props();
 
   // Stable across hydration so the hidden input stays named and text remains clickable.
@@ -40,6 +42,8 @@
       type="checkbox"
       {checked}
       {disabled}
+      name={name ?? null}
+      value={value ?? null}
       aria-label={ariaLabel?.trim() || null}
       aria-labelledby={ariaLabelledby?.trim() || null}
       onclick={handleCheckboxClick}
@@ -112,7 +116,7 @@
   }
 
   .input-checkbox:focus + .slider {
-    box-shadow: 0 0 1px #171717;
+    box-shadow: var(--toggle-focus-ring, 0 0 0 3px rgba(33, 150, 243, 0.3));
   }
 
   .input-checkbox:checked + .slider:before {

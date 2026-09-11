@@ -11,7 +11,9 @@
       testId: { type: 'String', attribute: 'test-id' },
       inputId: { type: 'String', attribute: 'input-id' },
       inputAriaLabel: { type: 'String', attribute: 'input-aria-label' },
-      inputAriaLabelledby: { type: 'String', attribute: 'input-aria-labelledby' }
+      inputAriaLabelledby: { type: 'String', attribute: 'input-aria-labelledby' },
+      name: { type: 'String', reflect: true },
+      value: { type: 'String', reflect: true }
     }
   }}
 />

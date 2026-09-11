@@ -20,6 +20,15 @@ export type OptionalToggleProperties = {
    * `text` or `inputAriaLabel` for labels outside the shadow root.
    */
   ariaLabelledby?: string;
+  /** Native `name` on the underlying `<input type="checkbox">`, so the switch
+   *  participates in a surrounding `<form>`'s submission. Omitted by default:
+   *  the input stays nameless and outside `FormData`, exactly as before this
+   *  prop existed. */
+  name?: string;
+  /** Native `value` submitted when on. Defaults to `"on"` — the native
+   *  checkbox default — when omitted. An off toggle never appears in
+   *  `FormData`, matching native behaviour. */
+  value?: string;
 };
 
 export type ToggleEventProperties = {

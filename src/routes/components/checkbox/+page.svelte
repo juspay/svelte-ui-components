@@ -8,6 +8,12 @@
   // click; the other declines them all and only counts them.
   let adoptedChecked = $state(false);
   let declinedClicks = $state(0);
+
+  // `name` makes the control participate in native <form> submission, so a
+  // consumer no longer mirrors it with a hidden input of their own.
+  let formAgree = $state(false);
+  let formSubscribe = $state(true);
+  let checkboxEntries = $state('');
 </script>
 
 <div class="page-header">
@@ -64,3 +70,34 @@
     testId="checkbox-attributes"
   />
 </div>
+
+<h3>Native form submission</h3>
+<p>
+  With a <code>name</code>, a checkbox submits with the surrounding <code>&lt;form&gt;</code>
+  exactly as a native one does: absent entirely when unchecked, and carrying <code>value</code> —
+  defaulting to <code>on</code> — when checked.
+</p>
+<form
+  class="demo-row"
+  data-pw="checkbox-form"
+  onsubmit={(event) => {
+    event.preventDefault();
+    checkboxEntries = JSON.stringify(Array.from(new FormData(event.currentTarget).entries()));
+  }}
+>
+  <Checkbox
+    text="Agree (no value, submits as 'on')"
+    name="agree"
+    bind:checked={formAgree}
+    testId="checkbox-form-agree"
+  />
+  <Checkbox
+    text="Subscribe (value='yes')"
+    name="subscribe"
+    value="yes"
+    bind:checked={formSubscribe}
+    testId="checkbox-form-subscribe"
+  />
+  <button type="submit" data-pw="checkbox-form-submit">Submit</button>
+</form>
+<pre data-pw="checkbox-form-result">{checkboxEntries}</pre>

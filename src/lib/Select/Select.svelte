@@ -36,7 +36,8 @@
     hierarchy = 'default',
     leftIcon,
     leftIconTestId,
-    usePortal = false
+    usePortal = false,
+    name
   }: SelectProperties = $props();
 
   function normalizeItems(source: SelectItem[] | string[]): SelectItem[] {
@@ -518,6 +519,16 @@
   bind:this={containerEl}
   {...typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
 >
+  {#if typeof name === 'string' && name.length > 0}
+    <!-- No native <select> exists to carry `name`/`value` -- this is a custom
+         combobox/listbox. One hidden input per selected id mirrors a native
+         `<select multiple>`, which likewise submits one FormData entry per
+         selected <option> under the same name; `disabled` matches native
+         behaviour by excluding all of them from the submission. -->
+    {#each value as id (id)}
+      <input type="hidden" {name} value={id} {disabled} />
+    {/each}
+  {/if}
   <div class="select-control" class:has-clear={showClearButton}>
     <div
       class="select-trigger"

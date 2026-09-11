@@ -15,7 +15,9 @@
       ariaControls: { type: 'String', attribute: 'aria-controls' },
       controlled: { type: 'Boolean', reflect: true },
       checkboxAttributes: { type: 'Object' },
-      onclick: { type: 'Object' }
+      onclick: { type: 'Object' },
+      name: { type: 'String', reflect: true },
+      value: { type: 'String', reflect: true }
     }
   }}
 />

@@ -24,6 +24,8 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 | id             | `string`  | No       | generated | Native `id` of the checkbox input. Point your own `<label for>` at it; when omitted an id is generated so the built-in `text` is a real label.                         |
 | ariaLabel      | `string`  | No       | `-`       | Names the switch for assistive technology when it has no visible text.                                                                                                 |
 | ariaLabelledby | `string`  | No       | `-`       | References a label in the same DOM root as the checkbox.                                                                                                               |
+| name           | `string`  | No       | `-`       | Sets the underlying native input's `name`, so the toggle participates in a surrounding `<form>`'s submission (`FormData`) like any native checkbox: absent when off, present with its value when on. Omitting it leaves the DOM byte-identical to before. |
+| value          | `string`  | No       | `-`       | Sets the underlying native input's `value`. Only meaningful once `name` is set. Left unset, an unstyled native checkbox defaults its submitted value to `"on"` — this component relies on that same native default rather than hardcoding it.              |
 
 ## Events
 
@@ -41,6 +43,7 @@ Override these custom properties to theme the component.
 | `--toggle-container-align-items`          | `center`          | align-items        | Vertical alignment of switch and label.                      |
 | `--toggle-container-gap`                  | `8px`             | gap                | Gap between the switch and label text.                       |
 | `--toggle-disabled-opacity`               | `0.4`             | opacity            | Opacity of the toggle when in the disabled state.            |
+| `--toggle-focus-ring`                     | `0 0 0 3px rgba(33, 150, 243, 0.3)` | box-shadow | Focus ring shown on the slider when the switch receives keyboard focus. |
 | `--toggle-text-font-size`                 | `14px`            | font-size          | Font size of the label text.                                 |
 | `--toggle-text-font-weight`               | `400`             | font-weight        | Font weight of the label text.                               |
 | `--toggle-text-color`                     | `#4a4a4a`         | color              | Color of the label text.                                     |
@@ -94,6 +97,19 @@ remains the fallback accessible name.
 <sui-toggle text="Order notifications"></sui-toggle>
 <sui-toggle input-aria-label="Order notifications"></sui-toggle>
 ```
+
+### Form participation in a shadow root
+
+The "Native form submission" example above is the Svelte `<Toggle>` component, whose
+`<input>` sits in the same document as the surrounding `<form>`. `<sui-toggle>` wraps
+that same input inside its own open shadow root (`shadow: 'open'`), and `<sui-toggle>`
+itself does not opt into the form-associated custom elements API (`static
+formAssociated` + [`ElementInternals`](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals))
+that would let the host itself carry a form value across that boundary. Browser and
+form-library support for reading a shadow-nested `name`/`value` pair back out through
+the host element varies, so a `<sui-toggle name="...">` may need additional handling
+(e.g. reading its state directly, or listening for its `change` event) to reach a
+light-DOM `<form>`'s `FormData` reliably.
 
 ### Prop names across the two distributions
 

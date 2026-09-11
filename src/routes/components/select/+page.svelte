@@ -70,6 +70,18 @@
     `%3Cellipse cx='8' cy='8' rx='3' ry='6.5'/%3E` +
     `%3Cline x1='1.5' y1='8' x2='14.5' y2='8'/%3E` +
     `%3C/svg%3E`;
+
+  // `name` makes the selection participate in native <form> submission: one
+  // FormData entry per selected id, matching <select multiple>.
+  let formFruit = $state<string[]>(['apple']);
+  let formColors = $state<string[]>(['red', 'blue']);
+  let selectEntries = $state('');
+
+  const formColorItems: SelectItem[] = [
+    { id: 'red', label: 'Red' },
+    { id: 'green', label: 'Green' },
+    { id: 'blue', label: 'Blue' }
+  ];
 </script>
 
 <div class="page-header">
@@ -470,6 +482,32 @@
   </Select>
   <p data-pw="select-menu-applied">Applied: {menuApplied}</p>
 </div>
+
+<h3>Native form submission</h3>
+<p>
+  With a <code>name</code>, the selection submits with the surrounding <code>&lt;form&gt;</code> —
+  one entry per selected id, the same shape a native <code>&lt;select multiple&gt;</code> produces, and
+  no entry at all when nothing is selected.
+</p>
+<form
+  class="demo-row"
+  data-pw="select-form"
+  onsubmit={(event) => {
+    event.preventDefault();
+    selectEntries = JSON.stringify(Array.from(new FormData(event.currentTarget).entries()));
+  }}
+>
+  <Select items={fruits} name="fruit" bind:value={formFruit} testId="select-form-single" />
+  <Select
+    items={formColorItems}
+    name="colors"
+    multiple
+    bind:value={formColors}
+    testId="select-form-multiple"
+  />
+  <button type="submit" data-pw="select-form-submit">Submit</button>
+</form>
+<pre data-pw="select-form-result">{selectEntries}</pre>
 
 <style>
   /* Small, fixed-height, overflow-clipping boxes to demonstrate the difference

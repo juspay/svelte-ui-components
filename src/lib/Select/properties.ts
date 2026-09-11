@@ -136,6 +136,17 @@ export type OptionalSelectProperties = {
    * `--select-dropdown-z-index` if it must sit above an even higher overlay.
    */
   usePortal?: boolean;
+  /**
+   * Native `name` for form submission. Select has no underlying `<select>` —
+   * it is a custom combobox/listbox — so setting this renders one
+   * `<input type="hidden">` per entry in `value`, each carrying the
+   * selected item's `id` as its value. Omitted by default: no hidden inputs
+   * are rendered and nothing changes for an existing consumer. Mirrors a
+   * native `<select multiple>`, which likewise submits one entry per
+   * selected `<option>` under the same name; an empty `value` array
+   * submits nothing, matching a native select with no selection.
+   */
+  name?: string;
 };
 
 export type SelectEventProperties = {

@@ -16,7 +16,7 @@ A customizable checkbox control with optional label text. Supports checked, unch
 
 | Prop          | Type                     | Required | Default     | Description                                                                                                                                                                                                                                                                                             |
 | ------------- | ------------------------ | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text          | `string`                 | Yes      | -           | Label text displayed next to the checkbox.                                                                                                                                                                                                                                                              |
+| text          | `string`                 | No       | `''`        | Label text displayed next to the checkbox. Leaving it unset renders an unlabelled checkbox — set `ariaLabel` so it still has an accessible name (see below), the same contract as `Toggle`'s `text`.                                                                                                    |
 | checked       | `boolean`                | No       | `false`     | The current checked state of the checkbox. Bindable.                                                                                                                                                                                                                                                    |
 | disabled      | `boolean`                | No       | `false`     | When true, the checkbox is non-interactive and visually dimmed.                                                                                                                                                                                                                                         |
 | indeterminate | `boolean`                | No       | `false`     | Bindable. When true, displays an indeterminate (dash) state instead of a checkmark. Typically used for "select all" patterns where only some children are selected.                                                                                                                                     |
@@ -26,6 +26,8 @@ A customizable checkbox control with optional label text. Supports checked, unch
 | ariaLabel     | `string`                 | No       | `undefined` | Accessible name for the checkbox. Set it whenever the visible `text` label isn't enough or sits outside this component (a table header cell, an icon-only row control) — since name-from-content can't reach it. Ignored when `text` is non-empty, so a visible label is never overridden (WCAG 2.5.3). |
 | controlled    | `boolean`                | No       | `false`     | Controlled mode. A click reports the requested value through `onclick` and changes nothing locally, so the parent's `checked` / `indeterminate` stay the single source of truth. Use it wherever the parent may decline the change — a table selection driven from a consumer-owned set.                |
 | attributes    | `Record<string, string>` | No       | `undefined` | Extra DOM attributes spread onto the checkbox element itself (the `role="checkbox"` box, not the wrapping label): an `id` for `aria-controls` to point at, or a consumer's own test attribute. Spread last, so a value here wins over the component's own `data-pw`.                                    |
+| name          | `string`                 | No       | `undefined` | Sets the underlying native `<input type="checkbox">`'s `name`, so the checkbox participates in a surrounding `<form>`'s submission (`FormData`) like any native checkbox: absent when unchecked, present with its value when checked. Omitting it leaves the DOM byte-identical to before.              |
+| value         | `string`                 | No       | `undefined` | Sets the underlying native input's `value`. Only meaningful once `name` is set. Left unset, an unstyled native checkbox defaults its submitted value to `"on"` — this component relies on that same native default rather than hardcoding it.                                                           |
 
 ## Snippets
 
@@ -94,6 +96,19 @@ those names on every `HTMLElement`:
 
 Both are object/script properties rather than attributes — an attribute is a
 string, and these carry structured values.
+
+### Form participation in a shadow root
+
+The "Native form submission" behaviour above is the Svelte `<Checkbox>` component, whose
+`<input>` sits in the same document as the surrounding `<form>`. `<sui-checkbox>` wraps
+that same input inside its own open shadow root (`shadow: 'open'`), and `<sui-checkbox>`
+itself does not opt into the form-associated custom elements API (`static
+formAssociated` + [`ElementInternals`](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals))
+that would let the host itself carry a form value across that boundary. Browser and
+form-library support for reading a shadow-nested `name`/`value` pair back out through
+the host element varies, so a `<sui-checkbox name="...">` may need additional handling
+(e.g. reading its state directly, or listening for its `change` event) to reach a
+light-DOM `<form>`'s `FormData` reliably.
 
 ### Slots
 

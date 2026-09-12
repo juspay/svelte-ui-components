@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { renderMarkdown } from './markdown';
+// Used to build stand-in sanitizers that parse and re-serialise, which is what a
+// real sanitizer does. Not an assertion about the library's own parser: if the
+// implementation ever swaps parse5 out, these stand-ins still model the
+// behaviour under test and only this import moves.
+import { parseFragment, serialize } from 'parse5';
 
 describe('renderMarkdown', () => {
   it('renders basic markdown', () => {
@@ -280,5 +285,251 @@ describe('renderMarkdown — table wrapping', () => {
     expect(output).not.toContain('" onmouseover="alert(1)"');
     expect(output).not.toContain('<div class="" onmouseover=');
     expect(output).toContain('class="markdown-table-wrapper &quot; onmouseover=&quot;alert(1)"');
+  });
+});
+
+describe('renderMarkdown — injected raw-HTML sanitizer', () => {
+  const raw = 'Hello <b>bold</b> and <img src=x onerror=alert(1)>';
+
+  it('escapes raw HTML by default, exactly as before', () => {
+    const output = renderMarkdown(raw);
+    expect(output).toContain('&lt;b&gt;bold&lt;/b&gt;');
+    expect(output).not.toContain('<b>bold</b>');
+  });
+
+  it('still escapes when sanitize mode is on but no sanitizer is supplied', () => {
+    // The unsafe path has to be unreachable by OMISSION, not by discipline.
+    // Turning the flag on without supplying a sanitizer must not start emitting
+    // raw HTML -- a consumer who half-configures this gets today's behaviour.
+    const output = renderMarkdown(raw, { sanitize: { rawHtml: 'sanitize' } });
+    expect(output).toContain('&lt;b&gt;bold&lt;/b&gt;');
+    expect(output).not.toContain('<b>bold</b>');
+  });
+
+  it('routes the raw token through a supplied sanitizer and emits its output', () => {
+    const seen: string[] = [];
+    const output = renderMarkdown(raw, {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: (html) => {
+          seen.push(html);
+          return html.replace(/<img[^>]*>/g, '');
+        }
+      }
+    });
+
+    // The library hands over the raw token and inserts what comes back. It does
+    // not decide content policy, and it does not second-guess the result.
+    expect(seen.join('')).toContain('<b>');
+    expect(output).toContain('<b>bold</b>');
+    expect(output).not.toContain('onerror');
+  });
+
+  it('falls back to escaping when the sanitizer throws', () => {
+    // A consumer's sanitizer is arbitrary code. If it fails, the safe path is
+    // the one that was already there -- never the raw token.
+    const output = renderMarkdown(raw, {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: () => {
+          throw new Error('sanitizer exploded');
+        }
+      }
+    });
+    expect(output).toContain('&lt;b&gt;bold&lt;/b&gt;');
+    expect(output).not.toContain('<b>bold</b>');
+  });
+
+  it('falls back to escaping when the sanitizer returns a non-string', () => {
+    const output = renderMarkdown(raw, {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: () => null as unknown as string
+      }
+    });
+    expect(output).toContain('&lt;b&gt;bold&lt;/b&gt;');
+  });
+
+  it('ignores a sanitizer while the mode is escape or strip', () => {
+    // The sanitizer is only consulted in sanitize mode, so supplying one cannot
+    // silently change what the other two modes do.
+    const escaped = renderMarkdown(raw, {
+      sanitize: { rawHtml: 'escape', htmlSanitizer: (html) => html }
+    });
+    expect(escaped).toContain('&lt;b&gt;bold&lt;/b&gt;');
+
+    const stripped = renderMarkdown(raw, {
+      sanitize: { rawHtml: 'strip', htmlSanitizer: (html) => html }
+    });
+    expect(stripped).not.toContain('<b>');
+    expect(stripped).not.toContain('&lt;b&gt;');
+  });
+
+  it('applies in inline mode too', () => {
+    const output = renderMarkdown('an <b>inline</b> tag', {
+      inline: true,
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: (html) => html }
+    });
+    expect(output).toContain('<b>');
+  });
+
+  it('does not let a sanitizer widen the link protocol allow-list', () => {
+    // Markdown links go through hasSafeProtocol regardless of raw-HTML policy.
+    // A permissive sanitizer must not reach markdown-syntax links at all.
+    const output = renderMarkdown('[click](javascript:alert(1))', {
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: (html) => html }
+    });
+    expect(output).not.toContain('javascript:');
+  });
+});
+
+describe('rawHtml: sanitize — the trust boundary', () => {
+  // The library does not second-guess the sanitizer. A caller who passes a
+  // permissive one gets exactly what it returns, script tag and all. Asserting
+  // that explicitly is the point: it pins the contract, and it would fail if the
+  // library ever started re-escaping the sanitizer's output -- which would look
+  // like a safety improvement while silently breaking every correct caller.
+  /*
+   * Where the protocol allow-list stops. Both halves are asserted together
+   * because the asymmetry is the contract: markdown syntax is the library's to
+   * guard, raw HTML is the caller's. Re-checking the second would mean parsing
+   * and rewriting the sanitizer's output, which is the sanitization this option
+   * exists to delegate -- so the boundary is pinned rather than closed, and it
+   * cannot move without this test changing.
+   */
+  it('guards a markdown-syntax javascript: link but not a raw-HTML one', () => {
+    const permissive = (html: string): string => html;
+
+    expect(
+      renderMarkdown('[click](javascript:alert(1))', {
+        sanitize: { rawHtml: 'sanitize', htmlSanitizer: permissive }
+      })
+    ).not.toContain('javascript:');
+
+    expect(
+      renderMarkdown('<a href="javascript:alert(1)">click</a>', {
+        sanitize: { rawHtml: 'sanitize', htmlSanitizer: permissive }
+      })
+    ).toContain('javascript:alert(1)');
+  });
+
+  it('emits whatever the sanitizer returns, including markup it did not remove', () => {
+    const output = renderMarkdown('<script>alert(1)</script>', {
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: (html) => html }
+    });
+    expect(output).toContain('<script>alert(1)</script>');
+  });
+
+  /*
+   * The mirror of the case above, because the contract cuts both ways and the
+   * caller's configuration decides which side they land on. Stands in for
+   * `DOMPurify.sanitize(html, { ALLOWED_TAGS })` without the dependency.
+   *
+   * Deliberately a parse-and-prune rather than a regex. A regex tag filter is
+   * the exact thing this PR argues a caller should not write -- `/<\/script>/`
+   * alone does not match `</script >`, which CodeQL flags as `js/bad-tag-filter`
+   * -- and a test is read as an example whether or not it is meant as one.
+   */
+  type PruneNode = { nodeName: string; childNodes?: PruneNode[] };
+  const withoutScripts = (html: string): string => {
+    const prune = (node: PruneNode): void => {
+      if (!node.childNodes) {
+        return;
+      }
+      node.childNodes = node.childNodes.filter((child) => child.nodeName !== 'script');
+      node.childNodes.forEach(prune);
+    };
+    const fragment = parseFragment(html);
+    prune(fragment);
+    return serialize(fragment);
+  };
+
+  it('a sanitizer that drops script elements removes them, and keeps the prose around them', () => {
+    const output = renderMarkdown('before <script>alert(1)</script> after', {
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: withoutScripts }
+    });
+    expect(output).not.toContain('<script');
+    expect(output).toContain('before');
+    expect(output).toContain('after');
+  });
+
+  it('drops a script element written with a spaced end tag, which a regex filter misses', () => {
+    const output = renderMarkdown('before <script>alert(1)</script > after', {
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: withoutScripts }
+    });
+    expect(output).not.toContain('<script');
+    expect(output).not.toContain('alert(1)');
+  });
+
+  /*
+   * The fallback is not merely "safe", it is the escape path byte for byte.
+   * That matters for SSR: a browser-only sanitizer throws on the server and
+   * succeeds on the client, and this pins the server half to a known rendering
+   * rather than to something the fallback invented.
+   */
+  it('a throwing sanitizer produces exactly what escape mode produces', () => {
+    const source = 'Hello <b>bold</b>\n\n<div class="callout">\n\n**inside**\n\n</div>';
+    const thrown = renderMarkdown(source, {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: () => {
+          throw new Error('no DOM on the server');
+        }
+      }
+    });
+    expect(thrown).toBe(renderMarkdown(source, { sanitize: { rawHtml: 'escape' } }));
+  });
+
+  it('falls back to escaping when the sanitizer throws', () => {
+    const output = renderMarkdown('<b>hi</b>', {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: () => {
+          throw new Error('boom');
+        }
+      }
+    });
+    expect(output).not.toContain('<b>');
+    expect(output).toContain('&lt;b&gt;');
+  });
+});
+
+describe('rawHtml: sanitize — one pass over the assembled output', () => {
+  /*
+   * A real sanitizer parses its input into a tree and serialises that tree back,
+   * so an unbalanced fragment is balanced where it stands: `<div>` comes back as
+   * `<div></div>` and a lone `</div>` comes back as nothing. parse5 is what
+   * DOMPurify's own parse-and-reserialise step amounts to, so this stands in for
+   * it faithfully without taking the dependency.
+   */
+  const balancing = (html: string): string => serialize(parseFragment(html));
+
+  // marked emits the open and close of a block-level container as two separate
+  // html tokens with the markdown between them as its own block.
+  const container = '<div class="callout">\n\n**important**\n\n</div>';
+
+  it('keeps markdown content inside the raw-HTML container that wraps it', () => {
+    const output = renderMarkdown(container, {
+      sanitize: { rawHtml: 'sanitize', htmlSanitizer: balancing }
+    });
+
+    expect(output).toMatch(/<div class="callout">\s*<p><strong>important<\/strong><\/p>\s*<\/div>/);
+  });
+
+  it('hands the sanitizer one assembled document rather than per-token fragments', () => {
+    const seen: string[] = [];
+    renderMarkdown(container, {
+      sanitize: {
+        rawHtml: 'sanitize',
+        htmlSanitizer: (html) => {
+          seen.push(html);
+          return html;
+        }
+      }
+    });
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toContain('<div class="callout">');
+    expect(seen[0]).toContain('<strong>important</strong>');
   });
 });

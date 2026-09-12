@@ -532,16 +532,17 @@ Override these custom properties to theme the component.
 
 ### Container & Layout
 
-| Variable                     | Default             | CSS Property          | Description                                                                                                |
-| ---------------------------- | ------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `--table-border`             | `1px solid #e5e7eb` | border                | Border of the table container.                                                                             |
-| `--table-border-radius`      | `8px`               | border-radius         | Border radius of the table container.                                                                      |
-| `--table-container-width`    | `100%`              | width                 | Width of the table container.                                                                              |
-| `--table-container-height`   | `143px`             | height                | Height of the scrollable table container (when isTableScrollable).                                         |
-| `--table-width`              | `100%`              | width                 | Width of the table element.                                                                                |
-| `--table-border-collapse`    | `collapse`          | border-collapse       | Border collapse mode of the table.                                                                         |
-| `--table-scroll-scrim-width` | `32px`              | width                 | Width of the fade-out gradient hint shown at the leading/trailing edge of a horizontally scrollable table. |
-| `--table-scroll-scrim-color` | `#ffffff`           | background (gradient) | Color the scroll scrim fades from — set to match the table's background when it isn't white.               |
+| Variable                     | Default             | CSS Property          | Description                                                                                                                                                     |
+| ---------------------------- | ------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-border`             | `1px solid #e5e7eb` | border                | Border of the table container.                                                                                                                                  |
+| `--table-border-radius`      | `8px`               | border-radius         | Border radius of the table container.                                                                                                                           |
+| `--table-container-width`    | `100%`              | width                 | Width of the table container.                                                                                                                                   |
+| `--table-container-height`   | `143px`             | height                | Height of the scrollable table container (when isTableScrollable).                                                                                              |
+| `--table-container-overflow` | `hidden`            | overflow              | Overflow of the table container. `hidden` clips the corners to `--table-border-radius`; set `auto` to let a wide table scroll sideways in the container itself. |
+| `--table-width`              | `100%`              | width                 | Width of the table element.                                                                                                                                     |
+| `--table-border-collapse`    | `collapse`          | border-collapse       | Border collapse mode of the table.                                                                                                                              |
+| `--table-scroll-scrim-width` | `32px`              | width                 | Width of the fade-out gradient hint shown at the leading/trailing edge of a horizontally scrollable table.                                                      |
+| `--table-scroll-scrim-color` | `#ffffff`           | background (gradient) | Color the scroll scrim fades from — set to match the table's background when it isn't white.                                                                    |
 
 ### Cell Grid
 
@@ -707,25 +708,25 @@ A second search-input mode (`searchConfig.displayMode: 'inline'`) — a trigger 
 
 These variables style the leading checkbox column that appears when `checkboxSelection` is set. The column renders the library `Checkbox` in controlled mode; every `--table-checkbox-*` token below is bridged onto the matching `--checkbox-*` variable inside the column, so theming the table keeps working and an app-wide `Checkbox` theme is overridden only there.
 
-| Variable                                      | Default                          | CSS Property     | Description                                                                |
-| --------------------------------------------- | -------------------------------- | ---------------- | -------------------------------------------------------------------------- |
-| `--table-checkbox-col-width`                  | `44px`                           | width            | Width of the checkbox column header and data cells.                        |
-| `--table-checkbox-col-padding`                | `12px 12px`                      | padding          | Padding of the checkbox column cells.                                      |
-| `--table-checkbox-size`                       | `18px`                           | width, height    | Size (width and height) of the checkbox box element.                       |
-| `--table-checkbox-border`                     | `2px solid #9ca3af`              | border           | Border of the unchecked checkbox.                                          |
-| `--table-checkbox-border-radius`              | `4px`                            | border-radius    | Border radius of the checkbox box. Falls back to `--radius` when unset.    |
-| `--table-checkbox-background`                 | `transparent`                    | background-color | Background of the unchecked checkbox.                                      |
-| `--table-checkbox-hover-border-color`         | `#6b7280`                        | border-color     | Border color of the checkbox on hover (when not disabled).                 |
-| `--table-checkbox-checked-background`         | `#2563eb`                        | background-color | Background of the checked checkbox.                                        |
-| `--table-checkbox-checked-border-color`       | `#2563eb`                        | border-color     | Border color of the checked checkbox.                                      |
+| Variable                                      | Default                          | CSS Property     | Description                                                                                                                                       |
+| --------------------------------------------- | -------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-checkbox-col-width`                  | `44px`                           | width            | Width of the checkbox column header and data cells.                                                                                               |
+| `--table-checkbox-col-padding`                | `12px 12px`                      | padding          | Padding of the checkbox column cells.                                                                                                             |
+| `--table-checkbox-size`                       | `18px`                           | width, height    | Size (width and height) of the checkbox box element.                                                                                              |
+| `--table-checkbox-border`                     | `2px solid #9ca3af`              | border           | Border of the unchecked checkbox.                                                                                                                 |
+| `--table-checkbox-border-radius`              | `4px`                            | border-radius    | Border radius of the checkbox box. Falls back to `--radius` when unset.                                                                           |
+| `--table-checkbox-background`                 | `transparent`                    | background-color | Background of the unchecked checkbox.                                                                                                             |
+| `--table-checkbox-hover-border-color`         | `#6b7280`                        | border-color     | Border color of the checkbox on hover (when not disabled).                                                                                        |
+| `--table-checkbox-checked-background`         | `#2563eb`                        | background-color | Background of the checked checkbox.                                                                                                               |
+| `--table-checkbox-checked-border-color`       | `#2563eb`                        | border-color     | Border color of the checked checkbox.                                                                                                             |
 | `--table-checkbox-checked-border`             | `2px solid #2563eb`              | border           | Whole border of the checked checkbox. Set it when the checked width must differ from `2px`; it wins over `--table-checkbox-checked-border-color`. |
-| `--table-checkbox-indeterminate-background`   | `#2563eb`                        | background-color | Background of the header checkbox in indeterminate (partial-select) state. |
-| `--table-checkbox-indeterminate-border-color` | `#2563eb`                        | border-color     | Border color of the header checkbox in indeterminate state.                |
-| `--table-checkbox-indeterminate-border`       | `2px solid #2563eb`              | border           | Whole border of the header checkbox in indeterminate state; wins over `--table-checkbox-indeterminate-border-color`. |
-| `--table-checkbox-disabled-opacity`           | `0.4`                            | opacity          | Opacity of a disabled checkbox row.                                        |
-| `--table-checkbox-focus-ring`                 | `0 0 0 3px rgba(59,130,246,0.3)` | box-shadow       | Focus ring shown on the checkbox element when focused via keyboard.        |
-| `--table-checkbox-icon-size`                  | `12px`                           | width, height    | Size of the checkmark / minus SVG icon inside the checkbox box.            |
-| `--table-checkbox-icon-color`                 | `#ffffff`                        | color            | Color of the checkmark / minus icon.                                       |
+| `--table-checkbox-indeterminate-background`   | `#2563eb`                        | background-color | Background of the header checkbox in indeterminate (partial-select) state.                                                                        |
+| `--table-checkbox-indeterminate-border-color` | `#2563eb`                        | border-color     | Border color of the header checkbox in indeterminate state.                                                                                       |
+| `--table-checkbox-indeterminate-border`       | `2px solid #2563eb`              | border           | Whole border of the header checkbox in indeterminate state; wins over `--table-checkbox-indeterminate-border-color`.                              |
+| `--table-checkbox-disabled-opacity`           | `0.4`                            | opacity          | Opacity of a disabled checkbox row.                                                                                                               |
+| `--table-checkbox-focus-ring`                 | `0 0 0 3px rgba(59,130,246,0.3)` | box-shadow       | Focus ring shown on the checkbox element when focused via keyboard.                                                                               |
+| `--table-checkbox-icon-size`                  | `12px`                           | width, height    | Size of the checkmark / minus SVG icon inside the checkbox box.                                                                                   |
+| `--table-checkbox-icon-color`                 | `#ffffff`                        | color            | Color of the checkmark / minus icon.                                                                                                              |
 
 ### Search Bar
 
@@ -761,12 +762,12 @@ each one.
 
 ```ts
 type TableLabels = {
-  sortBy?: (header: string) => string;        // default: `Sort by ${header}`
-  filterBy?: (header: string) => string;      // default: `Filter by ${header}`
-  selectRow?: (rowId: string) => string;      // default: `Select row ${rowId || 'non-selectable'}`
-  selectAllRows?: string;                     // default: 'Select all rows'
-  clearSearch?: string;                       // default: 'Clear search'
-  closeSearch?: string;                       // default: 'Close search'
+  sortBy?: (header: string) => string; // default: `Sort by ${header}`
+  filterBy?: (header: string) => string; // default: `Filter by ${header}`
+  selectRow?: (rowId: string) => string; // default: `Select row ${rowId || 'non-selectable'}`
+  selectAllRows?: string; // default: 'Select all rows'
+  clearSearch?: string; // default: 'Clear search'
+  closeSearch?: string; // default: 'Close search'
 };
 ```
 
@@ -790,7 +791,6 @@ while leaving the filter trigger and the search buttons in English.
 
 `Search` is not here. The search input has always been named by
 `searchConfig.placeholder`, which is the right place for it.
-
 
 ```typescript
 type SortDirection = 'asc' | 'desc';

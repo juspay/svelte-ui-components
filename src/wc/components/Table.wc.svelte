@@ -37,7 +37,8 @@
       usePortal: { type: 'Boolean', attribute: 'use-portal' },
       onrowclick: { type: 'Object' },
       onsort: { type: 'Object' },
-      onsearchchange: { type: 'Object' }
+      onsearchchange: { type: 'Object' },
+      labels: { type: 'Object' }
     }
   }}
 />

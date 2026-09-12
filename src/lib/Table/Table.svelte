@@ -51,7 +51,8 @@
     summaryRowIndex = null,
     headerTooltipIcon,
     headerTooltipPosition,
-    usePortal = false
+    usePortal = false,
+    labels
   }: TableProperties = $props();
 
   // ─── Keyed column model → positional projection ─────────────────────────────
@@ -646,7 +647,7 @@
         class="table-search-clear"
         type="button"
         onclick={clearSearch}
-        aria-label="Clear search"
+        aria-label={labels?.clearSearch ?? 'Clear search'}
       >
         <!-- eslint-disable svelte/no-at-html-tags -->
         {@html closeSvg}
@@ -688,7 +689,7 @@
                        so the tri-state is computed here and never flipped locally. -->
                   <Checkbox
                     text=""
-                    ariaLabel="Select all rows"
+                    ariaLabel={labels?.selectAllRows ?? 'Select all rows'}
                     controlled
                     checked={headerCheckboxState === 'all'}
                     indeterminate={headerCheckboxState === 'some'}
@@ -773,7 +774,7 @@
                             >
                               <Button
                                 {...triggerProps}
-                                ariaLabel="Filter by {header}"
+                                ariaLabel={labels?.filterBy?.(header) ?? `Filter by ${header}`}
                                 testId={headerColumn.testId &&
                                   `${headerColumn.testId}-filter-trigger`}
                               >
@@ -791,7 +792,10 @@
                     {/if}
                     {#if isColumnSortable(colIndex)}
                       <div class="sort-button">
-                        <Button onclick={() => handleSort(colIndex)} ariaLabel="Sort by {header}">
+                        <Button
+                          onclick={() => handleSort(colIndex)}
+                          ariaLabel={labels?.sortBy?.(header) ?? `Sort by ${header}`}
+                        >
                           {#if sortColumn === colIndex && sortDirection === 'asc'}
                             {#if typeof sortAscIcon === 'function'}
                               {@render sortAscIcon()}
@@ -840,7 +844,7 @@
                             <Button
                               variant="ghost"
                               iconOnly={true}
-                              ariaLabel="Close search"
+                              ariaLabel={labels?.closeSearch ?? 'Close search'}
                               onclick={clearSearch}
                             >
                               {#snippet icon()}
@@ -921,7 +925,8 @@
                     >
                       <Checkbox
                         text=""
-                        ariaLabel={`Select row ${rowId || 'non-selectable'}`}
+                        ariaLabel={labels?.selectRow?.(rowId) ??
+                          `Select row ${rowId || 'non-selectable'}`}
                         controlled
                         checked={rowSelected}
                         disabled={rowDisabled}

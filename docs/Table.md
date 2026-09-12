@@ -492,6 +492,7 @@ directly inside the `cell` snippet, which runs in consumer scope.
 | headerTooltipIcon     | `Snippet`                                                           | No       | `-`                   | Icon snippet shown after each header label that has a `tooltip`. When set, the default underline affordance on those labels is dropped.                                                                                                                                     |
 | headerTooltipPosition | `TooltipPosition`                                                   | No       | `'top'`               | Placement of every header tooltip bubble.                                                                                                                                                                                                                                   |
 | usePortal             | `boolean`                                                           | No       | `false`               | When true, in-cell `Select` dropdowns and `Menu` popovers (`action-group`/`popup-menu` columns) are portaled to `document.body` and positioned `fixed`, so the table's own scroll/overflow container cannot clip them. Set on tables whose rows can sit near a scroll edge. |
+| labels                | `TableLabels`                                                       | No       | `-`                   | Overrides for the accessible names Table generates itself (sort, filter, row/select-all checkboxes, search clear/close). Every member is optional and falls back to the English default, so omitting the prop changes nothing. See `TableLabels` below.                     |
 
 ## Snippets
 
@@ -750,6 +751,46 @@ These variables style the search input rendered above the table when `searchConf
 | `--table-search-clear-icon-size`        | `14px`              | width, height    | Size of the clear button icon.                                  |
 
 ## Type Reference
+
+### TableLabels
+
+Table names several controls it renders on the caller's behalf. Those names were
+hardcoded English, and `sortable` defaults to `true`, so a consumer shipping a
+non-English UI shipped English on controls they never wrote. `labels` overrides
+each one.
+
+```ts
+type TableLabels = {
+  sortBy?: (header: string) => string;        // default: `Sort by ${header}`
+  filterBy?: (header: string) => string;      // default: `Filter by ${header}`
+  selectRow?: (rowId: string) => string;      // default: `Select row ${rowId || 'non-selectable'}`
+  selectAllRows?: string;                     // default: 'Select all rows'
+  clearSearch?: string;                       // default: 'Clear search'
+  closeSearch?: string;                       // default: 'Close search'
+};
+```
+
+```svelte
+<Table
+  {columns}
+  {rows}
+  labels={{
+    sortBy: (header) => `Trier par ${header}`,
+    selectAllRows: 'Tout sélectionner'
+  }}
+/>
+```
+
+The three that depend on a column or a row are functions rather than templates
+with a placeholder, because a translator needs to decide where the header goes
+rather than fill the slot an English sentence happens to leave.
+
+Members are independent: the example above translates sorting and select-all
+while leaving the filter trigger and the search buttons in English.
+
+`Search` is not here. The search input has always been named by
+`searchConfig.placeholder`, which is the right place for it.
+
 
 ```typescript
 type SortDirection = 'asc' | 'desc';

@@ -82,7 +82,18 @@ Tag: `<sui-checkbox>`
 <sui-checkbox text="Parent decides" controlled></sui-checkbox>
 ```
 
-`controlled` maps to the attribute of the same name; `attributes` is an object property, set from script.
+`controlled` maps to the attribute of the same name.
+
+Two props are renamed on the custom element, because the platform already owns
+those names on every `HTMLElement`:
+
+| Component prop | Custom-element property                                        | Why                                                                                                                                                                                     |
+| -------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ariaLabel`    | `aria-label` attribute, or the `checkboxAriaLabel` property    | `ariaLabel` is an ARIA-reflected accessor on `Element`.                                                                                                                                 |
+| `attributes`   | `checkboxAttributes` property (script only, no attribute form) | `attributes` is `Element`'s live `NamedNodeMap`; declaring it as a prop replaced the accessor and every `<sui-checkbox>` threw `TypeError: this.attributes is not iterable` on connect. |
+
+Both are object/script properties rather than attributes — an attribute is a
+string, and these carry structured values.
 
 ### Slots
 

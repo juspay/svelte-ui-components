@@ -98,14 +98,58 @@ export type MarkdownSanitizeOptions = {
    * keep their existing rendering. Neither mode inserts source HTML into the DOM.
    */
   rawHtml?: MarkdownRawHtmlMode;
+  /**
+   * Sanitizer consulted only while `rawHtml` is `'sanitize'`. It is called ONCE
+   * per render, with the whole assembled document, and what it returns is what
+   * gets rendered.
+   *
+   * Note what that means: it sees markdown-generated HTML too, not only the raw
+   * HTML the author wrote. A configuration restrictive enough to drop `<p>`,
+   * `<code>` or `<table>` will drop them here as well, so allow the tags this
+   * component emits. It is not called per raw-HTML token, because marked splits
+   * a block-level container into separate opening and closing tokens -- and a
+   * sanitizer handed `<div class="x">` on its own balances it to
+   * `<div class="x"></div>`, which puts the content the author wrapped outside
+   * its container.
+   *
+   * This library deliberately does not implement HTML sanitization and does not
+   * depend on a sanitizer. Escaping everything is a provably safe default, and a
+   * sanitizer written here could only subtract from it: mutation XSS, namespace
+   * confusion and parse-then-reparse divergence are a specialist problem, and a
+   * home-grown one inside a package this many projects install would be the most
+   * dangerous file in it. Injection keeps that code in your dependency tree,
+   * where it can be audited and updated on its own schedule.
+   *
+   * It also keeps the contract honest: this signature says the returned string
+   * is YOUR responsibility. Pass DOMPurify's `sanitize`, or anything you trust.
+   * Note that the library's URL protocol allow-list guards markdown-syntax links
+   * and images only: a `javascript:` href written as raw HTML is emitted exactly
+   * as your sanitizer returns it, because re-checking that would mean parsing
+   * and rewriting the output -- the sanitization this option exists to delegate.
+   *
+   * If it throws or returns a non-string, the document is re-rendered with
+   * `'escape'` instead; the unsanitized assembly is never emitted.
+   *
+   * It must work on the server as well as in the browser. `MarkdownText`
+   * renders this through `{@html}` from a `$derived`, so a sanitizer that only
+   * works client-side (DOMPurify without a DOM, say) throws during SSR, falls
+   * back to escaped output there, and succeeds on hydration -- the two renders
+   * then disagree. Give it a server implementation, or leave `rawHtml` alone on
+   * server-rendered pages.
+   */
+  htmlSanitizer?: (html: string) => string;
 };
 
 /**
  * `'escape'` renders raw HTML as visible escaped text (the default, and what
- * the component has always done); `'strip'` removes it. See
+ * the component has always done); `'strip'` removes it; `'sanitize'` keeps raw
+ * HTML in place and hands the assembled document to
+ * `MarkdownSanitizeOptions.htmlSanitizer`, rendering what comes back. With no
+ * sanitizer supplied, `'sanitize'` behaves exactly like `'escape'` -- the unsafe
+ * path is unreachable by omission rather than by discipline. See
  * `MarkdownSanitizeOptions.rawHtml`.
  */
-export type MarkdownRawHtmlMode = 'escape' | 'strip';
+export type MarkdownRawHtmlMode = 'escape' | 'strip' | 'sanitize';
 
 export type RenderMarkdownOptions = {
   /** Render single newlines as `<br>` (GFM "breaks" mode). */

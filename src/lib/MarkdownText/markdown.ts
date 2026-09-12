@@ -2,11 +2,7 @@ import { Marked } from 'marked';
 import { parseFragment } from 'parse5';
 import type { DefaultTreeAdapterTypes } from 'parse5';
 import type { RendererObject, Tokens } from 'marked';
-import type {
-  MarkdownRawHtmlMode,
-  MarkdownSanitizeOptions,
-  RenderMarkdownOptions
-} from './properties';
+import type { MarkdownSanitizeOptions, RenderMarkdownOptions } from './properties';
 
 /**
  * Chat content comes from models and users, not from the app's own templates,
@@ -140,13 +136,31 @@ function tagAllowed(allowed: Set<string> | null, tag: string): boolean {
 }
 
 /**
+ * What the renderer does with a raw-HTML token. `'passthrough'` is deliberately
+ * not a public mode: it is `'sanitize'` *plus* a sanitizer actually supplied,
+ * and it emits the token untouched because sanitization has moved to a single
+ * pass over the assembled document (see `renderMarkdown`).
+ */
+type RawHtmlStrategy = 'escape' | 'strip' | 'passthrough';
+
+/**
  * As with `narrow` and `resolveTagAllowList`, a plain-JS or web-component
  * consumer can hand this anything at runtime, so anything other than the one
  * recognised opt-in degrades to today's escaping rather than throwing — an
  * unrecognised value must never be the reason content silently disappears.
+ *
+ * `'sanitize'` without a sanitizer resolves to `'escape'` for the same reason:
+ * the unsafe path stays unreachable by omission rather than by discipline.
  */
-function resolveRawHtmlMode(rawHtml?: MarkdownRawHtmlMode): MarkdownRawHtmlMode {
-  return rawHtml === 'strip' ? 'strip' : 'escape';
+function resolveRawHtmlStrategy(sanitize?: MarkdownSanitizeOptions): RawHtmlStrategy {
+  const rawHtml = sanitize?.rawHtml;
+  if (rawHtml === 'strip') {
+    return 'strip';
+  }
+  if (rawHtml === 'sanitize' && typeof sanitize?.htmlSanitizer === 'function') {
+    return 'passthrough';
+  }
+  return 'escape';
 }
 
 // An inert, server-compatible HTML parser handles quoted delimiters, entities
@@ -171,11 +185,27 @@ function createSanitizingRenderer(
   protocols: { links: Set<string>; images: Set<string> },
   allowedTags: Set<string> | null,
   disableTaskLists: boolean,
-  rawHtml: MarkdownRawHtmlMode
+  rawHtml: RawHtmlStrategy
 ): RendererObject {
   return {
     html(token: Tokens.HTML | Tokens.Tag): string {
-      return rawHtml === 'strip' ? rawHtmlText(parseFragment(token.text)) : escapeHtml(token.text);
+      if (rawHtml === 'strip') {
+        return rawHtmlText(parseFragment(token.text));
+      }
+      /*
+       * Emitted verbatim, and sanitized later in one pass over the whole
+       * document. Sanitizing here instead looks safer and is not: marked splits
+       * a block-level container into separate opening and closing tokens with
+       * the markdown between them as its own block, so a sanitizer -- which
+       * parses its input and serialises the tree back -- sees `<div class="x">`
+       * alone, balances it into `<div class="x"></div>`, and drops the lone
+       * `</div>`. The content the author wrapped then renders OUTSIDE its
+       * container. See markdown.test.ts, 'one pass over the assembled output'.
+       */
+      if (rawHtml === 'passthrough') {
+        return token.text;
+      }
+      return escapeHtml(token.text);
     },
     link(token: Tokens.Link): string | false {
       if (hasSafeProtocol(token.href, protocols.links) && tagAllowed(allowedTags, 'a')) {
@@ -322,12 +352,19 @@ function wrapTables(html: string, label?: string, wrapperClass?: string): string
   return html.replace(TABLE_OPEN, `${open}<table>`).replace(TABLE_CLOSE, '</table></div>');
 }
 
-function instanceFor(options: RenderMarkdownOptions): Marked {
+function instanceFor(options: RenderMarkdownOptions, rawHtml: RawHtmlStrategy): Marked {
   const breaks = options.breaks === true;
   const protocols = resolveProtocolSets(options.sanitize);
   const allowedTags = resolveTagAllowList(options.sanitize?.allowedTags);
   const disableTaskLists = options.sanitize?.disableTaskLists === true;
-  const rawHtml = resolveRawHtmlMode(options.sanitize?.rawHtml);
+  /*
+   * The strategy is what the renderer closes over, and it is a string, so the
+   * cache keeps working even though a caller now supplies a function: two
+   * consumers passing different sanitizers share one instance because that
+   * instance no longer knows about either of them. Keying on function identity
+   * would instead grow the map without bound, since the idiomatic call site
+   * passes a fresh inline arrow on every render.
+   */
   const key = [
     breaks ? 'breaks' : 'default',
     [...protocols.links].sort().join(','),
@@ -348,19 +385,65 @@ function instanceFor(options: RenderMarkdownOptions): Marked {
   return instance;
 }
 
+/** marked's parse can be configured to return a promise; this pipeline never is. */
+function parseWith(
+  markdown: string,
+  options: RenderMarkdownOptions,
+  rawHtml: RawHtmlStrategy
+): string | null {
+  const instance = instanceFor(options, rawHtml);
+  const output =
+    options.inline === true ? instance.parseInline(markdown) : instance.parse(markdown);
+  return typeof output === 'string' ? output : null;
+}
+
+/**
+ * A consumer's sanitizer is arbitrary code. `null` here means it did not return
+ * usable markup, and the caller falls back to the escaping path that was always
+ * there -- never to the unsanitized assembly.
+ */
+function runSanitizer(html: string, htmlSanitizer: (html: string) => string): string | null {
+  try {
+    const sanitized = htmlSanitizer(html);
+    return typeof sanitized === 'string' ? sanitized : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Markdown → HTML with the sanitizing pipeline above. Pure string transform —
  * no DOM involved — so it renders identically on server and client.
  */
 export function renderMarkdown(markdown: string, options: RenderMarkdownOptions = {}): string {
-  const instance = instanceFor(options);
-  const output =
-    options.inline === true ? instance.parseInline(markdown) : instance.parse(markdown);
-  if (typeof output !== 'string') {
+  const rawHtml = resolveRawHtmlStrategy(options.sanitize);
+  const parsed = parseWith(markdown, options, rawHtml);
+  if (parsed === null) {
     return '';
   }
-  /* Inline parsing produces no block elements, so there is no table to wrap. */
+
+  /*
+   * One pass, over the assembled document, because that is the only string in
+   * which a raw-HTML container and the markdown it wraps are both present and
+   * balanced. The cost is the contract: the sanitizer also sees markdown-
+   * generated HTML, so a configuration restrictive enough to strip `<p>` or
+   * `<code>` will strip them here too. Documented on `htmlSanitizer`.
+   */
+  let output = parsed;
+  if (rawHtml === 'passthrough') {
+    const htmlSanitizer = options.sanitize?.htmlSanitizer;
+    const sanitized =
+      typeof htmlSanitizer === 'function' ? runSanitizer(parsed, htmlSanitizer) : null;
+    output = sanitized ?? parseWith(markdown, options, 'escape') ?? '';
+  }
+
+  /*
+   * After sanitization, so the library's own link hardening cannot be stripped
+   * by the caller's configuration -- and so it reaches links that arrived as
+   * raw HTML rather than markdown syntax.
+   */
   const linked = annotateExternalLinks(output);
+  /* Inline parsing produces no block elements, so there is no table to wrap. */
   return options.inline === true
     ? linked
     : wrapTables(linked, options.tableLabel, options.tableWrapperClass);

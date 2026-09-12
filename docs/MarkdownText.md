@@ -36,19 +36,19 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 
 ## Props
 
-| Prop              | Type                      | Required | Default | Description                                                                                                                                                                                                         |
-| ----------------- | ------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| markdown          | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                         |
-| breaks            | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                               |
-| testId            | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                |
-| classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                   |
-| tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                        |
-| tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                              |
-| sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped or dropped. See the Security model section below. |
+| Prop              | Type                      | Required | Default | Description                                                                                                                                                                                                                                                                              |
+| ----------------- | ------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| markdown          | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                                                                                              |
+| breaks            | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                                                                                                    |
+| testId            | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                                                                                     |
+| classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                                                                                        |
+| tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                                                                                             |
+| tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                                                                                                   |
+| sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped, dropped, or rendered through a sanitizer the caller supplies (`htmlSanitizer`). See the Security model section below. |
 
 ## Security model
 
-- **Raw HTML never passes through.** `<script>`, event-handler attributes, iframes — source HTML is escaped by default, or stripped to escaped text content when `sanitize.rawHtml` is `'strip'`. This is deliberate for chat: models emit markdown, not HTML, and dropping passthrough removes the entire injection surface instead of trying to filter it.
+- **Raw HTML does not pass through unless you supply a sanitizer.** `<script>`, event-handler attributes, iframes — source HTML is escaped by default, or stripped to escaped text content when `sanitize.rawHtml` is `'strip'`. This is deliberate for chat: models emit markdown, not HTML, and dropping passthrough removes the entire injection surface instead of trying to filter it. If you genuinely need raw HTML rendered, see **Rendering raw HTML** below — you supply the sanitizer, and omitting it keeps the escaping.
 - **URL protocol allow-list.** `[x](javascript:…)` and `[x](data:…)` render as plain text without an anchor; `![x](javascript:…)` renders the alt text without an `<img>`. Entity-smuggled protocols (`jav&#x09;ascript:`) fail scheme parsing and are treated as relative paths, where attribute-escaping keeps them inert.
 - **External links are tab-safe.** `http:`/`https:` links open with `target="_blank" rel="noopener noreferrer"` (the same default the library's Button/Card apply); relative, `mailto:` and `tel:` links keep same-tab navigation. Autolinks and bare URLs go through the same protocol guard as explicit links.
 - **Pre-sanitized HTML has its own prop.** If you already hold trusted, sanitized HTML, use `ChatMessage`'s `html` prop — `markdown` is for untrusted source text.
@@ -84,6 +84,139 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
   <!-- Stray HTML in a transcript disappears instead of showing as tag text. -->
   <MarkdownText {markdown} sanitize={{ rawHtml: 'strip' }} />
   ```
+
+### Rendering raw HTML
+
+> **Web components.** `sui-markdown-text` declares `sanitize` as an object property, so
+> `htmlSanitizer` can only be supplied from script -- `element.sanitize = { rawHtml: 'sanitize',
+htmlSanitizer }`. There is no attribute form, because an attribute is a string and this option
+> is a function. A vanilla-JS consumer setting `sanitize` as an HTML attribute gets escaping, the
+> default, rather than an error.
+
+Set `sanitize.rawHtml` to `'sanitize'` and supply `sanitize.htmlSanitizer`. Your function is called
+once per render, with the whole assembled document, and what it returns is what gets rendered.
+
+DOMPurify is not bundled with this library and is not a peer dependency — install a sanitizer in
+your own app (`npm i dompurify`, or anything else you trust). Nothing here imports one.
+
+Configure it explicitly. `DOMPurify.sanitize(html)` with no options uses a broad default
+allow-list that varies by version and environment, and because your function now sees the whole
+document, the allow-list has to cover the tags this component emits as well as the ones you let
+authors write:
+
+```svelte
+<script lang="ts">
+  import DOMPurify from 'dompurify';
+  import { MarkdownText } from '@juspay/svelte-ui-components';
+
+  // What MarkdownText itself emits, plus the raw-HTML tags you choose to allow.
+  // Anything missing here is dropped from YOUR markdown output too, not just
+  // from author-written HTML.
+  const ALLOWED_TAGS = [
+    'p',
+    'br',
+    'hr',
+    'span',
+    'div',
+    'strong',
+    'em',
+    'del',
+    'code',
+    'pre',
+    'blockquote',
+    'ul',
+    'ol',
+    'li',
+    'input',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'a',
+    'img',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td'
+  ];
+  const ALLOWED_ATTR = [
+    'href',
+    'title',
+    'target',
+    'rel',
+    'src',
+    'alt',
+    'width',
+    'height',
+    'class',
+    'align',
+    'colspan',
+    'rowspan',
+    'type',
+    'checked',
+    'disabled'
+  ];
+</script>
+
+<MarkdownText
+  {markdown}
+  sanitize={{
+    rawHtml: 'sanitize',
+    htmlSanitizer: (html) => DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR })
+  }}
+/>
+```
+
+> **You own the policy.** Whatever your function returns is rendered as markup, unmodified. This
+> component does not re-check it, and cannot: re-escaping the result would turn the feature back
+> into `'escape'`. A permissive configuration here is a live XSS surface in your application, so
+> treat the allow-list above as a starting point to narrow, not a default to copy.
+
+**The library does not implement HTML sanitization and does not depend on a sanitizer.** That is a
+deliberate limit, not an omission. Escaping everything is a provably safe default, so a sanitizer
+written here could only ever subtract from it — and HTML sanitization is a specialist problem:
+mutation XSS, namespace confusion, and divergence between how a server-side parser and a browser
+read the same bytes. Injection keeps that code in your dependency tree, where it can be audited and
+updated on its own schedule, and the signature says plainly that the returned string is your
+responsibility.
+
+Three properties worth knowing:
+
+- **Omitting the sanitizer keeps the escaping.** `rawHtml: 'sanitize'` with no `htmlSanitizer` behaves
+  exactly like `'escape'`. A half-configured surface does not start emitting raw HTML.
+- **A failing sanitizer falls back to escaping.** If yours throws, or returns anything that is not a
+  string, the document is re-rendered with `'escape'`. The unsanitized assembly is never emitted, and
+  the fallback is always the safe path that was already there.
+- **The protocol allow-list covers markdown syntax, NOT raw HTML.** `[click](javascript:alert(1))`
+  renders as plain text with no anchor, as it always has. But
+  `<a href="javascript:alert(1)">click</a>` written as raw HTML is emitted exactly as your sanitizer
+  returns it — this component does not re-check it. That is the trust boundary doing what it says,
+  and it is the single most important thing to get right in your configuration: DOMPurify strips
+  `javascript:` hrefs by default, so do not turn that off. External-link hardening
+  (`rel="noopener noreferrer"`) is applied after your sanitizer runs, so a restrictive configuration
+  cannot strip it.
+- **It has to work on the server too.** `MarkdownText` renders the result through `{@html}`, so on a
+  server-rendered page the sanitizer runs twice: once during SSR and once on hydration. A
+  browser-only sanitizer — DOMPurify with no DOM around it — throws during SSR, falls back to escaped
+  output there, then succeeds on the client, and the two renders disagree. Give it a server
+  implementation (DOMPurify with `jsdom`, for instance), or leave `rawHtml` at its default on
+  server-rendered routes. The fallback itself is deterministic: a throwing sanitizer produces exactly
+  what `'escape'` produces, which is asserted in the tests.
+- **Your sanitizer sees markdown-generated HTML too.** This is the cost of the one-pass design, and
+  the thing to configure for: the input is the full document, so an allow-list must include the tags
+  this component emits (`p`, `strong`, `em`, `code`, `pre`, `ul`, `ol`, `li`, `blockquote`, `a`,
+  `img`, `table` and friends), not only the tags you expect authors to write.
+
+Why one pass rather than one call per raw-HTML token: `marked` splits a block-level container into
+separate opening and closing tokens, with the markdown between them as its own block. A sanitizer
+parses its input and serialises the tree back, so handed `<div class="callout">` on its own it
+returns `<div class="callout"></div>` and drops the matching `</div>` entirely — and the content the
+author wrapped renders _outside_ its container. Sanitizing the assembled document is the only point
+at which the container and its contents are both present and balanced.
 
 ## Wide tables
 
@@ -202,12 +335,18 @@ export type MarkdownSanitizeOptions = {
   // Render task-list items as plain text instead of a (already-disabled)
   // checkbox. Defaults to false.
   disableTaskLists?: boolean;
-  // Escape raw HTML from the source as visible text (the default), or drop it.
-  // Never parses it as markup either way.
+  // Escape raw HTML from the source as visible text (the default), drop it,
+  // or keep it and run htmlSanitizer over the assembled output.
   rawHtml?: MarkdownRawHtmlMode;
+  // Consulted only while rawHtml is 'sanitize'. Called once with the whole
+  // assembled document -- markdown-generated HTML included -- and returns the
+  // markup to render; a throw or non-string falls back to escaping. This
+  // library does not implement sanitization itself -- pass DOMPurify's
+  // `sanitize`, or anything you trust.
+  htmlSanitizer?: (html: string) => string;
 };
 
-export type MarkdownRawHtmlMode = 'escape' | 'strip';
+export type MarkdownRawHtmlMode = 'escape' | 'strip' | 'sanitize';
 
 export type RenderMarkdownOptions = {
   breaks?: boolean;

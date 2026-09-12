@@ -2,7 +2,59 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.20.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.21.0)
+
+Five tests parse the entire repository to assert it has nothing left for its
+generator to rewrite -- every component for the internal rename, every doc for
+the doc rename, every wrapper for the wc aliasing, and so on. They are the
+guards that stop the library shipping a spelling it deprecates.
+
+They also take 1.0s to 3.0s each on an idle machine, against vitest's 5000ms
+default. Measured, serially, on this tree:
+
+alias-wc-props          2976ms
+rename-internal-usages  2140ms
+rename-doc-usages       1634ms
+remove-event-aliases    1429ms
+lowercase-event-props   1338ms
+
+The slowest has under 2x headroom, which a busy machine erases:
+`rename-internal-usages` was observed failing as `Test timed out in 5000ms` at
+5538ms while the host sat at a load average of ~180. Nothing was wrong with it.
+The scan had simply been descheduled, and the run reported a code failure.
+
+That is the worst shape a CI failure can take. It names a real guard, it points
+at a real file, and it is noise -- so the cost is not the red build, it is that
+the next genuine failure in one of these five reads as "that flaky timeout
+again".
+
+A timeout here is a hang detector, not a performance budget: these tests assert
+nothing about how long they take, so the bound only has to be far enough out
+that a real hang still fails the run. 60s is roughly 20x the slowest measured
+time and still fails a genuine hang inside one test's runtime.
+
+Raising vitest's global `testTimeout` instead would buy the same headroom for
+these five and quietly weaken it for the ~1000 tests that genuinely should
+finish in milliseconds, so the constant is applied per test and lives in one
+place with the reasoning attached.
+
+Verified by inversion rather than by the change passing: with the constant set
+to 100ms, exactly these five fail with `Test timed out in 100ms` and no others
+do, which shows the argument is wired to the timeout and that the set is the
+one intended. At 60_000 the migrate suite is 76 passing in 8 files.
+
+Gate on this commit: prettier clean, eslint 0, event-casing 0, svelte-check 0
+errors across both tsconfigs, check:migrate 0, 1054 unit tests passing.
+
+Prompted by review of #610, which fixed this same class of load-sensitivity in
+two Playwright specs. These five are the unit-suite equivalent.
+
+-
+feat(charts): show optional per-series aggregates in legends ([1b23707](https://github.com/juspay/svelte-ui-components/commit/1b237070dda70ae00194b12267dcdfbb0777c030))
+-
+fix(migrate): bound the whole-repo scan tests on their own timeout, not vitest's default ([e0fa556](https://github.com/juspay/svelte-ui-components/commit/e0fa556506f457302fcc50eb2d9de703e5b16801))
+
+## [4.21.0](https://github.com/juspay/svelte-ui-components/compare/4.21.0..4.20.0) - 12 September 2026
 
 `LineChart`, `BarChart` and `PieChart` have handed back a `ChartHighlightAPI`
 from `onChartReady` since #465, described there as being "for imperative point

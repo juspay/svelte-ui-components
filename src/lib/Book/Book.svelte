@@ -273,7 +273,8 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--book-dot-transition-duration, var(--motion-duration, 0.2s))
+      var(--book-dot-transition-easing, var(--motion-easing, ease));
   }
 
   .dot-active {

@@ -21,6 +21,10 @@
 
 <CheckListItem {...props}>
   {#snippet checkboxLabel()}
-    <slot name="checkbox-label"></slot>
+    <!-- Mirrors CheckListItem.svelte's checkboxLabel fallback:
+         <span class="text" class:checked>{text}</span> -->
+    <slot name="checkbox-label">
+      <span class="text" class:checked={props.checked}>{props.text}</span>
+    </slot>
   {/snippet}
 </CheckListItem>

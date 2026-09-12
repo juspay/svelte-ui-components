@@ -12,6 +12,28 @@ A customizable checkbox control with optional label text. Supports checked, unch
 <Checkbox text="Accept terms" />
 ```
 
+### In a form
+
+`name` opts the box into native submission. Nothing else changes: the value follows the
+visible state, and a mixed (`indeterminate`) box submits nothing, exactly as the platform's
+own control does.
+
+```svelte
+<form onsubmit={handleSubmit}>
+  <Checkbox text="Accept terms" name="terms" value="accepted" required />
+  <button type="submit">Continue</button>
+</form>
+```
+
+> Through `<sui-checkbox>` the control lives in a shadow root, so it cannot join a form in
+> the host document. Form participation is a Svelte-import feature; the custom element
+> still accepts the props, and reports state through `onclick`.
+
+### Styling hooks
+
+The box carries `data-state="checked | unchecked | indeterminate"` and, while disabled,
+`data-disabled` — stable attribute hooks for styling that do not depend on class names.
+
 ## Props
 
 | Prop          | Type                     | Required | Default     | Description                                                                                                                                                                                                                                                                                             |
@@ -26,6 +48,10 @@ A customizable checkbox control with optional label text. Supports checked, unch
 | ariaLabel     | `string`                 | No       | `undefined` | Accessible name for the checkbox. Set it whenever the visible `text` label isn't enough or sits outside this component (a table header cell, an icon-only row control) — since name-from-content can't reach it. Ignored when `text` is non-empty, so a visible label is never overridden (WCAG 2.5.3). |
 | controlled    | `boolean`                | No       | `false`     | Controlled mode. A click reports the requested value through `onclick` and changes nothing locally, so the parent's `checked` / `indeterminate` stay the single source of truth. Use it wherever the parent may decline the change — a table selection driven from a consumer-owned set.                |
 | attributes    | `Record<string, string>` | No       | `undefined` | Extra DOM attributes spread onto the checkbox element itself (the `role="checkbox"` box, not the wrapping label): an `id` for `aria-controls` to point at, or a consumer's own test attribute. Spread last, so a value here wins over the component's own `data-pw`.                                    |
+| name          | `string`                 | No       | `undefined` | Submits the box under this name in the form it sits in. Omitted entirely when absent, unchecked, indeterminate or disabled — what a native checkbox does.                                                                                                                                               |
+| value         | `string`                 | No       | `'on'`      | Value submitted while checked. `'on'` is the native default.                                                                                                                                                                                                                                            |
+| required      | `boolean`                | No       | `false`     | Blocks submission while unchecked. Invalid validation moves focus to the visible box, since the control carrying `required` is deliberately not a tab stop.                                                                                                                                             |
+| form          | `string`                 | No       | `undefined` | `id` of a form elsewhere in the same document, for a box rendered outside it.                                                                                                                                                                                                                           |
 
 ## Snippets
 
@@ -86,7 +112,7 @@ Tag: `<sui-checkbox>`
 
 ### Slots
 
-| Slot Name            | Maps to Snippet     | Description                              |
-| -------------------- | ------------------- | ---------------------------------------- |
-| `checked-icon`       | `checkedIcon`       | Custom icon for the checked state.       |
-| `indeterminate-icon` | `indeterminateIcon` | Custom icon for the indeterminate state. |
+| Slot Name            | Maps to Snippet     | Description                                                          |
+| -------------------- | ------------------- | -------------------------------------------------------------------- |
+| `checked-icon`       | `checkedIcon`       | Custom icon for the checked state; defaults to the checkmark glyph.  |
+| `indeterminate-icon` | `indeterminateIcon` | Custom icon for the indeterminate state; defaults to the dash glyph. |

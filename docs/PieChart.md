@@ -219,39 +219,40 @@ overlapping text:
 
 In addition to the shared `--chart-*` variables (see BarChart docs), PieChart exposes:
 
-| Variable                             | Default      | CSS Property   | Description                                                                                                             |
-| ------------------------------------ | ------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `--piechart-stroke-color`            | `#fff`       | stroke         | Color of the stroke between slices.                                                                                     |
-| `--piechart-stroke-width`            | `2`          | stroke-width   | Width of the stroke between slices.                                                                                     |
-| `--chart-transition-duration`        | `0.2s`       | transition     | Duration of the slice transform/opacity transitions (hover, highlight). Shared across this library's chart family.      |
-| `--chart-font-family`                | `inherit`    | font-family    | Font family for chart text (empty-state message and legend). Shared across the chart family.                            |
-| `--chart-empty-padding`              | `32px 24px`  | padding        | Padding around the empty-state message shown when `data` has no slices.                                                 |
-| `--chart-empty-color`                | `#9ca3af`    | color          | Text color of the empty-state message.                                                                                  |
-| `--chart-legend-swatch-size`         | `12px`       | width / height | Size of each legend row's color swatch.                                                                                 |
-| `--chart-legend-font-size`           | `12px`       | font-size      | Font size of legend labels.                                                                                             |
-| `--chart-legend-color`               | `#333`       | color          | Text color of legend labels.                                                                                            |
-| `--piechart-hover-scale`             | `1.05`       | transform      | Scale factor applied to the highlighted (hovered or programmatic) slice.                                                |
-| `--piechart-dimmed-opacity`          | `0.3`        | opacity        | Opacity of non-highlighted slices when any slice is active.                                                             |
-| `--piechart-label-color`             | `#333`       | fill           | Color of slice labels.                                                                                                  |
-| `--piechart-label-font-size`         | `12px`       | font-size      | Font size of slice labels.                                                                                              |
-| `--piechart-semi-aspect-ratio`       | `2`          | —              | Aspect ratio (width÷height) used when `semiCircle` is true and `aspectRatio` prop is not set.                           |
-| `--piechart-delta-top`               | `8px`        | top            | Top offset of the delta badge overlay.                                                                                  |
-| `--piechart-delta-right`             | `8px`        | right          | Right offset of the delta badge overlay.                                                                                |
-| `--piechart-legend-gap`              | `8px`        | gap            | Row gap in the `legendShowValues` table.                                                                                |
-| `--piechart-legend-padding`          | `12px 0 0 0` | padding        | Padding on the `legendShowValues` container.                                                                            |
-| `--piechart-legend-label-min-width`  | `120px`      | min-width      | Minimum width of the label column in the `legendShowValues` table; aligns value columns across rows.                    |
-| `--piechart-legend-value-min-width`  | `60px`       | min-width      | Minimum width of the value column; combined with `text-align: right` for tabular alignment.                             |
-| `--piechart-legend-value-font-size`  | `12px`       | font-size      | Font size of the value column text in the `legendShowValues` table.                                                     |
-| `--piechart-legend-value-color`      | `#333`       | color          | Text color of the value column in the `legendShowValues` table.                                                         |
-| `--piechart-legend-column-gap`       | `16px`       | gap            | Gap between the chart and the legend when `legendPosition="right"`.                                                     |
-| `--piechart-legend-column-max-width` | `50%`        | max-width      | Upper bound on the legend column's width when `legendPosition="right"`, so a long label cannot starve the chart.        |
-| `--piechart-legend-column-padding`   | `0`          | padding        | Padding on the legend list when `legendPosition="right"` (the below-chart placement keeps `--piechart-legend-padding`). |
-| `--piechart-legend-more-color`       | `#2563eb`    | color          | Text color of the `+N more` control.                                                                                    |
-| `--piechart-legend-more-font-size`   | `12px`       | font-size      | Font size of the `+N more` control.                                                                                     |
-| `--piechart-legend-more-margin-top`  | `8px`        | margin-top     | Space between the last legend row and the `+N more` control.                                                            |
-| `--piechart-legend-more-padding`     | `2px 4px`    | padding        | Padding on the `+N more` control.                                                                                       |
-| `--piechart-legend-row-gap`          | `6px`        | gap            | Inline gap between swatch, label, and value within each legend row.                                                     |
-| `--piechart-legend-swatch-radius`    | `2px`        | border-radius  | Border radius of the color swatch in each legend row.                                                                   |
+| Variable                             | Default      | CSS Property   | Description                                                                                                                                                  |
+| ------------------------------------ | ------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--piechart-stroke-color`            | `#fff`       | stroke         | Color of the stroke between slices.                                                                                                                          |
+| `--piechart-stroke-width`            | `2`          | stroke-width   | Width of the stroke between slices.                                                                                                                          |
+| `--chart-transition-duration`        | `0.2s`       | transition     | Duration of the slice transform/opacity transitions (hover, highlight). Shared across this library's chart family.                                           |
+| `--chart-font-family`                | `inherit`    | font-family    | Font family for chart text (empty-state message and legend). Shared across the chart family.                                                                 |
+| `--chart-empty-padding`              | `32px 24px`  | padding        | Padding around the empty-state message shown when `data` has no slices.                                                                                      |
+| `--chart-empty-color`                | `#9ca3af`    | color          | Text color of the empty-state message.                                                                                                                       |
+| `--chart-legend-swatch-size`         | `12px`       | width / height | Size of each legend row's color swatch.                                                                                                                      |
+| `--chart-legend-font-size`           | `12px`       | font-size      | Font size of legend labels.                                                                                                                                  |
+| `--chart-legend-color`               | `#333`       | color          | Text color of legend labels.                                                                                                                                 |
+| `--piechart-hover-scale`             | `1.05`       | transform      | Scale factor applied to the highlighted (hovered or programmatic) slice.                                                                                     |
+| `--piechart-dimmed-opacity`          | `0.3`        | opacity        | Opacity of non-highlighted slices when any slice is active.                                                                                                  |
+| `--piechart-label-color`             | `#333`       | fill           | Color of slice labels.                                                                                                                                       |
+| `--piechart-label-font-size`         | `12px`       | font-size      | Font size of slice labels.                                                                                                                                   |
+| `--piechart-semi-aspect-ratio`       | `2`          | —              | Aspect ratio (width÷height) used when `semiCircle` is true and `aspectRatio` prop is not set.                                                                |
+| `--piechart-delta-top`               | `8px`        | top            | Top offset of the delta badge overlay.                                                                                                                       |
+| `--piechart-delta-right`             | `8px`        | right          | Right offset of the delta badge overlay.                                                                                                                     |
+| `--piechart-legend-gap`              | `8px`        | gap            | Row gap in the `legendShowValues` table.                                                                                                                     |
+| `--piechart-legend-padding`          | `12px 0 0 0` | padding        | Padding on the `legendShowValues` container.                                                                                                                 |
+| `--piechart-legend-label-min-width`  | `120px`      | min-width      | Minimum width of the label column in the `legendShowValues` table; aligns value columns across rows.                                                         |
+| `--piechart-legend-value-min-width`  | `60px`       | min-width      | Minimum width of the value column; combined with `text-align: right` for tabular alignment.                                                                  |
+| `--piechart-legend-value-font-size`  | `12px`       | font-size      | Font size of the value column text in the `legendShowValues` table.                                                                                          |
+| `--piechart-legend-value-color`      | `#333`       | color          | Text color of the value column in the `legendShowValues` table.                                                                                              |
+| `--piechart-legend-column-gap`       | `16px`       | gap            | Gap between the chart and the legend when `legendPosition="right"`.                                                                                          |
+| `--piechart-legend-column-max-width` | `50%`        | max-width      | Upper bound on the legend column's width when `legendPosition="right"`, so a long label cannot starve the chart.                                             |
+| `--piechart-legend-column-padding`   | `0`          | padding        | Padding on the legend list when `legendPosition="right"` (the below-chart placement keeps `--piechart-legend-padding`).                                      |
+| `--piechart-legend-more-color`       | `#2563eb`    | color          | Text color of the `+N more` control.                                                                                                                         |
+| `--piechart-legend-more-font-size`   | `12px`       | font-size      | Font size of the `+N more` control.                                                                                                                          |
+| `--piechart-legend-more-margin-top`  | `8px`        | margin-top     | Space between the last legend row and the `+N more` control.                                                                                                 |
+| `--piechart-legend-more-padding`     | `2px 4px`    | padding        | Padding on the `+N more` control.                                                                                                                            |
+| `--piechart-legend-row-gap`          | `6px`        | gap            | Inline gap between swatch, label, and value within each legend row.                                                                                          |
+| `--piechart-legend-swatch-radius`    | `2px`        | border-radius  | Border radius of the color swatch in each legend row.                                                                                                        |
+| `--chart-transition-easing`          | `ease`       | transition     | Easing curve of the slice transform/opacity transitions (hover, highlight). Falls back through `--motion-easing`. Shared across this library's chart family. |
 
 The expander's keyboard focus ring uses `--piechart-legend-more-focus-outline` (default `2px solid currentColor`, with a `2px` outline offset).
 

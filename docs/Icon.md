@@ -19,6 +19,13 @@ A clickable icon component that displays an image or inline SVG with an optional
 />
 ```
 
+## Interactivity
+
+An icon given an `onclick` handler becomes a real control: it takes `role="button"`,
+joins the tab order, and activates on Enter and Space as well as click. Without a
+click handler it stays a plain decorative element with no role and no tab stop, so a
+screen reader does not announce a button that does nothing.
+
 ## Props
 
 | Prop    | Type             | Required | Default | Description                                                                                                                                                                                                                      |
@@ -38,7 +45,7 @@ A clickable icon component that displays an image or inline SVG with an optional
 | Event     | Type                             | Description                                                     |
 | --------- | -------------------------------- | --------------------------------------------------------------- |
 | onclick   | `(event: MouseEvent) => void`    | Fires when the icon container is clicked.                       |
-| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the icon container has focus. |
+| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the icon container has focus. Runs for every key, including the Enter and Space the icon handles itself. |
 
 ## CSS Variables
 

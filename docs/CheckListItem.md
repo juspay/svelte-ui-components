@@ -71,6 +71,6 @@ Tag: `<sui-check-list-item>`
 
 ### Slots
 
-| Slot Name        | Maps to Snippet | Description                            |
-| ---------------- | --------------- | -------------------------------------- |
-| `checkbox-label` | `checkboxLabel` | Custom label content for the checkbox. |
+| Slot Name        | Maps to Snippet | Description                                                                 |
+| ---------------- | --------------- | --------------------------------------------------------------------------- |
+| `checkbox-label` | `checkboxLabel` | Custom label content for the checkbox; defaults to the plain `text` string. |

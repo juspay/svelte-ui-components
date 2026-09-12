@@ -25,10 +25,17 @@
     <slot name="icon"></slot>
   {/snippet}
   {#snippet titleSnippet()}
-    <slot name="title-snippet"></slot>
+    <!-- Mirrors EmptyState.svelte's titleSnippet fallback: {title} -->
+    <slot name="title-snippet">{emptyStateTitle}</slot>
   {/snippet}
   {#snippet descriptionSnippet()}
-    <slot name="description-snippet"></slot>
+    <!-- Mirrors EmptyState.svelte's descriptionSnippet fallback: {description},
+         shown only when `description` is a non-empty string. -->
+    <slot name="description-snippet">
+      {#if typeof props.description === 'string' && props.description.length > 0}
+        {props.description}
+      {/if}
+    </slot>
   {/snippet}
   {#snippet children()}
     <slot></slot>

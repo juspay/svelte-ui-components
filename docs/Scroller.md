@@ -190,5 +190,5 @@ Tag: `<sui-scroller>`
 | Slot Name        | Maps to Snippet | Description                 |
 | ---------------- | --------------- | --------------------------- |
 | _(default)_      | `children`      | Scrollable content.         |
-| `arrow-previous` | `arrowPrevious` | Custom previous/left arrow. |
-| `arrow-next`     | `arrowNext`     | Custom next/right arrow.    |
+| `arrow-previous` | `arrowPrevious` | Custom previous/left arrow; defaults to the built-in chevron. |
+| `arrow-next`     | `arrowNext`     | Custom next/right arrow; defaults to the built-in chevron.    |

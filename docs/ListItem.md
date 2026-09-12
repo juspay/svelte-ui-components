@@ -2,6 +2,8 @@
 
 A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts. Has no selection/checkbox concept at all — for a checkbox-driven selectable row, use `CheckListItem` instead.
 
+Only the region that was actually given its own click handler becomes an interactive control (`role="button"`, a tab stop, and Enter/Space activation) — see the Nested interactive semantics section below.
+
 ## Usage
 
 ```svelte
@@ -51,14 +53,14 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event             | Type                             | Description                                                                                        |
-| ----------------- | -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| onleftimageclick  | `(event: MouseEvent) => void`    | Fires when the left image is clicked.                                                              |
-| onrightimageclick | `(event: MouseEvent) => void`    | Fires when the right image is clicked.                                                             |
-| oncentertextclick | `(event: MouseEvent) => void`    | Fires when the center text/label area is clicked.                                                  |
-| onitemclick       | `(event: MouseEvent) => void`    | Fires when the entire list item container is clicked (including all sub-areas).                    |
-| ontopsectionclick | `(event: MouseEvent) => void`    | Fires when the top section (left + center + right row, excluding the accordion bottom) is clicked. |
-| onkeydown         | `(event: KeyboardEvent) => void` | Fires when a key is pressed while any focusable section of the list item has focus.                |
+| Event             | Type                             | Description                                                                                                                                                                                 |
+| ----------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onleftimageclick  | `(event: MouseEvent) => void`    | Fires when the left image is clicked. Passing this prop is also what makes the left image wrapper itself a real button — see the Nested interactive semantics section. |
+| onrightimageclick | `(event: MouseEvent) => void`    | Fires when the right image is clicked. Passing this prop is also what makes the right image wrapper itself a real button.                                                                   |
+| oncentertextclick | `(event: MouseEvent) => void`    | Fires when the center text/label area is clicked. Passing this prop is also what makes the center text itself a real button.                                                                |
+| onitemclick       | `(event: MouseEvent) => void`    | Fires when the entire list item container is clicked (including all sub-areas, since a click on any of them bubbles up to the root).                                                        |
+| ontopsectionclick | `(event: MouseEvent) => void`    | Fires when the top section (left + center + right row, excluding the accordion bottom) is clicked. Passing this prop is also what makes the top section itself a real button.               |
+| onkeydown         | `(event: KeyboardEvent) => void` | Fires when a key is pressed while any focusable section of the list item has focus.                                                                                                         |
 
 ## CSS Variables
 
@@ -172,9 +174,34 @@ Pass `transformSvg` to rewrite left and right SVG image markup before it is inli
 />
 ```
 
+## Nested interactive semantics
+
+The root item keeps its documented default: `role="button"` and `tabindex="0"` (or `role="option"`/`tabindex="-1"` when `role="option"` is passed), regardless of whether `onitemclick` is supplied, exactly as before.
+
+The four sub-regions — top section, left image, center text, and right image — do **not** share that default. Each one only becomes a real button (`role="button"`, a tab stop, and Enter/Space activation) when it is handed its **own** click handler (`ontopsectionclick`, `onleftimageclick`, `oncentertextclick`, `onrightimageclick` respectively). A sub-region with no handler of its own renders as a plain, non-focusable element with no `role` and no `tabindex` — it no longer nests a button inside the root's button just because it happens to render content. This follows the library's own rule (`DESIGN_PRINCIPLES.md` principle 4): a region takes an interactive role only when it was actually given a click handler.
+
+```svelte
+<!-- Only the root is a button. The top section, image wrappers, and label render as
+     plain elements — no nested buttons, no extra tab stops. -->
+<ListItem label="Payment Received" rightContentText="Yesterday" onitemclick={handleItemClick} />
+
+<!-- The left image is now its own button too, nested inside the root's button. This is
+     the consumer's explicit composition (both a root handler and a sub-region handler
+     were supplied) -- a click on the image fires onleftimageclick and then bubbles into
+     onitemclick, and Enter/Space on the focused image activates only its own handler. -->
+<ListItem
+  label="Payment Received"
+  leftImageUrl="/icons/status.svg"
+  onitemclick={handleItemClick}
+  onleftimageclick={handleLeftImageClick}
+/>
+```
+
+Every zone that is interactive this way also gets working keyboard activation: pressing <kbd>Enter</kbd> or <kbd>Space</kbd> while it has focus fires its click handler exactly once, the same as a pointer click. `onkeydown`, when supplied, is still forwarded from every zone regardless of whether that zone is interactive — including a zone whose own keydown listener merely re-observes a keypress bubbling up from an interactive descendant, which is why it can be called more than once per keypress in a nested composition like the second example above.
+
 ## Consumer-owned semantics
 
-`ListItem` renders synthetic button roles and tab stops by default. When a surrounding consumer supplies the interactive semantics, set `suppressRoleAndTabindex` to remove those paired attributes without changing click handlers.
+`ListItem` renders synthetic button roles and tab stops by default (root always; each sub-region only when given its own click handler, per the Nested interactive semantics section above). When a surrounding consumer supplies the interactive semantics, set `suppressRoleAndTabindex` to remove those paired attributes — from the root and from every sub-region, even ones with their own handler — without changing click handlers.
 
 ```svelte
 <ListItem suppressRoleAndTabindex onitemclick={handleItemClick} />

@@ -332,6 +332,16 @@ export function prefersReducedMotion(): boolean {
   );
 }
 
+/**
+ * Leading-edge throttle, despite the name: the first call runs immediately and
+ * every call within `delay` of it is dropped, rather than the last one being
+ * deferred as a debounce would. Modal relies on exactly that — the first
+ * dismissal must be acted on at once, and the repeats it guards against are the
+ * ones to discard.
+ *
+ * Not exported from the package; renaming it is a free change whenever the
+ * mismatch stops being worth the note.
+ */
 export function createDebouncer(delay: number) {
   let lastCallTime = 0;
   return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {

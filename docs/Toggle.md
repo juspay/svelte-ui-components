@@ -12,18 +12,34 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 <Toggle />
 ```
 
+### In a form
+
+```svelte
+<form onsubmit={handleSubmit}>
+  <Toggle text="Notifications" name="notifications" value="on" />
+  <button type="submit">Save</button>
+</form>
+```
+
+The input carries `data-state="checked | unchecked"` and `data-disabled` for styling that
+does not depend on class names.
+
 ## Props
 
-| Prop           | Type      | Required | Default   | Description                                                                                                                                                            |
-| -------------- | --------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| checked        | `boolean` | No       | `false`   | The current on/off state of the toggle switch.                                                                                                                         |
-| text           | `string`  | No       | `''`      | Label text displayed next to the toggle switch.                                                                                                                        |
-| disabled       | `boolean` | No       | `false`   | When true, prevents interaction and applies reduced opacity to indicate the disabled state.                                                                            |
-| testId         | `string`  | No       | `-`       | Value for the `data-pw` attribute on the container element, used for Playwright test targeting.                                                                        |
-| classes        | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| id             | `string`  | No       | generated | Native `id` of the checkbox input. Point your own `<label for>` at it; when omitted an id is generated so the built-in `text` is a real label.                         |
-| ariaLabel      | `string`  | No       | `-`       | Names the switch for assistive technology when it has no visible text.                                                                                                 |
-| ariaLabelledby | `string`  | No       | `-`       | References a label in the same DOM root as the checkbox.                                                                                                               |
+| Prop           | Type      | Required | Default     | Description                                                                                                                                                            |
+| -------------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| checked        | `boolean` | No       | `false`     | The current on/off state of the toggle switch. Bindable, like `Checkbox.checked`.                                                                                      |
+| text           | `string`  | No       | `''`        | Label text displayed next to the toggle switch.                                                                                                                        |
+| disabled       | `boolean` | No       | `false`     | When true, prevents interaction and applies reduced opacity to indicate the disabled state.                                                                            |
+| testId         | `string`  | No       | `-`         | Value for the `data-pw` attribute on the container element, used for Playwright test targeting.                                                                        |
+| classes        | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| id             | `string`  | No       | generated   | Native `id` of the checkbox input. Point your own `<label for>` at it; when omitted an id is generated so the built-in `text` is a real label.                         |
+| ariaLabel      | `string`  | No       | `-`         | Names the switch for assistive technology when it has no visible text.                                                                                                 |
+| ariaLabelledby | `string`  | No       | `-`         | References a label in the same DOM root as the checkbox.                                                                                                               |
+| name           | `string`  | No       | `undefined` | Submits the switch under this name. Omitted when off or disabled, like the checkbox it is built from.                                                                  |
+| value          | `string`  | No       | `'on'`      | Value submitted while on. `'on'` is the native default.                                                                                                                |
+| required       | `boolean` | No       | `false`     | Blocks submission while the switch is off.                                                                                                                             |
+| form           | `string`  | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-toggle>`, whose input sits in a shadow root.                                                  |
 
 ## Events
 
@@ -35,34 +51,36 @@ A labeled on/off switch with sliding ball animation. The `checked` prop controls
 
 Override these custom properties to theme the component.
 
-| Variable                                  | Default           | CSS Property       | Description                                                  |
-| ----------------------------------------- | ----------------- | ------------------ | ------------------------------------------------------------ |
-| `--toggle-container-display`              | `flex`            | display            | Display mode of the toggle container.                        |
-| `--toggle-container-align-items`          | `center`          | align-items        | Vertical alignment of switch and label.                      |
-| `--toggle-container-gap`                  | `8px`             | gap                | Gap between the switch and label text.                       |
-| `--toggle-disabled-opacity`               | `0.4`             | opacity            | Opacity of the toggle when in the disabled state.            |
-| `--toggle-text-font-size`                 | `14px`            | font-size          | Font size of the label text.                                 |
-| `--toggle-text-font-weight`               | `400`             | font-weight        | Font weight of the label text.                               |
-| `--toggle-text-color`                     | `#4a4a4a`         | color              | Color of the label text.                                     |
-| `--toggle-text-margin`                    | `0px 8px 0px 0px` | margin             | Margin around the label text.                                |
-| `--toggle-text-order`                     | `0`               | order              | Flex order of the label (0 = before switch, higher = after). |
-| `--toggle-switch-width`                   | `46px`            | width              | Width of the toggle switch track.                            |
-| `--toggle-switch-height`                  | `25px`            | height             | Height of the toggle switch track.                           |
-| `--toggle-slider-top`                     | `0`               | top                | Top position of the slider track.                            |
-| `--toggle-slider-left`                    | `0`               | left               | Left position of the slider track.                           |
-| `--toggle-slider-right`                   | `0`               | right              | Right position of the slider track.                          |
-| `--toggle-slider-bottom`                  | `0`               | bottom             | Bottom position of the slider track.                         |
-| `--slider-unchecked-color`                | `#ccc`            | background-color   | Background color of the track when unchecked (off).          |
-| `--toggle-slider-transition`              | `0.4s`            | -webkit-transition | Transition duration for the sliding animation.               |
-| `--toggle-ball-height`                    | `23px`            | height             | Height of the sliding ball/thumb.                            |
-| `--toggle-ball-width`                     | `23px`            | width              | Width of the sliding ball/thumb.                             |
-| `--toggle-slider-before-left`             | `2px`             | left               | Left position of the ball when unchecked.                    |
-| `--toggle-slider-before-bottom`           | `1px`             | bottom             | Bottom position of the ball.                                 |
-| `--toggle-slider-before-top`              | `1px`             | top                | Top position of the ball.                                    |
-| `--toggle-slider-before-background-color` | `white`           | background-color   | Background color of the ball/thumb.                          |
-| `--slider-checked-color`                  | `#2196f3`         | background-color   | Background color of the track when checked (on).             |
-| `--slider-border-radius`                  | `23px`            | border-radius      | Corner rounding of the slider track.                         |
-| `--slider-border-radius-before`           | `50%`             | border-radius      | Corner rounding of the ball/thumb.                           |
+| Variable                                  | Default           | CSS Property       | Description                                                                                                                                           |
+| ----------------------------------------- | ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--toggle-container-display`              | `flex`            | display            | Display mode of the toggle container.                                                                                                                 |
+| `--toggle-container-align-items`          | `center`          | align-items        | Vertical alignment of switch and label.                                                                                                               |
+| `--toggle-container-gap`                  | `8px`             | gap                | Gap between the switch and label text.                                                                                                                |
+| `--toggle-disabled-opacity`               | `0.4`             | opacity            | Opacity of the toggle when in the disabled state.                                                                                                     |
+| `--toggle-text-font-size`                 | `14px`            | font-size          | Font size of the label text.                                                                                                                          |
+| `--toggle-text-font-weight`               | `400`             | font-weight        | Font weight of the label text.                                                                                                                        |
+| `--toggle-text-color`                     | `#4a4a4a`         | color              | Color of the label text.                                                                                                                              |
+| `--toggle-text-margin`                    | `0px 8px 0px 0px` | margin             | Margin around the label text.                                                                                                                         |
+| `--toggle-text-order`                     | `0`               | order              | Flex order of the label (0 = before switch, higher = after).                                                                                          |
+| `--toggle-switch-width`                   | `46px`            | width              | Width of the toggle switch track.                                                                                                                     |
+| `--toggle-switch-height`                  | `25px`            | height             | Height of the toggle switch track.                                                                                                                    |
+| `--toggle-slider-top`                     | `0`               | top                | Top position of the slider track.                                                                                                                     |
+| `--toggle-slider-left`                    | `0`               | left               | Left position of the slider track.                                                                                                                    |
+| `--toggle-slider-right`                   | `0`               | right              | Right position of the slider track.                                                                                                                   |
+| `--toggle-slider-bottom`                  | `0`               | bottom             | Bottom position of the slider track.                                                                                                                  |
+| `--slider-unchecked-color`                | `#ccc`            | background-color   | Background color of the track when unchecked (off).                                                                                                   |
+| `--toggle-slider-transition`              | `0.4s`            | -webkit-transition | Transition duration for the sliding animation.                                                                                                        |
+| `--toggle-ball-height`                    | `23px`            | height             | Height of the sliding ball/thumb.                                                                                                                     |
+| `--toggle-ball-width`                     | `23px`            | width              | Width of the sliding ball/thumb.                                                                                                                      |
+| `--toggle-slider-before-left`             | `2px`             | left               | Left position of the ball when unchecked.                                                                                                             |
+| `--toggle-slider-before-bottom`           | `1px`             | bottom             | Bottom position of the ball.                                                                                                                          |
+| `--toggle-slider-before-top`              | `1px`             | top                | Top position of the ball.                                                                                                                             |
+| `--toggle-slider-before-background-color` | `white`           | background-color   | Background color of the ball/thumb.                                                                                                                   |
+| `--slider-checked-color`                  | `#2196f3`         | background-color   | Background color of the track when checked (on).                                                                                                      |
+| `--slider-border-radius`                  | `23px`            | border-radius      | Corner rounding of the slider track.                                                                                                                  |
+| `--slider-border-radius-before`           | `50%`             | border-radius      | Corner rounding of the ball/thumb.                                                                                                                    |
+| `--toggle-slider-transition-duration`     | `0.4s`            | transition         | Duration half of the slider transition. Ignored if `--toggle-slider-transition` (the whole shorthand) is set. Falls back through `--motion-duration`. |
+| `--toggle-slider-transition-easing`       | `ease`            | transition         | Easing half of the slider transition. Ignored if `--toggle-slider-transition` (the whole shorthand) is set. Falls back through `--motion-easing`.     |
 
 ## Web Component
 

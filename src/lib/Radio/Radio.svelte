@@ -9,7 +9,9 @@
     disabled = false,
     testId,
     onchange,
-    classes
+    classes,
+    required = false,
+    form
   }: RadioProperties = $props();
 
   let checked = $derived(selectedValue === value);
@@ -36,6 +38,10 @@
     {value}
     {checked}
     {disabled}
+    {required}
+    form={typeof form === 'string' ? form : null}
+    data-state={checked ? 'checked' : 'unchecked'}
+    data-disabled={disabled ? '' : null}
     onchange={handleChange}
   />
   <span class="radio-indicator" class:checked class:disabled>

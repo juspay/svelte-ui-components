@@ -37,6 +37,15 @@
   // String array shorthand (PR #232: items now accepts string[] directly)
   const statusOptions: string[] = ['Active', 'Inactive', 'Pending', 'Archived'];
 
+  const fruitsWithDisabledEnds: SelectItem[] = [
+    { id: 'apple', label: 'Apple', disabled: true },
+    { id: 'banana', label: 'Banana' },
+    { id: 'cherry', label: 'Cherry' },
+    { id: 'date', label: 'Date' },
+    { id: 'elderberry', label: 'Elderberry' },
+    { id: 'fig', label: 'Fig', disabled: true }
+  ];
+
   let singleValue: string[] = $state([]);
   let singleTickValue: string[] = $state([]);
   let searchValue: string[] = $state([]);
@@ -62,6 +71,7 @@
   let menuMultiValue: string[] = $state(['nyc']);
   let menuMultiOpen = $state(false);
   let menuApplied = $state('');
+  let disabledOptionsValue: string[] = $state([]);
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
@@ -241,6 +251,26 @@
 <h3>Disabled</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select items={fruits} disabled placeholder="Can't touch this" />
+</div>
+
+<h3>Disabled options + Home/End</h3>
+<p>
+  An individual option can opt out via <code>item.disabled</code> — dimmed,
+  <code>aria-disabled</code>, and unselectable by click or keyboard. Open the dropdown below and
+  press <code>Home</code> /
+  <code>End</code>: the highlight jumps to the first/last <em>selectable</em> row, skipping Apple and
+  Fig at either end.
+</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruitsWithDisabledEnds}
+    bind:value={disabledOptionsValue}
+    placeholder="Choose a fruit"
+    testId="select-disabled-options-demo"
+  />
+  {#if disabledOptionsValue.length > 0}
+    <p class="demo-info">Selected ID: {disabledOptionsValue.at(0)}</p>
+  {/if}
 </div>
 
 <h3>String array shorthand</h3>

@@ -19,11 +19,19 @@
 
 <script lang="ts">
   import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
+  import searchSvg from '$lib/assets/search.svg?raw';
   let props = $props();
 </script>
 
 <CommandMenu {...props}>
   {#snippet searchIcon()}
-    <slot name="search-icon"></slot>
+    <!-- Mirrors CommandMenu.svelte's searchIcon fallback:
+         <span class="command-menu-search-icon">{@html searchSvg}</span> -->
+    <slot name="search-icon">
+      <span class="command-menu-search-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html searchSvg}
+      </span>
+    </slot>
   {/snippet}
 </CommandMenu>

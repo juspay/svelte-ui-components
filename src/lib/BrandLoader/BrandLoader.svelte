@@ -67,8 +67,14 @@
 
   @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
     .background {
-      animation: animateBackground 5s ease-in-out infinite normal;
-      -webkit-animation: animateBackground 5s ease-in-out infinite normal;
+      animation: animateBackground
+        var(--brand-loader-background-animation-duration, var(--motion-duration, 5s))
+        var(--brand-loader-background-animation-easing, var(--motion-easing, ease-in-out)) infinite
+        normal;
+      -webkit-animation: animateBackground
+        var(--brand-loader-background-animation-duration, var(--motion-duration, 5s))
+        var(--brand-loader-background-animation-easing, var(--motion-easing, ease-in-out)) infinite
+        normal;
     }
 
     .loader {
@@ -96,19 +102,23 @@
   }
   .lds-ellipsis div:nth-child(1) {
     left: 8px;
-    animation: lds-ellipsis1 0.6s infinite;
+    animation: lds-ellipsis1
+      var(--brand-loader-ellipsis-animation-duration, var(--motion-duration, 0.6s)) infinite;
   }
   .lds-ellipsis div:nth-child(2) {
     left: 8px;
-    animation: lds-ellipsis2 0.6s infinite;
+    animation: lds-ellipsis2
+      var(--brand-loader-ellipsis-animation-duration, var(--motion-duration, 0.6s)) infinite;
   }
   .lds-ellipsis div:nth-child(3) {
     left: 32px;
-    animation: lds-ellipsis2 0.6s infinite;
+    animation: lds-ellipsis2
+      var(--brand-loader-ellipsis-animation-duration, var(--motion-duration, 0.6s)) infinite;
   }
   .lds-ellipsis div:nth-child(4) {
     left: 56px;
-    animation: lds-ellipsis3 0.6s infinite;
+    animation: lds-ellipsis3
+      var(--brand-loader-ellipsis-animation-duration, var(--motion-duration, 0.6s)) infinite;
   }
   @keyframes lds-ellipsis1 {
     0% {

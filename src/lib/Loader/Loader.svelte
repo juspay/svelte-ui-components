@@ -44,8 +44,13 @@
       var(--loader-foreground-end) 42%
     );
     position: relative;
-    -webkit-animation: load3 1.4s infinite linear;
-    animation: load3 1.4s infinite linear;
+    /* --loader-spin-* rather than --loader-animation-* — GridItem already reads an
+       unrelated --loader-animation-duration for its own clipper animation (a
+       pre-existing, differently-scoped name this file must not collide with). */
+    -webkit-animation: load3 var(--loader-spin-duration, var(--motion-duration, 1.4s))
+      var(--loader-spin-easing, var(--motion-easing, linear)) infinite;
+    animation: load3 var(--loader-spin-duration, var(--motion-duration, 1.4s))
+      var(--loader-spin-easing, var(--motion-easing, linear)) infinite;
     -webkit-transform: translateZ(0);
     -ms-transform: translateZ(0);
     transform: translateZ(0);

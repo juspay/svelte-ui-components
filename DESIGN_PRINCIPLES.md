@@ -38,6 +38,64 @@ rule painted. So enumerate the states when adding a component — rest, hover, f
 active, disabled — and give each one a rule and a token. A missing state is a missing API,
 not a missing style.
 
+**Motion follows the same rule, and needed the same fix twice.** The opening sentence
+above lists color, spacing, radius, shadow — motion was left out, and the codebase mirrors
+the omission: across `src/lib/*/*.svelte`, roughly a quarter of `transition`/`animation`
+declarations read no custom property at all, so a consumer cannot slow them down, speed
+them up, or turn them off. Where motion _is_ tokenised, it isn't tokenised consistently —
+the same idea is expressed as three different shapes:
+
+- **Duration only** — `--chart-transition-duration`. The easing curve is still a
+  hardcoded keyword baked into the declaration.
+- **Easing only** — `--task-list-ease`. The duration is still a hardcoded literal.
+- **A whole shorthand** — `--toggle-slider-transition`, `--list-item-transition`. One
+  token covers the entire `transition` value, so changing only the speed means also
+  restating the properties and the curve, and a consumer who wants the shorthand's
+  properties but a different curve has no way to touch just that.
+
+None of those three shapes can express "make every animation in this theme 30% faster"
+or "no motion at all" as a single change, because a consumer would first need to know,
+per component, which shape that component happens to use. That is the same problem a
+missing color token is — an inexpressible customization — for a different visual
+property.
+
+**The convention: two tokens per element, not one, each falling back through a
+library-wide root token to the current literal.** Every element that transitions or
+animates gets a duration token and an easing token —
+`--{component}-{element}-transition-duration` / `--{component}-{element}-transition-easing`
+for a CSS `transition`, or the `-animation-duration` / `-animation-easing` pair for an
+`animation` — and each falls back to the matching root token, `--motion-duration` /
+`--motion-easing`, before finally falling back to today's value:
+
+```css
+transition: transform var(--carousel-track-transition-duration, var(--motion-duration, 0.5s))
+  var(--carousel-track-transition-easing, var(--motion-easing, ease-in-out));
+```
+
+Left unset, both `var()` calls resolve to their innermost fallback, so rendering is
+byte-identical to today. Set `--motion-duration` once on `:root` and every component
+built to this convention moves together — the one root-level token this task exists to
+make possible, and the block a future `prefers-reduced-motion` rule can collapse to
+instead of a per-component edit everywhere motion appears. Set a component- or
+element-level token instead (`--carousel-track-transition-duration`) and only that
+element changes, same as any other token in this library.
+
+Two tokens rather than one shorthand, because duration and easing are independently
+meaningful controls — a consumer speeding up the whole theme is not usually also
+relitigating every curve, and vice versa — and a split pair composes with a root
+fallback in a way a shorthand cannot: `var(--x-transition, all 0.2s ease)` has nowhere
+for a lone `--motion-duration` override to plug into without also overriding every
+property and curve the shorthand names.
+
+**Existing tokens are not renamed.** `--chart-transition-duration`, `--task-list-ease`,
+`--toggle-slider-transition`, and every other motion token already public keep working
+exactly as they do today — renaming a public token is the breaking change this library
+treats it as everywhere else. Where a component is brought onto this convention, the
+existing name stays as the duration or easing half of the new pair
+(`--chart-transition-duration` keeps meaning exactly what it means today), and the
+_other_ half is the new addition — filling in the specific gap that component's shape
+was missing, not replacing what was already there.
+
 ## 2. Framework-agnosticism is a real target, not just a Svelte library
 
 This library ships both a Svelte 5 package and a web-component build (`sui-*` custom

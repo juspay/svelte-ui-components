@@ -4,6 +4,7 @@
     shadow: 'open',
     props: {
       text: { type: 'String', reflect: true },
+      transitionDuration: { type: 'Number', attribute: 'transition-duration', reflect: true },
       linkText: { type: 'String', reflect: true, attribute: 'link-text' },
       dismissible: { type: 'Boolean', reflect: true },
       visible: { type: 'Boolean', reflect: true },
@@ -22,6 +23,8 @@
 <script lang="ts">
   import Banner from '$lib/Banner/Banner.svelte';
   import type { BannerProperties } from '$lib/Banner/properties';
+  // Mirrors Banner.svelte's own dismissIcon default.
+  import closeSvg from '$lib/assets/close.svg?raw';
   // The element renames `role` to `bannerRole` because the platform already defines `role` on every
   // HTMLElement. The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.
@@ -56,7 +59,14 @@
       ></slot>{/if}
   {/snippet}
   {#snippet dismissIcon()}
-    {#if props.dismissIcon}{@render props.dismissIcon()}{:else}<slot name="dismiss-icon"
-      ></slot>{/if}
+    <!--
+      A slot fallback only helps once the branch actually reaches the <slot> -- Banner's
+      own dismissIcon default (bare {@html closeSvg}) is added here so hosts that supply
+      neither the dismissIcon property nor slotted content still see the close glyph.
+    -->
+    {#if props.dismissIcon}{@render props.dismissIcon()}{:else}<slot name="dismiss-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html closeSvg}
+      </slot>{/if}
   {/snippet}
 </Banner>

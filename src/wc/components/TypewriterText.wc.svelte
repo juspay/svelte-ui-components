@@ -6,6 +6,8 @@
       text: { type: 'String' },
       speed: { type: 'Number', reflect: true },
       isStreaming: { type: 'Boolean', attribute: 'is-streaming' },
+      markdown: { type: 'Boolean' },
+      markdownOptions: { type: 'Object', attribute: 'markdown-options' },
       renderText: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },

@@ -88,4 +88,68 @@ describe('computeSelectDropdownPosition', () => {
     expect(placement.left).toBe(900);
     expect(placement.width).toBe(90);
   });
+
+  it('clamps a flipped-up panel so it never gets a negative top in a short viewport', () => {
+    // Short viewport (100px); trigger sits just below its top edge, so there is
+    // more room above (50) than below (10) and the panel flips up — but the
+    // panel (80px) is still taller than the 50px available above it.
+    const shortViewport = { width: 1000, height: 100 };
+    const nearTopTrigger = { left: 100, right: 300, top: 50, bottom: 60, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: nearTopTrigger,
+      dropdown: { width: 200, height: 80 },
+      viewport: shortViewport,
+      align: 'left',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(true);
+    // Unclamped this would be 50 - 4 - 80 = -34.
+    expect(placement.top).toBeGreaterThanOrEqual(0);
+    expect(placement.top).toBe(8); // clamped to the margin
+  });
+
+  it('keeps a tall panel placed below the trigger within the viewport when it would otherwise run past the bottom', () => {
+    // A 200px-tall viewport with a trigger near the top: space below (160px) is
+    // still bigger than space above (20px), so the panel stays below rather
+    // than flipping — but the 180px panel is taller than the 160px available,
+    // so unclamped it would run 24px past the viewport bottom.
+    const viewport200 = { width: 1000, height: 200 };
+    const nearTopTriggerTallPanel = { left: 100, right: 300, top: 20, bottom: 40, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: nearTopTriggerTallPanel,
+      dropdown: { width: 200, height: 180 },
+      viewport: viewport200,
+      align: 'left',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(false); // more room below (160) than above (20)
+    // Unclamped this would be 40 + 4 = 44, and 44 + 180 = 224 overflows the 200px viewport.
+    expect(placement.top).toBe(12); // clamped to viewport.height (200) - dropdown height (180) - margin (8)
+    expect(placement.top + 180).toBeLessThanOrEqual(viewport200.height - 8);
+  });
+
+  it('keeps a normal panel in a roomy viewport at its unclamped placement (regression guard)', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger,
+      dropdown: { width: 200, height: 120 },
+      viewport,
+      align: 'left',
+      gap: 4
+    });
+    // Same as the very first test: plenty of room, so clamping must be a no-op.
+    expect(placement.top).toBe(244);
+  });
+
+  it('leaves the vertical placement unclamped (not NaN) when the viewport height is non-finite', () => {
+    const infiniteViewport = { width: 1000, height: Number.POSITIVE_INFINITY };
+    const placement = computeSelectDropdownPosition({
+      trigger,
+      dropdown: { width: 200, height: 120 },
+      viewport: infiniteViewport,
+      align: 'left',
+      gap: 4
+    });
+    expect(placement.top).toBe(244); // trigger.bottom + gap, untouched by clamping
+    expect(Number.isNaN(placement.top)).toBe(false);
+  });
 });

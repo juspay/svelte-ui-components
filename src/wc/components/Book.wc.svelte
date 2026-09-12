@@ -20,14 +20,29 @@
 
 <script lang="ts">
   import Book from '$lib/Book/Book.svelte';
+  // Mirrors Book.svelte's own previousIcon/nextIcon defaults.
+  import chevronLeftLgSvg from '$lib/assets/chevron-left-lg.svg?raw';
+  import chevronRightLgSvg from '$lib/assets/chevron-right-lg.svg?raw';
   let props = $props();
 </script>
 
 <Book {...props}>
   {#snippet previousIcon()}
-    <slot name="previous-icon"></slot>
+    <!--
+      A snippet declared here is always a function, so Book.svelte's own
+      `{#if typeof previousIcon === 'function'} ... {:else}{@html chevronLeftLgSvg}{/if}`
+      would always take the true branch and never show its default chevron. Native
+      slot fallback content renders exactly when the host assigns nothing, restoring it.
+    -->
+    <slot name="previous-icon">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html chevronLeftLgSvg}
+    </slot>
   {/snippet}
   {#snippet nextIcon()}
-    <slot name="next-icon"></slot>
+    <slot name="next-icon">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html chevronRightLgSvg}
+    </slot>
   {/snippet}
 </Book>

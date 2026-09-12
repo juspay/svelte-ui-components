@@ -753,7 +753,9 @@
     margin: -3px -6px;
     border-radius: var(--thinking-indicator-trace-row-radius, 6px);
     cursor: pointer;
-    transition: background 150ms ease;
+    transition: background
+      var(--thinking-indicator-trace-row-transition-duration, var(--motion-duration, 150ms))
+      var(--thinking-indicator-trace-row-transition-easing, var(--motion-easing, ease));
     width: calc(100% + 12px);
   }
 
@@ -861,7 +863,9 @@
     font-size: var(--thinking-indicator-trace-more-font-size, 0.75rem);
     color: var(--thinking-indicator-trace-more-color, #9a9a9a);
     padding: 6px 0 0 22px;
-    animation: thinking-indicator-fade-in 300ms ease both;
+    animation: thinking-indicator-fade-in
+      var(--thinking-indicator-trace-more-animation-duration, var(--motion-duration, 300ms))
+      var(--thinking-indicator-trace-more-animation-easing, var(--motion-easing, ease)) both;
   }
 
   @media (prefers-reduced-motion: reduce) {

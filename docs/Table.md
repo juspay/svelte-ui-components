@@ -706,48 +706,50 @@ A second search-input mode (`searchConfig.displayMode: 'inline'`) — a trigger 
 
 These variables style the leading checkbox column that appears when `checkboxSelection` is set. The column renders the library `Checkbox` in controlled mode; every `--table-checkbox-*` token below is bridged onto the matching `--checkbox-*` variable inside the column, so theming the table keeps working and an app-wide `Checkbox` theme is overridden only there.
 
-| Variable                                      | Default                          | CSS Property     | Description                                                                |
-| --------------------------------------------- | -------------------------------- | ---------------- | -------------------------------------------------------------------------- |
-| `--table-checkbox-col-width`                  | `44px`                           | width            | Width of the checkbox column header and data cells.                        |
-| `--table-checkbox-col-padding`                | `12px 12px`                      | padding          | Padding of the checkbox column cells.                                      |
-| `--table-checkbox-size`                       | `18px`                           | width, height    | Size (width and height) of the checkbox box element.                       |
-| `--table-checkbox-border`                     | `2px solid #9ca3af`              | border           | Border of the unchecked checkbox.                                          |
-| `--table-checkbox-border-radius`              | `4px`                            | border-radius    | Border radius of the checkbox box. Falls back to `--radius` when unset.    |
-| `--table-checkbox-background`                 | `transparent`                    | background-color | Background of the unchecked checkbox.                                      |
-| `--table-checkbox-hover-border-color`         | `#6b7280`                        | border-color     | Border color of the checkbox on hover (when not disabled).                 |
-| `--table-checkbox-checked-background`         | `#2563eb`                        | background-color | Background of the checked checkbox.                                        |
-| `--table-checkbox-checked-border-color`       | `#2563eb`                        | border-color     | Border color of the checked checkbox.                                      |
+| Variable                                      | Default                          | CSS Property     | Description                                                                                                                                       |
+| --------------------------------------------- | -------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--table-checkbox-col-width`                  | `44px`                           | width            | Width of the checkbox column header and data cells.                                                                                               |
+| `--table-checkbox-col-padding`                | `12px 12px`                      | padding          | Padding of the checkbox column cells.                                                                                                             |
+| `--table-checkbox-size`                       | `18px`                           | width, height    | Size (width and height) of the checkbox box element.                                                                                              |
+| `--table-checkbox-border`                     | `2px solid #9ca3af`              | border           | Border of the unchecked checkbox.                                                                                                                 |
+| `--table-checkbox-border-radius`              | `4px`                            | border-radius    | Border radius of the checkbox box. Falls back to `--radius` when unset.                                                                           |
+| `--table-checkbox-background`                 | `transparent`                    | background-color | Background of the unchecked checkbox.                                                                                                             |
+| `--table-checkbox-hover-border-color`         | `#6b7280`                        | border-color     | Border color of the checkbox on hover (when not disabled).                                                                                        |
+| `--table-checkbox-checked-background`         | `#2563eb`                        | background-color | Background of the checked checkbox.                                                                                                               |
+| `--table-checkbox-checked-border-color`       | `#2563eb`                        | border-color     | Border color of the checked checkbox.                                                                                                             |
 | `--table-checkbox-checked-border`             | `2px solid #2563eb`              | border           | Whole border of the checked checkbox. Set it when the checked width must differ from `2px`; it wins over `--table-checkbox-checked-border-color`. |
-| `--table-checkbox-indeterminate-background`   | `#2563eb`                        | background-color | Background of the header checkbox in indeterminate (partial-select) state. |
-| `--table-checkbox-indeterminate-border-color` | `#2563eb`                        | border-color     | Border color of the header checkbox in indeterminate state.                |
-| `--table-checkbox-indeterminate-border`       | `2px solid #2563eb`              | border           | Whole border of the header checkbox in indeterminate state; wins over `--table-checkbox-indeterminate-border-color`. |
-| `--table-checkbox-disabled-opacity`           | `0.4`                            | opacity          | Opacity of a disabled checkbox row.                                        |
-| `--table-checkbox-focus-ring`                 | `0 0 0 3px rgba(59,130,246,0.3)` | box-shadow       | Focus ring shown on the checkbox element when focused via keyboard.        |
-| `--table-checkbox-icon-size`                  | `12px`                           | width, height    | Size of the checkmark / minus SVG icon inside the checkbox box.            |
-| `--table-checkbox-icon-color`                 | `#ffffff`                        | color            | Color of the checkmark / minus icon.                                       |
+| `--table-checkbox-indeterminate-background`   | `#2563eb`                        | background-color | Background of the header checkbox in indeterminate (partial-select) state.                                                                        |
+| `--table-checkbox-indeterminate-border-color` | `#2563eb`                        | border-color     | Border color of the header checkbox in indeterminate state.                                                                                       |
+| `--table-checkbox-indeterminate-border`       | `2px solid #2563eb`              | border           | Whole border of the header checkbox in indeterminate state; wins over `--table-checkbox-indeterminate-border-color`.                              |
+| `--table-checkbox-disabled-opacity`           | `0.4`                            | opacity          | Opacity of a disabled checkbox row.                                                                                                               |
+| `--table-checkbox-focus-ring`                 | `0 0 0 3px rgba(59,130,246,0.3)` | box-shadow       | Focus ring shown on the checkbox element when focused via keyboard.                                                                               |
+| `--table-checkbox-icon-size`                  | `12px`                           | width, height    | Size of the checkmark / minus SVG icon inside the checkbox box.                                                                                   |
+| `--table-checkbox-icon-color`                 | `#ffffff`                        | color            | Color of the checkmark / minus icon.                                                                                                              |
 
 ### Search Bar
 
 These variables style the search input rendered above the table when `searchConfig` is set.
 
-| Variable                                | Default             | CSS Property     | Description                                                     |
-| --------------------------------------- | ------------------- | ---------------- | --------------------------------------------------------------- |
-| `--table-search-gap`                    | `8px`               | gap              | Gap between the search icon, input, and clear button.           |
-| `--table-search-padding`                | `8px 12px`          | padding          | Padding inside the search bar container.                        |
-| `--table-search-border`                 | `1px solid #e5e7eb` | border           | Border of the search bar container.                             |
-| `--table-search-border-radius`          | `8px`               | border-radius    | Border radius of the search bar container.                      |
-| `--table-search-background`             | `#ffffff`           | background-color | Background of the search bar container.                         |
-| `--table-search-margin-bottom`          | `8px`               | margin-bottom    | Margin below the search bar, separating it from the table.      |
-| `--table-search-icon-color`             | `#9ca3af`           | color            | Color of the search magnifier icon.                             |
-| `--table-search-icon-size`              | `16px`              | width, height    | Size of the search magnifier icon.                              |
-| `--table-search-font-size`              | `14px`              | font-size        | Font size of the search input text.                             |
-| `--table-search-color`                  | `#111827`           | color            | Text color of the search input.                                 |
-| `--table-search-placeholder-color`      | `#9ca3af`           | color            | Placeholder text color of the search input.                     |
-| `--table-search-focus-border-radius`    | `2px`               | border-radius    | Border radius of the focus-visible outline on the search input. |
-| `--table-search-clear-color`            | `#6b7280`           | color            | Color of the clear (✕) button icon.                             |
-| `--table-search-clear-hover-color`      | `#111827`           | color            | Color of the clear button icon on hover.                        |
-| `--table-search-clear-hover-background` | `rgba(0,0,0,0.05)`  | background-color | Background of the clear button on hover.                        |
-| `--table-search-clear-icon-size`        | `14px`              | width, height    | Size of the clear button icon.                                  |
+| Variable                                   | Default             | CSS Property     | Description                                                                                               |
+| ------------------------------------------ | ------------------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `--table-search-gap`                       | `8px`               | gap              | Gap between the search icon, input, and clear button.                                                     |
+| `--table-search-padding`                   | `8px 12px`          | padding          | Padding inside the search bar container.                                                                  |
+| `--table-search-border`                    | `1px solid #e5e7eb` | border           | Border of the search bar container.                                                                       |
+| `--table-search-border-radius`             | `8px`               | border-radius    | Border radius of the search bar container.                                                                |
+| `--table-search-background`                | `#ffffff`           | background-color | Background of the search bar container.                                                                   |
+| `--table-search-margin-bottom`             | `8px`               | margin-bottom    | Margin below the search bar, separating it from the table.                                                |
+| `--table-search-icon-color`                | `#9ca3af`           | color            | Color of the search magnifier icon.                                                                       |
+| `--table-search-icon-size`                 | `16px`              | width, height    | Size of the search magnifier icon.                                                                        |
+| `--table-search-font-size`                 | `14px`              | font-size        | Font size of the search input text.                                                                       |
+| `--table-search-color`                     | `#111827`           | color            | Text color of the search input.                                                                           |
+| `--table-search-placeholder-color`         | `#9ca3af`           | color            | Placeholder text color of the search input.                                                               |
+| `--table-search-focus-border-radius`       | `2px`               | border-radius    | Border radius of the focus-visible outline on the search input.                                           |
+| `--table-search-clear-color`               | `#6b7280`           | color            | Color of the clear (✕) button icon.                                                                       |
+| `--table-search-clear-hover-color`         | `#111827`           | color            | Color of the clear button icon on hover.                                                                  |
+| `--table-search-clear-hover-background`    | `rgba(0,0,0,0.05)`  | background-color | Background of the clear button on hover.                                                                  |
+| `--table-search-clear-icon-size`           | `14px`              | width, height    | Size of the clear button icon.                                                                            |
+| `--table-scroll-scrim-transition-duration` | `0.2s`              | transition       | Duration of the horizontal-scroll edge scrim's fade transition. Falls back through `--motion-duration`.   |
+| `--table-scroll-scrim-transition-easing`   | `ease`              | transition       | Easing curve of the horizontal-scroll edge scrim's fade transition. Falls back through `--motion-easing`. |
 
 ## Type Reference
 
@@ -892,6 +894,14 @@ type TablePaginationConfig = {
 
 ## Web Component
 
+> Known limitation: through `<sui-table>` the built-in paginator does not render. The
+> wrapper must supply the `paginator-slot` snippet for the host to be able to fill it, and
+> supplying it unconditionally suppresses the component's own default. Unlike the sort
+> icons, that default is a whole `Pagination` subtree built from internal state, so it
+> cannot be reproduced as slot fallback content. Pass your own paginator through
+> `slot="paginator-slot"`, or use the Svelte component directly.
+
+
 Tag: `<sui-table>`
 
 ```html
@@ -910,9 +920,9 @@ Tag: `<sui-table>`
 | Slot Name           | Maps to Snippet   | Description                                                    |
 | ------------------- | ----------------- | -------------------------------------------------------------- |
 | `empty`             | `empty`           | Content shown when the table has no data.                      |
-| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon.                                    |
-| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon.                                   |
+| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon; defaults to the table's own sort glyph. |
+| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon; defaults to the table's own sort glyph. |
 | `sort-default-icon` | `sortDefaultIcon` | Custom default (unsorted) sort icon.                           |
-| `paginator-slot`    | `paginatorSlot`   | Footer content below the table, typically pagination controls. |
+| `paginator-slot`    | `paginatorSlot`   | Footer content below the table, typically pagination controls; when left unassigned, the table's own default paginator (page-size select, steppers, range text) renders instead. |
 
 > **Note:** `tableHeaders`, `tableData`, and `sortableColumns` are arrays — set them via JavaScript properties. The `cell`, `getRowTestId`, and `getCellTestId` props are function-typed and only available via JavaScript.

@@ -4,6 +4,11 @@
     shadow: 'open',
     props: {
       images: { type: 'Object' },
+      lightboxTransitionDuration: {
+        type: 'Number',
+        attribute: 'lightbox-transition-duration',
+        reflect: true
+      },
       view: { type: 'String' },
       open: { type: 'Boolean', reflect: true },
       activeIndex: { type: 'Number', attribute: 'active-index', reflect: true },

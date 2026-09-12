@@ -14,11 +14,33 @@
     testId,
     onchange,
     oninput,
-    classes
+    classes,
+    ariaValueText,
+    name,
+    form
   }: SliderProperties = $props();
 
-  let percentage = $derived(((value - min) / (max - min)) * 100);
+  // Only the paint is clamped. The value stays exactly what the consumer passed, so a
+  // slider handed a number outside its own bounds reports that number rather than
+  // being silently corrected — but the track never renders a negative, >100% or NaN
+  // fill. An unusable range (empty, reversed, non-finite, or one whose width or
+  // quotient overflows to Infinity) has no meaningful fill, so it paints none.
+  const percentage: number = $derived.by(() => {
+    const span = max - min;
+    if (![value, min, max, span].every((part) => Number.isFinite(part)) || span <= 0) {
+      return 0;
+    }
+    const raw = ((value - min) / span) * 100;
+    return Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
+  });
   let displayValue = $derived(labelFormatter ? labelFormatter(value) : String(value));
+  const valueText: string | null = $derived(
+    typeof ariaValueText === 'string'
+      ? ariaValueText
+      : labelFormatter
+        ? labelFormatter(value)
+        : null
+  );
 
   function handleInput(e: Event) {
     if (e.target instanceof HTMLInputElement) {
@@ -44,6 +66,10 @@
     {step}
     {value}
     {disabled}
+    {name}
+    form={typeof form === 'string' ? form : null}
+    aria-valuetext={valueText}
+    data-disabled={disabled ? '' : null}
     aria-label={typeof ariaLabel === 'string' ? ariaLabel : null}
     aria-labelledby={typeof ariaLabel === 'string' ? null : (ariaLabelledby ?? null)}
     data-pw={typeof testId === 'string' ? testId : null}
@@ -109,8 +135,10 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
+      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 
   .slider-input::-moz-range-thumb {
@@ -123,8 +151,10 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
+      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 
   .slider-input:hover::-webkit-slider-thumb {

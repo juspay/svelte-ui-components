@@ -10,6 +10,8 @@
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      required: { type: 'Boolean', reflect: true },
+      form: { type: 'String', reflect: true },
       onchange: { type: 'Object' }
     }
   }}

@@ -230,7 +230,8 @@
   .step-spinner {
     width: var(--step-spinner-size, 18px);
     height: var(--step-spinner-size, 18px);
-    animation: stepper-spin 0.8s linear infinite;
+    animation: stepper-spin var(--step-spinner-animation-duration, var(--motion-duration, 0.8s))
+      var(--step-spinner-animation-easing, var(--motion-easing, linear)) infinite;
   }
 
   @keyframes stepper-spin {

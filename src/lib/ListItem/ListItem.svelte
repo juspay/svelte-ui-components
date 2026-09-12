@@ -38,6 +38,28 @@
     id
   }: ListItemProperties = $props();
 
+  // DESIGN_PRINCIPLES.md principle 4: a region only takes role="button" + a tab stop when
+  // it was actually given its own click handler -- otherwise a single list item nests up to
+  // four buttons inside a button and puts five tab stops where the consumer wired one
+  // handler. Each of the four sub-regions is checked against its own handler prop here. The
+  // root is intentionally NOT re-gated the same way: its role/tabindex stay governed by the
+  // pre-existing `itemRole`/`suppressRoleAndTabindex` contract (see below), unconditional on
+  // onitemclick, matching the library's documented default ("ListItem renders synthetic
+  // button roles and tab stops by default").
+  let topSectionInteractive = $derived(
+    !suppressRoleAndTabindex && typeof ontopsectionclick === 'function'
+  );
+  let leftImageInteractive = $derived(
+    !suppressRoleAndTabindex && typeof onleftimageclick === 'function'
+  );
+  let centerTextInteractive = $derived(
+    !suppressRoleAndTabindex && typeof oncentertextclick === 'function'
+  );
+  let rightImageInteractive = $derived(
+    !suppressRoleAndTabindex && typeof onrightimageclick === 'function'
+  );
+  let itemInteractive = $derived(!suppressRoleAndTabindex && itemRole !== 'option');
+
   function handleLeftImageClick(event: MouseEvent): void {
     onleftimageclick?.(event);
   }
@@ -57,6 +79,49 @@
   function handleTopSectionClick(event: MouseEvent): void {
     ontopsectionclick?.(event);
   }
+
+  // A region with role="button" needs Enter/Space to do what a click does (divs get no
+  // free keyboard activation the way a native <button> would). Re-dispatching a real click
+  // on the element itself -- rather than calling its handler directly -- keeps one
+  // activation path and lets that click bubble through nested zones exactly like a pointer
+  // click already does. The `event.target === event.currentTarget` guard matters only
+  // because zones can nest (a consumer-supplied root handler alongside a sub-region
+  // handler): without it, the same keydown bubbling from a focused, activated sub-region up
+  // through an also-interactive ancestor would synthesize a second click at every ancestor
+  // it passes through.
+  function activateOnEnterOrSpace(interactive: boolean, event: KeyboardEvent): void {
+    onkeydown?.(event);
+    if (!interactive || event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.click();
+    }
+  }
+
+  function handleItemKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(itemInteractive, event);
+  }
+
+  function handleTopSectionKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(topSectionInteractive, event);
+  }
+
+  function handleLeftImageKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(leftImageInteractive, event);
+  }
+
+  function handleCenterTextKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(centerTextInteractive, event);
+  }
+
+  function handleRightImageKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(rightImageInteractive, event);
+  }
 </script>
 
 {#if (typeof leftImageUrl === 'string' && leftImageUrl.length > 0) || (typeof rightImageUrl === 'string' && rightImageUrl.length > 0) || (typeof label === 'string' && label.length > 0) || typeof leftContent === 'function' || typeof centerContent === 'function' || typeof rightContent === 'function' || typeof bottomContent === 'function'}
@@ -69,7 +134,7 @@
       class="item"
       class:prevent-focus={preventFocus}
       onclick={handleItemClick}
-      {onkeydown}
+      onkeydown={handleItemKeydown}
       role={suppressRoleAndTabindex ? null : (itemRole ?? 'button')}
       tabindex={suppressRoleAndTabindex ? null : itemRole === 'option' ? -1 : 0}
       aria-selected={suppressRoleAndTabindex ? null : ariaSelected}
@@ -81,9 +146,9 @@
         class="top-section"
         class:prevent-focus={preventFocus}
         onclick={handleTopSectionClick}
-        {onkeydown}
-        role={suppressRoleAndTabindex ? null : 'button'}
-        tabindex={suppressRoleAndTabindex ? null : 0}
+        onkeydown={handleTopSectionKeydown}
+        role={topSectionInteractive ? 'button' : null}
+        tabindex={topSectionInteractive ? 0 : null}
         data-pw={topSectionTestId}
         testID={topSectionTestId}
       >
@@ -92,9 +157,9 @@
             <div
               class:prevent-focus={preventFocus}
               onclick={handleLeftImageClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleLeftImageKeydown}
+              role={leftImageInteractive ? 'button' : null}
+              tabindex={leftImageInteractive ? 0 : null}
               data-pw={leftImageTestId}
               testID={leftImageTestId}
             >
@@ -111,9 +176,9 @@
               class="center-text"
               class:prevent-focus={preventFocus}
               onclick={handleCenterTextClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleCenterTextKeydown}
+              role={centerTextInteractive ? 'button' : null}
+              tabindex={centerTextInteractive ? 0 : null}
               data-pw={centerTextTestId}
               testID={centerTextTestId}
             >
@@ -133,9 +198,9 @@
             <div
               class:prevent-focus={preventFocus}
               onclick={handleRightImageClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleRightImageKeydown}
+              role={rightImageInteractive ? 'button' : null}
+              tabindex={rightImageInteractive ? 0 : null}
               data-pw={rightImageTestId}
               testID={rightImageTestId}
             >

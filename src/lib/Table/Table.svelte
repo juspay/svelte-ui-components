@@ -1214,7 +1214,8 @@
     width: var(--table-scroll-scrim-width, 32px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--table-scroll-scrim-transition-duration, var(--motion-duration, 0.2s))
+      var(--table-scroll-scrim-transition-easing, var(--motion-easing, ease));
     z-index: 2;
   }
 

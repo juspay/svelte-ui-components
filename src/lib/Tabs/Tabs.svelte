@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import type { TabItem, TabsProperties } from './properties';
   import Img from '../Img/Img.svelte';
   import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
@@ -13,6 +12,9 @@
     activeKey,
     disabled = false,
     orientation = 'horizontal',
+    activationMode = 'automatic',
+    loop = true,
+    dir,
     testId,
     scrollLeftIcon,
     scrollRightIcon,
@@ -34,18 +36,65 @@
     return typeof item === 'string' ? item : item.label;
   }
 
-  const resolvedActiveIndex = $derived(
-    isObjectMode
-      ? items.findIndex((item) => {
-          const tabItem = toTabItem(item);
-          return tabItem !== null && tabItem.key === activeKey;
-        })
-      : activeIndex
-  );
+  // What "the focused tab" means across a re-render. A keyed item keeps its identity
+  // when the list is reordered or trimmed; a plain string list has nothing stabler
+  // than its position.
+  function identityOf(item: string | TabItem, index: number): string {
+    return typeof item === 'object' ? item.key : String(index);
+  }
+
+  function isItemDisabled(index: number): boolean {
+    if (disabled) {
+      return true;
+    }
+    const item = items.at(index);
+    return typeof item === 'object' && item.disabled === true;
+  }
+
+  // -1 whenever nothing is selected: an out-of-range or non-integer `activeIndex`, an
+  // `activeKey` matching no item, or object items with no `activeKey` at all. The list
+  // then shows no selection rather than inventing one, and still offers a way in.
+  const selectedIndex = $derived.by(() => {
+    if (isObjectMode) {
+      return typeof activeKey === 'string'
+        ? items.findIndex((item) => toTabItem(item)?.key === activeKey)
+        : -1;
+    }
+    return Number.isInteger(activeIndex) && activeIndex >= 0 && activeIndex < items.length
+      ? activeIndex
+      : -1;
+  });
 
   function isActiveItem(index: number): boolean {
-    return index === resolvedActiveIndex;
+    return index === selectedIndex;
   }
+
+  let focusedKey: string | null = $state(null);
+
+  const focusedIndex = $derived(
+    focusedKey === null
+      ? -1
+      : items.findIndex((item, index) => identityOf(item, index) === focusedKey)
+  );
+
+  const firstEnabledIndex = $derived(items.findIndex((_, index) => !isItemDisabled(index)));
+
+  // A tablist is one tab stop. It is the focused tab while the user is inside the
+  // list, the selected tab otherwise, and the first enabled tab when nothing is
+  // selected — so a list with no selection, or one whose selection is disabled, can
+  // still be reached by Tab. A fully disabled list has no tab stop at all.
+  const tabStopIndex = $derived.by(() => {
+    if (disabled) {
+      return -1;
+    }
+    if (focusedIndex >= 0 && !isItemDisabled(focusedIndex)) {
+      return focusedIndex;
+    }
+    if (selectedIndex >= 0 && !isItemDisabled(selectedIndex)) {
+      return selectedIndex;
+    }
+    return firstEnabledIndex;
+  });
 
   let scrollContainer: HTMLDivElement | null = null;
   let canScrollLeft = $state(false);
@@ -62,6 +111,34 @@
 
   const showStartArrow = $derived(isVertical ? canScrollUp : canScrollLeft);
   const showEndArrow = $derived(isVertical ? canScrollDown : canScrollRight);
+
+  const explicitDir: 'ltr' | 'rtl' | null = $derived(dir === 'rtl' || dir === 'ltr' ? dir : null);
+
+  function tabElements(): HTMLElement[] {
+    return scrollContainer === null
+      ? []
+      : Array.from(scrollContainer.querySelectorAll<HTMLElement>('[role="tab"]'));
+  }
+
+  // Read at the moment a key is pressed rather than tracked as state: the direction
+  // that matters is the one in effect now, and it can come from an ancestor's `dir`
+  // attribute or from CSS, neither of which is reactive.
+  function isRightToLeft(): boolean {
+    if (explicitDir !== null) {
+      return explicitDir === 'rtl';
+    }
+    if (scrollContainer === null) {
+      return false;
+    }
+    const declared = scrollContainer.closest('[dir]');
+    if (declared !== null) {
+      const value = declared.getAttribute('dir');
+      if (value === 'rtl' || value === 'ltr') {
+        return value === 'rtl';
+      }
+    }
+    return getComputedStyle(scrollContainer).direction === 'rtl';
+  }
 
   function updateOverflow(): void {
     if (scrollContainer === null) {
@@ -120,94 +197,195 @@
     });
   }
 
-  function handleTabClick(index: number): void {
-    if (disabled) {
+  function activate(index: number): void {
+    if (isItemDisabled(index)) {
       return;
     }
+    const rawItem = items.at(index);
     if (isObjectMode) {
-      const rawItem = items.at(index);
       if (typeof rawItem !== 'object') {
         return;
       }
-      const tabItem = toTabItem(rawItem);
-      if (tabItem === null) {
+      if (rawItem.key === activeKey) {
         return;
       }
-      if (tabItem.key === activeKey) {
-        return;
-      }
-      onkeychange?.(tabItem.key);
-    } else {
-      if (index === activeIndex) {
-        return;
-      }
-      const rawLabel = items.at(index);
-      if (typeof rawLabel !== 'string') {
-        return;
-      }
-      activeIndex = index;
-      onchange?.(index, rawLabel);
-    }
-  }
-
-  // After a keyboard-driven selection the active item changes (directly in
-  // string mode; via the consumer's activeKey update in object mode), and the
-  // roving tabindex re-roves with it. Move DOM focus onto the newly active tab
-  // so the user can keep arrowing — without this, focus is stranded on a
-  // tabindex="-1" item and the roving pattern breaks down.
-  function moveFocusToActiveTab(): void {
-    void tick().then(() => {
-      const activeTab = scrollContainer?.querySelector<HTMLElement>('[role="tab"][tabindex="0"]');
-      activeTab?.focus();
-    });
-  }
-
-  // WAI-ARIA APG tablist keyboard contract with activation-follows-focus:
-  // Arrow keys (orientation-aware) move selection to the adjacent tab with
-  // wrap-around, Home/End jump to the first/last tab. Without this, the roving
-  // tabindex makes every non-active tab keyboard-unreachable.
-  function handleKeydown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleTabClick(index);
+      onkeychange?.(rawItem.key);
       return;
     }
-    const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
-    const previousKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
-    let targetIndex: number | null = null;
-    if (event.key === nextKey) {
-      targetIndex = (index + 1) % items.length;
-    } else if (event.key === previousKey) {
-      targetIndex = (index - 1 + items.length) % items.length;
-    } else if (event.key === 'Home') {
-      targetIndex = 0;
-    } else if (event.key === 'End') {
-      targetIndex = items.length - 1;
+    if (typeof rawItem !== 'string' || index === activeIndex) {
+      return;
     }
-    if (targetIndex === null) {
+    activeIndex = index;
+    onchange?.(index, rawItem);
+  }
+
+  function handleTabClick(index: number): void {
+    activate(index);
+  }
+
+  function focusTabAt(index: number): void {
+    const item = items.at(index);
+    if (typeof item !== 'string' && typeof item !== 'object') {
+      return;
+    }
+    focusedKey = identityOf(item, index);
+    tabElements().at(index)?.focus();
+  }
+
+  /** Next enabled item in `step`'s direction, or -1 when there is none to move to. */
+  function nextEnabledIndex(from: number, step: number): number {
+    const count = items.length;
+    if (count === 0) {
+      return -1;
+    }
+    let index = from;
+    for (let moved = 0; moved < count; moved += 1) {
+      index += step;
+      if (index < 0 || index >= count) {
+        if (!loop) {
+          return -1;
+        }
+        index = ((index % count) + count) % count;
+      }
+      if (!isItemDisabled(index)) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  function edgeIndex(edge: 'start' | 'end'): number {
+    return edge === 'start'
+      ? items.findIndex((_, index) => !isItemDisabled(index))
+      : items.reduce((found: number, _, index) => (isItemDisabled(index) ? found : index), -1);
+  }
+
+  // WAI-ARIA APG tablist keyboard contract: orientation-aware arrow keys move through
+  // the enabled tabs, Home/End jump to the ends, and Enter/Space select. Whether
+  // moving also selects is `activationMode`'s decision.
+  function handleKeydown(event: KeyboardEvent, index: number): void {
+    // A tablist owns bare arrow keys, not the browser's and the OS's shortcuts built
+    // on them. Consuming Ctrl+Home or Shift+ArrowRight would take away scroll-to-top
+    // and text selection while the tablist happens to hold focus.
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+    if (disabled) {
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activate(index);
+      return;
+    }
+    const rightToLeft = !isVertical && isRightToLeft();
+    const forwardKey = isVertical ? 'ArrowDown' : rightToLeft ? 'ArrowLeft' : 'ArrowRight';
+    const backwardKey = isVertical ? 'ArrowUp' : rightToLeft ? 'ArrowRight' : 'ArrowLeft';
+    let targetIndex: number;
+    if (event.key === forwardKey) {
+      targetIndex = nextEnabledIndex(index, 1);
+    } else if (event.key === backwardKey) {
+      targetIndex = nextEnabledIndex(index, -1);
+    } else if (event.key === 'Home') {
+      targetIndex = edgeIndex('start');
+    } else if (event.key === 'End') {
+      targetIndex = edgeIndex('end');
+    } else {
       return;
     }
     event.preventDefault();
-    if (disabled || targetIndex === index) {
+    if (targetIndex < 0 || targetIndex === index) {
       return;
     }
-    handleTabClick(targetIndex);
-    moveFocusToActiveTab();
+    focusTabAt(targetIndex);
+    if (activationMode === 'automatic') {
+      activate(targetIndex);
+    }
+  }
+
+  function handleFocusIn(event: FocusEvent): void {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const index = tabElements().indexOf(target);
+    const item = items.at(index);
+    if (index < 0 || (typeof item !== 'string' && typeof item !== 'object')) {
+      return;
+    }
+    focusedKey = identityOf(item, index);
+  }
+
+  function handleFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    if (next instanceof HTMLElement && tabElements().includes(next)) {
+      return;
+    }
+    focusedKey = null;
+  }
+
+  /** Identity of the selected item, for noticing that the selection itself changed. */
+  let lastSelectionKey: string | null = null;
+
+  // Keeps DOM focus and the roving tab stop honest after the list changes underneath
+  // them: the selection moved, the focused item was removed, reordered, or disabled.
+  // Runs from the same MutationObserver that already tracks overflow, so nothing here
+  // needs an effect. It never pulls focus into a list the user is not already in.
+  function reconcileFocus(): void {
+    const elements = tabElements();
+    const active = document.activeElement;
+    const isInside = active instanceof HTMLElement && elements.includes(active);
+    const selectedItem = items.at(selectedIndex);
+    const selectionKey =
+      selectedIndex >= 0 && (typeof selectedItem === 'string' || typeof selectedItem === 'object')
+        ? identityOf(selectedItem, selectedIndex)
+        : null;
+    const selectionChanged = selectionKey !== lastSelectionKey;
+    lastSelectionKey = selectionKey;
+    if (tabStopIndex < 0) {
+      if (isInside && active instanceof HTMLElement) {
+        active.blur();
+      }
+      focusedKey = null;
+      return;
+    }
+    if (!isInside && focusedKey === null) {
+      return;
+    }
+    // Focus follows a selection made elsewhere, so a parent switching tabs does not
+    // strand the user on a tab that is no longer the selected one.
+    const targetIndex =
+      selectionChanged && selectedIndex >= 0 && !isItemDisabled(selectedIndex)
+        ? selectedIndex
+        : tabStopIndex;
+    const target = elements.at(targetIndex);
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const item = items.at(targetIndex);
+    if (typeof item === 'string' || typeof item === 'object') {
+      focusedKey = identityOf(item, targetIndex);
+    }
+    if (document.activeElement !== target) {
+      target.focus();
+    }
   }
 
   function initOverflow(node: HTMLDivElement): () => void {
     scrollContainer = node;
     updateOverflow();
     updateIndicator();
+    reconcileFocus();
     const observer = new MutationObserver(() => {
       updateOverflow();
       updateIndicator();
+      reconcileFocus();
     });
     observer.observe(node, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class']
+      attributeFilter: ['class', 'tabindex', 'aria-selected', 'aria-disabled']
     });
     const resizeObserver = new ResizeObserver(() => {
       updateOverflow();
@@ -226,7 +404,14 @@
   );
 </script>
 
-<div class={rootClass} class:disabled class:vertical={isVertical} data-pw={testId} testID={testId}>
+<div
+  class={rootClass}
+  class:disabled
+  class:vertical={isVertical}
+  {...explicitDir === null ? {} : { dir: explicitDir }}
+  data-pw={testId}
+  testID={testId}
+>
   {#if showStartArrow}
     <button
       class="tabs-arrow tabs-arrow-start"
@@ -249,8 +434,11 @@
     class:fade-bottom={canScrollDown}
     role="tablist"
     aria-orientation={isVertical ? 'vertical' : null}
+    data-orientation={orientation}
     {@attach initOverflow}
     onscroll={updateOverflow}
+    onfocusin={handleFocusIn}
+    onfocusout={handleFocusOut}
   >
     {#each items as item, index (isObjectMode ? (toTabItem(item)?.key ?? index) : index)}
       {@const tabItem = toTabItem(item)}
@@ -263,8 +451,11 @@
         class:active={isActiveItem(index)}
         role="tab"
         aria-selected={isActiveItem(index)}
-        aria-disabled={disabled ? true : null}
-        tabindex={isActiveItem(index) ? 0 : -1}
+        aria-disabled={isItemDisabled(index) ? 'true' : null}
+        tabindex={index === tabStopIndex ? 0 : -1}
+        data-state={isActiveItem(index) ? 'active' : 'inactive'}
+        data-disabled={isItemDisabled(index) ? '' : null}
+        data-orientation={orientation}
         data-pw={tabItem?.testId}
         testID={tabItem?.testId}
         onclick={() => handleTabClick(index)}

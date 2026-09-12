@@ -12,6 +12,11 @@ A square grid cell with a header icon (top-right), centered main icon, and text 
 <GridItem icon={'...'} text={'...'} />
 ```
 
+## Interactivity
+
+The tile is exposed as `role="button"` and sits in the tab order, so Enter and Space
+activate it exactly as a click does — toggling `showLoader` and calling `onclick`.
+
 ## Props
 
 | Prop       | Type             | Required | Default | Description                                                                                                                                                            |
@@ -28,7 +33,7 @@ A square grid cell with a header icon (top-right), centered main icon, and text 
 | Event     | Type                             | Description                                                                                   |
 | --------- | -------------------------------- | --------------------------------------------------------------------------------------------- |
 | onclick   | `(event: MouseEvent) => void`    | Fires when the grid cell is clicked. The showLoader state toggles before this callback fires. |
-| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the grid cell has focus.                                    |
+| onkeydown | `(event: KeyboardEvent) => void` | Fires when a key is pressed while the grid cell has focus. Runs for every key, including the Enter and Space the tile handles itself.                                    |
 
 ## CSS Variables
 

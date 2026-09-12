@@ -371,6 +371,12 @@ Tag: `<sui-stat-card>`
 
 Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively:
 
+### Slots
+
+| Slot Name       | Maps to Snippet | Description                                                                    |
+| --------------- | --------------- | ------------------------------------------------------------------------------ |
+| `value-snippet` | `valueSnippet`  | Rich-markup override for the value area; defaults to the plain `value` string. |
+
 ```html
 <sui-stat-card id="revenue" title="Revenue Overview">
   <a slot="header-right" href="/payments">Details →</a>

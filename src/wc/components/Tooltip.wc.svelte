@@ -29,6 +29,9 @@
     <slot name="icon"></slot>
   {/snippet}
   {#snippet content()}
-    <slot name="content"></slot>
+    <!-- Mirrors Tooltip.svelte's content fallback: <span class="tooltip-text">{text}</span> -->
+    <slot name="content">
+      <span class="tooltip-text">{props.text}</span>
+    </slot>
   {/snippet}
 </Tooltip>

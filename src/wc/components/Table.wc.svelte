@@ -44,6 +44,9 @@
 
 <script lang="ts">
   import Table from '$lib/Table/Table.svelte';
+  // Mirrors Table.svelte's own sortAscIcon/sortDescIcon defaults so the fallback
+  // below is the same artwork, not a retyped copy.
+  import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
   let props = $props();
 </script>
 
@@ -52,14 +55,38 @@
     <slot name="empty"></slot>
   {/snippet}
   {#snippet sortAscIcon()}
-    <slot name="sort-asc-icon"></slot>
+    <!--
+      A snippet declared here is always a function, so Table.svelte's own
+      `{#if typeof sortAscIcon === 'function'} ... {:else}<span class="sort-icon sort-icon-asc">{@html sortDefaultSvg}</span>{/if}`
+      would always take the true branch and never show its default icon. Native slot
+      fallback content renders exactly when the host assigns nothing, restoring it.
+    -->
+    <slot name="sort-asc-icon">
+      <span class="sort-icon sort-icon-asc">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html sortDefaultSvg}
+      </span>
+    </slot>
   {/snippet}
   {#snippet sortDescIcon()}
-    <slot name="sort-desc-icon"></slot>
+    <slot name="sort-desc-icon">
+      <span class="sort-icon sort-icon-desc">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html sortDefaultSvg}
+      </span>
+    </slot>
   {/snippet}
   {#snippet sortDefaultIcon()}
     <slot name="sort-default-icon"></slot>
   {/snippet}
+  <!--
+    The paginator keeps a bare slot with no fallback, unlike the sort icons above.
+    Gating the snippet on assigned light-DOM content restored Table's own paginator
+    but stopped host content reaching the slot at all, and its default is a whole
+    Pagination subtree rather than an icon, so reproducing it here would couple this
+    wrapper to Table's internals. Recorded as unfinished rather than shipped half
+    working: through `<sui-table>` the built-in paginator still cannot render.
+  -->
   {#snippet paginatorSlot()}
     <slot name="paginator-slot"></slot>
   {/snippet}

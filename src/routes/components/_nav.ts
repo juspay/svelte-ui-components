@@ -19,7 +19,9 @@ export const componentNav: NavGroup[] = [
       { name: 'Book', slug: 'book' },
       { name: 'Carousel', slug: 'carousel' },
       { name: 'Resizable', slug: 'resizable' },
-      { name: 'Draggable', slug: 'draggable' }
+      { name: 'Draggable', slug: 'draggable' },
+      { name: 'Separator', slug: 'separator' },
+      { name: 'AspectRatio', slug: 'aspect-ratio' }
     ]
   },
   {
@@ -51,7 +53,9 @@ export const componentNav: NavGroup[] = [
       { name: 'SplitInput', slug: 'split-input' },
       { name: 'ChipInput', slug: 'chip-input' },
       { name: 'FileDropzoneTrigger', slug: 'file-dropzone-trigger' },
-      { name: 'FileInput', slug: 'file-input' }
+      { name: 'FileInput', slug: 'file-input' },
+      { name: 'Label', slug: 'label' },
+      { name: 'RatingGroup', slug: 'rating-group' }
     ]
   },
   {

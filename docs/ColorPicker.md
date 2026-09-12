@@ -14,14 +14,14 @@ A color picker component that lets the user select a color using a saturation/br
 
 ## Props
 
-| Prop      | Type      | Required | Default     | Description                                                                                                                                                                      |
-| --------- | --------- | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value     | `string`  | Yes      | `'#000000'` | Bindable. The current color as a 7-character HEX string (e.g. `#3b82f6`). Two-way bound so parent components can read and write the selected color.                              |
-| label     | `string`  | No       | `-`         | Optional text label rendered above the trigger row. When provided, a `<span>` with the label text appears above the swatch button.                                               |
-| disabled  | `boolean` | No       | `false`     | Whether the color picker is disabled. When true, the trigger button cannot be clicked, the popover cannot open, and the component is visually dimmed.                            |
-| showValue | `boolean` | No       | `false`     | Whether to display a text input beside the swatch showing the current HEX value. When true, the user can type a HEX value directly into the inline input.                        |
-| testId    | `string`  | No       | `-`         | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                               |
-| classes   | `string`  | No       | `-`         | CSS class string applied to the component's top-level container element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop      | Type      | Required | Default     | Description                                                                                                                                                                                                                                                                      |
+| --------- | --------- | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| value     | `string`  | Yes      | `'#000000'` | Bindable. The current color as a 7-character HEX string (e.g. `#3b82f6`). Two-way bound so parent components can read and write the selected color — assigning a new value from outside moves the saturation panel and hue slider to match, the same as a user's own drag would. |
+| label     | `string`  | No       | `-`         | Optional text label rendered above the trigger row. When provided, a `<span>` with the label text appears above the swatch button.                                                                                                                                               |
+| disabled  | `boolean` | No       | `false`     | Whether the color picker is disabled. When true, the trigger button cannot be clicked, the popover cannot open, and the component is visually dimmed.                                                                                                                            |
+| showValue | `boolean` | No       | `false`     | Whether to display a text input beside the swatch showing the current HEX value. When true, the user can type a HEX value directly into the inline input.                                                                                                                        |
+| testId    | `string`  | No       | `-`         | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                                                                                               |
+| classes   | `string`  | No       | `-`         | CSS class string applied to the component's top-level container element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                 |
 
 ## Events
 
@@ -68,6 +68,30 @@ Override these custom properties to theme the component.
 | `--color-picker-field-background`            | `#ffffff`                                                          | background     | Background color of the popover input fields and the mode toggle button.                       |
 | `--color-picker-field-focus-border`          | `#3b82f6`                                                          | border-color   | Border color of the popover input fields when focused.                                         |
 | `--color-picker-field-label-color`           | `#9ca3af`                                                          | color          | Text color of the field labels (HEX, R, G, B, H, S, L) and the mode toggle button icon.        |
+
+## Keyboard Interactions (saturation/brightness panel)
+
+The panel is `role="slider"` and focusable (`tabindex="0"`). While it has focus:
+
+| Key                    | Action                                                           |
+| ---------------------- | ---------------------------------------------------------------- |
+| `Arrow Left` / `Right` | Decrease / increase saturation by 1%.                            |
+| `Arrow Up` / `Down`    | Increase / decrease brightness by 1%.                            |
+| `Page Up` / `Down`     | Increase / decrease saturation by 10% (the larger-step variant). |
+| `Home` / `End`         | Jump saturation to 0% / 100% (brightness unchanged).             |
+
+Values clamp at 0%/100% without wrapping, and every keyboard adjustment fires the same
+`oninput`/`onchange` callbacks a pointer drag fires. All of the above is a no-op while
+`disabled`. Pressing `Escape` anywhere inside the open popover closes it and returns
+focus to the swatch trigger button; clicking outside the popover still closes it too.
+
+## Achromatic (grey) values
+
+A grey HEX value (equal red/green/blue, including black and white) has no hue of its
+own — HSV math can't recover one from it. The hue slider is left exactly where it was
+the last time a chromatic color was in play, whether that color came from a user drag
+or an externally-assigned `value`, rather than snapping to red (0°). Raise saturation
+back up afterward and the previously-chosen hue reappears.
 
 ## Internal Dependencies
 

@@ -59,7 +59,11 @@ export function computeSelectDropdownPosition(opts: {
   const spaceAbove = trigger.top;
   const flippedUp =
     dropdown.height > 0 && spaceBelow < dropdown.height + gap && spaceAbove > spaceBelow;
-  const top = flippedUp ? trigger.top - gap - dropdown.height : trigger.bottom + gap;
+  let top = flippedUp ? trigger.top - gap - dropdown.height : trigger.bottom + gap;
+  if (Number.isFinite(viewport.height)) {
+    const maxTop = viewport.height - dropdown.height - margin;
+    top = Math.max(margin, Math.min(top, maxTop));
+  }
 
   return { left, top, minWidth, width, flippedUp };
 }

@@ -1,6 +1,6 @@
 # Snippet
 
-A copyable command-line code snippet with a prompt prefix symbol and an inline copy-to-clipboard button. Displays a single-line command or code string in a monospace container. After copying, briefly shows "Copied!" feedback (customizable via `copiedLabel`) before reverting to the copy icon after `copyResetMs` milliseconds (default 2000). The reset timer is cleared on unmount, so navigating away mid-flash never sets state on a destroyed component. Clipboard errors are silently caught (handles non-secure contexts and iframe restrictions). Ideal for CLI commands, install instructions, or any text the user needs to copy.
+A copyable command-line code snippet with a prompt prefix symbol and an inline copy-to-clipboard button. Displays a single-line command or code string in a monospace container. After copying, briefly shows "Copied!" feedback (customizable via `copiedLabel`) before reverting to the copy icon after `copyResetMs` milliseconds (default 2000). The reset timer is cleared on unmount, so navigating away mid-flash never sets state on a destroyed component. A clipboard write that fails -- denied permission, a non-secure context -- or a Clipboard API that is entirely absent (SSR, a sandboxed iframe) is reported through `onerror` rather than swallowed; the copied/success affordance never shows for that attempt, and `oncopy` does not fire. Ideal for CLI commands, install instructions, or any text the user needs to copy.
 
 ## Usage
 
@@ -86,6 +86,7 @@ This is the exact state machine `Snippet` itself runs on, so the single-pending-
 | ------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `copyResetMs` | `number`     | `2000`  | Milliseconds before `copied` reverts. A value that is not a finite number ≥ 0 — or a getter that throws — falls back to the default rather than arming an unusable timer. |
 | `oncopy`      | `() => void` | `-`     | Called once per **successful** copy. Never called when the write fails.                                                                                                   |
+| `onerror`     | `(reason: unknown) => void` | `-` | Called **instead of** `oncopy` when the write cannot complete — a rejection, or a Clipboard API that is absent entirely. Receives the rejection reason, or an `Error` when the API is missing. A throwing reporter is contained, exactly as `oncopy` is. |
 
 Options are read at copy time rather than captured at creation, so a caller with reactive values passes getters — which is how `Snippet` forwards its own props:
 
@@ -97,7 +98,7 @@ const copy = createCopyState({
 });
 ```
 
-A failed write does not start or extend feedback and does not fire `oncopy`; an earlier successful copy's feedback can remain until its existing deadline. Overlapping writes are acknowledged in completion order, and each successful completion restarts the single timer. `destroy()` permanently disables the helper: later calls and pending completions return `false`, without notifications or new timers. Exceptions from `oncopy` are contained because they cannot undo a successful clipboard write.
+A failed write does not start or extend feedback and does not fire `oncopy` — it reports through `onerror` instead; an earlier successful copy's feedback can remain until its existing deadline. Overlapping writes are acknowledged in completion order, and each successful completion restarts the single timer. `destroy()` permanently disables the helper: later calls and pending completions return `false`, without notifications or new timers. Exceptions from `oncopy` are contained because they cannot undo a successful clipboard write.
 
 The factory is safe to create during SSR; clipboard writes require a browser. Import it from the package's main entry. The `./wc` entry registers custom elements and exports no utilities; it does not re-export this factory. This is the existing entry-point contract, not a missing custom-element registration.
 
@@ -111,9 +112,10 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event  | Type         | Description                                                                                                                     |
-| ------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| oncopy | `() => void` | Fires after the text has been successfully copied to the clipboard. Use this to show custom notifications or track copy events. |
+| Event   | Type                        | Description                                                                                                                                                                                                          |
+| ------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| oncopy  | `() => void`                | Fires after the text has been successfully copied to the clipboard. Use this to show custom notifications or track copy events.                                                                                      |
+| onerror | `(reason: unknown) => void` | Fires when a clipboard write fails, or when the Clipboard API is unavailable (SSR, non-secure context, sandboxed iframe), instead of `oncopy`. Receives the rejection reason, or an `Error` when the API is missing. |
 
 ## CSS Variables
 
@@ -157,6 +159,7 @@ Tag: `<sui-snippet>`
 
 ```html
 <sui-snippet
+  id="install-snippet"
   text="npm install @juspay/svelte-ui-components"
   show-copy-button
   copied-label="Copied to clipboard"
@@ -164,6 +167,14 @@ Tag: `<sui-snippet>`
 >
   <svg slot="copy-icon">...</svg>
 </sui-snippet>
+```
+
+`oncopy` and `onerror` are callback props, not serialisable as HTML attributes -- attach them as JS properties on the element.
+
+```js
+const snippet = document.getElementById('install-snippet');
+snippet.oncopy = () => console.log('copied');
+snippet.onerror = (reason) => console.warn('copy failed', reason);
 ```
 
 ### Slots

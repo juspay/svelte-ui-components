@@ -313,6 +313,17 @@
 
 <p data-pw="input-paste-count">paste events seen: {pasteCount}</p>
 
+<h2>Required field, and the deprecated mandatory alias</h2>
+<p class="demo-caption">
+  <code>required</code> is the platform's name and the one every other form control here uses.
+  <code>mandatory</code> is the original spelling and still works, so existing call sites need no change.
+</p>
+<div class="demo-row">
+  <Input value="" label="Email" placeholder="you@example.com" required testId="input-required" />
+  <Input value="" label="Phone" placeholder="Legacy spelling" mandatory testId="input-mandatory" />
+  <Input value="" label="Nickname" placeholder="Optional" testId="input-optional" />
+</div>
+
 <style>
   /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */
   .resize-narrow :global(.input-container) {

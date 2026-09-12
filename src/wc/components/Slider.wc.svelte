@@ -13,6 +13,9 @@
       classes: { type: 'String' },
       sliderAriaLabel: { type: 'String', attribute: 'aria-label' },
       sliderAriaLabelledby: { type: 'String', attribute: 'aria-labelledby' },
+      name: { type: 'String', reflect: true },
+      form: { type: 'String', reflect: true },
+      sliderAriaValueText: { type: 'String', attribute: 'aria-valuetext' },
       oninput: { type: 'Object' },
       onchange: { type: 'Object' },
       labelFormatter: { type: 'Object' }
@@ -31,10 +34,12 @@
   let {
     sliderAriaLabel,
     sliderAriaLabelledby,
+    sliderAriaValueText,
     ...props
-  }: Omit<SliderProperties, 'ariaLabel' | 'ariaLabelledby'> & {
+  }: Omit<SliderProperties, 'ariaLabel' | 'ariaLabelledby' | 'ariaValueText'> & {
     sliderAriaLabel?: SliderProperties['ariaLabel'];
     sliderAriaLabelledby?: SliderProperties['ariaLabelledby'];
+    sliderAriaValueText?: SliderProperties['ariaValueText'];
   } = $props();
 
   // See the comment on `hostEl` in LottiePlayer.wc.svelte for why it is not
@@ -94,4 +99,5 @@
   {...props}
   ariaLabel={sliderAriaLabel ?? referencedLabel}
   ariaLabelledby={sliderAriaLabelledby}
+  ariaValueText={sliderAriaValueText}
 />

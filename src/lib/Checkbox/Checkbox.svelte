@@ -16,8 +16,21 @@
     ariaControls,
     ariaLabel,
     controlled = false,
-    attributes
+    attributes,
+    name,
+    value = 'on',
+    required = false,
+    form
   }: CheckboxProperties = $props();
+
+  // A mixed box submits nothing and satisfies nothing, so the control behind it is
+  // unchecked while `indeterminate` holds — the native property, not a third state.
+  const submitsChecked: boolean = $derived(indeterminate ? false : checked);
+  const boxState: 'checked' | 'unchecked' | 'indeterminate' = $derived(
+    indeterminate ? 'indeterminate' : checked ? 'checked' : 'unchecked'
+  );
+
+  let box: HTMLSpanElement | null = $state(null);
 
   // Visible text wins over `ariaLabel`, which is what `properties.ts` has always
   // promised and what WCAG 2.5.3 requires: a control showing "Accept terms" must
@@ -55,6 +68,14 @@
     onclick?.(checked);
   }
 
+  // The form control is `tabindex="-1"`, so the browser's own "focus the invalid
+  // field" step would land on an element the user cannot see or reach. Focus the
+  // box that carries the role instead.
+  function handleInvalid(e: Event): void {
+    e.preventDefault();
+    box?.focus();
+  }
+
   function handleKeyDown(e: KeyboardEvent): void {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
@@ -82,8 +103,14 @@
   <input
     type="checkbox"
     class="native-checkbox"
-    {checked}
+    checked={submitsChecked}
+    {indeterminate}
     {disabled}
+    {value}
+    {required}
+    name={typeof name === 'string' ? name : null}
+    form={typeof form === 'string' ? form : null}
+    oninvalid={handleInvalid}
     tabindex={-1}
     aria-hidden="true"
     onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -91,10 +118,14 @@
     testID={typeof testId === 'string' ? `${testId}-native-input` : null}
   />
   <span
+    bind:this={box}
     class="box"
     class:checked
     class:indeterminate
     role="checkbox"
+    data-state={boxState}
+    data-disabled={disabled ? '' : null}
+    aria-required={required ? 'true' : null}
     tabindex={disabled ? -1 : 0}
     aria-checked={indeterminate ? 'mixed' : checked}
     aria-disabled={disabled}

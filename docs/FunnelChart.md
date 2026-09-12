@@ -126,6 +126,7 @@ Override these custom properties to theme the component.
 | `--funnel-chart-value-font-size`    | `11px`                         | font-size     | Font size of in-bar value labels.                                                            |
 | `--funnel-chart-bar-hover-opacity`  | `1`                            | opacity       | Opacity of the hovered stage bar.                                                            |
 | `--funnel-chart-bar-dimmed-opacity` | `0.35`                         | opacity       | Opacity of non-hovered bars when another stage is hovered.                                   |
+| `--chart-transition-easing`         | `ease`                         | transition    | Easing curve of hover and expand transitions. Falls back through `--motion-easing`.          |
 
 ## Dark mode
 

@@ -19,6 +19,8 @@
 
 <script lang="ts">
   import Browser from '$lib/Browser/Browser.svelte';
+  // Mirrors Browser.svelte's own lockIcon default, wrapper span included.
+  import lockSvg from '$lib/assets/lock.svg?raw';
   let { browserTitle, ...props } = $props();
 </script>
 
@@ -27,6 +29,17 @@
     <slot></slot>
   {/snippet}
   {#snippet lockIcon()}
-    <slot name="lock-icon"></slot>
+    <!--
+      A snippet declared here is always a function, so Browser.svelte's own
+      `{#if typeof lockIcon === 'function'} ... {:else}<span class="lock-icon">{@html lockSvg}</span>{/if}`
+      would always take the true branch and never show its default lock glyph. Native
+      slot fallback content renders exactly when the host assigns nothing, restoring it.
+    -->
+    <slot name="lock-icon">
+      <span class="lock-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html lockSvg}
+      </span>
+    </slot>
   {/snippet}
 </Browser>

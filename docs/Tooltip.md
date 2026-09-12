@@ -146,8 +146,8 @@ Tag: `<sui-tooltip>`
 
 ### Slots
 
-| Slot Name   | Maps to Snippet | Description                                                                             |
-| ----------- | --------------- | --------------------------------------------------------------------------------------- |
-| _(default)_ | `children`      | The trigger element that shows the tooltip on hover.                                    |
-| `icon`      | `icon`          | Optional leading icon in the trigger wrapper. No default — consumers provide their own. |
-| `content`   | `content`       | Optional rich bubble body. Replaces the plain `text` string when provided.              |
+| Slot Name   | Maps to Snippet | Description                                                                                                                               |
+| ----------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| _(default)_ | `children`      | The trigger element that shows the tooltip on hover.                                                                                      |
+| `icon`      | `icon`          | Optional leading icon in the trigger wrapper. No default — consumers provide their own.                                                   |
+| `content`   | `content`       | Optional rich bubble body. Replaces the plain `text` string when provided; defaults to the plain `text` string in a `.tooltip-text` span. |

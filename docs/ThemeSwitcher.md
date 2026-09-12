@@ -33,6 +33,12 @@ A theme preference switcher that renders as either a single toggle button or a s
 />
 ```
 
+## Accessibility
+
+In `segment` mode each button carries `aria-pressed`, so the selected theme is
+reported to assistive technology rather than being shown only by the sliding
+indicator.
+
 ## Props
 
 | Prop       | Type                    | Required | Default                                                                                                                          | Description                                                                                                                                                                                                                                                                   |

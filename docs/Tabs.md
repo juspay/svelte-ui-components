@@ -35,6 +35,32 @@ A tab bar with clickable tab items and an animated active indicator. `items` acc
 </Tabs>
 ```
 
+### Manual activation and disabled tabs
+
+```svelte
+<Tabs
+  items={[
+    { key: 'overview', label: 'Overview' },
+    { key: 'billing', label: 'Billing', disabled: true },
+    { key: 'members', label: 'Members' }
+  ]}
+  activeKey={activeKey}
+  activationMode="manual"
+  onkeychange={(key) => (activeKey = key)}
+/>
+```
+
+Arrow keys skip disabled tabs, `Home`/`End` land on the first and last enabled ones, and a
+tab disabled after selection stays selected but is no longer focusable. The list is always
+a single tab stop: the focused tab while you are inside it, the selected tab otherwise, and
+the first enabled tab when nothing is selected — so a list with no selection can still be
+reached by Tab without inventing one.
+
+### Styling hooks
+
+The tablist carries `data-orientation`, and each tab carries
+`data-state="active | inactive"`, `data-orientation`, and `data-disabled` while disabled.
+
 ## Props
 
 | Prop        | Type                         | Required | Default        | Description                                                                                                                                                                          |
@@ -43,6 +69,9 @@ A tab bar with clickable tab items and an animated active indicator. `items` acc
 | activeIndex | `number`                     | No       | `0`            | The zero-based index of the currently active tab.                                                                                                                                    |
 | activeKey   | `string`                     | No       | `-`            | Selects the active tab by `TabItem.key` instead of index — for item lists that can reorder, where an index would point at the wrong tab after a reorder. Requires `TabItem[]` items. |
 | disabled    | `boolean`                    | No       | `false`        | When true, disables all tab interactions and applies disabled styling.                                                                                                               |
+| activationMode | `'automatic' \| 'manual'` | No | `'automatic'` | `'automatic'` selects a tab as soon as arrow keys reach it. `'manual'` moves focus only and waits for `Enter`, `Space` or a click — the WAI-ARIA APG recommendation when showing a panel is expensive. |
+| loop          | `boolean`                | No       | `true`         | Whether arrow keys wrap around the ends. |
+| dir           | `'ltr' \| 'rtl'`         | No       | `undefined`    | Which way horizontal arrow keys read. Omitted, the inherited document direction decides. Vertical lists are unaffected. |
 | orientation | `'horizontal' \| 'vertical'` | No       | `'horizontal'` | `'horizontal'` is the classic tab bar with a bottom-edge indicator. `'vertical'` stacks items in a column (a nav/menu rail) with a leading-edge indicator and up/down scroll arrows. |
 | testId      | `string`                     | No       | `-`            | Value applied to the `data-pw` attribute on the tab bar container for test selectors.                                                                                                |
 | classes     | `string`                     | No       | `-`            | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.               |
@@ -154,8 +183,8 @@ Tag: `<sui-tabs>`
 
 | Slot Name           | Maps to Snippet   | Description                                                                                                                                                       |
 | ------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow.                                                                                                                            |
-| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow.                                                                                                                           |
-| `tab`               | `tab`             | Custom tab content. Receives `label`, `index`, `active`, and — when the item came from a `TabItem[]` — `subtitle`, `icon` and `status`. Falls back to label text. |
+| `scroll-left-icon`  | `scrollLeftIcon`  | Custom icon for the left scroll arrow; defaults to the built-in chevron.                                                                                          |
+| `scroll-right-icon` | `scrollRightIcon` | Custom icon for the right scroll arrow; defaults to the built-in chevron.                                                                                         |
+| `tab`               | `tab`             | Custom tab content. Receives `label`, `index`, `active`, and — when the item came from a `TabItem[]` — `subtitle`, `icon` and `status`. Falls back to the default tab body (icon, label, and status dot). |
 
 > **Note:** The `items` prop is an array and `tab` is a parameterized Snippet — set them via JavaScript properties.

@@ -1063,7 +1063,8 @@
     position: relative;
   }
   .bar {
-    transition: opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
   .bar.hovered {

@@ -99,7 +99,20 @@ export type OptionalInputProperties = {
   leftIconLabel?: string;
   /** Accessible label for the clickable rightIcon button (defaults to a generic label). */
   rightIconLabel?: string;
-  /** Appends a required asterisk beside the label and sets aria-required on the field. */
+  /**
+   * Appends a required asterisk beside the label and sets `aria-required` and the
+   * native `required` attribute on the field. This is the platform's own name and the
+   * one every other form control in this library uses, so it is the spelling to reach
+   * for. Wins over `mandatory` when both are supplied.
+   */
+  required?: boolean;
+  /**
+   * @deprecated Use `required`. This is the original spelling of the same concept and
+   * keeps working unchanged, but the library settled on the platform's name once the
+   * other form controls gained it. The `--input-mandatory-*` tokens and the
+   * `.input-mandatory-asterisk` class keep their names: those are a separate public
+   * surface, and renaming them would break every consumer theming the asterisk.
+   */
   mandatory?: boolean;
   /** Forces the error border independent of validationPattern (server/runtime-driven errors). */
   forceError?: boolean;

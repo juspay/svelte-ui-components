@@ -2,7 +2,47 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.21.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.22.0)
+
+`.table-container` was hard-coded `overflow: hidden`. That default is load
+bearing -- it is what clips the first and last cells to the container's
+`border-radius`, and without it they square off over the rounded border -- but
+it was also the only option, so a consumer wanting a wide table to scroll
+sideways in the container had to reach past the component and restyle
+`.table-container` from their own stylesheet.
+
+The vertical axis already had a seam: `isTableScrollable` adds `overflow-y:
+auto` with `--table-container-height`. The horizontal one had none. This adds
+`--table-container-overflow`, defaulting to `hidden`, so every existing table
+renders exactly as before and `auto` is now expressible without reaching in.
+
+Found while auditing a consumer's stylesheet against this library's actual API.
+That app carries 68 CSS references into 21 Select and Table internals, and this
+is the only one of them that turned out to be a real gap -- `.select-dropdown`'s
+`z-index`/`width`/`min-width`/`margin-top` all already have documented custom
+properties on that exact selector, sticky headers are already a `stickyHeader`
+prop, and the header-bar spacing that app was chasing is already
+`--table-toolbar-gap`/`-padding`/`-margin-bottom`. The rest of that audit is a
+documentation problem, not a missing-API one, and is not in this PR.
+
+One interaction is worth knowing and is in the comment rather than left to be
+discovered: the scrollable variant sets `overflow-y`, and per the CSS overflow
+spec `visible` on one axis computes to `auto` when the other axis is not
+visible. So `visible` does not survive on a scrollable table. `hidden` and
+`auto` behave as written.
+
+Verified red-green rather than by the suite going green: with the property
+still hard-coded, the opt-in case fails and the default case passes; after the
+change both pass. That ordering matters here, because a test that only asserted
+the default would have passed against the bug.
+
+Gate on this commit: prettier clean, eslint 0, event-casing 0, svelte-check 0
+errors across both tsconfigs, and the new spec 2/2 under Playwright.
+
+-
+feat(table): let a consumer choose the container's overflow ([c8e4084](https://github.com/juspay/svelte-ui-components/commit/c8e40844350ac5fcc0da124f0960f39007b6b591))
+
+## [4.22.0](https://github.com/juspay/svelte-ui-components/compare/4.22.0..4.21.0) - 12 September 2026
 
 Five tests parse the entire repository to assert it has nothing left for its
 generator to rewrite -- every component for the internal rename, every doc for

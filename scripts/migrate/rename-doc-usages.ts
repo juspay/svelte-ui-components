@@ -33,30 +33,46 @@ const escapeRegExp = (literal: string): string => literal.replace(/[.*+?^${}()|[
 
 /**
  * Every `on*` callback declared somewhere other than a component's own props
- * — a config object's key, or a nested member — across `src/lib`. Ambiguous
- * in prose, see rule 3.
+ * — a config object's key, a nested member, or a headless controller's options
+ * bag — across `src/lib`. Ambiguous in prose, see rule 3.
+ *
+ * Both `properties.ts` and `types.ts` are read. `properties.ts` alone missed an
+ * entire category: a controller's options live in `types.ts`
+ * (`SpeechToTextOptions.onError`, `ChatOptions.onError`), so those names were
+ * never marked ambiguous and every bare prose mention of them anywhere in
+ * `docs/` was rewritten as though it were a deprecated component prop. That is
+ * not theoretical — it is why `SpeechSynthesisOptions` had to spell its error
+ * callback `onerror`, inconsistently with its own sibling, purely to get past
+ * this check.
  */
-function configCallbackNames(root: string): ReadonlySet<string> {
+export function configCallbackNames(root: string): ReadonlySet<string> {
   const names = new Set<string>();
   const lib = join(root, 'src', 'lib');
   for (const entry of readdirSync(lib)) {
-    const file = join(lib, entry, 'properties.ts');
-    if (!existsSync(file)) {
-      continue;
-    }
-    let owner = '';
-    for (const line of readFileSync(file, 'utf8').split('\n')) {
-      const typeLine = /^(?:export )?type (\w+)\b/.exec(line);
-      if (typeLine !== null) {
-        owner = typeLine[1];
+    for (const source of ['properties.ts', 'types.ts']) {
+      const file = join(lib, entry, source);
+      if (!existsSync(file)) {
+        continue;
       }
-      const declaration = /^(\s*)(on[A-Za-z]+)\??:/.exec(line);
-      if (declaration !== null && (!owner.endsWith('Properties') || declaration[1].length !== 2)) {
-        names.add(declaration[2]);
-      }
+      collectCallbackNames(readFileSync(file, 'utf8'), names);
     }
   }
   return names;
+}
+
+/** Shared by both source files; `owner` resets per file, never across them. */
+function collectCallbackNames(text: string, names: Set<string>): void {
+  let owner = '';
+  for (const line of text.split('\n')) {
+    const typeLine = /^(?:export )?type (\w+)\b/.exec(line);
+    if (typeLine !== null) {
+      owner = typeLine[1];
+    }
+    const declaration = /^(\s*)(on[A-Za-z]+)\??:/.exec(line);
+    if (declaration !== null && (!owner.endsWith('Properties') || declaration[1].length !== 2)) {
+      names.add(declaration[2]);
+    }
+  }
 }
 
 // A tag's attributes, up to but not across its closing `>`. An arrow inside an

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planDocRenames, rewriteDoc } from './rename-doc-usages.ts';
+import { configCallbackNames, planDocRenames, rewriteDoc } from './rename-doc-usages.ts';
 
 // Names that also appear as callback keys on config objects, so are
 // ambiguous in prose; `planDocRenames` derives the real set from src/lib.
@@ -66,6 +66,19 @@ describe('rewriteDoc', () => {
 });
 
 describe('the reference docs', () => {
+  it('treats a headless controller option as ambiguous, not as a component prop', () => {
+    // `onError` is a deprecated prop on Input/Table AND a live option on
+    // SpeechToTextOptions/ChatOptions, which live in types.ts. Scanning only
+    // properties.ts missed the second kind, so a bare prose mention in any doc
+    // was rewritten as though it were the deprecated prop -- which is why
+    // SpeechSynthesisOptions had to misspell its own callback to get past this.
+    const ambiguous = configCallbackNames(process.cwd());
+    expect(ambiguous.has('onError')).toBe(true);
+
+    const doc = 'The `onError` option fires when synthesis fails.\n';
+    expect(rewriteDoc('/x/docs/SpeechSynthesis.md', doc, ambiguous)).toBe(doc);
+  });
+
   it('never recommend a spelling the library deprecates', () => {
     // docs/ is what the MCP server serves to consumers: a deprecated name
     // here is an instruction to use something 4.0.0 removes.

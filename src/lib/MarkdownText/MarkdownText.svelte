@@ -9,11 +9,12 @@
     classes,
     tableLabel,
     tableWrapperClass,
-    sanitize
+    sanitize,
+    unwrapFence = false
   }: MarkdownTextProperties = $props();
 
   let html = $derived(
-    renderMarkdown(markdown, { breaks, tableLabel, tableWrapperClass, sanitize })
+    renderMarkdown(markdown, { breaks, tableLabel, tableWrapperClass, sanitize, unwrapFence })
   );
 </script>
 

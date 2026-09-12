@@ -473,7 +473,40 @@ export type TableSearchConfig = {
 
 export type TableProperties = OptionalTableProperties & TableEventProperties;
 
+/**
+ * Accessible names Table generates for its own controls, for callers who do
+ * not ship an English UI.
+ *
+ * Every member is optional and falls back to the English string Table has
+ * always used, so adding this prop changes nothing for existing consumers.
+ *
+ * The two that depend on a column, and the one that depends on a row, are
+ * functions rather than templates with a placeholder: a translator needs to
+ * put the header where their grammar wants it, not where an English sentence
+ * happens to leave a slot.
+ *
+ * `Search` is deliberately absent -- `searchConfig.placeholder` already names
+ * the search input and has since search shipped.
+ */
+export type TableLabels = {
+  /** Sort button on a column header. Default: `Sort by ${header}`. */
+  sortBy?: (header: string) => string;
+  /** Filter trigger on a column header. Default: `Filter by ${header}`. */
+  filterBy?: (header: string) => string;
+  /** Per-row selection checkbox. Receives the row id, or `''` when the row
+   *  cannot be selected -- the default spells that case out rather than
+   *  naming an empty row. Default: `Select row ${rowId || 'non-selectable'}`. */
+  selectRow?: (rowId: string) => string;
+  /** Header checkbox that selects every row on the page. Default: `Select all rows`. */
+  selectAllRows?: string;
+  /** Button that empties the search box. Default: `Clear search`. */
+  clearSearch?: string;
+  /** Button that dismisses the search box. Default: `Close search`. */
+  closeSearch?: string;
+};
+
 export type OptionalTableProperties = {
+  labels?: TableLabels;
   tableTitle?: string | null;
   tableHeaders?: string[];
   tableData?: Array<JSONValue[]>;

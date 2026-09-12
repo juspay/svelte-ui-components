@@ -7,6 +7,7 @@ import {
   groupDeclarations
 } from './lowercase-event-props.ts';
 import type { ComponentNote } from './lowercase-event-props.ts';
+import { REPO_SCAN_TIMEOUT_MS } from './repo-scan-timeout.ts';
 
 const PROPERTIES = [
   'export type ToggleEventProperties = {',
@@ -187,9 +188,13 @@ describe('lowercaseComponent', () => {
 });
 
 describe('the repository', () => {
-  it('has nothing left for the generator to do', () => {
-    const { changes, notes } = planLowercase(process.cwd());
-    expect(changes.map((change) => change.file)).toEqual([]);
-    expect(notes).toEqual([]);
-  });
+  it(
+    'has nothing left for the generator to do',
+    () => {
+      const { changes, notes } = planLowercase(process.cwd());
+      expect(changes.map((change) => change.file)).toEqual([]);
+      expect(notes).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { REPO_SCAN_TIMEOUT_MS } from './repo-scan-timeout.ts';
 import { groupDeclarations, scanDeclarations } from './lowercase-event-props.ts';
 import type { ComponentNote } from './lowercase-event-props.ts';
 import {
@@ -325,9 +326,13 @@ describe('removeAliasesFromComponent', () => {
 });
 
 describe('the repository', () => {
-  it('has nothing left for the generator to do', () => {
-    const { changes, notes } = planRemoval(process.cwd());
-    expect(changes.map((change) => change.file)).toEqual([]);
-    expect(notes).toEqual([]);
-  });
+  it(
+    'has nothing left for the generator to do',
+    () => {
+      const { changes, notes } = planRemoval(process.cwd());
+      expect(changes.map((change) => change.file)).toEqual([]);
+      expect(notes).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { transformSvelte } from '../codemod/transform.ts';
 import { INTERNAL_OPTIONS, planInternalRenames } from './rename-internal-usages.ts';
+import { REPO_SCAN_TIMEOUT_MS } from './repo-scan-timeout.ts';
 
 describe('internal import resolution', () => {
   it('treats a default import of $lib/X/X.svelte as component X', () => {
@@ -45,11 +46,15 @@ describe('internal import resolution', () => {
 });
 
 describe('the repository itself', () => {
-  it('never uses a spelling it deprecates', () => {
-    // Anything listed here is a call site that would warn in a consumer's
-    // console for code they did not write, and break outright in 4.0.0.
-    const plan = planInternalRenames(process.cwd());
+  it(
+    'never uses a spelling it deprecates',
+    () => {
+      // Anything listed here is a call site that would warn in a consumer's
+      // console for code they did not write, and break outright in 4.0.0.
+      const plan = planInternalRenames(process.cwd());
 
-    expect(plan.map((item) => `${item.file}: ${item.propsRenamed}`)).toEqual([]);
-  });
+      expect(plan.map((item) => `${item.file}: ${item.propsRenamed}`)).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

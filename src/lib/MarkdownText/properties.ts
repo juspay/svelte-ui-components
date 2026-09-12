@@ -33,6 +33,21 @@ export type OptionalMarkdownTextProperties = {
    */
   tableWrapperClass?: string;
   /**
+   * Remove a fence that wraps the ENTIRE value and is labelled `markdown` or
+   * `md`, then render what was inside it as markdown.
+   *
+   * Models very often return a whole answer wrapped that way, which renders as
+   * a code block showing source rather than as a document. Off by default,
+   * because unwrapping is not always right: a message quoting a fenced sample
+   * would be reinterpreted as live markup, which is exactly what an
+   * unanchored implementation elsewhere did.
+   *
+   * Only the whole-body case is unwrapped. A fence with anything before or
+   * after it, an unlabelled fence, a fence labelled as another language, and a
+   * body that still contains a fence delimiter are all left alone.
+   */
+  unwrapFence?: boolean;
+  /**
    * Narrow which URL protocols survive on rendered links/images. See
    * `MarkdownSanitizeOptions`.
    */
@@ -121,6 +136,8 @@ export type RenderMarkdownOptions = {
   tableLabel?: string;
   /** Class name for the scroll region wrapping each table. See `MarkdownTextProperties.tableWrapperClass`. */
   tableWrapperClass?: string;
+  /** Unwrap a whole-body ```markdown fence. See `MarkdownTextProperties.unwrapFence`. */
+  unwrapFence?: boolean;
   /** Narrow the protocol allow-list. See `MarkdownSanitizeOptions`. */
   sanitize?: MarkdownSanitizeOptions;
 };

@@ -9,7 +9,8 @@
       classes: { type: 'String' },
       tableLabel: { type: 'String', attribute: 'table-label' },
       tableWrapperClass: { type: 'String', attribute: 'table-wrapper-class' },
-      sanitize: { type: 'Object' }
+      sanitize: { type: 'Object' },
+      unwrapFence: { type: 'Boolean', attribute: 'unwrap-fence' }
     }
   }}
 />

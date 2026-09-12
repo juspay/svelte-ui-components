@@ -36,15 +36,16 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 
 ## Props
 
-| Prop              | Type                      | Required | Default | Description                                                                                                                                                                                                         |
-| ----------------- | ------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| markdown          | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                         |
-| breaks            | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                               |
-| testId            | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                |
-| classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                   |
-| tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                        |
-| tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                              |
-| sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped or dropped. See the Security model section below. |
+| Prop              | Type                      | Required | Default | Description                                                                                                                                                                                                                                                        |
+| ----------------- | ------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| markdown          | `string`                  | Yes      | `-`     | Markdown source. Raw HTML is escaped by default; strip mode removes tags and retains text; unsafe link/image protocols are stripped while their text stays.                                                                                                        |
+| breaks            | `boolean`                 | No       | `false` | Render single newlines as `<br>` (GFM "breaks" mode).                                                                                                                                                                                                              |
+| testId            | `string`                  | No       | `-`     | `data-pw` (and native `testID`) on the root element.                                                                                                                                                                                                               |
+| classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                                                                  |
+| tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                                                                       |
+| tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                                                                             |
+| unwrapFence       | `boolean`                 | No       | `false` | Remove a fence that wraps the **entire** value and is labelled ` ```markdown ` or ` ```md `, then render what was inside as markdown. Models routinely wrap a whole answer that way, which otherwise renders as a code block of source. Off by default. See below. |
+| sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped or dropped. See the Security model section below.                                                |
 
 ## Security model
 
@@ -178,6 +179,40 @@ the `class="..."` attribute it is placed in.
 | `--markdown-text-hr-color`                | `rgba(0, 0, 0, 0.12)`     | Horizontal rule color.         |
 | `--markdown-text-focus-outline-color`     | `#3b82f6`                 | Focus ring on a table wrapper. |
 
+## unwrapFence
+
+A model asked for markdown very often returns it wrapped:
+
+````
+```markdown
+# Quarterly summary
+
+Revenue rose **12%**.
+```
+````
+
+Rendered literally that is a code block, so the reader sees source instead of a
+document. `unwrapFence` opts into removing exactly that wrapper.
+
+It is opt-in, and it only ever matches a fence that is the whole value. That
+narrowness is the point: an unanchored implementation will happily unwrap a
+message that _quotes_ a fenced sample while explaining markdown, turning the
+sample into live markup. Every one of these is left untouched:
+
+| Source                          | Why it is not unwrapped                           |
+| ------------------------------- | ------------------------------------------------- |
+| Prose before or after the fence | The fence is not the whole body                   |
+| ` ``` ` with no info string     | May be code the author meant to show              |
+| ` ```python `                   | Labelled as another language                      |
+| A body still containing ` ``` ` | Ambiguous — the outer pair may not be the wrapper |
+
+Tilde fences (`~~~markdown`) are unwrapped too, and the info string is matched
+case-insensitively with surrounding whitespace tolerated.
+
+Unwrapping happens before parsing, so it changes nothing about sanitization:
+raw HTML inside an unwrapped body is still escaped or stripped exactly as it
+would be anywhere else.
+
 ## Type Reference
 
 ```ts
@@ -189,6 +224,7 @@ export type MarkdownTextProperties = {
   tableLabel?: string;
   tableWrapperClass?: string;
   sanitize?: MarkdownSanitizeOptions;
+  unwrapFence?: boolean;
 };
 
 export type MarkdownSanitizeOptions = {
@@ -215,5 +251,6 @@ export type RenderMarkdownOptions = {
   tableLabel?: string;
   tableWrapperClass?: string;
   sanitize?: MarkdownSanitizeOptions;
+  unwrapFence?: boolean;
 };
 ```

@@ -352,10 +352,77 @@ function instanceFor(options: RenderMarkdownOptions): Marked {
  * Markdown → HTML with the sanitizing pipeline above. Pure string transform —
  * no DOM involved — so it renders identically on server and client.
  */
+/**
+ * Matches a body that is ENTIRELY one fence labelled as markdown.
+ *
+ * Anchored at both ends on purpose. A peer's live implementation used an
+ * unanchored, global regex, so a message that *explained* markdown by quoting a
+ * fenced sample had the sample unwrapped and rendered as live markup. Anchoring
+ * means a fence with anything before or after it is left alone.
+ *
+ * The trailing whitespace is `\s*`, not `[ \t]*\s*` -- `[ \t]` is already a
+ * subset of `\s`, so pairing them let the engine try every split between the
+ * two quantifiers over the same characters. On uncontrolled input (this runs
+ * on chat/model text) that is a polynomial-time blow-up: a closing delimiter
+ * followed by many tabs and then one stray character made a single `.exec`
+ * call take seconds instead of a fraction of a millisecond.
+ *
+ * Groups: 1 = the opening run, 2 = the info string, 3 = the body, 4 = the closing run.
+ */
+/*
+ * Hoisted rather than built per call. Both carry only `m` -- no `g` or `y` --
+ * so they hold no `lastIndex` between calls and are safe to share.
+ */
+const INNER_BACKTICK_FENCE = /^[ \t]*`{3,}/m;
+const INNER_TILDE_FENCE = /^[ \t]*~{3,}/m;
+
+const WHOLE_BODY_MARKDOWN_FENCE =
+  /^\s*(`{3,}|~{3,})[ \t]*(markdown|md)[ \t]*\r?\n([\s\S]*?)\r?\n?(`{3,}|~{3,})\s*$/i;
+
+/**
+ * Removes a fence that wraps the entire body and is labelled `markdown` or
+ * `md`, which is how models overwhelmingly emit a markdown answer. Returns the
+ * source untouched in every other case.
+ *
+ * An unlabelled fence is deliberately not unwrapped: it may be code the author
+ * meant to show, and there is nothing in the source to tell the two apart.
+ */
+export function unwrapMarkdownFence(source: string): string {
+  const match = WHOLE_BODY_MARKDOWN_FENCE.exec(source);
+  if (match === null) {
+    return source;
+  }
+
+  const opening = match[1];
+  const body = match[3];
+  const closing = match[4];
+
+  // CommonMark lets a closing fence be LONGER than its opening, so the closing
+  // run is its own group and is checked here rather than by a `\1`
+  // backreference. The backreference did not refuse a longer close -- it
+  // matched the last three ticks and swept the extra one into the body, so
+  // `# Heading` came back as "# Heading\n`". Content corruption, not a refusal.
+  // Same character, and at least as long, is the actual rule.
+  if (closing[0] !== opening[0] || closing.length < opening.length) {
+    return source;
+  }
+
+  // A body still containing a fence run means the outer delimiters may not be a
+  // wrapper at all -- the regex is lazy to the LAST delimiter, so this shape is
+  // ambiguous. Refusing keeps a message quoting fenced code from being
+  // reinterpreted as markup, which is the failure this feature exists to avoid.
+  const innerFence = opening[0] === '~' ? INNER_TILDE_FENCE : INNER_BACKTICK_FENCE;
+  if (innerFence.test(body)) {
+    return source;
+  }
+
+  return body;
+}
+
 export function renderMarkdown(markdown: string, options: RenderMarkdownOptions = {}): string {
+  const source = options.unwrapFence === true ? unwrapMarkdownFence(markdown) : markdown;
   const instance = instanceFor(options);
-  const output =
-    options.inline === true ? instance.parseInline(markdown) : instance.parse(markdown);
+  const output = options.inline === true ? instance.parseInline(source) : instance.parse(source);
   if (typeof output !== 'string') {
     return '';
   }

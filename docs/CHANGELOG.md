@@ -2,7 +2,106 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.19.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.20.0)
+
+`LineChart`, `BarChart` and `PieChart` have handed back a `ChartHighlightAPI`
+from `onChartReady` since #465, described there as being "for imperative point
+highlighting from external orchestrators (e.g. voice narration sync,
+step-through animations)". The socket shipped; the plug did not, so the obvious
+consumer -- an assistant speaking over a chart -- was written per app.
+
+This is that orchestrator. `processText(transcriptSoFar)` highlights the
+category the narration names, at most once per turn, clearing after a pause.
+
+Ported from a Lighthouse implementation offered by the agentic-dashboard
+session, at roughly a fifth the size, because most of what it carried the
+library had already solved:
+
+- the 207-line chart registry is gone. `getCategories()` is the label list it
+duplicated and `highlight(null)` is the clear path it wrapped, so this holds
+one `ChartHighlightAPI` and nothing else
+- with it goes `getMostRecent()`, and the `chartId: 'current'` placeholder
+that stood in for a chart the orchestrator never actually identified
+- and the upsert branch, which existed only to tolerate `onChartReady` firing
+before a chart was registered -- a window that does not exist when the
+caller hands over the object it was just given
+- the telemetry, and with it an `@opentelemetry/api-logs` dependency. A
+consumer wanting instrumentation can wrap `processText`
+
+Shaped as a factory returning a closure rather than a class with private mutable
+fields, following `createCopyState` (#590): the same "behaviour without the
+presentation" split, and the same convention of reading options at call time.
+
+THE MATCHING RULE is the part worth review. The original matched
+`text.includes(category) || text.includes(content)`, and the source it serves
+reads categories straight off a model's tool output, so labels cannot be assumed
+distinctive -- `Other` and `None` already appear in its fixtures. A substring
+rule fires `Other` on `otherwise`, and because a category fires once per turn
+that wrong slice then stays lit for the rest of the answer.
+
+The default here matches whole words only, preferring the longest label when
+several match, so `Q1 Europe` wins over `Q1`. Substring behaviour remains
+available through `match`.
+
+Whole-word narrows the collision surface; it does not close it, and the tests
+pin that rather than implying otherwise. In "on the other hand", `other` is
+genuinely a standalone word, so the label matches and no lexical rule could
+decide differently without reading the sentence. That case is asserted as a
+known limit, with the guidance -- pass a stricter `match`, and `reset()` between
+turns -- in both the type and the docs.
+
+Matching is a scan rather than a `RegExp`: a label is caller data that would
+need escaping, and `\b` is defined over ASCII so it mismatches labels like
+`Café` or an East Asian one. Lookbehind would fix that but is not available
+everywhere this library runs.
+
+A demo section on the LineChart page drives it from a scripted transcript fed a
+word at a time, so the behaviour is visible rather than only asserted, and three
+Playwright cases drive that demo through a mounted chart. The unit suite proves
+the orchestrator against a recording stub; those prove the two ends are
+connected -- that a category index it picks actually moves a chart. The
+line-chart visual baseline is regenerated for the added section, in the pinned
+container; the other 92 are untouched and the suite is 93/93.
+
+Verified on this commit: check 0, lint 0, unit 0, integration 0, visual 0. 1042 unit tests, 21 of them
+new, covering matching, once-per-turn, auto-clear and teardown, plus hostile
+input from an untyped caller: `getCategories` throwing, returning a non-array,
+and a non-string transcript. 718 integration cases.
+
+The negative control was required by the offering session and earned its place.
+A highlighter that never fires is indistinguishable from one whose categories
+never matched, so both directions were mutation-tested: forcing the matcher to
+never match fails 15 of 21, and swapping the default to substring matching fails
+the case that exists to catch it.
+
+That second mutation initially passed, which is why it is worth recording. The
+test then had `Retail` alongside `Other` and asserted `Retail` won -- true under
+substring matching too, because longest-match-wins picks the six-character label
+over the five-character one. It was asserting the tie-break, not the matcher.
+Isolating the category fixed it.
+
+Refs #465
+
+The demo page now clears its narration interval on destroy. Navigating away
+mid-narration otherwise left it running and calling processText on a destroyed
+component.
+
+-
+feat(charts): add createNarrationHighlighter for the onChartReady hook ([ef41824](https://github.com/juspay/svelte-ui-components/commit/ef418243aaf7e6dabde0b90e72fd0727b1d10055))
+-
+fix(tests): make two timing-dependent specs independent of machine load ([fa85a5f](https://github.com/juspay/svelte-ui-components/commit/fa85a5f82382b5e4c346df8875bff76479301933))
+-
+feat(table): let callers name the controls Table generates itself ([af55682](https://github.com/juspay/svelte-ui-components/commit/af556823ecea557cc1a9a4c874c3358e5bb22e6f))
+-
+feat(markdown-text): let a consumer add a class to the table wrapper ([5a2b18f](https://github.com/juspay/svelte-ui-components/commit/5a2b18f7c0d477564d4c3c9b0179e61d7c4c98d8))
+-
+fix(chat-message): scroll a wide table in the wrapper, not the table itself ([ae68890](https://github.com/juspay/svelte-ui-components/commit/ae6889013569f91756f6de6fe30e4517ac9878b4))
+-
+fix(wc): stop sui-checkbox shadowing Element.attributes, which broke every instance ([f652776](https://github.com/juspay/svelte-ui-components/commit/f6527768488c5e993927d8d214ed307b58833465))
+-
+fix(migrate): stop the doc rename treating a controller option as a component prop ([103bfa3](https://github.com/juspay/svelte-ui-components/commit/103bfa362a5a0f05c50cfaca8724949c09b40fbe))
+
+## [4.20.0](https://github.com/juspay/svelte-ui-components/compare/4.20.0..4.19.1) - 10 September 2026
 
 4.19.0 deprecated the `attrs` keys Card and Pill overwrite, which turns the
 silent discard into a strikethrough for anyone reading TypeScript in an editor

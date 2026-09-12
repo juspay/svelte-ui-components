@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { REPO_SCAN_TIMEOUT_MS } from './repo-scan-timeout.ts';
 import {
   declareProps,
   isEventProp,
@@ -28,14 +29,18 @@ ${props}
 `;
 
 describe('phase 1 wrapper declarations', () => {
-  it('has nothing left to do, because every declaration is already applied', () => {
-    // The idempotence check, and the reason the transform is safe to keep in the
-    // tree: it plans from the parity ratchet's `missing` list, which is empty
-    // once the declarations exist, so a second --apply rewrites nothing.
-    const { additions } = planWrapperProps(root);
+  it(
+    'has nothing left to do, because every declaration is already applied',
+    () => {
+      // The idempotence check, and the reason the transform is safe to keep in the
+      // tree: it plans from the parity ratchet's `missing` list, which is empty
+      // once the declarations exist, so a second --apply rewrites nothing.
+      const { additions } = planWrapperProps(root);
 
-    expect(additions).toEqual([]);
-  });
+      expect(additions).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 
   it('appends a declaration at the indentation the existing entries use', () => {
     const source = wrapper("      checked: { type: 'Boolean', reflect: true }");

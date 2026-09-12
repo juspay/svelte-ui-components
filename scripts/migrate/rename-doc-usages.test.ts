@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { configCallbackNames, planDocRenames, rewriteDoc } from './rename-doc-usages.ts';
+import { REPO_SCAN_TIMEOUT_MS } from './repo-scan-timeout.ts';
 
 // Names that also appear as callback keys on config objects, so are
 // ambiguous in prose; `planDocRenames` derives the real set from src/lib.
@@ -79,9 +80,13 @@ describe('the reference docs', () => {
     expect(rewriteDoc('/x/docs/SpeechSynthesis.md', doc, ambiguous)).toBe(doc);
   });
 
-  it('never recommend a spelling the library deprecates', () => {
-    // docs/ is what the MCP server serves to consumers: a deprecated name
-    // here is an instruction to use something 4.0.0 removes.
-    expect(planDocRenames(process.cwd()).map((item) => item.file)).toEqual([]);
-  });
+  it(
+    'never recommend a spelling the library deprecates',
+    () => {
+      // docs/ is what the MCP server serves to consumers: a deprecated name
+      // here is an instruction to use something 4.0.0 removes.
+      expect(planDocRenames(process.cwd()).map((item) => item.file)).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

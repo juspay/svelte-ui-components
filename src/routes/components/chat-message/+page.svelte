@@ -50,6 +50,16 @@
   const markdownReply =
     'Same thing from **markdown** — parsed and sanitized internally:\n\n- Wireless earbuds\n- A scented candle set';
 
+  // A wide table is the case that exposes whether the scroll container and the
+  // table's own semantics are separated correctly.
+  const markdownTable =
+    'Quarterly breakdown:\n\n' +
+    '| Region | Q1 | Q2 | Q3 | Q4 | Notes |\n' +
+    '| --- | --- | --- | --- | --- | --- |\n' +
+    '| North America | $128,400 | $131,900 | $140,200 | $155,700 | Strongest growth |\n' +
+    '| Europe | $98,100 | $102,600 | $99,400 | $110,800 | Currency headwind |\n' +
+    '| Asia Pacific | $76,300 | $81,200 | $88,900 | $94,500 | New partners |\n';
+
   const settledToolChips: ToolCallChip[] = [
     { label: 'Fetch', meta: 'catalog.json', mono: true, state: 'done' },
     { label: 'Run', meta: 'price-filter', mono: true, state: 'done' }
@@ -69,6 +79,17 @@
   />
   <ChatMessage role="responder" markdown={markdownReply} testId="chat-message-markdown" />
   <ChatMessage role="responder" content="" streaming={true} />
+</div>
+
+<h2>Wide tables</h2>
+<p class="demo-note">
+  A markdown table wider than the message scrolls in its own focusable container, so the
+  <code>&lt;table&gt;</code> keeps the semantics assistive technology needs to navigate it by row and
+  column. The container is a tab stop and shows a focus ring, because a keyboard user has to be able to
+  reach the scroll.
+</p>
+<div class="demo-stack">
+  <ChatMessage role="responder" markdown={markdownTable} testId="chat-message-table" />
 </div>
 
 <h2>Settled turn — a persistent trace and tool log in history</h2>

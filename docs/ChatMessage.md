@@ -185,6 +185,7 @@ pinning to the left. `--chat-message-marker-offset` is the one to reach for: it 
 | `--chat-message-blockquote-opacity`            | `0.85`                    | opacity            | Opacity of rendered blockquote text.                    |
 | `--chat-message-table-border-color`            | `rgba(0,0,0,0.12)`        | border-color       | Border color of a rendered table and its cells.         |
 | `--chat-message-table-header-background`       | `rgba(0,0,0,0.04)`        | background         | Background of a rendered table's header row.            |
+| `--chat-message-table-focus-outline-color`     | `#3b82f6`                 | outline-color      | Focus ring color of a rendered table's scroll wrapper.  |
 | `--chat-message-image-border-radius`           | `8px`                     | border-radius      | Corner rounding of a rendered image.                    |
 | `--chat-message-hr-color`                      | `rgba(0,0,0,0.12)`        | border-top         | Color of a rendered horizontal rule.                    |
 | `--chat-message-actions-gap`                   | `2px`                     | gap                | Gap between action buttons.                             |

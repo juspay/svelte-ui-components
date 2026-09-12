@@ -16,12 +16,27 @@
     showLoader = !showLoader;
     onclick?.(event);
   }
+
+  // The tile carries role="button" and sits in the tab order, so Enter and Space have
+  // to do what a click does. Clicking the element itself rather than calling the
+  // handler keeps one activation path, and gives `onclick` the MouseEvent its type
+  // promises instead of a synthesized stand-in.
+  function handleKeydown(event: KeyboardEvent): void {
+    onkeydown?.(event);
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.click();
+    }
+  }
 </script>
 
 <div
   class="container {classes ?? ''}"
   onclick={handleClick}
-  {onkeydown}
+  onkeydown={handleKeydown}
   role="button"
   tabindex="0"
   data-pw={typeof testId === 'string' ? testId : null}

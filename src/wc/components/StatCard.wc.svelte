@@ -39,7 +39,8 @@
     <slot name="footer"></slot>
   {/snippet}
   {#snippet valueSnippet()}
-    <slot name="value-snippet"></slot>
+    <!-- Mirrors StatCard.svelte's valueSnippet fallback: {value} -->
+    <slot name="value-snippet">{props.value}</slot>
   {/snippet}
   <slot></slot>
 </StatCard>

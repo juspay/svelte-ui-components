@@ -6,6 +6,10 @@
   const answer =
     'Refunds are down 12% this month. Card refunds cleared fastest, UPI refunds took a median of 2.1 days, and three orders are still awaiting gateway confirmation.';
 
+  const markdownAnswer =
+    '**Refund summary**\n\n- Cards cleared first.\n- Read the [guide](https://example.com/refunds).';
+  let markdownDisplay = $state('');
+
   let streamed = $state('');
   let isStreaming = $state(false);
 
@@ -119,7 +123,29 @@
   <TypewriterText text={streamed} {isStreaming} />
 </div>
 
-<h2>Rich text via renderText</h2>
+<h2>Safe Markdown, without a custom renderer</h2>
+<p>
+  Enable <code>markdown</code> for model or user text. Each revealed prefix goes through the library's
+  safe Markdown renderer, which escapes raw HTML and strips unsafe link protocols.
+</p>
+<div class="demo-row" style="flex-direction: column; align-items: flex-start;">
+  <button onclick={() => (markdownDisplay = markdownAnswer)} data-pw="typewriter-markdown-start">
+    Reveal Markdown
+  </button>
+  <TypewriterText
+    text={markdownDisplay}
+    markdown
+    isStreaming
+    speed={10}
+    testId="typewriter-markdown-demo"
+  />
+</div>
+
+<h2>Trusted custom HTML via renderText</h2>
+<p>
+  <code>renderText</code> inserts the returned HTML directly. Use it only with trusted templates or
+  a renderer that sanitizes its own output. Prefer <code>markdown</code> for untrusted text.
+</p>
 <div class="demo-row">
   <TypewriterText
     text="**Bold** where the renderer says so."

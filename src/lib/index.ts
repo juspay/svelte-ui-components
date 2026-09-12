@@ -82,6 +82,10 @@ export { default as FunnelChart } from './FunnelChart/FunnelChart.svelte';
 export { default as ProportionBar } from './ProportionBar/ProportionBar.svelte';
 export { default as ChipInput } from './ChipInput/ChipInput.svelte';
 export { default as FileDropzoneTrigger } from './FileDropzoneTrigger/FileDropzoneTrigger.svelte';
+export { default as Separator } from './Separator/Separator.svelte';
+export { default as Label } from './Label/Label.svelte';
+export { default as AspectRatio } from './AspectRatio/AspectRatio.svelte';
+export { default as RatingGroup } from './RatingGroup/RatingGroup.svelte';
 
 export { default as Chat } from './Chat/Chat.svelte';
 export { default as ChatHeader } from './ChatHeader/ChatHeader.svelte';
@@ -150,6 +154,10 @@ export type * from './Gauge/properties';
 export type * from './SplitButton/properties';
 export type * from './KeyboardInput/properties';
 export type * from './LoadingDots/properties';
+export type * from './Separator/properties';
+export type * from './Label/properties';
+export type * from './AspectRatio/properties';
+export type * from './RatingGroup/properties';
 export type * from './Menu/properties';
 export type * from './Sheet/properties';
 export type * from './Scroller/properties';
@@ -210,5 +218,12 @@ export type * from './MediaUpload/properties';
 export type * from './Gallery/properties';
 
 export { createSoundKit } from './SoundKit/SoundKit';
-export { validateInput, lockBodyScroll, unlockBodyScroll } from './utils';
+// `prefersReducedMotion` reads the OS preference, and its own comment in utils.ts
+// explains why it is shared rather than reimplemented per component: two
+// character-reveal implementations ship here, and honouring the preference in one
+// silences a chat bubble while the message body inside it keeps typing. That argument
+// applies just as much across the boundary. A consumer driving motion from JavaScript
+// -- a canvas, a chart, an imperative animation -- cannot reach the preference through
+// a stylesheet, so leaving this unexported made every such consumer write it again.
+export { validateInput, lockBodyScroll, unlockBodyScroll, prefersReducedMotion } from './utils';
 export { formatNumberIndian } from './_chart/format';

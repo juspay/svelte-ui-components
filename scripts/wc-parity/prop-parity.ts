@@ -214,6 +214,12 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   'lang',
   'hidden',
   'tabindex',
+  // Worse than a shadowed accessor: Svelte's custom-element layer iterates
+  // `this.attributes` when syncing attributes onto props, so a wrapper declaring it
+  // threw during render and `<sui-checkbox>` produced an empty shadow root for every
+  // consumer. Missed when this list was enumerated because the sweep asked for
+  // ARIAMixin names and `on*` handlers, not for every accessor on Element.
+  'attributes',
   // `children` is the costliest of these and was measured, not reasoned about:
   // declaring it does not merely shadow `Element.children`, it leaves
   // `element.children` returning undefined outright, so `el.children.length`

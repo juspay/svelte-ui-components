@@ -27,6 +27,24 @@ A date or date-range picker that displays a monthly calendar grid with navigatio
 <Calendar mode="range" bind:rangeStart bind:rangeEnd />
 ```
 
+## Keyboard
+
+The day grid is a single tab stop, using the same roving-tabindex pattern as Tabs: only
+one day cell (or, in the fully-disabled edge case below, the grid itself) is ever in the
+page's tab order at a time.
+
+| Key                        | Behavior                                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tab`                      | Moves focus onto the grid's one tab stop: the selected day (or range start/end) if it's in the displayed month, else today if it's in the displayed month and enabled, else the first enabled day of the displayed month. If every day in view is disabled, focus lands on the grid container instead, since no cell is a valid target. |
+| `ArrowRight` / `ArrowLeft` | Moves focus one day forward/backward, skipping over any disabled day in that direction until it reaches an enabled one — crossing into the next or previous month as needed.                                                                                                                                                            |
+| `ArrowDown` / `ArrowUp`    | Moves focus one week forward/backward (staying in the same weekday column), skipping a disabled week the same way.                                                                                                                                                                                                                      |
+| `Enter` / `Space`          | Selects the focused day, firing `onselect` or `onrangeselect` exactly as a click would.                                                                                                                                                                                                                                                 |
+
+Arrow-key navigation only ever moves focus to an enabled day — it never lands on a day
+disabled by `minDate`, `maxDate`, or `disabledDates`. The search for the next enabled day
+is capped (not open-ended), so a `disabledDates` predicate that disables every reachable
+day makes the arrow keys a no-op instead of hanging.
+
 ## Props
 
 | Prop          | Type                                  | Required | Default       | Description                                                                                                                                                                                                                |
@@ -124,7 +142,7 @@ Tag: `<sui-calendar>`
 
 | Slot Name             | Maps to Snippet     | Description                                |
 | --------------------- | ------------------- | ------------------------------------------ |
-| `previous-month-icon` | `previousMonthIcon` | Custom icon for the previous month button. |
-| `next-month-icon`     | `nextMonthIcon`     | Custom icon for the next month button.     |
+| `previous-month-icon` | `previousMonthIcon` | Custom icon for the previous month button; defaults to the built-in chevron. |
+| `next-month-icon`     | `nextMonthIcon`     | Custom icon for the next month button; defaults to the built-in chevron.     |
 
 > **Note:** `value`, `rangeStart`, `rangeEnd`, `minDate`, `maxDate`, and `disabledDates` are object props — set them via JavaScript properties.

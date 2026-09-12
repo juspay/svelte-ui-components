@@ -4,6 +4,8 @@
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
+  import { focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
+  import { registerDismissible } from '../_interaction/dismissal';
 
   let {
     open = $bindable(false),
@@ -57,12 +59,14 @@
     }
   }
 
+  // Escape moved out to the shared dismissal module (see registerDismissible
+  // in scrollLockAction below) so only the topmost dismissible layer -- this
+  // sheet, or a Menu/CommandMenu opened on top of it -- answers Escape,
+  // instead of every open surface's own keydown handler reacting to the same
+  // press. Tab and Enter/Space stay here: neither is a cross-component
+  // ownership question, just this panel's own trap and its overlay's
+  // click-equivalent activation.
   function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      close();
-      return;
-    }
-
     // The overlay only carries role="button" while it is dismissible, and a
     // role="button" has to answer Enter/Space as well as click (WCAG 2.1
     // SC 2.1.1) -- tabindex="-1" keeps it out of the Tab sequence, but the
@@ -80,29 +84,37 @@
       return;
     }
 
-    if (event.key === 'Tab' && sheetPanel !== null) {
-      const focusable = sheetPanel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      const first = focusable.item(0);
-      const last = focusable.item(focusable.length - 1);
-
-      if (first === null || last === null) {
-        return;
-      }
-
-      const atEdge = document.activeElement === (event.shiftKey ? first : last);
-      if (atEdge) {
+    if (event.key === 'Tab') {
+      const target = focusTrapTabTarget({
+        container: sheetPanel,
+        activeElement: document.activeElement,
+        shiftKey: event.shiftKey
+      });
+      if (target !== null) {
         event.preventDefault();
-        (event.shiftKey ? last : first).focus();
+        target.focus();
       }
     }
   }
 
   function scrollLockAction(node: HTMLElement) {
-    const previousFocus = document.activeElement;
+    // getActiveElement rather than document.activeElement: when the sheet is
+    // used through its custom element the opener lives inside a shadow root,
+    // where document.activeElement reports only the host and the real opener
+    // could never be handed focus back.
+    const previousFocus = getActiveElement(node);
     let active = true;
     lockBodyScroll();
+    // Registered here rather than in an onMount/onDestroy pair: this action's
+    // mount/destroy already brackets exactly the open span (the overlay only
+    // exists while `open` is true, per the `{#if open}` below), the same
+    // span the scroll lock above uses. `element` reads `sheetPanel` lazily --
+    // it is not bound yet at this point in a fresh open, same reason
+    // sheetPanel.focus() below is deferred through tick().
+    const releaseDismissible = registerDismissible({
+      element: () => sheetPanel,
+      onEscape: close
+    });
     tick().then(() => {
       if (active && sheetPanel !== null) {
         sheetPanel.focus();
@@ -111,11 +123,17 @@
     return {
       destroy() {
         active = false;
+        releaseDismissible();
         unlockBodyScroll();
+        // Only take focus back when it is still somewhere the sheet is
+        // responsible for -- inside the panel, or nowhere at all. If the user
+        // has already moved on to another control, stealing it back would be
+        // the more disruptive bug.
+        const current = getActiveElement(node);
         if (
           previousFocus instanceof HTMLElement &&
           previousFocus.isConnected &&
-          (document.activeElement === document.body || node.contains(document.activeElement))
+          (current === null || current === document.body || node.contains(current))
         ) {
           previousFocus.focus();
         }

@@ -53,6 +53,7 @@
     leftIconLabel = 'Leading action',
     rightIconLabel = 'Trailing action',
     mandatory = false,
+    required,
     forceError = false,
     rows,
     autoResize = false,
@@ -61,6 +62,12 @@
     resize = 'none',
     showCount = false
   }: InputProperties = $props();
+
+  // `required` decides when it is supplied at all, so a caller migrating one call site
+  // at a time gets an unambiguous direction; `mandatory` answers only when `required`
+  // was not passed. Checked with typeof rather than a default, so an explicit
+  // `required={false}` beside a legacy `mandatory` really does turn the field optional.
+  const isRequired = $derived(typeof required === 'boolean' ? required : mandatory);
 
   /* `for` on a <label> resolves against an element's id, never its name. The label
      was emitted with for={name} while the field itself carried only name={name},
@@ -302,7 +309,7 @@
 <div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
   {#if hasVisibleLabel}
     <label class="label" for={effectiveId}>
-      {label}{#if mandatory}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
+      {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
     </label>
   {/if}
 
@@ -321,10 +328,10 @@
         aria-autocomplete={ariaAutocomplete}
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
-        aria-required={mandatory || null}
+        aria-required={isRequired || null}
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
-        required={mandatory || null}
+        required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}
@@ -359,10 +366,10 @@
         aria-autocomplete={ariaAutocomplete}
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
-        aria-required={mandatory || null}
+        aria-required={isRequired || null}
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
-        required={mandatory || null}
+        required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}

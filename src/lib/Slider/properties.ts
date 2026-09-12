@@ -27,6 +27,16 @@ export type OptionalSliderProperties = {
   ariaLabelledby?: string;
   testId?: string;
   classes?: string;
+  /** Spoken in place of the raw number, for a value whose meaning the digits do not
+   *  carry ("Quiet", "Large"). Falls back to `labelFormatter(value)` when that is
+   *  supplied, and is omitted entirely when neither is. An explicit empty string is
+   *  honoured rather than treated as absent. */
+  ariaValueText?: string;
+  /** Submits the current value under this name. Omitted while disabled. */
+  name?: string;
+  /** `id` of a form elsewhere in the same document. Unavailable through
+   *  `<sui-slider>`, whose input sits in a shadow root. */
+  form?: string;
 };
 
 export type SliderEventProperties = {

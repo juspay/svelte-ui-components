@@ -54,28 +54,32 @@ progressing and, on failure, a retry.
 
 ## CSS Variables
 
-| Variable                                                        | Default                               | Description                                                                 |
-| --------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------- |
-| `--task-list-ease`                                              | `cubic-bezier(0.23, 1, 0.32, 1)`      | The curve behind row entrances and the check pop-in.                        |
-| `--task-list-row-gap`                                           | `10px`                                | Vertical gap between rows.                                                  |
-| `--task-list-row-inline-gap`                                    | `10px`                                | Gap between the glyph and the row text.                                     |
-| `--task-list-glyph-size`                                        | `16px`                                | The fixed-size box the status glyph renders in.                             |
-| `--task-list-dot-color`                                         | `#9a9a9a`                             | Pending status dot.                                                         |
-| `--task-list-spinner-color` / `--task-list-spinner-track-color` | `#6b6b6b` / `#dcdcdc`                 | Running status spinner (library `Loader`'s gradient leading/trailing edge). |
-| `--task-list-spinner-size`                                      | `11px`                                | Running status spinner diameter.                                            |
-| `--task-list-done-color`                                        | `#6b6b6b`                             | Done status check ink.                                                      |
-| `--task-list-error-color`                                       | `#c93f38`                             | Failed status cross ink.                                                    |
-| `--task-list-pending-opacity`                                   | `0.55`                                | Row text opacity while the row is pending.                                  |
-| `--task-list-row-color`                                         | `#2b2b2b`                             | Row label ink.                                                              |
-| `--task-list-row-weight`                                        | `500`                                 | Row label font weight.                                                      |
-| `--task-list-row-font-size` / `--task-list-secondary-font-size` | `0.875rem` / `0.75rem`                | Row type scale.                                                             |
-| `--task-list-secondary-color`                                   | `#9a9a9a`                             | Secondary text ink.                                                         |
-| `--task-list-mono-font`                                         | `ui-monospace, Menlo, monospace`      | Mono face for `secondary` when `mono` is set.                               |
-| `--task-list-text-gap`                                          | `8px`                                 | Gap between label and secondary.                                            |
-| `--task-list-retry-color` / `--task-list-retry-background`      | `#c93f38` / `rgba(201, 63, 56, 0.12)` | The retry pill button, resting state.                                       |
-| `--task-list-retry-hover-background`                            | `rgba(201, 63, 56, 0.2)`              | The retry pill button, hover state.                                         |
-| `--task-list-retry-font-size` / `--task-list-retry-weight`      | `0.75rem` / `600`                     | Retry button type.                                                          |
-| `--task-list-retry-padding` / `--task-list-retry-radius`        | `3px 10px` / `999px`                  | Retry button shape.                                                         |
+| Variable                                                        | Default                               | Description                                                                                                                  |
+| --------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--task-list-ease`                                              | `cubic-bezier(0.23, 1, 0.32, 1)`      | The curve behind row entrances and the check pop-in.                                                                         |
+| `--task-list-row-gap`                                           | `10px`                                | Vertical gap between rows.                                                                                                   |
+| `--task-list-row-inline-gap`                                    | `10px`                                | Gap between the glyph and the row text.                                                                                      |
+| `--task-list-glyph-size`                                        | `16px`                                | The fixed-size box the status glyph renders in.                                                                              |
+| `--task-list-dot-color`                                         | `#9a9a9a`                             | Pending status dot.                                                                                                          |
+| `--task-list-spinner-color` / `--task-list-spinner-track-color` | `#6b6b6b` / `#dcdcdc`                 | Running status spinner (library `Loader`'s gradient leading/trailing edge).                                                  |
+| `--task-list-spinner-size`                                      | `11px`                                | Running status spinner diameter.                                                                                             |
+| `--task-list-done-color`                                        | `#6b6b6b`                             | Done status check ink.                                                                                                       |
+| `--task-list-error-color`                                       | `#c93f38`                             | Failed status cross ink.                                                                                                     |
+| `--task-list-pending-opacity`                                   | `0.55`                                | Row text opacity while the row is pending.                                                                                   |
+| `--task-list-row-color`                                         | `#2b2b2b`                             | Row label ink.                                                                                                               |
+| `--task-list-row-weight`                                        | `500`                                 | Row label font weight.                                                                                                       |
+| `--task-list-row-font-size` / `--task-list-secondary-font-size` | `0.875rem` / `0.75rem`                | Row type scale.                                                                                                              |
+| `--task-list-secondary-color`                                   | `#9a9a9a`                             | Secondary text ink.                                                                                                          |
+| `--task-list-mono-font`                                         | `ui-monospace, Menlo, monospace`      | Mono face for `secondary` when `mono` is set.                                                                                |
+| `--task-list-text-gap`                                          | `8px`                                 | Gap between label and secondary.                                                                                             |
+| `--task-list-retry-color` / `--task-list-retry-background`      | `#c93f38` / `rgba(201, 63, 56, 0.12)` | The retry pill button, resting state.                                                                                        |
+| `--task-list-retry-hover-background`                            | `rgba(201, 63, 56, 0.2)`              | The retry pill button, hover state.                                                                                          |
+| `--task-list-retry-font-size` / `--task-list-retry-weight`      | `0.75rem` / `600`                     | Retry button type.                                                                                                           |
+| `--task-list-retry-padding` / `--task-list-retry-radius`        | `3px 10px` / `999px`                  | Retry button shape.                                                                                                          |
+| `--task-list-row-animation-duration`                            | `320ms`                               | Duration of a row's fade-up entrance. Falls back through `--motion-duration`. Pairs with the existing `--task-list-ease`.    |
+| `--task-list-glyph-animation-duration`                          | `150ms`                               | Duration of the status glyph's fade when it swaps. Falls back through `--motion-duration`.                                   |
+| `--task-list-glyph-animation-easing`                            | `ease`                                | Easing curve of the status glyph's fade when it swaps. Falls back through `--motion-easing`.                                 |
+| `--task-list-check-pop-animation-duration`                      | `200ms`                               | Duration of the done checkmark's pop-in. Falls back through `--motion-duration`. Pairs with the existing `--task-list-ease`. |
 
 ## Web component
 

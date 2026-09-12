@@ -3,14 +3,30 @@
   import type { IconProperties } from './properties';
 
   let { icon, svg, text, onclick, onkeydown, classes, testId }: IconProperties = $props();
+
+  // A decorative icon is not a control. Without a click handler it keeps no button
+  // role and stays out of the tab order, rather than being a focusable no-op that
+  // assistive technology announces as a button.
+  const interactive = $derived(typeof onclick === 'function');
+
+  function handleKeydown(event: KeyboardEvent): void {
+    onkeydown?.(event);
+    if (!interactive || (event.key !== 'Enter' && event.key !== ' ')) {
+      return;
+    }
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.click();
+    }
+  }
 </script>
 
 <div
   class="icon-container {classes ?? ''}"
   {onclick}
-  {onkeydown}
-  role="button"
-  tabindex="0"
+  onkeydown={handleKeydown}
+  role={interactive ? 'button' : null}
+  tabindex={interactive ? 0 : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >

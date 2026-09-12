@@ -274,11 +274,14 @@
     color: var(--tool-call-log-label-color, #2b2b2b);
     cursor: var(--tool-call-log-chip-cursor, pointer);
     max-width: 100%;
-    animation: tool-call-log-fade-up 320ms var(--tool-call-log-ease, cubic-bezier(0.23, 1, 0.32, 1))
-      both;
+    animation: tool-call-log-fade-up
+      var(--tool-call-log-chip-animation-duration, var(--motion-duration, 320ms))
+      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
     transition:
-      background 150ms ease,
-      border-color 150ms ease;
+      background var(--tool-call-log-chip-transition-duration, var(--motion-duration, 150ms))
+        var(--tool-call-log-chip-transition-easing, var(--motion-easing, ease)),
+      border-color var(--tool-call-log-chip-transition-duration, var(--motion-duration, 150ms))
+        var(--tool-call-log-chip-transition-easing, var(--motion-easing, ease));
   }
   .chip:hover {
     background: var(--tool-call-log-chip-hover-background, #f1f1f1);
@@ -386,8 +389,9 @@
     border: var(--tool-call-log-popover-border, 1px solid #e4e4e7);
     border-radius: var(--tool-call-log-popover-radius, 10px);
     box-shadow: var(--tool-call-log-popover-shadow, 0 10px 30px rgba(0, 0, 0, 0.12));
-    animation: tool-call-log-fade-up 200ms var(--tool-call-log-ease, cubic-bezier(0.23, 1, 0.32, 1))
-      both;
+    animation: tool-call-log-fade-up
+      var(--tool-call-log-popover-animation-duration, var(--motion-duration, 200ms))
+      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
   }
 
   .popover-detail {

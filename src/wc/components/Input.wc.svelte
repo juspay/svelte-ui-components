@@ -32,6 +32,7 @@
       leftIconLabel: { type: 'String', attribute: 'left-icon-label' },
       rightIconLabel: { type: 'String', attribute: 'right-icon-label' },
       mandatory: { type: 'Boolean', reflect: true },
+      required: { type: 'Boolean', reflect: true },
       forceError: { type: 'Boolean', reflect: true, attribute: 'force-error' },
       readonly: { type: 'Boolean', attribute: 'readonly' },
       // Not 'Boolean': Svelte's boolean conversion is presence-based, mapping any

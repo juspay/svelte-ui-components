@@ -8,6 +8,19 @@
   // a switch named only for assistive technology.
   let textLabelChecked = $state(false);
   let externalLabelChecked = $state(false);
+
+  let submitted = $state('');
+
+  function capture(event: SubmitEvent): void {
+    event.preventDefault();
+    const target = event.target;
+    if (!(target instanceof HTMLFormElement)) {
+      return;
+    }
+    submitted = [...new FormData(target)]
+      .map(([key, value]) => `${key}=${String(value)}`)
+      .join(' ');
+  }
 </script>
 
 <div class="page-header">
@@ -76,3 +89,14 @@
     <Toggle id={inputId} text={`Blank id setting ${index}`} testId={`toggle-blank-id-${index}`} />
   </div>
 {/each}
+
+<h3>Native form submission</h3>
+<p class="demo-caption">
+  A switch with a <code>name</code> submits like the checkbox it is built from: its
+  <code>value</code> when on, nothing when off or disabled.
+</p>
+<form class="demo-row" onsubmit={capture} data-pw="toggle-form-demo">
+  <Toggle text="Notifications" name="notifications" value="on" testId="toggle-form-notifications" />
+  <button type="submit" data-pw="toggle-form-submit">Submit</button>
+  <span data-pw="toggle-form-result">{submitted}</span>
+</form>

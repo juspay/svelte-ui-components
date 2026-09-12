@@ -202,38 +202,39 @@ all-corner `rx` rounding). Stacked bars keep their existing outer-end-only round
 
 Override these custom properties to theme the component.
 
-| Variable                             | Default                     | CSS Property     | Description                                                               |
-| ------------------------------------ | --------------------------- | ---------------- | ------------------------------------------------------------------------- |
-| `--chart-background`                 | `transparent`               | background       | Background color of the chart container.                                  |
-| `--chart-font-family`                | `inherit`                   | font-family      | Font family for all chart text.                                           |
-| `--chart-transition-duration`        | `0.2s`                      | transition       | Duration of hover transitions.                                            |
-| `--chart-axis-color`                 | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                         |
-| `--chart-axis-stroke-width`          | `1`                         | stroke-width     | Width of axis lines and tick marks.                                       |
-| `--chart-axis-font-size`             | `11px`                      | font-size        | Font size of tick labels.                                                 |
-| `--chart-axis-label-color`           | `#333`                      | fill             | Color of axis labels (xAxisLabel, yAxisLabel).                            |
-| `--chart-axis-label-font-size`       | `12px`                      | font-size        | Font size of axis labels.                                                 |
-| `--chart-gridline-color`             | `#e0e0e0`                   | stroke           | Color of gridlines.                                                       |
-| `--chart-gridline-opacity`           | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                     |
-| `--chart-gridline-dash`              | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                               |
-| `--chart-tooltip-background`         | `rgba(0,0,0,0.85)`          | background       | Background of default tooltip.                                            |
-| `--chart-tooltip-color`              | `#fff`                      | color            | Text color of default tooltip.                                            |
-| `--chart-tooltip-font-size`          | `12px`                      | font-size        | Font size of tooltip content.                                             |
-| `--chart-tooltip-padding`            | `8px 12px`                  | padding          | Inner padding of tooltip.                                                 |
-| `--chart-tooltip-border-radius`      | `4px`                       | border-radius    | Border radius of tooltip.                                                 |
-| `--chart-tooltip-shadow`             | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                                    |
-| `--chart-legend-gap`                 | `16px`                      | gap              | Space between legend items.                                               |
-| `--chart-legend-font-size`           | `12px`                      | font-size        | Font size of legend labels.                                               |
-| `--chart-legend-swatch-size`         | `12px`                      | width, height    | Size of color swatches in the legend.                                     |
-| `--chart-legend-color`               | `#333`                      | color            | Color of legend text.                                                     |
-| `--chart-empty-padding`              | `32px 24px`                 | padding          | Padding around the empty state content.                                   |
-| `--chart-empty-color`                | `#9ca3af`                   | color            | Text color of empty state default.                                        |
-| `--barchart-bar-hover-opacity`       | `1`                         | opacity          | Opacity of the hovered bar.                                               |
-| `--barchart-bar-highlighted-opacity` | `1`                         | opacity          | Opacity of a bar emphasised via `highlightedIndex` or `onchartready`.     |
-| `--barchart-bar-dimmed-opacity`      | `0.3`                       | opacity          | Opacity of non-highlighted / non-hovered bars when a highlight is active. |
-| `--barchart-value-color`             | `#333`                      | fill             | Color of value labels.                                                    |
-| `--barchart-value-font-size`         | `11px`                      | font-size        | Font size of value labels.                                                |
-| `--barchart-value-font-weight`       | `600`                       | font-weight      | Font weight of value labels.                                              |
-| `--barchart-scroll-area-height`      | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`.              |
+| Variable                             | Default                     | CSS Property     | Description                                                                                                         |
+| ------------------------------------ | --------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--chart-background`                 | `transparent`               | background       | Background color of the chart container.                                                                            |
+| `--chart-font-family`                | `inherit`                   | font-family      | Font family for all chart text.                                                                                     |
+| `--chart-transition-duration`        | `0.2s`                      | transition       | Duration of hover transitions.                                                                                      |
+| `--chart-axis-color`                 | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                                                                   |
+| `--chart-axis-stroke-width`          | `1`                         | stroke-width     | Width of axis lines and tick marks.                                                                                 |
+| `--chart-axis-font-size`             | `11px`                      | font-size        | Font size of tick labels.                                                                                           |
+| `--chart-axis-label-color`           | `#333`                      | fill             | Color of axis labels (xAxisLabel, yAxisLabel).                                                                      |
+| `--chart-axis-label-font-size`       | `12px`                      | font-size        | Font size of axis labels.                                                                                           |
+| `--chart-gridline-color`             | `#e0e0e0`                   | stroke           | Color of gridlines.                                                                                                 |
+| `--chart-gridline-opacity`           | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                                                               |
+| `--chart-gridline-dash`              | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                                                                         |
+| `--chart-tooltip-background`         | `rgba(0,0,0,0.85)`          | background       | Background of default tooltip.                                                                                      |
+| `--chart-tooltip-color`              | `#fff`                      | color            | Text color of default tooltip.                                                                                      |
+| `--chart-tooltip-font-size`          | `12px`                      | font-size        | Font size of tooltip content.                                                                                       |
+| `--chart-tooltip-padding`            | `8px 12px`                  | padding          | Inner padding of tooltip.                                                                                           |
+| `--chart-tooltip-border-radius`      | `4px`                       | border-radius    | Border radius of tooltip.                                                                                           |
+| `--chart-tooltip-shadow`             | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Shadow on the tooltip.                                                                                              |
+| `--chart-legend-gap`                 | `16px`                      | gap              | Space between legend items.                                                                                         |
+| `--chart-legend-font-size`           | `12px`                      | font-size        | Font size of legend labels.                                                                                         |
+| `--chart-legend-swatch-size`         | `12px`                      | width, height    | Size of color swatches in the legend.                                                                               |
+| `--chart-legend-color`               | `#333`                      | color            | Color of legend text.                                                                                               |
+| `--chart-empty-padding`              | `32px 24px`                 | padding          | Padding around the empty state content.                                                                             |
+| `--chart-empty-color`                | `#9ca3af`                   | color            | Text color of empty state default.                                                                                  |
+| `--barchart-bar-hover-opacity`       | `1`                         | opacity          | Opacity of the hovered bar.                                                                                         |
+| `--barchart-bar-highlighted-opacity` | `1`                         | opacity          | Opacity of a bar emphasised via `highlightedIndex` or `onchartready`.                                               |
+| `--barchart-bar-dimmed-opacity`      | `0.3`                       | opacity          | Opacity of non-highlighted / non-hovered bars when a highlight is active.                                           |
+| `--barchart-value-color`             | `#333`                      | fill             | Color of value labels.                                                                                              |
+| `--barchart-value-font-size`         | `11px`                      | font-size        | Font size of value labels.                                                                                          |
+| `--barchart-value-font-weight`       | `600`                       | font-weight      | Font weight of value labels.                                                                                        |
+| `--barchart-scroll-area-height`      | `auto`                      | height           | Fixed height of the scroll area when `scrollable` is `true`.                                                        |
+| `--chart-transition-easing`          | `ease`                      | transition       | Easing curve of hover transitions. Falls back through `--motion-easing`. Shared across this library's chart family. |
 
 ## Dark mode
 

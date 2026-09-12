@@ -76,17 +76,18 @@ No tone enum is needed — define the variant in your app's CSS and pass it thro
 
 ## Props
 
-| Prop        | Type             | Required | Default | Description                                                                                                                                                                                                                   |
-| ----------- | ---------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text        | `string`         | Yes      | `-`     | The main banner message text.                                                                                                                                                                                                 |
-| icon        | `Snippet`        | No       | `-`     | Svelte 5 Snippet for a custom icon displayed to the left of the text.                                                                                                                                                         |
-| title       | `Snippet`        | No       | `-`     | Optional Snippet rendered above the main text inside a `banner-body` flex column. When omitted the layout is identical to today.                                                                                              |
-| linkText    | `string`         | No       | `-`     | Optional link text appended inline after the main text, styled in a different color (blue by default).                                                                                                                        |
-| dismissible | `boolean`        | No       | `false` | Whether to show a close/dismiss button on the right side of the banner.                                                                                                                                                       |
-| visible     | `boolean`        | No       | `true`  | Bindable. Controls whether the banner is visible. When `dismissible` is true, clicking the dismiss button sets this to `false`. Supports two-way binding via `bind:visible`.                                                  |
-| role        | `string \| null` | No       | `null`  | ARIA role override. When provided, this value is used verbatim instead of the automatic `"button"` role that is added when `onclick` is present. Use `role="alert"` for error banners that should announce to screen readers. |
-| testId      | `string`         | No       | `-`     | Value for the `data-pw` attribute on the banner container. The dismiss button gets `{testId}-dismiss`. Used for Playwright selectors.                                                                                         |
-| classes     | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles (see example above).                                    |
+| Prop               | Type             | Required | Default | Description                                                                                                                                                                                                                    |
+| ------------------ | ---------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| text               | `string`         | Yes      | `-`     | The main banner message text.                                                                                                                                                                                                  |
+| icon               | `Snippet`        | No       | `-`     | Svelte 5 Snippet for a custom icon displayed to the left of the text.                                                                                                                                                          |
+| title              | `Snippet`        | No       | `-`     | Optional Snippet rendered above the main text inside a `banner-body` flex column. When omitted the layout is identical to today.                                                                                               |
+| linkText           | `string`         | No       | `-`     | Optional link text appended inline after the main text, styled in a different color (blue by default).                                                                                                                         |
+| dismissible        | `boolean`        | No       | `false` | Whether to show a close/dismiss button on the right side of the banner.                                                                                                                                                        |
+| visible            | `boolean`        | No       | `true`  | Bindable. Controls whether the banner is visible. When `dismissible` is true, clicking the dismiss button sets this to `false`. Supports two-way binding via `bind:visible`.                                                   |
+| role               | `string \| null` | No       | `null`  | ARIA role override. When provided, this value is used verbatim instead of the automatic `"button"` role that is added when `onclick` is present. Use `role="alert"` for error banners that should announce to screen readers.  |
+| testId             | `string`         | No       | `-`     | Value for the `data-pw` attribute on the banner container. The dismiss button gets `{testId}-dismiss`. Used for Playwright selectors.                                                                                          |
+| classes            | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles (see example above).                                     |
+| transitionDuration | `number \| null` | No       | `300`   | Duration (ms) of the show/hide `slide` transition. A CSS custom property can't reach a Svelte transition directive's parameters, so this prop is the motion-token equivalent — see `DESIGN_PRINCIPLES.md`'s motion convention. |
 
 ## Snippets
 
@@ -176,4 +177,4 @@ Tag: `<sui-banner>`
 | `icon`          | `icon`          | Icon content rendered at the start of the banner. |
 | `title`         | `title`         | Optional heading rendered above the main text.    |
 | `right-content` | `rightContent`  | Content rendered on the right side.               |
-| `dismiss-icon`  | `dismissIcon`   | Custom dismiss/close icon.                        |
+| `dismiss-icon`  | `dismissIcon`   | Custom dismiss/close icon; defaults to the close glyph. |

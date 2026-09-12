@@ -8,6 +8,7 @@
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
   import Button from '../Button/Button.svelte';
+  import { focusTrapTabTarget, getFocusTrapBoundary } from '../_interaction/focus';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
@@ -157,6 +158,9 @@
   let compareTriggerRef: HTMLDivElement | null = $state(null);
   // Stores the element that opened the compare panel so focus can be restored on close.
   let compareFocusReturnEl: HTMLElement | null = null;
+  // Same bookkeeping for the main panel — both panels declare aria-modal="true", so both
+  // need to return focus to whatever opened them once they close.
+  let panelFocusReturnEl: HTMLElement | null = null;
 
   // Tracks the active preset label for the trigger display (seeded from initialPresetLabel on mount)
   const resolvedInitialPresetLabel: string | null = untrack(() => {
@@ -274,7 +278,43 @@
     return placeholder;
   });
 
+  // Shared focus-trap plumbing for both aria-modal="true" panels (main and compare).
+  // Originally written once, inline, for the compare panel only, then reimplemented
+  // a third time for the main panel; both now delegate to the same module Modal and
+  // Sheet use (src/lib/_interaction/focus.ts) instead of carrying their own copy.
+
+  // Moves focus to the first focusable descendant of an open panel, so a keyboard user
+  // lands inside the modal content instead of on whatever was focused before it opened.
+  // Uses the boundary directly rather than focusEntryPoint's container fallback: this
+  // panel has never focused itself when empty, and preserving that (unlikely, since a
+  // dialog with no focusable content isn't a case this component has) is simpler than
+  // auditing whether the fallback is safe everywhere this is called.
+  function focusFirstElement(panelNode: HTMLElement | null): void {
+    const { first } = getFocusTrapBoundary(panelNode);
+    first?.focus();
+  }
+
+  // Keeps Tab/Shift+Tab cycling within an open panel — required by aria-modal="true":
+  // focus must never leave the panel via keyboard until it closes.
+  function trapFocus(panelNode: HTMLElement | null, event: KeyboardEvent): void {
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const target = focusTrapTabTarget({
+      container: panelNode,
+      activeElement: document.activeElement,
+      shiftKey: event.shiftKey
+    });
+    if (target !== null) {
+      event.preventDefault();
+      target.focus();
+    }
+  }
+
   function openPicker(): void {
+    // Save whatever had focus (the trigger button) so it can be restored on close.
+    panelFocusReturnEl =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     // Seed draft from current committed values
     draftStart = rangeStart;
     draftEnd = rangeEnd;
@@ -309,12 +349,18 @@
 
     isOpen = true;
     onopentoggle?.({ open: true });
+    tick().then(() => focusFirstElement(panelRef));
   }
 
   function closePicker(): void {
     isOpen = false;
     opensUpward = false;
     onopentoggle?.({ open: false });
+    const returnEl = panelFocusReturnEl;
+    panelFocusReturnEl = null;
+    tick().then(() => {
+      returnEl?.focus();
+    });
   }
 
   /**
@@ -368,12 +414,7 @@
     draftCompareStart = compareStart ?? null;
     draftCompareEnd = compareEnd ?? null;
     openCompare = true;
-    tick().then(() => {
-      const firstFocusable = comparePanelRef?.querySelector<HTMLElement>(
-        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      firstFocusable?.focus();
-    });
+    tick().then(() => focusFirstElement(comparePanelRef));
   }
 
   function closeComparePicker(): void {
@@ -845,29 +886,7 @@
           aria-label="Compare period picker"
           aria-modal="true"
           tabindex="-1"
-          onkeydown={(event) => {
-            if (event.key === 'Tab') {
-              const focusable = comparePanelRef?.querySelectorAll<HTMLElement>(
-                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-              );
-              if (!focusable || focusable.length === 0) {
-                return;
-              }
-              const first = focusable[0];
-              const last = focusable[focusable.length - 1];
-              if (event.shiftKey) {
-                if (document.activeElement === first) {
-                  event.preventDefault();
-                  last.focus();
-                }
-              } else {
-                if (document.activeElement === last) {
-                  event.preventDefault();
-                  first.focus();
-                }
-              }
-            }
-          }}
+          onkeydown={(event) => trapFocus(comparePanelRef, event)}
         >
           {#if typeof compareCalendar === 'function'}
             <div class="drp-compare-panel-body">
@@ -904,6 +923,8 @@
       role="dialog"
       aria-label="Date range picker"
       aria-modal="true"
+      tabindex="-1"
+      onkeydown={(event) => trapFocus(panelRef, event)}
       data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
       testID={typeof testId === 'string' ? `${testId}-panel` : null}
     >
@@ -1351,7 +1372,8 @@
     color: var(--drp-preset-color, inherit);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.12s ease;
+    transition: background var(--drp-preset-item-transition-duration, var(--motion-duration, 0.12s))
+      var(--drp-preset-item-transition-easing, var(--motion-easing, ease));
   }
 
   .drp-preset-item:hover {
@@ -1429,7 +1451,8 @@
     border-radius: var(--drp-nav-btn-border-radius, var(--radius, 4px));
     cursor: pointer;
     color: var(--drp-nav-btn-color, inherit);
-    transition: background 0.12s ease;
+    transition: background var(--drp-nav-btn-transition-duration, var(--motion-duration, 0.12s))
+      var(--drp-nav-btn-transition-easing, var(--motion-easing, ease));
     padding: 0;
   }
 

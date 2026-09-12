@@ -143,7 +143,12 @@
     display: flex;
     align-items: baseline;
     gap: var(--task-list-row-inline-gap, 10px);
-    animation: task-list-fade-up 320ms var(--task-list-ease, cubic-bezier(0.23, 1, 0.32, 1)) both;
+    /* --task-list-ease was an easing-only token (DESIGN_PRINCIPLES.md motion
+       convention) — kept working unchanged, now paired with a duration token
+       and both fall back through the library-wide --motion-* tokens. */
+    animation: task-list-fade-up
+      var(--task-list-row-animation-duration, var(--motion-duration, 320ms))
+      var(--task-list-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
   }
 
   .row-glyph {
@@ -160,7 +165,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    animation: task-list-glyph-fade 150ms ease both;
+    animation: task-list-glyph-fade
+      var(--task-list-glyph-animation-duration, var(--motion-duration, 150ms))
+      var(--task-list-glyph-animation-easing, var(--motion-easing, ease)) both;
   }
 
   .glyph-dot {
@@ -197,7 +204,9 @@
   }
   .glyph-check {
     color: var(--task-list-done-color, #6b6b6b);
-    animation: task-list-check-pop 200ms var(--task-list-ease, cubic-bezier(0.23, 1, 0.32, 1)) both;
+    animation: task-list-check-pop
+      var(--task-list-check-pop-animation-duration, var(--motion-duration, 200ms))
+      var(--task-list-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
   }
   .glyph-x {
     color: var(--task-list-error-color, #c93f38);

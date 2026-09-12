@@ -16,6 +16,18 @@ A single radio button within a group. Multiple Radio components sharing the same
 <Radio name="payment" value="netbanking" bind:selectedValue={selectedPayment} text="Net Banking" />
 ```
 
+### In a form
+
+```svelte
+<form onsubmit={handleSubmit}>
+  <Radio name="payment" value="card" text="Card" required bind:selectedValue />
+  <Radio name="payment" value="upi" text="UPI" required bind:selectedValue />
+  <button type="submit">Pay</button>
+</form>
+```
+
+The input carries `data-state="checked | unchecked"` and `data-disabled` for styling.
+
 ## Props
 
 | Prop          | Type      | Required | Default     | Description                                                                                                                                                            |
@@ -27,6 +39,8 @@ A single radio button within a group. Multiple Radio components sharing the same
 | disabled      | `boolean` | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                          |
 | testId        | `string`  | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                         |
 | classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| required      | `boolean` | No       | `false`     | Blocks submission until a member of the group is selected. Set it on every member, as the native control expects. |
+| form          | `string`  | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-radio>`, whose input sits in a shadow root. |
 
 ## Events
 

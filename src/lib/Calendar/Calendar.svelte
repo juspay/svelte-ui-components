@@ -148,6 +148,21 @@
     return days;
   });
 
+  // A calendar grid is one tab stop, the same roving-tabindex pattern Tabs uses: the
+  // day being actively navigated while inside the grid, else the selected day, else
+  // today if it's in view and enabled, else the first enabled day -- so a month with
+  // no selection, or whose selection has scrolled out of view, is still reachable by
+  // Tab. A fully disabled month in view resolves to null, and the grid container
+  // becomes the fallback tab stop so the calendar can still be tabbed to.
+  const tabStopDay: number | null = $derived(
+    focusedDay ??
+      calendarDays.find((d) => d.isCurrentMonth && (d.isSelected || d.isRangeStart || d.isRangeEnd))
+        ?.day ??
+      calendarDays.find((d) => d.isCurrentMonth && d.isToday && !d.isDisabled)?.day ??
+      calendarDays.find((d) => d.isCurrentMonth && !d.isDisabled)?.day ??
+      null
+  );
+
   function normalizeDate(d: Date): Date {
     const n = new SvelteDate(d);
     n.setHours(0, 0, 0, 0);
@@ -222,79 +237,79 @@
     }
   }
 
-  function daysInMonth(year: number, month: number): number {
-    return new SvelteDate(year, month + 1, 0).getDate();
+  function dateAtDay(year: number, month: number, day: number): Date {
+    const date = new SvelteDate(year, month, day);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  // disabledDates can be a predicate that disables every day it's asked about, so the
+  // walk is capped rather than open-ended -- ~10 years of daily steps is far past any
+  // realistic disabled range but still guarantees the keyboard handler terminates
+  // instead of hanging when a whole month (or more) is disabled.
+  const MAX_DAY_SKIP = 3660;
+
+  function findEnabledDate(from: Date, stepDays: number): Date | null {
+    const candidate = new SvelteDate(from);
+    for (let i = 0; i < MAX_DAY_SKIP; i++) {
+      candidate.setDate(candidate.getDate() + stepDays);
+      candidate.setHours(0, 0, 0, 0);
+      if (!isDateDisabled(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  // Moves the roving tab stop to `date`, crossing into a different displayed month
+  // (by any number of months, since findEnabledDate can skip past several) when the
+  // target lands outside the currently visible one.
+  function moveFocusTo(date: Date): void {
+    const changesMonth =
+      date.getFullYear() !== displayDate.getFullYear() ||
+      date.getMonth() !== displayDate.getMonth();
+    if (changesMonth) {
+      displayDate.setFullYear(date.getFullYear(), date.getMonth(), 1);
+      onmonthchange?.({ year: displayDate.getFullYear(), month: displayDate.getMonth() });
+    }
+    focusedDay = date.getDate();
+    focusDayCell();
   }
 
   function handleKeyDown(event: KeyboardEvent): void {
     const year = displayDate.getFullYear();
     const month = displayDate.getMonth();
-    const totalDays = daysInMonth(year, month);
-
-    if (focusedDay === null) {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
-        event.preventDefault();
-        focusedDay = 1;
-        focusDayCell();
-        return;
-      }
-    }
 
     switch (event.key) {
       case 'ArrowRight':
-        event.preventDefault();
-        if (focusedDay !== null && focusedDay < totalDays) {
-          focusedDay++;
-        } else if (focusedDay === totalDays) {
-          navigateMonth(1);
-          focusedDay = 1;
-        }
-        focusDayCell();
-        break;
       case 'ArrowLeft':
-        event.preventDefault();
-        if (focusedDay !== null && focusedDay > 1) {
-          focusedDay--;
-        } else if (focusedDay === 1) {
-          navigateMonth(-1);
-          focusedDay = daysInMonth(displayDate.getFullYear(), displayDate.getMonth());
-        }
-        focusDayCell();
-        break;
       case 'ArrowDown':
+      case 'ArrowUp': {
         event.preventDefault();
-        if (focusedDay !== null) {
-          if (focusedDay + 7 <= totalDays) {
-            focusedDay += 7;
-          } else {
-            const overflow = focusedDay + 7 - totalDays;
-            navigateMonth(1);
-            focusedDay = overflow;
-          }
+        // Nothing is focusable in the grid (a fully disabled month with no
+        // selection or today in view) -- there's nowhere to move from.
+        if (tabStopDay === null) {
+          break;
         }
-        focusDayCell();
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        if (focusedDay !== null) {
-          if (focusedDay - 7 >= 1) {
-            focusedDay -= 7;
-          } else {
-            const currentDay = focusedDay;
-            const prevTotal = daysInMonth(year, month - 1);
-            navigateMonth(-1);
-            focusedDay = prevTotal + (currentDay - 7);
-          }
+        const stepDays =
+          event.key === 'ArrowRight'
+            ? 1
+            : event.key === 'ArrowLeft'
+              ? -1
+              : event.key === 'ArrowDown'
+                ? 7
+                : -7;
+        const target = findEnabledDate(dateAtDay(year, month, tabStopDay), stepDays);
+        if (target !== null) {
+          moveFocusTo(target);
         }
-        focusDayCell();
         break;
+      }
       case 'Enter':
       case ' ':
         event.preventDefault();
-        if (focusedDay !== null) {
-          const date = new SvelteDate(year, month, focusedDay);
-          date.setHours(0, 0, 0, 0);
-          selectDate(date);
+        if (tabStopDay !== null) {
+          selectDate(dateAtDay(year, month, tabStopDay));
         }
         break;
     }
@@ -338,7 +353,13 @@
     {/each}
   </div>
 
-  <div class="grid" bind:this={gridRef} tabindex="0" role="grid" onkeydown={handleKeyDown}>
+  <div
+    class="grid"
+    bind:this={gridRef}
+    tabindex={tabStopDay === null ? 0 : -1}
+    role="grid"
+    onkeydown={handleKeyDown}
+  >
     {#each calendarDays as dayInfo (dayInfo.date.getTime())}
       {#if dayInfo.isCurrentMonth}
         <button
@@ -352,7 +373,7 @@
           class:disabled={dayInfo.isDisabled}
           data-day={dayInfo.day}
           disabled={dayInfo.isDisabled}
-          tabindex={focusedDay === dayInfo.day ? 0 : -1}
+          tabindex={tabStopDay === dayInfo.day ? 0 : -1}
           aria-label={dayInfo.date.toLocaleDateString(locale)}
           onclick={() => selectDate(dayInfo.date)}
         >

@@ -35,7 +35,8 @@
     onclose,
     onchange,
     onkeydown,
-    classes
+    classes,
+    lightboxTransitionDuration
   }: GalleryProperties = $props();
 
   let lightboxDiv: HTMLDivElement | null = $state(null);
@@ -266,7 +267,7 @@
     use:lightboxAction
     onclick={handleBackdropClick}
     onkeydown={handleLightboxKeydown}
-    transition:fade={{ duration: 200 }}
+    transition:fade={{ duration: lightboxTransitionDuration ?? 200 }}
   >
     <div class="lightbox-close" bind:this={closeButtonWrap}>
       <Button ariaLabel="Close gallery" onclick={closeLightbox}>

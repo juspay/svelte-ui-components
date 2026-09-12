@@ -23,14 +23,14 @@ A primary action button paired with a dropdown arrow trigger that reveals a menu
 
 ## Props
 
-| Prop     | Type         | Required | Default | Description                                                                                                                                                                      |
-| -------- | ------------ | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text     | `string`     | Yes      | `-`     | The label displayed on the primary action button.                                                                                                                                |
-| items    | `MenuItem[]` | Yes      | `-`     | Array of menu items for the dropdown. Uses the same `MenuItem` type as the Menu component — supports `label`, `value`, `icon`, `disabled`, `danger`, and `separator` properties. |
-| disabled | `boolean`    | No       | `false` | Whether the entire split button is disabled. When true, both the primary button and dropdown trigger appear dimmed and ignore clicks.                                            |
-| testId   | `string`     | No       | `-`     | Value for the `data-pw` attribute on the container, used for end-to-end testing selectors.                                                                                       |
-| classes  | `string`     | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.           |
-| triggerAriaLabel | `string` | No   | `More {text} options` | Accessible name for the dropdown trigger. The trigger renders only a chevron, so without a name it announces as an unnamed button. Defaults to `More {text} options`, or `More options` when `text` is empty; a blank value falls back to that default rather than leaving the trigger unnamed. |
+| Prop             | Type         | Required | Default               | Description                                                                                                                                                                                                                                                                                     |
+| ---------------- | ------------ | -------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text             | `string`     | Yes      | `-`                   | The label displayed on the primary action button.                                                                                                                                                                                                                                               |
+| items            | `MenuItem[]` | Yes      | `-`                   | Array of menu items for the dropdown. Uses the same `MenuItem` type as the Menu component — supports `label`, `value`, `icon`, `disabled`, `danger`, and `separator` properties.                                                                                                                |
+| disabled         | `boolean`    | No       | `false`               | Whether the entire split button is disabled. When true, both the primary button and dropdown trigger appear dimmed and ignore clicks.                                                                                                                                                           |
+| testId           | `string`     | No       | `-`                   | Value for the `data-pw` attribute on the container, used for end-to-end testing selectors.                                                                                                                                                                                                      |
+| classes          | `string`     | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                          |
+| triggerAriaLabel | `string`     | No       | `More {text} options` | Accessible name for the dropdown trigger. The trigger renders only a chevron, so without a name it announces as an unnamed button. Defaults to `More {text} options`, or `More options` when `text` is empty; a blank value falls back to that default rather than leaving the trigger unnamed. |
 
 ## Snippets
 
@@ -138,8 +138,8 @@ Tag: `<sui-split-button>`
 
 ### Slots
 
-| Slot Name       | Maps to Snippet | Description                         |
-| --------------- | --------------- | ----------------------------------- |
-| `dropdown-icon` | `dropdownIcon`  | Custom icon for the dropdown arrow. |
+| Slot Name       | Maps to Snippet | Description                                                             |
+| --------------- | --------------- | ----------------------------------------------------------------------- |
+| `dropdown-icon` | `dropdownIcon`  | Custom icon for the dropdown arrow; defaults to the chevron-down glyph. |
 
 > **Note:** The `items` prop is an array — set it via JavaScript property.

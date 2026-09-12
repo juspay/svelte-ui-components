@@ -605,7 +605,8 @@
     font-size: var(--combobox-option-font-size, inherit);
     font-weight: var(--combobox-option-font-weight, inherit);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--combobox-option-transition-duration, var(--motion-duration, 0.1s))
+      var(--combobox-option-transition-easing, var(--motion-easing, ease));
   }
 
   .combobox-option:hover,

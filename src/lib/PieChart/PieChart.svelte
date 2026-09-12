@@ -459,8 +459,10 @@
     stroke: var(--piechart-stroke-color, #fff);
     stroke-width: var(--piechart-stroke-width, 2);
     transition:
-      transform var(--chart-transition-duration, 0.2s) ease,
-      opacity var(--chart-transition-duration, 0.2s) ease;
+      transform var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease));
     transform-origin: 0 0;
     cursor: pointer;
   }

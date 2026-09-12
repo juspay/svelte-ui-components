@@ -11,6 +11,7 @@
       copyResetMs: { type: 'Number', reflect: true, attribute: 'copy-reset-ms' },
       classes: { type: 'String' },
       oncopy: { type: 'Object' },
+      onerror: { type: 'Object' },
       copyIcon: { type: 'Object' }
     }
   }}

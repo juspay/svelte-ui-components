@@ -17,7 +17,8 @@
     ondismiss,
     classes,
     title,
-    role = null
+    role = null,
+    transitionDuration
   }: BannerProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
@@ -54,7 +55,7 @@
     tabindex={interactive ? 0 : null}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
-    transition:slide={{ duration: 300 }}
+    transition:slide={{ duration: transitionDuration ?? 300 }}
   >
     {#if typeof icon === 'function'}
       <div class="banner-icon">

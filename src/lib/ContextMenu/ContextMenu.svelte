@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { registerDismissible } from '../_interaction/dismissal';
   import type { ContextMenuProperties, ContextMenuItem } from './properties';
 
   let {
@@ -174,11 +174,6 @@
         }
         break;
       }
-      case 'Escape': {
-        event.preventDefault();
-        close();
-        break;
-      }
       case 'Tab': {
         close();
         break;
@@ -186,36 +181,33 @@
     }
   }
 
-  function handleClickOutside(event: Event) {
-    if (event.target instanceof Node && menuEl && !menuEl.contains(event.target)) {
-      close();
-    }
+  /**
+   * Registers this dropdown as the topmost dismissible layer for exactly the
+   * span it is open (the `{#if open}` block below), and releases it again on
+   * teardown. Escape and outside-click used to be answered here directly (a
+   * document click listener and a document keydown listener, both added in
+   * onMount) — routed through the shared module instead so only the topmost
+   * open surface, not every one of them, answers a given press.
+   *
+   * The module still listens for Escape on the document rather than only on
+   * the menu, preserving the reason this component used to as well: for one
+   * frame after the right-click the menu is open but focus has not moved into
+   * it yet (see openMenu's requestAnimationFrame above). A menu-only handler
+   * would do nothing during that window — the keystroke swallowed, the menu
+   * still open, and the pending frame then pulling focus into it — so a quick
+   * Escape appeared to do the opposite of what it asked for. An open menu has
+   * to close on Escape wherever focus happens to be.
+   */
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => menuEl,
+      onEscape: close,
+      onOutside: close
+    });
+    return {
+      destroy: release
+    };
   }
-
-  // Escape is handled on the document as well as on the menu, because for one
-  // frame after the right-click the menu is open but focus has not moved into it
-  // yet. A menu-only handler does nothing during that window: the keystroke is
-  // swallowed, the menu stays open, and the pending frame then pulls focus into
-  // it — so a quick Escape appeared to do the opposite of what it asked for. An
-  // open menu should close on Escape wherever focus happens to be.
-  function handleDocumentKeydown(event: KeyboardEvent) {
-    if (open && event.key === 'Escape') {
-      event.preventDefault();
-      close();
-    }
-  }
-
-  onMount(() => {
-    document.addEventListener('click', handleClickOutside);
-    document.addEventListener('keydown', handleDocumentKeydown);
-  });
-
-  onDestroy(() => {
-    if (typeof window !== 'undefined') {
-      document.removeEventListener('click', handleClickOutside);
-      document.removeEventListener('keydown', handleDocumentKeydown);
-    }
-  });
 </script>
 
 <div
@@ -239,6 +231,7 @@
     role="menu"
     tabindex="-1"
     onkeydown={handleMenuKeydown}
+    use:dismissalAction
   >
     {#each items as item (item.value)}
       {#if item.separator}

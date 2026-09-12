@@ -143,6 +143,7 @@
         class:selected={currentValue === option.value}
         onclick={() => applyValue(option.value)}
         aria-label={option.label ?? option.value}
+        aria-pressed={currentValue === option.value}
       >
         <span class="icon">
           {#if typeof option.icon === 'function'}

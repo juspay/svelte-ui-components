@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { RenderMarkdownOptions } from '../MarkdownText/properties';
 
 export type TypewriterTextProperties = OptionalTypewriterTextProperties &
   MandatoryTypewriterTextProperties;
@@ -84,9 +85,21 @@ export type OptionalTypewriterTextProperties = {
    */
   isStreaming?: boolean;
   /**
-   * Renders the revealed text as HTML — pass a markdown renderer to type rich text.
-   * The component trusts the returned string, so sanitise inside the renderer if the
-   * text can contain untrusted input. When omitted, the text renders as plain text.
+   * Render every revealed prefix through the library's safe Markdown pipeline.
+   * Raw HTML is escaped and unsafe link/image protocols are stripped. Defaults to
+   * false; when true, takes precedence over both renderText and renderCharacter.
+   */
+  markdown?: boolean;
+  /**
+   * Options for safe Markdown rendering, including narrower sanitization policies.
+   * Only used when markdown is true; never applied to a trusted renderText callback.
+   */
+  markdownOptions?: RenderMarkdownOptions;
+  /**
+   * Trusted custom-HTML escape hatch. The caller owns the safety of every returned
+   * string, including incomplete streaming prefixes; sanitize untrusted input inside
+   * the callback. markdownOptions do not apply here. Ignored when markdown is true;
+   * otherwise takes precedence over renderCharacter and escaped plain text.
    */
   renderText?: (text: string) => string;
   /**
@@ -118,8 +131,8 @@ export type OptionalTypewriterTextProperties = {
   onprogress?: (progress: TypewriterProgress) => void;
   /**
    * Render each revealed character yourself — highlight a token, wrap a number — instead
-   * of the plain text node. Ignored when `renderText` is set, since that renderer already
-   * owns the full markup. Falls back to plain text per character when omitted.
+   * of the plain text node. Ignored when markdown is true or renderText is set, since
+   * those renderers own the full markup. Falls back to plain text when omitted.
    */
   renderCharacter?: Snippet<[TypewriterCharacterContext]>;
   testId?: string;

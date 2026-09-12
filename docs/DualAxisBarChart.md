@@ -160,39 +160,40 @@ type DualAxisTooltipContext = {
 
 Override these custom properties to theme the component.
 
-| Variable                         | Default                     | CSS Property     | Description                                       |
-| -------------------------------- | --------------------------- | ---------------- | ------------------------------------------------- |
-| `--chart-background`             | `transparent`               | background       | Background color of the chart container.          |
-| `--chart-font-family`            | `inherit`                   | font-family      | Font family for all chart text.                   |
-| `--chart-transition-duration`    | `0.2s`                      | transition       | Duration of hover/opacity transitions.            |
-| `--chart-axis-color`             | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels. |
-| `--chart-axis-stroke-width`      | `1`                         | stroke-width     | Width of axis lines and tick marks.               |
-| `--chart-axis-font-size`         | `11px`                      | font-size        | Font size of axis tick labels.                    |
-| `--chart-axis-label-color`       | `#333`                      | fill             | Color of axis title text.                         |
-| `--chart-axis-label-font-size`   | `11px`                      | font-size        | Font size of axis title labels.                   |
-| `--chart-gridline-color`         | `#e0e0e0`                   | stroke           | Color of horizontal gridlines.                    |
-| `--chart-gridline-opacity`       | `0.5`                       | stroke-opacity   | Opacity of gridlines.                             |
-| `--chart-gridline-dash`          | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                       |
-| `--chart-tooltip-background`     | `rgba(0,0,0,0.85)`          | background       | Background of the default tooltip.                |
-| `--chart-tooltip-color`          | `#fff`                      | color            | Text color of the default tooltip.                |
-| `--chart-tooltip-font-size`      | `12px`                      | font-size        | Font size of tooltip content.                     |
-| `--chart-tooltip-padding`        | `8px 12px`                  | padding          | Inner padding of the default tooltip.             |
-| `--chart-tooltip-border-radius`  | `4px`                       | border-radius    | Border radius of the default tooltip.             |
-| `--chart-tooltip-shadow`         | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Box shadow on the default tooltip.                |
-| `--chart-legend-gap`             | `16px`                      | gap              | Space between legend items.                       |
-| `--chart-legend-font-size`       | `12px`                      | font-size        | Font size of legend labels.                       |
-| `--chart-legend-swatch-size`     | `12px`                      | width, height    | Size of color swatches in the legend.             |
-| `--chart-legend-color`           | `#333`                      | color            | Color of legend text.                             |
-| `--dual-axis-bar-hover-opacity`  | `1`                         | opacity          | Opacity of bars in the hovered category.          |
-| `--dual-axis-bar-dimmed-opacity` | `0.3`                       | opacity          | Opacity of bars outside the hovered category.     |
-| `--dual-axis-line-stroke-width`  | `2`                         | stroke-width     | Stroke width of line series paths.                |
-| `--dual-axis-dot-stroke`         | `#fff`                      | stroke           | Stroke color around line series dots.             |
-| `--dual-axis-dot-stroke-width`   | `1.5`                       | stroke-width     | Stroke width of line series dots.                 |
-| `--dual-axis-guideline-color`    | `#aaa`                      | stroke           | Color of the vertical hover guideline.            |
-| `--dual-axis-guideline-width`    | `1`                         | stroke-width     | Width of the vertical hover guideline.            |
-| `--dual-axis-guideline-dash`     | `4 3`                       | stroke-dasharray | Dash pattern of the vertical hover guideline.     |
-| `--chart-empty-padding`          | `32px 24px`                 | padding          | Padding around the empty-state message.           |
-| `--chart-empty-color`            | `#9ca3af`                   | color            | Text color of the empty-state message.            |
+| Variable                         | Default                     | CSS Property     | Description                                                                      |
+| -------------------------------- | --------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| `--chart-background`             | `transparent`               | background       | Background color of the chart container.                                         |
+| `--chart-font-family`            | `inherit`                   | font-family      | Font family for all chart text.                                                  |
+| `--chart-transition-duration`    | `0.2s`                      | transition       | Duration of hover/opacity transitions.                                           |
+| `--chart-axis-color`             | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                                |
+| `--chart-axis-stroke-width`      | `1`                         | stroke-width     | Width of axis lines and tick marks.                                              |
+| `--chart-axis-font-size`         | `11px`                      | font-size        | Font size of axis tick labels.                                                   |
+| `--chart-axis-label-color`       | `#333`                      | fill             | Color of axis title text.                                                        |
+| `--chart-axis-label-font-size`   | `11px`                      | font-size        | Font size of axis title labels.                                                  |
+| `--chart-gridline-color`         | `#e0e0e0`                   | stroke           | Color of horizontal gridlines.                                                   |
+| `--chart-gridline-opacity`       | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                            |
+| `--chart-gridline-dash`          | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                                      |
+| `--chart-tooltip-background`     | `rgba(0,0,0,0.85)`          | background       | Background of the default tooltip.                                               |
+| `--chart-tooltip-color`          | `#fff`                      | color            | Text color of the default tooltip.                                               |
+| `--chart-tooltip-font-size`      | `12px`                      | font-size        | Font size of tooltip content.                                                    |
+| `--chart-tooltip-padding`        | `8px 12px`                  | padding          | Inner padding of the default tooltip.                                            |
+| `--chart-tooltip-border-radius`  | `4px`                       | border-radius    | Border radius of the default tooltip.                                            |
+| `--chart-tooltip-shadow`         | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Box shadow on the default tooltip.                                               |
+| `--chart-legend-gap`             | `16px`                      | gap              | Space between legend items.                                                      |
+| `--chart-legend-font-size`       | `12px`                      | font-size        | Font size of legend labels.                                                      |
+| `--chart-legend-swatch-size`     | `12px`                      | width, height    | Size of color swatches in the legend.                                            |
+| `--chart-legend-color`           | `#333`                      | color            | Color of legend text.                                                            |
+| `--dual-axis-bar-hover-opacity`  | `1`                         | opacity          | Opacity of bars in the hovered category.                                         |
+| `--dual-axis-bar-dimmed-opacity` | `0.3`                       | opacity          | Opacity of bars outside the hovered category.                                    |
+| `--dual-axis-line-stroke-width`  | `2`                         | stroke-width     | Stroke width of line series paths.                                               |
+| `--dual-axis-dot-stroke`         | `#fff`                      | stroke           | Stroke color around line series dots.                                            |
+| `--dual-axis-dot-stroke-width`   | `1.5`                       | stroke-width     | Stroke width of line series dots.                                                |
+| `--dual-axis-guideline-color`    | `#aaa`                      | stroke           | Color of the vertical hover guideline.                                           |
+| `--dual-axis-guideline-width`    | `1`                         | stroke-width     | Width of the vertical hover guideline.                                           |
+| `--dual-axis-guideline-dash`     | `4 3`                       | stroke-dasharray | Dash pattern of the vertical hover guideline.                                    |
+| `--chart-empty-padding`          | `32px 24px`                 | padding          | Padding around the empty-state message.                                          |
+| `--chart-empty-color`            | `#9ca3af`                   | color            | Text color of the empty-state message.                                           |
+| `--chart-transition-easing`      | `ease`                      | transition       | Easing curve of hover/opacity transitions. Falls back through `--motion-easing`. |
 
 ## Dark mode
 

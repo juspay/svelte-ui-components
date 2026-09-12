@@ -467,7 +467,7 @@ src/lib/
     {Component}.svelte     # component implementation
     properties.ts          # prop type definitions
   types.ts                 # shared types (ValidationState, InputDataType, etc.)
-  utils.ts                 # shared utilities (validateInput, createDebouncer)
+  utils.ts                 # shared utilities (validateInput, prefersReducedMotion, body scroll lock)
   index.ts                 # public exports
 
 docs/                      # component documentation (one markdown file per component)

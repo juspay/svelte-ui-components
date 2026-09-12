@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { tick, onMount } from 'svelte';
+  import { tick, onDestroy } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '../Img/Img.svelte';
   import { computeMenuDropdownPosition } from './dropdownPosition';
+  import { registerDismissible } from '../_interaction/dismissal';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
   let {
@@ -315,11 +316,6 @@
         }
         break;
       }
-      case 'Escape': {
-        event.preventDefault();
-        close();
-        break;
-      }
       case 'Tab': {
         close();
         break;
@@ -352,29 +348,45 @@
     }
   }
 
-  function handleClickOutside(event: Event) {
-    // A portaled panel lives outside menuContainerEl, so a click on a separator
+  function handleOutsidePress(event: Event) {
+    // A portaled panel lives outside menuContainerEl, so a press on a separator
     // or padding inside it is not contained — treat the panel node as "inside"
-    // too, matching the in-flow behaviour of not closing on such clicks.
-    if (
-      open &&
-      event.target instanceof Node &&
-      menuContainerEl !== null &&
-      !menuContainerEl.contains(event.target) &&
-      !(menuListEl !== null && menuListEl.contains(event.target))
-    ) {
-      close();
+    // too, matching the in-flow behaviour of not closing on such presses. The
+    // module has already established the press is outside menuContainerEl
+    // (that's `element` below) before calling this at all, so only the portal
+    // case needs a second check here.
+    if (event.target instanceof Node && menuListEl !== null && menuListEl.contains(event.target)) {
+      return;
     }
+    close();
   }
 
-  onMount(() => {
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-      if (typeaheadTimer !== null) {
-        clearTimeout(typeaheadTimer);
-      }
+  /**
+   * Registers this dropdown as the topmost dismissible layer for exactly the
+   * span it exists (the `{#if open}` block below) and releases it again on
+   * teardown — including when the component unmounts while still open, so a
+   * stale layer never survives to swallow a later Escape meant for whatever
+   * opens next. Escape and outside-press used to be answered here directly
+   * (a document click listener added in onMount, and an Escape case in
+   * handleMenuKeydown); routed through the shared module instead so only the
+   * topmost open surface — this menu, or a Modal/Sheet/another Menu opened on
+   * top of it — answers either.
+   */
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => menuContainerEl,
+      onEscape: close,
+      onOutside: handleOutsidePress
+    });
+    return {
+      destroy: release
     };
+  }
+
+  onDestroy(() => {
+    if (typeaheadTimer !== null) {
+      clearTimeout(typeaheadTimer);
+    }
   });
 </script>
 
@@ -439,6 +451,7 @@
       style={portalStyle}
       onkeydown={handleMenuKeydown}
       use:portalToBody
+      use:dismissalAction
     >
       {#each items as item (item.value)}
         {#if item.separator === true}

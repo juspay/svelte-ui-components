@@ -90,3 +90,7 @@ import './components/ThinkingIndicator.wc.svelte';
 import './components/AttachmentChipRow.wc.svelte';
 import './components/HITL.wc.svelte';
 import './components/TypewriterText.wc.svelte';
+import './components/Separator.wc.svelte';
+import './components/Label.wc.svelte';
+import './components/AspectRatio.wc.svelte';
+import './components/RatingGroup.wc.svelte';

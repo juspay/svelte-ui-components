@@ -8,6 +8,19 @@
   // click; the other declines them all and only counts them.
   let adoptedChecked = $state(false);
   let declinedClicks = $state(0);
+
+  let submitted = $state('');
+
+  function capture(event: SubmitEvent): void {
+    event.preventDefault();
+    const target = event.target;
+    if (!(target instanceof HTMLFormElement)) {
+      return;
+    }
+    submitted = [...new FormData(target)]
+      .map(([key, value]) => `${key}=${String(value)}`)
+      .join(' ');
+  }
 </script>
 
 <div class="page-header">
@@ -64,3 +77,22 @@
     testId="checkbox-attributes"
   />
 </div>
+
+<h3>Native form submission</h3>
+<p class="demo-caption">
+  <code>name</code> opts the box into the form it sits in. An unchecked, indeterminate or disabled
+  box submits nothing, and <code>required</code> moves invalid focus to the visible box rather than the
+  control behind it.
+</p>
+<form class="demo-row" onsubmit={capture} data-pw="checkbox-form-demo">
+  <Checkbox
+    text="Accept terms"
+    name="terms"
+    value="accepted"
+    required
+    testId="checkbox-form-terms"
+  />
+  <Checkbox text="Send me updates" name="updates" testId="checkbox-form-updates" />
+  <button type="submit" data-pw="checkbox-form-submit">Submit</button>
+  <span data-pw="checkbox-form-result">{submitted}</span>
+</form>

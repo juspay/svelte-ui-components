@@ -23,6 +23,12 @@
 
 <script lang="ts">
   import Scroller from '$lib/Scroller/Scroller.svelte';
+  // Mirrors Scroller.svelte's own arrowPrevious/arrowNext defaults, which pick their
+  // glyph from `direction` the same way.
+  import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
+  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
+  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   let props = $props();
 </script>
 
@@ -31,9 +37,25 @@
     <slot></slot>
   {/snippet}
   {#snippet arrowPrevious()}
-    <slot name="arrow-previous"></slot>
+    <!--
+      A snippet declared here is always a function, so Scroller.svelte's own
+      `{#if typeof arrowPrevious === 'function'} ... {:else}<span class="arrow-icon">...</span>{/if}`
+      would always take the true branch and never show its default chevron. Native
+      slot fallback content renders exactly when the host assigns nothing, restoring it.
+    -->
+    <slot name="arrow-previous">
+      <span class="arrow-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html props.direction === 'horizontal' ? chevronLeftSvg : chevronUpSvg}
+      </span>
+    </slot>
   {/snippet}
   {#snippet arrowNext()}
-    <slot name="arrow-next"></slot>
+    <slot name="arrow-next">
+      <span class="arrow-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html props.direction === 'horizontal' ? chevronRightSvg : chevronDownSvg}
+      </span>
+    </slot>
   {/snippet}
 </Scroller>

@@ -53,6 +53,7 @@
 
 <script lang="ts">
   import Modal from '$lib/Modal/Modal.svelte';
+  import Button from '$lib/Button/Button.svelte';
 
   // Pulled out so they forward to the panel under Modal's own `ariaLabel`/`role`
   // names instead of the host-reserved ones. Unset by default, so a consumer
@@ -67,6 +68,30 @@
     {#if props.content}{@render props.content()}{:else}<slot></slot>{/if}
   {/snippet}
   {#snippet footerSnippet()}
-    {#if props.footerSnippet}{@render props.footerSnippet()}{:else}<slot name="footer"></slot>{/if}
+    {#if props.footerSnippet}
+      {@render props.footerSnippet()}
+    {:else}
+      <!-- Mirrors Modal.svelte's footerSnippet fallback: the primary/secondary
+           button pair built from `footer.primaryButton`/`footer.secondaryButton`.
+           The `.footer-content` wrapper is already supplied unconditionally by
+           Modal.svelte's function branch, so only the inner buttons are reproduced
+           here. -->
+      <slot name="footer">
+        {#if typeof props.footer?.primaryButton === 'object' || typeof props.footer?.secondaryButton === 'object'}
+          <div class="footer-action-buttons">
+            {#if props.footer.secondaryButton}
+              <div class="footer-secondary-button">
+                <Button {...props.footer.secondaryButton} onclick={props.onsecondarybuttonclick} />
+              </div>
+            {/if}
+            {#if props.footer.primaryButton}
+              <div class="footer-primary-button">
+                <Button {...props.footer.primaryButton} onclick={props.onprimarybuttonclick} />
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </slot>
+    {/if}
   {/snippet}
 </Modal>

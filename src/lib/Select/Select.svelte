@@ -248,6 +248,9 @@
     if (disabled) {
       return;
     }
+    if (items.find((item) => item.id === id)?.disabled === true) {
+      return;
+    }
     if (multiple) {
       value = value.includes(id) ? value.filter((v) => v !== id) : [...value, id];
     } else {
@@ -306,6 +309,40 @@
     await tick();
     // Query the dropdown node itself, not containerEl, so highlight-scrolling
     // keeps working once the panel is portaled out to <body>.
+    if (dropdownEl !== null) {
+      const el = dropdownEl.querySelector('.select-option.highlighted');
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
+  // The select-all row is always selectable; only an item row can opt out via
+  // SelectItem.disabled. There is no group-header row kind to skip.
+  function isRowSelectable(row: SelectRow): boolean {
+    return row.kind === 'select-all' || row.item.disabled !== true;
+  }
+
+  function hasModifierKey(event: KeyboardEvent): boolean {
+    return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+  }
+
+  /**
+   * Home/End: jump the highlight to the first/last selectable row, skipping
+   * disabled options the same way `moveHighlight` skips nothing -- it just
+   * targets a different index and reuses the same scroll-into-view step. A
+   * no-op when no row in that direction is selectable, including an empty list.
+   */
+  async function moveHighlightToEdge(edge: 'first' | 'last'): Promise<void> {
+    const target =
+      edge === 'first'
+        ? optionRows.findIndex(isRowSelectable)
+        : optionRows.findLastIndex(isRowSelectable);
+    if (target < 0) {
+      return;
+    }
+    highlightedIndex = target;
+    await tick();
     if (dropdownEl !== null) {
       const el = dropdownEl.querySelector('.select-option.highlighted');
       if (el instanceof HTMLElement) {
@@ -387,6 +424,20 @@
       case 'ArrowUp':
         event.preventDefault();
         moveHighlight(-1);
+        break;
+      case 'Home':
+        // A caret-bearing text filter input owns Home/End for itself; only the
+        // dropdown's own chrome (or a non-searchable trigger) hands them to us.
+        if (open && !(event.target instanceof HTMLInputElement) && !hasModifierKey(event)) {
+          event.preventDefault();
+          moveHighlightToEdge('first');
+        }
+        break;
+      case 'End':
+        if (open && !(event.target instanceof HTMLInputElement) && !hasModifierKey(event)) {
+          event.preventDefault();
+          moveHighlightToEdge('last');
+        }
         break;
       case 'Escape':
         if (open) {
@@ -711,9 +762,11 @@
             class:tickable={showSelectedTick && !multiple}
             class:selected={value.includes(row.item.id)}
             class:highlighted={index === highlightedIndex}
+            class:select-option-disabled={row.item.disabled === true}
             role="option"
             id={`${listboxId}-option-${index}`}
             aria-selected={value.includes(row.item.id)}
+            aria-disabled={row.item.disabled === true ? 'true' : null}
             tabindex="-1"
             {...typeof row.item.testId === 'string'
               ? { 'data-pw': row.item.testId, testID: row.item.testId }
@@ -726,7 +779,11 @@
                   ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
                   : {}}
             onclick={() => selectItem(row.item.id)}
-            onmouseenter={() => (highlightedIndex = index)}
+            onmouseenter={() => {
+              if (row.item.disabled !== true) {
+                highlightedIndex = index;
+              }
+            }}
           >
             {#if multiple}
               {#if typeof optionIndicator === 'function'}
@@ -1022,7 +1079,8 @@
     height: var(--select-arrow-size, 16px);
     color: var(--select-arrow-color, #666666);
     flex-shrink: 0;
-    transition: transform 0.15s;
+    transition: transform var(--select-arrow-transition-duration, var(--motion-duration, 0.15s))
+      var(--select-arrow-transition-easing, var(--motion-easing, ease));
   }
 
   .select.open .select-arrow {
@@ -1113,7 +1171,8 @@
     color: var(--select-option-color, #333333);
     font-size: var(--select-option-font-size, inherit);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--select-option-transition-duration, var(--motion-duration, 0.1s))
+      var(--select-option-transition-easing, var(--motion-easing, ease));
   }
 
   /* Per-option leading icon (SelectItem.icon). Kept inline + vertically centred so
@@ -1143,6 +1202,12 @@
   .select-option.selected {
     background: var(--select-option-selected-background, #e8f0fe);
     color: var(--select-option-selected-color, var(--select-option-color, #333333));
+  }
+
+  .select-option-disabled {
+    opacity: var(--select-option-disabled-opacity, 0.4);
+    cursor: var(--select-option-disabled-cursor, not-allowed);
+    pointer-events: none;
   }
 
   .select-option.selected.highlighted {
@@ -1177,8 +1242,11 @@
     background-color: var(--select-option-indicator-background, transparent);
     color: var(--select-option-indicator-color, currentColor);
     transition:
-      background-color 0.15s,
-      border-color 0.15s;
+      background-color
+        var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+        var(--select-option-indicator-transition-easing, var(--motion-easing, ease)),
+      border-color var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+        var(--select-option-indicator-transition-easing, var(--motion-easing, ease));
   }
 
   .select-option-indicator.checked {

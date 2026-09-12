@@ -32,6 +32,19 @@ export type OptionalCheckboxProperties = {
    *  `aria-controls` to point at, or a consumer's own test attribute. Spread
    *  last, so a value here wins over the component's own `data-pw`. */
   attributes?: Record<string, string>;
+  /** Submits the box under this name when it sits inside (or is associated with) a
+   *  form. Omitted entirely when absent, unchecked, indeterminate or disabled, which
+   *  is what a native `<input type="checkbox">` does. */
+  name?: string;
+  /** Value submitted while checked. Defaults to `'on'`, the native default. */
+  value?: string;
+  /** Makes an unchecked box block submission. Invalid validation moves focus to the
+   *  visible box, since the form control behind it is deliberately not a tab stop. */
+  required?: boolean;
+  /** `id` of a form elsewhere in the same document, for a box rendered outside it.
+   *  Custom elements have no form association: inside `<sui-checkbox>` the control
+   *  lives in a shadow root and cannot reach a form in the host document. */
+  form?: string;
 };
 
 export type CheckboxEventProperties = {

@@ -450,7 +450,8 @@
     width: 100%;
     max-width: var(--hitl-max-width, 100%);
     margin: var(--hitl-margin, 0);
-    animation: hitl-slide-in 0.3s ease-out forwards;
+    animation: hitl-slide-in var(--hitl-slide-in-animation-duration, var(--motion-duration, 0.3s))
+      var(--hitl-slide-in-animation-easing, var(--motion-easing, ease-out)) forwards;
     contain: layout style;
   }
 
@@ -573,7 +574,8 @@
     background: var(--hitl-completion-background, #f4f4f5);
     border-radius: var(--hitl-border-radius, 0.5rem);
     padding: var(--hitl-completion-padding, 1rem);
-    animation: hitl-fade-in 0.3s ease-in-out;
+    animation: hitl-fade-in var(--hitl-completion-animation-duration, var(--motion-duration, 0.3s))
+      var(--hitl-completion-animation-easing, var(--motion-easing, ease-in-out));
   }
 
   .completion-icon {

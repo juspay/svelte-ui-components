@@ -407,9 +407,12 @@
 
   .funnel-bar {
     transition:
-      opacity var(--chart-transition-duration, 0.2s) ease,
-      y var(--chart-transition-duration, 0.2s) ease,
-      height var(--chart-transition-duration, 0.2s) ease;
+      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      y var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      height var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
 
@@ -436,7 +439,8 @@
   }
 
   .funnel-connector {
-    transition: d var(--chart-transition-duration, 0.2s) ease;
+    transition: d var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
   }
 
   .chart-empty {

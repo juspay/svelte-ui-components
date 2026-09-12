@@ -154,20 +154,22 @@ Override these custom properties to theme the component.
 
 ### Keyboard Shortcut Badges
 
-| Variable                           | Default             | CSS Property     | Description                                                             |
-| ---------------------------------- | ------------------- | ---------------- | ----------------------------------------------------------------------- |
-| `--command-menu-shortcut-gap`      | `4px`               | gap              | Gap between multiple shortcut key badges.                               |
-| `--command-menu-kbd-min-width`     | `24px`              | min-width        | Minimum width of each keyboard shortcut badge.                          |
-| `--command-menu-kbd-height`        | `22px`              | height           | Height of each keyboard shortcut badge.                                 |
-| `--command-menu-kbd-padding`       | `0 6px`             | padding          | Padding inside each keyboard shortcut badge.                            |
-| `--command-menu-kbd-border-radius` | `4px`               | border-radius    | Corner rounding of keyboard shortcut badges.                            |
-| `--command-menu-kbd-background`    | `#f1f5f9`           | background-color | Background color of keyboard shortcut badges.                           |
-| `--command-menu-kbd-border`        | `1px solid #e2e8f0` | border           | Border of keyboard shortcut badges.                                     |
-| `--command-menu-kbd-color`         | `#64748b`           | color            | Text color of keyboard shortcut badges.                                 |
-| `--command-menu-kbd-font-size`     | `11px`              | font-size        | Font size of keyboard shortcut badge text.                              |
-| `--command-menu-kbd-font-family`   | `inherit`           | font-family      | Font family of keyboard shortcut badge text.                            |
-| `--command-menu-kbd-font-weight`   | `500`               | font-weight      | Font weight of keyboard shortcut badge text.                            |
-| `--command-menu-kbd-box-shadow`    | `0 1px 0 #e2e8f0`   | box-shadow       | Box shadow of keyboard shortcut badges (gives a raised key appearance). |
+| Variable                                  | Default             | CSS Property     | Description                                                                                             |
+| ----------------------------------------- | ------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `--command-menu-shortcut-gap`             | `4px`               | gap              | Gap between multiple shortcut key badges.                                                               |
+| `--command-menu-kbd-min-width`            | `24px`              | min-width        | Minimum width of each keyboard shortcut badge.                                                          |
+| `--command-menu-kbd-height`               | `22px`              | height           | Height of each keyboard shortcut badge.                                                                 |
+| `--command-menu-kbd-padding`              | `0 6px`             | padding          | Padding inside each keyboard shortcut badge.                                                            |
+| `--command-menu-kbd-border-radius`        | `4px`               | border-radius    | Corner rounding of keyboard shortcut badges.                                                            |
+| `--command-menu-kbd-background`           | `#f1f5f9`           | background-color | Background color of keyboard shortcut badges.                                                           |
+| `--command-menu-kbd-border`               | `1px solid #e2e8f0` | border           | Border of keyboard shortcut badges.                                                                     |
+| `--command-menu-kbd-color`                | `#64748b`           | color            | Text color of keyboard shortcut badges.                                                                 |
+| `--command-menu-kbd-font-size`            | `11px`              | font-size        | Font size of keyboard shortcut badge text.                                                              |
+| `--command-menu-kbd-font-family`          | `inherit`           | font-family      | Font family of keyboard shortcut badge text.                                                            |
+| `--command-menu-kbd-font-weight`          | `500`               | font-weight      | Font weight of keyboard shortcut badge text.                                                            |
+| `--command-menu-kbd-box-shadow`           | `0 1px 0 #e2e8f0`   | box-shadow       | Box shadow of keyboard shortcut badges (gives a raised key appearance).                                 |
+| `--command-menu-item-transition-duration` | `0.1s`              | transition       | Duration of a menu item's hover/active background transition. Falls back through `--motion-duration`.   |
+| `--command-menu-item-transition-easing`   | `ease`              | transition       | Easing curve of a menu item's hover/active background transition. Falls back through `--motion-easing`. |
 
 ## Type Reference
 
@@ -202,8 +204,8 @@ Tag: `<sui-command-menu>`
 
 ### Slots
 
-| Slot Name     | Maps to Snippet | Description                       |
-| ------------- | --------------- | --------------------------------- |
-| `search-icon` | `searchIcon`    | Custom icon for the search input. |
+| Slot Name     | Maps to Snippet | Description                                                     |
+| ------------- | --------------- | --------------------------------------------------------------- |
+| `search-icon` | `searchIcon`    | Custom icon for the search input; defaults to the search glyph. |
 
 > **Note:** The `items` prop is an array and `itemIcon` is a parameterized Snippet — set them via JavaScript properties.

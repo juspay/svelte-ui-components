@@ -18,11 +18,16 @@
 
 <script lang="ts">
   import SplitButton from '$lib/SplitButton/SplitButton.svelte';
+  import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
   let props = $props();
 </script>
 
 <SplitButton {...props}>
   {#snippet dropdownIcon()}
-    <slot name="dropdown-icon"></slot>
+    <!-- Mirrors SplitButton.svelte's dropdownIcon fallback: {@html chevronDownSmSvg} -->
+    <slot name="dropdown-icon">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+      {@html chevronDownSmSvg}
+    </slot>
   {/snippet}
 </SplitButton>

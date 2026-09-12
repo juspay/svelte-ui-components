@@ -19,6 +19,13 @@ export type SelectItem = {
    * the current selection in the closed trigger.
    */
   icon?: string;
+  /**
+   * When `true`, the option is rendered non-interactive (dimmed, `aria-disabled`)
+   * and cannot be chosen by click or Enter/Space. `Home` and `End` skip past
+   * disabled options to land on the nearest selectable row at each end of the
+   * list — mirroring `ComboboxItem.disabled`.
+   */
+  disabled?: boolean;
 };
 
 export type MandatorySelectProperties = {

@@ -2,7 +2,7 @@
   import type { ToggleProperties } from './properties';
 
   let {
-    checked = false,
+    checked = $bindable(false),
     text = '',
     disabled = false,
     testId,
@@ -10,7 +10,11 @@
     id,
     ariaLabel,
     ariaLabelledby,
-    onclick
+    onclick,
+    name,
+    value = 'on',
+    required = false,
+    form
   }: ToggleProperties = $props();
 
   // Stable across hydration so the hidden input stays named and text remains clickable.
@@ -40,6 +44,12 @@
       type="checkbox"
       {checked}
       {disabled}
+      {value}
+      {required}
+      name={typeof name === 'string' ? name : null}
+      form={typeof form === 'string' ? form : null}
+      data-state={checked ? 'checked' : 'unchecked'}
+      data-disabled={disabled ? '' : null}
       aria-label={ariaLabel?.trim() || null}
       aria-labelledby={ariaLabelledby?.trim() || null}
       onclick={handleCheckboxClick}
@@ -90,8 +100,16 @@
     right: var(--toggle-slider-right, 0);
     bottom: var(--toggle-slider-bottom, 0);
     background-color: var(--slider-unchecked-color, #ccc);
-    -webkit-transition: var(--toggle-slider-transition, 0.4s);
-    transition: var(--toggle-slider-transition, 0.4s);
+    -webkit-transition: var(
+      --toggle-slider-transition,
+      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+        var(--toggle-slider-transition-easing, var(--motion-easing, ease))
+    );
+    transition: var(
+      --toggle-slider-transition,
+      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+        var(--toggle-slider-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .slider:before {
@@ -103,8 +121,16 @@
     bottom: var(--toggle-slider-before-bottom, 1px);
     top: var(--toggle-slider-before-top, 1px);
     background-color: var(--toggle-slider-before-background-color, white);
-    -webkit-transition: var(--toggle-slider-transition, 0.4s);
-    transition: var(--toggle-slider-transition, 0.4s);
+    -webkit-transition: var(
+      --toggle-slider-transition,
+      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+        var(--toggle-slider-transition-easing, var(--motion-easing, ease))
+    );
+    transition: var(
+      --toggle-slider-transition,
+      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+        var(--toggle-slider-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .input-checkbox:checked + .slider {

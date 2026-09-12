@@ -7,6 +7,8 @@
     text,
     speed = 15,
     isStreaming = false,
+    markdown = false,
+    markdownOptions,
     renderText,
     variableDelay,
     resolveDelay,
@@ -15,6 +17,23 @@
     testId,
     classes
   }: TypewriterTextProperties = $props();
+
+  // Keep the promise stable across streamed prop updates so the await block does
+  // not flash escaped source between already-rendered Markdown frames.
+  let rendererPromise: Promise<typeof import('../MarkdownText/markdown')> | null = null;
+  function loadMarkdownRenderer(): Promise<typeof import('../MarkdownText/markdown')> {
+    rendererPromise ??= import('../MarkdownText/markdown');
+    return rendererPromise;
+  }
+  const markdownRenderer = $derived(markdown === true ? loadMarkdownRenderer() : null);
+  // Object-valued custom-element props may receive JSON null or other non-objects.
+  const safeMarkdownOptions = $derived(
+    typeof markdownOptions === 'object' &&
+      markdownOptions !== null &&
+      !Array.isArray(markdownOptions)
+      ? markdownOptions
+      : {}
+  );
 
   let displayedText = $state('');
   let currentIndex = $state(0);
@@ -182,11 +201,24 @@
 
 <div
   class="typewriter-text {classes ?? ''}"
-  class:plain={typeof renderText !== 'function'}
+  class:plain={markdown !== true && typeof renderText !== 'function'}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
-  {#if typeof renderText === 'function'}
+  {#if markdown === true}
+    {#await markdownRenderer}
+      {displayedText}
+    {:then renderer}
+      {#if renderer !== null}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html renderer.renderMarkdown(displayedText, safeMarkdownOptions)}
+      {:else}
+        {displayedText}
+      {/if}
+    {:catch}
+      {displayedText}
+    {/await}
+  {:else if typeof renderText === 'function'}
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html renderText(displayedText)}
   {:else if renderCharacter}

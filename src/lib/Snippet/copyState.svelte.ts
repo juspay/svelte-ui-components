@@ -33,6 +33,17 @@ export type CopyStateOptions = {
   copyResetMs?: number;
   /** Called once per successful copy. Never called when the write fails. */
   oncopy?: () => void;
+  /**
+   * Called instead of `oncopy` when a write cannot complete -- a rejection
+   * (denied permission, a non-secure context) or a Clipboard API that is
+   * absent entirely (SSR, a sandboxed iframe). Receives the rejection
+   * reason, or an `Error` when the API itself is missing.
+   *
+   * Without it the caller sees only `copy()` resolving `false` and cannot
+   * distinguish "refused" from "no clipboard here", which is the difference
+   * between a message worth showing the user and one worth suppressing.
+   */
+  onerror?: (reason: unknown) => void;
 };
 
 export type CopyState = {
@@ -41,7 +52,8 @@ export type CopyState = {
   /**
    * Writes `text` to the clipboard. Resolves `true` on success, `false` if
    * the clipboard was unavailable or refused — it never rejects, so a caller
-   * needs no try/catch of its own.
+   * needs no try/catch of its own. A `false` outcome is also reported to
+   * `onerror` with the reason.
    */
   copy: (text: string) => Promise<boolean>;
   /** Cancels any pending reset. Call from the owner's teardown. */
@@ -70,6 +82,20 @@ function resolveResetDelay(options: CopyStateOptions): number {
   return requested;
 }
 
+/**
+ * `onerror` is a consumer callback like `oncopy`, so it gets the same
+ * containment: a throwing reporter must not turn a handled failure into an
+ * unhandled rejection out of `copy()`, which is the one thing this factory
+ * promises never to do.
+ */
+function report(options: CopyStateOptions, reason: unknown): void {
+  try {
+    options.onerror?.(reason);
+  } catch {
+    /* A failed notification cannot make the clipboard write any less failed. */
+  }
+}
+
 export function createCopyState(options: CopyStateOptions = {}): CopyState {
   let copied = $state(false);
   let destroyed = false;
@@ -84,13 +110,26 @@ export function createCopyState(options: CopyStateOptions = {}): CopyState {
       if (destroyed) {
         return false;
       }
+      // Checked before the call rather than relying on the catch below: with
+      // no `navigator.clipboard` at all, `writeText` is a property access on
+      // undefined, and the resulting TypeError says nothing a caller could
+      // act on. An explicit reason distinguishes "this context has no
+      // clipboard" from "the user refused". `navigator` is tested for null
+      // separately from `undefined`: a stubbed-out global is routinely the
+      // former, and `!navigator.clipboard` would throw on it.
+      if (typeof navigator === 'undefined' || navigator === null || !navigator.clipboard) {
+        report(options, new Error('Clipboard API is unavailable in this context.'));
+        return false;
+      }
+
       try {
         await navigator.clipboard.writeText(text);
-      } catch {
+      } catch (reason) {
         /* Clipboard unavailable: non-secure context, sandboxed iframe, or a
            permission refusal. Reporting success here — and flashing "Copied!"
            over a clipboard that never received the text — is the one outcome
            worse than showing no feedback at all. */
+        report(options, reason);
         return false;
       }
 

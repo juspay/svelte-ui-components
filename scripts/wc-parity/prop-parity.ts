@@ -222,6 +222,15 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   // path web-component consumers actually use, so nothing is lost by reserving
   // the name.
   'children',
+  // Same class as `children`, and measured the same way rather than reasoned
+  // about: `Element.prototype.attributes` is the live NamedNodeMap that Svelte's
+  // own generated `connectedCallback` iterates (`for (const attr of this.attributes)`).
+  // Declaring a prop of that name replaced it with a plain object, so every
+  // `<sui-checkbox>` threw `TypeError: this.attributes is not iterable` on connect
+  // and never initialised -- reproduced in Chromium with a bare
+  // `document.createElement('sui-checkbox')`. A wrapper that needs to forward it
+  // exposes it under another name, as Checkbox.wc.svelte now does.
+  'attributes',
   // ARIAMixin is implemented on Element, so each of these is already an accessor
   // that reflects to its aria-* attribute. Verified in Chromium rather than
   // assumed: every name below answered true to `name in Element.prototype`.

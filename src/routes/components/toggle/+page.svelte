@@ -8,6 +8,10 @@
   // a switch named only for assistive technology.
   let textLabelChecked = $state(false);
   let externalLabelChecked = $state(false);
+
+  // `name` makes the switch participate in native <form> submission.
+  let formNotifications = $state(false);
+  let toggleEntries = $state('');
 </script>
 
 <div class="page-header">
@@ -76,3 +80,27 @@
     <Toggle id={inputId} text={`Blank id setting ${index}`} testId={`toggle-blank-id-${index}`} />
   </div>
 {/each}
+
+<h3>Native form submission</h3>
+<p>
+  A switch with a <code>name</code> submits with the surrounding <code>&lt;form&gt;</code>: absent
+  while off, and present as <code>on</code> once switched on.
+</p>
+<form
+  class="demo-row"
+  data-pw="toggle-form"
+  onsubmit={(event) => {
+    event.preventDefault();
+    toggleEntries = JSON.stringify(Array.from(new FormData(event.currentTarget).entries()));
+  }}
+>
+  <Toggle
+    text="Notifications"
+    name="notifications"
+    checked={formNotifications}
+    onclick={(value) => (formNotifications = value)}
+    testId="toggle-form-notifications"
+  />
+  <button type="submit" data-pw="toggle-form-submit">Submit</button>
+</form>
+<pre data-pw="toggle-form-result">{toggleEntries}</pre>

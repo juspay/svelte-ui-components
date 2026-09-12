@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { flushSync } from 'svelte';
   import type { CheckboxProperties } from './properties';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import minusSvg from '$lib/assets/minus.svg?raw';
 
   let {
-    text,
+    text = '',
     checked = $bindable(false),
     disabled = false,
     indeterminate = $bindable(false),
@@ -16,8 +17,12 @@
     ariaControls,
     ariaLabel,
     controlled = false,
-    attributes
+    attributes,
+    name,
+    value
   }: CheckboxProperties = $props();
+
+  let nativeInputEl: HTMLInputElement | null = $state(null);
 
   // Visible text wins over `ariaLabel`, which is what `properties.ts` has always
   // promised and what WCAG 2.5.3 requires: a control showing "Accept terms" must
@@ -44,15 +49,45 @@
     // for. Nothing is flipped locally, so a parent that declines the change
     // (a controlled table selection that rejects a row) keeps the box, the
     // native input and aria-checked all agreeing with the value it passed.
+    // No `input`/`change` dispatch here either: the input's checked state
+    // genuinely has not changed, so firing one would tell listeners (a
+    // parent `<form>`, a consumer's own `onchange`) about a flip that did
+    // not happen.
     if (controlled) {
       onclick?.(!checked);
       return;
     }
-    checked = !checked;
-    if (indeterminate) {
-      indeterminate = false;
-    }
+    // `flushSync` (rather than `await tick()`) applies the reactive
+    // `input.checked` write before the dispatch below runs, without handing
+    // control back to the event loop first. A keyboard repeat or a rapid
+    // double click stays a single synchronous call stack from gesture to
+    // dispatch: nothing can interleave a second `handleClick` in the middle
+    // (the race an `await` gap would allow), a screen reader sees the
+    // `input`/`change` pair land in the same tick as the key press it
+    // expects them tied to, and there is no unmount gap for `nativeInputEl`
+    // to go stale in.
+    flushSync(() => {
+      checked = !checked;
+      if (indeterminate) {
+        indeterminate = false;
+      }
+    });
     onclick?.(checked);
+    // The box (role="checkbox") is the only element the user can actually
+    // reach — the native input is aria-hidden, tabindex="-1" and
+    // pointer-events: none, purely a form-submission mirror. Because it
+    // never receives a real user click, the browser never fires a native
+    // `change` on it either, so a parent `<form>` listener (or a consumer's
+    // own `input.addEventListener('change', ...)`) never learns the value
+    // moved. `input`/`change` are dispatched manually to restore that signal.
+    // `composed: true` matters as much as `bubbles: true` here: native `input`/
+    // `change` are composed, and this component ships inside a shadow root
+    // (Checkbox.wc.svelte's `shadow: 'open'`) for every <sui-checkbox> consumer.
+    // `bubbles` alone stops at the shadow boundary; without `composed` the event
+    // never reaches a light-DOM `<form>`, silently defeating the whole point of
+    // wiring `name`/`value` onto this input for every web-component consumer.
+    nativeInputEl?.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    nativeInputEl?.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
   }
 
   function handleKeyDown(e: KeyboardEvent): void {
@@ -84,9 +119,12 @@
     class="native-checkbox"
     {checked}
     {disabled}
+    name={name ?? null}
+    value={value ?? null}
     tabindex={-1}
     aria-hidden="true"
     onclick={(e: MouseEvent) => e.stopPropagation()}
+    bind:this={nativeInputEl}
     data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
     testID={typeof testId === 'string' ? `${testId}-native-input` : null}
   />

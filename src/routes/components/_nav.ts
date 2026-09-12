@@ -139,6 +139,7 @@ export const componentNav: NavGroup[] = [
       { name: 'ChatMessageList', slug: 'chat-message-list' },
       { name: 'ChatComposer', slug: 'chat-composer' },
       { name: 'SpeechToText', slug: 'speech-to-text' },
+      { name: 'VoiceOrb', slug: 'voice-orb' },
       { name: 'ChatHeader', slug: 'chat-header' },
       { name: 'ChatToolStatus', slug: 'chat-tool-status' },
       { name: 'ToolCallLog', slug: 'tool-call-log' },

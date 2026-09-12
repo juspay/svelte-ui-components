@@ -570,12 +570,51 @@
     opacity: var(--chat-message-blockquote-opacity, 0.85);
   }
 
+  /* Fallback for a bare <table> in caller-supplied `html`, which has no scroll
+     container of its own: it keeps the block treatment so a wide table scrolls
+     rather than overflowing the message. A table that came from `markdown` (or
+     from `renderMarkdown`) arrives inside `.markdown-table-wrapper`, and the
+     rules below take it back out of block layout. */
   .body :global(table) {
     display: block;
     max-width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
     margin: 0.5em 0;
+  }
+
+  /* The wrapper scrolls, not the table. `display: block` on a <table> is what
+     makes `overflow-x` work on the element itself, but it strips the table's
+     semantics for assistive technology -- a screen reader loses row and column
+     navigation. MarkdownText separates the scroll container from the table for
+     exactly that reason; this component rendered the same wrapper markup and
+     styled the table instead, so a chat table was scrollable and no longer a
+     table. Chat is where markdown tables overwhelmingly land. */
+  .body :global(.markdown-table-wrapper) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0.5em 0;
+  }
+
+  /* The wrapper is a tab stop (the renderer emits tabindex="0" so the scroll is
+     reachable by keyboard). The browser's default ring already applies; this
+     replaces it with the same 2px treatment the rest of the library uses, since
+     the 1px UA default is easy to miss against a message bubble. */
+  .body :global(.markdown-table-wrapper:focus-visible) {
+    outline: 2px solid var(--chat-message-table-focus-outline-color, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  /* Without an intrinsic width the table is exactly its container's width and a
+     wide table compresses instead of scrolling. `max-content` supplies it;
+     `min-width` keeps a narrow table filling the bubble. */
+  .body :global(.markdown-table-wrapper table) {
+    display: table;
+    width: max-content;
+    min-width: 100%;
+    overflow-x: visible;
+    margin: 0;
   }
 
   .body :global(th),

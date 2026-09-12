@@ -2,6 +2,13 @@ import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
+declare global {
+  interface Window {
+    /** Mutation tally kept by `waitForDomQuiet`; read from Node between clock slices. */
+    __visualMutationCount?: number;
+  }
+}
+
 // Routes are discovered from disk rather than hand-listed on purpose: a new
 // component demo added without a committed baseline fails this suite instead of
 // silently going unscreenshotted, which is the failure mode that lets visual
@@ -97,6 +104,87 @@ const SETTLE_OVERRIDES: Readonly<Record<string, number>> = {
   // Its demo calls the sequence "showcase choreography": tool entries land one
   // per 700ms with a chip that resolves afterwards. Same shape as chat's.
   'tool-call-log': 30_000
+};
+
+/**
+ * Real-time slice given to the page between clock advances, and the quiet
+ * period that ends a settle early.
+ */
+const DRAIN_SLICE_MS = 500;
+const DRAIN_QUIET_MS = 120;
+const DRAIN_CAP_MS = 3_000;
+
+/**
+ * Advances the fake clock in slices, letting the page's promise chain drain
+ * between them.
+ *
+ * `runFor` fires every fake timer due in the window back to back, but a demo
+ * that chains `setTimeout` through `await` only reaches its next timer once the
+ * microtask queue has run -- and that runs in REAL time, on a real event loop.
+ * Firing the whole budget in one call therefore left cascades at whatever point
+ * the machine's scheduler happened to reach, which is why routes this suite
+ * does not touch failed on a loaded host: `task-list` stopped two steps short,
+ * `hitl` rendered a differently-sized button, `chat-message` and `carousel`
+ * moved with them.
+ *
+ * The total fake time advanced is deliberately unchanged. Baselines encode it
+ * -- `relative-time` renders "30 seconds" because exactly 1500ms of fake time
+ * elapsed -- so stopping early the moment the DOM went quiet would shift every
+ * clock-dependent baseline. What changes is only that the page is given real
+ * time to catch up between slices, so the cascade lands in the same place
+ * whether the host is idle or saturated.
+ */
+const settleClock = async (page: Page, slug: string): Promise<void> => {
+  const budget = SETTLE_OVERRIDES[slug] ?? SETTLE_MS;
+
+  for (let advanced = 0; advanced < budget; advanced += DRAIN_SLICE_MS) {
+    await page.clock.runFor(Math.min(DRAIN_SLICE_MS, budget - advanced));
+    await waitForDomQuiet(page);
+  }
+};
+
+/**
+ * Resolves once the document has gone `DRAIN_QUIET_MS` of REAL time without a
+ * mutation, or `DRAIN_CAP_MS` has passed.
+ *
+ * The waiting happens in Node, not in the page, and that is the whole point:
+ * `page.clock.install()` replaces the page's `setTimeout`, so an in-page timer
+ * would be driven by the very fake clock this function exists to pace, and
+ * would never fire on its own. Only the mutation counter lives in the page.
+ *
+ * The cap matters: a demo with a genuinely endless animation would otherwise
+ * never go quiet and the suite would hang rather than fail. Capping turns that
+ * back into the screenshot it takes today.
+ */
+const waitForDomQuiet = async (page: Page): Promise<void> => {
+  await page.evaluate(() => {
+    if (typeof window.__visualMutationCount === 'number') {
+      return;
+    }
+    window.__visualMutationCount = 0;
+    const observer = new MutationObserver((records) => {
+      window.__visualMutationCount = (window.__visualMutationCount ?? 0) + records.length;
+    });
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true
+    });
+  });
+
+  const read = async (): Promise<number> => page.evaluate(() => window.__visualMutationCount ?? 0);
+
+  const deadline = Date.now() + DRAIN_CAP_MS;
+  let previous = await read();
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, DRAIN_QUIET_MS));
+    const current = await read();
+    if (current === previous) {
+      return;
+    }
+    previous = current;
+  }
 };
 
 // A fixed, opaque stand-in for every off-origin image. Sized 64x64 but scaled by
@@ -324,10 +412,10 @@ async function prepare(page: Page, slug: string): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
   await waitForImages(page);
 
-  // Advance the manual clock once, by a fixed amount, so timer-driven demos
-  // reach a settled state that is identical on every run. After this returns
-  // the clock stops again, so nothing can shift while the screenshot is taken.
-  await page.clock.runFor(SETTLE_OVERRIDES[slug] ?? SETTLE_MS);
+  // Advance the manual clock by a fixed amount so timer-driven demos reach a
+  // settled state that is identical on every run. After this returns the clock
+  // stops again, so nothing can shift while the screenshot is taken.
+  await settleClock(page, slug);
 
   // Remove every CSS animation via a stylesheet, not per element.
   //

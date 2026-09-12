@@ -1188,11 +1188,18 @@
   }
 
   /* ── Container ──────────────────────────────────────────────────────────── */
+  /* `hidden` is the default because it is what clips the table's corners to
+     this element's border-radius; without it the first and last cells square
+     off over the rounded border. A consumer who needs the container itself to
+     scroll sideways sets this to `auto` and accepts that trade. Note the
+     scrollable variant below sets `overflow-y`, and per the CSS overflow spec
+     a `visible` on one axis computes to `auto` when the other is not visible,
+     so `visible` here does not survive on a scrollable table. */
   .table-container {
     border: var(--table-border, 1px solid #e5e7eb);
     border-radius: var(--table-border-radius, var(--radius, 4px));
     width: var(--table-container-width, 100%);
-    overflow: hidden;
+    overflow: var(--table-container-overflow, hidden);
   }
 
   .scrollable-table {

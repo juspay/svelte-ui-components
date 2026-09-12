@@ -18,6 +18,36 @@ import { gotoHydrated } from './support/hydrated';
  * cases pin the race deterministically instead of waiting for a bad day.
  */
 
+/**
+ * Holds every module script until the test releases it, rather than delaying
+ * them by a fixed 2000ms.
+ *
+ * The fixed delay was a bet that the click below would land inside the window,
+ * and on a loaded machine it lost: hydration completed first, the menu opened,
+ * and `toHaveCount(0)` failed -- the test that exists to prove the race is
+ * real became the suite's own most reliable flake. A hold the test controls
+ * cannot expire early, so the case is pinned rather than probable.
+ */
+const holdScripts = async (
+  page: Parameters<typeof gotoHydrated>[0]
+): Promise<{ release: () => void }> => {
+  let release = (): void => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/*.js', async (route) => {
+    await held;
+    await route.continue();
+  });
+  return { release };
+};
+
+/**
+ * A bounded delay is still right for the second case: it only has to prove that
+ * `gotoHydrated` waits, and a delay that runs long makes that case pass more
+ * firmly rather than less. Only the first case is falsified by the delay
+ * expiring early.
+ */
 const delayScripts = async (page: Parameters<typeof gotoHydrated>[0]): Promise<void> => {
   await page.route('**/*.js', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -27,16 +57,23 @@ const delayScripts = async (page: Parameters<typeof gotoHydrated>[0]): Promise<v
 
 test.describe('demo pages are only driven once they are interactive', () => {
   test('a click before hydration is lost, which is what made the suite flaky', async ({ page }) => {
-    await delayScripts(page);
-    await page.goto('/components/menu', { waitUntil: 'commit' });
+    const { release } = await holdScripts(page);
+    try {
+      await page.goto('/components/menu', { waitUntil: 'commit' });
 
-    const menu = page.locator('[data-pw="menu-default-demo"]');
-    const trigger = menu.locator('.menu-trigger');
+      const menu = page.locator('[data-pw="menu-default-demo"]');
+      const trigger = menu.locator('.menu-trigger');
 
-    // Passes every actionability check Playwright makes, while inert.
-    await expect(trigger).toBeVisible();
-    await trigger.click();
-    await expect(menu.locator('.menu-dropdown')).toHaveCount(0);
+      // Passes every actionability check Playwright makes, while inert. The
+      // scripts are still held at this point, so this is a fact about the page
+      // rather than a race the machine's load decides.
+      await expect(trigger).toBeVisible();
+      await trigger.click();
+      await expect(menu.locator('.menu-dropdown')).toHaveCount(0);
+    } finally {
+      // Let the held requests finish so teardown does not wait on them.
+      release();
+    }
   });
 
   test('the same click through gotoHydrated opens the menu', async ({ page }) => {

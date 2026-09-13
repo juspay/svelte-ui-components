@@ -34,6 +34,14 @@ export type OptionalGalleryProperties = {
   itemFooter?: Snippet<[GalleryImage, number]>;
   testId?: string;
   classes?: string;
+  /**
+   * Duration (ms) of the lightbox's `fade` transition. A CSS custom property
+   * cannot reach a Svelte transition directive's parameters, so this prop is
+   * the token-contract equivalent for Gallery's motion — same shape as
+   * Toast's `inAnimationDuration`/`outAnimationDuration`. Defaults to the
+   * library's existing 200ms so omitting it renders identically to before.
+   */
+  lightboxTransitionDuration?: number | null;
 };
 
 export type GalleryEventProperties = {

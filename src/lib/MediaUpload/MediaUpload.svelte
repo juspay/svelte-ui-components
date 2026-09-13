@@ -322,7 +322,7 @@
   .counter {
     font-size: var(--media-upload-counter-font-size, 12px);
     font-weight: var(--media-upload-counter-font-weight, 500);
-    color: var(--media-upload-counter-color, #8a8f98);
+    color: var(--media-upload-counter-color, #5a5a5a);
     font-variant-numeric: tabular-nums;
   }
 
@@ -475,7 +475,7 @@
     text-align: center;
     background-color: var(--media-upload-add-background-color, #fafafa);
     border: var(--media-upload-add-border, 1.5px dashed #c8ccd2);
-    color: var(--media-upload-add-color, #6b7280);
+    color: var(--media-upload-add-color, #4b5563);
     cursor: pointer;
     transition: var(
       --media-upload-add-transition,
@@ -517,12 +517,22 @@
 
   .drop-hint {
     font-size: var(--media-upload-add-hint-font-size, 10px);
-    color: var(--media-upload-add-hint-color, #9aa0a8);
+    color: var(--media-upload-add-hint-color, #4b5563);
   }
 
   .error {
     font-size: var(--media-upload-error-font-size, 12px);
     color: var(--media-upload-error-color, #e0334b);
     margin: var(--media-upload-error-margin, 8px 0 0 0);
+  }
+
+  /* `--media-upload-item-transition` defaults to a box-shadow AND transform lift
+     on hover. The shadow alone would be fine; the transform is movement, and a
+     consumer overriding the token is most likely adding more of it. Dropping the
+     whole declaration is right here because every end state is a resting state. */
+  @media (prefers-reduced-motion: reduce) {
+    .media-item {
+      transition: none;
+    }
   }
 </style>

@@ -371,6 +371,28 @@ Tag: `<sui-stat-card>`
 
 Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively:
 
+### Web Component Events
+
+`oncheckboxchange` is available as a JS property, and the same toggle also dispatches a
+`checkboxchange` DOM custom event (bubbles, composed) with `detail` set to the checkbox's
+new boolean checked state, for a consumer who only calls `addEventListener`:
+
+```js
+const card = document.querySelector('sui-stat-card');
+card.addEventListener('checkboxchange', (e) => console.log(e.detail));
+```
+
+`onclick` does NOT dispatch a matching DOM event — `click` is already `HTMLElement`'s own
+native event, so `card.addEventListener('click', ...)` still sees only the real,
+natively-bubbled click, not a second synthetic one. Use `card.onclick = (event) => ...`
+instead.
+
+### Slots
+
+| Slot Name       | Maps to Snippet | Description                                                                    |
+| --------------- | --------------- | ------------------------------------------------------------------------------ |
+| `value-snippet` | `valueSnippet`  | Rich-markup override for the value area; defaults to the plain `value` string. |
+
 ```html
 <sui-stat-card id="revenue" title="Revenue Overview">
   <a slot="header-right" href="/payments">Details →</a>

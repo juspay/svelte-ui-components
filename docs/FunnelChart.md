@@ -74,25 +74,33 @@ A horizontal funnel chart built entirely from pure SVG — no external charting 
 </FunnelChart>
 ```
 
+### Keyboard access
+
+Every stage bar is a focusable `role="button"` element that mirrors pointer hover on
+focus and fires its click event on `Enter`/`Space` — the same family-wide keyboard/
+tooltip contract shared with BarChart, DualAxisBarChart, PieChart and SankeyChart. See
+[PieChart's "Keyboard access" and "Synchronized legend recipe" sections](./PieChart.md#keyboard-access)
+for the full contract.
+
 ## Props
 
-| Prop            | Type                                     | Required | Default                        | Description                                                                                                                                |
-| --------------- | ---------------------------------------- | -------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| data            | `FunnelStage[]`                          | Yes      | –                              | Ordered array of `{ category, value }` stage objects. Stages are rendered left-to-right; the tallest bar corresponds to the maximum value. |
-| stageColors     | `string[]`                               | No       | chart palette                  | Fill color for each stage bar, index-matched to `data`. Unspecified entries fall back to the shared chart palette.                         |
-| connectorColor  | `string`                                 | No       | `light-dark(#BDFFFB, #164e4a)` | Fill color for the trapezoidal connector shapes between consecutive stages. The default resolves per color scheme via CSS `light-dark()`.  |
-| slopeWidth      | `number`                                 | No       | `10`                           | Horizontal width (SVG units) of each slope connector. Larger values produce steeper visual drops.                                          |
-| onHoverExpand   | `number`                                 | No       | `10`                           | Extra vertical pixels added symmetrically to the hovered stage bar. Set to `0` to disable.                                                 |
-| radius          | `number`                                 | No       | `4`                            | Corner radius on each stage bar in pixels.                                                                                                 |
-| maxHeight       | `number`                                 | No       | `420`                          | Upper bound (px) on the rendered chart height.                                                                                             |
-| minHeight       | `number`                                 | No       | `0`                            | Lower bound (px) on the rendered chart height.                                                                                             |
-| showValueLabels | `boolean`                                | No       | `true`                         | Whether to render the value and percentage label centred inside each stage bar.                                                            |
-| valueFormat     | `(value: number, max: number) => string` | No       | `"<value>  \|  <pct>%"`        | Custom formatter for in-bar labels. Receives the stage value and the maximum value across all stages.                                      |
-| aspectRatio     | `number`                                 | No       | `16 / 9`                       | Width-to-height ratio passed to `ChartContainer`. Controls the chart's height relative to its container width.                             |
-| testId          | `string`                                 | No       | –                              | Value for the `data-pw` attribute on the chart root element.                                                                               |
-| classes         | `string`                                 | No       | –                              | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                             |
-| empty           | `Snippet`                                | No       | –                              | Content rendered when `data` is empty or all values are zero.                                                                              |
-| tooltipPortal   | `boolean`                                | No       | `false`                        | Render the tooltip into `document.body` (`position: fixed`) so scroll/overflow ancestors never clip it.                                    |
+| Prop            | Type                                     | Required | Default                        | Description                                                                                                                                                                 |
+| --------------- | ---------------------------------------- | -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data            | `FunnelStage[]`                          | Yes      | –                              | Ordered array of `{ category, value }` stage objects. Stages are rendered left-to-right; the tallest bar corresponds to the maximum value.                                  |
+| stageColors     | `string[]`                               | No       | chart palette                  | Fill color for each stage bar, index-matched to `data`. Unspecified entries fall back to the shared chart palette.                                                          |
+| connectorColor  | `string`                                 | No       | `light-dark(#BDFFFB, #164e4a)` | Fill color for the trapezoidal connector shapes between consecutive stages. The default resolves per color scheme via CSS `light-dark()`.                                   |
+| slopeWidth      | `number`                                 | No       | `10`                           | Horizontal width (SVG units) of each slope connector. Larger values produce steeper visual drops.                                                                           |
+| onHoverExpand   | `number`                                 | No       | `10`                           | Extra vertical pixels added symmetrically to the hovered stage bar. Set to `0` to disable.                                                                                  |
+| radius          | `number`                                 | No       | `4`                            | Corner radius on each stage bar in pixels.                                                                                                                                  |
+| maxHeight       | `number`                                 | No       | `420`                          | Upper bound (px) on the rendered chart height.                                                                                                                              |
+| minHeight       | `number`                                 | No       | `0`                            | Lower bound (px) on the rendered chart height.                                                                                                                              |
+| showValueLabels | `boolean`                                | No       | `true`                         | Whether to render the value and percentage label centred inside each stage bar.                                                                                             |
+| valueFormat     | `(value: number, max: number) => string` | No       | `"<value>  \|  <pct>%"`        | Custom formatter for in-bar labels. Receives the stage value and the maximum value across all stages.                                                                       |
+| aspectRatio     | `number`                                 | No       | `16 / 9`                       | Width-to-height ratio passed to `ChartContainer`. Controls the chart's height relative to its container width.                                                              |
+| testId          | `string`                                 | No       | –                              | Value for the `data-pw` attribute on the chart root element.                                                                                                                |
+| classes         | `string`                                 | No       | –                              | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                                                              |
+| empty           | `Snippet`                                | No       | –                              | Content rendered when `data` is empty or all values are zero.                                                                                                               |
+| tooltipPortal   | `boolean`                                | No       | `false`                        | Render the tooltip into the chart's own root (shadow root, or `document.body`) with `position: fixed`, clamped to the viewport, so scroll/overflow ancestors never clip it. |
 
 ## Events
 
@@ -126,6 +134,7 @@ Override these custom properties to theme the component.
 | `--funnel-chart-value-font-size`    | `11px`                         | font-size     | Font size of in-bar value labels.                                                            |
 | `--funnel-chart-bar-hover-opacity`  | `1`                            | opacity       | Opacity of the hovered stage bar.                                                            |
 | `--funnel-chart-bar-dimmed-opacity` | `0.35`                         | opacity       | Opacity of non-hovered bars when another stage is hovered.                                   |
+| `--chart-transition-easing`         | `ease`                         | transition    | Easing curve of hover and expand transitions. Falls back through `--motion-easing`.          |
 
 ## Dark mode
 
@@ -153,20 +162,71 @@ type FunnelStage = {
 
 ## Web Component
 
+`sui-funnel-chart` is registered by the web-component bundle. `FunnelChart`
+portals its tooltip via `tooltipPortal`, and a portalled node keeps its
+shadow-scoped styles because `ChartTooltip` resolves the portal destination
+from the node's own root (`getRootNode()`) instead of hardcoding
+`document.body`.
+
 ```html
-<sui-funnel-chart></sui-funnel-chart>
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-funnel-chart show-value-labels connector-color="#BDFFFB" slope-width="24"></sui-funnel-chart>
 
 <script>
   const chart = document.querySelector('sui-funnel-chart');
   chart.data = [
     { category: 'Visit', value: 12000 },
-    { category: 'Cart', value: 4200 },
+    { category: 'Product View', value: 8400 },
+    { category: 'Add to Cart', value: 4200 },
+    { category: 'Checkout', value: 2100 },
     { category: 'Purchase', value: 980 }
   ];
-  chart.stageColors = ['#4e79a7', '#f28e2b', '#59a14f'];
-  chart.showValueLabels = true;
-  chart.addEventListener('onstageclick', (e) => console.log(e.detail));
+  chart.valueFormat = (value) => value.toLocaleString();
+  chart.onstageclick = ({ index, stage }) => console.log('clicked', stage.category, index);
 </script>
 ```
 
-All props are exposed as web component properties. Array and object props (`data`, `stageColors`, `valueFormat`, `onstageclick`, `onstagehover`) must be set via JavaScript property assignment, not HTML attributes.
+**Scalar props are kebab-case attributes**, coerced to their declared type:
+`connector-color`, `slope-width`, `on-hover-expand`, `show-value-labels`,
+`aspect-ratio`, `max-height`, `min-height`, `radius`, `tooltip-portal`, `test-id`,
+`classes`. Booleans are presence-based, so `show-value-labels` is on by default and
+adding `show-value-labels="false"` does not turn it off — remove the attribute
+instead.
+
+**Everything else is a JS property**, because arrays, objects and functions cannot
+cross the HTML-attribute boundary:
+
+```js
+const chart = document.querySelector('sui-funnel-chart');
+chart.data = stages;
+chart.stageColors = ['#8EE3F6', '#79E2E9', '#82DEE4', '#87E3D3', '#78CDBE'];
+chart.valueFormat = (value, max) => `${value} of ${max}`;
+chart.onstageclick = ({ index, stage }) => console.log(index, stage.category);
+chart.onstagehover = (event) => console.log(event?.stage.category ?? 'none');
+```
+
+Assigning `onstageclick` and `onstagehover` as properties, as above, still works
+exactly as shown. Each also dispatches a same-named DOM event with `detail` set to
+the same argument the property callback receives (`null` for `onstagehover` when
+the pointer leaves a stage), so `addEventListener` works too:
+
+```js
+chart.addEventListener('stageclick', (e) => console.log(e.detail.index, e.detail.stage.category));
+chart.addEventListener('stagehover', (e) => console.log(e.detail?.stage.category ?? 'none'));
+```
+
+### Slots
+
+| Slot    | Replaces                                                                   |
+| ------- | -------------------------------------------------------------------------- |
+| `empty` | The empty state shown when `data` is empty or every stage's value is zero. |
+
+Supply it only when you mean to: with no `empty` slot the component falls through
+to its own chart frame, and an empty slot would replace that frame with a blank box.
+
+> **Svelte-only:** unlike `SankeyChart` and `PieChart`, `FunnelChart` has no
+> `tooltipSnippet` (or any other tooltip-customizing prop) — it always renders
+> `ChartTooltip`'s built-in markup. There is no parameterized snippet here for a
+> `<slot>` to drop the arguments of, and nothing for a Web Component consumer to
+> lose by using `<sui-funnel-chart>` instead of the Svelte component.

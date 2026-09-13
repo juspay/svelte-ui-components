@@ -12,6 +12,29 @@ export type MandatoryInputProperties = {
 
 export type OptionalInputProperties = {
   placeholder?: string | null;
+  /**
+   * Native input type, and the switch `validateInput` runs on.
+   *
+   * **Only `text`, `tel`, `password` and `email` are validated.** `number`,
+   * `time`, `date`, `search` and `url` have no branch at all: they are always
+   * reported Valid, `onErrorMessage` never shows for them, and the browser's own
+   * constraint validation (`min`/`max`/`step`, the type's own parsing) is the
+   * only thing checking the value. Supply `validators` if you need more.
+   *
+   * `tel` with no `validationPattern` checks only the characters a phone number
+   * may contain -- digits, spaces, `+`, `-`, `.`, `()` -- and nothing about any
+   * national format, so `+33 6 12 34 56 78` and `(555) 123-4567` are accepted.
+   * Before 4.20 it silently required a ten-digit Indian mobile number. To ask for
+   * that rule, or any other market's, pass the preset's patterns:
+   *
+   * ```svelte
+   * <Input
+   *   dataType="tel"
+   *   validationPattern={TEL_PRESET_IN_MOBILE.valid}
+   *   inProgressPattern={TEL_PRESET_IN_MOBILE.inProgress}
+   * />
+   * ```
+   */
   dataType?: InputDataType;
   label?: string | null;
   onErrorMessage?: string | null;
@@ -99,7 +122,20 @@ export type OptionalInputProperties = {
   leftIconLabel?: string;
   /** Accessible label for the clickable rightIcon button (defaults to a generic label). */
   rightIconLabel?: string;
-  /** Appends a required asterisk beside the label and sets aria-required on the field. */
+  /**
+   * Appends a required asterisk beside the label and sets `aria-required` and the
+   * native `required` attribute on the field. This is the platform's own name and the
+   * one every other form control in this library uses, so it is the spelling to reach
+   * for. Wins over `mandatory` when both are supplied.
+   */
+  required?: boolean;
+  /**
+   * @deprecated Use `required`. This is the original spelling of the same concept and
+   * keeps working unchanged, but the library settled on the platform's name once the
+   * other form controls gained it. The `--input-mandatory-*` tokens and the
+   * `.input-mandatory-asterisk` class keep their names: those are a separate public
+   * surface, and renaming them would break every consumer theming the asterisk.
+   */
   mandatory?: boolean;
   /** Forces the error border independent of validationPattern (server/runtime-driven errors). */
   forceError?: boolean;

@@ -37,11 +37,16 @@
 
 <style>
   :global(.media-upload-themed) {
-    --media-upload-label-color: rgb(20, 90, 200);
+    --media-upload-label-color: light-dark(rgb(20, 90, 200), rgb(147, 197, 253));
     --media-upload-item-border-radius: 2px;
     --media-upload-item-width: 90px;
     --media-upload-item-height: 90px;
     --media-upload-add-background-color: rgb(255, 244, 214);
     --media-upload-add-border: 1.5px dashed rgb(210, 140, 10);
+    /* This demo paints the tile cream in BOTH themes, so the text on it has to
+       be named here too -- the library's neutral default is tuned for the tile's
+       normal surface and reads at 2.41:1 on this one. */
+    --media-upload-add-color: #503608;
+    --media-upload-add-hint-color: #6e4b14;
   }
 </style>

@@ -231,7 +231,7 @@
   .card-description {
     font-size: var(--card-description-font-size, 14px);
     color: var(--card-description-color, inherit);
-    opacity: var(--card-description-opacity, 0.6);
+    opacity: var(--card-description-opacity, 0.8);
     margin-top: var(--card-description-margin-top, 4px);
   }
 

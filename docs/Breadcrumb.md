@@ -138,3 +138,19 @@ The web component exposes a built-in default item renderer (link for non-last it
   ];
 </script>
 ```
+
+> **Svelte-only:** `item` (receives `BreadcrumbItemContext`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+### Slots
+
+`sui-breadcrumb` exposes no named slot. `separator` is an argument-less snippet, but Breadcrumb
+renders it once per gap between crumbs, and a named slot can be filled only once: the browser
+assigns light-DOM children to the first matching slot in the shadow tree, so a four-crumb trail
+would show the slotted separator in the first gap and leave the other two empty — not even the
+built-in `/`. Set it as a JavaScript property instead, which applies to every gap:
+
+```js
+document.querySelector('sui-breadcrumb').separator = mySnippet;
+```
+
+Omitting it renders the built-in `/` between crumbs.

@@ -349,6 +349,13 @@ Tag: `<sui-pill>`
 `attrs` is object-valued (set as a property, e.g. `el.attrs = { 'data-state': 'waiting' }`),
 like Card's.
 
+`ondismiss` also dispatches a same-named DOM custom event (bubbles, composed) for a consumer who
+only calls `addEventListener` — `pill.addEventListener('dismiss', () => ...)`, with no `detail`.
+`onclick` does not dispatch a DOM event: `click` is already `HTMLElement`'s own native event, so a
+`pill.addEventListener('click', ...)` listener still sees the real click that bubbles out of the
+shadow root on its own, and adding a second, synthetic one under the same name would
+double-deliver it to that same listener.
+
 ### Slots
 
 | Slot Name      | Maps to Snippet | Description                                                              |

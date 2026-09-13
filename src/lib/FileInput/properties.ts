@@ -15,6 +15,13 @@ export type FileInputProperties = {
   disabled?: boolean;
   testId?: string;
   classes?: string;
+  /** Text shown, and announced, when the control is in error. Linked through
+   *  `aria-describedby`, and sets `aria-invalid` while present. */
+  errorMessage?: string | null;
+  /** Persistent helper text describing the control, linked the same way. */
+  infoMessage?: string | null;
+  /** Marks the control invalid without supplying a message. */
+  invalid?: boolean;
   onfiles?: (files: File[]) => void;
   onerror?: (message: string) => void;
 };

@@ -55,3 +55,12 @@ Tag: `<sui-chat-tool-status>`
 ```html
 <sui-chat-tool-status label="Searching…"></sui-chat-tool-status>
 ```
+
+### Slots
+
+| Slot Name | Maps to Snippet | Description                                                                          |
+| --------- | --------------- | ------------------------------------------------------------------------------------ |
+| `icon`    | `icon`          | Leading indicator, replacing the spinner. Defaults to the built-in `Loader` spinner. |
+
+A JavaScript-assigned `icon` property wins over slotted markup; the slot is the fallback, and
+the slot's own fallback is the spinner, so supplying neither still renders it.

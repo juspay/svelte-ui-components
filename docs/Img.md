@@ -82,3 +82,8 @@ Tag: `<sui-img>`
 ```html
 <sui-img src="/photo.jpg" alt="Description" fallback="/fallback.jpg" test-id="my-img"></sui-img>
 ```
+
+`onerror` is a JS-property callback only (`img.onerror = () => ...`) and does not dispatch a
+DOM event: `error` is already `HTMLElement`'s own native event, so an
+`img.addEventListener('error', ...)` listener still sees the real one, and adding a second,
+synthetic one under the same name would double-deliver it to that same listener.

@@ -39,12 +39,26 @@
   });
 
   /**
-   * Svelte action: relocates the tooltip to document.body so a position:fixed
+   * Where a portalled node is allowed to land. Svelte scopes a custom element's
+   * CSS to its shadow root, so `document.body` is the one place the tooltip must
+   * never go from inside a `<sui-*>` element: it keeps its `svelte-*` scoping
+   * class and loses every rule behind it, plus the host's custom properties.
+   * Measured in Chromium -- position fell back to `static`, background to
+   * transparent, border and shadow to none. Its own root holds that stylesheet
+   * and still sits above every overflow/scroll ancestor between the two.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
+  /**
+   * Svelte action: relocates the tooltip out to its root so a position:fixed
    * tooltip is never clipped by an overflow/scroll ancestor. `use:` actions
    * never run during SSR.
    */
-  const portalToBody = (node: HTMLElement) => {
-    document.body.appendChild(node);
+  const portalToRoot = (node: HTMLElement) => {
+    portalTarget(node).appendChild(node);
     return { destroy: () => node.remove() };
   };
 
@@ -105,7 +119,7 @@
       bind:clientHeight={tooltipHeight}
       class="chart-tooltip portal {unstyled ? 'unstyled' : ''} {classes ?? ''}"
       style="left: {pos.left}px; top: {pos.top}px;"
-      use:portalToBody
+      use:portalToRoot
       data-pw="chart-tooltip"
       testID="chart-tooltip"
     >

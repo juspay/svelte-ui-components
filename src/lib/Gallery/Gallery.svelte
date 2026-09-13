@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getActiveElement } from '../_interaction/focus';
+  import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
   import type { Snippet } from 'svelte';
   import { fade } from 'svelte/transition';
@@ -35,7 +37,8 @@
     onclose,
     onchange,
     onkeydown,
-    classes
+    classes,
+    lightboxTransitionDuration
   }: GalleryProperties = $props();
 
   let lightboxDiv: HTMLDivElement | null = $state(null);
@@ -54,16 +57,20 @@
   let showItemActions = $derived(showEditButton || showDeleteButton);
 
   function lightboxAction(node: HTMLElement) {
-    if (openerElement === null && document.activeElement instanceof HTMLElement) {
-      openerElement = document.activeElement;
+    const opener = getActiveElement(node);
+    if (openerElement === null && opener instanceof HTMLElement) {
+      openerElement = opener;
     }
-    document.body.style.overflow = 'hidden';
+    // Reference-counted: a lightbox opened from inside another scroll-locking
+    // surface (Modal, Sheet, CommandMenu) must not restore scroll out from
+    // under it on close. See lockBodyScroll's own doc comment in utils.ts.
+    lockBodyScroll();
     tick().then(() => {
       node.focus();
     });
     return {
       destroy() {
-        document.body.style.overflow = '';
+        unlockBodyScroll();
         if (openerElement !== null) {
           openerElement.focus();
           openerElement = null;
@@ -93,7 +100,7 @@
     activeIndex = index;
     onchange?.(activeIndex);
     await tick();
-    if (lightboxDiv !== null && !lightboxDiv.contains(document.activeElement)) {
+    if (lightboxDiv !== null && !lightboxDiv.contains(getActiveElement(lightboxDiv))) {
       lightboxDiv.focus();
     }
   }
@@ -138,11 +145,11 @@
     }
     if (
       event.shiftKey &&
-      (document.activeElement === first || document.activeElement === lightboxDiv)
+      (getActiveElement(lightboxDiv) === first || getActiveElement(lightboxDiv) === lightboxDiv)
     ) {
       event.preventDefault();
       last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
+    } else if (!event.shiftKey && getActiveElement(lightboxDiv) === last) {
       event.preventDefault();
       first.focus();
     }
@@ -266,7 +273,7 @@
     use:lightboxAction
     onclick={handleBackdropClick}
     onkeydown={handleLightboxKeydown}
-    transition:fade={{ duration: 200 }}
+    transition:fade={{ duration: lightboxTransitionDuration ?? 200 }}
   >
     <div class="lightbox-close" bind:this={closeButtonWrap}>
       <Button ariaLabel="Close gallery" onclick={closeLightbox}>
@@ -450,13 +457,13 @@
     color: var(--gallery-list-title-color, inherit);
     font-size: var(--gallery-list-title-font-size, 14px);
     font-weight: var(--gallery-list-title-font-weight, 500);
-    font-family: var(--gallery-list-title-font-family);
+    font-family: var(--gallery-list-title-font-family, inherit);
   }
 
   .list-caption {
     color: var(--gallery-list-caption-color, inherit);
     font-size: var(--gallery-list-caption-font-size, 12px);
-    font-family: var(--gallery-list-caption-font-family);
+    font-family: var(--gallery-list-caption-font-family, inherit);
   }
 
   .gallery-item-actions {
@@ -542,7 +549,7 @@
   .lightbox-caption {
     color: var(--gallery-lightbox-caption-color, #ffffff);
     font-size: var(--gallery-lightbox-caption-font-size, 14px);
-    font-family: var(--gallery-lightbox-caption-font-family);
+    font-family: var(--gallery-lightbox-caption-font-family, inherit);
     text-align: center;
     max-width: var(--gallery-lightbox-image-width, 85vw);
   }
@@ -554,7 +561,7 @@
     transform: translateX(-50%);
     color: var(--gallery-lightbox-counter-color, #ffffff);
     font-size: var(--gallery-lightbox-counter-font-size, 13px);
-    font-family: var(--gallery-lightbox-counter-font-family);
+    font-family: var(--gallery-lightbox-counter-font-family, inherit);
   }
 
   .lightbox-close,

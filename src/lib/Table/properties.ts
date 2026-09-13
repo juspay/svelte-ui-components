@@ -5,6 +5,22 @@ import type { TooltipPosition } from '../Tooltip/properties';
 export type SortDirection = 'asc' | 'desc';
 
 /**
+ * Which column a table is sorted by, addressed by column ID rather than by
+ * column index.
+ *
+ * `columnId` is a `TableColumn.id` in the keyed model, and the column's index
+ * rendered as a string in the positional model (`tableHeaders`/`tableData`),
+ * which has no other identity to offer. The distinction is the whole point of
+ * the type: an index follows a POSITION, so reordering or hiding a column
+ * silently re-points a stored sort at whichever field moved into that slot,
+ * while an ID follows the FIELD and a hidden field simply stops being sorted.
+ */
+export type TableSortState = {
+  columnId: string;
+  direction: SortDirection;
+};
+
+/**
  * Built-in cell renderer vocabulary for the keyed column model.
  *
  * `'text'` (the default) renders the cell value as plain text through the
@@ -394,9 +410,29 @@ export type TableCheckboxSelectionConfig = {
  */
 export type TablePaginationConfig = {
   mode?: 'client' | 'server';
-  /** 1-indexed current page. Server mode: controlled by the consumer. */
+  /**
+   * 1-indexed current page — never 0-indexed, so an adapter over a
+   * zero-based engine (TanStack's `pageIndex`) converts once, here, and not
+   * again inside its own page handler.
+   *
+   * Server mode: authoritative. Table renders this page and `onPageChange` is
+   * a request the consumer may honor, delay, or refuse. Client mode: the
+   * starting page — Table then owns paging, and clamps the page it renders to
+   * the last page that actually has rows, so a dataset that shrinks from
+   * outside cannot leave the reader on a blank page past the end.
+   */
   page?: number;
-  /** Rows per page. Default 10. */
+  /**
+   * Rows per page. Default 10.
+   *
+   * Server mode: declaring it makes it authoritative, the same way
+   * `checkboxSelection.selectedIds` takes ownership of selection —
+   * `onPageSizeChange` becomes a request the consumer answers by changing
+   * this value, and refusing leaves both the rows and the chrome at the size
+   * the server actually served. Omit it in server mode to keep the older
+   * behavior where the page-size selector updates the chrome on its own.
+   * Client mode: the starting size, which the selector then owns.
+   */
   pageSize?: number;
   /** Page-size selector options. Default [10, 25, 50, 100]; `[]` hides the selector. */
   pageSizeOptions?: number[];
@@ -469,6 +505,39 @@ export type TableSearchConfig = {
   searchableColumnIndices?: number[];
   testId?: string;
   displayMode?: 'toolbar' | 'inline';
+  /**
+   * Controlled search term. Omitted (every pre-existing consumer): the input
+   * owns its term through an internal state, unchanged. Provided: the input
+   * renders FROM this string and never mutates it — `onSearchTermChange`
+   * reports the would-be next term and the consumer decides, exactly as
+   * `checkboxSelection.selectedIds` does for selection.
+   *
+   * Independent of `onsearchchange`: that prop delegates FILTERING to the
+   * consumer, this one only delegates the visible term, so a controlled term
+   * still filters client-side unless `onsearchchange` is also supplied.
+   */
+  searchTerm?: string;
+  /**
+   * Reports every would-be search term, in controlled and uncontrolled mode
+   * alike. A controlled consumer feeds it back through `searchTerm`; an
+   * uncontrolled one may use it purely as a notification.
+   */
+  onSearchTermChange?: (searchTerm: string) => void;
+};
+
+/**
+ * Why the table is showing nothing, handed to the `empty` snippet.
+ *
+ * "No records yet" and "nothing matched your search" are different messages
+ * with different remedies, and only Table can tell them apart once the built-in
+ * search owns the term: a consumer reading `rows.length === 0` sees the same
+ * zero either way. `searchTerm` is passed alongside so the message can quote
+ * what was searched for.
+ */
+export type TableEmptyContext = {
+  reason: 'no-rows' | 'no-matches';
+  /** The term currently filtering the view; `''` when none is active. */
+  searchTerm: string;
 };
 
 export type TableProperties = OptionalTableProperties & TableEventProperties;
@@ -527,6 +596,26 @@ export type OptionalTableProperties = {
    * (e.g. via a server query).
    */
   sortMode?: 'client' | 'server';
+  /**
+   * Controlled sort overlay, keyed by column ID (see `TableSortState`).
+   *
+   * Omitted (every pre-existing consumer): today's uncontrolled behavior —
+   * Table owns the sort state and a header click re-sorts it directly.
+   * Provided: the header indicators, `aria-sort`, and the client-side reorder
+   * all render FROM this value and Table never mutates it; a header click
+   * reports the would-be next state through `onsortchange` (and the
+   * unchanged `onsort`) and the consumer decides. This is what lets a sort
+   * held in a URL or on a server be restored into the built-in header.
+   *
+   * `null` is a controlled value meaning "no column is sorted" — pass it to
+   * clear a sort without handing sort ownership back to the table. A
+   * `columnId` that no currently rendered column carries (a hidden column)
+   * sorts nothing, rather than falling through to a neighboring field.
+   *
+   * Independent of `sortMode`: `'server'` still means Table does not reorder
+   * rows locally, controlled or not.
+   */
+  sortState?: TableSortState | null;
   /** Built-in paginator (see TablePaginationConfig). */
   pagination?: TablePaginationConfig;
   /**
@@ -564,6 +653,32 @@ export type OptionalTableProperties = {
    * edge. Defaults to `false` (in-flow rendering, unchanged).
    */
   usePortal?: boolean;
+  /**
+   * Opt-in stacked "record card" layout below a 640px viewport, in place
+   * of the default horizontal scroll. Off by default — flipping every existing
+   * consumer's table to a different layout at some width they never chose
+   * would be a breaking change to a published library, not a bug fix.
+   *
+   * CSS alone cannot build this for a Web Component consumer: the classic
+   * `td::before { content: attr(data-label) }` recipe needs a rule INSIDE the
+   * shadow tree, which a `<sui-table>` consumer's stylesheet can never reach.
+   * So Table carries the column→label mapping itself and renders it as markup
+   * (a real, `aria-hidden` element, not generated content — see the mobile
+   * label span in the template), which is compiled into the shadow root
+   * exactly like the rest of this file's styles and works identically through
+   * `<sui-table>` and the Svelte component.
+   *
+   * Stacking cells vertically means their CSS `display` can no longer be
+   * `table-cell` — which is also what silently drops the browser's implicit
+   * table/row/cell accessibility roles in several browser/AT combinations.
+   * This prop therefore also stamps explicit `role="table"/"rowgroup"/"row"/
+   * "columnheader"/"cell"` back onto the native elements (harmless and
+   * redundant at desktop width, load-bearing at the mobile breakpoint) — the
+   * documented fix for "CSS reformats a table but the AX tree must not lose
+   * it". See the `.table-mobile-cards` block in `<style>` for the layout and
+   * the accessibility decision recorded there for the visible-label choice.
+   */
+  mobileCardLayout?: boolean;
   sortable?: boolean;
   sortableColumns?: number[];
   stickyHeader?: boolean;
@@ -575,7 +690,14 @@ export type OptionalTableProperties = {
   sortDescIcon?: Snippet;
   sortDefaultIcon?: Snippet;
   cell?: Snippet<[JSONValue, number, number]>;
-  empty?: Snippet;
+  /**
+   * Rendered in place of the rows when the view has none. Receives why
+   * (`TableEmptyContext`) so one snippet can serve both "no records yet" and
+   * "nothing matched", which are different messages with different remedies.
+   * Declaring it without parameters stays valid — every existing consumer is
+   * unaffected.
+   */
+  empty?: Snippet<[TableEmptyContext]>;
   classes?: string;
   /** Snippet rendered in a footer region below the table (e.g. a paginator). */
   paginatorSlot?: Snippet;
@@ -599,6 +721,17 @@ export type OptionalTableProperties = {
 export type TableEventProperties = {
   onrowclick?: (rowIndex: number, rowData: JSONValue[], originalIndex: number) => void;
   onsort?: (columnIndex: number, direction: SortDirection) => void;
+  /**
+   * Fires with every `onsort`, carrying the same change keyed by column ID —
+   * the input half of the controlled contract (`sortState`) speaks IDs, so the
+   * report does too, and a consumer never has to resolve an index against a
+   * column list that may since have changed.
+   *
+   * Only ever reports a sorted state: a header click cycles ascending →
+   * descending → ascending, exactly as before. Clearing a sort is the
+   * consumer's own act of setting `sortState` to `null`.
+   */
+  onsortchange?: (sortState: TableSortState) => void;
   /**
    * C2-3: When provided, the built-in client-side filtering is disabled and
    * this callback is called on every search input change instead, letting the

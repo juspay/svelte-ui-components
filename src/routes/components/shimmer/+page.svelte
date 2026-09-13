@@ -9,7 +9,7 @@
 
 <div class="demo-row" style="align-items: flex-start;">
   <div style="--shimmer-width: 48px; --shimmer-height: 48px; --shimmer-border-radius: 50%;">
-    <Shimmer />
+    <Shimmer testId="shimmer-avatar" />
   </div>
   <div style="display: flex; flex-direction: column; gap: 8px; flex: 1; max-width: 300px;">
     <div style="--shimmer-width: 60%; --shimmer-height: 20px;">

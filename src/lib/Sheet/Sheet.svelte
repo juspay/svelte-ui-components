@@ -1,9 +1,12 @@
 <script lang="ts">
+  import { reducedMotion } from '../reduced-motion.svelte';
   import type { SheetProperties } from './properties';
   import { fly, fade } from 'svelte/transition';
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
+  import { focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
+  import { registerDismissible } from '../_interaction/dismissal';
 
   let {
     open = $bindable(false),
@@ -27,6 +30,26 @@
   let sheetPanel: HTMLDivElement | null = $state(null);
 
   let flyParams = $derived.by(() => {
+    // Under reduced motion every side behaves as `center` already does. That is
+    // not an invented fallback: the `center` case below documents it in the
+    // component's own words -- "a centered dialog only fades, so x/y stay at 0
+    // and `fly` degrades to exactly the overlay's own fade transition". The
+    // panel still appears, it simply stops travelling 400px to get there.
+    //
+    // A directive's parameters are a JS object, so no @media block can reach
+    // them; the guard has to be here.
+    //
+    // Reading `reducedMotion.current` (real `$state`) rather than calling
+    // `prefersReducedMotion()` (a plain, un-reactive read) is what keeps this
+    // derived subscribed even on this early-return branch, where `side` below
+    // is never reached. Sheet's demo keeps one instance mounted across many
+    // open/close cycles (`{#if open}` lives inside Sheet, not around it), so a
+    // preference the user toggles mid-session has to reach an already-mounted
+    // panel -- a plain read here would latch whatever it saw on first
+    // evaluation and never revisit it.
+    if (reducedMotion.current) {
+      return { x: 0, y: 0, duration: 300 };
+    }
     switch (side) {
       case 'left':
         return { x: -400, y: 0, duration: 300 };
@@ -57,12 +80,14 @@
     }
   }
 
+  // Escape moved out to the shared dismissal module (see registerDismissible
+  // in scrollLockAction below) so only the topmost dismissible layer -- this
+  // sheet, or a Menu/CommandMenu opened on top of it -- answers Escape,
+  // instead of every open surface's own keydown handler reacting to the same
+  // press. Tab and Enter/Space stay here: neither is a cross-component
+  // ownership question, just this panel's own trap and its overlay's
+  // click-equivalent activation.
   function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      close();
-      return;
-    }
-
     // The overlay only carries role="button" while it is dismissible, and a
     // role="button" has to answer Enter/Space as well as click (WCAG 2.1
     // SC 2.1.1) -- tabindex="-1" keeps it out of the Tab sequence, but the
@@ -80,29 +105,37 @@
       return;
     }
 
-    if (event.key === 'Tab' && sheetPanel !== null) {
-      const focusable = sheetPanel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      const first = focusable.item(0);
-      const last = focusable.item(focusable.length - 1);
-
-      if (first === null || last === null) {
-        return;
-      }
-
-      const atEdge = document.activeElement === (event.shiftKey ? first : last);
-      if (atEdge) {
+    if (event.key === 'Tab') {
+      const target = focusTrapTabTarget({
+        container: sheetPanel,
+        activeElement: getActiveElement(sheetPanel),
+        shiftKey: event.shiftKey
+      });
+      if (target !== null) {
         event.preventDefault();
-        (event.shiftKey ? last : first).focus();
+        target.focus();
       }
     }
   }
 
   function scrollLockAction(node: HTMLElement) {
-    const previousFocus = document.activeElement;
+    // getActiveElement rather than document.activeElement: when the sheet is
+    // used through its custom element the opener lives inside a shadow root,
+    // where document.activeElement reports only the host and the real opener
+    // could never be handed focus back.
+    const previousFocus = getActiveElement(node);
     let active = true;
     lockBodyScroll();
+    // Registered here rather than in an onMount/onDestroy pair: this action's
+    // mount/destroy already brackets exactly the open span (the overlay only
+    // exists while `open` is true, per the `{#if open}` below), the same
+    // span the scroll lock above uses. `element` reads `sheetPanel` lazily --
+    // it is not bound yet at this point in a fresh open, same reason
+    // sheetPanel.focus() below is deferred through tick().
+    const releaseDismissible = registerDismissible({
+      element: () => sheetPanel,
+      onEscape: close
+    });
     tick().then(() => {
       if (active && sheetPanel !== null) {
         sheetPanel.focus();
@@ -111,11 +144,17 @@
     return {
       destroy() {
         active = false;
+        releaseDismissible();
         unlockBodyScroll();
+        // Only take focus back when it is still somewhere the sheet is
+        // responsible for -- inside the panel, or nowhere at all. If the user
+        // has already moved on to another control, stealing it back would be
+        // the more disruptive bug.
+        const current = getActiveElement(node);
         if (
           previousFocus instanceof HTMLElement &&
           previousFocus.isConnected &&
-          (document.activeElement === document.body || node.contains(document.activeElement))
+          (current === null || current === document.body || node.contains(current))
         ) {
           previousFocus.focus();
         }

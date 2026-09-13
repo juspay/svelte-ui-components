@@ -77,3 +77,47 @@ The pending-attachment strip above a chat composer: image thumbnails and file ti
 | `--attachment-chip-row-file-glyph-fold-color`    | `#ffffff`                                 | Built-in document glyph fold (page-corner) color.                                                                                                          |
 | `--attachment-chip-row-file-name-font-size`      | `0.75rem`                                 | Filename font size.                                                                                                                                        |
 | `--attachment-chip-row-file-name-color`          | `#52525b`                                 | Filename color.                                                                                                                                            |
+
+## Web Component
+
+Tag: `<sui-attachment-chip-row>`
+
+```html
+<sui-attachment-chip-row test-id="composer-attachments"></sui-attachment-chip-row>
+```
+
+`images`, `files`, `videos`, the tooltip functions, both icon snippets and every `on*` handler
+are set as JavaScript properties — none of them is serialisable as an attribute. `test-id` and
+`classes` are attributes.
+
+### Web Component Events
+
+None of the six `on*` props collides with a native `HTMLElement` handler, so each is available
+as a JS property AND dispatches a same-named DOM custom event (bubbles, composed) for a consumer
+who only calls `addEventListener`: `onremoveimage` → `removeimage`, `onremovefile` →
+`removefile`, `onremovevideo` → `removevideo`, `onopenimage` → `openimage`, `onopenvideo` →
+`openvideo`, `onopenfile` → `openfile`. Each detail is the same single argument the JS-property
+callback receives — an attachment id string for the three `remove*` events, the attachment
+object itself for the three `open*` events:
+
+```js
+const row = document.querySelector('sui-attachment-chip-row');
+row.addEventListener('removeimage', (e) => console.log(e.detail)); // image id
+row.addEventListener('openimage', (e) => console.log(e.detail)); // image object
+```
+
+### Slots
+
+`sui-attachment-chip-row` exposes no named slot. `removeIcon` and `fileIcon` are argument-less
+snippets, but the component renders them once per attachment, and a named slot can be filled
+only once: the browser assigns light-DOM children to the first matching slot in the shadow tree,
+so with three chips the slotted glyph would land on the first and the other two would render
+empty — losing the built-in cross and document glyphs as well. Set them as properties instead,
+which applies to every chip:
+
+```js
+document.querySelector('sui-attachment-chip-row').removeIcon = mySnippet;
+```
+
+Omitting them renders the built-in cross on each remove button and the built-in document glyph
+on each file tile.

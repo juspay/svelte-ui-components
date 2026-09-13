@@ -273,6 +273,9 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | allowCreate          | `boolean`                                        | No       | `false`                       | Show a "Create …" row when the query has no exact match. Fires `oncreate`; in multi-select the value is also added to `selected`.                                                                                                                                                                                                               |
 | createLabel          | `(query: string) => string`                      | No       | `Create "{query}"`            | Builds the create-row label from the current query.                                                                                                                                                                                                                                                                                             |
 | action               | `ComboboxAction`                                 | No       | `-`                           | A persistent custom action row at the foot of the dropdown: `{ label, onClick, keepOpen? }`.                                                                                                                                                                                                                                                    |
+| errorMessage         | `string \| null`                                 | No       | `undefined`                   | Text shown, and announced, when the control is in error. Referenced by `aria-describedby` on the group wrapping the control, and sets `aria-invalid` while present.                                                                                                                                                                             |
+| infoMessage          | `string \| null`                                 | No       | `undefined`                   | Persistent helper text describing the control. Referenced the same way, so it is read before the user trips an error rather than only after.                                                                                                                                                                                                    |
+| invalid              | `boolean`                                        | No       | `false`                       | Marks the control invalid without supplying a message, for a consumer driving validity from a server or its own rules.                                                                                                                                                                                                                          |
 
 ## Methods
 
@@ -317,55 +320,57 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                                      | Default                                               | CSS Property  | Description                                                                    |
-| --------------------------------------------- | ----------------------------------------------------- | ------------- | ------------------------------------------------------------------------------ |
-| `--combobox-width`                            | `100%`                                                | width         | Width of the combobox container.                                               |
-| `--combobox-font-family`                      | `inherit`                                             | font-family   | Font family for the input and dropdown text.                                   |
-| `--combobox-font-size`                        | `14px`                                                | font-size     | Font size for the input and dropdown text.                                     |
-| `--combobox-color`                            | `#333333`                                             | color         | Text color for the input and dropdown.                                         |
-| `--combobox-disabled-opacity`                 | `0.5`                                                 | opacity       | Opacity when the combobox is disabled.                                         |
-| `--combobox-disabled-cursor`                  | `not-allowed`                                         | cursor        | Cursor when the combobox is disabled.                                          |
-| `--combobox-input-padding`                    | `8px 12px`                                            | padding       | Inner padding of the input field.                                              |
-| `--combobox-input-background`                 | `#ffffff`                                             | background    | Background color of the input field.                                           |
-| `--combobox-input-border`                     | `1px solid #cccccc`                                   | border        | Border of the input field in its default state.                                |
-| `--combobox-input-border-radius`              | `6px`                                                 | border-radius | Corner rounding of the input field.                                            |
-| `--combobox-input-transition`                 | `border-color 0.15s, box-shadow 0.15s`                | transition    | Transition animation for input border and shadow changes.                      |
-| `--combobox-input-hover-border-color`         | `#999999`                                             | border-color  | Border color of the input on hover.                                            |
-| `--combobox-input-focus-border-color`         | `#2563eb`                                             | border-color  | Border color of the input when focused.                                        |
-| `--combobox-input-focus-shadow`               | `0 0 0 2px rgba(37, 99, 235, 0.2)`                    | box-shadow    | Focus ring shadow around the input.                                            |
-| `--combobox-placeholder-color`                | `#999999`                                             | color         | Color of the placeholder text.                                                 |
-| `--combobox-input-prefix-padding`             | `8px`                                                 | padding-left  | Left padding of the input prefix container.                                    |
-| `--combobox-input-suffix-padding`             | `8px`                                                 | padding-right | Right padding of the input suffix container.                                   |
-| `--combobox-dropdown-top`                     | `100%`                                                | top           | Top position of the dropdown relative to the container. Change to open upward. |
-| `--combobox-dropdown-left`                    | `0`                                                   | left          | Left position of the dropdown relative to the container.                       |
-| `--combobox-dropdown-right`                   | `0`                                                   | right         | Right position of the dropdown relative to the container.                      |
-| `--combobox-dropdown-gap`                     | `4px`                                                 | margin-top    | Gap between the input and the dropdown panel.                                  |
-| `--combobox-dropdown-background`              | `#ffffff`                                             | background    | Background color of the dropdown panel.                                        |
-| `--combobox-dropdown-border`                  | `1px solid #cccccc`                                   | border        | Border of the dropdown panel.                                                  |
-| `--combobox-dropdown-border-radius`           | `6px`                                                 | border-radius | Corner rounding of the dropdown panel.                                         |
-| `--combobox-dropdown-shadow`                  | `0 4px 12px rgba(0, 0, 0, 0.1)`                       | box-shadow    | Shadow of the dropdown panel.                                                  |
-| `--combobox-dropdown-max-height`              | `200px`                                               | max-height    | Maximum height of the dropdown before it scrolls.                              |
-| `--combobox-dropdown-z-index`                 | `10`                                                  | z-index       | Stack order of the dropdown panel.                                             |
-| `--combobox-dropdown-padding`                 | `0`                                                   | padding       | Inner padding of the dropdown panel.                                           |
-| `--combobox-option-padding`                   | `8px 12px`                                            | padding       | Inner padding of each option.                                                  |
-| `--combobox-option-color`                     | `#333333`                                             | color         | Text color of options.                                                         |
-| `--combobox-option-font-size`                 | `inherit`                                             | font-size     | Font size of option text.                                                      |
-| `--combobox-option-font-weight`               | `inherit`                                             | font-weight   | Font weight of option text.                                                    |
-| `--combobox-option-hover-background`          | `#f0f0f0`                                             | background    | Background color of an option on hover or when highlighted via keyboard.       |
-| `--combobox-option-hover-color`               | `var(--combobox-option-color, #333333)`               | color         | Text color of an option on hover.                                              |
-| `--combobox-option-selected-background`       | `#e8f0fe`                                             | background    | Background color of the currently selected option.                             |
-| `--combobox-option-selected-color`            | `var(--combobox-option-color, #333333)`               | color         | Text color of the currently selected option.                                   |
-| `--combobox-option-selected-font-weight`      | `inherit`                                             | font-weight   | Font weight of the currently selected option.                                  |
-| `--combobox-option-selected-hover-background` | `var(--combobox-option-selected-background, #e8f0fe)` | background    | Background color of the selected option when also hovered/highlighted.         |
-| `--combobox-option-disabled-opacity`          | `0.4`                                                 | opacity       | Opacity of disabled options.                                                   |
-| `--combobox-option-disabled-cursor`           | `not-allowed`                                         | cursor        | Cursor shown when hovering disabled options.                                   |
-| `--combobox-empty-padding`                    | `8px 12px`                                            | padding       | Padding of the "no results" message.                                           |
-| `--combobox-empty-color`                      | `#999999`                                             | color         | Color of the "no results" message text.                                        |
-| `--combobox-empty-font-style`                 | `italic`                                              | font-style    | Font style of the "no results" message.                                        |
-| `--combobox-dropdown-header-border`           | `none`                                                | border-bottom | Bottom border of the dropdown header section.                                  |
-| `--combobox-dropdown-header-padding`          | `0`                                                   | padding       | Padding of the dropdown header section.                                        |
-| `--combobox-dropdown-footer-border`           | `none`                                                | border-top    | Top border of the dropdown footer section.                                     |
-| `--combobox-dropdown-footer-padding`          | `0`                                                   | padding       | Padding of the dropdown footer section.                                        |
+| Variable                                      | Default                                               | CSS Property  | Description                                                                                           |
+| --------------------------------------------- | ----------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------- |
+| `--combobox-width`                            | `100%`                                                | width         | Width of the combobox container.                                                                      |
+| `--combobox-font-family`                      | `inherit`                                             | font-family   | Font family for the input and dropdown text.                                                          |
+| `--combobox-font-size`                        | `14px`                                                | font-size     | Font size for the input and dropdown text.                                                            |
+| `--combobox-color`                            | `#333333`                                             | color         | Text color for the input and dropdown.                                                                |
+| `--combobox-disabled-opacity`                 | `0.5`                                                 | opacity       | Opacity when the combobox is disabled.                                                                |
+| `--combobox-disabled-cursor`                  | `not-allowed`                                         | cursor        | Cursor when the combobox is disabled.                                                                 |
+| `--combobox-input-padding`                    | `8px 12px`                                            | padding       | Inner padding of the input field.                                                                     |
+| `--combobox-input-background`                 | `#ffffff`                                             | background    | Background color of the input field.                                                                  |
+| `--combobox-input-border`                     | `1px solid #cccccc`                                   | border        | Border of the input field in its default state.                                                       |
+| `--combobox-input-border-radius`              | `6px`                                                 | border-radius | Corner rounding of the input field.                                                                   |
+| `--combobox-input-transition`                 | `border-color 0.15s, box-shadow 0.15s`                | transition    | Transition animation for input border and shadow changes.                                             |
+| `--combobox-input-hover-border-color`         | `#999999`                                             | border-color  | Border color of the input on hover.                                                                   |
+| `--combobox-input-focus-border-color`         | `#2563eb`                                             | border-color  | Border color of the input when focused.                                                               |
+| `--combobox-input-focus-shadow`               | `0 0 0 2px rgba(37, 99, 235, 0.2)`                    | box-shadow    | Focus ring shadow around the input.                                                                   |
+| `--combobox-placeholder-color`                | `#999999`                                             | color         | Color of the placeholder text.                                                                        |
+| `--combobox-input-prefix-padding`             | `8px`                                                 | padding-left  | Left padding of the input prefix container.                                                           |
+| `--combobox-input-suffix-padding`             | `8px`                                                 | padding-right | Right padding of the input suffix container.                                                          |
+| `--combobox-dropdown-top`                     | `100%`                                                | top           | Top position of the dropdown relative to the container. Change to open upward.                        |
+| `--combobox-dropdown-left`                    | `0`                                                   | left          | Left position of the dropdown relative to the container.                                              |
+| `--combobox-dropdown-right`                   | `0`                                                   | right         | Right position of the dropdown relative to the container.                                             |
+| `--combobox-dropdown-gap`                     | `4px`                                                 | margin-top    | Gap between the input and the dropdown panel.                                                         |
+| `--combobox-dropdown-background`              | `#ffffff`                                             | background    | Background color of the dropdown panel.                                                               |
+| `--combobox-dropdown-border`                  | `1px solid #cccccc`                                   | border        | Border of the dropdown panel.                                                                         |
+| `--combobox-dropdown-border-radius`           | `6px`                                                 | border-radius | Corner rounding of the dropdown panel.                                                                |
+| `--combobox-dropdown-shadow`                  | `0 4px 12px rgba(0, 0, 0, 0.1)`                       | box-shadow    | Shadow of the dropdown panel.                                                                         |
+| `--combobox-dropdown-max-height`              | `200px`                                               | max-height    | Maximum height of the dropdown before it scrolls.                                                     |
+| `--combobox-dropdown-z-index`                 | `10`                                                  | z-index       | Stack order of the dropdown panel.                                                                    |
+| `--combobox-dropdown-padding`                 | `0`                                                   | padding       | Inner padding of the dropdown panel.                                                                  |
+| `--combobox-option-padding`                   | `8px 12px`                                            | padding       | Inner padding of each option.                                                                         |
+| `--combobox-option-color`                     | `#333333`                                             | color         | Text color of options.                                                                                |
+| `--combobox-option-font-size`                 | `inherit`                                             | font-size     | Font size of option text.                                                                             |
+| `--combobox-option-font-weight`               | `inherit`                                             | font-weight   | Font weight of option text.                                                                           |
+| `--combobox-option-hover-background`          | `#f0f0f0`                                             | background    | Background color of an option on hover or when highlighted via keyboard.                              |
+| `--combobox-option-hover-color`               | `var(--combobox-option-color, #333333)`               | color         | Text color of an option on hover.                                                                     |
+| `--combobox-option-selected-background`       | `#e8f0fe`                                             | background    | Background color of the currently selected option.                                                    |
+| `--combobox-option-selected-color`            | `var(--combobox-option-color, #333333)`               | color         | Text color of the currently selected option.                                                          |
+| `--combobox-option-selected-font-weight`      | `inherit`                                             | font-weight   | Font weight of the currently selected option.                                                         |
+| `--combobox-option-selected-hover-background` | `var(--combobox-option-selected-background, #e8f0fe)` | background    | Background color of the selected option when also hovered/highlighted.                                |
+| `--combobox-option-disabled-opacity`          | `0.4`                                                 | opacity       | Opacity of disabled options.                                                                          |
+| `--combobox-option-disabled-cursor`           | `not-allowed`                                         | cursor        | Cursor shown when hovering disabled options.                                                          |
+| `--combobox-empty-padding`                    | `8px 12px`                                            | padding       | Padding of the "no results" message.                                                                  |
+| `--combobox-empty-color`                      | `#999999`                                             | color         | Color of the "no results" message text.                                                               |
+| `--combobox-empty-font-style`                 | `italic`                                              | font-style    | Font style of the "no results" message.                                                               |
+| `--combobox-dropdown-header-border`           | `none`                                                | border-bottom | Bottom border of the dropdown header section.                                                         |
+| `--combobox-dropdown-header-padding`          | `0`                                                   | padding       | Padding of the dropdown header section.                                                               |
+| `--combobox-dropdown-footer-border`           | `none`                                                | border-top    | Top border of the dropdown footer section.                                                            |
+| `--combobox-dropdown-footer-padding`          | `0`                                                   | padding       | Padding of the dropdown footer section.                                                               |
+| `--combobox-option-transition-duration`       | `0.1s`                                                | transition    | Duration of an option's hover/active background transition. Falls back through `--motion-duration`.   |
+| `--combobox-option-transition-easing`         | `ease`                                                | transition    | Easing curve of an option's hover/active background transition. Falls back through `--motion-easing`. |
 
 ## Type Reference
 
@@ -423,3 +428,41 @@ Attributes are kebab-case: `aria-label`, `test-id`, `input-value`, `highlighted-
 `no-results-text`, `max-selected`, `max-selected-text`, `allow-create`. `items`, `selected`, `filterFn`, the
 snippet props and every `on*` handler are set as properties, since they are not serialisable
 as attributes.
+
+Of the `on*` handlers, `onopen`, `onadd`, `onremove`, and `oncreate` also dispatch a same-named
+DOM custom event (bubbles, composed) for a consumer who only calls `addEventListener` --
+`combobox.addEventListener('add', (e) => console.log(e.detail))`. `onselect`, `oninput`,
+`onclose`, `onkeydown`, `onfocus`, `onblur`, and `onchange` do not: each is already one of
+`HTMLElement`'s own native events, so `combobox.addEventListener('select', ...)` registers
+without error but is never called by this component -- assign the property instead.
+
+> **Svelte-only from markup:** `itemSnippet` (receives `ComboboxItem, boolean`) and
+> `pillSnippet` (receives `string, () => void, boolean`) take arguments, so neither can be
+> a named slot — a `<slot>` projects markup and does not forward Svelte snippet
+> parameters. They are exposed as JavaScript properties instead, and assigning one DOES
+> receive the arguments: `el.itemSnippet = mySnippet`. There is no HTML-only path.
+
+### Slots
+
+| Slot Name         | Maps to Snippet  | Description                                                                                                                                        |
+| ----------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input-prefix`    | `inputPrefix`    | Leading content inside the control. Nothing renders when the slot is empty, and the control keeps its normal padding — there is no default.        |
+| `input-suffix`    | `inputSuffix`    | Trailing content inside the control. Nothing renders when the slot is empty, and the control keeps its normal padding — there is no default.       |
+| `dropdown-header` | `dropdownHeader` | Row above the option list. Nothing renders when the slot is empty — there is no built-in header.                                                   |
+| `dropdown-footer` | `dropdownFooter` | Row below the option list. Nothing renders when the slot is empty — there is no built-in footer.                                                   |
+| `empty-snippet`   | `emptySnippet`   | Replaces the "no results" row shown when `items` filters down to nothing. Defaults to the built-in `noResultsText` message when the slot is empty. |
+| `action-icon`     | `actionIcon`     | Icon shown beside the create-new-option action row (see `allowCreate`). Nothing renders when the slot is empty — there is no default icon.         |
+
+A JavaScript-assigned property of the same name wins over slotted markup; the slot is the
+fallback. `input-prefix`, `input-suffix`, `empty-snippet` and `action-icon` are claimed only when
+actually filled: the first two because their wrappers carry
+`--combobox-input-prefix-padding` / `--combobox-input-suffix-padding` and an always-claimed
+snippet would inset the field's text around an empty box, `action-icon` because its span sits in
+a `var(--combobox-option-gap, 8px)` flex row and an empty one would indent the action label, and
+`empty-snippet` because Combobox's own default there — `noResultsText` in a styled `.combobox-empty`
+div — would otherwise be replaced by a blank box whenever the slot is left empty.
+
+One caveat on the two dropdown rows: the element supplies those snippets unconditionally, so
+Combobox draws the header and footer `<div>`s whether or not anything was slotted. They occupy
+no space at their defaults (`--combobox-dropdown-header-border: none`, `-padding: 0`), but a
+consumer who themes a border or padding onto an empty one will see it.

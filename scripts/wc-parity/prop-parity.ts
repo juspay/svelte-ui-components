@@ -1,6 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'svelte/compiler';
+import {
+  CALLBACK_PROP_PATTERN,
+  DISPATCH_COLLISION_EXCEPTIONS
+} from './dispatch-collision-exceptions.js';
+import { HOST_EVENT_HANDLER_PROPS } from './host-event-handler-props.js';
 
 /**
  * Shared between the unit guard (source declarations match component props) and
@@ -145,6 +150,78 @@ export function readComponentProps(source: string): ComponentProps {
  * collects those attribute names. A bound identifier that is NOT a declared prop
  * is not forwarding anything a consumer can set, and stays missing.
  */
+/**
+ * The declared names that a wrapper actually USES as a forwarding source.
+ *
+ * `readForwardedProps` answers "which component prop is satisfied by a rename",
+ * which is the direction parity has always checked. This answers the opposite
+ * question -- "is this declared prop wired to anything at all" -- and the two are
+ * not the same set: the first collects `ariaLabel`, this one collects
+ * `checkboxAriaLabel`.
+ */
+export function readRenameSources(source: string, declared: ReadonlySet<string>): string[] {
+  const sources: string[] = [];
+  // A GENERIC descent, not `fragment.nodes` / `nodes` like `readForwardedProps`.
+  // That shape cannot enter an `{#if}`: an IfBlock holds its children under
+  // `consequent` and `alternate`, so a `<Chat {...props} title={chatTitle}>`
+  // inside a branch is invisible to it. Six wrappers render their component
+  // that way and every one looked unwired until this walked the whole tree.
+  //
+  // The existing rule never noticed because the names it loses are all in
+  // HOST_RESERVED_PROPS, and those are reported separately from `missing`. This
+  // rule asks the opposite question, where a missed forwarding would accuse a
+  // correctly-wired prop of being dead -- so it has to see every branch.
+  const visit = (node: unknown): void => {
+    if (node === null || typeof node !== 'object') {
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        visit(child);
+      }
+      return;
+    }
+    const record = asRecord(node);
+    if (record.type === 'Component') {
+      // Every declared identifier ANYWHERE inside an attribute's expression, not
+      // just a bare `prop={declaredName}`. Slider binds
+      // `ariaLabel={sliderAriaLabel ?? referencedLabel}` -- a LogicalExpression --
+      // and reading only the top-level node called a correctly-wired prop dead.
+      // The question here is "is this wired to anything at all", so any mention
+      // inside the binding answers it.
+      collectIdentifiers(record.attributes, declared, sources);
+    }
+    for (const value of Object.values(record)) {
+      visit(value);
+    }
+  };
+  visit(parse(source, { modern: true }));
+  return sources;
+}
+
+function collectIdentifiers(node: unknown, declared: ReadonlySet<string>, into: string[]): void {
+  if (node === null || typeof node !== 'object') {
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      collectIdentifiers(child, declared, into);
+    }
+    return;
+  }
+  const record = asRecord(node);
+  if (
+    record.type === 'Identifier' &&
+    typeof record.name === 'string' &&
+    declared.has(record.name)
+  ) {
+    into.push(record.name);
+  }
+  for (const value of Object.values(record)) {
+    collectIdentifiers(value, declared, into);
+  }
+}
+
 export function readForwardedProps(source: string, declared: ReadonlySet<string>): string[] {
   const root = asRecord(parse(source, { modern: true }));
   const forwarded: string[] = [];
@@ -214,6 +291,12 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   'lang',
   'hidden',
   'tabindex',
+  // Worse than a shadowed accessor: Svelte's custom-element layer iterates
+  // `this.attributes` when syncing attributes onto props, so a wrapper declaring it
+  // threw during render and `<sui-checkbox>` produced an empty shadow root for every
+  // consumer. Missed when this list was enumerated because the sweep asked for
+  // ARIAMixin names and `on*` handlers, not for every accessor on Element.
+  'attributes',
   // `children` is the costliest of these and was measured, not reasoned about:
   // declaring it does not merely shadow `Element.children`, it leaves
   // `element.children` returning undefined outright, so `el.children.length`
@@ -259,166 +342,33 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   'ariaRoleDescription'
 ]);
 
-/**
- * Event-handler IDL attributes that already exist on `HTMLElement`. Declaring
- * one as a custom-element prop replaces the host's own accessor, so
- * `element.onclick = fn` sets this library's prop instead of registering a DOM
- * handler. On `sui-checkbox` and `sui-toggle` that is not just a shadowed
- * accessor but a changed signature: their `onclick` is typed
- * `(checked: boolean) => void`, so the assignment receives a boolean where every
- * other element in the document hands back a `MouseEvent`.
- *
- * Deliberately NOT folded into `HOST_RESERVED_PROPS`. That set is *excluded*
- * from the parity requirement, so putting these there would stop a wrapper that
- * simply forgot to declare `onclick` from being reported missing — masking the
- * exact class of gap this suite exists to catch. These get recorded separately
- * instead: existing declarations are listed, and a new one fails.
- *
- * This is the platform's whole set, not the subset this library happens to use.
- * The first version listed only the 25 names currently declared somewhere, which
- * reads as thorough and is not: a guard built from present usage cannot fail on
- * a name nobody has used yet, so a wrapper adding `oncontextmenu` or `ondblclick`
- * tomorrow would have walked straight past the check whose entire job is to catch
- * that. Reviewed and corrected before merge.
- *
- * Enumerated in Chromium rather than curated by hand: every `on*` own-property
- * name reachable by walking `HTMLElement.prototype`'s chain — 114 of them,
- * through Element, Node and EventTarget. That is the same "ask the browser, do
- * not reason about it" method the ARIAMixin list above was built with, and it is
- * why `onselect` is here (a genuine host accessor) while `onopen`, `ondismiss`,
- * `onretry` and the library's other 80-odd bespoke handler names are not: they
- * collide with nothing.
- *
- * **Enumerate with touch support on.** Four of the 114 — `ontouchstart`,
- * `ontouchend`, `ontouchmove`, `ontouchcancel` — are only defined when the
- * browser reports touch, so a plain desktop context reports 110 and quietly
- * omits them. The first version of this list was built that way and missed all
- * four, while `Button.wc.svelte` was already declaring two: asking the browser
- * is only better than reasoning if you ask a browser configured like the ones
- * consumers use. Playwright's `hasTouch: true` is what makes the difference:
- *
- *   without touch -> []
- *   with touch    -> ontouchstart, ontouchend, ontouchmove, ontouchcancel
- *
- * Re-enumerate if a browser adds handlers. A name missing from this list is not
- * flagged, so the list being complete is what the guard rests on.
- */
-export const HOST_EVENT_HANDLER_PROPS: ReadonlySet<string> = new Set([
-  'onabort',
-  'onanimationcancel',
-  'onanimationend',
-  'onanimationiteration',
-  'onanimationstart',
-  'onauxclick',
-  'onbeforecopy',
-  'onbeforecut',
-  'onbeforeinput',
-  'onbeforematch',
-  'onbeforepaste',
-  'onbeforetoggle',
-  'onbeforexrselect',
-  'onblur',
-  'oncancel',
-  'oncanplay',
-  'oncanplaythrough',
-  'onchange',
-  'onclick',
-  'onclose',
-  'oncommand',
-  'oncontentvisibilityautostatechange',
-  'oncontextlost',
-  'oncontextmenu',
-  'oncontextrestored',
-  'oncopy',
-  'oncuechange',
-  'oncut',
-  'ondblclick',
-  'ondrag',
-  'ondragend',
-  'ondragenter',
-  'ondragleave',
-  'ondragover',
-  'ondragstart',
-  'ondrop',
-  'ondurationchange',
-  'onemptied',
-  'onended',
-  'onerror',
-  'onfocus',
-  'onformdata',
-  'onfullscreenchange',
-  'onfullscreenerror',
-  'ongotpointercapture',
-  'oninput',
-  'oninvalid',
-  'onkeydown',
-  'onkeypress',
-  'onkeyup',
-  'onload',
-  'onloadeddata',
-  'onloadedmetadata',
-  'onloadstart',
-  'onlostpointercapture',
-  'onmousedown',
-  'onmouseenter',
-  'onmouseleave',
-  'onmousemove',
-  'onmouseout',
-  'onmouseover',
-  'onmouseup',
-  'onmousewheel',
-  'onpaste',
-  'onpause',
-  'onplay',
-  'onplaying',
-  'onpointercancel',
-  'onpointerdown',
-  'onpointerenter',
-  'onpointerleave',
-  'onpointermove',
-  'onpointerout',
-  'onpointerover',
-  'onpointerrawupdate',
-  'onpointerup',
-  'onprogress',
-  'onratechange',
-  'onreset',
-  'onresize',
-  'onscroll',
-  'onscrollend',
-  'onscrollsnapchange',
-  'onscrollsnapchanging',
-  'onsearch',
-  'onsecuritypolicyviolation',
-  'onseeked',
-  'onseeking',
-  'onselect',
-  'onselectionchange',
-  'onselectstart',
-  'onslotchange',
-  'onstalled',
-  'onsubmit',
-  'onsuspend',
-  'ontimeupdate',
-  'ontoggle',
-  'ontouchcancel',
-  'ontouchend',
-  'ontouchmove',
-  'ontouchstart',
-  'ontransitioncancel',
-  'ontransitionend',
-  'ontransitionrun',
-  'ontransitionstart',
-  'onvolumechange',
-  'onwaiting',
-  'onwebkitanimationend',
-  'onwebkitanimationiteration',
-  'onwebkitanimationstart',
-  'onwebkitfullscreenchange',
-  'onwebkitfullscreenerror',
-  'onwebkittransitionend',
-  'onwheel'
-]);
+// The authoritative collision set: every existing DOM event-handler IDL
+// attribute on HTMLElement's prototype chain. Lives in its own dependency-free
+// file because src/wc/dispatch.ts (bundled for browsers) needs it too, and this
+// module's node:fs/svelte-compiler imports can never reach that bundle. See
+// host-event-handler-props.ts for the full reasoning and the enumeration itself.
+//
+// The '.js' specifier (not '.ts', not extensionless) is the one spelling every
+// program that reaches this file agrees on: this module is also imported (for
+// prop-parity checks) by tests/wc-prop-parity.spec.ts and
+// tests/wc-event-casing-parity.spec.ts, which pulls it into ./tsconfig.json's
+// (root) program even though it sits outside that config's own `include` --
+// and root's `moduleResolution: "Node"` rejects a literal '.ts' extension
+// (TS2835-adjacent) the moment `allowImportingTsExtensions` is unset, while
+// this file's own tsconfig.json (`moduleResolution: "NodeNext"`) rejects an
+// extensionless specifier outright (TS2835) and only accepts '.js' or a
+// literal '.ts' (via `allowImportingTsExtensions`). '.js' is the only one of
+// the three spellings both configs accept -- the standard NodeNext convention
+// of writing the specifier as it will resolve at runtime, which TS maps back
+// to the co-located `.ts` source file. Confirmed empirically against both
+// `npx tsc -p scripts/wc-parity/tsconfig.json` and
+// `svelte-check --tsconfig ./tsconfig.json`.
+export { HOST_EVENT_HANDLER_PROPS } from './host-event-handler-props.js';
+
+// Re-exported so prop-parity.test.ts's gate can assert against the exact
+// same pattern and exception map dispatch.ts runs on -- one constant each, not a
+// gate-side re-derivation that could silently diverge from the browser bundle's.
+export { CALLBACK_PROP_PATTERN, DISPATCH_COLLISION_EXCEPTIONS };
 
 export type WrapperParity = {
   readonly wrapper: string;
@@ -426,6 +376,8 @@ export type WrapperParity = {
   readonly declared: readonly string[];
   readonly missing: readonly string[];
   readonly reserved: readonly string[];
+  /** Declared on the element but wired to nothing on the component. */
+  readonly dead: readonly string[];
 };
 
 export function readWrapperParity(): readonly WrapperParity[] {
@@ -437,7 +389,7 @@ export function readWrapperParity(): readonly WrapperParity[] {
     const { tag, props } = readCustomElementDeclaration(source);
     const componentPath = wrappedComponentPath(source);
     if (componentPath === null) {
-      results.push({ wrapper, tag, declared: props, missing: [], reserved: [] });
+      results.push({ wrapper, tag, declared: props, missing: [], reserved: [], dead: [] });
       continue;
     }
 
@@ -448,12 +400,389 @@ export function readWrapperParity(): readonly WrapperParity[] {
       ? []
       : component.names.filter((name) => !declared.has(name) && !forwarded.has(name));
 
+    // The opposite direction. Everything above asks "is every component prop
+    // declared on the element"; this asks "does every declared prop reach the
+    // component at all". A name that is neither a prop of the wrapped component
+    // nor mentioned in any binding to it is wired to nothing: the element hands
+    // a consumer an accessor, takes the value, and drops it without an error.
+    // `<sui-stepper>` shipped exactly that -- `onstepclick`, the deprecated alias
+    // 4.0.0 deleted from StepperProperties, left behind on the element.
+    const renamed = new Set(readRenameSources(source, declared));
+    const componentNames = new Set(component.names);
+
     results.push({
       wrapper,
       tag,
       declared: props,
       missing: absent.filter((name) => !HOST_RESERVED_PROPS.has(name)),
-      reserved: absent.filter((name) => HOST_RESERVED_PROPS.has(name))
+      reserved: absent.filter((name) => HOST_RESERVED_PROPS.has(name)),
+      dead: props.filter((name) => !componentNames.has(name) && !renamed.has(name))
+    });
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// A declared callback prop dispatches a same-named DOM CustomEvent unless
+// its name collides with a native HTMLElement handler (HOST_EVENT_HANDLER_PROPS).
+// src/wc/dispatch.ts is the shared runtime mechanism; what follows is the static
+// reader that tells whether a given wrapper's SOURCE actually wires it, the same
+// "read the declaration, don't run the component" method the rest of this file
+// uses for prop parity.
+// ---------------------------------------------------------------------------
+
+/**
+ * The identifier a wrapper's own `let ... = $props()` binds -- either the whole
+ * object (`let props = $props()`) or a rest element inside a destructure
+ * (`let { x, ...props } = $props()`, e.g. Checkbox.wc.svelte). This is the
+ * wrapper's OWN props bag, not the wrapped library component's (readComponentProps
+ * reads that one, off a different file). `null` means the wrapper never binds one
+ * as a single spreadable identifier -- dispatchEvents has nothing to receive.
+ */
+function wrapperPropsBindingName(source: string): string | null {
+  const root = asRecord(parse(source, { modern: true }));
+  const program = asRecord(asRecord(root.instance).content);
+  for (const statement of asList(program.body)) {
+    const node = asRecord(statement);
+    if (node.type !== 'VariableDeclaration') {
+      continue;
+    }
+    for (const declarator of asList(node.declarations)) {
+      const declared = asRecord(declarator);
+      const init = asRecord(declared.init);
+      if (init.type !== 'CallExpression' || asRecord(init.callee).name !== '$props') {
+        continue;
+      }
+      const id = asRecord(declared.id);
+      if (id.type === 'Identifier' && typeof id.name === 'string') {
+        return id.name;
+      }
+      if (id.type === 'ObjectPattern') {
+        for (const property of asList(id.properties)) {
+          const propertyRecord = asRecord(property);
+          if (propertyRecord.type !== 'RestElement') {
+            continue;
+          }
+          const argument = asRecord(propertyRecord.argument);
+          if (typeof argument.name === 'string') {
+            return argument.name;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** The identifier a wrapper's own `const ... = $host()` binds, or `null`. */
+function hostElBindingName(source: string): string | null {
+  const root = asRecord(parse(source, { modern: true }));
+  const program = asRecord(asRecord(root.instance).content);
+  for (const statement of asList(program.body)) {
+    const node = asRecord(statement);
+    if (node.type !== 'VariableDeclaration') {
+      continue;
+    }
+    for (const declarator of asList(node.declarations)) {
+      const declared = asRecord(declarator);
+      const init = asRecord(declared.init);
+      const id = asRecord(declared.id);
+      if (
+        init.type === 'CallExpression' &&
+        asRecord(init.callee).name === '$host' &&
+        id.type === 'Identifier' &&
+        typeof id.name === 'string'
+      ) {
+        return id.name;
+      }
+    }
+  }
+  return null;
+}
+
+type DispatchHelperCall = {
+  /** The import specifier `dispatchEvents` was imported from, or `null` if never imported. */
+  readonly importedFrom: string | null;
+  /** The identifier the call's result was assigned to, e.g. `dispatchers`. */
+  readonly dispatcherVarName: string | null;
+  /** Identifier names of the call's own arguments, in order -- `[]` if not called, or if called with a non-identifier argument. */
+  readonly callArgNames: readonly string[];
+  /**
+   * Whether the call is wrapped in `$derived(...)`, which the dispatch rule requires.
+   *
+   * Not cosmetic. `dispatchEvents` omits a dispatcher for a presence-gated callback
+   * until the consumer has assigned it (see presence-gated-callbacks.ts), and it reads
+   * `props` to decide. Called once, that decision freezes at first render and a
+   * consumer who assigns the callback later never gets the control at all.
+   */
+  readonly reactive: boolean;
+};
+
+const EMPTY_DISPATCH_HELPER_CALL: DispatchHelperCall = {
+  importedFrom: null,
+  dispatcherVarName: null,
+  callArgNames: [],
+  reactive: false
+};
+
+/**
+ * Finds `import { dispatchEvents } from '<relative path>'` (under whatever local
+ * name it was imported as -- there is no reason to rename it today, but nothing
+ * requires the alias) and the one place its result is assigned to a variable.
+ * Reading the CALL's arguments as plain identifier names (rather than resolving
+ * what they hold) is deliberate: `isWc4DispatchWired` below only needs to confirm
+ * they are the SAME identifiers `$host()`/`$props()` were bound to, which is a
+ * name comparison, not a values-flow analysis this file has no need to build.
+ */
+function readDispatchHelperCall(source: string): DispatchHelperCall {
+  const root = asRecord(parse(source, { modern: true }));
+  const program = asRecord(asRecord(root.instance).content);
+
+  let localName: string | null = null;
+  let importedFrom: string | null = null;
+  for (const statement of asList(program.body)) {
+    const node = asRecord(statement);
+    if (node.type !== 'ImportDeclaration') {
+      continue;
+    }
+    const sourceValue = asRecord(node.source).value;
+    for (const specifier of asList(node.specifiers)) {
+      const specifierRecord = asRecord(specifier);
+      if (
+        specifierRecord.type === 'ImportSpecifier' &&
+        asRecord(specifierRecord.imported).name === 'dispatchEvents'
+      ) {
+        const local = asRecord(specifierRecord.local);
+        if (typeof local.name === 'string') {
+          localName = local.name;
+          importedFrom = typeof sourceValue === 'string' ? sourceValue : null;
+        }
+      }
+    }
+  }
+  if (localName === null) {
+    return EMPTY_DISPATCH_HELPER_CALL;
+  }
+
+  for (const statement of asList(program.body)) {
+    const node = asRecord(statement);
+    if (node.type !== 'VariableDeclaration') {
+      continue;
+    }
+    for (const declarator of asList(node.declarations)) {
+      const declared = asRecord(declarator);
+      const init = asRecord(declared.init);
+      // `$derived(dispatchEvents(...))` is the required shape, so the helper call sits
+      // one level down. Unwrap exactly one `$derived` rather than searching, so an
+      // unwrapped call is still found and reported as non-reactive instead of missing.
+      const reactive = init.type === 'CallExpression' && asRecord(init.callee).name === '$derived';
+      const call = reactive ? asRecord(asList(init.arguments)[0]) : init;
+      if (call.type !== 'CallExpression' || asRecord(call.callee).name !== localName) {
+        continue;
+      }
+      const id = asRecord(declared.id);
+      const callArgNames = asList(call.arguments).map((argument) => {
+        const argumentRecord = asRecord(argument);
+        return typeof argumentRecord.name === 'string' ? argumentRecord.name : '';
+      });
+      return {
+        importedFrom,
+        dispatcherVarName: id.type === 'Identifier' && typeof id.name === 'string' ? id.name : null,
+        callArgNames,
+        reactive
+      };
+    }
+  }
+  // Imported but never assigned to a variable: reactive is false because there is no
+  // call to have wrapped.
+  return { importedFrom, dispatcherVarName: null, callArgNames: [], reactive: false };
+}
+
+/** The local binding name of the wrapped `$lib/...` component, e.g. `BarChart`. */
+function wrappedComponentLocalName(source: string): string | null {
+  const root = asRecord(parse(source, { modern: true }));
+  const program = asRecord(asRecord(root.instance).content);
+  for (const statement of asList(program.body)) {
+    const node = asRecord(statement);
+    if (node.type !== 'ImportDeclaration') {
+      continue;
+    }
+    const sourceValue = asRecord(node.source).value;
+    if (typeof sourceValue !== 'string' || !sourceValue.startsWith('$lib/')) {
+      continue;
+    }
+    for (const specifier of asList(node.specifiers)) {
+      const specifierRecord = asRecord(specifier);
+      if (specifierRecord.type === 'ImportDefaultSpecifier') {
+        const local = asRecord(specifierRecord.local);
+        if (typeof local.name === 'string') {
+          return local.name;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Fields whose value is itself a Fragment (`{ nodes: [...] }`) in Svelte's modern
+ * template AST: a Component/element's own children, and both arms of an
+ * `{#if}...{:else}...{/if}` (BarChart.wc.svelte renders the wrapped component from
+ * both). Walking exactly these four -- confirmed empirically against the parsed
+ * AST, not assumed -- is what lets `componentSpreadIdentifierSites` find a render
+ * site regardless of which conditional branch it sits in.
+ */
+const FRAGMENT_HOLDING_FIELDS = ['fragment', 'consequent', 'alternate', 'body'] as const;
+
+/**
+ * For every `<ComponentLocalName ...>` tag in the template, the identifier names
+ * of its spread attributes (`{...x}`), in source order. One entry per render
+ * site -- a wrapper that renders the wrapped component from more than one branch
+ * (BarChart's `{#if hasEmptySlot}`) yields more than one entry, and
+ * `isWc4DispatchWired` requires the ordering property to hold at EVERY one, not
+ * just the first found.
+ */
+function componentSpreadIdentifierSites(
+  source: string,
+  componentLocalName: string
+): readonly (readonly string[])[] {
+  const root = asRecord(parse(source, { modern: true }));
+  const sites: string[][] = [];
+
+  const visit = (node: unknown): void => {
+    const record = asRecord(node);
+    if (record.type === 'Component' && record.name === componentLocalName) {
+      const names: string[] = [];
+      for (const attribute of asList(record.attributes)) {
+        const attributeRecord = asRecord(attribute);
+        if (attributeRecord.type !== 'SpreadAttribute') {
+          continue;
+        }
+        const expression = asRecord(attributeRecord.expression);
+        if (typeof expression.name === 'string') {
+          names.push(expression.name);
+        }
+      }
+      sites.push(names);
+    }
+    for (const field of FRAGMENT_HOLDING_FIELDS) {
+      for (const child of asList(asRecord(record[field]).nodes)) {
+        visit(child);
+      }
+    }
+  };
+
+  for (const node of asList(asRecord(root.fragment).nodes)) {
+    visit(node);
+  }
+  return sites;
+}
+
+/**
+ * Whether a wrapper's SOURCE structurally wires the dispatch rule: imports `dispatchEvents`
+ * from a relative `dispatch` module, calls it with exactly the wrapper's own
+ * `$host()` and `$props()` bindings (by name -- see readDispatchHelperCall's
+ * note), and spreads the call's result onto EVERY render of the wrapped
+ * component strictly after that same props binding is spread.
+ *
+ * That last ordering check is load-bearing, not cosmetic: `{...dispatchers}
+ * {...props}` (dispatchers first) would let the plain callback in `props`
+ * overwrite the wrapping function for every key they share, silently producing
+ * a wrapper that still calls the consumer's callback but never dispatches --
+ * the exact regression negative-control (a) in prop-parity's callback-dispatch
+ * describe block below demonstrates.
+ *
+ * This does not re-derive WHICH declared props dispatch versus stay
+ * callback-only -- dispatchEvents (src/wc/dispatch.ts) decides that generically,
+ * for every wrapper, from HOST_EVENT_HANDLER_PROPS and
+ * DISPATCH_COLLISION_EXCEPTIONS alike, and its own unit tests
+ * (src/wc/dispatch.test.ts) already cover that logic in isolation. Confirming
+ * the wiring below is what makes those guarantees actually apply to THIS
+ * wrapper's callback props.
+ */
+function isWc4DispatchWired(source: string): boolean {
+  const hostElName = hostElBindingName(source);
+  const propsName = wrapperPropsBindingName(source);
+  const dispatchCall = readDispatchHelperCall(source);
+  const dispatcherVarName = dispatchCall.dispatcherVarName;
+  const importedFrom = dispatchCall.importedFrom;
+
+  if (
+    hostElName === null ||
+    propsName === null ||
+    dispatcherVarName === null ||
+    importedFrom === null
+  ) {
+    return false;
+  }
+  if (!/(^|\/)dispatch(\.ts|\.js)?$/.test(importedFrom)) {
+    return false;
+  }
+  if (
+    dispatchCall.callArgNames.length !== 2 ||
+    dispatchCall.callArgNames[0] !== hostElName ||
+    dispatchCall.callArgNames[1] !== propsName
+  ) {
+    return false;
+  }
+  // Must be `$derived(...)`. A bare call freezes the dispatcher set at first render,
+  // which silently costs every presence-gated callback its late assignment.
+  if (!dispatchCall.reactive) {
+    return false;
+  }
+
+  const wrappedLocalName = wrappedComponentLocalName(source);
+  if (wrappedLocalName === null) {
+    return false;
+  }
+
+  const sites = componentSpreadIdentifierSites(source, wrappedLocalName);
+  if (sites.length === 0) {
+    return false;
+  }
+  return sites.every((attributeNames) => {
+    const propsIndex = attributeNames.indexOf(propsName);
+    const dispatchersIndex = attributeNames.indexOf(dispatcherVarName);
+    return propsIndex !== -1 && dispatchersIndex !== -1 && dispatchersIndex > propsIndex;
+  });
+}
+
+export type WrapperDispatchParity = {
+  readonly wrapper: string;
+  readonly tag: string | null;
+  /** Every declared prop matching CALLBACK_PROP_PATTERN, regardless of collision. */
+  readonly callbackProps: readonly string[];
+  /** Callback props required to dispatch: non-colliding, or colliding-but-excepted. */
+  readonly dispatchable: readonly string[];
+  /** Colliding callback props with no recorded exception -- must NEVER dispatch. */
+  readonly callbackOnly: readonly string[];
+  /** Structural wiring found in source. Vacuously true when callbackProps is empty. */
+  readonly wired: boolean;
+};
+
+export function readDispatchParity(): readonly WrapperDispatchParity[] {
+  const results: WrapperDispatchParity[] = [];
+  for (const wrapper of readdirSync(WC_DIR)
+    .filter((file) => file.endsWith('.wc.svelte'))
+    .sort()) {
+    const source = readFileSync(join(WC_DIR, wrapper), 'utf8');
+    const { tag, props } = readCustomElementDeclaration(source);
+    const callbackProps = props.filter((name) => CALLBACK_PROP_PATTERN.test(name));
+    const dispatchable = callbackProps.filter(
+      (name) =>
+        !HOST_EVENT_HANDLER_PROPS.has(name) ||
+        DISPATCH_COLLISION_EXCEPTIONS.has(`${tag ?? ''}:${name}`)
+    );
+    const dispatchableSet = new Set(dispatchable);
+    const callbackOnly = callbackProps.filter((name) => !dispatchableSet.has(name));
+
+    results.push({
+      wrapper,
+      tag,
+      callbackProps,
+      dispatchable,
+      callbackOnly,
+      wired: callbackProps.length === 0 ? true : isWc4DispatchWired(source)
     });
   }
   return results;

@@ -6,8 +6,13 @@
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { truncateToWidth } from '$lib/_chart/labels';
-  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
+  import {
+    DEFAULT_CHART_CORNER_RADIUS,
+    DEFAULT_CHART_MAX_HEIGHT,
+    type TooltipAnchor
+  } from '$lib/_chart/types';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
@@ -39,7 +44,8 @@
     disableDimOnHover = false,
     firstColumnLabelSide = 'left',
     lastColumnLabelSide = 'right',
-    marginX = 40
+    marginX = 40,
+    tooltipPortal = false
   }: SankeyChartProperties = $props();
 
   // ── State ──────────────────────────────────────────────────────
@@ -47,10 +53,29 @@
   let containerEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
+  // `hoveredNode`/`hoveredLink` (pointer) and `focusedNode`/`focusedLink`
+  // (keyboard) are kept as separate state rather than one pair shared by
+  // both input sources: a pointer leaving a node/link must never erase that
+  // node/link's focus, and a late/stale pointerleave -- which real browsers
+  // fire *after* a focus event when focusing an off-screen node/link
+  // auto-scrolls the page under an unmoved cursor -- must not be able to
+  // clobber the focus highlight either. See `activeNode`/`activeLink` below
+  // for the precedence between them, and `anchor` (in Interactions) for how
+  // the tooltip re-locates the right element off of these ids alone.
   let hoveredNode = $state<string | null>(null);
+  let focusedNode = $state<string | null>(null);
   let hoveredLink = $state<{ source: string; target: string } | null>(null);
+  let focusedLink = $state<{ source: string; target: string } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
+
+  // Precedence: keyboard focus wins over pointer hover, on whichever of
+  // node/link actually holds it -- a focused node stays active even while
+  // the pointer hovers an unrelated link (and vice versa). Nodes and links
+  // are mutually exclusive DOM targets, so within one tier (focus, then
+  // hover) at most one of activeNode/activeLink is ever non-null.
+  let activeNode = $derived(focusedLink !== null ? null : (focusedNode ?? hoveredNode));
+  let activeLink = $derived(focusedNode !== null ? null : (focusedLink ?? hoveredLink));
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -310,18 +335,18 @@
     if (disableDimOnHover) {
       return null;
     }
-    if (hoveredNode !== null) {
-      const connected = new SvelteSet<string>([hoveredNode]);
+    if (activeNode !== null) {
+      const connected = new SvelteSet<string>([activeNode]);
       for (const l of links) {
-        if (l.source === hoveredNode || l.target === hoveredNode) {
+        if (l.source === activeNode || l.target === activeNode) {
           connected.add(l.source);
           connected.add(l.target);
         }
       }
       return connected;
     }
-    if (hoveredLink !== null) {
-      return new SvelteSet([hoveredLink.source, hoveredLink.target]);
+    if (activeLink !== null) {
+      return new SvelteSet([activeLink.source, activeLink.target]);
     }
     return null;
   });
@@ -334,11 +359,11 @@
    * twice on every hover state change.
    */
   let hoveredLinkCache = $derived.by(() => {
-    if (hoveredLink === null) {
+    if (activeLink === null) {
       return null;
     }
     const l = links.find(
-      (lk) => lk.source === hoveredLink!.source && lk.target === hoveredLink!.target
+      (lk) => lk.source === activeLink!.source && lk.target === activeLink!.target
     );
     if (!l) {
       return null;
@@ -350,8 +375,8 @@
   });
 
   let tooltipData = $derived.by(() => {
-    if (hoveredNode !== null) {
-      const n = layout.nodes.find((nd) => nd.id === hoveredNode);
+    if (activeNode !== null) {
+      const n = layout.nodes.find((nd) => nd.id === activeNode);
       if (!n) {
         return null;
       }
@@ -380,9 +405,9 @@
   });
 
   let tooltipContext = $derived.by<SankeyTooltipContext | null>(() => {
-    if (hoveredNode !== null) {
-      const n = findNode(hoveredNode);
-      const computed = layout.nodes.find((nd) => nd.id === hoveredNode);
+    if (activeNode !== null) {
+      const n = findNode(activeNode);
+      const computed = layout.nodes.find((nd) => nd.id === activeNode);
       if (!n || !computed) {
         return null;
       }
@@ -402,22 +427,83 @@
   });
 
   // ── Interactions ───────────────────────────────────────────────
+  // Family-wide contract shared with BarChart/FunnelChart/DualAxisBarChart:
+  // pointer hover and keyboard focus feed SEPARATE state (see hoveredNode/
+  // focusedNode/hoveredLink/focusedLink above), read together as one "direct
+  // interaction" tier via activeNode/activeLink. Enter/Space on a focused
+  // node or link invokes the same click callback a pointer click would.
 
   function trackMouse(e: MouseEvent) {
-    if (containerEl === null) {
-      return;
+    const position = pointerPositionIn(containerEl, e);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
   }
 
-  function isLinkHighlighted(source: string, target: string): boolean {
-    if (hoveredLink !== null) {
-      return source === hoveredLink.source && target === hoveredLink.target;
+  // Anchor from the live element's own rect (not SVG-space math), so the two
+  // nested margin/gutter transforms this chart applies never need reproducing
+  // here -- same technique BarChart/FunnelChart/DualAxisBarChart use.
+  function anchorFromElement(el: Element): TooltipAnchor | null {
+    if (containerEl === null) {
+      return null;
     }
-    if (hoveredNode !== null) {
-      return source === hoveredNode || target === hoveredNode;
+    const r = el.getBoundingClientRect();
+    const c = containerEl.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - c.left, y: r.top - c.top, side: 'top' };
+  }
+
+  // Re-locates the live element for an id via its data-node-id/data-link-*
+  // attribute (added to the elements below) rather than a ref captured at
+  // enter/focus time -- `anchor` can become active through a path with no
+  // event of its own to capture from (e.g. focus blurring off a node while
+  // the pointer already rests, unmoved, over a different one), so it always
+  // needs to be able to look the current element up fresh.
+  function findNodeElement(id: string): Element | null {
+    if (containerEl === null) {
+      return null;
+    }
+    for (const el of containerEl.querySelectorAll('.sankey-node')) {
+      if (el.getAttribute('data-node-id') === id) {
+        return el;
+      }
+    }
+    return null;
+  }
+
+  function findLinkElement(source: string, target: string): Element | null {
+    if (containerEl === null) {
+      return null;
+    }
+    for (const el of containerEl.querySelectorAll('.sankey-link')) {
+      if (
+        el.getAttribute('data-link-source') === source &&
+        el.getAttribute('data-link-target') === target
+      ) {
+        return el;
+      }
+    }
+    return null;
+  }
+
+  let anchor = $derived.by<TooltipAnchor | null>(() => {
+    if (activeNode !== null) {
+      const el = findNodeElement(activeNode);
+      return el ? anchorFromElement(el) : null;
+    }
+    if (activeLink !== null) {
+      const el = findLinkElement(activeLink.source, activeLink.target);
+      return el ? anchorFromElement(el) : null;
+    }
+    return null;
+  });
+
+  function isLinkHighlighted(source: string, target: string): boolean {
+    if (activeLink !== null) {
+      return source === activeLink.source && target === activeLink.target;
+    }
+    if (activeNode !== null) {
+      return source === activeNode || target === activeNode;
     }
     return false;
   }
@@ -430,18 +516,73 @@
     return links.find((l) => l.source === source && l.target === target);
   }
 
+  /** Resolved display label for a node id, from the computed layout (falls back to the id). */
+  function resolveNodeLabel(id: string): string {
+    return layout.nodes.find((n) => n.id === id)?.label ?? id;
+  }
+
+  // onnodehover mirrors the combined pointer-or-focus node (activeNode),
+  // once per actual change -- e.g. a pointer leaving a node that is still
+  // keyboard-focused must not report a hover-cleared event for a highlight
+  // that never went away.
+  let lastNotifiedNode: string | null = null;
+  function notifyNodeHover() {
+    const next = activeNode;
+    if (next === lastNotifiedNode) {
+      return;
+    }
+    lastNotifiedNode = next;
+    const orig = next === null ? null : findNode(next);
+    onnodehover?.(orig ? { node: orig } : null);
+  }
+
+  function sameLink(
+    a: { source: string; target: string } | null,
+    b: { source: string; target: string } | null
+  ): boolean {
+    if (a === null || b === null) {
+      return a === b;
+    }
+    return a.source === b.source && a.target === b.target;
+  }
+
+  // onlinkhover mirrors the combined pointer-or-focus link (activeLink),
+  // once per actual change -- same dedup rationale as notifyNodeHover.
+  let lastNotifiedLink: { source: string; target: string } | null = null;
+  function notifyLinkHover() {
+    const next = activeLink;
+    if (sameLink(next, lastNotifiedLink)) {
+      return;
+    }
+    lastNotifiedLink = next;
+    const orig = next === null ? null : findLink(next.source, next.target);
+    onlinkhover?.(orig ? { link: orig } : null);
+  }
+
   function handleNodeEnter(e: MouseEvent, id: string) {
     hoveredNode = id;
     trackMouse(e);
-    const orig = findNode(id);
-    if (orig) {
-      onnodehover?.({ node: orig });
-    }
+    notifyNodeHover();
   }
 
+  function handleNodeFocus(id: string) {
+    focusedNode = id;
+    notifyNodeHover();
+  }
+
+  // Wired to a node's mouseleave. Clears ONLY the hover half -- never
+  // `focusedNode` -- so a late, stale mouseleave (see `hoveredNode`'s
+  // declaration comment) cannot erase a node's focus highlight.
   function handleNodeLeave() {
     hoveredNode = null;
-    onnodehover?.(null);
+    notifyNodeHover();
+  }
+
+  // Wired to a node's blur. Clears ONLY the focus half; a pointer that
+  // happens to still be over the node keeps it hovered.
+  function handleNodeBlur() {
+    focusedNode = null;
+    notifyNodeHover();
   }
 
   function handleNodeClick(id: string) {
@@ -451,18 +592,36 @@
     }
   }
 
-  function handleLinkEnter(e: MouseEvent, source: string, target: string) {
-    hoveredLink = { source, target };
-    trackMouse(e);
-    const orig = findLink(source, target);
-    if (orig) {
-      onlinkhover?.({ link: orig });
+  function handleNodeKeydown(e: KeyboardEvent, id: string) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleNodeClick(id);
     }
   }
 
+  function handleLinkEnter(e: MouseEvent, source: string, target: string) {
+    hoveredLink = { source, target };
+    trackMouse(e);
+    notifyLinkHover();
+  }
+
+  function handleLinkFocus(source: string, target: string) {
+    focusedLink = { source, target };
+    notifyLinkHover();
+  }
+
+  // Wired to a link's mouseleave. Clears ONLY the hover half -- never
+  // `focusedLink` -- for the same reason handleNodeLeave spares focusedNode.
   function handleLinkLeave() {
     hoveredLink = null;
-    onlinkhover?.(null);
+    notifyLinkHover();
+  }
+
+  // Wired to a link's blur. Clears ONLY the focus half; a pointer that
+  // happens to still be over the link keeps it hovered.
+  function handleLinkBlur() {
+    focusedLink = null;
+    notifyLinkHover();
   }
 
   function handleLinkClick(source: string, target: string) {
@@ -471,6 +630,31 @@
       onlinkclick?.({ link: orig });
     }
   }
+
+  function handleLinkKeydown(e: KeyboardEvent, source: string, target: string) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleLinkClick(source, target);
+    }
+  }
+
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands
+  // outside. Clears only the hover half of each pair -- a real pointerdown
+  // outside a focused element blurs it natively (see handleNodeBlur /
+  // handleLinkBlur), matching PieChart/AreaChart/LineChart's identical
+  // hover-only scope for this effect.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hoveredNode === null && hoveredLink === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, () => {
+      hoveredNode = null;
+      hoveredLink = null;
+      notifyNodeHover();
+      notifyLinkHover();
+    });
+  });
 </script>
 
 <div
@@ -503,19 +687,27 @@
         {#each layout.links as link, i (i)}
           {@const highlighted = isLinkHighlighted(link.source, link.target)}
           {@const dimmed =
-            !disableDimOnHover && (hoveredNode !== null || hoveredLink !== null) && !highlighted}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
+            !disableDimOnHover && (activeNode !== null || activeLink !== null) && !highlighted}
           <path
             class="sankey-link"
+            data-link-source={link.source}
+            data-link-target={link.target}
             d={link.path}
             fill="none"
             stroke={link.color ?? nodeColorMap.get(link.source) ?? getColor(0)}
             stroke-width={Math.max(minLinkWidth, link.width)}
             stroke-opacity={highlighted ? 0.7 : dimmed ? 0.08 : 0.4}
+            tabindex="0"
+            role="button"
+            aria-label="{resolveNodeLabel(link.source)} to {resolveNodeLabel(link.target)}: {format(
+              link.value
+            )}"
             onmouseenter={(e) => handleLinkEnter(e, link.source, link.target)}
             onmousemove={trackMouse}
             onmouseleave={handleLinkLeave}
+            onfocus={() => handleLinkFocus(link.source, link.target)}
+            onblur={handleLinkBlur}
+            onkeydown={(e) => handleLinkKeydown(e, link.source, link.target)}
             onclick={() => handleLinkClick(link.source, link.target)}
           />
         {/each}
@@ -523,11 +715,10 @@
         {#each layout.nodes as node, ni (ni)}
           {@const color = nodeColorMap.get(node.id) ?? getColor(ni)}
           {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <rect
             class="sankey-node"
             class:node-dimmed={dimmed}
+            data-node-id={node.id}
             x={node.x}
             y={node.y}
             width={node.width}
@@ -535,9 +726,15 @@
             rx={radius}
             ry={radius}
             fill={color}
+            tabindex="0"
+            role="button"
+            aria-label="{node.label}: {format(node.value)}"
             onmouseenter={(e) => handleNodeEnter(e, node.id)}
             onmousemove={trackMouse}
             onmouseleave={handleNodeLeave}
+            onfocus={() => handleNodeFocus(node.id)}
+            onblur={handleNodeBlur}
+            onkeydown={(e) => handleNodeKeydown(e, node.id)}
             onclick={() => handleNodeClick(node.id)}
           />
         {/each}
@@ -570,12 +767,31 @@
       </g>
     </ChartContainer>
 
-    {#if typeof tooltipSnippet === 'function' && tooltipContext !== null}
-      <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-        {@render tooltipSnippet(tooltipContext)}
-      </div>
+    {#if typeof tooltipSnippet === 'function'}
+      <ChartTooltip
+        data={tooltipData}
+        {mouseX}
+        {mouseY}
+        {anchor}
+        portal={tooltipPortal}
+        originEl={containerEl}
+        unstyled
+      >
+        {#snippet content()}
+          {#if tooltipContext !== null}
+            {@render tooltipSnippet(tooltipContext)}
+          {/if}
+        {/snippet}
+      </ChartTooltip>
     {:else}
-      <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+      <ChartTooltip
+        data={tooltipData}
+        {mouseX}
+        {mouseY}
+        {anchor}
+        portal={tooltipPortal}
+        originEl={containerEl}
+      />
     {/if}
   {/if}
 </div>
@@ -590,12 +806,22 @@
     pointer-events: none;
   }
   .sankey-link {
-    transition: stroke-opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: stroke-opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
+  .sankey-link:focus-visible {
+    outline: var(--sankey-focus-outline, 2px solid currentColor);
+    outline-offset: var(--sankey-focus-outline-offset, 2px);
+  }
   .sankey-node {
-    transition: opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
+  }
+  .sankey-node:focus-visible {
+    outline: var(--sankey-focus-outline, 2px solid currentColor);
+    outline-offset: var(--sankey-focus-outline-offset, 2px);
   }
   .sankey-node.node-dimmed {
     opacity: var(--sankey-dimmed-opacity, 0.15);
@@ -613,7 +839,8 @@
     stroke-width: var(--sankey-label-halo-width, 0);
     stroke-linejoin: round;
     pointer-events: none;
-    transition: opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
   }
   .sankey-col-label {
     fill: var(--sankey-col-label-color, #666);
@@ -624,11 +851,6 @@
   }
   .sankey-label.node-dimmed {
     opacity: var(--sankey-dimmed-opacity, 0.15);
-  }
-  .chart-tooltip-slot {
-    position: absolute;
-    z-index: 10;
-    pointer-events: none;
   }
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);

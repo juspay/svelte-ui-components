@@ -112,7 +112,7 @@
   .relative-time {
     font-size: var(--relative-time-font-size, 14px);
     font-weight: var(--relative-time-font-weight, 400);
-    font-family: var(--relative-time-font-family);
+    font-family: var(--relative-time-font-family, inherit);
     color: var(--relative-time-color, inherit);
     cursor: var(--relative-time-cursor, default);
   }

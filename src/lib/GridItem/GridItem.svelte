@@ -16,12 +16,27 @@
     showLoader = !showLoader;
     onclick?.(event);
   }
+
+  // The tile carries role="button" and sits in the tab order, so Enter and Space have
+  // to do what a click does. Clicking the element itself rather than calling the
+  // handler keeps one activation path, and gives `onclick` the MouseEvent its type
+  // promises instead of a synthesized stand-in.
+  function handleKeydown(event: KeyboardEvent): void {
+    onkeydown?.(event);
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.click();
+    }
+  }
 </script>
 
 <div
   class="container {classes ?? ''}"
   onclick={handleClick}
-  {onkeydown}
+  onkeydown={handleKeydown}
   role="button"
   tabindex="0"
   data-pw={typeof testId === 'string' ? testId : null}
@@ -130,6 +145,21 @@
     }
     100% {
       clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+    }
+  }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .grid-body-loader::before {
+      /* clip-path is what the animation drives; clearing it reveals the whole
+         border ring, which is the frame the animation ends on anyway. */
+      animation: none;
+      clip-path: none;
     }
   }
 </style>

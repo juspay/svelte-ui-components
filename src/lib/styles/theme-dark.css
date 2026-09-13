@@ -1,0 +1,778 @@
+/* ============================================================================
+   Dark theme for @juspay/svelte-ui-components.
+
+   Every colour in every component is authored as `var(--x, <light literal>)`,
+   so the library's defaults are light all the way through. The library also
+   ships a ThemeSwitcher that stamps data-theme="dark" on <html>. Until this
+   file existed those two facts did not meet: a consumer who dropped in the
+   switcher got a dark page with light components on it -- white table cells,
+   #333 labels on a near-black ground, a white Select on every route. A sweep of
+   98 routes measured 1820 text instances below their WCAG threshold in dark
+   mode across 107 distinct classes, the worst at 1.01:1.
+
+   That was never a hundred bugs. It was one bug shaped like a hundred, and this
+   is the one place it gets fixed. Import it to opt a whole app into dark mode:
+
+       import '@juspay/svelte-ui-components/theme-dark.css';
+
+   Custom properties are inherited, and inheritance crosses a shadow boundary --
+   verified against a live sui-input, whose inner <input> repaints from a rule
+   set on the document root. So this file themes the <sui-*> custom elements
+   too, which no stylesheet could do if it had to reach them by selector.
+
+   Anything declared here must clear 4.5:1 (3:1 for large text) against the
+   surface it lands on; scripts/check-css-contract.js fails the build when a
+   component grows a light colour default with no entry here.
+   ============================================================================ */
+
+/* ============================================================================
+   Chat family — dark theme.
+   The components ship light literals as their token fallbacks (the library
+   convention); theming is the consumer's job, and on this site that consumer
+   is the demo shell. Without these, dark mode renders the chat surfaces with
+   their light defaults — white composer on a near-black page, #27272a
+   responder text on #0f0f17.
+   ============================================================================ */
+[data-theme='dark'] {
+  /* Table -- the component's defaults are light all the way through: white
+     cells, a #f9fafb header, a white search field. An earlier pass pinned the
+     cell background to #ffffff so its dark text stayed readable; that fixed the
+     contrast and left a glaring white slab sitting on a dark page. The right
+     lever was always these variables -- the component exposes every one of
+     them, nothing had ever set them. */
+  --table-content-background: #1a1a26;
+  --table-content-color: #d1d5db;
+  --table-header-background: #1e1e2e;
+  --table-header-color: #9ca3af;
+  --table-border: 1px solid #2a2a3c;
+  --table-row-border: 1px solid #232335;
+  --table-row-hover-background: #232335;
+  --table-row-alt-background: #1e1e2e;
+  --table-row-selected-background: #1e1b4b;
+  --table-col-highlight-background: #1e1b3a;
+  --table-summary-row-background: #1e1e2e;
+  --table-scroll-scrim-color: #1a1a26;
+
+  --table-search-background: #1e1e2e;
+  --table-search-color: #d1d5db;
+  --table-search-placeholder-color: #9ca3af;
+  --table-search-icon-color: #9ca3af;
+  --table-search-clear-color: #9ca3af;
+  --table-search-clear-hover-color: #f3f4f6;
+  --table-search-clear-hover-background: rgb(255 255 255 / 8%);
+
+  /* Both #6b7280, tuned for a white surface: ~3.9:1 on the dark footer and
+     3.56:1 on the newly-dark cells. Theming a surface means theming what
+     sits on it. */
+  --table-paginator-range-color: #9ca3af;
+  --table-row-number-color: #9ca3af;
+
+  /* Mobile record cards: the per-cell label span mirrors
+     --table-header-color's dark value, since it is standing in for the
+     header text at the width where the header row itself is visually
+     hidden. The card border mirrors --table-border for the same reason
+     scripts/check-css-contract.js does not itself require it here: a
+     "1px solid #e5e7eb" fallback never automatically qualifies (its value
+     isn't a bare hex colour), but leaving it light-only would still put a
+     light-grey card outline on this same dark page. */
+  --table-mobile-label-color: #9ca3af;
+  --table-mobile-card-border: 1px solid #2a2a3c;
+}
+
+[data-theme='dark'] {
+  /* Select -- the component's own defaults are light (#ffffff trigger,
+     #cccccc border, #333333 text) and nothing here had ever overridden them,
+     so every Select on every route rendered as a white box on the dark page. */
+  --select-color: #d1d5db;
+  --select-trigger-background: #1e1e2e;
+  --select-trigger-border: 1px solid #2a2a3c;
+  --select-trigger-hover-border-color: #3f3f57;
+  --select-trigger-pressed-background: #252535;
+  --select-placeholder-color: #9ca3af;
+  --select-arrow-color: #9ca3af;
+  --select-clear-color: #9ca3af;
+  --select-clear-hover-background: #252535;
+  --select-clear-hover-color: #e5e7eb;
+  --select-dropdown-background: #1e1e2e;
+  --select-dropdown-border: 1px solid #2a2a3c;
+  --select-option-color: #d1d5db;
+  --select-option-hover-background: #252535;
+  --select-option-hover-color: #f3f4f6;
+  --select-menu-search-background: #161621;
+  --select-menu-search-border: 1px solid #2a2a3c;
+
+  /* Input -- same gap. */
+  --input-background: #1e1e2e;
+  --input-text-color: #d1d5db;
+  --input-placeholder-color: #9ca3af;
+  --input-border: 1px solid #2a2a3c;
+  --input-info-msg-text-color: #9ca3af;
+  --input-label-msg-text-color: #9ca3af;
+}
+
+[data-theme='dark'] {
+  /* ChatMessage */
+  --chat-message-sender-background: #e4e4e7;
+  --chat-message-sender-color: #18181b;
+  --chat-message-color: #d1d5db;
+  --chat-message-background: #1e1e2e;
+  --chat-message-header-color: #9ca3af;
+  --chat-message-action-color: #9ca3af;
+  --chat-message-action-hover-background-color: #252535;
+  --chat-message-code-background: rgb(255 255 255 / 8%);
+  --chat-message-pre-background: rgb(255 255 255 / 8%);
+  --chat-message-link-color: #a5b4fc;
+  --chat-message-error-color: #f87171;
+  /* Same element and same light default (#3b82f6) as
+     --markdown-text-focus-outline-color: the markdown renderer's table
+     wrapper, here inside a chat bubble. Mapped to the same dark value. */
+  --chat-message-table-focus-outline-color: #818cf8;
+
+  /* ChatComposer */
+  --chat-composer-background: #1e1e2e;
+  --chat-composer-border: 1px solid #2a2a3c;
+  --chat-composer-color: #e5e7eb;
+  --chat-composer-placeholder-color: #9ca3af;
+  --chat-composer-action-color: #9ca3af;
+  --chat-composer-action-hover-background-color: #252535;
+  --chat-composer-send-background-color: #e4e4e7;
+  --chat-composer-send-color: #18181b;
+  --chat-composer-send-hover-background-color: #d4d4d8;
+  --chat-composer-stop-background-color: #e4e4e7;
+  --chat-composer-stop-color: #18181b;
+  --chat-composer-voice-recording-background-color: #450a0a;
+  --chat-composer-voice-recording-color: #f87171;
+
+  /* ChatToolStatus */
+  --chat-tool-status-background: #1e1e2e;
+  --chat-tool-status-border: 1px solid #2a2a3c;
+  --chat-tool-status-color: #9ca3af;
+  --chat-tool-status-box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+
+  /* ChatHeader */
+  --chat-header-title-color: #e5e7eb;
+  --chat-header-subtitle-color: #9ca3af;
+  --chat-header-close-color: #9ca3af;
+  --chat-header-close-hover-background-color: #252535;
+
+  /* ChatMessageList */
+  --chat-message-list-jump-background-color: #1e1e2e;
+  --chat-message-list-jump-color: #d1d5db;
+  --chat-message-list-jump-hover-background-color: #252535;
+  --chat-message-list-jump-box-shadow: 0 4px 12px rgb(0 0 0 / 45%);
+
+  /* Chat surface + ChatBubble widget */
+  --chat-background: #161621;
+  --chat-bubble-background-color: #e4e4e7;
+  --chat-bubble-color: #18181b;
+  --chat-bubble-hover-background-color: #d4d4d8;
+  --chat-bubble-panel-background: #161621;
+
+  /* HITL */
+  --hitl-background: #1e1e2e;
+  --hitl-border: 1px solid #2a2a3c;
+  --hitl-divider-color: #2a2a3c;
+  --hitl-title-color: #e5e7eb;
+  --hitl-param-value-color: #e5e7eb;
+  --hitl-badge-color: #9ca3af;
+  --hitl-description-color: #9ca3af;
+  --hitl-param-label-color: #9ca3af;
+  --hitl-completion-background: #252535;
+  --hitl-approved-color: #4ade80;
+  --hitl-halted-color: #fbbf24;
+  --hitl-countdown-filter: brightness(1.6);
+
+  /* ThinkingIndicator */
+  --thinking-indicator-label-color: #9ca3af;
+  --thinking-indicator-detail-color: #9ca3af;
+  --thinking-indicator-arrow-color: #9ca3af;
+  --thinking-indicator-border-bottom: 1px solid #2a2a3c;
+
+  /* ThinkingIndicator — chip variant (mirrors ChatToolStatus above; Chat's built-in
+     tool-status row now renders this instead of ChatToolStatus) */
+  --thinking-indicator-chip-background: #1e1e2e;
+  --thinking-indicator-chip-border: 1px solid #2a2a3c;
+  --thinking-indicator-chip-color: #9ca3af;
+  --thinking-indicator-chip-box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+
+  /* AttachmentChipRow */
+  --attachment-chip-row-chip-background: #1e1e2e;
+  --attachment-chip-row-file-tile-background: #252535;
+  --attachment-chip-row-file-tile-border: 1px solid #2a2a3c;
+  --attachment-chip-row-file-tile-box-shadow: 0 2px 0.25rem rgb(0 0 0 / 40%);
+  --attachment-chip-row-file-name-color: #d1d5db;
+  --attachment-chip-row-file-glyph-color: #9ca3af;
+  --attachment-chip-row-file-glyph-fold-color: #1e1e2e;
+
+  /* Pill — dark counterparts for the semantic tones. Without these a status chip
+     falls back to Pill's built-in light pastels, which are unreadable on this
+     ground: the `ok` text #155724 on the neutral chip below is 1.74:1. Every pair
+     here clears WCAG AA (5.93:1 at the lowest, `muted`). The neutral chip itself
+     is scoped separately, below this block — see the note there. */
+  --pill-tone-accent-background: #11262e;
+  --pill-tone-accent-color: #7dd3fc;
+  --pill-tone-ok-background: #10281a;
+  --pill-tone-ok-color: #6ee7a8;
+  --pill-tone-warn-background: #2e2410;
+  --pill-tone-warn-color: #fcd34d;
+  --pill-tone-danger-background: #2d1416;
+  --pill-tone-danger-color: #fca5a5;
+  --pill-tone-muted-background: #252535;
+  --pill-tone-muted-color: #9ca3af;
+
+  /* ThinkingTrace */
+  --thinking-indicator-trace-connector-color: #2a2a3c;
+  --thinking-indicator-trace-row-color: #d1d5db;
+  --thinking-indicator-trace-prose-color: #9ca3af;
+  --thinking-indicator-trace-secondary-color: #9ca3af;
+  --thinking-indicator-trace-icon-color: #9ca3af;
+  --thinking-indicator-trace-spinner-color: #9ca3af;
+  --thinking-indicator-trace-spinner-track-color: #2a2a3c;
+  --thinking-indicator-trace-spinner-color-end: #2a2a3c;
+  --thinking-indicator-trace-row-hover-background: #252535;
+  --thinking-indicator-trace-row-selected-background: #2f2f45;
+  --thinking-indicator-trace-query-background: #252535;
+  --thinking-indicator-trace-query-color: #d1d5db;
+  --thinking-indicator-trace-more-color: #9ca3af;
+  --thinking-indicator-trace-added-color: #4ade80;
+  --thinking-indicator-trace-removed-color: #f87171;
+
+  /* ToolCallLog */
+  --tool-call-log-chip-background: #1e1e2e;
+  --tool-call-log-chip-border: 1px solid #2a2a3c;
+  --tool-call-log-chip-hover-background: #252535;
+  --tool-call-log-chip-open-border-color: #6366f1;
+  --tool-call-log-label-color: #d1d5db;
+  --tool-call-log-meta-color: #9ca3af;
+  --tool-call-log-error-background: #2a1416;
+  --tool-call-log-error-border-color: #7f1d1d;
+  --tool-call-log-error-color: #f87171;
+  --tool-call-log-error-hover-background: #3b1a1c;
+  --tool-call-log-added-background: rgb(74 222 128 / 12%);
+  --tool-call-log-added-color: #4ade80;
+  --tool-call-log-removed-background: rgb(248 113 113 / 12%);
+  --tool-call-log-removed-color: #f87171;
+  --tool-call-log-spinner-color: #9ca3af;
+  --tool-call-log-spinner-track-color: #2a2a3c;
+  --tool-call-log-popover-background: #1e1e2e;
+  --tool-call-log-popover-border: 1px solid #2a2a3c;
+  --tool-call-log-popover-color: #d1d5db;
+  --tool-call-log-popover-shadow: 0 8px 24px rgb(0 0 0 / 55%);
+
+  /* TaskList */
+  --task-list-row-color: #d1d5db;
+  --task-list-secondary-color: #9ca3af;
+  --task-list-dot-color: #4b5563;
+  --task-list-done-color: #9ca3af;
+  --task-list-error-color: #f87171;
+  --task-list-spinner-color: #9ca3af;
+  --task-list-spinner-track-color: #2a2a3c;
+  --task-list-retry-background: #2a1416;
+  --task-list-retry-color: #f87171;
+  --task-list-retry-hover-background: #3b1a1c;
+}
+
+/* Pill — the neutral dark chip for chat suggestion chips and composer attachment
+   pills, which carry no tone.
+
+   Deliberately NOT set alongside the other tokens in the block above. Pill resolves
+   colour as `var(--pill-background, var(--_pill-tone-background, …))`, so a bare
+   --pill-background on the theme root wins over the tone layer by design (see
+   docs/Pill.md). Set there, it silently flattened every tone="…" chip to this same
+   grey — all five tones rendered byte-identical in dark mode, so the Pill demo
+   showed five indistinguishable chips labelled Accent/Ok/Warn/Danger/Muted.
+
+   Excluding the tone classes keeps the neutral chip for the untoned pills that
+   wanted it, and lets the tone variables above reach the ones that carry a tone. */
+[data-theme='dark'] {
+  /* The untoned chip. This used to be a `.pill:not(.tone-…)` selector, to stop a
+     bare --pill-background from flattening every toned chip to one grey. The
+     scoping was right and the mechanism was not: .pill sits inside <sui-pill>'s
+     shadow root, where a document-level descendant selector cannot reach it, so
+     the custom element went on painting its #e0e0e0 light default on the dark
+     page. Pill now exposes a neutral tier in its fallback chain that resolves
+     only when no tone class has set --_pill-tone-*, which says the same thing
+     with a token -- and tokens inherit across the boundary. */
+  --pill-tone-neutral-background: #252535;
+  --pill-tone-neutral-color: #d1d5db;
+  --pill-tone-neutral-hover-background: #2f2f45;
+  --pill-tone-neutral-hover-color: #e5e7eb;
+}
+
+/* ----------------------------------------------------------------------------
+   Second pass — from measurement rather than from reports.
+
+   The blocks above were written component by component as defects were noticed
+   by eye. This pass swept all 98 routes in BOTH themes and composited each
+   element's real backdrop up its ancestor chain, instead of only inspecting
+   elements that painted a background of their own -- which is what the earlier
+   sweep did, and why it was structurally unable to see text sitting on an
+   inherited surface. Every value here clears its WCAG threshold against the
+   surface the audit measured it on.
+   ---------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  /* Status's panel is frosted glass -- rgba(255,255,255,0.6) behind a 60px
+     backdrop-filter. It stayed white in dark mode with the themed light text on
+     it, measured at 1.02:1 from real pixels. The sweep could not count it: a
+     backdrop-filter means the backdrop is not one colour, so it was quarantined
+     as indeterminate rather than guessed at, and only a pixel check settled it.
+     The static lint could not see it either -- it reads hex literals, and this
+     default is an rgba(). Both limitations are ones those tools print about
+     themselves, which is the only reason this was findable at all. */
+  --status-panel-background: rgba(30, 30, 46, 0.6);
+}
+
+[data-theme='dark'] {
+  /* Banner */
+  --banner-color: #9ca3af;
+  --banner-link-color: #93c5fd;
+
+  /* Book */
+  --book-background: #1e1e2e;
+
+  /* Calendar */
+  --calendar-day-name-color: #9ca3af;
+  --calendar-outside-month-color: #9ca3af;
+
+  /* Checkbox */
+  --field-error-color: #f87171;
+  --field-info-color: #9ca3af;
+
+  /* Choicebox */
+  --choicebox-background: #1e1e2e;
+
+  /* DeltaIndicator */
+  --delta-indicator-negative-color: #f87171;
+
+  /* FileDropzoneTrigger */
+  --file-dropzone-trigger-caption-color: #cbd5e1;
+
+  /* Gauge */
+  --gauge-label-color: #d1d5db;
+
+  /* GridItem */
+  --grid-item-color: #d1d5db;
+
+  /* Input */
+  --input-error-msg-text-color: #f87171;
+
+  /* InputButton */
+  --inputbutton-external-error-color: #f87171;
+
+  /* Label */
+  --label-color: #d1d5db;
+
+  /* ListItem */
+  --list-item-center-text-color: #d1d5db;
+  --list-item-right-content-text-color: #d1d5db;
+
+  /* MediaUpload */
+  --media-upload-label-color: #d1d5db;
+
+  /* PieChart */
+  --chart-legend-color: #d1d5db;
+  --piechart-legend-more-color: #818cf8;
+  --piechart-legend-value-color: #d1d5db;
+
+  /* Progress */
+  --progress-label-color: #d1d5db;
+
+  /* ProportionBar */
+  --proportion-bar-legend-label-color: #9ca3af;
+  --proportion-bar-legend-value-color: #d1d5db;
+
+  /* Radio */
+  --radio-text-color: #d1d5db;
+
+  /* Select */
+  --select-error-message-color: #f87171;
+
+  /* Slider */
+  --slider-value-color: #d1d5db;
+
+  /* StatCard */
+  --statcard-background: #1e1e2e;
+  --statcard-delta-positive-color: #4ade80;
+
+  /* Status */
+  --status-description-font-color: #9ca3af;
+
+  /* Stepper */
+  --step-index-container-completed-background-color: #1a7a44;
+  --step-text-active-color: #818cf8;
+
+  /* Table */
+  --table-cell-secondary-color: #9ca3af;
+  --table-cell-thumb-placeholder-color: #4b5563;
+  --table-link-color: #60a5fa;
+  --table-trend-down-color: #f87171;
+
+  /* Tabs */
+  --tabs-section-label-color: #9ca3af;
+
+  /* Toggle */
+  --toggle-text-color: #d1d5db;
+
+  /* Toolbar */
+  --toolbar-background: #1e1e2e;
+
+  /* demo page: pill */
+  /* NOT --button-text-color: that is the consumer-level hook and it wins over
+     the variant layer by design, so setting it here flattened primary,
+     destructive and the rest to one grey -- #d1d5db on the destructive red at
+     3.24:1. The neutral tier applies only to a button no variant has coloured. */
+  --button-neutral-text-color: #d1d5db;
+  --button-secondary-text-color: #d1d5db;
+  --button-secondary-border-color: #3f3f57;
+  --button-secondary-hover-background: #252535;
+  --button-ghost-text-color: #d1d5db;
+  --button-ghost-hover-background: #252535;
+}
+
+[data-theme='dark'] {
+  /* Stepper. These were selectors inside the component until they were measured
+     against <sui-stepper>, where they could never apply. The light rules in
+     Stepper.svelte and Step.svelte already read these properties; naming them
+     here re-points those same rules and reaches the shadow tree as well.
+     Contrast is against this app's #1a1a26 demo surface. */
+  --step-text-completed-color: #24aa5a;
+  --step-text-failure-color: #ef5350;
+  --step-text-in-progress-color: #fbbf24;
+  --stepper-separator-background-image-failure-color: #ef5350;
+  --stepper-separator-background-image-in-progress-color: #fbbf24;
+}
+
+/* ----------------------------------------------------------------------------
+   Third pass — completing the set.
+
+   The passes above fixed what a demo page happened to render. A static scan of
+   every colour default in src/lib (scripts/check-css-contract.js) found 218 more
+   that no page exercises: hover fills, popovers, focus rings, empty states. The
+   sweep could never have seen them, because nothing on screen was showing them.
+   ---------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  /* Avatar */
+  --avatar-background: #2f2f45;
+  --avatar-text-color: #d1d5db;
+
+  /* Banner */
+  --banner-background: #1e1e2e;
+
+  /* Book */
+  --book-dot-active-color: #818cf8;
+  --book-nav-color: #9ca3af;
+
+  /* BrandLoader */
+  --loader-dot-color: #9ca3af;
+  --loader-sub-text-color: #b8bcc4;
+  --loader-text-color: #d1d5db;
+
+  /* Browser */
+  --browser-addressbar-bg: #0f0f17;
+  --browser-addressbar-color: #9ca3af;
+  --browser-chrome-bg: #1e1e2e;
+  --browser-chrome-color: #9ca3af;
+  --browser-content-bg: #1a1a26;
+  --browser-lock-color: #9ca3af;
+  --browser-tab-bg: #252535;
+  --browser-tab-color: #d1d5db;
+
+  /* Calendar */
+  --calendar-background: #1e1e2e;
+  --calendar-cell-color: #d1d5db;
+  --calendar-cell-hover-background: #252535;
+  --calendar-focus-ring-color: #818cf8;
+  --calendar-header-color: #d1d5db;
+  --calendar-nav-button-color: #9ca3af;
+  --calendar-nav-button-hover-background: #252535;
+  --calendar-range-background: #2a2a3c;
+
+  /* Carousel */
+  --carousel-dot-active-color: #818cf8;
+
+  /* ChatMessage */
+  --chat-message-marker-color: #a78bfa;
+
+  /* Checkbox */
+  --checkbox-hover-border-color: #d1d5db;
+  --checkbox-label-color: #d1d5db;
+
+  /* ColorPicker */
+  --color-picker-field-background: #1e1e2e;
+  --color-picker-field-color: #d1d5db;
+  --color-picker-field-focus-border: #60a5fa;
+  --color-picker-label-color: #d1d5db;
+  --color-picker-popover-background: #1e1e2e;
+  --color-picker-swatch-btn-background: #1e1e2e;
+  --color-picker-swatch-btn-hover-background: #252535;
+
+  /* Combobox */
+  --combobox-action-color: #9ca3af;
+  --combobox-color: #d1d5db;
+  --combobox-create-color: #818cf8;
+  --combobox-dropdown-background: #1e1e2e;
+  --combobox-input-background: #1e1e2e;
+  --combobox-input-focus-border-color: #818cf8;
+  --combobox-limit-background: #3a2f14;
+  --combobox-limit-color: #fbbf24;
+  --combobox-option-color: #d1d5db;
+  --combobox-option-hover-background: #252535;
+  --combobox-option-selected-background: #1e1b4b;
+
+  /* CommandMenu */
+  --command-menu-background: #1e1e2e;
+  --command-menu-input-caret-color: #818cf8;
+  --command-menu-input-color: #d1d5db;
+  --command-menu-item-active-background: #252535;
+  --command-menu-item-active-color: #d1d5db;
+  --command-menu-item-color: #9ca3af;
+  --command-menu-kbd-background: #252535;
+  --command-menu-kbd-color: #9ca3af;
+
+  /* ContextMenu */
+  --context-menu-background-color: #1e1e2e;
+  --context-menu-item-color: #d1d5db;
+  --context-menu-item-danger-color: #f87171;
+  --context-menu-item-danger-focus-background-color: #33191c;
+  --context-menu-item-danger-hover-background-color: #3a1f22;
+  --context-menu-item-focus-background-color: #2a2a3c;
+  --context-menu-item-hover-background-color: #252535;
+
+  /* DateRangePicker */
+  --drp-apply-disabled-background: #3f3f4d;
+  --drp-apply-disabled-color: #d1d5db;
+  --drp-cancel-hover-background: #252535;
+  --drp-clear-hover-background: #252535;
+  --drp-date-input-background: #1e1e2e;
+  --drp-date-input-color: #d1d5db;
+  --drp-date-input-invalid-border: #f87171;
+  --drp-datetime-arrow-color: #9ca3af;
+  --drp-field-error-color: #f87171;
+  --drp-nav-btn-hover-background: #252535;
+  --drp-panel-background: #1e1e2e;
+  --drp-preset-hover-background: #252535;
+  --drp-time-field-color: #d1d5db;
+  --drp-time-input-background: #1e1e2e;
+  --drp-time-input-icon-color: #9ca3af;
+  --drp-time-input-invalid-border: #f87171;
+  --drp-time-toggle-active-color: #60a5fa;
+  --drp-time-toggle-background: #1a1a26;
+  --drp-time-toggle-color: #9ca3af;
+  --drp-trigger-open-border-color: #818cf8;
+
+  /* DeltaIndicator */
+  --delta-indicator-neutral-color: #9ca3af;
+  --delta-indicator-positive-color: #4ade80;
+
+  /* FileInput */
+  --file-input-error-color: #f87171;
+  --file-input-info-color: #9ca3af;
+
+  /* GridItem */
+  --grid-item-background-color: #252535;
+
+  /* Input */
+  --input-char-count-color: #9ca3af;
+  --input-focus-border-color: #818cf8;
+
+  /* InputButton */
+  --input-field-error-stroke: #f87171;
+  --inputbutton-mandatory-color: #f87171;
+
+  /* KeyValue */
+  --keyvalue-label-color: #d1d5db;
+  --keyvalue-value-color: #9ca3af;
+
+  /* KeyboardInput */
+  --keyboard-input-key-background: #1e1e2e;
+  --keyboard-input-key-color: #d1d5db;
+  --keyboard-input-separator-color: #9ca3af;
+
+  /* Label */
+  --label-required-color: #f87171;
+
+  /* ListItem */
+  --list-item-loader-background: #1a1a26;
+
+  /* MarkdownText */
+  --markdown-text-focus-outline-color: #818cf8;
+  --markdown-text-link-color: #a78bfa;
+
+  /* MediaUpload */
+  --media-upload-add-background-color: #1e1e2e;
+  /* The tile's own text, on that #1e1e2e tile. The light defaults (#6b7280 /
+     #9aa0a8) are tuned for a white tile and read at 3.4:1 and 3.8:1 here. */
+  --media-upload-add-color: #9ca3af;
+  --media-upload-add-hint-color: #9ca3af;
+  --media-upload-add-dragging-background-color: #262b4a;
+  --media-upload-add-dragging-color: #818cf8;
+  --media-upload-add-hover-background-color: #252535;
+  --media-upload-add-hover-color: #818cf8;
+  --media-upload-counter-color: #9ca3af;
+  --media-upload-description-color: #9ca3af;
+  --media-upload-error-color: #f87171;
+  --media-upload-file-meta-color: #9ca3af;
+  --media-upload-item-background-color: #1e1e2e;
+
+  /* Menu */
+  --menu-background-color: #1e1e2e;
+  --menu-item-color: #d1d5db;
+  --menu-item-danger-color: #f87171;
+  --menu-item-danger-focus-background-color: #2a1518;
+  --menu-item-danger-hover-background-color: #331519;
+  --menu-item-focus-background-color: #252535;
+  --menu-item-hover-background-color: #252535;
+
+  /* Modal */
+  --modal-content-background-color: #1e1e2e;
+  --modal-footer-background-color: #1a1a26;
+  --modal-footer-primary-button-color: #9ca3af;
+  --modal-footer-secondary-button-color: #9ca3af;
+  --modal-header-background-color: #1a1a26;
+
+  /* Pagination */
+  --pagination-button-hover-background: #252535;
+  --pagination-button-hover-color: #d1d5db;
+  --pagination-ellipsis-color: #9ca3af;
+  --pagination-load-more-hover-background: #252535;
+  --pagination-load-more-hover-color: #d1d5db;
+
+  /* PieChart */
+  --piechart-label-color: #d1d5db;
+
+  /* Pill -- deliberately NOT here. `--_pill-tone-*` is Pill's PRIVATE tone tier,
+     set by its own `.pill.tone-*` rules. Setting it on the theme root inherits it
+     into every pill, so an UNTONED pill resolved the muted tone's text colour
+     (#9ca3af) instead of the neutral tier's (#d1d5db) -- the background matched
+     only because muted and neutral share one. The neutral tokens live in their own
+     block further down, with the full explanation. */
+
+  /* Progress */
+  --progress-track-background: #2a2a3c;
+
+  /* ProportionBar */
+  --proportion-bar-track-bg: #2a2a3c;
+
+  /* Radio */
+  --radio-background: #1e1e2e;
+  --radio-disabled-background: #1a1a26;
+  --radio-selected-background: #1e1e2e;
+
+  /* SankeyChart */
+  --sankey-col-label-color: #9ca3af;
+  --sankey-label-color: #d1d5db;
+
+  /* Scroller */
+  --scroller-arrow-background: #1e1e2e;
+  --scroller-arrow-color: #d1d5db;
+  --scroller-arrow-hover-background: #252535;
+
+  /* Select */
+  --select-clear-pressed-background: #2a2a3c;
+  --select-menu-search-focus-border-color: #818cf8;
+  --select-option-pressed-background: #2a2a3c;
+  --select-option-selected-background: #2e304e;
+  --select-option-tick-color: #818cf8;
+  --select-pill-background: #252535;
+  --select-pill-color: #d1d5db;
+  --select-trigger-error-border-color: #f87171;
+  --select-trigger-focus-border-color: #818cf8;
+
+  /* Separator */
+  --separator-background: #2a2a3c;
+
+  /* Sheet */
+  --sheet-background: #1e1e2e;
+  --sheet-close-button-color: #9ca3af;
+  --sheet-close-button-hover-background: #252535;
+  --sheet-title-color: #e5e7eb;
+
+  /* Shimmer */
+  --shimmer-background: #2a2a3c;
+
+  /* Slider */
+  --slider-thumb-background: #d1d5db;
+  --slider-track-background: #2a2a3c;
+
+  /* SplitInput */
+  --field-group-label-color: #9ca3af;
+
+  /* StatCard */
+  --statcard-breakdown-heading-color: #9ca3af;
+  --statcard-breakdown-label-color: #9ca3af;
+  --statcard-delta-color: #9ca3af;
+  --statcard-delta-negative-color: #f87171;
+  --statcard-row-additional-color: #9ca3af;
+  --statcard-row-heading-color: #9ca3af;
+  --statcard-subtitle-color: #9ca3af;
+  --statcard-title-color: #9ca3af;
+  --statcard-value-warning-color: #fbbf24;
+
+  /* Stepper */
+  --step-index-container-muted-background-color: #2a2a3c;
+  --step-index-muted-color: #9ca3af;
+  --step-text-color: #9ca3af;
+  --step-text-muted-color: #9ca3af;
+  --step-text-pending-color: #9ca3af;
+  --stepper-separator-background-image-muted-color: #2a2a3c;
+  /* One hue, two roles -- the trap Stepper's own comments describe. These
+     --stepper-status-*-color values are the LABEL text, read against the dark
+     page, and they are also the fallback for the step circle's fill, which
+     carries a white number. Lifting them for the label alone put white on
+     #f87171 at 2.77:1, so the circle gets its own darker fill. */
+  --stepper-status-failure-color: #f87171;
+  --step-index-container-failure-background-color: #b91c1c;
+  --step-index-container-in-progress-background-color: #92400e;
+  --stepper-status-in-progress-color: #fbbf24;
+
+  /* Table */
+  --table-cell-icon-button-color: #9ca3af;
+  --table-checkbox-checked-border-color: #60a5fa;
+  --table-checkbox-hover-border-color: #d1d5db;
+  --table-checkbox-indeterminate-border-color: #60a5fa;
+  --table-content-border-bgcolor: #1a1a26;
+  --table-content-font-color: #d1d5db;
+  --table-filter-active-color: #60a5fa;
+  --table-focus-outline-color: #60a5fa;
+  --table-header-border-bgcolor: #1e1e2e;
+  --table-header-font-color: #9ca3af;
+  --table-inline-search-clear-color: #9ca3af;
+  --table-link-copy-color: #9ca3af;
+  --table-sort-active-color: #60a5fa;
+  --table-sort-hover-color: #9ca3af;
+  --table-toolbar-background: #1e1e2e;
+  --table-trend-flat-color: #9ca3af;
+  --table-trend-up-color: #4ade80;
+
+  /* Tabs */
+  --tabs-active-color: #818cf8;
+  --tabs-bar-background: #1e1e2e;
+  --tabs-hover-background: #252535;
+  --tabs-hover-color: #d1d5db;
+  --tabs-indicator-color: #818cf8;
+  --tabs-item-color: #9ca3af;
+  --tabs-item-status-default-color: #818cf8;
+  --tabs-item-status-error-color: #f87171;
+
+  /* ThemeSwitcher */
+  --theme-switcher-bg-hover: #252535;
+  --theme-switcher-bg-pressed: #2a2a3c;
+  --theme-switcher-icon-color: #9ca3af;
+  --theme-switcher-icon-color-active: #d1d5db;
+  --theme-switcher-segment-active-bg: #2a2a3c;
+  --theme-switcher-segment-bg: #1e1e2e;
+
+  /* ThinkingIndicator */
+  --thinking-indicator-elapsed-color: #9ca3af;
+
+  /* Toast */
+  --toast-background-color: #0369a1;
+}
+
+/* ----------------------------------------------------------------------------
+   Fourth pass — what was still measurably failing after the third.
+   ---------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --doc-text: #d1d5db;
+  --doc-text-secondary: #9ca3af;
+}

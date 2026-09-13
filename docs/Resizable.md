@@ -102,7 +102,18 @@ type ResizeSize = { width: number; height: number };
 Tag: `<sui-resizable>`
 
 ```html
-<sui-resizable width="420" height="600" min-width="320"></sui-resizable>
+<sui-resizable width="420" height="600" min-width="320">
+  <div>Panel content</div>
+</sui-resizable>
 ```
 
 Set `.handles` and the resize callbacks via JavaScript.
+
+`onresizestart` and `onresizeend` also dispatch same-named DOM custom events (bubbles, composed)
+for a consumer who only calls `addEventListener`, each carrying `detail` set to the same
+`{ width, height }` size object the property callback receives —
+`el.addEventListener('resizestart', (e) => console.log(e.detail))`,
+`el.addEventListener('resizeend', (e) => console.log(e.detail))`. `onresize` does not: it is
+already `HTMLElement`'s own native event, so `el.addEventListener('resize', ...)` registers
+without error but is never called by this component — assign the property instead
+(`el.onresize = (size) => ...`).

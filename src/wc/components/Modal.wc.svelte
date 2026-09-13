@@ -53,20 +53,95 @@
 
 <script lang="ts">
   import Modal from '$lib/Modal/Modal.svelte';
+  import Button from '$lib/Button/Button.svelte';
+  import { dispatchEvents } from '../dispatch';
 
   // Pulled out so they forward to the panel under Modal's own `ariaLabel`/`role`
   // names instead of the host-reserved ones. Unset by default, so a consumer
   // who sets neither sees today's unnamed, unroled panel unchanged.
   let { modalAriaLabel, modalRole, ...props } = $props();
+
+  // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
+  // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
+  // as used before its declaration.
+  const hostEl = $host();
+
+  // onclose and onkeydown both collide with native HTMLElement accessors
+  // (HOST_EVENT_HANDLER_PROPS), so dispatchEvents returns nothing for either --
+  // they stay callback-only. The other six do not collide, so each dispatches its
+  // own same-named event -- 'headerrightimageclick', 'headerleftimageclick',
+  // 'primarybuttonclick', 'secondarybuttonclick', 'overlayclick', 'dismiss' -- for
+  // a consumer who only calls addEventListener. The capture is safe and the
+  // warning does not apply to this shape.
+  // `dispatchEvents` never reads a callback here -- each wrapper it returns reads
+  // `props[name]` at CALL time (src/wc/dispatch.ts), through this same reactive
+  // proxy, so a consumer assigning `el.onfoo = fn` after mount is seen. Reading
+  // the value eagerly is exactly what the helper is written not to do.
+  // svelte-ignore state_referenced_locally
+  const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
 <!-- Property-assigned snippets win; the slots are the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. -->
-<Modal {...props} ariaLabel={modalAriaLabel} role={modalRole}>
+<Modal {...props} {...dispatchers} ariaLabel={modalAriaLabel} role={modalRole}>
   {#snippet content()}
     {#if props.content}{@render props.content()}{:else}<slot></slot>{/if}
   {/snippet}
   {#snippet footerSnippet()}
-    {#if props.footerSnippet}{@render props.footerSnippet()}{:else}<slot name="footer"></slot>{/if}
+    {#if props.footerSnippet}
+      {@render props.footerSnippet()}
+    {:else}
+      <!-- Mirrors Modal.svelte's footerSnippet fallback: the primary/secondary
+           button pair built from `footer.primaryButton`/`footer.secondaryButton`.
+           The `.footer-content` wrapper is already supplied unconditionally by
+           Modal.svelte's function branch, so only the inner buttons are reproduced
+           here.
+
+           onclick is wired to `dispatchers.onXxx`, not `props.onXxx`: this wrapper
+           always supplies a footerSnippet, so Modal.svelte's own internal
+           handlePrimaryButtonClick/handleSecondaryButtonClick branch (which is
+           what would otherwise call onprimarybuttonclick/onsecondarybuttonclick
+           AND dispatch) never runs -- typeof footerSnippet !== 'function' is
+           permanently false when wrapped. This is the only call site for either
+           prop, so it has to both invoke the consumer's callback (dispatchers.*
+           still calls props.* first, see dispatch.ts) and dispatch the event
+           itself, or the dispatch half of the callback-dispatch rule would be dead
+           code for these two. -->
+      <slot name="footer">
+        {#if typeof props.footer?.primaryButton === 'object' || typeof props.footer?.secondaryButton === 'object'}
+          <div class="footer-action-buttons">
+            {#if props.footer.secondaryButton}
+              <div class="footer-secondary-button">
+                <Button
+                  {...props.footer.secondaryButton}
+                  onclick={dispatchers.onsecondarybuttonclick}
+                />
+              </div>
+            {/if}
+            {#if props.footer.primaryButton}
+              <div class="footer-primary-button">
+                <Button
+                  {...props.footer.primaryButton}
+                  onclick={dispatchers.onprimarybuttonclick}
+                />
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </slot>
+    {/if}
   {/snippet}
 </Modal>
+
+<style>
+  /* A custom element defaults to `display: inline`, which has no definite
+     width for a percentage to resolve against -- so a component sizing itself
+     with `width: 100%` resolved against the wrong ancestor, and layout depended
+     on the consumer's surrounding markup rather than on the component. The value
+     matches this component's own root element (block-level), and is a token so a
+     consumer can change it without reaching inside the shadow root -- which they
+     could not do, since a stylesheet cannot add a rule there. */
+  :host {
+    display: var(--sui-modal-display, block);
+  }
+</style>

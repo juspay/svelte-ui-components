@@ -1,6 +1,8 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import Modal from '$lib/Modal/Modal.svelte';
+  import Menu from '$lib/Menu/Menu.svelte';
+  import Select from '$lib/Select/Select.svelte';
 
   let showModal = $state(false);
   let showModalTop = $state(false);
@@ -26,6 +28,8 @@
   let nestedLockOuterOpen = $state(false);
   let nestedLockInnerOpen = $state(false);
   let showDisabledFooterModal = $state(false);
+  let showNestedMenuModal = $state(false);
+  let showNestedSelectModal = $state(false);
 </script>
 
 <div class="page-header">
@@ -362,6 +366,87 @@
     {/snippet}
   </Modal>
 {/if}
+
+<h2>A menu opened inside a modal</h2>
+<p class="demo-caption">
+  Two dismissible surfaces at once. Escape closes the menu on top and leaves the modal open; a
+  second Escape then closes the modal. Ownership is the order they opened in, not where they sit in
+  the DOM.
+</p>
+<div class="demo-row">
+  <Button
+    text="Open modal with a menu"
+    onclick={() => (showNestedMenuModal = true)}
+    testId="nested-menu-modal-trigger"
+  />
+  {#if showNestedMenuModal}
+    <Modal
+      size="medium"
+      align="center"
+      showOverlay
+      role="dialog"
+      ariaLabel="Row actions"
+      header={{ text: 'Row actions' }}
+      testId="nested-menu-modal"
+      onclose={() => (showNestedMenuModal = false)}
+      onoverlayclick={() => (showNestedMenuModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <Menu
+            items={[
+              { label: 'Edit', value: 'edit' },
+              { label: 'Delete', value: 'delete', danger: true }
+            ]}
+            testId="nested-menu"
+            interactiveTrigger
+          >
+            {#snippet trigger(props)}
+              <Button text="Row actions" {...props} />
+            {/snippet}
+          </Menu>
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+</div>
+
+<h2>A select opened inside a modal</h2>
+<p class="demo-caption">
+  Two dismissible surfaces at once. Escape closes the select on top and leaves the modal open; a
+  second Escape then closes the modal. An outside click follows the same ordering. Ownership is the
+  order they opened in, not where they sit in the DOM.
+</p>
+<div class="demo-row">
+  <Button
+    text="Open modal with a select"
+    onclick={() => (showNestedSelectModal = true)}
+    testId="nested-select-modal-trigger"
+  />
+  {#if showNestedSelectModal}
+    <Modal
+      size="medium"
+      align="center"
+      showOverlay
+      role="dialog"
+      ariaLabel="Pick a fruit"
+      header={{ text: 'Pick a fruit' }}
+      testId="nested-select-modal"
+      onclose={() => (showNestedSelectModal = false)}
+      onoverlayclick={() => (showNestedSelectModal = false)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <Select
+            items={['Apple', 'Banana', 'Cherry']}
+            placeholder="Choose a fruit"
+            testId="nested-select"
+          />
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+</div>
 
 <style>
   .demo-note {

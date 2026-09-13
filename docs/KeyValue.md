@@ -154,3 +154,7 @@ Override these custom properties to theme the component.
 | `--keyvalue-value-size`        | size-based | font-size    | Value font size. Defaults to the `size` preset (12/14/16px) unless set. |
 | `--keyvalue-value-weight`      | `400`      | font-weight  | Value font weight.                                                      |
 | `--keyvalue-value-line-height` | `1.4`      | line-height  | Value line height.                                                      |
+
+## Web Component
+
+> **Svelte-only:** `valueSnippet` (receives `KeyValueItem, number`), `labelSnippet` (receives `KeyValueItem, number`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.

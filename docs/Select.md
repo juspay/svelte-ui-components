@@ -1,6 +1,6 @@
 # Select
 
-A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. The `items` prop accepts either `SelectItem[]` objects or a plain `string[]` (each string is used as both the id and the label). Custom snippets let you replace the per-option checkbox indicator and add arbitrary content pinned to the bottom of the dropdown. Supports keyboard navigation (Arrow keys, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` prop is bindable. Browse-a-list is the primary interaction — a closed dropdown the user opens and clicks through, with optional filtering as one feature among several (as opposed to `Combobox`, which is type-to-search first: a text input the user types into, with the dropdown filtering live as they go).
+A dropdown selector that supports single and multi-select modes with optional search filtering. In single-select mode, clicking an item selects it and closes the dropdown. In multi-select mode, clicking items toggles them on or off and the dropdown stays open. Selected items in multi-select are shown as dismissible pills. The `items` prop accepts either `SelectItem[]` objects or a plain `string[]` (each string is used as both the id and the label). Custom snippets let you replace the per-option checkbox indicator and add arbitrary content pinned to the bottom of the dropdown. Supports keyboard navigation (Arrow keys, Home, End, Enter, Escape, Backspace) and closes automatically when clicking outside. The `value` prop is bindable. Browse-a-list is the primary interaction — a closed dropdown the user opens and clicks through, with optional filtering as one feature among several (as opposed to `Combobox`, which is type-to-search first: a text input the user types into, with the dropdown filtering live as they go).
 
 ## Usage
 
@@ -84,6 +84,22 @@ An SVG source is **inlined into the component's DOM**, so an icon drawn with `cu
 <Select {items} placeholder="Select a city" leftIcon="/icons/globe.svg" />
 ```
 
+## Keyboard
+
+| Key         | Behavior                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Enter`     | Opens the dropdown when closed; selects the highlighted row when open.                                                                                                                                                                                                                                                                                                   |
+| `Space`     | Same as `Enter`, except while a search input has focus (where it types a space).                                                                                                                                                                                                                                                                                         |
+| `ArrowDown` | Opens the dropdown when closed; moves the highlight down one row when open.                                                                                                                                                                                                                                                                                              |
+| `ArrowUp`   | Moves the highlight up one row.                                                                                                                                                                                                                                                                                                                                          |
+| `Home`      | Moves the highlight to the first selectable row (skipping any row whose `item.disabled` is `true`), scrolling it into view the same way arrow-key navigation does. No effect while the dropdown is closed, while a search input has focus, while a modifier key (`Ctrl`/`Cmd`/`Alt`/`Shift`) is held, or when the list has no selectable rows (including an empty list). |
+| `End`       | Same as `Home`, but to the last selectable row.                                                                                                                                                                                                                                                                                                                          |
+| `Escape`    | Closes the dropdown and returns focus to the trigger (non-searchable only).                                                                                                                                                                                                                                                                                              |
+| `Backspace` | In `multiple` mode with an empty search query, removes the last selected value.                                                                                                                                                                                                                                                                                          |
+| `Tab`       | Closes the dropdown without changing selection.                                                                                                                                                                                                                                                                                                                          |
+
+`Home`/`End` operate on the same row list as arrow-key navigation, including the `showSelectAll` row when present — it is never skipped, since it has no `disabled` concept. A row is only skipped when its own `item.disabled` is `true`; `ArrowUp`/`ArrowDown` are unchanged and can still land on a disabled row (e.g. from an adjacent enabled row), but selecting it — by click, `Enter`, or `Space` — is a no-op, same as clicking it directly.
+
 ## Props
 
 | Prop             | Type                                                                     | Required | Default        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -110,7 +126,7 @@ An SVG source is **inlined into the component's DOM**, so an icon drawn with `cu
 | showSelectedTick | `boolean`                                                                | No       | `false`        | Single-select only. When `true`, the selected option shows a checkmark at its right edge. No effect in `multiple` mode. Themeable via `--select-option-tick-size` / `--select-option-tick-color`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | showSelectAll    | `boolean`                                                                | No       | `false`        | Multiple mode only. Renders a "Select all" row at the top of the dropdown that toggles every currently-listed (search-filtered) option. Shows an indeterminate indicator when only some listed options are selected.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | selectAllLabel   | `string`                                                                 | No       | `'Select all'` | Label text for the `showSelectAll` row.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| usePortal        | `boolean`                                                                | No       | `false`        | When `true`, the dropdown panel is portaled to `document.body` and positioned `fixed` relative to the trigger, so an ancestor with `overflow: hidden` or a scroll container (e.g. a table cell) cannot clip it. Placement follows the trigger on scroll/resize and flips above it when there's no room below *and* more room above. Portaled panels default to `z-index: 1000`; raise `--select-dropdown-z-index` to sit above an even higher overlay.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| usePortal        | `boolean`                  | No       | `false`        | When `true`, the dropdown panel is portaled to the root of the tree it lives in — `document.body` normally, or the shadow root inside `<sui-select>` — and positioned `fixed` relative to the trigger, so an ancestor with `overflow: hidden` or a scroll container (e.g. a table cell) cannot clip it. The root is chosen rather than always `document.body` because Svelte scopes a custom element's CSS to its shadow root: a panel moved into the light DOM keeps its markup and loses every rule scoped to that root, so through `<sui-select>` it would render unstyled. Placement follows the trigger on scroll/resize and flips above it when there's no room below *and* more room above. Portaled panels default to `z-index: 1000`; raise `--select-dropdown-z-index` to sit above an even higher overlay. |
 | name             | `string`                                                                 | No       | -              | Sets the `name` under which selected ids submit as part of a surrounding `<form>` (`FormData`). Select renders no native `<select>`, so this renders one `<input type="hidden" {name} value={id}>` per selected id — the same shape a native `<select multiple>` produces: one entry per selection, none when nothing is selected. An empty string is treated exactly as omitted -- no hidden inputs are rendered, so `name=""` silently disables form participation rather than submitting under an empty key. This deliberately diverges from a native `<select name="">`, which does submit under an empty key: Select has no underlying native control to inherit that behaviour from, so an empty key would be a hidden input this component invented, not one the platform requires. Omitting it leaves the DOM byte-identical to before. |
 
 ## Snippets
@@ -403,6 +419,8 @@ Override these custom properties to theme the component.
 | `--select-option-indicator-check-size`           | `12px`                                         | width, height | Size of the checkmark inside a checked indicator.                                                                                        |
 | `--select-option-indicator-check-color`          | `#ffffff`                                      | color         | Color of the checkmark inside a checked indicator.                                                                                       |
 | `--select-option-indicator-color`                | `currentColor`                                 | color         | Legacy text-color hook on the indicator wrapper. Inert for the default checkbox box; only affects a text-glyph custom `optionIndicator`. |
+| `--select-option-disabled-opacity`               | `0.4`                                          | opacity       | Opacity of an option row whose `item.disabled` is `true`.                                                                                |
+| `--select-option-disabled-cursor`                | `not-allowed`                                  | cursor        | Cursor shown over a disabled option row.                                                                                                 |
 
 ### Bottom Content
 
@@ -437,13 +455,19 @@ These variables apply when `hierarchy="ghost"`. The trigger starts fully transpa
 
 These variables style the Pill components shown for selected items in multi-select mode. They are forwarded to the internal Pill component.
 
-| Variable                      | Default   | CSS Property  | Description                              |
-| ----------------------------- | --------- | ------------- | ---------------------------------------- |
-| `--select-pill-background`    | `#e0e0e0` | background    | Background color of selected item pills. |
-| `--select-pill-color`         | `#333333` | color         | Text color of selected item pills.       |
-| `--select-pill-border-radius` | `999px`   | border-radius | Corner rounding of selected item pills.  |
-| `--select-pill-padding`       | `2px 8px` | padding       | Padding inside selected item pills.      |
-| `--select-pill-font-size`     | `13px`    | font-size     | Font size of selected item pills.        |
+| Variable                                        | Default   | CSS Property  | Description                                                                                                         |
+| ----------------------------------------------- | --------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--select-pill-background`                      | `#e0e0e0` | background    | Background color of selected item pills.                                                                            |
+| `--select-pill-color`                           | `#333333` | color         | Text color of selected item pills.                                                                                  |
+| `--select-pill-border-radius`                   | `999px`   | border-radius | Corner rounding of selected item pills.                                                                             |
+| `--select-pill-padding`                         | `2px 8px` | padding       | Padding inside selected item pills.                                                                                 |
+| `--select-pill-font-size`                       | `13px`    | font-size     | Font size of selected item pills.                                                                                   |
+| `--select-arrow-transition-duration`            | `0.15s`   | transition    | Duration of the dropdown arrow's rotate transition. Falls back through `--motion-duration`.                         |
+| `--select-arrow-transition-easing`              | `ease`    | transition    | Easing curve of the dropdown arrow's rotate transition. Falls back through `--motion-easing`.                       |
+| `--select-option-transition-duration`           | `0.1s`    | transition    | Duration of an option's hover/active background transition. Falls back through `--motion-duration`.                 |
+| `--select-option-transition-easing`             | `ease`    | transition    | Easing curve of an option's hover/active background transition. Falls back through `--motion-easing`.               |
+| `--select-option-indicator-transition-duration` | `0.15s`   | transition    | Duration of the selected-option indicator's background/border transition. Falls back through `--motion-duration`.   |
+| `--select-option-indicator-transition-easing`   | `ease`    | transition    | Easing curve of the selected-option indicator's background/border transition. Falls back through `--motion-easing`. |
 
 ## Type Reference
 
@@ -457,6 +481,10 @@ type SelectItem = {
   label: string;
   /** Optional per-option test id. When set, emitted as `data-pw` directly on the option element (overrides `itemTestId` and `testId` fallbacks). */
   testId?: string;
+  /** Optional image src rendered at the left of the option row. See "With Leading Icon". */
+  icon?: string;
+  /** When `true`, the option is dimmed, `aria-disabled`, unselectable, and skipped by `Home`/`End`. */
+  disabled?: boolean;
 };
 ```
 
@@ -487,9 +515,23 @@ Tag: `<sui-select>`
     { id: 'banana', label: 'Banana' },
     { id: 'cherry', label: 'Cherry' }
   ];
-  el.addEventListener('change', (e) => console.log(e.detail));
+  el.onchange = (value) => console.log(value);
 </script>
 ```
+
+All four events are available as JS properties, assigned as above. `onclear` and `onopen`
+also dispatch a same-named DOM custom event (bubbles, composed, no detail) for a consumer
+who only calls `addEventListener`:
+
+```js
+el.addEventListener('clear', () => console.log('selection cleared'));
+el.addEventListener('open', () => console.log('dropdown opened'));
+```
+
+`onchange` and `onclose` do NOT dispatch a matching DOM event — `change` and `close` are
+already `HTMLElement`'s own native events, so `el.addEventListener('change', ...)` or
+`el.addEventListener('close', ...)` registers without error but never runs. Use the JS
+property for those two instead: `el.onchange = (value) => ...`, `el.onclose = () => ...`.
 
 ### With Slots
 

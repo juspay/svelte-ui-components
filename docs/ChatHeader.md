@@ -72,3 +72,17 @@ Tag: `<sui-chat-header>`
 ```html
 <sui-chat-header title="Assistant" subtitle="Online"></sui-chat-header>
 ```
+
+`onclose` is this element's only callback prop. It is a JS-property-only callback
+(`header.onclose = () => ...`) and does not dispatch a DOM event: `close` is already
+`HTMLElement`'s own native event, so a `header.addEventListener('close', ...)` listener would
+receive both the real one and a synthetic one under the same name.
+
+### Slots
+
+| Slot Name    | Maps to Snippet | Description                                                                                                                                                              |
+| ------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| (default)    | `children`      | Extra content rendered as a full-width second row below the main bar.                                                                                                    |
+| `avatar`     | `avatar`        | Brand/avatar mark left of the title. Takes effect only once slotted — an unslotted `<sui-chat-header>` keeps falling back to `image`/no-avatar instead of a blank space. |
+| `actions`    | `actions`       | Extra actions right of the title (before close).                                                                                                                         |
+| `close-icon` | `closeIcon`     | Custom close icon. Defaults to the built-in close glyph.                                                                                                                 |

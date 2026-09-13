@@ -424,3 +424,17 @@ Reflected boolean attributes: `stretch`, `scrollable`.
   <p>Event 2</p>
 </sui-card>
 ```
+
+`onclick` is a JS-property callback only (`card.onclick = (event) => ...`) and does not dispatch
+a DOM event: `click` is already `HTMLElement`'s own native event, so a real one already bubbles
+out of the shadow root, and a second, synthetic one under the same name would double-deliver it
+to a `card.addEventListener('click', ...)` listener.
+
+### Slots
+
+| Slot Name             | Maps to Snippet      | Description                                                                                                     |
+| --------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `title-snippet`       | `titleSnippet`       | Replaces the plain `title` text with custom markup. Falls back to the `title` attribute when the slot is empty. |
+| `description-snippet` | `descriptionSnippet` | Replaces the plain `description` text with custom markup. Falls back to the `description` attribute when empty. |
+| `header-right`        | `headerRight`        | Content placed opposite the title/description in the header row. Nothing renders when the slot is empty.        |
+| `footer`              | `footer`             | Content placed in a footer element below the body. Nothing renders when the slot is empty.                      |

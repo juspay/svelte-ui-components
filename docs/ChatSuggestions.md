@@ -62,3 +62,10 @@ Tag: `<sui-chat-suggestions>`
 ```
 
 Set `.items` and `.onselect` via JavaScript.
+
+`onselect` is this element's only callback prop. It is a JS-property-only callback
+(`suggestions.onselect = (value, index) => ...`) and does not dispatch a DOM event: `select` is
+already `HTMLElement`'s own native event, so a `suggestions.addEventListener('select', ...)`
+listener would receive both the real one and a synthetic one under the same name.
+
+> **Svelte-only:** `icon` (receives `string | null, number`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.

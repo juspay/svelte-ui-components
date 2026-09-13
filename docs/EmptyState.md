@@ -176,9 +176,9 @@ CSS custom property — set it on the host element (or an ancestor) directly:
 
 ### Slots
 
-| Slot Name             | Maps to Snippet      | Description                                                  |
-| --------------------- | -------------------- | ------------------------------------------------------------ |
-| `icon`                | `icon`               | Icon or illustration content displayed above the title.      |
-| `title-snippet`       | `titleSnippet`       | Rich-markup override for the title area.                     |
-| `description-snippet` | `descriptionSnippet` | Rich-markup override for the description area.               |
-| (default)             | `children`           | Action content (buttons, links) displayed below description. |
+| Slot Name             | Maps to Snippet      | Description                                                                                                     |
+| --------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `icon`                | `icon`               | Icon or illustration content displayed above the title.                                                         |
+| `title-snippet`       | `titleSnippet`       | Rich-markup override for the title area; defaults to the plain `title` string.                                  |
+| `description-snippet` | `descriptionSnippet` | Rich-markup override for the description area; defaults to the plain `description` string (omitted when empty). |
+| (default)             | `children`           | Action content (buttons, links) displayed below description.                                                    |

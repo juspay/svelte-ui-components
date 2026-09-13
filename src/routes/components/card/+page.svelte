@@ -460,7 +460,7 @@
 
   .row-badge-up {
     background: #ecfdf5;
-    color: #059669;
+    color: #047857;
   }
 
   .row-status {
@@ -468,7 +468,7 @@
   }
 
   .row-status-connected {
-    color: #059669;
+    color: light-dark(#047857, #4ade80);
   }
 
   .row-status-disconnected {

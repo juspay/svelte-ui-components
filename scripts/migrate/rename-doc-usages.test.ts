@@ -67,6 +67,10 @@ describe('rewriteDoc', () => {
 });
 
 describe('the reference docs', () => {
+  // Reads all 112 reference docs; see the note in
+  // rename-internal-usages.test.ts. Timing, not correctness.
+  // docs/ is what the MCP server serves to consumers: a deprecated name
+  // here is an instruction to use something 4.0.0 removes.
   it('treats a headless controller option as ambiguous, not as a component prop', () => {
     // `onError` is a deprecated prop on Input/Table AND a live option on
     // SpeechToTextOptions/ChatOptions, which live in types.ts. Scanning only

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { registerDismissible } from '../_interaction/dismissal';
+  import { describeField } from '../_field/description';
   import Button from '$lib/Button/Button.svelte';
   import Input from '$lib/Input/Input.svelte';
   import Slider from '$lib/Slider/Slider.svelte';
@@ -24,13 +26,35 @@
     testId,
     onchange,
     oninput,
-    classes
+    classes,
+    errorMessage,
+    infoMessage,
+    invalid = false
   }: ColorPickerProperties = $props();
+
+  /* The control and the text that explains it were never linked: a screen-reader
+     user reaching the swatch heard "Pick a color" and nothing about why the last
+     one was rejected. `describeField` composes the reference from the messages
+     that are actually rendered, so aria-describedby never points at an id that is
+     not in the DOM -- which passes an attribute assertion and resolves to nothing
+     in a real reader.
+
+     It describes the group holding the swatch button and the hex field, because
+     the message is about the colour rather than about either control, and because
+     neither `Button` nor `Input` exposes an `aria-describedby` seam to bind it to
+     one of them. The role is conditional so a ColorPicker with no messages keeps
+     the accessibility tree it had before these props existed. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+  const describedGroup = $derived(field.describedBy !== null || field.ariaInvalid !== null);
 
   // ── Internal state ──────────────────────────────────────────────
 
   let open = $state(false);
   let containerEl: HTMLDivElement | null = $state(null);
+  let triggerWrapEl: HTMLDivElement | null = $state(null);
 
   let hue = $state(0);
   let sat = $state(1);
@@ -46,21 +70,43 @@
   let currentRgb = $derived(hsvToRgb(hue, sat, val));
   let currentHsl = $derived(hsvToHsl(hue, sat, val));
 
-  let _syncTrigger = $derived.by(() => {
-    const hsv = hexToHsv(value);
-    if (hsv !== null) {
-      hue = hsv.h;
-      sat = hsv.s;
-      val = hsv.v;
+  // The hex string this component itself last wrote to `value` via commitColor.
+  // Plain (non-`$state`) bookkeeping -- like Tabs' `lastSelectionKey` -- so reading
+  // it never creates a reactive dependency; only `value` needs to.
+  let lastCommittedHex: string | null = null;
+
+  // Keeps hue/sat/val honest against `value` for every route that is NOT
+  // commitColor -- an externally-changed `value` prop, or the popover's own hex
+  // field/trigger input, which write `value` directly. `{@attach}` runs its
+  // callback inside a real reactive effect (see attachments.js), so reading
+  // `value` here re-runs it on change without reaching for the banned $effect.
+  // Skipped entirely when `value` merely echoes our own last commit, so the
+  // hue we just set from a drag never gets round-tripped back through hex.
+  function syncFromValue(_node: HTMLDivElement): void {
+    if (value === lastCommittedHex) {
+      return;
     }
-    return value;
-  });
+    const hsv = hexToHsv(value);
+    if (hsv === null) {
+      return;
+    }
+    sat = hsv.s;
+    val = hsv.v;
+    // A grey hex (sat 0, from d === 0) has no recoverable hue -- rgbToHsv defaults
+    // it to 0, which is not "the" hue, just an artifact of the formula. Leaving
+    // `hue` alone here is what keeps a drag down to grey from snapping the hue
+    // slider to red.
+    if (hsv.s > 0) {
+      hue = hsv.h;
+    }
+  }
 
   // ── Color commit ────────────────────────────────────────────────
 
   function commitColor() {
     const hex = hsvToHex(hue, sat, val);
     if (hex !== value) {
+      lastCommittedHex = hex;
       value = hex;
       oninput?.(value);
       onchange?.(value);
@@ -75,15 +121,29 @@
     }
   }
 
-  function handleWindowClick(e: MouseEvent) {
-    if (
-      open &&
-      containerEl !== null &&
-      e.target instanceof Node &&
-      containerEl.contains(e.target) === false
-    ) {
-      open = false;
-    }
+  // Registered for exactly the popover's open span (the {#if open} block below),
+  // same as Menu's dismissalAction, so this popover only answers Escape/outside-press
+  // while it is the topmost dismissible surface -- a picker opened inside a Modal or
+  // Sheet no longer closes the layer behind it. `element` is containerEl (the whole
+  // component, trigger included) rather than just the popover: a press on the swatch
+  // button that reopens/toggles the popover must not also be read as an outside press
+  // by the module, matching the old handleWindowClick's boundary exactly.
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => containerEl,
+      // Wherever focus happens to be inside the popover -- the sat panel, a field,
+      // the mode-toggle button -- matching ContextMenu's "wherever focus happens to
+      // be" rule, then hands focus back to the trigger so keyboard users don't lose
+      // their place.
+      onEscape: () => {
+        open = false;
+        triggerWrapEl?.querySelector('button')?.focus();
+      },
+      onOutside: () => {
+        open = false;
+      }
+    });
+    return { destroy: release };
   }
 
   // ── Saturation panel drag ───────────────────────────────────────
@@ -120,6 +180,53 @@
     const rect = satPanelEl.getBoundingClientRect();
     sat = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     val = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+    commitColor();
+  }
+
+  // Small step for the arrow keys, larger step for Page Up/Down -- mirrors the
+  // native <input type="range"> convention Slider relies on.
+  const SAT_STEP = 0.01;
+  const SAT_PAGE_STEP = 0.1;
+
+  function handleSatKeydown(e: KeyboardEvent) {
+    if (disabled) {
+      return;
+    }
+    switch (e.key) {
+      case 'ArrowLeft':
+        sat = Math.max(0, sat - SAT_STEP);
+        break;
+      case 'ArrowRight':
+        sat = Math.min(1, sat + SAT_STEP);
+        break;
+      case 'ArrowUp':
+        val = Math.min(1, val + SAT_STEP);
+        break;
+      case 'ArrowDown':
+        val = Math.max(0, val - SAT_STEP);
+        break;
+      case 'PageUp':
+        // Larger step on the same axis Home/End jump on -- see below.
+        sat = Math.min(1, sat + SAT_PAGE_STEP);
+        break;
+      case 'PageDown':
+        sat = Math.max(0, sat - SAT_PAGE_STEP);
+        break;
+      case 'Home':
+        // Home/End follow the ARIA slider contract for "the" value this role
+        // formally exposes -- aria-valuenow/min/max track saturation, so that
+        // is the axis being adjusted here. Brightness is left untouched, same
+        // as arrow keys never touch the axis they aren't bound to.
+        sat = 0;
+        break;
+      case 'End':
+        sat = 1;
+        break;
+      default:
+        // Not one of ours -- leave it unconsumed (Tab, Enter, etc.).
+        return;
+    }
+    e.preventDefault();
     commitColor();
   }
 
@@ -182,14 +289,17 @@
   }
 </script>
 
-<svelte:window onclick={handleWindowClick} />
-
 <div
   class="color-picker-container {classes ?? ''}"
   class:disabled
+  role={describedGroup ? 'group' : null}
+  aria-label={describedGroup && typeof label === 'string' ? label : null}
+  aria-describedby={field.describedBy}
+  aria-invalid={field.ariaInvalid}
   data-pw={testId}
   testID={testId}
   bind:this={containerEl}
+  {@attach syncFromValue}
 >
   {#if typeof label === 'string'}
     <span class="color-picker-label">{label}</span>
@@ -197,7 +307,11 @@
 
   <!-- Trigger: swatch button + optional hex input -->
   <div class="color-picker-row">
-    <div class="color-picker-swatch-btn" class:standalone={showValue === false}>
+    <div
+      class="color-picker-swatch-btn"
+      class:standalone={showValue === false}
+      bind:this={triggerWrapEl}
+    >
       <Button onclick={togglePicker} {disabled} ariaLabel="Pick a color" ariaExpanded={open}>
         <span class="color-picker-checkerboard">
           <span class="color-picker-swatch" style="background-color: {value};"></span>
@@ -219,7 +333,7 @@
 
   <!-- Popover panel -->
   {#if open}
-    <div class="color-picker-popover" role="dialog" aria-label="Color picker">
+    <div class="color-picker-popover" role="dialog" aria-label="Color picker" use:dismissalAction>
       <div
         class="cp-sat-panel"
         style="background-color: {hsvToHex(hue, 1, 1)};"
@@ -227,6 +341,7 @@
         onpointerdown={handleSatDown}
         onpointermove={handleSatMove}
         onpointerup={handleSatUp}
+        onkeydown={handleSatKeydown}
         role="slider"
         aria-label="Saturation and brightness"
         aria-valuenow={Math.round(sat * 100)}
@@ -303,7 +418,41 @@
   {/if}
 </div>
 
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
+
 <style>
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
+  }
+
   /* ── Container ─────────────────────────────────────────────── */
 
   .color-picker-container {

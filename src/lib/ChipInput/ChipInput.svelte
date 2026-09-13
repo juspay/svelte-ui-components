@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { describeField } from '../_field/description';
   import Input from '$lib/Input/Input.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
   import type { ChipInputProperties } from './properties';
@@ -11,11 +12,32 @@
     editable = false,
     testId,
     classes,
+    errorMessage,
+    infoMessage,
+    invalid = false,
     onadd,
     ondismiss,
     onedit,
     onchange
   }: ChipInputProperties = $props();
+
+  /* The widget and the text that explains it were never linked: a screen-reader
+     user heard the draft field's name and nothing about why the last value was
+     rejected. `describeField` composes the reference from the messages that are
+     actually rendered, so aria-describedby never points at an id that is not in
+     the DOM -- which passes an attribute assertion and resolves to nothing in a
+     real reader.
+
+     It describes the GROUP rather than the draft field, because that is what the
+     message is about: "at most five tags" is a fact about the collection, not
+     about the box the next one is typed into. The role is conditional so a
+     ChipInput with no messages keeps the accessibility tree it had before this
+     prop existed -- an unnamed, undescribed group is announced noise. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+  const describedGroup = $derived(field.describedBy !== null || field.ariaInvalid !== null);
 
   let draft = $state('');
 
@@ -131,7 +153,15 @@
   }
 </script>
 
-<div class="chip-input {classes ?? ''}" data-pw={testId} testID={testId}>
+<div
+  class="chip-input {classes ?? ''}"
+  role={describedGroup ? 'group' : null}
+  aria-label={describedGroup ? ariaLabel : null}
+  aria-describedby={field.describedBy}
+  aria-invalid={field.ariaInvalid}
+  data-pw={testId}
+  testID={testId}
+>
   {#each values as chip, index (chip)}
     {#if editable && editingChip === chip && !disabled}
       <div class="chip-input-edit-wrap">
@@ -186,7 +216,41 @@
   </div>
 </div>
 
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
+
 <style>
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
+  }
+
   .chip-input {
     display: flex;
     flex-wrap: var(--chip-input-flex-wrap, wrap);
@@ -209,8 +273,11 @@
        Tokens the component owns STRUCTURALLY — the draft field's inline padding, margin and
        shadow, and its width/height — deliberately stay fixed, since those position the field among
        the chips rather than describe how it looks. */
-    --chip-input-pill-background-default: var(--pill-background, #e0e0e0);
-    --chip-input-pill-color-default: var(--pill-color, #333333);
+    --chip-input-pill-background-default: var(
+      --pill-background,
+      var(--pill-tone-neutral-background, #e0e0e0)
+    );
+    --chip-input-pill-color-default: var(--pill-color, var(--pill-tone-neutral-color, #333333));
     --chip-input-pill-dismiss-color-default: var(--pill-dismiss-color, currentColor);
     --chip-input-pill-font-size-default: var(--pill-font-size, 13px);
     --chip-input-pill-font-weight-default: var(--pill-font-weight, 500);

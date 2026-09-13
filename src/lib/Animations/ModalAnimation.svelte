@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { fly, fade } from 'svelte/transition';
+  import { prefersReducedMotion } from '../utils';
   import type { ModalAlign, ModalEntryAnimation } from '$lib/Modal/properties';
   import type { ModalTransition } from '$lib/types';
 
@@ -25,6 +26,16 @@
   let flyAnimationProperties = $derived.by(() => {
     const base = { x: 0, y: 0, duration: 380 };
 
+    // Both the distance and the duration go to zero, and the distance is the part
+    // that matters: `fly` interpolates towards 0, so duration 0 with y still at 300
+    // paints the modal 300px off-target on its first frame and then snaps. Returning
+    // `base` unchanged is exactly "appear in place" -- it already has x and y at 0 --
+    // so only the duration needs zeroing alongside it. These values feed
+    // `in:fly|global={...}`, which no stylesheet can reach, so the guard is here.
+    if (prefersReducedMotion()) {
+      return { ...base, duration: 0 };
+    }
+
     // entryAnimation, when set, overrides the align-based default below —
     // e.g. a centered modal (which normally fades) can opt into the same
     // fly distances top/bottom alignment already use.
@@ -45,7 +56,10 @@
     }
   });
 
-  let fadeAnimationProperties = { duration: 300 };
+  // The fade is opacity-only, so it is not the movement the preference targets --
+  // but it is still an animation, and the cheapest honest thing is to drop it too
+  // rather than argue the distinction at every call site.
+  let fadeAnimationProperties = $derived({ duration: prefersReducedMotion() ? 0 : 300 });
 
   let useFlyAnimation = $derived(
     entryAnimation != null ? entryAnimation !== 'fade' : align === 'top' || align === 'bottom'

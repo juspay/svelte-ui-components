@@ -15,8 +15,10 @@ vite.config.ts.timestamp-*
 
 # Playwright artifacts
 test-results
+test-results-walkthrough/
 playwright-report/
 playwright-report-visual/
+playwright-report-walkthrough/
 .superpowers/
 juspay-svelte-ui-components-*.tgz
 

@@ -16,6 +16,18 @@ A single radio button within a group. Multiple Radio components sharing the same
 <Radio name="payment" value="netbanking" bind:selectedValue={selectedPayment} text="Net Banking" />
 ```
 
+### In a form
+
+```svelte
+<form onsubmit={handleSubmit}>
+  <Radio name="payment" value="card" text="Card" required bind:selectedValue />
+  <Radio name="payment" value="upi" text="UPI" required bind:selectedValue />
+  <button type="submit">Pay</button>
+</form>
+```
+
+The input carries `data-state="checked | unchecked"` and `data-disabled` for styling.
+
 ## Props
 
 | Prop          | Type      | Required | Default     | Description                                                                                                                                                            |
@@ -27,6 +39,8 @@ A single radio button within a group. Multiple Radio components sharing the same
 | disabled      | `boolean` | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                          |
 | testId        | `string`  | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                         |
 | classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| required      | `boolean` | No       | `false`     | Blocks submission until a member of the group is selected. Set it on every member, as the native control expects.                                                      |
+| form          | `string`  | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-radio>`, whose input sits in a shadow root.                                                   |
 
 ## Events
 
@@ -73,3 +87,19 @@ Tag: `<sui-radio>`
 <sui-radio name="color" value="red" text="Red"></sui-radio>
 <sui-radio name="color" value="blue" text="Blue"></sui-radio>
 ```
+
+Each `<sui-radio>` renders its native input inside its own shadow root, so the
+platform's by-`name` grouping -- which only ever looks within one DOM tree --
+cannot see across them on its own. The wrapper coordinates same-`name`
+elements explicitly instead, so a group of `<sui-radio>` behaves like a native
+radio group despite the separate shadow roots: exactly one stays checked,
+exactly one `FormData` entry is contributed, and `ArrowDown`/`ArrowRight`,
+`ArrowUp`/`ArrowLeft`, `Home`, and `End` move focus and selection together
+between enabled members, wrapping at the ends. A group is scoped to its owning
+`<form>` when one exists, matching how the platform scopes native radio
+groups.
+
+`onchange` is a JS-property callback only (`el.onchange = (value) => ...`) and does not dispatch a
+DOM event: `change` is already `HTMLElement`'s own native event, so
+`el.addEventListener('change', ...)` registers without error but is never called by this
+component — assign the property instead.

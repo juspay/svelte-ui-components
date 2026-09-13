@@ -69,8 +69,14 @@ Tag: `<sui-check-list-item>`
 </sui-check-list-item>
 ```
 
+`onclick` is this element's only callback prop. It is a JS-property-only callback
+(`item.onclick = (checked) => ...`) and does not dispatch a DOM event: `click` is already
+`HTMLElement`'s own native event, so an `item.addEventListener('click', ...)` listener already
+sees the real click that bubbles out of the shadow root on its own, and a synthetic one under
+the same name would double-deliver it to that same listener.
+
 ### Slots
 
-| Slot Name        | Maps to Snippet | Description                            |
-| ---------------- | --------------- | -------------------------------------- |
-| `checkbox-label` | `checkboxLabel` | Custom label content for the checkbox. |
+| Slot Name        | Maps to Snippet | Description                                                                 |
+| ---------------- | --------------- | --------------------------------------------------------------------------- |
+| `checkbox-label` | `checkboxLabel` | Custom label content for the checkbox; defaults to the plain `text` string. |

@@ -44,13 +44,35 @@
 
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
+  import { dispatchEvents } from '../dispatch';
   let { buttonAriaExpanded, buttonAriaLabel, ...props } = $props();
+
+  // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
+  // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
+  // as used before its declaration.
+  const hostEl = $host();
+
+  // Every callback prop this element declares (onclick, onkeydown, onkeyup,
+  // onmousedown, onmouseup, onmouseleave, ontouchstart, ontouchend) collides with a
+  // native HTMLElement handler, with no exception recorded for any 'sui-button:on*'
+  // pair in ../dispatch.ts's DISPATCH_COLLISION_EXCEPTIONS -- so dispatchEvents
+  // intentionally returns nothing for all eight. Each stays callback-only: the
+  // consumer's own handler still runs exactly as before, but no synthetic event is
+  // ever dispatched under a name a real, composed DOM event already bubbles out of
+  // the shadow root under. Called anyway, rather than skipped: proves the collision
+  // guard produces this no-op instead of assuming it.
+  // `dispatchEvents` never reads a callback here -- each wrapper it returns reads
+  // `props[name]` at CALL time (src/wc/dispatch.ts), through this same reactive
+  // proxy, so a consumer assigning `el.onfoo = fn` after mount is seen. Reading
+  // the value eagerly is exactly what the helper is written not to do.
+  // svelte-ignore state_referenced_locally
+  const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
 <!-- A property-assigned icon wins; the slot is the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. `children` is
      no longer a declared prop, so the default slot is its only path. -->
-<Button {...props} ariaLabel={buttonAriaLabel} ariaExpanded={buttonAriaExpanded}>
+<Button {...props} {...dispatchers} ariaLabel={buttonAriaLabel} ariaExpanded={buttonAriaExpanded}>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}
@@ -58,3 +80,16 @@
     <slot></slot>
   {/snippet}
 </Button>
+
+<style>
+  /* A custom element defaults to `display: inline`, which has no definite
+     width for a percentage to resolve against -- so a component sizing itself
+     with `width: 100%` resolved against the wrong ancestor, and layout depended
+     on the consumer's surrounding markup rather than on the component. The value
+     matches this component's own root element (block-level), and is a token so a
+     consumer can change it without reaching inside the shadow root -- which they
+     could not do, since a stylesheet cannot add a rule there. */
+  :host {
+    display: var(--sui-button-display, block);
+  }
+</style>

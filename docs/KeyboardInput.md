@@ -111,3 +111,8 @@ Tag: `<sui-keyboard-input>`
 ```
 
 > **Note:** The `keys` prop is an array — set it via JavaScript property.
+
+`onclick` is a JS-property callback only (`keyboardInput.onclick = (event) => ...`) and does not dispatch a DOM event: `click` is already `HTMLElement`'s own native event, so a
+`keyboardInput.addEventListener('click', ...)` listener still sees the real one that bubbles out
+of the shadow root on its own, and adding a second, synthetic one under the same name would
+double-deliver it to that same listener.

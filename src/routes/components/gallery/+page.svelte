@@ -1,6 +1,8 @@
 <script lang="ts">
   import { base } from '$app/paths';
+  import Button from '$lib/Button/Button.svelte';
   import Gallery from '$lib/Gallery/Gallery.svelte';
+  import Modal from '$lib/Modal/Modal.svelte';
   import type { GalleryImage } from '$lib/Gallery/properties';
 
   const images: GalleryImage[] = [
@@ -26,6 +28,11 @@
   function handleDelete(index: number): void {
     removed = [...removed, images[index].alt];
   }
+
+  // Nested-lock demo: the lightbox opened from inside a still-open Modal, so the
+  // shared, reference-counted body scroll lock (lockBodyScroll/unlockBodyScroll)
+  // can be exercised the same way the Modal page's own nested-Modal demo does.
+  let nestedLockModalOpen = $state(false);
 </script>
 
 <div class="page-header">
@@ -56,10 +63,39 @@
   <Gallery {images} view="grid" testId="gallery-themed-demo" />
 </div>
 
+<h3>Nested scroll lock — lightbox opened inside a Modal</h3>
+<p class="demo-note">
+  Closing only the lightbox must not release the Modal's lock: both draw on the library's shared,
+  reference-counted lockBodyScroll/unlockBodyScroll.
+</p>
+<div class="demo-row">
+  <Button
+    text="Open outer modal"
+    testId="gallery-nested-lock-open-outer"
+    onclick={() => (nestedLockModalOpen = true)}
+  />
+</div>
+{#if nestedLockModalOpen}
+  <Modal
+    testId="gallery-nested-lock-modal"
+    header={{ text: 'Outer modal' }}
+    onoverlayclick={() => (nestedLockModalOpen = false)}
+  >
+    {#snippet content()}
+      <Gallery {images} view="grid" testId="gallery-nested-lock-gallery" />
+      <Button
+        text="Close outer modal"
+        testId="gallery-nested-lock-close-outer"
+        onclick={() => (nestedLockModalOpen = false)}
+      />
+    {/snippet}
+  </Modal>
+{/if}
+
 <style>
   .demo-note {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--doc-text-muted, #6b7280);
   }
 
   .themed-gallery {

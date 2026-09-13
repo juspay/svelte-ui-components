@@ -140,19 +140,19 @@
 
   .variant-secondary {
     --_btn-color: transparent;
-    --_btn-text-color: #3a4550;
-    --_btn-border: 1px solid #cbd5e1;
-    --_btn-hover-color: #f1f5f9;
-    --_btn-hover-text-color: #3a4550;
-    --_btn-hover-border: 1px solid #cbd5e1;
+    --_btn-text-color: var(--button-secondary-text-color, #3a4550);
+    --_btn-border: 1px solid var(--button-secondary-border-color, #cbd5e1);
+    --_btn-hover-color: var(--button-secondary-hover-background, #f1f5f9);
+    --_btn-hover-text-color: var(--button-secondary-text-color, #3a4550);
+    --_btn-hover-border: 1px solid var(--button-secondary-border-color, #cbd5e1);
   }
 
   .variant-ghost {
     --_btn-color: transparent;
-    --_btn-text-color: #3a4550;
+    --_btn-text-color: var(--button-ghost-text-color, #3a4550);
     --_btn-border: none;
-    --_btn-hover-color: #f1f5f9;
-    --_btn-hover-text-color: #3a4550;
+    --_btn-hover-color: var(--button-ghost-hover-background, #f1f5f9);
+    --_btn-hover-text-color: var(--button-ghost-text-color, #3a4550);
     --_btn-hover-border: none;
   }
 
@@ -224,7 +224,10 @@
        would reset a consumer's own background-image/position/size layers
        whenever the hook is unset. Gradients go here; solids stay on --button-color. */
     background-image: var(--button-background, none);
-    color: var(--button-text-color, var(--_btn-text-color, white));
+    color: var(
+      --button-text-color,
+      var(--_btn-text-color, var(--button-neutral-text-color, white))
+    );
     height: var(--button-height, fit-content);
     padding: var(--button-padding, var(--_btn-padding, 16px));
     margin: var(--button-margin);
@@ -256,8 +259,8 @@
     cursor: var(--disabled-cursor, not-allowed);
     opacity: var(--disabled-opacity, 0.4);
     color: var(--disabled-text-color, var(--button-text-color, var(--_btn-text-color, white)));
-    font-size: var(--disabled-font-size);
-    font-weight: var(--disabled-font-weight);
+    font-size: var(--disabled-font-size, inherit);
+    font-weight: var(--disabled-font-weight, inherit);
     text-decoration: var(--button-disabled-text-decoration, var(--button-text-decoration, none));
     /* Preserve the variant border when disabled so secondary (bordered) stays distinct from ghost. */
     border: var(--disabled-border, var(--button-border, var(--_btn-border, none)));
@@ -340,6 +343,48 @@
 
     100% {
       width: 100%;
+    }
+  }
+
+  /* This bar is not indefinite like a spinner -- its width IS the meaning:
+     "how much of `--button-progress-loader-duration` has elapsed", and
+     `showProgressBar` keeps the button disabled for that whole span. A bare
+     `animation: none` would freeze it at the base rule above (`width: 100%`),
+     showing a FULL, "finished" bar for up to 8s while the button is actually
+     still counting down and still disabled -- a frame that means something
+     else is worse than the motion it removed. Freezing at 0% instead would
+     lie the other way once the real duration elapses and the bar should read
+     complete. Neither static width is honest for the whole span, so motion is
+     thinned rather than removed: `steps()` swaps the continuous ease for
+     discrete jumps that hold the PRIOR interval's value until each jump (the
+     `jump-end` default), so the displayed width can only ever under-report
+     elapsed time -- never claim to be further along than it really is -- while
+     still losing the smooth per-frame slide prefers-reduced-motion targets.
+     The step count is a LITERAL, deliberately not a token. `steps()` is invalid
+     for a count below 1, and an invalid value does not fall back to a safer
+     stepped default -- the whole declaration is dropped and the property takes
+     the base rule's `ease`, restoring exactly the continuous slide this block
+     exists to remove. A consumer passing `0` to "just freeze it" would silently
+     switch the guard off for every user who asked for reduced motion. A guard
+     that fails OPEN, quietly, is worse than no guard, and one tunable is not
+     worth that. 
+     This block lives in the component's own <style> because that is the only
+     stylesheet that reaches inside the shadow root a custom-element consumer
+     gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .button-progress-bar {
+      animation-timing-function: steps(5, jump-end);
+    }
+
+    /* The loader is not the only motion here. `--button-transition` defaults to
+       `none`, so this rule does nothing until a consumer opts in -- and the
+       documented way to opt in is exactly a hover/press animation, which is
+       what a user asking for reduced motion is asking not to have. The sweep
+       that covered every transition in ThemeSwitcher stopped at the one
+       animation the brief named in this file. */
+    .button-el,
+    .button-container {
+      transition: none;
     }
   }
 </style>

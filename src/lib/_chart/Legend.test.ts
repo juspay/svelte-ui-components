@@ -1,6 +1,34 @@
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
-import Legend from './Legend.svelte';
+import Legend, { resolveLegendIndex } from './Legend.svelte';
+
+describe('resolveLegendIndex', () => {
+  it('resolves a stable id to its current position', () => {
+    expect(resolveLegendIndex(['a', 'b', 'c'], 'b')).toBe(1);
+  });
+
+  it('re-resolves to a new position after the category list reorders', () => {
+    const before = ['a', 'b', 'c'];
+    const after = ['c', 'a', 'b'];
+    expect(resolveLegendIndex(before, 'b')).toBe(1);
+    expect(resolveLegendIndex(after, 'b')).toBe(2);
+  });
+
+  it('returns null when an id is filtered out of the current category list', () => {
+    expect(resolveLegendIndex(['a', 'c'], 'b')).toBeNull();
+  });
+
+  it('returns null when an id is absorbed into a topN "Other" aggregate bucket', () => {
+    // simulated post-aggregation category list: the tail categories are gone,
+    // folded into a synthetic "Other" entry the caller's id will never match.
+    const aggregated = ['a', 'b', 'Other'];
+    expect(resolveLegendIndex(aggregated, 'z')).toBeNull();
+  });
+
+  it('returns null for an empty category list', () => {
+    expect(resolveLegendIndex([], 'a')).toBeNull();
+  });
+});
 
 const items = [
   { label: 'Revenue', color: '#4e79a7' },

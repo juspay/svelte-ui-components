@@ -4,7 +4,8 @@
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { createDebouncer, lockBodyScroll, unlockBodyScroll } from '../utils';
-  import { focusEntryPoint, focusTrapTabTarget } from './focus-trap';
+  import { focusEntryPoint, focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
+  import { registerDismissible } from '../_interaction/dismissal';
   import Button from '$lib/Button/Button.svelte';
   import Img from '$lib/Img/Img.svelte';
 
@@ -68,40 +69,41 @@
   // resetting the timer and breaking debounce correctness.
   const debounce = createDebouncer(debounceTime);
 
+  /**
+   * Where a portalled node is allowed to land. Svelte scopes a custom element's
+   * CSS to its shadow root, so `document.body` is the one place the overlay must
+   * never go from inside `<sui-modal>`: it keeps its `svelte-*` scoping class and
+   * loses every rule behind it, plus the host's custom properties. Measured in
+   * Chromium -- position fell back to `static`, background to transparent, so the
+   * dialog stopped being a dialog and became a block of text in the page flow.
+   * Its own root holds that stylesheet and still escapes every clipping and
+   * stacking ancestor between the two.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
   // Fix [minor]: portalAction with null guard + update hook so usePortal toggles work post-mount.
   const portalAction = (node: HTMLElement, params: { usePortal: boolean }) => {
     if (!params.usePortal || typeof document === 'undefined' || !document.body) {
       return;
     }
-    const target = document.body;
+    // Resolved once, while the node is still in the tree it was rendered into --
+    // after the move its own root is the destination, so re-reading it would only
+    // ever answer with wherever it already is.
+    const target = portalTarget(node);
     target.appendChild(node);
     return {
       update(updatedParams: { usePortal: boolean }) {
-        if (updatedParams.usePortal && !node.parentElement?.isSameNode(document.body)) {
-          document.body.appendChild(node);
+        if (updatedParams.usePortal && node.parentNode !== target) {
+          target.appendChild(node);
         }
       },
       destroy() {
         node.parentNode?.removeChild(node);
       }
     };
-  };
-
-  // Resolves the real focused element regardless of whether modalContent sits
-  // in the light DOM or inside Modal.wc.svelte's open shadow root.
-  // document.activeElement stops at a shadow boundary and returns the shadow
-  // host itself, never the element actually focused inside it -- getRootNode()
-  // returns that shadow root directly when modalContent is shadow-hosted, and
-  // the owner Document otherwise.
-  const getActiveElement = (): Element | null => {
-    if (modalContent === null) {
-      return null;
-    }
-    const root = modalContent.getRootNode();
-    if (root instanceof Document || root instanceof ShadowRoot) {
-      return root.activeElement;
-    }
-    return null;
   };
 
   const handlePopstate = (): void => {
@@ -135,18 +137,17 @@
     }
   };
 
+  // Escape itself is no longer decided here -- see handleEscape and the
+  // registerDismissible call in onMount below. This still runs on every
+  // keydown (Escape included) purely to forward the onkeydown prop and to
+  // run the Tab trap; it must never re-decide who Escape belongs to.
   const handleKeyDown = (event: KeyboardEvent): void => {
     onkeydown?.(event);
     const key = event?.key;
-    if (key === 'Escape') {
-      onoverlayclick?.();
-      ondismiss?.();
-      return;
-    }
     if (key === 'Tab') {
       const target = focusTrapTabTarget({
         container: modalContent,
-        activeElement: getActiveElement(),
+        activeElement: getActiveElement(modalContent),
         shiftKey: event.shiftKey
       });
       if (target !== null) {
@@ -156,14 +157,24 @@
     }
   };
 
+  // What the shared dismissal module calls when this modal is the topmost
+  // dismissible layer and Escape is pressed -- same callbacks the old
+  // Escape branch in handleKeyDown used to invoke directly, just gated on
+  // ownership now instead of firing for every open modal unconditionally.
+  const handleEscape = (): void => {
+    onoverlayclick?.();
+    ondismiss?.();
+  };
+
   // The overlay's own Enter/Space activation, additional to the shared
-  // handleKeyDown (Escape/Tab/onkeydown-prop) that svelte:window already
-  // delivers here via bubbling -- this handler must not also call
-  // handleKeyDown itself, or every keydown on/under the overlay would run it
-  // twice (once from this direct call, once from the window listener seeing
-  // the same event bubble past it), double-firing onkeydown and, on Escape,
-  // the dismiss callbacks. Enter/Space activation is scoped to this handler,
-  // not folded into handleKeyDown itself, because handleKeyDown also runs
+  // handleKeyDown (Tab/onkeydown-prop -- Escape is the dismissal module's,
+  // via handleEscape) that svelte:window already delivers here via
+  // bubbling -- this handler must not also call handleKeyDown itself, or
+  // every keydown on/under the overlay would run it twice (once from this
+  // direct call, once from the window listener seeing the same event bubble
+  // past it), double-firing onkeydown and re-running the Tab trap. Enter/Space
+  // activation is scoped to this handler, not folded into handleKeyDown itself,
+  // because handleKeyDown also runs
   // from the window listener for a keypress anywhere in the modal (e.g. an
   // input field) -- it must not treat every Enter/Space in the modal as an
   // overlay dismissal. This handler is bound to the overlay div, so a keydown
@@ -202,9 +213,30 @@
     }
   };
 
+  // What THIS instance acquired, rather than what the prop says at teardown. The
+  // lock is reference counted and shared with Sheet and CommandMenu, so reading
+  // `lockScroll` again in onDestroy releases the wrong number of holds whenever the
+  // prop changed while the modal was open: turned off, the count never comes back
+  // down and the page stays frozen; turned on, this modal releases a hold another
+  // component is still relying on. Release exactly what was taken.
+  let heldScrollLock = false;
+
+  // Set once in onMount, cleared once in onDestroy -- registerDismissible's
+  // own release function already tolerates a repeat call, but this still
+  // guards against calling it twice from here (see the "release exactly
+  // once" comment on unlockBodyScroll's own bookkeeping above for why that
+  // matters generally: a stale layer left registered after unmount would
+  // swallow every later Escape in the app, and would never come back).
+  let releaseDismissible: (() => void) | null = null;
+
   onMount(() => {
+    releaseDismissible = registerDismissible({
+      element: () => modalContent,
+      onEscape: handleEscape
+    });
     if (lockScroll) {
       lockBodyScroll();
+      heldScrollLock = true;
     }
     if (typeof autoDismissAfter === 'number') {
       dismissTimer = setTimeout(() => onclose?.(), autoDismissAfter);
@@ -221,19 +253,22 @@
       // moving focus in, so onDestroy can put it back. Shadow-aware for the
       // same reason the Tab trap is: inside Modal.wc.svelte's open shadow
       // root, document.activeElement would return the shadow host instead.
-      const active = getActiveElement();
+      const active = getActiveElement(modalContent);
       previouslyFocusedElement = active instanceof HTMLElement ? active : null;
       focusEntryPoint(modalContent);
     });
   });
 
   onDestroy(() => {
+    releaseDismissible?.();
+    releaseDismissible = null;
     if (dismissTimer !== null) {
       clearTimeout(dismissTimer);
     }
     if (typeof window !== 'undefined') {
-      if (lockScroll) {
+      if (heldScrollLock) {
         unlockBodyScroll();
+        heldScrollLock = false;
       }
       if (supportHardwareBackPress) {
         if (!backPressed) {
@@ -411,9 +446,9 @@
     overflow: var(--modal-content-overflow, auto);
     border-top: var(--modal-content-border-top);
     /* tabindex="-1" makes this the focus-trap's fallback target when the modal
-       has no focusable content of its own (see focus-trap.ts); it is never in
-       the Tab order itself, so it needs no visible focus ring the way a real
-       focusable element would. Matches Sheet's sheet-panel. */
+       has no focusable content of its own (see _interaction/focus.ts); it is
+       never in the Tab order itself, so it needs no visible focus ring the way
+       a real focusable element would. Matches Sheet's sheet-panel. */
     outline: none;
     /* Viewport containment for every size class: only .fit-content used to carry
        a max-height, so a size whose height var is overridden to fit-content (or
@@ -584,9 +619,9 @@
     align-items: center;
     flex: 1;
     font-size: var(--header-text-size, 16px);
-    font-weight: var(--modal-header-text-weight);
-    line-height: var(--modal-header-text-line-height);
-    letter-spacing: var(--modal-header-text-letter-spacing);
+    font-weight: var(--modal-header-text-weight, inherit);
+    line-height: var(--modal-header-text-line-height, inherit);
+    letter-spacing: var(--modal-header-text-letter-spacing, inherit);
   }
 
   /* The header images render through the Img component (inline svg or img), so

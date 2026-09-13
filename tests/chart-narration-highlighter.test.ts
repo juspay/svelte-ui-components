@@ -47,6 +47,20 @@ test.describe('LineChart narration sync', () => {
     const chart = page.getByTestId('line-highlight-hook-chart');
     const highlightedDot = chart.locator('circle.dot.highlighted');
 
+    // ChartContainer renders its body only once a ResizeObserver measures a
+    // non-zero box, and that measurement is deferred through
+    // requestAnimationFrame -- so no `circle.dot` exists yet at hydration, and
+    // gotoHydrated does not cover it.
+    //
+    // Waiting for the dots is what makes the next line MEAN anything. A bare
+    // toHaveCount(0) is satisfied just as well by a chart that has not drawn at
+    // all as by one drawn with nothing highlighted, so on its own it passes for
+    // the wrong reason -- and then the count(1) after the narration races the
+    // first paint, which is how this failed under load while the two
+    // readout-only tests beside it never did: `narrationIndex` is the demo's own
+    // state and owes the chart nothing.
+    await expect(chart.locator('circle.dot')).not.toHaveCount(0);
+
     await expect(highlightedDot).toHaveCount(0);
 
     await page.getByTestId('narration-play').click();

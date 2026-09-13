@@ -8,6 +8,19 @@
   function selectRadio(index: number): void {
     radioSelection = index;
   }
+
+  let submitted = $state('');
+
+  function handleSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+    submitted = [...new FormData(form).entries()]
+      .map(([key, value]) => `${key}=${String(value)}`)
+      .join(' ');
+  }
 </script>
 
 <div class="page-header">
@@ -17,9 +30,11 @@
 
 <h3>Radio mode</h3>
 <!-- Grouped and named, so assistive tech announces "1 of 3" rather than three
-     unrelated radios. Roving focus across the group still is not implemented —
-     Choicebox has no concept of siblings sharing a group — and that gap is
-     pinned as a test.fixme in tests/a11y-choicebox.spec.ts. -->
+     unrelated radios. These cards carry no `name`, so they are deliberately NOT
+     one of the groups Choicebox now forms by itself: the parent owns the
+     selection through `radioSelection`, which is the controlled pattern. The
+     self-grouping version — one tab stop, arrow-key roving, exclusive selection
+     — is the `name="plan"` set under "Form participation" below. -->
 <div class="demo-row" role="radiogroup" aria-label="Shipping speed">
   <Choicebox
     mode="radio"
@@ -66,6 +81,54 @@
   </Choicebox>
 </div>
 
+<h2>Validity messaging</h2>
+<p>
+  <code>errorMessage</code> and <code>infoMessage</code> are referenced by
+  <code>aria-describedby</code> on the card itself, and <code>aria-invalid</code> is set only while an
+  error is showing.
+</p>
+<div
+  class="demo-row"
+  data-pw="choicebox-field-contract"
+  style="flex-direction: column; align-items: start;"
+>
+  <Choicebox
+    mode="checkbox"
+    errorMessage="Pick a plan to continue."
+    infoMessage="You can change this later."
+    testId="choicebox-described"
+  >
+    <span class="choice-title">Described</span>
+  </Choicebox>
+  <Choicebox mode="checkbox" infoMessage="You can change this later." testId="choicebox-info-only">
+    <span class="choice-title">Helper only</span>
+  </Choicebox>
+  <Choicebox mode="checkbox" testId="choicebox-undescribed">
+    <span class="choice-title">No messages</span>
+  </Choicebox>
+</div>
+
+<h2 id="form-participation-demo">Form participation</h2>
+<p>
+  A <code>name</code> makes the card submit. In <code>radio</code> mode it also groups the cards that
+  share it: one selection, one tab stop, and Arrow/Home/End move between them.
+</p>
+<form data-pw="choicebox-form" onsubmit={handleSubmit}>
+  <div class="demo-row" style="flex-direction: column; align-items: start;">
+    <Choicebox mode="radio" name="plan" value="basic" required testId="choicebox-form-basic">
+      <span class="choice-title">Basic</span>
+    </Choicebox>
+    <Choicebox mode="radio" name="plan" value="pro" testId="choicebox-form-pro">
+      <span class="choice-title">Pro</span>
+    </Choicebox>
+    <Choicebox mode="checkbox" name="addons" value="insurance" testId="choicebox-form-addon">
+      <span class="choice-title">Add insurance</span>
+    </Choicebox>
+    <button type="submit" data-pw="choicebox-form-submit">Submit</button>
+  </div>
+</form>
+<p data-pw="choicebox-form-result">{submitted}</p>
+
 <style>
   .choice-title {
     font-weight: 600;
@@ -74,12 +137,12 @@
 
   .choice-desc {
     font-size: 14px;
-    opacity: 0.6;
+    opacity: 0.8;
   }
 
   .demo-note {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--doc-text-muted, #6b7280);
   }
 
   .themed-indicator {

@@ -1,4 +1,5 @@
 import type { SoundKit, SoundKitOptions, SoundName } from './properties';
+import { closestInEventPath } from '../_interaction/dismissal';
 
 const DEFAULT_STORAGE_KEY = 'sui-sound-enabled';
 const DEFAULT_MASTER_GAIN = 0.32;
@@ -266,12 +267,11 @@ export const createSoundKit = (options: SoundKitOptions = {}): SoundKit => {
     if (!resolveEnabled()) {
       return;
     }
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const overrideElement = target.closest(`[${SOUND_ATTRIBUTE}]`);
+    // This listener sits on `document`, so `event.target` is the shadow HOST for
+    // any click inside a `<sui-*>` element and `target.closest()` would search
+    // the light tree instead of the one that was clicked -- no sound for every
+    // custom-element click, or the wrong sound inherited from a light ancestor.
+    const overrideElement = closestInEventPath(event, `[${SOUND_ATTRIBUTE}]`);
     if (overrideElement !== null) {
       const overrideValue = overrideElement.getAttribute(SOUND_ATTRIBUTE) ?? '';
       const resolved = resolveOverride(overrideValue);
@@ -281,15 +281,15 @@ export const createSoundKit = (options: SoundKitOptions = {}): SoundKit => {
       return;
     }
 
-    if (target.closest(TICK_SELECTOR) !== null) {
+    if (closestInEventPath(event, TICK_SELECTOR) !== null) {
       play('tick');
       return;
     }
-    if (target.closest(PAGE_SELECTOR) !== null) {
+    if (closestInEventPath(event, PAGE_SELECTOR) !== null) {
       play('page');
       return;
     }
-    if (target.closest(PRESS_SELECTOR) !== null) {
+    if (closestInEventPath(event, PRESS_SELECTOR) !== null) {
       play('press');
     }
   };

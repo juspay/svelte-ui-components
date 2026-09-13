@@ -24,6 +24,13 @@ export type TabItem = {
    * `tab` snippet, since it sits outside the item row.
    */
   sectionLabel?: string;
+  /**
+   * Blocks selection of this item. It keeps its place and its `aria-disabled`
+   * state, but arrow keys, `Home`/`End` and clicks skip past it, and it never
+   * becomes the list's tab stop. An item selected from outside stays selected
+   * even while disabled, matching how a controlled parent's state is honoured.
+   */
+  disabled?: boolean;
 };
 
 export type TabsProperties = MandatoryTabsProperties & OptionalTabsProperties & TabsEventProperties;
@@ -42,6 +49,22 @@ export type OptionalTabsProperties = {
    * rail) — indicator on the leading edge, scroll arrows point up/down.
    */
   orientation?: 'horizontal' | 'vertical';
+  /**
+   * `'automatic'` (default) selects a tab as soon as arrow keys reach it, which is
+   * right when switching panels is instant. `'manual'` moves focus only, and waits
+   * for `Enter`, `Space` or a click — the WAI-ARIA APG recommendation when showing
+   * a panel is expensive, since arrowing past three tabs should not load three
+   * panels.
+   */
+  activationMode?: 'automatic' | 'manual';
+  /** Whether arrow keys wrap around the ends. `true` by default. */
+  loop?: boolean;
+  /**
+   * Which way horizontal arrow keys read. Omitted, the inherited document direction
+   * decides, so an app that sets `dir` on a wrapper needs nothing here. Vertical
+   * lists are unaffected: `ArrowDown` always means "later in the list".
+   */
+  dir?: 'ltr' | 'rtl';
   testId?: string;
   scrollLeftIcon?: Snippet;
   scrollRightIcon?: Snippet;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { closestInEventPath } from '../_interaction/dismissal';
   import type { DraggableProperties, DragPosition } from './properties';
 
   let {
@@ -26,18 +27,22 @@
     baseY: number;
   } | null = $state(null);
 
-  function isInteractive(target: EventTarget | null): boolean {
+  // Searched over the event's composed path rather than from `event.target`: a
+  // `<sui-button>` nested inside a Draggable retargets to its host, so a plain
+  // `closest('button')` misses the real control and the press starts a drag
+  // instead of activating it.
+  function isInteractive(event: Event): boolean {
     return (
-      target instanceof Element &&
-      target.closest('input, textarea, select, button, a, [contenteditable="true"]') !== null
+      closestInEventPath(event, 'input, textarea, select, button, a, [contenteditable="true"]') !==
+      null
     );
   }
 
-  function withinHandle(target: EventTarget | null): boolean {
+  function withinHandle(event: Event): boolean {
     if (typeof handle !== 'string' || handle.length === 0) {
-      return !isInteractive(target);
+      return !isInteractive(event);
     }
-    return target instanceof Element && target.closest(handle) !== null;
+    return closestInEventPath(event, handle) !== null;
   }
 
   function clamp(node: HTMLElement, nextX: number, nextY: number): DragPosition {
@@ -61,7 +66,7 @@
   }
 
   function startDrag(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (disabled || !withinHandle(event.target)) {
+    if (disabled || !withinHandle(event)) {
       return;
     }
     event.preventDefault();

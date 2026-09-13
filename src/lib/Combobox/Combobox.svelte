@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { registerDismissible } from '../_interaction/dismissal';
+  import { describeField } from '../_field/description';
+  import { tick } from 'svelte';
   import Input from '../Input/Input.svelte';
   import Pill from '../Pill/Pill.svelte';
   import type { ComboboxItem, ComboboxProperties } from './properties';
@@ -50,8 +52,31 @@
     onchange,
     onadd,
     onremove,
-    oncreate
+    oncreate,
+    errorMessage,
+    infoMessage,
+    invalid = false
   }: ComboboxProperties = $props();
+
+  /* The control and the text that explains it were never linked: a screen-reader
+     user reaching this combobox heard its name and nothing about why the value
+     was rejected. `describeField` composes the reference from the messages that
+     are actually rendered, so aria-describedby never points at an id that is not
+     in the DOM -- which passes an attribute assertion and resolves to nothing in
+     a real reader.
+
+     It goes on a group around the control rather than on the `role="combobox"`
+     element itself, because that element is inside `Input` and `Input` exposes
+     no `aria-describedby` seam -- it derives its own from the messages IT is
+     given, which are a different pair of props. Per-control is the stronger
+     placement and needs that seam; see docs/Combobox.md. The role is conditional
+     so a Combobox with no messages keeps the accessibility tree it had before
+     these props existed. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+  const describedGroup = $derived(field.describedBy !== null || field.ariaInvalid !== null);
 
   let containerEl: HTMLDivElement | null = $state(null);
   let inputRef: ReturnType<typeof Input> | null = $state(null);
@@ -295,12 +320,6 @@
           removeValue(selected[selected.length - 1]);
         }
         break;
-      case 'Escape':
-        if (open) {
-          event.preventDefault();
-          closeDropdown();
-        }
-        break;
       case 'Tab':
         if (open) {
           closeDropdown();
@@ -327,28 +346,30 @@
     }
   }
 
-  function handleClickOutside(event: Event) {
-    if (
-      event.target instanceof Node &&
-      containerEl !== null &&
-      !containerEl.contains(event.target)
-    ) {
-      closeDropdown();
-    }
+  // Registered for exactly the dropdown's open span (the `{#if open && !disabled}`
+  // block below), same as Menu's dismissalAction, so this dropdown only answers
+  // Escape/outside-press while it is the topmost dismissible surface -- a combobox
+  // opened inside a Modal, Sheet, Menu, ContextMenu or CommandMenu no longer closes
+  // the layer behind it. Unlike Select's dropdown, this one is never portaled --
+  // it is always a DOM descendant of containerEl -- so containerEl alone is enough
+  // for the module's own inside/outside test; no second hit-test is needed here.
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => containerEl,
+      onOutside: closeDropdown,
+      onEscape: closeDropdown
+    });
+    return { destroy: release };
   }
-
-  onMount(() => {
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  });
 </script>
 
 <div
   class="combobox {classes ?? ''}"
   class:disabled
   bind:this={containerEl}
+  role={describedGroup ? 'group' : null}
+  aria-describedby={field.describedBy}
+  aria-invalid={field.ariaInvalid}
   data-pw={testId}
   testID={testId}
 >
@@ -394,7 +415,13 @@
   </div>
 
   {#if open && !disabled}
-    <div class="combobox-dropdown" role="listbox" id={listboxId} aria-label={ariaLabel}>
+    <div
+      class="combobox-dropdown"
+      role="listbox"
+      id={listboxId}
+      aria-label={ariaLabel}
+      use:dismissalAction
+    >
       {#if typeof dropdownHeader === 'function'}
         <div class="combobox-dropdown-header">{@render dropdownHeader()}</div>
       {/if}
@@ -498,7 +525,41 @@
   {/if}
 </div>
 
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
+
 <style>
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
+  }
+
   .combobox {
     position: relative;
     width: var(--combobox-width, 100%);
@@ -605,7 +666,8 @@
     font-size: var(--combobox-option-font-size, inherit);
     font-weight: var(--combobox-option-font-weight, inherit);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--combobox-option-transition-duration, var(--motion-duration, 0.1s))
+      var(--combobox-option-transition-easing, var(--motion-easing, ease));
   }
 
   .combobox-option:hover,

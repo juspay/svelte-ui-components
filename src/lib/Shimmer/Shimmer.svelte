@@ -45,4 +45,19 @@
       transform: translateX(100%);
     }
   }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer::after {
+      /* The sweep is the only animated part; the base block underneath is the
+         skeleton. Removing the sweep leaves exactly that -- a flat placeholder
+         -- rather than a highlight band frozen somewhere across it. */
+      display: none;
+    }
+  }
 </style>

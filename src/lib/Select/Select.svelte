@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { eventHitsInside, registerDismissible } from '../_interaction/dismissal';
+  import { getActiveElement } from '../_interaction/focus';
+  import { describeField } from '../_field/description';
   import { onMount, tick } from 'svelte';
   import type { SelectItem, SelectPlacement, SelectProperties } from './properties';
   import Pill from '$lib/Pill/Pill.svelte';
@@ -126,7 +129,6 @@
 
   const instanceId = $props.id();
   const listboxId = `select-listbox-${instanceId}`;
-  const errorMessageId = `${listboxId}-error`;
 
   /* `searchable` alone no longer says where the input goes, so every place
      that used to branch on it now asks which of the two it meant. Filtering
@@ -134,8 +136,28 @@
   const searchInTrigger = $derived(searchable && searchPosition !== 'menu');
   const searchInMenu = $derived(searchable && searchPosition === 'menu');
 
-  const hasErrorMessage = $derived(
-    error && typeof errorMessage === 'string' && errorMessage.trim().length > 0
+  /* `error` is an independent gate, not merely "is errorMessage non-empty" --
+     `error=false` with `errorMessage` still set is a state this component's two-prop
+     API explicitly permits (see properties.ts) and must render nothing, matching
+     today's behaviour before this ported to describeField. Passing `error ?
+     errorMessage : null` preserves that gate; passing `error` through `invalid` too
+     means aria-invalid tracks `error` alone, exactly like the literal `error ?
+     'true' : null` this replaces, whether or not a message is set.
+     describeField's own hasText check does not trim (`value !== ''`), while this
+     gate did (`.trim().length > 0`) -- so a whitespace-only errorMessage rendered
+     nothing before and, ported as-is, would render an empty-looking alert div after.
+     The trim is kept here, in the glue, rather than tightened into hasText itself:
+     hasText is shared by five other consumers (Radio, Checkbox, Slider, Toggle,
+     FileInput) this change does not otherwise touch, and tightening it was out of
+     scope for a surgical port of Select alone. */
+  const field = $derived(
+    describeField(listboxId, {
+      error:
+        error && typeof errorMessage === 'string' && errorMessage.trim().length > 0
+          ? errorMessage
+          : null,
+      invalid: error
+    })
   );
 
   /* Nothing selected means nothing to clear, so the control is not rendered at
@@ -245,15 +267,30 @@
   });
 
   /**
-   * Svelte action: relocates the dropdown to document.body when usePortal is set,
+   * Where a portalled node is allowed to land. Svelte scopes a custom element's
+   * CSS to its shadow root, so `document.body` is the one place the panel must
+   * never go from inside `<sui-select>`: it keeps its `svelte-*` scoping class
+   * and loses every rule behind it, plus the host's custom properties. Measured
+   * in Chromium -- position fell back to `static`, background to transparent,
+   * border and shadow to none, so the options rendered as bare text over the
+   * page. Its own root holds that stylesheet and still sits above every
+   * overflow/scroll ancestor between the two.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
+  /**
+   * Svelte action: relocates the dropdown out to its root when usePortal is set,
    * so a position:fixed panel is never clipped by an overflow/scroll ancestor
    * (e.g. a table cell). No-op otherwise; `use:` actions never run during SSR.
    */
-  const portalToBody = (node: HTMLElement) => {
+  const portalToRoot = (node: HTMLElement) => {
     if (!usePortal) {
       return;
     }
-    document.body.appendChild(node);
+    portalTarget(node).appendChild(node);
     return { destroy: () => node.remove() };
   };
 
@@ -360,6 +397,9 @@
     if (disabled) {
       return;
     }
+    if (items.find((item) => item.id === id)?.disabled === true) {
+      return;
+    }
     if (multiple) {
       value = value.includes(id) ? value.filter((v) => v !== id) : [...value, id];
     } else {
@@ -418,6 +458,40 @@
     await tick();
     // Query the dropdown node itself, not containerEl, so highlight-scrolling
     // keeps working once the panel is portaled out to <body>.
+    if (dropdownEl !== null) {
+      const el = dropdownEl.querySelector('.select-option.highlighted');
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
+  // The select-all row is always selectable; only an item row can opt out via
+  // SelectItem.disabled. There is no group-header row kind to skip.
+  function isRowSelectable(row: SelectRow): boolean {
+    return row.kind === 'select-all' || row.item.disabled !== true;
+  }
+
+  function hasModifierKey(event: KeyboardEvent): boolean {
+    return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+  }
+
+  /**
+   * Home/End: jump the highlight to the first/last selectable row, skipping
+   * disabled options the same way `moveHighlight` skips nothing -- it just
+   * targets a different index and reuses the same scroll-into-view step. A
+   * no-op when no row in that direction is selectable, including an empty list.
+   */
+  async function moveHighlightToEdge(edge: 'first' | 'last'): Promise<void> {
+    const target =
+      edge === 'first'
+        ? optionRows.findIndex(isRowSelectable)
+        : optionRows.findLastIndex(isRowSelectable);
+    if (target < 0) {
+      return;
+    }
+    highlightedIndex = target;
+    await tick();
     if (dropdownEl !== null) {
       const el = dropdownEl.querySelector('.select-option.highlighted');
       if (el instanceof HTMLElement) {
@@ -500,12 +574,18 @@
         event.preventDefault();
         moveHighlight(-1);
         break;
-      case 'Escape':
-        if (open) {
-          close();
-          if (!searchInTrigger && triggerEl !== null) {
-            triggerEl.focus();
-          }
+      case 'Home':
+        // A caret-bearing text filter input owns Home/End for itself; only the
+        // dropdown's own chrome (or a non-searchable trigger) hands them to us.
+        if (open && !(event.target instanceof HTMLInputElement) && !hasModifierKey(event)) {
+          event.preventDefault();
+          moveHighlightToEdge('first');
+        }
+        break;
+      case 'End':
+        if (open && !(event.target instanceof HTMLInputElement) && !hasModifierKey(event)) {
+          event.preventDefault();
+          moveHighlightToEdge('last');
         }
         break;
       case 'Backspace':
@@ -525,7 +605,7 @@
           close();
           break;
         }
-        const active = document.activeElement;
+        const active = getActiveElement(triggerEl);
         if (event.shiftKey) {
           /* Backwards out of the trigger genuinely leaves the widget; every
              other Shift+Tab walks back through the menu and must not close
@@ -596,24 +676,36 @@
     }
   }
 
-  function handleClickOutside(event: Event): void {
-    // A portaled dropdown lives outside containerEl, so a click on an option is
-    // not contained by it — treat the dropdown node as "inside" too, otherwise a
-    // multi-select would close on every pick.
-    if (
-      event.target instanceof Node &&
-      containerEl !== null &&
-      !containerEl.contains(event.target) &&
-      !(dropdownEl !== null && dropdownEl.contains(event.target))
-    ) {
-      close();
-    }
+  // Registered for exactly the dropdown's open span (the `{#if open && !disabled}`
+  // block below), same as Menu's dismissalAction, so this dropdown only answers
+  // Escape/outside-press while it is the topmost dismissible surface -- a select
+  // opened inside a Modal, Sheet, Menu, ContextMenu or CommandMenu no longer closes
+  // the layer behind it, and pressing Escape closes only this dropdown rather than
+  // being intercepted by an enclosing layer's own Escape handler.
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => containerEl,
+      // A portaled dropdown lives outside containerEl, so a click on an option is
+      // not contained by it — treat the dropdown node as "inside" too, otherwise a
+      // multi-select would close on every pick.
+      onOutside: (event) => {
+        if (eventHitsInside(dropdownEl, event)) {
+          return;
+        }
+        close();
+      },
+      onEscape: () => {
+        close();
+        if (!searchInTrigger && triggerEl !== null) {
+          triggerEl.focus();
+        }
+      }
+    });
+    return { destroy: release };
   }
 
   onMount(() => {
-    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
       if (open) {
         onclose?.();
       }
@@ -650,8 +742,8 @@
       aria-expanded={open}
       aria-haspopup="listbox"
       aria-controls={listboxId}
-      aria-invalid={error ? 'true' : null}
-      aria-describedby={hasErrorMessage ? errorMessageId : null}
+      aria-invalid={field.ariaInvalid}
+      aria-describedby={field.describedBy}
       {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
       tabindex={disabled ? -1 : searchInTrigger ? -1 : 0}
     >
@@ -678,8 +770,8 @@
               bind:this={searchInputEl}
               placeholder={value.length === 0 ? placeholder : ''}
               {disabled}
-              aria-invalid={error ? 'true' : null}
-              aria-describedby={hasErrorMessage ? errorMessageId : null}
+              aria-invalid={field.ariaInvalid}
+              aria-describedby={field.describedBy}
               autocomplete="off"
               tabindex={disabled ? -1 : 0}
               data-pw={typeof testId === 'string' ? `${testId}-search` : null}
@@ -706,8 +798,8 @@
               bind:this={searchInputEl}
               placeholder={value.length === 0 ? placeholder : ''}
               {disabled}
-              aria-invalid={error ? 'true' : null}
-              aria-describedby={hasErrorMessage ? errorMessageId : null}
+              aria-invalid={field.ariaInvalid}
+              aria-describedby={field.describedBy}
               autocomplete="off"
               tabindex={disabled ? -1 : 0}
               data-pw={typeof testId === 'string' ? `${testId}-search` : null}
@@ -727,8 +819,8 @@
           bind:this={searchInputEl}
           placeholder={searchPlaceholder}
           {disabled}
-          aria-invalid={error ? 'true' : null}
-          aria-describedby={hasErrorMessage ? errorMessageId : null}
+          aria-invalid={field.ariaInvalid}
+          aria-describedby={field.describedBy}
           autocomplete="off"
           tabindex={disabled ? -1 : 0}
           data-pw={typeof testId === 'string' ? `${testId}-search` : null}
@@ -761,9 +853,9 @@
     {/if}
   </div>
 
-  {#if hasErrorMessage}
+  {#if field.showsError}
     <div
-      id={errorMessageId}
+      id={field.errorId}
       role="alert"
       class="select-error-message"
       data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
@@ -833,9 +925,11 @@
             class:tickable={showSelectedTick && !multiple}
             class:selected={value.includes(row.item.id)}
             class:highlighted={index === highlightedIndex}
+            class:select-option-disabled={row.item.disabled === true}
             role="option"
             id={`${listboxId}-option-${index}`}
             aria-selected={value.includes(row.item.id)}
+            aria-disabled={row.item.disabled === true ? 'true' : null}
             tabindex="-1"
             {...typeof row.item.testId === 'string'
               ? { 'data-pw': row.item.testId, testID: row.item.testId }
@@ -848,7 +942,11 @@
                   ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
                   : {}}
             onclick={() => selectItem(row.item.id)}
-            onmouseenter={() => (highlightedIndex = index)}
+            onmouseenter={() => {
+              if (row.item.disabled !== true) {
+                highlightedIndex = index;
+              }
+            }}
           >
             {#if multiple}
               {#if typeof optionIndicator === 'function'}
@@ -915,7 +1013,8 @@
         bind:clientHeight={dropdownHeight}
         style={portalStyle}
         use:menuKeys
-        use:portalToBody
+        use:portalToRoot
+        use:dismissalAction
       >
         <input
           class="select-menu-search"
@@ -971,7 +1070,8 @@
         id={listboxId}
         aria-multiselectable={multiple}
         style={portalStyle}
-        use:portalToBody
+        use:portalToRoot
+        use:dismissalAction
       >
         {@render menuOptions()}
       </div>
@@ -1122,7 +1222,7 @@
 
   .select-placeholder {
     flex: 1;
-    color: var(--select-placeholder-color, #999999);
+    color: var(--select-placeholder-color, #666666);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1143,7 +1243,7 @@
   }
 
   .select-search::placeholder {
-    color: var(--select-placeholder-color, #999999);
+    color: var(--select-placeholder-color, #6b7280);
   }
 
   .select-arrow {
@@ -1154,7 +1254,8 @@
     height: var(--select-arrow-size, 16px);
     color: var(--select-arrow-color, #666666);
     flex-shrink: 0;
-    transition: transform 0.15s;
+    transition: transform var(--select-arrow-transition-duration, var(--motion-duration, 0.15s))
+      var(--select-arrow-transition-easing, var(--motion-easing, ease));
   }
 
   .select.open .select-arrow {
@@ -1262,7 +1363,8 @@
     color: var(--select-option-color, #333333);
     font-size: var(--select-option-font-size, inherit);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background var(--select-option-transition-duration, var(--motion-duration, 0.1s))
+      var(--select-option-transition-easing, var(--motion-easing, ease));
   }
 
   /* Per-option leading icon (SelectItem.icon). Kept inline + vertically centred so
@@ -1292,6 +1394,12 @@
   .select-option.selected {
     background: var(--select-option-selected-background, #e8f0fe);
     color: var(--select-option-selected-color, var(--select-option-color, #333333));
+  }
+
+  .select-option-disabled {
+    opacity: var(--select-option-disabled-opacity, 0.4);
+    cursor: var(--select-option-disabled-cursor, not-allowed);
+    pointer-events: none;
   }
 
   .select-option.selected.highlighted {
@@ -1326,8 +1434,11 @@
     background-color: var(--select-option-indicator-background, transparent);
     color: var(--select-option-indicator-color, currentColor);
     transition:
-      background-color 0.15s,
-      border-color 0.15s;
+      background-color
+        var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+        var(--select-option-indicator-transition-easing, var(--motion-easing, ease)),
+      border-color var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+        var(--select-option-indicator-transition-easing, var(--motion-easing, ease));
   }
 
   .select-option-indicator.checked {
@@ -1429,5 +1540,14 @@
   .select-option-tick :global(svg) {
     width: 100%;
     height: 100%;
+  }
+
+  /* The chevron rotates between closed and open. Small, but it is a transform,
+     and the two end states are each meaningful, so dropping the tween just makes
+     the flip instant. */
+  @media (prefers-reduced-motion: reduce) {
+    .select-arrow {
+      transition: none;
+    }
   }
 </style>

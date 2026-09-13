@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { tick, onMount } from 'svelte';
+  import { tick, onDestroy } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '../Img/Img.svelte';
   import { computeMenuDropdownPosition } from './dropdownPosition';
+  import { eventHitsInside, registerDismissible } from '../_interaction/dismissal';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
   let {
@@ -110,15 +111,30 @@
   });
 
   /**
-   * Svelte action: relocates the dropdown to document.body when usePortal is set,
+   * Where a portalled node is allowed to land. Svelte scopes a custom element's
+   * CSS to its shadow root, so `document.body` is the one place the panel must
+   * never go from inside `<sui-menu>`: it keeps its `svelte-*` scoping class and
+   * loses every rule behind it, plus the host's custom properties. Measured in
+   * Chromium -- position fell back to `static`, background to transparent,
+   * border and shadow to none, so the items rendered as bare text over the page.
+   * Its own root holds that stylesheet and still sits above every overflow/
+   * scroll ancestor between the two.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
+  /**
+   * Svelte action: relocates the dropdown out to its root when usePortal is set,
    * so a position:fixed panel is never clipped by an overflow/scroll ancestor
    * (e.g. a table cell). No-op otherwise; `use:` actions never run during SSR.
    */
-  const portalToBody = (node: HTMLElement) => {
+  const portalToRoot = (node: HTMLElement) => {
     if (!usePortal) {
       return;
     }
-    document.body.appendChild(node);
+    portalTarget(node).appendChild(node);
     return { destroy: () => node.remove() };
   };
 
@@ -315,11 +331,6 @@
         }
         break;
       }
-      case 'Escape': {
-        event.preventDefault();
-        close();
-        break;
-      }
       case 'Tab': {
         close();
         break;
@@ -352,29 +363,45 @@
     }
   }
 
-  function handleClickOutside(event: Event) {
-    // A portaled panel lives outside menuContainerEl, so a click on a separator
+  function handleOutsidePress(event: Event) {
+    // A portaled panel lives outside menuContainerEl, so a press on a separator
     // or padding inside it is not contained — treat the panel node as "inside"
-    // too, matching the in-flow behaviour of not closing on such clicks.
-    if (
-      open &&
-      event.target instanceof Node &&
-      menuContainerEl !== null &&
-      !menuContainerEl.contains(event.target) &&
-      !(menuListEl !== null && menuListEl.contains(event.target))
-    ) {
-      close();
+    // too, matching the in-flow behaviour of not closing on such presses. The
+    // module has already established the press is outside menuContainerEl
+    // (that's `element` below) before calling this at all, so only the portal
+    // case needs a second check here.
+    if (eventHitsInside(menuListEl, event)) {
+      return;
     }
+    close();
   }
 
-  onMount(() => {
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-      if (typeaheadTimer !== null) {
-        clearTimeout(typeaheadTimer);
-      }
+  /**
+   * Registers this dropdown as the topmost dismissible layer for exactly the
+   * span it exists (the `{#if open}` block below) and releases it again on
+   * teardown — including when the component unmounts while still open, so a
+   * stale layer never survives to swallow a later Escape meant for whatever
+   * opens next. Escape and outside-press used to be answered here directly
+   * (a document click listener added in onMount, and an Escape case in
+   * handleMenuKeydown); routed through the shared module instead so only the
+   * topmost open surface — this menu, or a Modal/Sheet/another Menu opened on
+   * top of it — answers either.
+   */
+  function dismissalAction(_node: HTMLDivElement) {
+    const release = registerDismissible({
+      element: () => menuContainerEl,
+      onEscape: close,
+      onOutside: handleOutsidePress
+    });
+    return {
+      destroy: release
     };
+  }
+
+  onDestroy(() => {
+    if (typeaheadTimer !== null) {
+      clearTimeout(typeaheadTimer);
+    }
   });
 </script>
 
@@ -438,7 +465,8 @@
       tabindex="-1"
       style={portalStyle}
       onkeydown={handleMenuKeydown}
-      use:portalToBody
+      use:portalToRoot
+      use:dismissalAction
     >
       {#each items as item (item.value)}
         {#if item.separator === true}

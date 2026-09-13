@@ -65,6 +65,42 @@
   let controlsTextDisabled = $state(false);
   let controlsVoiceDisabled = $state(false);
   let voiceActivations = $state(0);
+
+  // Dictation: the caller owns the state machine and both sentences here —
+  // the library only ever receives whichever tri-state value and statusText
+  // this demo decides to pass it. "Busy" is simulated with a timeout standing
+  // in for a real transcription round-trip.
+  type DictationState = 'idle' | 'recording' | 'busy';
+  let dictationValue = $state('');
+  let dictationState: DictationState = $state('idle');
+  let dictationCancelCount = $state(0);
+
+  const dictationStatusText: Record<DictationState, string> = {
+    idle: '',
+    recording: 'Recording. Press Escape to stop and transcribe.',
+    busy: 'Transcribing…'
+  };
+
+  function toggleDictation(): void {
+    if (dictationState === 'idle') {
+      dictationState = 'recording';
+      return;
+    }
+    if (dictationState === 'recording') {
+      dictationState = 'busy';
+      setTimeout(() => {
+        dictationValue = `${dictationValue}(transcribed audio) `;
+        dictationState = 'idle';
+      }, 900);
+    }
+    // No case for 'busy': the voice button disables itself while busy, so
+    // this branch cannot be reached from a real press.
+  }
+
+  function cancelDictation(): void {
+    dictationCancelCount += 1;
+    dictationState = 'idle';
+  }
 </script>
 
 <div class="page-header">
@@ -189,6 +225,33 @@
 </div>
 <p class="demo-note" data-pw="per-control-disable-voice-count">
   Voice activations: {voiceActivations}
+</p>
+
+<h2>Dictation — tri-state recording, Escape to cancel, caller-supplied status</h2>
+<p class="demo-note">
+  Press the mic to start "recording", press it again to move to "busy" (simulating transcription),
+  or press Escape while recording to cancel. The status sentence and the placeholder are both
+  decided here in the demo, not by the library.
+</p>
+<div class="chat-theme composer-frame">
+  <ChatComposer
+    bind:value={dictationValue}
+    placeholder={dictationState === 'busy' ? 'Transcribing…' : 'Type a message…'}
+    recording={dictationState}
+    statusText={dictationStatusText[dictationState]}
+    testId="dictation-demo"
+    voiceTestId="dictation-voice"
+    statusTestId="dictation-status"
+    onvoice={toggleDictation}
+    oncanceldictation={cancelDictation}
+    onsubmit={(text) => {
+      sent.push(text);
+    }}
+  />
+</div>
+<p class="demo-note" data-pw="dictation-state">State: {dictationState}</p>
+<p class="demo-note" data-pw="dictation-cancel-count">
+  Cancelled via Escape: {dictationCancelCount}
 </p>
 
 {#if preview !== null}

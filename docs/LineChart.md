@@ -251,6 +251,40 @@ Hovering anywhere over the plot area finds the nearest point and shows a crossha
 </LineChart>
 ```
 
+### Multi-Series Alignment
+
+Series are joined by their **x value**, not by array position: a shorter,
+offset, reordered or duplicate-x series never has another series' sample
+attributed to its column. Hover, the tooltip, and hit-testing all read from
+this same alignment — there is no separate, position-based path. For the
+common case where every series already shares one x sequence this reproduces
+the exact positional pairing you'd expect.
+
+```svelte
+<script>
+  const series = [
+    {
+      name: 'This week',
+      data: [
+        { x: 1, y: 10 },
+        { x: 2, y: 20 }
+      ]
+    },
+    {
+      name: 'Last week',
+      // Different x coverage -- hovering at x=2 reads THIS series' own
+      // sample at x=2 (200), not whatever sits at array index 1.
+      data: [
+        { x: 2, y: 200 },
+        { x: 3, y: 300 }
+      ]
+    }
+  ];
+</script>
+
+<LineChart {series} />
+```
+
 ### Sparse Series — Gap Points
 
 A data point with a non-finite y (`NaN`) marks a **gap**: the line breaks around it and resumes
@@ -278,10 +312,52 @@ auto-computed axis domains.
 <LineChart {series} />
 ```
 
+See [Chart Input Policy](./CHART_INPUT_POLICY.md) for the full table of input
+shapes (empty, all-zero, single point, null/NaN/Infinity, negative values,
+reordered times, and unknown `stackNormalize` totals — the latter shared with
+AreaChart) and how each one renders, plus the calendar-axis limitation and why
+`NaN` cannot survive a JSON round trip.
+
 ### X-Axis Tick Density
 
 The x-axis renders at most **6 ticks** (per the design-system line-chart spec), thinning further
 on narrow charts. Y-axis ticks were already capped at 6.
+
+### Keyboard access
+
+Every rendered data point is a focusable `role="button"` element (`tabindex="0"`),
+labelled via `aria-label` with its resolved name (`label`, else the formatted x value)
+and value — `"{name}: {value}"` for a single series, `"{name} — {series}: {value}"` when
+there is more than one, matching the tooltip's own multi-series disambiguation.
+`Tab`/`Shift+Tab` moves through points in series order, then point order within each
+series. `Enter` or `Space` on a focused point fires `onpointclick`, the same event a
+pointer click fires. Focusing a point also activates it exactly as pointer hover does —
+same tooltip content, same anchor position — through the one `activate()` function both
+input paths share, so keyboard and pointer users can never see the two drift apart. This
+is the same family-wide keyboard/tooltip contract implemented by BarChart,
+DualAxisBarChart, FunnelChart, PieChart and SankeyChart — see
+[PieChart's "Keyboard access" section](./PieChart.md#keyboard-access) for the full
+contract.
+
+LineChart is a continuous series rather than a fixed set of categories, so "the marks to
+Tab through" is a deliberate choice rather than a given: each **rendered (series, point)
+pair** is its own stop, in the same order pointer hover's nearest-point search already
+uses — keyboard and pointer users reach the same addressable data, just via different
+input.
+
+Unlike AreaChart, LineChart also carries a single visually-hidden
+`role="status" aria-live="polite"` region announcing the active point's name and value.
+It exists for the same reason PieChart's does: LineChart exposes two ways to change the
+highlighted point **without** a focus event — the declarative
+[`highlightedIndex` prop](#highlightedindex--declarative-prop) and the imperative
+[`ChartHighlightAPI` from `onchartready`](#highlight-hook--onchartready) — and a focus
+event is the only other route assistive tech has to learn a point changed. Direct
+interaction (pointer hover or keyboard focus) takes precedence over either of those
+programmatic paths, matching PieChart's own precedence order. AreaChart has neither
+prop, so its every state change already goes through a focus event and it relies on
+`aria-label` alone — this is not the two new charts disagreeing with each other, it is
+the same underlying rule (announce what a focus event cannot) applied to two different
+prop surfaces.
 
 ### Legend Aggregates
 
@@ -429,14 +505,72 @@ type ChartHighlightAPI = {
 
 ## Web Component
 
+`sui-line-chart` is registered by the web-component bundle. Registering it was
+gated on `ChartTooltip`'s portal target: `LineChart` can portal its tooltip to
+`document.body` (the `tooltipPortal` prop), and Svelte scopes a custom
+element's CSS to its shadow root, so a node relocated into the light DOM used
+to keep its markup and lose every style rule scoped to that root. `ChartTooltip`
+now resolves its portal destination from the node's own root
+(`getRootNode()`) — landing back inside the shadow root when there is one, and
+falling through to `document.body` only when there isn't — so the element
+ships fully styled whether or not `tooltipPortal` is set.
+
 ```html
-<sui-line-chart
-  series='[{"name":"Revenue","data":[{"x":1,"y":30},{"x":2,"y":45}]}]'
-  show-area="true"
-  show-dots="true"
-  show-legend="false"
-  test-id="my-line-chart"
-></sui-line-chart>
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-line-chart show-legend curve="natural" aspect-ratio="2"></sui-line-chart>
+
+<script>
+  const chart = document.querySelector('sui-line-chart');
+  chart.series = [
+    {
+      name: 'Revenue',
+      data: [
+        { x: 1, y: 30 },
+        { x: 2, y: 45 },
+        { x: 3, y: 38 },
+        { x: 4, y: 52 }
+      ]
+    }
+  ];
+  chart.xAxisCategories = ['Jan', 'Feb', 'Mar', 'Apr'];
+  chart.yTickFormat = (v) => `$${v}`;
+  chart.onchartready = (api) => {
+    api.highlight(2);
+  };
+</script>
 ```
 
-Object/array props (`series`, `xDomain`, `yDomain`, `xAxisCategories`, `areaGradient`, callback props) must be set via JavaScript property assignment on the element, not as HTML attributes.
+Arrays, objects and functions — `series`, `areaGradient`, `xDomain`, `yDomain`,
+`xAxisCategories`, `xTickFormat`, `yTickFormat`, `onchartready`, `onpointclick`
+and `onpointhover` — must be assigned as JavaScript properties. They cannot
+cross the HTML-attribute boundary.
+
+### Web Component Events
+
+`onchartready`, `onpointclick`, and `onpointhover` are available as JS properties, and each also
+dispatches a same-named DOM custom event (bubbles, composed) for a consumer who only calls
+`addEventListener` — each carries its own single argument as detail (the `ChartHighlightAPI`, or
+the point-hit object, or `null` on hover-leave):
+
+```js
+chart.addEventListener('chartready', (e) => e.detail.highlight(2));
+chart.addEventListener('pointclick', (e) => select(e.detail.point));
+chart.addEventListener('pointhover', (e) => setHovered(e.detail?.point ?? null));
+```
+
+### Slots
+
+| Slot    | Replaces                                             |
+| ------- | ---------------------------------------------------- |
+| `empty` | The empty state shown when every series has no data. |
+
+Supply it only when you mean to: with no `empty` slot the component falls
+through to its own chart frame, and an empty slot would replace that frame
+with a blank box.
+
+> **Svelte-only:** `tooltipSnippet` (receives a `LineChartTooltipContext`)
+> takes an argument, so it cannot be expressed as a named slot: a Web
+> Component `<slot>` projects markup and does not forward Svelte snippet
+> parameters, so the hover context (`{x, points}`) would be silently dropped.
+> Use the Svelte component directly when you need a custom tooltip.

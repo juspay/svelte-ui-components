@@ -36,6 +36,15 @@ export type OptionalPieChartProperties = {
   minHeight?: number;
   valueFormat?: (value: number) => string;
   tooltipSnippet?: Snippet<[PieChartSlice, number]>;
+  /**
+   * Render the tooltip into the chart's own root (its shadow root when hosted as a
+   * custom element, `document.body` otherwise) with `position: fixed`, clamped to
+   * the viewport, instead of positioned inside the chart. Use it when the chart
+   * sits inside a container with `overflow: hidden`/`scroll` that would otherwise
+   * clip the tooltip. Defaults to `false`. Has no effect on `tooltipSnippet`'s
+   * content, only on where the tooltip wrapper renders.
+   */
+  tooltipPortal?: boolean;
   center?: Snippet;
   empty?: Snippet;
   testId?: string;

@@ -143,3 +143,30 @@ Tag: `<sui-media-player>`
 ```html
 <sui-media-player src="/clip.mp4" type="video"></sui-media-player>
 ```
+
+`onseek` also dispatches a same-named DOM custom event (bubbles, composed) for a consumer who
+only calls `addEventListener` — `player.addEventListener('seek', (e) => console.log(e.detail))`,
+with `detail` set to the same `currentTime` the property callback receives. `onplay`, `onpause`,
+`onvolumechange`, `ontimeupdate`, and `onfullscreenchange` do not: all five are already
+`HTMLElement`'s own native events, so `player.addEventListener('play', ...)` (and the other four)
+register without error but are never called by this component — assign the properties instead
+(`player.onplay = (event) => ...`, etc).
+
+### Slots
+
+The six control glyphs are reachable from markup. Each renders inside the custom overlay, which
+the component draws only while `controls` is absent — with native `controls` the browser draws
+its own transport and none of these slots appear.
+
+| Slot Name              | Maps to Snippet      | Description                                                                         |
+| ---------------------- | -------------------- | ----------------------------------------------------------------------------------- |
+| `play-icon`            | `playIcon`           | Transport button while paused. Defaults to the built-in play glyph.                 |
+| `pause-icon`           | `pauseIcon`          | Transport button while playing. Defaults to the built-in pause glyph.               |
+| `mute-icon`            | `muteIcon`           | Volume button while muted. Defaults to the built-in muted-speaker glyph.            |
+| `unmute-icon`          | `unmuteIcon`         | Volume button while unmuted. Defaults to the built-in volume glyph.                 |
+| `fullscreen-icon`      | `fullscreenIcon`     | Fullscreen button while windowed. Defaults to the built-in enter-fullscreen glyph.  |
+| `exit-fullscreen-icon` | `exitFullscreenIcon` | Fullscreen button while fullscreen. Defaults to the built-in exit-fullscreen glyph. |
+
+A JavaScript-assigned property of the same name wins over slotted markup; the slot is the
+fallback, and the slot's own fallback is the built-in glyph, so supplying neither still renders
+the control.

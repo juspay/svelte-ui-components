@@ -666,14 +666,18 @@
     padding-top: var(--thinking-indicator-detail-padding-top, 0.5rem);
     font-size: var(--thinking-indicator-detail-font-size, 0.875rem);
     line-height: var(--thinking-indicator-detail-line-height, 1.5);
-    color: var(--thinking-indicator-detail-color, #bebebe);
+    /* Resting text, not the shimmer highlight — needs its own readable default
+       rather than reusing the shimmer's light sweep color. Matches
+       --thinking-indicator-trace-prose-color, the same prose-at-rest ink used
+       for the reasoning trace's paragraph rows. */
+    color: var(--thinking-indicator-detail-color, #6b6b6b);
     text-align: left;
   }
 
   .elapsed {
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
-    color: var(--thinking-indicator-elapsed-color, #9a9a9a);
+    color: var(--thinking-indicator-elapsed-color, #4b5563);
     font-size: var(--thinking-indicator-elapsed-font-size, 0.75rem);
   }
 
@@ -753,7 +757,9 @@
     margin: -3px -6px;
     border-radius: var(--thinking-indicator-trace-row-radius, 6px);
     cursor: pointer;
-    transition: background 150ms ease;
+    transition: background
+      var(--thinking-indicator-trace-row-transition-duration, var(--motion-duration, 150ms))
+      var(--thinking-indicator-trace-row-transition-easing, var(--motion-easing, ease));
     width: calc(100% + 12px);
   }
 
@@ -777,7 +783,7 @@
   }
 
   .row-secondary {
-    color: var(--thinking-indicator-trace-secondary-color, #9a9a9a);
+    color: var(--thinking-indicator-trace-secondary-color, #4b5563);
     font-size: var(--thinking-indicator-trace-secondary-font-size, 0.75rem);
     white-space: nowrap;
   }
@@ -861,7 +867,9 @@
     font-size: var(--thinking-indicator-trace-more-font-size, 0.75rem);
     color: var(--thinking-indicator-trace-more-color, #9a9a9a);
     padding: 6px 0 0 22px;
-    animation: thinking-indicator-fade-in 300ms ease both;
+    animation: thinking-indicator-fade-in
+      var(--thinking-indicator-trace-more-animation-duration, var(--motion-duration, 300ms))
+      var(--thinking-indicator-trace-more-animation-easing, var(--motion-easing, ease)) both;
   }
 
   @media (prefers-reduced-motion: reduce) {

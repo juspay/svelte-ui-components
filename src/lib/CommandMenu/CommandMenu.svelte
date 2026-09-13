@@ -2,6 +2,8 @@
   import type { CommandMenuProperties, CommandItem } from './properties';
   import { tick, onMount, onDestroy } from 'svelte';
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
+  import { registerDismissible } from '../_interaction/dismissal';
+  import { getActiveElement } from '../_interaction/focus';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '$lib/Img/Img.svelte';
   import searchSvg from '$lib/assets/search.svg?raw';
@@ -143,11 +145,6 @@
         }
         break;
       }
-      case 'Escape': {
-        event.preventDefault();
-        close();
-        break;
-      }
       case 'Tab': {
         // aria-modal="true" promises focus stays inside, so Tab cycles rather
         // than escaping. Cycle over whatever is actually tabbable instead of
@@ -160,7 +157,7 @@
           break;
         }
         event.preventDefault();
-        const active = document.activeElement;
+        const active = getActiveElement(tabbable[0] ?? null);
         const current = active instanceof HTMLElement ? tabbable.indexOf(active) : -1;
         const step = event.shiftKey ? -1 : 1;
         const next = (current + step + tabbable.length) % tabbable.length;
@@ -185,7 +182,7 @@
         // tabindex="-1"; they are arrow-key targets. Excluding -1 only in the
         // `[tabindex]` selector would still match them as buttons.
         el.getAttribute('tabindex') !== '-1' &&
-        (el.offsetParent !== null || el === document.activeElement)
+        (el.offsetParent !== null || el === getActiveElement(el))
     );
   }
 
@@ -220,11 +217,27 @@
   // the action when the node goes away, including on component teardown, so the
   // onDestroy below must NOT unlock as well: with a shared reference count a second
   // decrement would release a lock another open surface still needs.
-  function scrollLockAction(_node: HTMLElement) {
-    if (openerElement === null && document.activeElement instanceof HTMLElement) {
-      openerElement = document.activeElement;
+  //
+  // The dismissible layer is registered here too, for the same reason: this
+  // action's mount/destroy already brackets exactly the open span (the overlay
+  // only exists while `open` is true, per the `{#if open}` below). Escape used
+  // to be answered directly in handleKeyDown above, with nothing coordinating
+  // it against a Modal/Sheet/Menu opened on top — a keydown from a nested
+  // overlay bubbling up through this one's own onkeydown would close both.
+  // `element` reads `dialogElement` lazily, since it is not bound yet at this
+  // point in a fresh open. Ctrl+K stays on `handleGlobalKeyDown`/`window`
+  // below rather than moving here: it is an OPEN shortcut that must keep
+  // working while the menu is closed, and this layer only exists while open.
+  function scrollLockAction(node: HTMLElement) {
+    const opener = getActiveElement(node);
+    if (openerElement === null && opener instanceof HTMLElement) {
+      openerElement = opener;
     }
     lockBodyScroll();
+    const releaseDismissible = registerDismissible({
+      element: () => dialogElement,
+      onEscape: close
+    });
     tick().then(() => {
       if (inputElement !== null) {
         inputElement.focus();
@@ -232,6 +245,7 @@
     });
     return {
       destroy() {
+        releaseDismissible();
         unlockBodyScroll();
         if (openerElement !== null) {
           openerElement.focus();
@@ -459,7 +473,9 @@
     gap: var(--command-menu-item-gap, 10px);
     font-size: var(--command-menu-item-font-size, 14px);
     color: var(--command-menu-item-color, #334155);
-    transition: background-color 0.1s;
+    transition: background-color
+      var(--command-menu-item-transition-duration, var(--motion-duration, 0.1s))
+      var(--command-menu-item-transition-easing, var(--motion-easing, ease));
     background: none;
     border: none;
     width: 100%;

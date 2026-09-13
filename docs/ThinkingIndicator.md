@@ -139,7 +139,7 @@ optional — a mount that never passes them behaves exactly like the originally 
 | `--thinking-indicator-arrow-transition`                                                                                                        | `transform 0.2s ease-in-out`                        | Chevron rotate transition.                                                                                       |
 | `--thinking-indicator-detail-font-size`                                                                                                        | `0.875rem`                                          | Detail text font size.                                                                                           |
 | `--thinking-indicator-detail-line-height`                                                                                                      | `1.5`                                               | Detail text line height.                                                                                         |
-| `--thinking-indicator-detail-color`                                                                                                            | `#bebebe`                                           | Detail text color.                                                                                               |
+| `--thinking-indicator-detail-color`                                                                                                            | `#6b6b6b`                                           | Detail text color.                                                                                               |
 | `--thinking-indicator-detail-padding-top`                                                                                                      | `0.5rem`                                            | Space above the detail text.                                                                                     |
 | `--thinking-indicator-elapsed-color`                                                                                                           | `#9a9a9a`                                           | Elapsed counter ink.                                                                                             |
 | `--thinking-indicator-elapsed-font-size`                                                                                                       | `0.75rem`                                           | Elapsed counter font size.                                                                                       |
@@ -162,6 +162,10 @@ optional — a mount that never passes them behaves exactly like the originally 
 | `--thinking-indicator-trace-query-background` / `-query-color` / `-query-radius` / `-query-padding` / `-query-margin` / `-query-font-size`     | pill recipe                                         | The search query chip (wired onto the library `Pill`).                                                           |
 | `--thinking-indicator-trace-more-color` / `--thinking-indicator-trace-more-font-size`                                                          | `#9a9a9a` / `0.75rem`                               | The settled `moreLabel` caption.                                                                                 |
 | `--thinking-indicator-trace-body-gap` / `-row-gap` / `-body-padding-top`                                                                       | `12px` / `7px` / `10px`                             | Trace layout rhythm.                                                                                             |
+| `--thinking-indicator-trace-row-transition-duration`                                                                                           | `150ms`                                             | Duration of a selectable coding row's hover background transition. Falls back through `--motion-duration`.       |
+| `--thinking-indicator-trace-row-transition-easing`                                                                                             | `ease`                                              | Easing curve of a selectable coding row's hover background transition. Falls back through `--motion-easing`.     |
+| `--thinking-indicator-trace-more-animation-duration`                                                                                           | `300ms`                                             | Duration of the settled `moreLabel` caption's fade-in. Falls back through `--motion-duration`.                   |
+| `--thinking-indicator-trace-more-animation-easing`                                                                                             | `ease`                                              | Easing curve of the settled `moreLabel` caption's fade-in. Falls back through `--motion-easing`.                 |
 
 > Renamed from `ThinkingTrace`: every `--thinking-trace-*` variable is now `--thinking-indicator-trace-*`.
 > `--thinking-trace-label-color` / `-settled-color` / `-shimmer-gradient` were absorbed into the
@@ -191,6 +195,36 @@ optional — a mount that never passes them behaves exactly like the originally 
 attributes; `detail`, `showElapsed`/`show-elapsed`, `testId`/`test-id`, `toggleTestId`/
 `toggle-test-id`, `detailTestId`/`detail-test-id`, `labelTestId`/`label-test-id`, `classes`, `busy`,
 `query`, `moreLabel`/`more-label` and `selectable` can all be set as attributes.
+
+### Web Component Events
+
+`ontoggle` is a callback prop, not a DOM event — assign it as a plain property as above. The
+custom element does not dispatch a matching DOM event, so `el.addEventListener('toggle', ...)`
+registers without error but the handler is never called.
+
+`onrowselect` and `onsettled` are available as JS properties, and each also dispatches a
+same-named DOM custom event (bubbles, composed) for a consumer who only calls
+`addEventListener` — `rowselect`'s detail is the callback's own index (or `null`), and
+`settled` carries no detail:
+
+```js
+const indicator = document.querySelector('sui-thinking-indicator');
+indicator.addEventListener('rowselect', (e) => console.log(e.detail));
+indicator.addEventListener('settled', () => console.log('settled'));
+```
+
+### Slots
+
+| Slot Name     | Maps to Snippet | Description                                                                                                                                        |
+| ------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `avatar`      | `avatar`        | Leading avatar. Nothing is forced when the slot is empty: the built-in `Loader` still appears while busy, and an idle indicator stays avatar-less. |
+| `toggle-icon` | `toggleIcon`    | Disclosure arrow, collapsible variant only. Defaults to the built-in chevron.                                                                      |
+
+The element claims each snippet only when its slot is actually filled, so a JavaScript-assigned
+`avatar`/`toggleIcon` property keeps working when the slot is empty. `avatar` needs that guard
+rather than a slot fallback: the collapsible variant renders the avatar when `avatar` is set
+**or** the indicator is busy, so an always-claimed snippet would put a spinner in front of every
+idle indicator.
 
 ## Accessibility
 

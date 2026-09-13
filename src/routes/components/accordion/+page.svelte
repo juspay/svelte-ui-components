@@ -16,7 +16,7 @@
     {accordionExpanded ? 'Collapse' : 'Expand'} Accordion
   </button>
   <Accordion expand={accordionExpanded}>
-    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
       <p>This is the accordion content that can be expanded or collapsed.</p>
       <p>It supports any content inside including other components.</p>
     </div>
@@ -32,11 +32,11 @@
 <div class="demo-row" style="flex-direction: column; max-width: 500px;">
   <Accordion testId="accordion-linked">
     {#snippet trigger({ expanded })}
-      <div style="padding: 12px; background: #eef; border-radius: 6px;">
+      <div style="padding: 12px; background: #eef; border-radius: 6px; color: #3a4550;">
         Shipping details {expanded ? '▲' : '▼'}
       </div>
     {/snippet}
-    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
       <p>Delivered in 3–5 business days.</p>
     </div>
   </Accordion>
@@ -50,11 +50,11 @@
 <div class="demo-row" style="flex-direction: column; max-width: 500px;">
   <Accordion testId="accordion-custom-panel" panelId="returns-policy-panel">
     {#snippet trigger({ expanded })}
-      <div style="padding: 12px; background: #efe; border-radius: 6px;">
+      <div style="padding: 12px; background: #efe; border-radius: 6px; color: #3a4550;">
         Returns policy {expanded ? '▲' : '▼'}
       </div>
     {/snippet}
-    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
       <p>Free returns within 30 days.</p>
     </div>
   </Accordion>
@@ -70,7 +70,7 @@
     {#snippet trigger({ expanded })}
       <span data-pw="accordion-disabled-trigger-label">{expanded ? 'Collapse' : 'Expand'}</span>
     {/snippet}
-    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
       <p>This content stays collapsed — the trigger above is disabled.</p>
     </div>
   </Accordion>
@@ -94,7 +94,7 @@
     {#snippet trigger({ expanded })}
       <span data-pw="accordion-late-id-trigger-label">Warranty {expanded ? '▲' : '▼'}</span>
     {/snippet}
-    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+    <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
       <p>Two-year manufacturer warranty.</p>
     </div>
   </Accordion>
@@ -125,7 +125,7 @@
     style="display: grid; align-content: start; overflow-y: auto; height: 300px; border: 1px solid #ccc; border-radius: 8px;"
   >
     <Accordion expand={gridAccordionExpanded} testId="accordion-grid-nested">
-      <div style="padding: 16px; background: #f5f5f5; border-radius: 8px;">
+      <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; color: #3a4550;">
         <p>
           This paragraph must stay visible once the accordion above is expanded, even though its
           direct parent is a grid container rather than a block one.

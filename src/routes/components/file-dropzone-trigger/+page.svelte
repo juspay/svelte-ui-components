@@ -69,6 +69,6 @@
 
 <style>
   :global(.upload-trigger-muted) {
-    --file-dropzone-trigger-caption-color: #94a3b8;
+    --file-dropzone-trigger-caption-color: #cbd5e1;
   }
 </style>

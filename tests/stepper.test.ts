@@ -297,7 +297,7 @@ test.describe('Stepper — status "muted" (smaller, subtly-tinted marker)', () =
     const backgroundColor = await completedCircle.evaluate(
       (element) => getComputedStyle(element).backgroundColor
     );
-    expect(backgroundColor).toBe('rgb(36, 170, 90)'); // #24aa5a
+    expect(backgroundColor).toBe('rgb(26, 122, 68)'); // #1a7a44 -- darkened for contrast, see Stepper.svelte
   });
 });
 

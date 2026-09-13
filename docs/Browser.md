@@ -96,4 +96,4 @@ Tag: `<sui-browser>`
 | Slot Name   | Maps to Snippet | Description                                     |
 | ----------- | --------------- | ----------------------------------------------- |
 | _(default)_ | `children`      | Content rendered inside the browser viewport.   |
-| `lock-icon` | `lockIcon`      | Custom icon for the address bar lock indicator. |
+| `lock-icon` | `lockIcon`      | Custom icon for the address bar lock indicator; defaults to the built-in lock glyph. |

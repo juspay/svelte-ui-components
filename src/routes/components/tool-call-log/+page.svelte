@@ -207,6 +207,6 @@
     display: block;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #888;
+    color: var(--doc-text-secondary, #888);
   }
 </style>

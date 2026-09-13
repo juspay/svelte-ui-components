@@ -126,6 +126,36 @@ Node labels are laid out defensively so a crowded chart never renders overlappin
 - Any truncated or dropped label keeps its full text available via the node's hover `<title>`
   tooltip.
 
+### Keyboard access
+
+Every node and link is a focusable `role="button"` element (`tabindex="0"`), labelled
+via `aria-label` — a node with its resolved label and value, a link with its source and
+target labels and value. `Tab`/`Shift+Tab` moves through nodes then links; `Enter` or
+`Space` on a focused node or link fires `onnodeclick`/`onlinkclick`, the same event a
+pointer click fires. Focusing a node or link also highlights it (dimming unrelated
+nodes/links, unless `disableDimOnHover` is set) exactly as pointer hover does, and fires
+the same `onnodehover`/`onlinkhover` callback. This is the same family-wide keyboard/
+tooltip contract implemented by BarChart, DualAxisBarChart, FunnelChart and PieChart —
+see [PieChart's "Keyboard access" section](./PieChart.md#keyboard-access) for the full
+contract.
+
+### Tooltip portal
+
+Pass `tooltipPortal` to render the tooltip into the chart's own root (its shadow root
+when hosted as a custom element, `document.body` otherwise) with `position: fixed`,
+clamped to the viewport, instead of positioned inside the chart. Use it when the chart
+sits inside a container with `overflow: hidden`/`scroll` that would otherwise clip the
+tooltip:
+
+```svelte
+<div style="overflow: hidden; max-height: 300px;">
+  <SankeyChart {nodes} {links} tooltipPortal />
+</div>
+```
+
+`tooltipPortal` only changes where the tooltip wrapper renders — it has no effect on
+`tooltipSnippet`'s content, so a custom tooltip snippet keeps working unchanged.
+
 ## Props
 
 | Prop                 | Type                                                    | Required | Default     | Description                                                                                                                                                                                                                                                                                                                                             |
@@ -142,6 +172,7 @@ Node labels are laid out defensively so a crowded chart never renders overlappin
 | maxHeight            | `number`                                                | No       | `420`       | Caps the chart's rendered height in pixels regardless of `aspectRatio`.                                                                                                                                                                                                                                                                                 |
 | valueFormat          | `(value: number) => string`                             | No       | abbreviated | Formatter for flow values.                                                                                                                                                                                                                                                                                                                              |
 | tooltipSnippet       | `Snippet<[SankeyTooltipContext]>`                       | No       | `-`         | Custom tooltip. Receives `{type: 'node', node, value}` on node hover, or `{type: 'link', link, sourceLabel, targetLabel, percentage}` on link hover. `sourceLabel`/`targetLabel` are pre-resolved human-readable names; `percentage` is the link's share of the source node's total flow (0–100, 2 dp).                                                 |
+| tooltipPortal        | `boolean`                                               | No       | `false`     | Render the tooltip into the chart's own root (shadow root, or `document.body`) with `position: fixed`, clamped to the viewport, instead of positioned inside the chart. Use inside an `overflow: hidden`/`scroll` container. No effect on `tooltipSnippet`'s content.                                                                                   |
 | empty                | `Snippet`                                               | No       | `-`         | Content rendered when `nodes` is empty.                                                                                                                                                                                                                                                                                                                 |
 | testId               | `string`                                                | No       | `-`         | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                                                                                                                 |
 | classes              | `string`                                                | No       | `-`         | CSS class string applied to the top-level element.                                                                                                                                                                                                                                                                                                      |
@@ -213,3 +244,69 @@ type SankeyTooltipContext =
 The `tooltipSnippet` prop receives a `SankeyTooltipContext`. In the `'link'` branch, `sourceLabel` and `targetLabel` are pre-resolved human-readable names (falling back to the node id when no `label` is set), and `percentage` gives the link's share of the source node's total flow as a 0–100 value rounded to two decimal places.
 
 > **Additive / backward-compatible:** The `'link'` branch of `SankeyTooltipContext` gained three new optional fields — `sourceLabel`, `targetLabel`, and `percentage`. They are always populated at runtime by the chart. Existing consumer code that typed a variable as `{ type: 'link'; link: SankeyLink }` continues to compile without changes. Accessing the new fields requires adding `sourceLabel?: string`, `targetLabel?: string`, and `percentage?: number` (or widening to `SankeyTooltipContext`) in the consumer's type annotation.
+
+## Web Component
+
+`sui-sankey-chart` is registered by the web-component bundle. Historically SankeyChart
+had no `tooltipPortal` and this note explained why a Web Component wrapper was safe to
+ship regardless: nothing here portalled a node out of the shadow root, so there was
+nothing to lose its shadow-scoped styles. That is no longer the reason it is safe —
+SankeyChart now supports `tooltipPortal` too, and `ChartTooltip` resolves the portal
+destination from the node's own root (`getRootNode()`) rather than hardcoding
+`document.body`, so a portalled tooltip keeps its shadow-scoped styles inside a
+`<sui-sankey-chart>` custom element exactly as an unportalled one does.
+
+```html
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-sankey-chart show-values node-width="18" margin-x="48"></sui-sankey-chart>
+
+<script>
+  const chart = document.querySelector('sui-sankey-chart');
+  chart.nodes = [
+    { id: 'visit', label: 'Visit' },
+    { id: 'cart', label: 'Cart' },
+    { id: 'buy', label: 'Purchase' }
+  ];
+  chart.links = [
+    { source: 'visit', target: 'cart', value: 4200 },
+    { source: 'cart', target: 'buy', value: 980 }
+  ];
+  chart.valueFormat = (v) => `${(v / 1000).toFixed(1)}k`;
+</script>
+```
+
+Arrays, objects and functions — `nodes`, `links`, `columnLabels`, `valueFormat`,
+`nodeColorResolver` and every callback — must be assigned as JavaScript
+properties. They cannot cross the HTML-attribute boundary.
+
+### Web Component Events
+
+`onnodeclick`, `onlinkclick`, `onnodehover`, and `onlinkhover` are available as JS
+properties, and each also dispatches a same-named DOM custom event (bubbles, composed)
+for a consumer who only calls `addEventListener` — `nodeclick`'s detail is `{ node }`,
+`linkclick`'s is `{ link }`, and the hover events carry the same shape (or `null` on
+hover-out):
+
+```js
+const chart = document.querySelector('sui-sankey-chart');
+chart.addEventListener('nodeclick', (e) => console.log(e.detail.node));
+chart.addEventListener('linkclick', (e) => console.log(e.detail.link));
+chart.addEventListener('nodehover', (e) => setHighlighted(e.detail?.node ?? null));
+chart.addEventListener('linkhover', (e) => setHighlighted(e.detail?.link ?? null));
+```
+
+### Slots
+
+| Slot    | Replaces                                                  |
+| ------- | --------------------------------------------------------- |
+| `empty` | The empty state shown when there are no links to lay out. |
+
+Supply it only when you mean to: with no `empty` slot the component falls through
+to its own chart frame, and an empty slot would replace that frame with a blank box.
+
+> **Svelte-only:** `tooltipSnippet` (receives `SankeyTooltipContext`) takes an
+> argument, so it cannot be expressed as a named slot: a Web Component `<slot>`
+> projects markup and does not forward Svelte snippet parameters, so the hover
+> context would be silently dropped. Use the Svelte component directly when you
+> need a custom tooltip.

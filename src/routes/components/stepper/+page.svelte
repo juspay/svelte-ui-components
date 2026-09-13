@@ -96,25 +96,26 @@
   <Stepper steps={[{ label: 'Cart' }, { label: 'Shipping' }]} currentStepIndex={0} />
 </div>
 
-<div class="demo-row" style="max-width: 220px; margin-top: 32px;">
+<div class="demo-row" style="margin-top: 32px;">
   <h2 class="txt-heading-md">Wrap — off (default; a narrow rail clips instead of stacking)</h2>
-  <Stepper
-    testId="stepper-wrap-off"
-    steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }]}
-    currentStepIndex={1}
-  />
+  <div style="max-width: 220px;">
+    <Stepper
+      testId="stepper-wrap-off"
+      steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }]}
+      currentStepIndex={1}
+    />
+  </div>
 </div>
 
-<div
-  class="demo-row"
-  style="max-width: 220px; margin-top: 32px; --container-flex-wrap: wrap; --step-container-flex: 1 1 100%;"
->
+<div class="demo-row" style="margin-top: 32px;">
   <h2 class="txt-heading-md">Wrap — on (stacks one step per row on the same narrow rail)</h2>
-  <Stepper
-    testId="stepper-wrap-on"
-    steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }]}
-    currentStepIndex={1}
-  />
+  <div style="max-width: 220px; --container-flex-wrap: wrap; --step-container-flex: 1 1 100%;">
+    <Stepper
+      testId="stepper-wrap-on"
+      steps={[{ label: 'Cart' }, { label: 'Shipping' }, { label: 'Payment' }]}
+      currentStepIndex={1}
+    />
+  </div>
 </div>
 
 <div class="demo-row" style="max-width: 600px; margin-top: 32px;">
@@ -219,13 +220,13 @@
 </div>
 
 {#snippet cartBadge()}
-  <span style="background:#24aa5a;color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;">
+  <span style="background:#24aa5a;color:#0b2f1a;border-radius:8px;padding:1px 6px;font-size:10px;">
     Done
   </span>
 {/snippet}
 
 {#snippet shippingBadge()}
-  <span style="background:#f59e0b;color:#fff;border-radius:8px;padding:1px 6px;font-size:10px;">
+  <span style="background:#f59e0b;color:#111827;border-radius:8px;padding:1px 6px;font-size:10px;">
     ETA 2d
   </span>
 {/snippet}

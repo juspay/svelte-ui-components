@@ -10,6 +10,7 @@
   import type { ChatComposerProperties } from './properties';
   import { resolveControlDisabled } from './controlDisabled';
   import { shouldApplyClear } from './submitResult';
+  import { normalizeDictationState } from './dictationState';
 
   let {
     value = $bindable(''),
@@ -51,12 +52,15 @@
     actionIcon,
     actionLabel = 'Voice conversation',
     leading,
+    statusText,
+    statusTestId,
     onsubmit,
     oninput,
     onkeydown,
     onpaste,
     onstop,
     onvoice,
+    oncanceldictation,
     onattach,
     onattachclick,
     onaction,
@@ -84,7 +88,14 @@
   // unset, so a caller who never passes the new props keeps the original
   // single-`disabled`-gates-everything behaviour exactly.
   let resolvedTextDisabled = $derived(resolveControlDisabled(textDisabled, disabled));
-  let resolvedVoiceDisabled = $derived(resolveControlDisabled(voiceDisabled, disabled));
+  // 'busy' (transcribing) is not cosmetic -- the control must not accept
+  // a new press, so busy forces the voice button off regardless of what the
+  // caller passed for `voiceDisabled`/`disabled`, the same way `disabled`
+  // itself is not something a specific flag can override back on.
+  let dictationState = $derived(normalizeDictationState(recording));
+  let resolvedVoiceDisabled = $derived(
+    resolveControlDisabled(voiceDisabled, disabled) || dictationState === 'busy'
+  );
   let resolvedSendDisabled = $derived(resolveControlDisabled(sendDisabled, disabled));
 
   let canSend = $derived(
@@ -131,6 +142,13 @@
       event.preventDefault();
       submit();
     }
+    // Escape cancels dictation when recording, and only then -- not
+    // while idle (nothing to cancel) and not while busy (transcribing is
+    // already past the point Escape can interrupt).
+    if (event.key === 'Escape' && dictationState === 'recording') {
+      event.preventDefault();
+      oncanceldictation?.();
+    }
     onkeydown?.(event);
   }
 
@@ -167,6 +185,13 @@
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
+  {#if typeof statusText === 'string'}
+    <!-- Generic region, role and politeness only -- the sentence is
+         whatever the caller passed in `statusText`, never hardcoded here. -->
+    <div class="sr-only" role="status" aria-live="polite" data-pw={statusTestId ?? null}>
+      {statusText}
+    </div>
+  {/if}
   {#if typeof attachmentsPreview === 'function'}
     {@render attachmentsPreview()}
   {:else if hasRichAttachments}
@@ -250,7 +275,11 @@
     ></textarea>
 
     {#if showVoice}
-      <div class="control voice" class:recording>
+      <div
+        class="control voice"
+        class:recording={dictationState === 'recording'}
+        class:busy={dictationState === 'busy'}
+      >
         <Button
           onclick={() => onvoice?.()}
           disabled={resolvedVoiceDisabled}
@@ -278,7 +307,7 @@
           {/if}
         </Button>
       </div>
-    {:else if typeof onaction === 'function' && !canSend && !recording}
+    {:else if typeof onaction === 'function' && !canSend && dictationState === 'idle'}
       <div class="control send action" data-pw={sendSlotTestId ?? null}>
         <Button
           onclick={() => onaction()}
@@ -368,7 +397,7 @@
   }
 
   .input::placeholder {
-    color: var(--chat-composer-placeholder-color, #a1a1aa);
+    color: var(--chat-composer-placeholder-color, #52525b);
   }
 
   .control {
@@ -398,6 +427,13 @@
     --button-text-color: var(--chat-composer-voice-recording-color, #dc2626);
   }
 
+  /* No dedicated busy palette: the disabled `Button` already dims itself
+     (`--disabled-opacity`), which is enough to distinguish "busy" from the
+     active "recording" red without inventing new color tokens that would
+     need a matching dark-theme entry outside this component's scope. The
+     `.busy` class is still applied to the wrapper (see markup) so a caller
+     can target it with their own CSS if they want a distinct look. */
+
   .send {
     --button-width: var(--chat-composer-send-size, 40px);
     --button-height: var(--chat-composer-send-size, 40px);
@@ -412,5 +448,19 @@
   .send.stop {
     --button-color: var(--chat-composer-stop-background-color, #18181b);
     --button-text-color: var(--chat-composer-stop-color, #ffffff);
+  }
+
+  /* Visually hidden but still read by assistive technology -- same pattern
+     Table's caption and Label's required marker use. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
   }
 </style>

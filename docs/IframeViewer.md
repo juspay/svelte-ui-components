@@ -99,4 +99,13 @@ frame.allowedOrigins = ['https://example.com'];
 frame.onmessage = (event) => console.log(event.data);
 ```
 
+`onmessage` also dispatches a same-named `message` DOM custom event (bubbles, composed, detail:
+the `MessageEvent`) for a consumer who only calls `addEventListener` — it does not collide with a
+native `HTMLElement` handler, since `message` belongs to `MessagePort`/`Window`, not the element
+itself:
+
+```js
+frame.addEventListener('message', (e) => console.log(e.detail.data));
+```
+
 `postMessage` is **not** exposed on `<sui-iframe-viewer>` — it is a Svelte-only instance accessor (see Instance Methods above). Web Component consumers already have a standard way to reach the same outcome: query the rendered `<iframe>` inside the element's shadow root and call its `contentWindow.postMessage` directly.

@@ -4,9 +4,10 @@
   import Loader from '../Loader/Loader.svelte';
   import Pill from '../Pill/Pill.svelte';
   import { computeMenuDropdownPosition } from '../Menu/dropdownPosition';
+  import { eventHitsInside } from '../_interaction/dismissal';
   import type { ToolCallChip, ToolCallLogProperties } from './properties';
 
-  let { chips, onchipclick, testId, classes }: ToolCallLogProperties = $props();
+  let { chips, onchipclick, testId, classes, usePortal = true }: ToolCallLogProperties = $props();
 
   // Exactly one popover open at a time, component-local.
   let openIndex = $state<number | null>(null);
@@ -97,16 +98,37 @@
   });
 
   /**
-   * Svelte action for the popover element: relocates it to `document.body`
+   * Where a portalled node is allowed to land. Svelte scopes a custom element's
+   * CSS to its shadow root, so `document.body` is the one place the popover must
+   * never go from inside `<sui-tool-call-log>`: it keeps its `svelte-*` scoping
+   * class and loses every rule behind it, plus the host's custom properties.
+   * Measured in Chromium -- position fell back to `static`, background to
+   * transparent, border and shadow to none, so the detail text landed as a bare
+   * paragraph at the end of the page. Its own root holds that stylesheet and
+   * still sits above every overflow/scroll ancestor between the two.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
+  /**
+   * Svelte action for the popover element: relocates it out to its root
    * (mirroring Menu's `usePortal`) so an `overflow: hidden` or scrolling
    * ancestor — a chat bubble, a card — can never clip it, and keeps
    * `popoverTick` bumping (rAF-coalesced) while it is mounted so `popoverStyle`
    * re-derives on scroll/resize. The popover only exists in the DOM while open
    * (see the `{#if}` below), so the listeners live exactly as long as it does;
    * `use:` actions never run during SSR.
+   *
+   * The listeners are wired even when `usePortal` is false: the popover is
+   * `position: fixed` in both modes, so its coordinates go stale on scroll
+   * whether or not it was moved.
    */
   const popoverPortal: Action<HTMLElement> = (node) => {
-    document.body.appendChild(node);
+    if (usePortal) {
+      portalTarget(node).appendChild(node);
+    }
     let frame: number | null = null;
     const bump = (): void => {
       if (frame !== null) {
@@ -126,7 +148,11 @@
         if (frame !== null) {
           cancelAnimationFrame(frame);
         }
-        node.remove();
+        // Only a node this action moved is this action's to take back out; an
+        // un-portalled one is still Svelte's, and it removes it on its own.
+        if (usePortal) {
+          node.remove();
+        }
       }
     };
   };
@@ -138,14 +164,21 @@
    * `openIndex`, and closing here too would race it: this listener runs after
    * the chip's own `onclick` on the same bubbling click event, so without the
    * guard it would immediately re-close a popover a click just opened.
+   *
+   * "Inside" is asked of the composed path, not of `contains(event.target)`.
+   * This listener is on the document, which sees the target retargeted to the
+   * shadow host, so `chipEl.contains(target)` was false for a click on the chip
+   * itself and the guard above never held: through `<sui-tool-call-log>` the
+   * popover opened and closed on the same click, every time. Observed under
+   * a MutationObserver — one insert, one removal, `aria-expanded` back to
+   * "false" — while chasing the portal fix this file also carries.
    */
   const handleDocumentClick = (event: MouseEvent): void => {
-    const target = event.target;
-    if (openIndex === null || !(target instanceof Node)) {
+    if (openIndex === null) {
       return;
     }
-    const clickedInsideChip = chipEls.some((chipEl) => chipEl !== null && chipEl.contains(target));
-    const clickedInsidePopover = popoverEl !== null && popoverEl.contains(target);
+    const clickedInsideChip = chipEls.some((chipEl) => eventHitsInside(chipEl, event));
+    const clickedInsidePopover = eventHitsInside(popoverEl, event);
     if (!clickedInsideChip && !clickedInsidePopover) {
       openIndex = null;
     }
@@ -274,11 +307,14 @@
     color: var(--tool-call-log-label-color, #2b2b2b);
     cursor: var(--tool-call-log-chip-cursor, pointer);
     max-width: 100%;
-    animation: tool-call-log-fade-up 320ms var(--tool-call-log-ease, cubic-bezier(0.23, 1, 0.32, 1))
-      both;
+    animation: tool-call-log-fade-up
+      var(--tool-call-log-chip-animation-duration, var(--motion-duration, 320ms))
+      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
     transition:
-      background 150ms ease,
-      border-color 150ms ease;
+      background var(--tool-call-log-chip-transition-duration, var(--motion-duration, 150ms))
+        var(--tool-call-log-chip-transition-easing, var(--motion-easing, ease)),
+      border-color var(--tool-call-log-chip-transition-duration, var(--motion-duration, 150ms))
+        var(--tool-call-log-chip-transition-easing, var(--motion-easing, ease));
   }
   .chip:hover {
     background: var(--tool-call-log-chip-hover-background, #f1f1f1);
@@ -288,7 +324,7 @@
   }
 
   .chip.error {
-    color: var(--tool-call-log-error-color, #c93f38);
+    color: var(--tool-call-log-error-color, #9f2d27);
     border-color: var(--tool-call-log-error-border-color, #f2b8b5);
     background: var(--tool-call-log-error-background, #fdf1f0);
   }
@@ -304,7 +340,7 @@
   }
 
   .chip-meta {
-    color: var(--tool-call-log-meta-color, #9a9a9a);
+    color: var(--tool-call-log-meta-color, #666666);
     font-size: var(--tool-call-log-meta-font-size, 0.75rem);
     white-space: nowrap;
     overflow: hidden;
@@ -366,13 +402,14 @@
   }
   .diffstat-removed {
     --pill-background: var(--tool-call-log-removed-background, #fbeceb);
-    --pill-color: var(--tool-call-log-removed-color, #c93f38);
+    --pill-color: var(--tool-call-log-removed-color, #a8302a);
   }
 
-  /* Always portaled to document.body (see `popoverPortal`), so `position:
-     fixed` is the baseline rather than a portal-only override — left/top/
-     z-index come from the inline `popoverStyle`, computed against the live
-     anchor rect. */
+  /* `position: fixed` is the baseline rather than a portal-only override —
+     left/top/z-index come from the inline `popoverStyle`, computed against the
+     live anchor rect, and that is viewport-relative in both portal modes. So
+     `usePortal={false}` (see `popoverPortal`) changes only which ancestors can
+     clip the popover, never how it is placed. */
   .chip-popover {
     position: fixed;
     z-index: var(--tool-call-log-popover-z-index, 1000);
@@ -386,8 +423,9 @@
     border: var(--tool-call-log-popover-border, 1px solid #e4e4e7);
     border-radius: var(--tool-call-log-popover-radius, 10px);
     box-shadow: var(--tool-call-log-popover-shadow, 0 10px 30px rgba(0, 0, 0, 0.12));
-    animation: tool-call-log-fade-up 200ms var(--tool-call-log-ease, cubic-bezier(0.23, 1, 0.32, 1))
-      both;
+    animation: tool-call-log-fade-up
+      var(--tool-call-log-popover-animation-duration, var(--motion-duration, 200ms))
+      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
   }
 
   .popover-detail {

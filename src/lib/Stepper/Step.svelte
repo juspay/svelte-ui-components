@@ -138,10 +138,10 @@
      tokens Step actually renders are set here; the separator is Stepper's to draw. Each
      chain terminates in the same literal Stepper uses, so the two agree by construction. */
   .status-completed {
-    --step-text-color: var(--step-text-completed-color, #24aa5a);
+    --step-text-color: var(--step-text-completed-color, #1a7a44);
     --step-index-container-background-color: var(
       --step-index-container-completed-background-color,
-      #24aa5a
+      #1a7a44
     );
     --step-index-container-border: var(--step-index-container-completed-border, none);
   }
@@ -198,7 +198,7 @@
     height: var(--step-index-container-height, 30px);
     width: var(--step-index-container-width, 30px);
     border-radius: var(--step-index-container-radius, 50%);
-    background-color: var(--step-index-container-background-color, #798fa5cc);
+    background-color: var(--step-index-container-background-color, #55627a);
     /* No border today, so the fallback is `none` — an existing consumer that sets
        nothing renders byte-identically. Shared with .step-icon-container below so
        a status override (see Stepper.svelte) themes the circle whichever of the
@@ -215,7 +215,7 @@
     height: var(--step-index-container-height, 30px);
     width: var(--step-index-container-width, 30px);
     border-radius: var(--step-index-container-radius, 50%);
-    background-color: var(--step-index-container-background-color, #798fa5cc);
+    background-color: var(--step-index-container-background-color, #55627a);
     border: var(--step-index-container-border, none);
     flex-shrink: 0;
     overflow: hidden;
@@ -230,7 +230,8 @@
   .step-spinner {
     width: var(--step-spinner-size, 18px);
     height: var(--step-spinner-size, 18px);
-    animation: stepper-spin 0.8s linear infinite;
+    animation: stepper-spin var(--step-spinner-animation-duration, var(--motion-duration, 0.8s))
+      var(--step-spinner-animation-easing, var(--motion-easing, linear)) infinite;
   }
 
   @keyframes stepper-spin {
@@ -299,7 +300,7 @@
        `normal` — that is the literal fallback, keeping an existing consumer
        byte-identical. */
     font-weight: var(--step-text-font-weight, normal);
-    color: var(--step-text-color, #798fa5cc);
+    color: var(--step-text-color, #55627a);
   }
 
   .step-vertical .step-text {
@@ -317,5 +318,17 @@
 
   .step-vertical .step-badge {
     margin: var(--step-badge-vertical-margin, 4px 0 0 0);
+  }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .step-spinner {
+      animation: none;
+    }
   }
 </style>

@@ -9,7 +9,7 @@
 
 <div class="demo-row">
   <Browser url="https://example.com" title="Example Page" showAddressBar showTabBar>
-    <div style="padding: 20px; background: #f9f9f9; min-height: 100px;">
+    <div style="padding: 20px; background: #f9f9f9; color: #1f2937; min-height: 100px;">
       <p>Browser window content</p>
     </div>
   </Browser>

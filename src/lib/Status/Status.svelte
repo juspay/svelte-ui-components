@@ -92,12 +92,12 @@
      typography applies, so those two declarations must not sit on the element and win. */
   .status-text-default {
     font-weight: var(--status-font-weight, 600);
-    color: var(--status-description-font-color, #2f3841);
+    color: var(--status-description-font-color, light-dark(#3d5a76, #9ab4cc));
   }
 
   .status-description {
     font-weight: var(--status-font-weight, 400);
-    color: var(--status-description-font-color, #436484cc);
+    color: var(--status-description-font-color, light-dark(#3d5a76, #9ab4cc));
     padding: 0px 42px;
     margin-bottom: 25px;
   }

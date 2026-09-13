@@ -62,20 +62,24 @@ named props, which is the only form that works with the library's own components
 
 Override these custom properties to theme the component.
 
-| Variable                      | Default             | CSS Property   | Description                                                                                                                                                                              |
-| ----------------------------- | ------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--carousel-width`            | `300px`             | width          | Width of the carousel container. Read by JS at mount time for slide positioning. Note: `.carousel-container` uses this variable without a fallback; inner elements fall back to `300px`. |
-| `--carousel-height`           | `100px`             | height         | Height of the carousel slides.                                                                                                                                                           |
-| `--carousel-shadow`           | `-`                 | box-shadow     | Box shadow of the carousel container.                                                                                                                                                    |
-| `--carousel-border-radius`    | `0%`                | border-radius  | Corner rounding of the carousel container.                                                                                                                                               |
-| `--carousel-dot-color`        | `#c4c4c4`           | background     | Background color of an inactive dot indicator.                                                                                                                                           |
-| `--carousel-dot-active-color` | `#000000`           | background     | Background color of the active dot indicator.                                                                                                                                            |
-| `--dot-gap`                   | `10px`              | gap            | Gap between dot indicators.                                                                                                                                                              |
-| `--dot-padding-top`           | `10px`              | padding-top    | Top padding above the dot indicators.                                                                                                                                                    |
-| `--dot-width`                 | `5px`               | width          | Width of each dot indicator.                                                                                                                                                             |
-| `--dot-height`                | `5px`               | height         | Height of each dot indicator.                                                                                                                                                            |
-| `--dot-focus-outline`         | `2px solid #000000` | outline        | Focus ring on a keyboard-focused dot.                                                                                                                                                    |
-| `--dot-focus-outline-offset`  | `2px`               | outline-offset | Gap between a focused dot and its focus ring.                                                                                                                                            |
+| Variable                               | Default             | CSS Property   | Description                                                                                                                                                                              |
+| -------------------------------------- | ------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--carousel-width`                     | `300px`             | width          | Width of the carousel container. Read by JS at mount time for slide positioning. Note: `.carousel-container` uses this variable without a fallback; inner elements fall back to `300px`. |
+| `--carousel-height`                    | `100px`             | height         | Height of the carousel slides.                                                                                                                                                           |
+| `--carousel-shadow`                    | `-`                 | box-shadow     | Box shadow of the carousel container.                                                                                                                                                    |
+| `--carousel-border-radius`             | `0%`                | border-radius  | Corner rounding of the carousel container.                                                                                                                                               |
+| `--carousel-dot-color`                 | `#c4c4c4`           | background     | Background color of an inactive dot indicator.                                                                                                                                           |
+| `--carousel-dot-active-color`          | `#000000`           | background     | Background color of the active dot indicator.                                                                                                                                            |
+| `--dot-gap`                            | `10px`              | gap            | Gap between dot indicators.                                                                                                                                                              |
+| `--dot-padding-top`                    | `10px`              | padding-top    | Top padding above the dot indicators.                                                                                                                                                    |
+| `--dot-width`                          | `5px`               | width          | Width of each dot indicator.                                                                                                                                                             |
+| `--dot-height`                         | `5px`               | height         | Height of each dot indicator.                                                                                                                                                            |
+| `--dot-focus-outline`                  | `2px solid #000000` | outline        | Focus ring on a keyboard-focused dot.                                                                                                                                                    |
+| `--dot-focus-outline-offset`           | `2px`               | outline-offset | Gap between a focused dot and its focus ring.                                                                                                                                            |
+| `--carousel-track-transition-duration` | `0.5s`              | transition     | Duration of the slide-track's slide transition. Falls back through `--motion-duration`.                                                                                                  |
+| `--carousel-track-transition-easing`   | `ease-in-out`       | transition     | Easing curve of the slide-track's slide transition. Falls back through `--motion-easing`.                                                                                                |
+| `--carousel-dot-transition-duration`   | `0.3s`              | transition     | Duration of a dot indicator's hover/active-state transition. Falls back through `--motion-duration`.                                                                                     |
+| `--carousel-dot-transition-easing`     | `ease`              | transition     | Easing curve of a dot indicator's hover/active-state transition. Falls back through `--motion-easing`.                                                                                   |
 
 ## Accessibility
 
@@ -103,5 +107,10 @@ Tag: `<sui-carousel>`
 ```html
 <sui-carousel autoplay show-dots></sui-carousel>
 ```
+
+`onkeydown` is a JS-property callback only (`carousel.onkeydown = (event) => ...`) and does not
+dispatch a DOM event: `keydown` is already `HTMLElement`'s own native event, so a real one
+already bubbles out of the shadow root, and a second, synthetic one under the same name would
+double-deliver it to a `carousel.addEventListener('keydown', ...)` listener.
 
 > **Note:** The `views` prop is an array — set it via JavaScript property.

@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Custom elements in a form</title>
+<style>
+  body {
+    font: 15px/1.5 system-ui, sans-serif;
+    margin: 0;
+    padding: 24px 28px;
+    color: #111;
+    background: #fff;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.lede { margin: 0 0 20px; color: #555; max-width: 60ch; }
+  form { display: grid; gap: 14px; max-width: 460px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .actions { display: flex; gap: 10px; margin-top: 6px; }
+  button { font: inherit; padding: 6px 14px; }
+  #out {
+    margin-top: 22px;
+    padding: 14px 16px;
+    background: #0f1115;
+    color: #d7dae0;
+    border-radius: 6px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 14px;
+    min-height: 96px;
+    white-space: pre;
+    max-width: 460px;
+  }
+  #validity { margin-top: 10px; font-weight: 600; }
+  .invalid { color: #c5120a; }
+  .valid { color: #14743a; }
+</style>
+
+<h1>Custom elements in a form</h1>
+<p class="lede">
+  Every control below is a <code>&lt;sui-*&gt;</code> custom element with its own shadow root. What
+  the form collects is printed underneath, live.
+</p>
+
+<form id="signup">
+  <div class="row"><sui-input name="email" value="ada@example.com" label="Email"></sui-input></div>
+  <div class="row"><sui-checkbox name="terms" value="accepted" text="Accept terms" required></sui-checkbox></div>
+  <div class="row"><sui-toggle name="notifications" value="on" text="Notifications" checked></sui-toggle></div>
+  <div class="row">
+    <sui-radio name="pay" value="wallet" text="Wallet" selected-value="wallet"></sui-radio>
+    <sui-radio name="pay" value="cod" text="Cash on delivery" selected-value="wallet"></sui-radio>
+  </div>
+  <div class="row"><sui-slider name="volume" value="41"></sui-slider></div>
+  <div class="actions">
+    <button type="submit" id="submit">Submit</button>
+    <button type="reset" id="reset">Reset</button>
+    <button type="button" id="check">checkValidity()</button>
+  </div>
+</form>
+
+<div id="out" data-pw="wc-form-output">(nothing collected yet)</div>
+<div id="validity" data-pw="wc-form-validity"></div>
+
+<script type="module">
+  const form = document.querySelector('#signup');
+  const out = document.querySelector('#out');
+  const validity = document.querySelector('#validity');
+
+  const render = () => {
+    const entries = [...new FormData(form).entries()];
+    out.textContent = entries.length === 0
+      ? '(the form collects nothing)'
+      : entries.map(([k, v]) => `${k} = ${v}`).join('\n');
+  };
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    render();
+  });
+  form.addEventListener('reset', () => {
+    setTimeout(render, 60);
+  });
+  document.querySelector('#check').addEventListener('click', () => {
+    const ok = form.checkValidity();
+    validity.textContent = ok ? 'form.checkValidity() → true' : 'form.checkValidity() → false';
+    validity.className = ok ? 'valid' : 'invalid';
+  });
+
+  // Radio grouping is a consumer concern: the component reports the click and
+  // the page decides what the group's selection now is.
+  for (const radio of form.querySelectorAll('sui-radio')) {
+    radio.addEventListener('click', () => {
+      for (const sibling of form.querySelectorAll('sui-radio')) {
+        sibling.selectedValue = radio.value;
+      }
+      render();
+    });
+  }
+</script>

@@ -78,3 +78,8 @@ Tag: `<sui-avatar>`
 ```html
 <sui-avatar src="/photo.jpg" alt="User" size="medium"></sui-avatar>
 ```
+
+`onclick` is a JS-property callback only (`avatar.onclick = (event) => ...`) and does not
+dispatch a DOM event: `click` is already `HTMLElement`'s own native event, so a real one already
+bubbles out of the shadow root, and a second, synthetic one under the same name would
+double-deliver it to an `avatar.addEventListener('click', ...)` listener.

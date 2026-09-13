@@ -30,7 +30,16 @@ export type OptionalChatComposerProperties = {
   submitOnEnter?: boolean;
   maxLength?: number;
   streaming?: boolean;
-  recording?: boolean;
+  /**
+   * Voice/dictation state. Accepts the tri-state `'idle' | 'recording' |
+   * 'busy'` -- 'busy' means the control is transcribing: it must not accept a
+   * new press, so the voice button disables itself while busy regardless of
+   * `voiceDisabled`/`disabled`.
+   *
+   * `boolean` is kept working, unchanged, as an alias for one minor cycle:
+   * `true` reads as 'recording', `false` (the default) reads as 'idle'.
+   */
+  recording?: boolean | 'idle' | 'recording' | 'busy';
   attachments?: File[];
   /**
    * Replaces the built-in attachment pill strip above the input row — render a
@@ -78,6 +87,17 @@ export type OptionalChatComposerProperties = {
   actionIcon?: Snippet;
   actionLabel?: string;
   leading?: Snippet;
+  /**
+   * Opt-in sr-only status region (`role="status" aria-live="polite"`) for
+   * narrating composer state changes -- e.g. "Recording. Press Escape to stop
+   * and transcribe." Rendered only when set (an empty string still renders an
+   * emptied region, so a caller can clear it without unmounting). The library
+   * owns only the region, its role and its politeness; the sentences are
+   * product voice and must come from the caller -- never hardcoded here.
+   */
+  statusText?: string;
+  /** Test id on the status region (see `statusText`). */
+  statusTestId?: string;
   testId?: string;
   /** Test id emitted as `data-pw` on the textarea itself (none by default). */
   inputTestId?: string;
@@ -107,6 +127,13 @@ export type ChatComposerEventProperties = {
   onpaste?: (event: ClipboardEvent) => void;
   onstop?: () => void;
   onvoice?: () => void;
+  /**
+   * Fires when Escape is pressed while `recording` is 'recording' (or the
+   * legacy `true`), and only then -- Escape has no effect at any other
+   * dictation state. The library owns no microphone or media APIs, so this is
+   * the seam a caller wires to actually stop dictation.
+   */
+  oncanceldictation?: () => void;
   onattach?: (files: File[]) => void;
   /**
    * Intercepts the attach button: when provided, clicking it calls this instead of

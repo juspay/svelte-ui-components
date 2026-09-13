@@ -70,4 +70,25 @@
       transform: scale(1);
     }
   }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    /* `.dot.pulse` further down sets `animation-name`, and it is both more
+       specific and later, so a lone `.dot` rule here loses to it and the pulse
+       variant keeps animating. Matching its specificity is what makes the guard
+       apply to both variants. */
+    .dot,
+    .dot.pulse {
+      /* The rest frame of both keyframe sets is already the visible one --
+         translateY(0) at full opacity -- so stopping leaves the three dots
+         legible rather than collapsed or invisible. */
+      animation: none;
+      transform: none;
+    }
+  }
 </style>

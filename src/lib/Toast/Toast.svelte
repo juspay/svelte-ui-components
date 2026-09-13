@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { fly } from 'svelte/transition';
+  import { prefersReducedMotion } from '../utils';
   import type { ToastDirection, ToastProperties } from './properties';
   import type { FlyAnimationConfig } from '$lib/types';
   import Img from '../Img/Img.svelte';
@@ -72,6 +73,20 @@
         break;
     }
 
+    // Reduced motion zeroes the OFFSETS as well as the durations, and the offsets
+    // are the part that matters. `fly` interpolates from x/y to 0, so a duration of
+    // 0 with x still at 500 paints the toast 500px away on its first frame and then
+    // snaps -- a stranded frame that reads as a glitch rather than as no animation.
+    // Zeroing both makes it simply appear in place, which is what the preference
+    // asks for. A `@media` block cannot reach any of this: these values are consumed
+    // by `in:fly={...}` / `out:fly={...}`, so the guard has to live here.
+    if (prefersReducedMotion()) {
+      return {
+        in: { x: 0, y: 0, duration: 0 },
+        out: { x: 0, y: 0, duration: 0 }
+      };
+    }
+
     return {
       in: {
         x: inX,
@@ -108,12 +123,22 @@
 </script>
 
 {#if showToast}
+  <!-- `showToast` starts `true` (see the `$state(true)` above), so this
+       `{#if}` is already satisfied on the component's own first render -- a
+       *local* transition only plays when its enclosing block flips true as a
+       later reactive update, not when the block is created already-true,
+       which is what happens every time a caller mounts Toast fresh (e.g.
+       `{#if visible}<Toast .../>{/if}` in the caller). `in:fly|global` plays
+       the intro on creation regardless, matching Sheet's panel transition
+       (Sheet.svelte). `out:fly` needs no such modifier: `hideToast()` always
+       flips an already-mounted block from true to false, a genuine local
+       transition that already fires correctly. -->
   <div
     class={rootClass}
     class:no-page-overlap={!overlapPage}
     role="alert"
     aria-live="assertive"
-    in:fly={animationConfig.in}
+    in:fly|global={animationConfig.in}
     out:fly={animationConfig.out}
     onoutroend={handleAnimationEnd}
     data-pw={testId}
@@ -162,7 +187,7 @@
     padding: var(--toast-padding, 10px);
     font-size: var(--toast-font-size, 14px);
     font-family: var(--toast-font-family, inherit);
-    font-weight: var(--toast-font-weight);
+    font-weight: var(--toast-font-weight, inherit);
     height: var(--toast-height, fit-content);
     border-radius: var(--toast-border-radius, var(--radius, 4px));
     border: var(--toast-border, none);

@@ -81,6 +81,14 @@ A pure-SVG dual-axis chart with two completely independent Y-axes — left (`yAx
 />
 ```
 
+### Keyboard access
+
+Every bar is a focusable `role="button"` element that mirrors pointer hover on focus and
+fires its click event on `Enter`/`Space` — the same family-wide keyboard/tooltip
+contract shared with BarChart, FunnelChart, PieChart and SankeyChart. See
+[PieChart's "Keyboard access" and "Synchronized legend recipe" sections](./PieChart.md#keyboard-access)
+for the full contract.
+
 ### Legend Aggregates
 
 **The aggregate sits beside the legend control, never inside it.** When the
@@ -196,39 +204,40 @@ type DualAxisTooltipContext = {
 
 Override these custom properties to theme the component.
 
-| Variable                         | Default                     | CSS Property     | Description                                       |
-| -------------------------------- | --------------------------- | ---------------- | ------------------------------------------------- |
-| `--chart-background`             | `transparent`               | background       | Background color of the chart container.          |
-| `--chart-font-family`            | `inherit`                   | font-family      | Font family for all chart text.                   |
-| `--chart-transition-duration`    | `0.2s`                      | transition       | Duration of hover/opacity transitions.            |
-| `--chart-axis-color`             | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels. |
-| `--chart-axis-stroke-width`      | `1`                         | stroke-width     | Width of axis lines and tick marks.               |
-| `--chart-axis-font-size`         | `11px`                      | font-size        | Font size of axis tick labels.                    |
-| `--chart-axis-label-color`       | `#333`                      | fill             | Color of axis title text.                         |
-| `--chart-axis-label-font-size`   | `11px`                      | font-size        | Font size of axis title labels.                   |
-| `--chart-gridline-color`         | `#e0e0e0`                   | stroke           | Color of horizontal gridlines.                    |
-| `--chart-gridline-opacity`       | `0.5`                       | stroke-opacity   | Opacity of gridlines.                             |
-| `--chart-gridline-dash`          | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                       |
-| `--chart-tooltip-background`     | `rgba(0,0,0,0.85)`          | background       | Background of the default tooltip.                |
-| `--chart-tooltip-color`          | `#fff`                      | color            | Text color of the default tooltip.                |
-| `--chart-tooltip-font-size`      | `12px`                      | font-size        | Font size of tooltip content.                     |
-| `--chart-tooltip-padding`        | `8px 12px`                  | padding          | Inner padding of the default tooltip.             |
-| `--chart-tooltip-border-radius`  | `4px`                       | border-radius    | Border radius of the default tooltip.             |
-| `--chart-tooltip-shadow`         | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Box shadow on the default tooltip.                |
-| `--chart-legend-gap`             | `16px`                      | gap              | Space between legend items.                       |
-| `--chart-legend-font-size`       | `12px`                      | font-size        | Font size of legend labels.                       |
-| `--chart-legend-swatch-size`     | `12px`                      | width, height    | Size of color swatches in the legend.             |
-| `--chart-legend-color`           | `#333`                      | color            | Color of legend text.                             |
-| `--dual-axis-bar-hover-opacity`  | `1`                         | opacity          | Opacity of bars in the hovered category.          |
-| `--dual-axis-bar-dimmed-opacity` | `0.3`                       | opacity          | Opacity of bars outside the hovered category.     |
-| `--dual-axis-line-stroke-width`  | `2`                         | stroke-width     | Stroke width of line series paths.                |
-| `--dual-axis-dot-stroke`         | `#fff`                      | stroke           | Stroke color around line series dots.             |
-| `--dual-axis-dot-stroke-width`   | `1.5`                       | stroke-width     | Stroke width of line series dots.                 |
-| `--dual-axis-guideline-color`    | `#aaa`                      | stroke           | Color of the vertical hover guideline.            |
-| `--dual-axis-guideline-width`    | `1`                         | stroke-width     | Width of the vertical hover guideline.            |
-| `--dual-axis-guideline-dash`     | `4 3`                       | stroke-dasharray | Dash pattern of the vertical hover guideline.     |
-| `--chart-empty-padding`          | `32px 24px`                 | padding          | Padding around the empty-state message.           |
-| `--chart-empty-color`            | `#9ca3af`                   | color            | Text color of the empty-state message.            |
+| Variable                         | Default                     | CSS Property     | Description                                                                      |
+| -------------------------------- | --------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| `--chart-background`             | `transparent`               | background       | Background color of the chart container.                                         |
+| `--chart-font-family`            | `inherit`                   | font-family      | Font family for all chart text.                                                  |
+| `--chart-transition-duration`    | `0.2s`                      | transition       | Duration of hover/opacity transitions.                                           |
+| `--chart-axis-color`             | `#666`                      | stroke, fill     | Color of axis lines, tick marks, and tick labels.                                |
+| `--chart-axis-stroke-width`      | `1`                         | stroke-width     | Width of axis lines and tick marks.                                              |
+| `--chart-axis-font-size`         | `11px`                      | font-size        | Font size of axis tick labels.                                                   |
+| `--chart-axis-label-color`       | `#333`                      | fill             | Color of axis title text.                                                        |
+| `--chart-axis-label-font-size`   | `11px`                      | font-size        | Font size of axis title labels.                                                  |
+| `--chart-gridline-color`         | `#e0e0e0`                   | stroke           | Color of horizontal gridlines.                                                   |
+| `--chart-gridline-opacity`       | `0.5`                       | stroke-opacity   | Opacity of gridlines.                                                            |
+| `--chart-gridline-dash`          | `4 4`                       | stroke-dasharray | Dash pattern for gridlines.                                                      |
+| `--chart-tooltip-background`     | `rgba(0,0,0,0.85)`          | background       | Background of the default tooltip.                                               |
+| `--chart-tooltip-color`          | `#fff`                      | color            | Text color of the default tooltip.                                               |
+| `--chart-tooltip-font-size`      | `12px`                      | font-size        | Font size of tooltip content.                                                    |
+| `--chart-tooltip-padding`        | `8px 12px`                  | padding          | Inner padding of the default tooltip.                                            |
+| `--chart-tooltip-border-radius`  | `4px`                       | border-radius    | Border radius of the default tooltip.                                            |
+| `--chart-tooltip-shadow`         | `0 2px 8px rgba(0,0,0,0.2)` | box-shadow       | Box shadow on the default tooltip.                                               |
+| `--chart-legend-gap`             | `16px`                      | gap              | Space between legend items.                                                      |
+| `--chart-legend-font-size`       | `12px`                      | font-size        | Font size of legend labels.                                                      |
+| `--chart-legend-swatch-size`     | `12px`                      | width, height    | Size of color swatches in the legend.                                            |
+| `--chart-legend-color`           | `#333`                      | color            | Color of legend text.                                                            |
+| `--dual-axis-bar-hover-opacity`  | `1`                         | opacity          | Opacity of bars in the hovered category.                                         |
+| `--dual-axis-bar-dimmed-opacity` | `0.3`                       | opacity          | Opacity of bars outside the hovered category.                                    |
+| `--dual-axis-line-stroke-width`  | `2`                         | stroke-width     | Stroke width of line series paths.                                               |
+| `--dual-axis-dot-stroke`         | `#fff`                      | stroke           | Stroke color around line series dots.                                            |
+| `--dual-axis-dot-stroke-width`   | `1.5`                       | stroke-width     | Stroke width of line series dots.                                                |
+| `--dual-axis-guideline-color`    | `#aaa`                      | stroke           | Color of the vertical hover guideline.                                           |
+| `--dual-axis-guideline-width`    | `1`                         | stroke-width     | Width of the vertical hover guideline.                                           |
+| `--dual-axis-guideline-dash`     | `4 3`                       | stroke-dasharray | Dash pattern of the vertical hover guideline.                                    |
+| `--chart-empty-padding`          | `32px 24px`                 | padding          | Padding around the empty-state message.                                          |
+| `--chart-empty-color`            | `#9ca3af`                   | color            | Text color of the empty-state message.                                           |
+| `--chart-transition-easing`      | `ease`                      | transition       | Easing curve of hover/opacity transitions. Falls back through `--motion-easing`. |
 
 ## Dark mode
 
@@ -247,20 +256,72 @@ Every `--chart-*` / component token can still be overridden per theme; overrides
 
 ## Web Component
 
+`sui-dual-axis-bar-chart` is registered by the web-component bundle. It was
+gated on `ChartTooltip` resolving its portal destination from the node's own
+root instead of hardcoding `document.body` — a portalled node relocated outside
+the shadow root would otherwise keep its markup and lose every style rule that
+was scoped to that root. That is fixed, so the element ships.
+
 ```html
-<sui-dual-axis-bar-chart
-  test-id="my-chart"
-  show-gridlines="true"
-  show-legend="true"
-></sui-dual-axis-bar-chart>
+<script type="module" src="@juspay/svelte-ui-components/wc"></script>
+
+<sui-dual-axis-bar-chart aspect-ratio="2" max-height="360" tooltip-portal>
+</sui-dual-axis-bar-chart>
+
 <script>
   const chart = document.querySelector('sui-dual-axis-bar-chart');
-  chart.categories = ['Jan', 'Feb', 'Mar'];
+  chart.categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
   chart.series = [
-    { name: 'Revenue', data: [100, 200, 150], yAxisIndex: 0, type: 'column' },
-    { name: 'CTR', data: [3.2, 4.1, 3.7], yAxisIndex: 1, type: 'line' }
+    { name: 'Revenue ($)', data: [42000, 38500, 51200, 46800, 58300, 62100], yAxisIndex: 0 },
+    { name: 'CTR (%)', data: [3.2, 2.8, 4.1, 3.7, 4.8, 5.2], yAxisIndex: 1, type: 'line' }
   ];
   chart.leftAxis = { title: 'Revenue ($)' };
   chart.rightAxis = { title: 'CTR (%)', valueFormat: (v) => `${v.toFixed(1)}%` };
+  chart.onbarclick = ({ categoryIndex, context }) => console.log(categoryIndex, context);
 </script>
 ```
+
+**Scalar props are kebab-case attributes**, coerced to their declared type:
+`show-gridlines`, `show-legend`, `bar-radius`, `bar-padding`, `aspect-ratio`,
+`max-height`, `min-height`, `min-bar-height`, `tooltip-portal`,
+`interactive-legend`, `hide-legend-below`, `test-id`, `classes`. Booleans are
+presence-based: `show-gridlines` and `show-legend` default on, so the attribute
+only needs adding to opt into `tooltip-portal` / `interactive-legend`, and
+removing `show-gridlines` / `show-legend` (or setting the JS property to
+`false`) turns them off.
+
+**Everything else is a JS property**, because arrays, objects and functions
+cannot cross the HTML-attribute boundary:
+
+```js
+const chart = document.querySelector('sui-dual-axis-bar-chart');
+chart.categories = categories;
+chart.series = series;
+chart.leftAxis = { title: 'Revenue ($)', color: '#4e79a7' };
+chart.rightAxis = { title: 'CTR (%)', valueFormat: (v) => `${v.toFixed(1)}%` };
+chart.margin = { left: 64, right: 64 };
+chart.onbarclick = ({ categoryIndex, context }) => console.log(categoryIndex, context);
+```
+
+`onbarclick` also dispatches a same-named DOM custom event (bubbles, composed) with
+`detail` set to the same `{ categoryIndex, context }` object, for a consumer who only
+calls `addEventListener`:
+
+```js
+chart.addEventListener('barclick', (e) => console.log(e.detail.categoryIndex, e.detail.context));
+```
+
+### Slots
+
+None. Unlike `sui-sankey-chart`'s `empty` or `sui-pie-chart`'s `center`/`empty`,
+`DualAxisBarChart` has no non-parameterized snippet to bridge — its empty-data
+state ("No data available.") is plain markup, not a snippet prop, so there is
+nothing for a `<slot>` to replace.
+
+> **Svelte-only:** `tooltipSnippet` (receives `DualAxisTooltipContext`) takes an
+> argument, so it cannot be expressed as a named slot: a Web Component `<slot>`
+> projects markup and does not forward Svelte snippet parameters, so the hovered
+> category's series values would be silently dropped. It stays a JS-property-only
+> prop reachable only from a Svelte consumer (only Svelte can construct a
+> `Snippet` value) — use the Svelte component directly when you need a custom
+> tooltip.

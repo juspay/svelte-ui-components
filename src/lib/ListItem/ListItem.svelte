@@ -38,6 +38,28 @@
     id
   }: ListItemProperties = $props();
 
+  // DESIGN_PRINCIPLES.md principle 4: a region only takes role="button" + a tab stop when
+  // it was actually given its own click handler -- otherwise a single list item nests up to
+  // four buttons inside a button and puts five tab stops where the consumer wired one
+  // handler. Each of the four sub-regions is checked against its own handler prop here. The
+  // root is intentionally NOT re-gated the same way: its role/tabindex stay governed by the
+  // pre-existing `itemRole`/`suppressRoleAndTabindex` contract (see below), unconditional on
+  // onitemclick, matching the library's documented default ("ListItem renders synthetic
+  // button roles and tab stops by default").
+  let topSectionInteractive = $derived(
+    !suppressRoleAndTabindex && typeof ontopsectionclick === 'function'
+  );
+  let leftImageInteractive = $derived(
+    !suppressRoleAndTabindex && typeof onleftimageclick === 'function'
+  );
+  let centerTextInteractive = $derived(
+    !suppressRoleAndTabindex && typeof oncentertextclick === 'function'
+  );
+  let rightImageInteractive = $derived(
+    !suppressRoleAndTabindex && typeof onrightimageclick === 'function'
+  );
+  let itemInteractive = $derived(!suppressRoleAndTabindex && itemRole !== 'option');
+
   function handleLeftImageClick(event: MouseEvent): void {
     onleftimageclick?.(event);
   }
@@ -57,6 +79,49 @@
   function handleTopSectionClick(event: MouseEvent): void {
     ontopsectionclick?.(event);
   }
+
+  // A region with role="button" needs Enter/Space to do what a click does (divs get no
+  // free keyboard activation the way a native <button> would). Re-dispatching a real click
+  // on the element itself -- rather than calling its handler directly -- keeps one
+  // activation path and lets that click bubble through nested zones exactly like a pointer
+  // click already does. The `event.target === event.currentTarget` guard matters only
+  // because zones can nest (a consumer-supplied root handler alongside a sub-region
+  // handler): without it, the same keydown bubbling from a focused, activated sub-region up
+  // through an also-interactive ancestor would synthesize a second click at every ancestor
+  // it passes through.
+  function activateOnEnterOrSpace(interactive: boolean, event: KeyboardEvent): void {
+    onkeydown?.(event);
+    if (!interactive || event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    event.preventDefault();
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.click();
+    }
+  }
+
+  function handleItemKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(itemInteractive, event);
+  }
+
+  function handleTopSectionKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(topSectionInteractive, event);
+  }
+
+  function handleLeftImageKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(leftImageInteractive, event);
+  }
+
+  function handleCenterTextKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(centerTextInteractive, event);
+  }
+
+  function handleRightImageKeydown(event: KeyboardEvent): void {
+    activateOnEnterOrSpace(rightImageInteractive, event);
+  }
 </script>
 
 {#if (typeof leftImageUrl === 'string' && leftImageUrl.length > 0) || (typeof rightImageUrl === 'string' && rightImageUrl.length > 0) || (typeof label === 'string' && label.length > 0) || typeof leftContent === 'function' || typeof centerContent === 'function' || typeof rightContent === 'function' || typeof bottomContent === 'function'}
@@ -69,7 +134,7 @@
       class="item"
       class:prevent-focus={preventFocus}
       onclick={handleItemClick}
-      {onkeydown}
+      onkeydown={handleItemKeydown}
       role={suppressRoleAndTabindex ? null : (itemRole ?? 'button')}
       tabindex={suppressRoleAndTabindex ? null : itemRole === 'option' ? -1 : 0}
       aria-selected={suppressRoleAndTabindex ? null : ariaSelected}
@@ -81,9 +146,9 @@
         class="top-section"
         class:prevent-focus={preventFocus}
         onclick={handleTopSectionClick}
-        {onkeydown}
-        role={suppressRoleAndTabindex ? null : 'button'}
-        tabindex={suppressRoleAndTabindex ? null : 0}
+        onkeydown={handleTopSectionKeydown}
+        role={topSectionInteractive ? 'button' : null}
+        tabindex={topSectionInteractive ? 0 : null}
         data-pw={topSectionTestId}
         testID={topSectionTestId}
       >
@@ -92,9 +157,9 @@
             <div
               class:prevent-focus={preventFocus}
               onclick={handleLeftImageClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleLeftImageKeydown}
+              role={leftImageInteractive ? 'button' : null}
+              tabindex={leftImageInteractive ? 0 : null}
               data-pw={leftImageTestId}
               testID={leftImageTestId}
             >
@@ -111,9 +176,9 @@
               class="center-text"
               class:prevent-focus={preventFocus}
               onclick={handleCenterTextClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleCenterTextKeydown}
+              role={centerTextInteractive ? 'button' : null}
+              tabindex={centerTextInteractive ? 0 : null}
               data-pw={centerTextTestId}
               testID={centerTextTestId}
             >
@@ -133,9 +198,9 @@
             <div
               class:prevent-focus={preventFocus}
               onclick={handleRightImageClick}
-              {onkeydown}
-              role={suppressRoleAndTabindex ? null : 'button'}
-              tabindex={suppressRoleAndTabindex ? null : 0}
+              onkeydown={handleRightImageKeydown}
+              role={rightImageInteractive ? 'button' : null}
+              tabindex={rightImageInteractive ? 0 : null}
               data-pw={rightImageTestId}
               testID={rightImageTestId}
             >
@@ -189,6 +254,29 @@
 
     100% {
       width: 100%;
+    }
+  }
+
+  /* Same hazard as Button's progress-bar loader (see its comment for the full
+     reasoning): this bar's width is a real elapsed-time signal over
+     `--list-item-loader-duration`, not decoration, so a bare `animation: none`
+     would freeze it at the base rule's `width: 100%` and read as "finished"
+     for the entire duration instead of "still loading". Discrete steps keep
+     the width an honest (if coarser) lower bound on elapsed time -- it can
+     only under-report, never claim to be further along than it is -- while
+     dropping the continuous slide prefers-reduced-motion targets. Lives in
+     the component's own <style> because that is the only stylesheet that
+     reaches inside the shadow root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .item-loader {
+      /* A LITERAL step count, deliberately not a token. `steps()` is invalid
+         below 1, and an invalid value does not degrade to a safer stepped
+         default: the whole declaration is dropped and the property falls back to
+         the base rule's easing, restoring the continuous slide this block exists
+         to remove. A consumer passing 0 to "just freeze it" would silently
+         switch the guard off for every user who asked for reduced motion, and a
+         guard that fails OPEN without saying so is worse than no guard. */
+      animation-timing-function: steps(5, jump-end);
     }
   }
 
@@ -256,7 +344,7 @@
     margin: var(--list-item-center-text-margin);
     border: var(--list-item-center-text-border);
     cursor: var(--list-item-center-text-cursor, pointer);
-    font-family: var(--list-item-center-text-font-family);
+    font-family: var(--list-item-center-text-font-family, inherit);
   }
 
   .center-content {
@@ -309,11 +397,29 @@
     margin: var(--list-item-right-content-text-margin, 0px);
     border: var(--list-item-right-content-text-border);
     cursor: var(--list-item-right-content-text-cursor, pointer);
-    font-family: var(--list-item-right-content-text-font-family);
+    font-family: var(--list-item-right-content-text-font-family, inherit);
     justify-content: var(--list-item-right-content-text-justify-content);
   }
 
   .prevent-focus:focus {
     outline: none;
+  }
+  /* The loader is not the only motion in this file, and this block sits at the
+     END on purpose: `.item` is declared after the guard above, so an override
+     placed there would lose the same-specificity tie on source order -- the
+     cascade trap BrandLoader's own guard had to account for.
+     `--image-transition` is not a transition on this element at all; it is a
+     custom property handed DOWN to the Img child, and a custom property is the
+     only thing that crosses that boundary. Setting `transition: none` here would
+     never reach the image, so the property itself is neutralised. */
+  @media (prefers-reduced-motion: reduce) {
+    .item {
+      transition: none;
+    }
+
+    .left-content,
+    .right-img-wrapper {
+      --image-transition: none;
+    }
   }
 </style>

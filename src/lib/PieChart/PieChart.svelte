@@ -11,9 +11,10 @@
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { truncateToWidth, placedLabelRect, dropOverlapping } from '$lib/_chart/labels';
   import type { LabelRect } from '$lib/_chart/labels';
-  import type { LegendItem } from '$lib/_chart/types';
+  import type { LegendItem, TooltipAnchor } from '$lib/_chart/types';
   import { SvelteMap } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────
@@ -38,6 +39,7 @@
     onslicehover,
     testId,
     classes,
+    tooltipPortal = false,
     semiCircle = false,
     legendShowValues = false,
     legendPosition = 'bottom',
@@ -57,6 +59,7 @@
   let chartWidth = $state(0);
   let chartHeight = $state(0);
   let hoveredIndex = $state<number | null>(null);
+  let focusedIndex = $state<number | null>(null);
   let programmaticIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
@@ -87,9 +90,25 @@
   });
 
   // ── Active index ───────────────────────────────────────────────
-  // Precedence: mouse hover > declarative highlightedIndex prop > imperative API.
-
-  let activeIndex = $derived<number | null>(hoveredIndex ?? highlightedIndex ?? programmaticIndex);
+  // Precedence: keyboard focus > mouse hover > declarative highlightedIndex
+  // prop > imperative API.
+  //
+  // hoveredIndex and focusedIndex are deliberately separate pieces of state
+  // (not one index shared by both input sources): a pointer leaving a slice
+  // must never erase that slice's focus, and a late/stale pointerleave --
+  // which real browsers fire *after* a focus event when focusing an
+  // off-screen slice auto-scrolls the page under an unmoved cursor -- must
+  // not be able to clobber the focus highlight either. Keeping the two
+  // states apart makes that impossible by construction rather than by event
+  // ordering. Focus wins outright when both are set: hovering slice A while
+  // slice B holds focus keeps B highlighted (focus is the sticky, "current"
+  // state a keyboard user is tracking; a stray pointer position elsewhere
+  // must not steal it), and A regains hover feedback the moment focus moves
+  // off B.
+  let pointerOrFocusIndex = $derived<number | null>(focusedIndex ?? hoveredIndex);
+  let activeIndex = $derived<number | null>(
+    pointerOrFocusIndex ?? highlightedIndex ?? programmaticIndex
+  );
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -299,15 +318,25 @@
 
   // ── Tooltip ────────────────────────────────────────────────────
 
-  // Tooltip visibility tracks hover only. activeIndex also covers declarative/imperative
-  // highlights, but those arrive without mouse coordinates, so a tooltip driven by them
-  // would render at the top-left (mouseX/mouseY still 0). Highlight styling uses
-  // activeIndex; the tooltip stays gated on hoveredIndex.
+  // Looks a slice up by its stable `index` field rather than array position --
+  // `slices` is derived from `data` and its ordering is not a contract, while
+  // `activeIndex`/`hoveredIndex` are always original-data indices (see the
+  // aria-label and legend, which key off the same index).
+  function sliceAt(i: number) {
+    return slices.find((s) => s.index === i) ?? null;
+  }
+
+  // Tooltip visibility tracks hover-or-focus (pointerOrFocusIndex), not the
+  // declarative highlightedIndex prop or the imperative API: those arrive
+  // without mouse coordinates, so a tooltip driven by them would render at
+  // the top-left (mouseX/mouseY still 0). Highlight styling uses activeIndex
+  // (which also covers those two lower-precedence sources); the tooltip
+  // stays gated on direct interaction only.
   let tooltipData = $derived.by(() => {
-    if (hoveredIndex === null || !slices[hoveredIndex]) {
+    if (pointerOrFocusIndex === null || !slices[pointerOrFocusIndex]) {
       return null;
     }
-    const s = slices[hoveredIndex];
+    const s = slices[pointerOrFocusIndex];
     return {
       title: s.label,
       items: [
@@ -320,27 +349,127 @@
     };
   });
 
+  /**
+   * Data-space anchor at the slice's own mid-angle, independent of pointer
+   * position. Legend hover and keyboard focus have no cursor coordinates, so
+   * an anchor keeps the tooltip landing in the same place a pointer hover
+   * would -- one contract for all three activation paths.
+   */
+  let anchor = $derived.by<TooltipAnchor | null>(() => {
+    if (pointerOrFocusIndex === null) {
+      return null;
+    }
+    const slice = sliceAt(pointerOrFocusIndex);
+    if (slice === null) {
+      return null;
+    }
+    const midR = (innerR + outerR) / 2;
+    return {
+      x: cx + midR * Math.cos(slice.midAngle),
+      y: cy + midR * Math.sin(slice.midAngle),
+      side: Math.sin(slice.midAngle) <= 0 ? 'top' : 'bottom'
+    };
+  });
+
+  // ── Assistive-tech status region ───────────────────────────────
+  // Mirrors the tooltip's exact text (value AND percentage) into a live region
+  // every slice is described-by, so a screen reader user gets the same detail a
+  // pointer hover shows without needing pointer hover -- and, because it reads
+  // activeIndex rather than hoveredIndex, it also announces the declarative
+  // highlightedIndex prop and the imperative ChartHighlightAPI, neither of
+  // which fires a focus event of its own.
+  const statusId = `pie-status-${instanceId}`;
+  let statusText = $derived.by(() => {
+    if (activeIndex === null) {
+      return '';
+    }
+    const s = sliceAt(activeIndex);
+    return s === null ? '' : `${s.label}: ${format(s.value)} (${pctFormat(s.value)})`;
+  });
+
   // ── Interactions ───────────────────────────────────────────────
+  // Family-wide contract shared with BarChart/FunnelChart/DualAxisBarChart:
+  // pointer hover and keyboard focus feed SEPARATE state (hoveredIndex /
+  // focusedIndex -- see activeIndex above for why), read together as one
+  // "direct interaction" precedence tier ahead of the declarative
+  // highlightedIndex prop and the imperative ChartHighlightAPI. Legend
+  // pointer/focus events drive the exact same two variables a slice's own
+  // events would, so a legend row is just another entry point into the same
+  // state, not a third source. Enter/Space on a focused slice invokes the
+  // same click callback a pointer click would.
 
   function trackMouse(e: MouseEvent) {
-    if (containerEl === null) {
+    const position = pointerPositionIn(containerEl, e);
+    if (position !== null) {
+      mouseX = position.x;
+      mouseY = position.y;
+    }
+  }
+
+  // onslicehover mirrors the combined pointer-or-focus index, once per
+  // actual change -- e.g. a pointer leaving a slice that is still
+  // keyboard-focused must not report a hover-cleared event for a highlight
+  // that never went away.
+  let lastNotifiedIndex: number | null = null;
+  function notifyHoverChange(): void {
+    const next = pointerOrFocusIndex;
+    if (next === lastNotifiedIndex) {
       return;
     }
-    const rect = containerEl.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
+    lastNotifiedIndex = next;
+    onslicehover?.(next === null ? null : { index: next, slice: data[next] });
   }
 
-  function handleEnter(e: MouseEvent, i: number) {
+  function handlePointerEnter(e: MouseEvent, i: number) {
     hoveredIndex = i;
     trackMouse(e);
-    onslicehover?.({ index: i, slice: data[i] });
+    notifyHoverChange();
   }
 
-  function handleLeave() {
-    hoveredIndex = null;
-    onslicehover?.(null);
+  // Legend rows have no SVG-space mouse coordinates to track, unlike a slice.
+  function handleLegendHover(i: number) {
+    hoveredIndex = i;
+    notifyHoverChange();
   }
+
+  // Wired to pointerleave/mouseleave on both slices and legend rows. Clears
+  // ONLY the hover half of the state -- never focusedIndex -- so a late,
+  // stale pointerleave (see activeIndex's comment) cannot erase a slice's
+  // focus highlight.
+  function handlePointerLeave() {
+    hoveredIndex = null;
+    notifyHoverChange();
+  }
+
+  // Wired to focus on both slices and legend rows.
+  function handleFocus(i: number) {
+    focusedIndex = i;
+    notifyHoverChange();
+  }
+
+  // Wired to blur on both slices and legend rows. Clears ONLY the focus
+  // half; a pointer that happens to still be over the slice keeps it
+  // hovered.
+  function handleBlur() {
+    focusedIndex = null;
+    notifyHoverChange();
+  }
+
+  function handleKeydown(e: KeyboardEvent, i: number) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onsliceclick?.({ index: i, slice: data[i] });
+    }
+  }
+
+  // Touch taps have no pointerleave/blur: dismiss when a pointerdown lands outside.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (hoveredIndex === null) {
+      return;
+    }
+    return dismissOnOutsidePointerDown(containerEl, handlePointerLeave);
+  });
 </script>
 
 <div
@@ -353,8 +482,40 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
+    <!-- Mirrors the tooltip's own text for every activation path (pointer, focus,
+         declarative highlightedIndex, imperative ChartHighlightAPI) -- see statusText. -->
+    <div class="sr-only" role="status" aria-live="polite" id={statusId} data-pw="pie-status">
+      {statusText}
+    </div>
+
     {#if showLegend && !legendShowValues}
-      <Legend items={legendItems} position="top" />
+      <Legend items={legendItems} position="top">
+        {#snippet customSnippet(syncItems)}
+          <!-- Synchronized legend recipe: hovering/focusing an item highlights its
+               slice via the same hoveredIndex a pointer hover over the slice itself
+               would set -- highlighting, not a visibility toggle (see Legend.svelte's
+               separate onToggle path, used by Bar/DualAxis to show/hide a series). -->
+          <div class="pie-legend-sync">
+            {#each syncItems as item, i (i)}
+              <button
+                type="button"
+                class="legend-item pie-legend-sync-item"
+                class:legend-sync-active={activeIndex === i}
+                data-pw={`pie-legend-sync-${i}`}
+                testID={`pie-legend-sync-${i}`}
+                onpointerenter={() => handleLegendHover(i)}
+                onpointerleave={handlePointerLeave}
+                onfocus={() => handleFocus(i)}
+                onblur={handleBlur}
+                onclick={() => onsliceclick?.({ index: i, slice: data[i] })}
+              >
+                <span class="legend-swatch" style="background: {item.color}"></span>
+                <span class="legend-label">{item.label}</span>
+              </button>
+            {/each}
+          </div>
+        {/snippet}
+      </Legend>
     {/if}
 
     <ChartContainer
@@ -366,18 +527,22 @@
     >
       <g transform="translate({cx}, {cy})">
         {#each slices as slice (slice.index)}
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
           <path
             class="slice"
             class:hovered={activeIndex === slice.index}
             class:dimmed={activeIndex !== null && activeIndex !== slice.index}
             d={slice.path}
             fill={slice.color}
+            tabindex="0"
+            role="button"
             aria-label="{slice.label}: {format(slice.value)}"
-            onmouseenter={(e) => handleEnter(e, slice.index)}
+            aria-describedby={statusId}
+            onmouseenter={(e) => handlePointerEnter(e, slice.index)}
             onmousemove={trackMouse}
-            onmouseleave={handleLeave}
+            onmouseleave={handlePointerLeave}
+            onfocus={() => handleFocus(slice.index)}
+            onblur={handleBlur}
+            onkeydown={(e) => handleKeydown(e, slice.index)}
             onclick={() => onsliceclick?.({ index: slice.index, slice: data[slice.index] })}
           />
           {#if visibleSliceLabels.has(slice.index)}
@@ -440,12 +605,31 @@
       </div>
     {/if}
 
-    {#if typeof tooltipSnippet === 'function' && hoveredIndex !== null && data[hoveredIndex]}
-      <div class="chart-tooltip-slot" style="left: {mouseX + 12}px; top: {mouseY - 12}px;">
-        {@render tooltipSnippet(data[hoveredIndex], hoveredIndex)}
-      </div>
+    {#if typeof tooltipSnippet === 'function'}
+      <ChartTooltip
+        data={tooltipData}
+        {mouseX}
+        {mouseY}
+        {anchor}
+        portal={tooltipPortal}
+        originEl={containerEl}
+        unstyled
+      >
+        {#snippet content()}
+          {#if pointerOrFocusIndex !== null && data[pointerOrFocusIndex]}
+            {@render tooltipSnippet(data[pointerOrFocusIndex], pointerOrFocusIndex)}
+          {/if}
+        {/snippet}
+      </ChartTooltip>
     {:else}
-      <ChartTooltip data={tooltipData} {mouseX} {mouseY} />
+      <ChartTooltip
+        data={tooltipData}
+        {mouseX}
+        {mouseY}
+        {anchor}
+        portal={tooltipPortal}
+        originEl={containerEl}
+      />
     {/if}
   {/if}
 </div>
@@ -459,8 +643,10 @@
     stroke: var(--piechart-stroke-color, #fff);
     stroke-width: var(--piechart-stroke-width, 2);
     transition:
-      transform var(--chart-transition-duration, 0.2s) ease,
-      opacity var(--chart-transition-duration, 0.2s) ease;
+      transform var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease));
     transform-origin: 0 0;
     cursor: pointer;
   }
@@ -470,6 +656,10 @@
   }
   .slice.dimmed {
     opacity: var(--piechart-dimmed-opacity, 0.3);
+  }
+  .slice:focus-visible {
+    outline: var(--piechart-slice-focus-outline, 2px solid currentColor);
+    outline-offset: var(--piechart-slice-focus-outline-offset, 2px);
   }
   .slice-label {
     fill: var(--piechart-label-color, #333);
@@ -495,15 +685,65 @@
     z-index: 2;
     pointer-events: none;
   }
-  .chart-tooltip-slot {
-    position: absolute;
-    z-index: 10;
-    pointer-events: none;
-  }
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);
     color: var(--chart-empty-color, #9ca3af);
     text-align: center;
+  }
+  /* Standard visually-hidden recipe (matches ChatComposer's .sr-only): present
+     for assistive tech, removed from layout and the visual canvas. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  .pie-legend-sync {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--chart-legend-gap, 16px);
+    font-family: var(--chart-font-family, inherit);
+    padding: 8px 0;
+  }
+  .pie-legend-sync-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    margin: 0;
+    padding: var(--piechart-legend-sync-padding, 2px 4px);
+    font: inherit;
+    cursor: var(--cursor, pointer);
+    border-radius: var(--piechart-legend-sync-radius, var(--radius, 4px));
+  }
+  .pie-legend-sync-item .legend-swatch {
+    display: inline-block;
+    width: var(--chart-legend-swatch-size, 12px);
+    height: var(--chart-legend-swatch-size, 12px);
+    border-radius: var(--chart-swatch-radius, 2px);
+    flex-shrink: 0;
+  }
+  .pie-legend-sync-item .legend-label {
+    font-size: var(--chart-legend-font-size, 12px);
+    color: var(--chart-legend-color, light-dark(#333, #e5e7eb));
+  }
+  .pie-legend-sync-item.legend-sync-active {
+    background: var(
+      --piechart-legend-sync-active-background,
+      light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.1))
+    );
+  }
+  .pie-legend-sync-item:focus-visible {
+    outline: var(--piechart-legend-sync-focus-outline, 2px solid currentColor);
+    outline-offset: 2px;
   }
   .pie-legend-values {
     display: flex;

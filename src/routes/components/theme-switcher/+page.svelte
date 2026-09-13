@@ -47,7 +47,7 @@
       }}
     />
     {#if callbackValue}
-      <p style="margin-top: 8px; font-size: 13px; color: #666;">
+      <p style="margin-top: 8px; font-size: 13px; color: var(--doc-text-muted, #666);">
         value: <code>{callbackValue}</code> &bull; resolved: <code>{callbackResolved}</code>
       </p>
     {/if}

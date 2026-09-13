@@ -8,7 +8,13 @@
   <h1>BrandLoader</h1>
 </div>
 
-<div class="demo-row">
+<!-- BrandLoader is a full-screen splash (100vw/100vh). The component now caps
+     itself to whatever box it is given, so the width no longer overflows this
+     column. Height still needs a number from the page: left at 100vh the card
+     would be taller than the viewport, and the loader's content -- correctly
+     centred within that card -- would sit well below the middle of what you can
+     actually see. --brand-loader-height is the documented way to say so. -->
+<div class="demo-row" style="--brand-loader-height: 360px;">
   <BrandLoader
     brandLogoURL="{base}/demo-media/placeholder-square.svg"
     brandText="Loading"

@@ -29,6 +29,11 @@ ${props}
 `;
 
 describe('phase 1 wrapper declarations', () => {
+  // Whole-repository scan; see the note on the sibling check in
+  // rename-internal-usages.test.ts. Timing, not correctness.
+  // The idempotence check, and the reason the transform is safe to keep in the
+  // tree: it plans from the parity ratchet's `missing` list, which is empty
+  // once the declarations exist, so a second --apply rewrites nothing.
   it(
     'has nothing left to do, because every declaration is already applied',
     () => {

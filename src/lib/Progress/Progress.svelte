@@ -107,4 +107,24 @@
       transform: translateX(400%);
     }
   }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .bar.indeterminate {
+      /* `animation: none` alone would strand a 30%-wide bar at the left of the
+         track, which is indistinguishable from determinate 30% progress -- the
+         one reading that is actually wrong. A full-width bar at reduced opacity
+         says "busy, amount unknown", which is what indeterminate means and what
+         aria-valuetext already announces. */
+      width: 100%;
+      transform: none;
+      animation: none;
+      opacity: var(--progress-indeterminate-reduced-motion-opacity, 0.5);
+    }
+  }
 </style>

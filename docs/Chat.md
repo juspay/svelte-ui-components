@@ -239,3 +239,40 @@ Tag: `<sui-chat>`
 ```
 
 Set `.messages`, `.onsend`, and other object/array props via JavaScript. Scroll controls map to `scroll-policy`, `pin-hold`, `jump`, `jump-label`, and the `.jumpIcon` / `.onscrollstate` properties; `onscrollstate` receives `{ atBottom, scrollable }`.
+
+### Web Component Events
+
+`onsend`, `onsuggestion`, `onstop`, `onvoice`, `onattach`, `onretry`, `onfeedback` and `onscrollstate`
+are available as JS properties, and each also dispatches a same-named DOM custom event (bubbles,
+composed) for a consumer who only calls `addEventListener`: `send`'s detail is
+`{ value, attachments }`, `suggestion`'s is `{ value, index }`, `feedback`'s is
+`{ value, message }`, `scrollstate`'s is the `{ atBottom, scrollable }` state object as-is,
+`attach`'s is the dropped `File[]` array as-is, and `stop`/`retry` carry no detail:
+
+```js
+const chat = document.querySelector('sui-chat');
+chat.addEventListener('send', (e) => submit(e.detail.value, e.detail.attachments));
+chat.addEventListener('feedback', (e) => rate(e.detail.value, e.detail.message));
+chat.addEventListener('scrollstate', (e) => setJumpVisible(!e.detail.atBottom));
+```
+
+`onclose` stays a JS-property-only callback and does not dispatch a DOM event: `close` is already
+`HTMLElement`'s own native event, so a `chat.addEventListener('close', ...)` listener would receive
+both the real one and a synthetic one under the same name.
+
+### Slots
+
+| Slot Name          | Maps to Snippet   | Description                                                                                                                                                                                                                             |
+| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `header-avatar`    | `headerAvatar`    | Brand/avatar mark in the header. Takes effect only once slotted — an unslotted `<sui-chat>` keeps falling back to `image`/no-avatar instead of a blank space, so a JS-assigned `headerAvatar` still works when this slot is left empty. |
+| `header-actions`   | `headerActions`   | Extra inline header actions.                                                                                                                                                                                                            |
+| `header-content`   | `headerContent`   | Extra content as a full-width second row in the header (toolbar, status…).                                                                                                                                                              |
+| `empty`            | `empty`           | Empty-state content, shown when there are no messages.                                                                                                                                                                                  |
+| `composer-leading` | `composerLeading` | Content before the composer input.                                                                                                                                                                                                      |
+| `send-icon`        | `sendIcon`        | Custom send-button icon. Defaults to the built-in send glyph.                                                                                                                                                                           |
+| `stop-icon`        | `stopIcon`        | Custom stop-button icon. Defaults to the built-in stop glyph.                                                                                                                                                                           |
+| `voice-icon`       | `voiceIcon`       | Custom voice-button icon. Defaults to the built-in mic glyph.                                                                                                                                                                           |
+| `attach-icon`      | `attachIcon`      | Custom attach-button icon. Defaults to the built-in paperclip glyph.                                                                                                                                                                    |
+| `jump-icon`        | `jumpIcon`        | Custom jump-to-latest icon. Defaults to the built-in chevron glyph.                                                                                                                                                                     |
+
+> **Svelte-only:** `message` (receives `ChatMessageData`), `messageBody` (receives `ChatMessageData`), `messageAttachments` (receives `ChatMessageData`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.

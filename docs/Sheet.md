@@ -195,6 +195,22 @@ A dismissible sheet with a localized overlay label (`overlay-aria-label`, reflec
 </sui-sheet>
 ```
 
+### Web Component Events
+
+`onafteropen` and `onafterclose` are available as JS properties, and each also dispatches
+a same-named DOM custom event (bubbles, composed, no detail) for a consumer who only
+calls `addEventListener`:
+
+```js
+const sheet = document.querySelector('sui-sheet');
+sheet.addEventListener('afteropen', () => console.log('open transition finished'));
+sheet.addEventListener('afterclose', () => console.log('close transition finished'));
+```
+
+`onclose` does NOT dispatch a matching DOM event — `close` is already `HTMLElement`'s own
+native event, so `sheet.addEventListener('close', ...)` registers without error but never
+runs. Use the JS property instead: `sheet.onclose = () => ...`.
+
 ### Slots
 
 | Slot Name   | Maps to Snippet | Description                           |

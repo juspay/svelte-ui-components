@@ -104,10 +104,17 @@
   let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
+  // `hovered` (pointer) and `focused` (keyboard) are kept as separate state
+  // rather than one field shared by both input sources: tabbing to a bar
+  // fires a native scroll-into-view, which triggers a late `pointerleave` on
+  // whatever the mouse used to sit over -- with one shared field that
+  // pointerleave unconditionally clobbers the just-set focus highlight. See
+  // `activeBar` below for the precedence this restores (focus wins over
+  // pointer hover).
   let hovered = $state<{ si: number; pi: number } | null>(null);
+  let focused = $state<{ si: number; pi: number } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
-  let anchor = $state<TooltipAnchor | null>(null);
   let valueFontSize = $state(14);
   /** Internal tracking for the imperative highlight API (onchartready). */
   let apiHighlightedIndex = $state<number | null>(null);
@@ -676,11 +683,31 @@
 
   // ── Tooltip ────────────────────────────────────────────────────
 
+  /**
+   * The bar's accessible name, mirroring `tooltipData`'s own title rule below.
+   *
+   * In a multi-series chart the tooltip disambiguates two bars in the same
+   * category as `{label} — {seriesName}`; the aria-label did not, so every bar
+   * in a category announced identically. A screen-reader user tabbing a grouped
+   * chart heard "Jan: 42" then "Jan: 38" with nothing saying which series either
+   * belonged to -- a distinction sighted users have had since the tooltip
+   * shipped. The two spellings live next to each other so they cannot drift
+   * apart again.
+   */
+  function barAccessibleName(bar: BarRect): string {
+    const label = isMulti ? `${bar.dataPoint.label} — ${bar.seriesName}` : bar.dataPoint.label;
+    return `${label}: ${getDisplayValue(bar)}`;
+  }
+
+  // Precedence: keyboard focus wins over pointer hover (see the state
+  // declarations above for why they're tracked separately).
+  let activeBar = $derived(focused ?? hovered);
+
   let tooltipData = $derived.by(() => {
-    if (hovered === null) {
+    if (activeBar === null) {
       return null;
     }
-    const bar = bars.find((b) => b.si === hovered!.si && b.pi === hovered!.pi);
+    const bar = bars.find((b) => b.si === activeBar!.si && b.pi === activeBar!.pi);
     if (!bar) {
       return null;
     }
@@ -725,11 +752,6 @@
 
   // ── Interactions ───────────────────────────────────────────────
 
-  // Narrows an event's currentTarget to Element without an `as` cast (repo
-  // lint bans type assertions outside test files).
-  const targetElement = (e: Event): Element | null =>
-    e.currentTarget instanceof Element ? e.currentTarget : null;
-
   function trackMouse(e: PointerEvent): void {
     const position = pointerPositionIn(plotEl, e);
     if (position !== null) {
@@ -751,31 +773,86 @@
       : { x: r.right - c.left, y: r.top + r.height / 2 - c.top, side: 'right' };
   }
 
-  function activateBar(target: Element, bar: BarRect): void {
+  // Looks up the live DOM element for the active bar via the `data-pw`
+  // index attribute every bar path already renders (bar-${i}), rather than
+  // caching an element reference from whichever handler last fired. Needed
+  // because `anchor` below must fall back correctly even when focus blurs
+  // off a bar while the pointer independently, silently, still rests over a
+  // different (already-hovered but never re-entered) bar -- a blur event
+  // carries no reference to that other bar's element.
+  function findBarElement(target: { si: number; pi: number }): Element | null {
+    if (plotEl === null) {
+      return null;
+    }
+    const idx = bars.findIndex((b) => b.si === target.si && b.pi === target.pi);
+    if (idx === -1) {
+      return null;
+    }
+    return plotEl.querySelector(`[data-pw="bar-${idx}"]`);
+  }
+
+  let anchor = $derived.by<TooltipAnchor | null>(() => {
+    if (activeBar === null) {
+      return null;
+    }
+    const el = findBarElement(activeBar);
+    return el ? anchorFromElement(el) : null;
+  });
+
+  function sameBar(
+    a: { si: number; pi: number } | null,
+    b: { si: number; pi: number } | null
+  ): boolean {
+    return a === b || (a !== null && b !== null && a.si === b.si && a.pi === b.pi);
+  }
+
+  // Mirrors the combined activeBar (focus-or-hover) to onbarhover, deduped
+  // so that e.g. focus landing on the bar the pointer already hovers doesn't
+  // re-fire the callback with a value that never went away.
+  let lastNotifiedBar: { si: number; pi: number } | null = null;
+  function notifyBarHover(): void {
+    const next = activeBar;
+    if (sameBar(next, lastNotifiedBar)) {
+      return;
+    }
+    lastNotifiedBar = next;
+    if (next === null) {
+      onbarhover?.(null);
+      return;
+    }
+    const bar = bars.find((b) => b.si === next.si && b.pi === next.pi);
+    if (bar) {
+      onbarhover?.({ index: bar.pi, dataPoint: bar.dataPoint });
+    }
+  }
+
+  function activatePointer(bar: BarRect): void {
     hovered = { si: bar.si, pi: bar.pi };
-    anchor = anchorFromElement(target);
-    onbarhover?.({ index: bar.pi, dataPoint: bar.dataPoint });
+    notifyBarHover();
+  }
+
+  function activateFocus(bar: BarRect): void {
+    focused = { si: bar.si, pi: bar.pi };
+    notifyBarHover();
   }
 
   function handleEnter(e: PointerEvent, bar: BarRect): void {
-    const el = targetElement(e);
-    if (el !== null) {
-      activateBar(el, bar);
-    }
+    activatePointer(bar);
     trackMouse(e);
   }
 
-  function handleFocus(e: FocusEvent, bar: BarRect): void {
-    const el = targetElement(e);
-    if (el !== null) {
-      activateBar(el, bar);
-    }
+  function handleFocus(bar: BarRect): void {
+    activateFocus(bar);
   }
 
-  function handleLeave(): void {
+  function handlePointerLeave(): void {
     hovered = null;
-    anchor = null;
-    onbarhover?.(null);
+    notifyBarHover();
+  }
+
+  function handleBlur(): void {
+    focused = null;
+    notifyBarHover();
   }
 
   function handleKeydown(e: KeyboardEvent, bar: BarRect): void {
@@ -785,23 +862,30 @@
     }
   }
 
-  // Touch taps have no pointerleave: dismiss when a pointerdown lands outside.
+  // Touch taps have no pointerleave: dismiss when a pointerdown lands
+  // outside. Clears only the hover half -- a real pointerdown outside a
+  // focused bar blurs it natively (see handleBlur), matching
+  // PieChart/AreaChart/LineChart's identical hover-only scope for this
+  // effect.
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
     if (hovered === null) {
       return;
     }
-    return dismissOnOutsidePointerDown(containerEl, handleLeave);
+    return dismissOnOutsidePointerDown(containerEl, () => {
+      hovered = null;
+      notifyBarHover();
+    });
   });
 
   function handleClick(bar: BarRect) {
     onbarclick?.({ index: bar.pi, dataPoint: bar.dataPoint });
   }
 
-  function hoveredBar() {
-    return hovered === null
+  function activeBarData() {
+    return activeBar === null
       ? null
-      : (bars.find((b) => b.si === hovered!.si && b.pi === hovered!.pi) ?? null);
+      : (bars.find((b) => b.si === activeBar!.si && b.pi === activeBar!.pi) ?? null);
   }
 </script>
 
@@ -955,11 +1039,11 @@
                   {#if isStackedMode && barRadius > 0}
                     <path
                       class="bar"
-                      class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                      class:hovered={activeBar?.si === bar.si && activeBar?.pi === bar.pi}
                       class:highlighted={effectiveHighlightedIndex !== null &&
                         effectiveHighlightedIndex === bar.pi}
-                      class:dimmed={(hovered !== null &&
-                        (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                      class:dimmed={(activeBar !== null &&
+                        (activeBar.si !== bar.si || activeBar.pi !== bar.pi)) ||
                         (effectiveHighlightedIndex !== null &&
                           effectiveHighlightedIndex !== bar.pi)}
                       d={stackedBarPath(bar)}
@@ -968,23 +1052,23 @@
                       testID={`bar-${i}`}
                       tabindex="0"
                       role="button"
-                      aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                      aria-label={barAccessibleName(bar)}
                       onpointerenter={(e) => handleEnter(e, bar)}
                       onpointermove={trackMouse}
-                      onpointerleave={handleLeave}
-                      onfocus={(e) => handleFocus(e, bar)}
-                      onblur={handleLeave}
+                      onpointerleave={handlePointerLeave}
+                      onfocus={() => handleFocus(bar)}
+                      onblur={handleBlur}
                       onkeydown={(e) => handleKeydown(e, bar)}
                       onclick={() => handleClick(bar)}
                     />
                   {:else}
                     <path
                       class="bar"
-                      class:hovered={hovered?.si === bar.si && hovered?.pi === bar.pi}
+                      class:hovered={activeBar?.si === bar.si && activeBar?.pi === bar.pi}
                       class:highlighted={effectiveHighlightedIndex !== null &&
                         effectiveHighlightedIndex === bar.pi}
-                      class:dimmed={(hovered !== null &&
-                        (hovered.si !== bar.si || hovered.pi !== bar.pi)) ||
+                      class:dimmed={(activeBar !== null &&
+                        (activeBar.si !== bar.si || activeBar.pi !== bar.pi)) ||
                         (effectiveHighlightedIndex !== null &&
                           effectiveHighlightedIndex !== bar.pi)}
                       d={valueEndBarPath(bar)}
@@ -993,12 +1077,12 @@
                       testID={`bar-${i}`}
                       tabindex="0"
                       role="button"
-                      aria-label="{bar.dataPoint.label}: {getDisplayValue(bar)}"
+                      aria-label={barAccessibleName(bar)}
                       onpointerenter={(e) => handleEnter(e, bar)}
                       onpointermove={trackMouse}
-                      onpointerleave={handleLeave}
-                      onfocus={(e) => handleFocus(e, bar)}
-                      onblur={handleLeave}
+                      onpointerleave={handlePointerLeave}
+                      onfocus={() => handleFocus(bar)}
+                      onblur={handleBlur}
                       onkeydown={(e) => handleKeydown(e, bar)}
                       onclick={() => handleClick(bar)}
                     />
@@ -1044,7 +1128,7 @@
           unstyled
         >
           {#snippet content()}
-            {@const hb = hoveredBar()}
+            {@const hb = activeBarData()}
             {#if hb}
               {@render tooltipSnippet(hb.dataPoint, hb.pi)}
             {/if}
@@ -1076,7 +1160,8 @@
     position: relative;
   }
   .bar {
-    transition: opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
   .bar.hovered {

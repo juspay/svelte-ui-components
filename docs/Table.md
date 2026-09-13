@@ -129,9 +129,45 @@ const columns: TableColumn[] = [
 
 The standalone `sortTableRows(rows, columnIndex, direction, options?)` export sorts positional rows type-aware (numeric strings with thousands separators / percent / currency sort numerically; text case-insensitively; `sortType: 'date'` opt-in for dates, using range starts) with optional `hasSummaryRow` pinning and `nestedKey` extraction for object cells — useful for `sortMode="server"` consumers and unit tests.
 
+### Controlled sort (`sortState`)
+
+`sortMode="server"` stops the internal reorder; it does not hand over the sort STATE. Pass `sortState` to own that too — a sort held in a URL, a saved view, or a server query restored into the built-in header:
+
+```svelte
+<script>
+  let sortState = $state({ columnId: 'amount', direction: 'desc' });
+</script>
+
+<Table
+  {columns}
+  {rows}
+  sortMode="server"
+  {sortState}
+  onsortchange={(next) => {
+    sortState = next;
+    void refetch(next);
+  }}
+/>
+```
+
+- **Keyed by column ID, not column index.** `columnId` is a `TableColumn.id`; positional tables (`tableHeaders`/`tableData`) have no declared identity, so their column ID is the index as a string (`'1'`). The distinction is the point: reorder or hide a column and an index-keyed sort would silently start sorting whichever field moved into that slot. With IDs, a reordered column keeps its sort, and a sorted column that is hidden sorts nothing at all rather than handing the sort to its neighbour.
+- **Table never writes to it.** A header click calls `onsortchange({ columnId, direction })` — and the unchanged `onsort(columnIndex, direction)` — and nothing moves until the consumer feeds a new `sortState` back. The direction cycles ascending → descending → ascending exactly as the uncontrolled table does.
+- **`null` is a value, not an absence.** `sortState={null}` means "controlled, sorted by nothing"; omitting the prop entirely is what leaves Table owning its own sort state, unchanged for every existing consumer.
+- Independent of `sortMode`: `'client'` still sorts locally from the controlled state, `'server'` still never re-sorts a page the consumer already fetched.
+
+### Headless adapters (multi-sort, faceting, grouped headers)
+
+`sortState` is deliberately one column. Multi-column sort, faceted filter counts, grouped/multi-row headers and column-visibility engines belong to a headless table library (TanStack Table and similar), not inside this component: keep that engine as the source of truth, render through Table, and feed its state in through `sortState` / `searchConfig.searchTerm` / `checkboxSelection.selectedIds` / `pagination`, using `columns[].id` as the shared column identity. Do not run two sort or page engines at once — set `sortMode="server"` and `pagination.mode: 'server'` so Table reports and renders while the engine decides. TanStack's `pageIndex` is zero-based and `pagination.page` is one-based: convert once, at that boundary, and not again inside `onPageChange`.
+
 ### Built-in Pagination
 
 `pagination` renders a footer paginator (range label, optional page-size selector, page controls). `'client'` mode slices the rows internally — search and page-size changes snap back to page 1; `'server'` mode leaves the supplied rows untouched (they are the current page) and drives the chrome from `page`/`totalItems`/`hasMore`, with `isLoading` disabling the controls during fetches. A consumer `paginatorSlot` takes precedence.
+
+`page` is 1-indexed in both modes. An adapter over a zero-based engine (TanStack's `pageIndex`) converts once, here — not again inside its own `onPageChange`.
+
+**Who owns the page.** In client mode Table does: it renders the last page that actually has rows, so a dataset that shrinks from outside — rows deleted, replaced, or refetched shorter while the reader is on page 5 — resolves to a real page with a truthful range instead of a blank page past the end. That resolution is display-side and fires no `onPageChange`, because nobody asked for a page change — and it does not overwrite the page the reader chose, so a dataset that shrinks and comes back (a refetch, a filter widening again) returns them to where they were rather than to page 1. In server mode the consumer does: `page` is authoritative and `onPageChange` is a request it may honour, delay, or refuse by simply not changing the prop.
+
+**Who owns the page size.** In client mode, the built-in selector. In server mode, declaring `pageSize` takes ownership of it the same way `checkboxSelection.selectedIds` takes ownership of selection: `onPageSizeChange` becomes a request, and until the consumer answers by changing the prop, the range text keeps describing the page the server actually served rather than a page of rows nobody fetched. Omit `pageSize` in server mode to keep the older behaviour where the selector drives the chrome on its own.
 
 `showFooterOnSinglePage` keeps that footer visible when the data fits on one page — the default hides it entirely, which is DataGrid parity but wrong for a call site whose page-size selector is how the merchant asks for more rows.
 
@@ -309,15 +345,92 @@ For a uniform column width across all columns, use the `--table-column-width` CS
 
 ### Empty State
 
-Show a placeholder when `tableData` is empty:
+Show a placeholder when the view has no rows. The snippet receives a `TableEmptyContext` saying WHY, because "no records yet" and "nothing matched your search" are different messages with different remedies — and once the built-in search owns the term, a consumer reading `rows.length === 0` cannot tell them apart:
 
 ```svelte
-<Table tableHeaders={['Name', 'Email']} tableData={[]}>
-  {#snippet empty()}
-    <p>No records found.</p>
+<Table {columns} {rows} searchConfig={{ placeholder: 'Search…' }}>
+  {#snippet empty({ reason, searchTerm })}
+    {#if reason === 'no-matches'}
+      <p>No records match “{searchTerm}”.</p>
+    {:else}
+      <p>No records yet.</p>
+    {/if}
   {/snippet}
 </Table>
 ```
+
+`reason` is `'no-matches'` whenever a search term or a column filter is active — including under `onsearchchange`, where the consumer hands back an already-filtered empty page — and `'no-rows'` otherwise. Declaring the snippet without parameters stays valid, so existing consumers are unaffected:
+
+```svelte
+{#snippet empty()}
+  <p>No records found.</p>
+{/snippet}
+```
+
+The empty message renders in the table body, so the header, the caption and the horizontal scroll container stay mounted: the reader keeps the column labels and their scroll position.
+
+### Row activation vs. controls inside a cell
+
+A clickable row (`onrowclick`) and interactive content inside a cell both want the same click and the same Enter. The two halves are handled differently, deliberately.
+
+**Keyboard is handled for you.** The row activates on Enter/Space only when the ROW ITSELF has focus. A key pressed inside a cell control never reaches it, so typing a space in an editable cell types a space instead of opening the record, and Enter on a cell button fires only the button. Nothing to opt into, and no allowlist of "interactive" tags, which could never be complete for inputs, editable regions, custom elements or portaled controls.
+
+**Click is opt-out, because "click anywhere on the row" is the feature.** Guarding click by event target would break clicking the row's own text, which is most of the row. Mark interactive content instead:
+
+```svelte
+{#snippet actionsCell(row)}
+  <button data-row-activation="ignore" onclick={() => approve(row.id)}>Approve</button>
+  <a href={row.url} data-row-activation="ignore">Detail</a>
+  <input data-row-activation="ignore" aria-label="Note" />
+{/snippet}
+```
+
+The marking is inherited, so one on a wrapper covers everything inside it. Built-in cell types (`type: 'button'`, `'toggle'`, `'select'`, `'input'`, `'action-group'`, `'popup-menu'`, …) already stop propagation themselves and need no marking. In-cell `Menu`/`Select` panels opened with `usePortal` render outside the row entirely, so their clicks never reach it either — mark the trigger, which does sit in the row. An unmarked control keeps bubbling exactly as before, so a consumer who intends both to fire is unaffected.
+
+### Loading, error and partial results
+
+Fetching, retrying and deciding what a partial page means are caller-owned; Table renders rows and says when it has none. The composition that keeps the states coherent:
+
+```svelte
+<!-- Busy on your own region, so the rows stay mounted: row identity, focus and
+     scroll position all survive a refresh. Replacing the table with a spinner
+     loses all three. -->
+<div aria-busy={state === 'loading'}>
+  {#if state === 'error'}
+    <!-- Outside the scroll container, so a sideways-scrolled reader still sees it. -->
+    <div role="alert">Could not load records. <button onclick={retry}>Retry</button></div>
+  {/if}
+  <Table {columns} {rows} pagination={{ pageSize: 20, isLoading: state === 'loading' }}>
+    {#snippet empty({ reason, searchTerm })}
+      <!-- An error is not an empty result: a failed fetch never established
+           that there are no records, so let the alert own that state. -->
+      {#if state !== 'error'}
+        {reason === 'no-matches' ? `No records match “${searchTerm}”.` : 'No records yet.'}
+      {/if}
+    {/snippet}
+  </Table>
+</div>
+```
+
+`pagination.isLoading` disables the paginator and page-size selector during a fetch so a reader cannot queue a second page request against stale chrome. A partial result is a short page plus your own notice, not a different component — keeping the same table keeps the header and the row identities.
+
+### Mobile Record Cards
+
+Below a 640px viewport, `mobileCardLayout` stacks each row into a bordered card of label/value pairs instead of scrolling the table sideways:
+
+```svelte
+<Table {columns} {rows} mobileCardLayout />
+```
+
+This is opt-in and off by default: a table that silently changed layout at some width for every existing consumer, with no prop set, would be a breaking change to a published library. Turn it on per table where the horizontal-scroll default is the wrong fit for a narrow viewport.
+
+**Why this needs component support, not a CSS recipe.** The common `td::before { content: attr(data-label) }` pattern works for a plain `<table>` a consumer marks up themselves, but it cannot work here: a `<sui-table>` consumer's stylesheet cannot add a rule inside the element's shadow root, so there is nowhere for that `::before` to live. Table carries the column → label mapping itself and renders it as real markup, which is compiled into the shadow root exactly like the rest of the component's styles — so `mobileCardLayout` behaves identically on the Svelte component and through `<sui-table>`.
+
+**Why the label is a real, `aria-hidden` element and not generated content.** Generated content (`::before`/`attr()`) cannot carry `aria-hidden`, and a stacked layout that keeps a real `<table>` underneath already lets a screen reader announce each cell's column header through the normal header/cell association — adding a second, unhidden visible label would announce that header text twice. So each cell gets a `<span class="table-mobile-label" aria-hidden="true">` holding the same text as its column header: visible to a sighted reader as the in-card label, invisible to assistive tech, which still gets the header from the table structure itself.
+
+**Why the ARIA roles are restated.** Stacking cells vertically means every `table`/`thead`/`tbody`/`tr`/`th`/`td` switches from its table-family `display` value to `block`, and several browser/assistive-technology combinations drop the implicit table semantics as soon as that happens. `mobileCardLayout` restates them explicitly (`role="table"`, `"rowgroup"`, `"row"`, `"columnheader"`, `"cell"`) so the accessible structure is no worse than the plain table at any width — the roles are harmless duplicates at desktop width, and load-bearing once the layout collapses to cards.
+
+The breakpoint is a fixed `640px`, not a themable custom property: `@media` conditions cannot read CSS custom properties, so there is no `var()` to expose here. See the [CSS Variables](#mobile-cards) section below for card spacing and label styling tokens, and [Web Component](#web-component) for the `mobile-card-layout` attribute.
 
 ### Paginator Slot
 
@@ -397,6 +510,24 @@ Pass `checkboxSelection` to render a leading checkbox column. Set `selectionMode
 
 Pass `searchConfig` to show a search input above the table. By default the table filters rows client-side across all columns. Pass `onsearchchange` to disable client-side filtering and delegate to the server instead.
 
+The visible TERM is separately controllable: set `searchConfig.searchTerm` and the input renders from it and never mutates it, with `searchConfig.onSearchTermChange` reporting each would-be term for the consumer to accept. That is what lets a search restored from a URL appear in the built-in input. It is orthogonal to `onsearchchange` — that prop delegates the FILTERING, this one only the term, so a controlled term still filters client-side unless `onsearchchange` is also supplied. Omit `searchTerm` and the input owns its term exactly as before.
+
+```svelte
+<script>
+  let term = $state(new URL(location.href).searchParams.get('q') ?? '');
+</script>
+
+<Table
+  {columns}
+  {rows}
+  searchConfig={{
+    placeholder: 'Search users…',
+    searchTerm: term,
+    onSearchTermChange: (next) => (term = next)
+  }}
+/>
+```
+
 ```svelte
 <!-- Server-side delegation: client filtering disabled, onSearchChange fires on every keystroke -->
 <script>
@@ -458,41 +589,43 @@ directly inside the `cell` snippet, which runs in consumer scope.
 
 ## Props
 
-| Prop                  | Type                                                                | Required | Default               | Description                                                                                                                                                                                                                                                                 |
-| --------------------- | ------------------------------------------------------------------- | -------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| tableTitle            | `string \| null`                                                    | No       | `''`                  | Optional title text displayed above the table.                                                                                                                                                                                                                              |
-| tableHeaders          | `string[]`                                                          | No       | `[]`                  | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                                                                                                       |
-| tableData             | `Array<JSONValue[]>`                                                | No       | `[]`                  | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                                                                                                         |
-| sortable              | `boolean`                                                           | No       | `true`                | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                                                                                                       |
-| sortableColumns       | `number[]`                                                          | No       | `-`                   | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                                                                                                           |
-| stickyHeader          | `boolean`                                                           | No       | `false`               | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                                                                                                           |
-| isTableScrollable     | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                                                                                                            |
-| isContentScrollable   | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                                                                                                                |
-| testId                | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                                                                                                              |
-| caption               | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                                                                                                                   |
-| sortAscIcon           | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.                                                                                        |
-| sortDescIcon          | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.                                                                                       |
-| sortDefaultIcon       | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                                                                                                               |
-| cell                  | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                                                                                                        |
-| empty                 | `Snippet`                                                           | No       | `-`                   | Content to show when `tableData` is empty. Rendered inside a full-width table row.                                                                                                                                                                                          |
-| classes               | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                      |
-| paginatorSlot         | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                                                                                                       |
-| getRowTestId          | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                                                                                                                  |
-| getCellTestId         | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                                                                                                      |
-| checkboxSelection     | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                                                                                                        |
-| searchConfig          | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onsearchchange` to delegate filtering to the server. See `TableSearchConfig` type below.                                                                                     |
-| columns               | `TableColumn[]`                                                     | No       | `-`                   | Keyed column model (preferred). When provided, `columns`/`rows` are normalized internally onto the same engine as `tableHeaders`/`tableData`, which are then ignored for that instance. See `TableColumn` type below and "Usage" above.                                     |
-| rows                  | `TableRow[]`                                                        | No       | `-`                   | Keyed row data, addressed by `TableColumn.id`. Used with `columns`. Missing keys render as empty cells. See `TableRow` type below.                                                                                                                                          |
-| sortMode              | `'client' \| 'server'`                                              | No       | `'client'`            | `'client'` sorts rows internally on header click. `'server'` keeps the header sort UI and `onsort` callback but skips the internal reorder — the consumer re-orders the data itself.                                                                                        |
-| pagination            | `TablePaginationConfig`                                             | No       | `-`                   | Built-in footer paginator (range label, optional page-size selector, page controls). See `TablePaginationConfig` type below and "Built-in Pagination" above.                                                                                                                |
-| toolbarSlot           | `Snippet<[{ selectedIds: Set<string> }]>`                           | No       | `-`                   | Bulk-action bar rendered above the table while the checkbox selection is non-empty. The library owns only placement — content is entirely consumer-rendered. See "Controlled Selection + Bulk Toolbar" above.                                                               |
-| rowNumberColumn       | `boolean`                                                           | No       | `false`               | Prepends a sequential row-number column (1-based, pagination-aware).                                                                                                                                                                                                        |
-| rowNumberLabel        | `string`                                                            | No       | `'#'`                 | Header label for the row-number column.                                                                                                                                                                                                                                     |
-| summaryRowIndex       | `number \| null`                                                    | No       | `null`                | Index (into the consumer-supplied `rows`, pre-sort/pre-filter) of a summary/period-total row that renders with a distinct background (`--table-summary-row-background`). Matched by original position, so it survives sort/search/pagination.                               |
-| headerTooltipIcon     | `Snippet`                                                           | No       | `-`                   | Icon snippet shown after each header label that has a `tooltip`. When set, the default underline affordance on those labels is dropped.                                                                                                                                     |
-| headerTooltipPosition | `TooltipPosition`                                                   | No       | `'top'`               | Placement of every header tooltip bubble.                                                                                                                                                                                                                                   |
-| usePortal             | `boolean`                                                           | No       | `false`               | When true, in-cell `Select` dropdowns and `Menu` popovers (`action-group`/`popup-menu` columns) are portaled to `document.body` and positioned `fixed`, so the table's own scroll/overflow container cannot clip them. Set on tables whose rows can sit near a scroll edge. |
+| Prop                  | Type                                                                | Required | Default               | Description                                                                                                                                                                                                                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------- | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tableTitle            | `string \| null`                                                    | No       | `''`                  | Optional title text displayed above the table.                                                                                                                                                                                                                                                                                        |
+| tableHeaders          | `string[]`                                                          | No       | `[]`                  | Array of column header strings. Each header is clickable for sorting (when sortable).                                                                                                                                                                                                                                                 |
+| tableData             | `Array<JSONValue[]>`                                                | No       | `[]`                  | Array of row arrays. Each row is an array of cell values (string, number, or boolean). Columns correspond to tableHeaders by index.                                                                                                                                                                                                   |
+| sortable              | `boolean`                                                           | No       | `true`                | When false, disables sorting on all columns. Sort buttons are hidden.                                                                                                                                                                                                                                                                 |
+| sortableColumns       | `number[]`                                                          | No       | `-`                   | Array of column indices that are sortable. When provided, only these columns show sort buttons. Other columns are non-sortable regardless of the `sortable` prop.                                                                                                                                                                     |
+| stickyHeader          | `boolean`                                                           | No       | `false`               | When true, the header row sticks to the top during scroll. Works with `isTableScrollable` or any parent scroll container. Offset via `--table-header-sticky-top`.                                                                                                                                                                     |
+| isTableScrollable     | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                                                                                                                                                                      |
+| isContentScrollable   | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                                                                                                                                                                          |
+| testId                | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                                                                                                                                                                        |
+| caption               | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                                                                                                                                                                             |
+| sortAscIcon           | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.                                                                                                                                                  |
+| sortDescIcon          | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.                                                                                                                                                 |
+| sortDefaultIcon       | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                                                                                                                                                                         |
+| cell                  | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                                                                                                                                                                  |
+| empty                 | `Snippet<[TableEmptyContext]>`                                      | No       | `-`                   | Content to show when the view has no rows, inside a full-width table row so the header stays. Receives `{ reason, searchTerm }` — `'no-rows'` vs `'no-matches'`; declaring it without parameters stays valid.                                                                                                                         |
+| classes               | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                |
+| paginatorSlot         | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                                                                                                                                                                 |
+| getRowTestId          | `(row: JSONValue[], rowIndex: number) => string`                    | No       | `-`                   | Callback that returns a `data-pw` attribute value for each row `<tr>`. Useful for Playwright and other E2E test selectors.                                                                                                                                                                                                            |
+| getCellTestId         | `(row: JSONValue[], column: JSONValue, rowIndex: number) => string` | No       | `-`                   | Callback that returns a `data-pw` attribute value for each data cell `<td>`. Receives the full row, the cell value, and the row index.                                                                                                                                                                                                |
+| checkboxSelection     | `TableCheckboxSelectionConfig`                                      | No       | `-`                   | Opt-in checkbox row-selection column. See `TableCheckboxSelectionConfig` type below.                                                                                                                                                                                                                                                  |
+| searchConfig          | `TableSearchConfig`                                                 | No       | `-`                   | Opt-in search bar rendered above the table. Client-side filtering is applied by default; pass `onsearchchange` to delegate filtering to the server. See `TableSearchConfig` type below.                                                                                                                                               |
+| columns               | `TableColumn[]`                                                     | No       | `-`                   | Keyed column model (preferred). When provided, `columns`/`rows` are normalized internally onto the same engine as `tableHeaders`/`tableData`, which are then ignored for that instance. See `TableColumn` type below and "Usage" above.                                                                                               |
+| rows                  | `TableRow[]`                                                        | No       | `-`                   | Keyed row data, addressed by `TableColumn.id`. Used with `columns`. Missing keys render as empty cells. See `TableRow` type below.                                                                                                                                                                                                    |
+| sortMode              | `'client' \| 'server'`                                              | No       | `'client'`            | `'client'` sorts rows internally on header click. `'server'` keeps the header sort UI and `onsort` callback but skips the internal reorder — the consumer re-orders the data itself.                                                                                                                                                  |
+| sortState             | `TableSortState \| null`                                            | No       | `-`                   | Controlled sort, keyed by column ID. Provided (including `null`, meaning "sorted by nothing"), Table renders the header state and any client-side reorder FROM it and never mutates it — a header click reports through `onsortchange`/`onsort` instead. Omitted, Table owns the sort exactly as before. See "Controlled sort" above. |
+| pagination            | `TablePaginationConfig`                                             | No       | `-`                   | Built-in footer paginator (range label, optional page-size selector, page controls). See `TablePaginationConfig` type below and "Built-in Pagination" above.                                                                                                                                                                          |
+| toolbarSlot           | `Snippet<[{ selectedIds: Set<string> }]>`                           | No       | `-`                   | Bulk-action bar rendered above the table while the checkbox selection is non-empty. The library owns only placement — content is entirely consumer-rendered. See "Controlled Selection + Bulk Toolbar" above.                                                                                                                         |
+| rowNumberColumn       | `boolean`                                                           | No       | `false`               | Prepends a sequential row-number column (1-based, pagination-aware).                                                                                                                                                                                                                                                                  |
+| rowNumberLabel        | `string`                                                            | No       | `'#'`                 | Header label for the row-number column.                                                                                                                                                                                                                                                                                               |
+| summaryRowIndex       | `number \| null`                                                    | No       | `null`                | Index (into the consumer-supplied `rows`, pre-sort/pre-filter) of a summary/period-total row that renders with a distinct background (`--table-summary-row-background`). Matched by original position, so it survives sort/search/pagination.                                                                                         |
+| headerTooltipIcon     | `Snippet`                                                           | No       | `-`                   | Icon snippet shown after each header label that has a `tooltip`. When set, the default underline affordance on those labels is dropped.                                                                                                                                                                                               |
+| headerTooltipPosition | `TooltipPosition`                                                   | No       | `'top'`               | Placement of every header tooltip bubble.                                                                                                                                                                                                                                                                                             |
+| usePortal             | `boolean`                                                           | No       | `false`               | When true, in-cell `Select` dropdowns and `Menu` popovers (`action-group`/`popup-menu` columns) are portaled to `document.body` and positioned `fixed`, so the table's own scroll/overflow container cannot clip them. Set on tables whose rows can sit near a scroll edge.                                                           |
 | labels                | `TableLabels`                                                       | No       | `-`                   | Overrides for the accessible names Table generates itself (sort, filter, row/select-all checkboxes, search clear/close). Every member is optional and falls back to the English default, so omitting the prop changes nothing. See `TableLabels` below.                     |
+| mobileCardLayout      | `boolean`                                                           | No       | `false`               | Opt-in stacked "record card" layout below a 640px viewport, in place of the default horizontal scroll. See "Mobile Record Cards" above.                                                                                                                                                                                               |
 
 ## Snippets
 
@@ -502,17 +635,18 @@ directly inside the `cell` snippet, which runs in consumer scope.
 | `sortDescIcon`    | none                                                     | Custom descending sort icon, replaces the default SVG chevron.                             |
 | `sortDefaultIcon` | none                                                     | Custom default (unsorted) sort icon, replaces the dimmed up/down chevron pair.             |
 | `cell`            | `(value: JSONValue, rowIndex: number, colIndex: number)` | Custom cell renderer. When not provided, cells render the raw value as text.               |
-| `empty`           | none                                                     | Content shown when `tableData` is empty. Rendered inside a full-width table row.           |
+| `empty`           | `TableEmptyContext` (`{ reason, searchTerm }`)           | Content shown when the view has no rows, inside a full-width table row.                    |
 | `paginatorSlot`   | none                                                     | Content rendered in a footer region below the table (e.g. pagination controls, row count). |
 
 ## Events
 
-| Event          | Type                                                                | Description                                                                                                                                                                                                                                                               |
-| -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onrowclick     | `(rowIndex: number, rowData: JSONValue[]) => void`                  | Fires when a data row is clicked. The row becomes focusable and keyboard-navigable when provided.                                                                                                                                                                         |
-| onsort         | `(columnIndex: number, direction: SortDirection) => void`           | Fires after a column sort is toggled. `direction` is `'asc'` or `'desc'`.                                                                                                                                                                                                 |
-| oncellchange   | `(rowIndex: number, colIndex: number, newValue: JSONValue) => void` | Accepted as a prop for type-checking at the call site, but **not called by Table internally**. Wire your handler directly inside the `cell` snippet instead — snippets run in consumer scope and already have your handler in closure. See "Editable Cells" recipe above. |
-| onsearchchange | `(searchTerm: string) => void`                                      | When provided, disables built-in client-side filtering and calls this callback on every search input change. Use to delegate filtering to the server. Requires `searchConfig` to be set.                                                                                  |
+| Event          | Type                                                                | Description                                                                                                                                                                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onrowclick     | `(rowIndex: number, rowData: JSONValue[]) => void`                  | Fires when a data row is clicked. The row becomes focusable and keyboard-navigable when provided.                                                                                                                                                                                                  |
+| onsort         | `(columnIndex: number, direction: SortDirection) => void`           | Fires after a column sort is toggled. `direction` is `'asc'` or `'desc'`.                                                                                                                                                                                                                          |
+| onsortchange   | `(sortState: TableSortState) => void`                               | Fires with every `onsort`, carrying the same change keyed by column ID (`{ columnId, direction }`) so a consumer never has to resolve an index against a column list that may since have changed. Only ever reports a sorted state; clearing a sort is the consumer setting `sortState` to `null`. |
+| oncellchange   | `(rowIndex: number, colIndex: number, newValue: JSONValue) => void` | Accepted as a prop for type-checking at the call site, but **not called by Table internally**. Wire your handler directly inside the `cell` snippet instead — snippets run in consumer scope and already have your handler in closure. See "Editable Cells" recipe above.                          |
+| onsearchchange | `(searchTerm: string) => void`                                      | When provided, disables built-in client-side filtering and calls this callback on every search input change. Use to delegate filtering to the server. Requires `searchConfig` to be set.                                                                                                           |
 
 ## CSS Variables
 
@@ -525,7 +659,7 @@ Override these custom properties to theme the component.
 | `--table-title-margin`      | `0 0 12px 0` | margin       | Margin around the table title.                                                                                                                                                                             |
 | `--table-title-font-size`   | `18px`       | font-size    | Font size of the table title.                                                                                                                                                                              |
 | `--table-title-font-weight` | `600`        | font-weight  | Font weight of the table title.                                                                                                                                                                            |
-| `--table-title-color`       | `#111827`    | color        | Text color of the table title.                                                                                                                                                                             |
+| `--table-title-color`       | `inherit`    | color        | Text color of the table title. A heading has no background of its own, so it inherits the surrounding text colour by default rather than hardcoding one — set this to override.                            |
 | `--table-title-font-family` | `-`          | font-family  | Font family of the table title.                                                                                                                                                                            |
 | `--table-title-padding`     | `-`          | padding      | Padding of the table title.                                                                                                                                                                                |
 | `--table-tile-font-size`    | `18px`       | font-size    | Secondary fallback for the title font size — `--table-title-font-size` falls back to this before the `18px` literal. Kept for backward compatibility; set `--table-title-font-size` directly for new code. |
@@ -587,7 +721,7 @@ Override these custom properties to theme the component.
 | `--table-content-color`                   | `#111827`                                        | color            | Text color of data cells. Falls back to `--table-content-font-color`.                       |
 | `--table-col-highlight-background`        | `#f3f9ff`                                        | background-color | Background of a `highlighted: true` column's body cells. Row hover/selection paint over it. |
 | `--table-col-highlight-header-background` | falls back to `--table-col-highlight-background` | background-color | Background of a `highlighted: true` column's header cell.                                   |
-| `--table-content-border-bgcolor`          | `-`                                              | background-color | Fallback background for data cells when `--table-content-background` is unset.              |
+| `--table-content-border-bgcolor`          | `#ffffff`                                        | background-color | Fallback background for data cells when `--table-content-background` is unset.              |
 | `--table-content-font-color`              | `-`                                              | color            | Fallback text color for data cells when `--table-content-color` is unset.                   |
 
 ### Built-in Cells
@@ -732,24 +866,41 @@ These variables style the leading checkbox column that appears when `checkboxSel
 
 These variables style the search input rendered above the table when `searchConfig` is set.
 
-| Variable                                | Default             | CSS Property     | Description                                                     |
-| --------------------------------------- | ------------------- | ---------------- | --------------------------------------------------------------- |
-| `--table-search-gap`                    | `8px`               | gap              | Gap between the search icon, input, and clear button.           |
-| `--table-search-padding`                | `8px 12px`          | padding          | Padding inside the search bar container.                        |
-| `--table-search-border`                 | `1px solid #e5e7eb` | border           | Border of the search bar container.                             |
-| `--table-search-border-radius`          | `8px`               | border-radius    | Border radius of the search bar container.                      |
-| `--table-search-background`             | `#ffffff`           | background-color | Background of the search bar container.                         |
-| `--table-search-margin-bottom`          | `8px`               | margin-bottom    | Margin below the search bar, separating it from the table.      |
-| `--table-search-icon-color`             | `#9ca3af`           | color            | Color of the search magnifier icon.                             |
-| `--table-search-icon-size`              | `16px`              | width, height    | Size of the search magnifier icon.                              |
-| `--table-search-font-size`              | `14px`              | font-size        | Font size of the search input text.                             |
-| `--table-search-color`                  | `#111827`           | color            | Text color of the search input.                                 |
-| `--table-search-placeholder-color`      | `#9ca3af`           | color            | Placeholder text color of the search input.                     |
-| `--table-search-focus-border-radius`    | `2px`               | border-radius    | Border radius of the focus-visible outline on the search input. |
-| `--table-search-clear-color`            | `#6b7280`           | color            | Color of the clear (✕) button icon.                             |
-| `--table-search-clear-hover-color`      | `#111827`           | color            | Color of the clear button icon on hover.                        |
-| `--table-search-clear-hover-background` | `rgba(0,0,0,0.05)`  | background-color | Background of the clear button on hover.                        |
-| `--table-search-clear-icon-size`        | `14px`              | width, height    | Size of the clear button icon.                                  |
+| Variable                                   | Default             | CSS Property     | Description                                                                                               |
+| ------------------------------------------ | ------------------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `--table-search-gap`                       | `8px`               | gap              | Gap between the search icon, input, and clear button.                                                     |
+| `--table-search-padding`                   | `8px 12px`          | padding          | Padding inside the search bar container.                                                                  |
+| `--table-search-border`                    | `1px solid #e5e7eb` | border           | Border of the search bar container.                                                                       |
+| `--table-search-border-radius`             | `8px`               | border-radius    | Border radius of the search bar container.                                                                |
+| `--table-search-background`                | `#ffffff`           | background-color | Background of the search bar container.                                                                   |
+| `--table-search-margin-bottom`             | `8px`               | margin-bottom    | Margin below the search bar, separating it from the table.                                                |
+| `--table-search-icon-color`                | `#9ca3af`           | color            | Color of the search magnifier icon.                                                                       |
+| `--table-search-icon-size`                 | `16px`              | width, height    | Size of the search magnifier icon.                                                                        |
+| `--table-search-font-size`                 | `14px`              | font-size        | Font size of the search input text.                                                                       |
+| `--table-search-color`                     | `#111827`           | color            | Text color of the search input.                                                                           |
+| `--table-search-placeholder-color`         | `#9ca3af`           | color            | Placeholder text color of the search input.                                                               |
+| `--table-search-focus-border-radius`       | `2px`               | border-radius    | Border radius of the focus-visible outline on the search input.                                           |
+| `--table-search-clear-color`               | `#6b7280`           | color            | Color of the clear (✕) button icon.                                                                       |
+| `--table-search-clear-hover-color`         | `#111827`           | color            | Color of the clear button icon on hover.                                                                  |
+| `--table-search-clear-hover-background`    | `rgba(0,0,0,0.05)`  | background-color | Background of the clear button on hover.                                                                  |
+| `--table-search-clear-icon-size`           | `14px`              | width, height    | Size of the clear button icon.                                                                            |
+| `--table-scroll-scrim-transition-duration` | `0.2s`              | transition       | Duration of the horizontal-scroll edge scrim's fade transition. Falls back through `--motion-duration`.   |
+| `--table-scroll-scrim-transition-easing`   | `ease`              | transition       | Easing curve of the horizontal-scroll edge scrim's fade transition. Falls back through `--motion-easing`. |
+
+### Mobile Cards
+
+These variables style the stacked card layout that `mobileCardLayout` switches on below 640px — see "Mobile Record Cards" above. `--table-mobile-card-radius` and `--table-mobile-card-border` also fall back through the same `--radius`/`--table-border`-shaped chains as the rest of the component, and `--table-mobile-label-color` carries a dark-theme override in `theme-dark.css` for the same reason `--table-header-color` does: it stands in for the header text once the header row itself is hidden.
+
+| Variable                           | Default                                                        | CSS Property  | Description                                               |
+| ---------------------------------- | -------------------------------------------------------------- | ------------- | --------------------------------------------------------- |
+| `--table-mobile-card-border`       | `1px solid #e5e7eb`                                            | border        | Border around each stacked row card.                      |
+| `--table-mobile-card-radius`       | falls back to `--table-border-radius`, then `--radius` (`4px`) | border-radius | Corner rounding of each row card.                         |
+| `--table-mobile-card-padding`      | `12px`                                                         | padding       | Inner padding of each row card.                           |
+| `--table-mobile-card-gap`          | `12px`                                                         | margin-bottom | Space between consecutive row cards.                      |
+| `--table-mobile-label-gap`         | `8px`                                                          | gap           | Gap between a cell's label and its value inside a card.   |
+| `--table-mobile-label-width`       | `40%`                                                          | flex-basis    | Width reserved for the label column inside each card row. |
+| `--table-mobile-label-font-weight` | `600`                                                          | font-weight   | Font weight of the label text.                            |
+| `--table-mobile-label-color`       | `#6b7280`                                                      | color         | Text color of the label. Has a dark-theme override.       |
 
 ## Type Reference
 
@@ -818,6 +969,25 @@ type TableSearchConfig = {
   searchableColumnIndices?: number[];
   /** Value for the data-pw attribute on the search input element. */
   testId?: string;
+  /** 'toolbar' (default) renders the bar above the table; 'inline' is a trigger that expands in the last header. */
+  displayMode?: 'toolbar' | 'inline';
+  /** Controlled search term: the input renders from it and never mutates it. Omitted, the input owns its term. */
+  searchTerm?: string;
+  /** Reports each would-be term, controlled or not. Unlike onsearchchange it does not disable client-side filtering. */
+  onSearchTermChange?: (searchTerm: string) => void;
+};
+
+type TableSortState = {
+  /** A TableColumn.id, or the column index as a string for positional tables. */
+  columnId: string;
+  direction: SortDirection;
+};
+
+type TableEmptyContext = {
+  /** 'no-matches' when a search term or column filter is active; 'no-rows' otherwise. */
+  reason: 'no-rows' | 'no-matches';
+  /** The term currently filtering the view; '' when none is active. */
+  searchTerm: string;
 };
 
 // Helper aliases the two declarations below build on. All are exported from
@@ -933,10 +1103,17 @@ type TablePaginationConfig = {
 
 ## Web Component
 
+> Known limitation: through `<sui-table>` the built-in paginator does not render. The
+> wrapper must supply the `paginator-slot` snippet for the host to be able to fill it, and
+> supplying it unconditionally suppresses the component's own default. Unlike the sort
+> icons, that default is a whole `Pagination` subtree built from internal state, so it
+> cannot be reproduced as slot fallback content. Pass your own paginator through
+> `slot="paginator-slot"`, or use the Svelte component directly.
+
 Tag: `<sui-table>`
 
 ```html
-<sui-table table-title="Users" sortable sticky-header>
+<sui-table table-title="Users" sortable sticky-header mobile-card-layout>
   <div slot="empty">No data found</div>
   <div slot="paginator-slot">
     <button>Prev</button>
@@ -946,14 +1123,40 @@ Tag: `<sui-table>`
 </sui-table>
 ```
 
+`mobile-card-layout` is a plain boolean attribute like `sortable` and `sticky-header` above — its presence is enough to opt in, exactly as with the Svelte component's `mobileCardLayout`. See "Mobile Record Cards" for what it does and why it needed component support rather than a CSS recipe.
+
+### Web Component Events
+
+`onrowclick`, `onsort`, `onsortchange`, and `onsearchchange` are available as JS
+properties, and each also dispatches a same-named DOM custom event (bubbles, composed)
+for a consumer who only calls `addEventListener` — `rowclick`'s detail is
+`{ rowIndex, rowData, originalIndex }`, `sort`'s is `{ columnIndex, direction }`,
+`sortchange`'s is the `TableSortState` object (`{ columnId, direction }`), and
+`searchchange`'s is the search-term string:
+
+```js
+const table = document.querySelector('sui-table');
+table.addEventListener('rowclick', (e) => {
+  console.log(e.detail.rowIndex, e.detail.originalIndex);
+});
+table.addEventListener('sort', (e) => {
+  console.log(e.detail.columnIndex, e.detail.direction);
+});
+```
+
 ### Slots
 
-| Slot Name           | Maps to Snippet   | Description                                                    |
-| ------------------- | ----------------- | -------------------------------------------------------------- |
-| `empty`             | `empty`           | Content shown when the table has no data.                      |
-| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon.                                    |
-| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon.                                   |
-| `sort-default-icon` | `sortDefaultIcon` | Custom default (unsorted) sort icon.                           |
-| `paginator-slot`    | `paginatorSlot`   | Footer content below the table, typically pagination controls. |
+| Slot Name           | Maps to Snippet   | Description                                                                                                                                                                                                              |
+| ------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `empty`             | `empty`           | Content shown when the view has no rows. Static markup here cannot see WHY it is empty — see the Svelte-only note below.                                                                                                 |
+| `sort-asc-icon`     | `sortAscIcon`     | Custom ascending sort icon; defaults to the table's own sort glyph.                                                                                                                                                      |
+| `sort-desc-icon`    | `sortDescIcon`    | Custom descending sort icon; defaults to the table's own sort glyph.                                                                                                                                                     |
+| `sort-default-icon` | `sortDefaultIcon` | Custom default (unsorted) sort icon.                                                                                                                                                                                     |
+| `paginator-slot`    | `paginatorSlot`   | Footer content below the table, typically pagination controls. Through `<sui-table>` this slot is always supplied, so the built-in paginator never renders whether or not you assign content — see the limitation above. |
+| `toolbar-slot`      | `toolbarSlot`     | Bulk-action bar shown above the table while the checkbox selection is non-empty. Static markup here cannot see WHICH rows are selected — see the Svelte-only note below.                                                 |
 
 > **Note:** `tableHeaders`, `tableData`, and `sortableColumns` are arrays — set them via JavaScript properties. The `cell`, `getRowTestId`, and `getCellTestId` props are function-typed and only available via JavaScript.
+
+> **Svelte-only:** `cell` (receives `(cellValue, rowIndex, colIndex)`) and `column.cell` (receives `(row, rowIndex, originalIndex)`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.
+>
+> `toolbarSlot` (receives `{ selectedIds: Set<string> }`) and `empty` (receives `{ reason, searchTerm }`) are the parameterized snippets `<sui-table>` still bridges, because both are usable without their argument — a static toolbar, a static "No records" message: assign one as a JavaScript property (`el.toolbarSlot = snippet`, `el.empty = snippet`) and it is rendered WITH its argument; fill `slot="toolbar-slot"` / `slot="empty"` with markup instead and it renders without them, so the static toolbar cannot tell which rows are selected and the static empty message cannot tell "no records" from "no matches". Assigning the property wins over the slot.

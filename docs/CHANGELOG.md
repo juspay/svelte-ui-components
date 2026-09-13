@@ -2,7 +2,34 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.22.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.23.0)
+
+A model asked for markdown routinely returns the whole answer wrapped in
+```markdown ... ```, which renders as a code block showing source rather than
+as a document. `unwrapFence` opts into removing exactly that wrapper.
+
+Opt-in and narrowly anchored, both deliberately. An unanchored implementation
+unwraps a message that *quotes* a fenced sample while explaining markdown,
+turning the sample into live markup -- a peer measured that on their own live
+regex, which is why this one matches only a fence that is the entire value.
+
+Left untouched: a fence with prose before or after it, an unlabelled fence
+(which may be code the author meant to show), a fence labelled as another
+language, and a body that still contains a fence delimiter, where the outer
+pair may not be the wrapper at all.
+
+Tilde fences unwrap too, the info string matches `markdown` or `md`
+case-insensitively, and surrounding whitespace is tolerated.
+
+Unwrapping happens before parsing, so sanitization is unaffected: raw HTML in
+an unwrapped body is escaped or stripped exactly as it is anywhere else.
+
+-
+feat(checkbox,toggle,select): participate in native form submission ([6c6dbec](https://github.com/juspay/svelte-ui-components/commit/6c6dbece7b8168d07216cc0f6cb81648aca04e62))
+-
+feat(markdown-text): optionally unwrap a whole-body markdown fence ([2588d8f](https://github.com/juspay/svelte-ui-components/commit/2588d8fa4729da3100e6dc494bb89009554af564))
+
+## [4.23.0](https://github.com/juspay/svelte-ui-components/compare/4.23.0..4.22.0) - 12 September 2026
 
 `.table-container` was hard-coded `overflow: hidden`. That default is load
 bearing -- it is what clips the first and last cells to the container's

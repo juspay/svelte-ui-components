@@ -2,7 +2,131 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.24.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.25.0)
+
+Ported from the Lighthouse `AutomaticOrb` offered by the agentic-dashboard
+session: a thousand seeded points on a rotating sphere, drawn to a canvas, with
+a `listening` state that breathes.
+
+Pass an `AnalyserNode` and `listening` is driven by the sound itself -- amplitude
+moves both rotation speed and the size of the sphere. Without one it breathes on
+a timer and is purely decorative.
+
+The orb never opens a microphone. It does not call `getUserMedia`, does not
+create an `AudioContext` and never closes one: permission prompts, context
+lifecycle and the choice of source need application context a component does not
+have, and one that grabbed a microphone because it was mounted would be a worse
+component. The caller owns the node; the orb reads it. Any source works -- a
+microphone, a media element, a synthesised tone.
+
+The envelope is RMS over byte time-domain data, smoothed with a fast attack
+(60ms) and a slower release (320ms). Speech is a burst followed by a gap, and
+symmetric smoothing either chatters through every syllable or lags the onset
+that makes the orb feel connected to the voice. Silence draws at 0.82 scale and
+full level at 1.0, never above, so a shout cannot clip the sphere against the
+canvas edge. `speedMultiplier` still applies on top, so `0` freezes an
+audio-driven orb like any other.
+
+`onlevel` hands the same smoothed envelope back to the caller, so a caption or
+a meter stays in step with the sphere instead of measuring the analyser a second
+time and drifting. It is rate-limited by change rather than by time -- it fires
+when the level moves by at least 0.01, so silence is silent instead of sixty
+calls a second, and it fires once more on the way back to zero when the audio
+stops so a meter cannot stick at the last value it saw.
+
+Degradation is deliberate and tested. No analyser means `listening` falls back
+to the sine wave, so a consumer without an `AudioContext` keeps the animation.
+Closing the context under a mounted orb is guarded: an exception thrown inside
+the rAF callback would kill the loop permanently and leave a frozen sphere.
+
+Particles draw in the inherited text colour. That is the whole theming contract:
+legible on whatever ground a consumer puts it on, correct in both themes, no
+configuration. `--sui-orb-particle-color` overrides it and accepts any CSS colour
+-- `oklch()`, `color(display-p3 ...)`, named -- because the value is normalised
+by assigning it to a canvas `fillStyle` and reading it back rather than parsed
+here. It is resolved per frame against a string cache, so switching themes
+recolours an orb that is already running.
+
+Three app couplings had to go, not the one that was reported:
+
+- `session.store`, read for an RNG seed, becomes a `seed` prop taking a string
+or a number. A string is hashed with FNV-1a, so the same session id yields
+the same orb across navigations, which was the point of the coupling
+- `hexToRgb` from the app's utils is replaced by `parseCssColor`, which reads
+the two shapes a browser actually returns rather than hex alone
+- `$app/environment`'s `browser` is dropped. The library imports it nowhere,
+and `onMount` is client-only, so the guard was redundant here
+
+`localStorage` is the substantive change. The original wrote `orb_rotationX`,
+`orb_rotationY` and `orb_listeningTime` unconditionally under fixed global keys.
+In a package 56 projects install that is not acceptable: two orbs on one page
+would overwrite each other, and writing to a consumer's storage uninvited is not
+a component's decision. It is now opt-in behind `persistKey`, namespaced under
+it, and every read and write is guarded.
+
+The geometry, seeding, envelopes and colour parsing live in `orbMath.ts` rather
+than the component. This repo's vitest suite has no canvas -- `getContext` is
+unimplemented in jsdom -- so anything left inside the component is unreachable
+by a test. Same split as `Pill/pillTone.ts`.
+
+A `speedMultiplier={0}` orb is on the demo page under "Held still". It is a real
+state a consumer wants, and it is also the one arrangement whose pixels are
+identical on every frame, which is what lets the visual suite baseline actual
+orb pixels instead of masking the whole route.
+
+Addresses three findings from adversarial review, each with its own test
+written first and mutation-tested against the described defect:
+
+- No `prefers-reduced-motion` support. `draw` never consulted it, unlike nine
+other components in this library, and being canvas-drawn no CSS media query
+can reach it. Idle rotation and the no-analyser sine breathing are
+decorative and now freeze under the preference; a real `analyser` driving
+`listening` is left alone, because it reports what the microphone is doing
+right now rather than decorating the page. `resolveMotionSpeed` and
+`resolveMotionScale` in orbMath.ts now take the resolved preference
+explicitly, checked once per frame in `draw`. Covered end to end by three
+Playwright tests (tests/voice-orb-reduced-motion.test.ts) using
+`page.emulateMedia`, including a control proving the audio-driven path is
+untouched.
+
+- Geometry never regenerated. `generateOrbParticles` ran once inside
+`onMount`, so changing `particleCount`, `radius` or `seed` after mount
+silently kept the original sphere. `particles` is now a `$derived.by` keyed
+on those three inputs. An unseeded orb still only re-rolls its randomness
+on an actual remount, not on every unrelated prop change, via a random seed
+resolved once per instance rather than inside the derivation. Pinned by
+four new component tests (VoiceOrb.svelte.test.ts) that fake a canvas
+context and hand-step `requestAnimationFrame` to observe exactly when
+`generateOrbParticles` runs.
+
+- `seed` disagreed between the web component and the Svelte prop. The custom
+element can only ever declare it as a string attribute -- HTML has no
+numeric attribute type -- while the Svelte prop accepts `string | number`,
+and seed resolution branched on `typeof`, so `seed={42}` and `seed="42"`
+painted two different orbs for what a caller reasonably expects to be the
+same seed. `resolveExplicitSeed` now parses a numeric-looking string to the
+same unsigned integer the equivalent number would give; the web
+component's declared attribute type is untouched, and any other string is
+still hashed as text exactly as before. Pinned in orbMath.test.ts.
+
+docs/VoiceOrb.md and properties.ts document the reduced-motion split and the
+seed numeric-string parity.
+
+Verified on this amend: check 0 errors, lint 0 (prettier + eslint +
+event-casing), build 0 errors. vitest: 1094/1094 (the plain `vitest run`
+command is intermittently 5 short of that on this shared, heavily loaded
+machine -- always in scripts/migrate/*.test.ts's hardcoded 5s per-test
+timeout, never in anything touched here; a --testTimeout=20000 override, no
+source change, goes 1094/1094, pinning it as host load, not a regression).
+Playwright: the full suite completed once end to end -- 727 passed, 1
+skipped, 2 failed, neither failure in a file this change touches
+(tests/snippet-copy-options.test.ts and
+tests/typewriter-text-reduced-motion.test.ts, both timing-window assertions
+plausibly caught by the same host load); all 14 VoiceOrb tests
+(voice-orb.test.ts + voice-orb-reduced-motion.test.ts) passed in that run and
+in two further VoiceOrb-scoped-only runs.
+
+## [4.25.0](https://github.com/juspay/svelte-ui-components/compare/4.25.0..4.24.0) - 13 September 2026
 
 Symmetric counterpart to SpeechToTextController, wrapping the browser
 speechSynthesis API: voice enumeration with the voiceschanged dance,

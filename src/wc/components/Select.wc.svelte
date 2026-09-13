@@ -19,6 +19,7 @@
       classes: { type: 'String' },
       open: { type: 'Boolean', reflect: true },
       dropdownAlign: { type: 'String', attribute: 'dropdown-align' },
+      placement: { type: 'String', attribute: 'placement' },
       showSelectAll: { type: 'Boolean', attribute: 'show-select-all', reflect: true },
       selectAllLabel: { type: 'String', attribute: 'select-all-label' },
       onchange: { type: 'Object' },

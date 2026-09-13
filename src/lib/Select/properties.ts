@@ -1,5 +1,11 @@
 import type { Snippet } from 'svelte';
 
+/**
+ * Corner the dropdown anchors to. Mirrors `MenuPlacement` so the two components
+ * that open a panel from a trigger describe placement the same way.
+ */
+export type SelectPlacement = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right' | 'auto';
+
 export type SelectProperties = MandatorySelectProperties &
   OptionalSelectProperties &
   SelectEventProperties;
@@ -108,8 +114,23 @@ export type OptionalSelectProperties = {
   classes?: string;
   /** Bindable. Controls whether the dropdown is open; the component writes back on open/close so parents can `bind:open` to observe or drive it. Unbound, the component manages its own state. */
   open?: boolean;
-  /** Horizontal anchor of the dropdown panel. `'left'` (default) anchors to the trigger's left edge; `'right'` anchors to the right edge so a content-wider panel hangs leftward instead of overflowing. */
+  /**
+   * @deprecated Use `placement`, which controls both axes. `dropdownAlign: 'left'`
+   * is `placement: 'bottom-left'` and `'right'` is `'bottom-right'`. Still honoured
+   * when `placement` is not set; scheduled for removal in 5.0.0.
+   */
   dropdownAlign?: 'left' | 'right';
+  /**
+   * Corner the dropdown panel anchors to, matching `Menu`'s prop of the same name.
+   * `'auto'` resolves the best-fitting corner against the viewport on open, so a
+   * Select sitting just above a sticky footer opens upward instead of into it.
+   *
+   * Unset is the pre-5.0 contract and is what `dropdownAlign` still drives: the
+   * in-flow panel always opens downward, and a portaled one flips up only when it
+   * cannot fit below. Setting `placement` opts both paths into the same resolved
+   * corner, so an in-flow Select can finally open upward.
+   */
+  placement?: SelectPlacement;
   /** Snippet for rendering a compact trigger summary in multiple mode instead of one Pill per selected value. Receives `{ value, items }` so the consumer can compute e.g. "All" / "3 selected". When not provided the default Pill-per-value behaviour is used. */
   triggerSummary?: import('svelte').Snippet<[{ value: string[]; items: SelectItem[] }]>;
   /** Visual hierarchy of the trigger. `'ghost'` renders a transparent, borderless trigger — useful when the Select is embedded in a toolbar or header where a full bordered input would be visually heavy. Defaults to `'default'`. */

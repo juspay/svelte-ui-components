@@ -55,6 +55,8 @@
   let iconTintValue: string[] = $state([]);
   let portalValue: string[] = $state([]);
   let inflowValue: string[] = $state([]);
+  let placementUpValue: string[] = $state([]);
+  let placementAutoValue: string[] = $state([]);
   let errorValue: string[] = $state([]);
   let clearableValue: string[] = $state(['apple']);
   let clearCount = $state(0);
@@ -439,6 +441,27 @@
       testId="select-portal-demo"
     />
   </div>
+</div>
+
+<h3>placement — open upward</h3>
+<p><code>placement</code> anchors both axes, so an in-flow Select can open upward.</p>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruits}
+    bind:value={placementUpValue}
+    placement="top-left"
+    placeholder="Opens upward"
+    testId="select-placement-up"
+  />
+</div>
+<div class="demo-row" style="max-width: 300px;">
+  <Select
+    items={fruits}
+    bind:value={placementAutoValue}
+    placement="auto"
+    placeholder="Auto corner"
+    testId="select-placement-auto"
+  />
 </div>
 
 <h3>Portaled in-menu search</h3>

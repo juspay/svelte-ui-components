@@ -89,3 +89,165 @@ describe('computeSelectDropdownPosition', () => {
     expect(placement.width).toBe(90);
   });
 });
+
+/*
+ * `vertical` is the seam that lets a caller pin the panel above or below the
+ * trigger instead of taking the fit-based flip. Omitting it has to keep the
+ * pre-existing auto-flip exactly, because that is what every portaled Select
+ * shipped before `placement` existed relies on.
+ */
+describe('computeSelectDropdownPosition vertical placement', () => {
+  // Room below for a 120px panel: 800 - 240 = 560. No flip would ever happen here.
+  it('forces the panel above the trigger when vertical is "top", despite room below', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger,
+      dropdown: { width: 200, height: 120 },
+      viewport,
+      align: 'left',
+      vertical: 'top',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(true);
+    expect(placement.top).toBe(200 - 4 - 120); // trigger top - gap - height
+  });
+
+  it('keeps the panel below when vertical is "bottom", even with no room for it', () => {
+    // Trigger sits 40px from the viewport bottom; a 400px panel cannot fit below.
+    const lowTrigger = { left: 100, right: 300, top: 720, bottom: 760, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: lowTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      vertical: 'bottom',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(false);
+    expect(placement.top).toBe(764); // bottom (760) + gap (4)
+  });
+
+  it('still flips on fit when vertical is omitted, matching the previous behaviour', () => {
+    const lowTrigger = { left: 100, right: 300, top: 720, bottom: 760, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: lowTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(true);
+    expect(placement.top).toBe(720 - 4 - 400);
+  });
+
+  it('treats an explicit "auto" the same as omitting it', () => {
+    const lowTrigger = { left: 100, right: 300, top: 720, bottom: 760, width: 200 };
+    const omitted = computeSelectDropdownPosition({
+      trigger: lowTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      gap: 4
+    });
+    const explicit = computeSelectDropdownPosition({
+      trigger: lowTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      vertical: 'auto',
+      gap: 4
+    });
+    expect(explicit).toEqual(omitted);
+  });
+});
+
+/*
+ * Pinning a side is new, and it introduces a case the fit-based flip never
+ * could: the caller asks for a side the panel does not fit on. Honouring the
+ * request is right, but it must not put the panel where nothing can reach it.
+ */
+describe('computeSelectDropdownPosition pinned-side clamping', () => {
+  it('keeps a pinned-top panel on screen when there is not enough room above', () => {
+    // Trigger 50px from the top; a 400px panel pinned above would start at -354.
+    const highTrigger = { left: 100, right: 300, top: 50, bottom: 90, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: highTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      vertical: 'top',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(true);
+    expect(placement.top).toBeGreaterThanOrEqual(0);
+  });
+
+  /*
+   * Deliberately NOT clamped: pulling a too-tall pinned-bottom panel up to fit
+   * would park it over the trigger the caller just pinned it below, and the
+   * panel's own max-height/overflow already keeps its contents reachable. Only
+   * the top edge is unrecoverable, so only the top edge is held.
+   */
+  it('leaves a pinned-bottom panel below the trigger even when it overflows', () => {
+    const lowTrigger = { left: 100, right: 300, top: 720, bottom: 760, width: 200 };
+    const placement = computeSelectDropdownPosition({
+      trigger: lowTrigger,
+      dropdown: { width: 200, height: 400 },
+      viewport,
+      align: 'left',
+      vertical: 'bottom',
+      gap: 4
+    });
+    expect(placement.flippedUp).toBe(false);
+    expect(placement.top).toBe(764);
+  });
+
+  it('leaves an unconstrained panel exactly where it was', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger,
+      dropdown: { width: 200, height: 120 },
+      viewport,
+      align: 'left',
+      gap: 4
+    });
+    expect(placement.top).toBe(244);
+  });
+});
+
+/*
+ * An auto-resolved side can still overflow: `'auto'` only prefers the side with
+ * more room, and in a short viewport neither side has enough. The panel is
+ * `position: fixed` when portaled, so anything past the bottom edge cannot be
+ * scrolled back into view -- which is why the auto path clamps both ends and the
+ * pinned path, above, deliberately clamps only the top.
+ */
+describe('computeSelectDropdownPosition auto-side overflow', () => {
+  const shortViewport = { width: 1000, height: 200 };
+  const shortTrigger = { left: 100, right: 300, top: 20, bottom: 40, width: 200 };
+
+  it('holds an auto-placed panel inside a short viewport', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger: shortTrigger,
+      dropdown: { width: 200, height: 180 },
+      viewport: shortViewport,
+      align: 'left',
+      gap: 4
+    });
+    // Neither side fits: below has 160px, above has 20px, the panel needs 184px.
+    expect(placement.flippedUp).toBe(false);
+    expect(placement.top).toBe(12); // viewport 200 - height 180 - margin 8
+    expect(placement.top + 180).toBeLessThanOrEqual(shortViewport.height - 8);
+  });
+
+  it('does not apply that upper clamp to a pinned side', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger: shortTrigger,
+      dropdown: { width: 200, height: 180 },
+      viewport: shortViewport,
+      align: 'left',
+      vertical: 'bottom',
+      gap: 4
+    });
+    // Pinned below stays below its trigger rather than being dragged over it.
+    expect(placement.top).toBe(44);
+  });
+});

@@ -2,7 +2,37 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.25.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.26.0)
+
+dropdownAlign only ever described the horizontal axis, and the vertical
+flip lived inside computeSelectDropdownPosition, which portalStyle gates
+behind usePortal. An in-flow Select therefore had no way to open upward
+at all -- a Select above a sticky action bar could only open into it.
+
+placement mirrors MenuPlacement exactly, so the two components that open
+a panel from a trigger are configured the same way. It is implemented on
+both halves: the CSS class that positions the in-flow panel, and the
+geometry the portaled one uses. 'auto' measures in a hidden one-tick pass
+that reads the element rects directly, so it resolves in-flow too rather
+than silently falling back to bottom.
+
+The resolved corner is published as data-placement, which finally gives
+SelectDropdownPlacement.flippedUp a consumer -- it was returned and read
+by nothing outside its own test.
+
+Pinning a side is new, and only a pinned side can ask for a position the
+panel does not fit in. A negative top is unrecoverable for a fixed panel,
+so the top edge is clamped; overflow past the bottom is left alone, since
+the panel's own max-height keeps its contents reachable and pulling it up
+would park it over the trigger it was pinned below.
+
+dropdownAlign is kept and marked @deprecated for 5.0.0. Unset placement
+reproduces the previous behaviour exactly, on both paths.
+
+-
+feat(select): anchor the dropdown to a corner, so it can open upward ([0102628](https://github.com/juspay/svelte-ui-components/commit/0102628c0dab4e1a38081e8964271a8125f69481))
+
+## [4.26.0](https://github.com/juspay/svelte-ui-components/compare/4.26.0..4.25.0) - 13 September 2026
 
 Ported from the Lighthouse `AutomaticOrb` offered by the agentic-dashboard
 session: a thousand seeded points on a rotating sphere, drawn to a canvas, with

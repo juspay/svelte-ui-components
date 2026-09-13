@@ -58,11 +58,11 @@
 
   .text {
     font-size: var(--check-list-item-text-size, 14px);
-    color: var(--check-list-item-text-color);
+    color: var(--check-list-item-text-color, inherit);
   }
 
   .text.checked {
-    color: var(--check-list-item-checked-text-color);
-    font-weight: var(--check-list-item-checked-font-weight);
+    color: var(--check-list-item-checked-text-color, inherit);
+    font-weight: var(--check-list-item-checked-font-weight, inherit);
   }
 </style>

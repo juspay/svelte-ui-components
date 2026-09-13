@@ -73,7 +73,13 @@ export type OptionalFunnelChartProperties = {
   maxHeight?: number;
   /** Lower bound (px) on the rendered chart height (defaults to `0`). */
   minHeight?: number;
-  /** Render the tooltip into document.body (position:fixed) so scroll/overflow ancestors never clip it. */
+  /**
+   * Render the tooltip into the chart's own root (its shadow root when hosted as a
+   * custom element, `document.body` otherwise) with `position: fixed`, clamped to
+   * the viewport, instead of positioned inside the chart. Use it when the chart
+   * sits inside a container with `overflow: hidden`/`scroll` that would otherwise
+   * clip the tooltip.
+   */
   tooltipPortal?: boolean;
   /** Value for the `data-pw` attribute on the chart root element. */
   testId?: string;

@@ -35,6 +35,22 @@ export type OptionalChipInputProperties = {
   editable?: boolean;
   testId?: string;
   classes?: string;
+  /**
+   * Text shown, and announced, when the chip collection is in error ("at most
+   * five tags"). Referenced by `aria-describedby` on the group wrapping the
+   * chips and the draft field, and sets `aria-invalid` while present.
+   */
+  errorMessage?: string | null;
+  /**
+   * Persistent helper text describing the whole control. Referenced the same
+   * way, so it is read before the user trips an error rather than only after.
+   */
+  infoMessage?: string | null;
+  /**
+   * Marks the control invalid without supplying a message, for a consumer
+   * driving validity from a server or its own rules.
+   */
+  invalid?: boolean;
 };
 
 export type ChipInputEventProperties = {

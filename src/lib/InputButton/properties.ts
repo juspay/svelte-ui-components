@@ -26,7 +26,16 @@ export type OptionalInputButtonProperties = {
   leftIcon?: Snippet;
   rightIcon?: Snippet;
   classes?: string;
-  /** When true, renders a red asterisk (*) next to the label to signal the field is required. */
+  /**
+   * Marks the field required: native `required` and `aria-required` on the
+   * input the user reaches, plus a decorative asterisk beside the label.
+   */
+  required?: boolean;
+  /**
+   * @deprecated Use `required`, the platform's name for this. Kept working as
+   * an alias. It previously drew the asterisk without making the field
+   * required; it now does both, matching the `Input` it wraps.
+   */
   mandatory?: boolean;
   /** Preset height/padding size variant. Overridable per-size via CSS variables. */
   size?: InputButtonSize;

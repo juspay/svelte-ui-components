@@ -190,12 +190,12 @@
   }
 
   .sample-control.muted {
-    opacity: 0.55;
+    opacity: 0.8;
   }
 
   .sample-tag {
     font-size: 0.6875rem;
-    color: var(--doc-text-faint);
+    color: var(--doc-text-secondary);
     font-family: ui-monospace, Menlo, monospace;
   }
 </style>

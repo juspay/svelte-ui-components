@@ -1,4 +1,9 @@
 <script lang="ts">
+  // A Svelte transition directive takes a JS number, so no `@media
+  // (prefers-reduced-motion: reduce)` block can reach it -- the guard has to be
+  // in script. Duration 0 lands on exactly the frame the slide was travelling
+  // to: the banner, present. Nothing is stranded.
+  import { prefersReducedMotion } from '../utils';
   import type { BannerProperties } from './properties';
   import { slide } from 'svelte/transition';
   import Button from '../Button/Button.svelte';
@@ -17,7 +22,8 @@
     ondismiss,
     classes,
     title,
-    role = null
+    role = null,
+    transitionDuration
   }: BannerProperties = $props();
 
   let interactive = $derived(typeof onclick === 'function');
@@ -54,7 +60,7 @@
     tabindex={interactive ? 0 : null}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
-    transition:slide={{ duration: 300 }}
+    transition:slide={{ duration: prefersReducedMotion() ? 0 : (transitionDuration ?? 300) }}
   >
     {#if typeof icon === 'function'}
       <div class="banner-icon">
@@ -109,7 +115,7 @@
     justify-content: var(--banner-justify-content, center);
     background-color: var(--banner-background, #f0f4f8);
     color: var(--banner-color, #4d6174);
-    font-family: var(--banner-font-family);
+    font-family: var(--banner-font-family, inherit);
     font-size: var(--banner-font-size, 14px);
     font-weight: var(--banner-font-weight, 500);
     line-height: var(--banner-line-height, 1.3);
@@ -156,7 +162,7 @@
   }
 
   .banner-link-text {
-    color: var(--banner-link-color, #0099ff);
+    color: var(--banner-link-color, #1d4ed8);
     margin-left: var(--banner-link-gap, 4px);
   }
 

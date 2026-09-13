@@ -28,4 +28,14 @@ export type OptionalToolCallLogProperties = {
   onchipclick?: (index: number, chip: ToolCallChip) => void;
   testId?: string;
   classes?: string;
+  /**
+   * Move the open detail popover out to the root of the tree it lives in, so an
+   * `overflow: hidden` or scrolling ancestor between the two — a chat bubble, a
+   * card — cannot clip it. Defaults to true, which is what this component did
+   * unconditionally before the prop existed. Placement is identical either way
+   * (the popover is `position: fixed` in both modes), so turning it off costs
+   * only the clipping escape — worth it when the popover must stay inside a
+   * container that is itself being transformed or scrolled as a unit.
+   */
+  usePortal?: boolean;
 };

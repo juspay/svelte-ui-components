@@ -98,6 +98,10 @@
     position: relative;
     border-radius: var(--phone-screen-border-radius, 38px);
     background: var(--phone-screen-background, #000);
+    /* The screen is black by default, so it owns the ink on it too. Without
+       this, slotted content inherits the surrounding page's colour -- which on
+       a light page is dark text on a black screen (2.04:1). */
+    color: var(--phone-screen-color, #f5f5f5);
     overflow: hidden;
     display: flex;
     flex-direction: column;

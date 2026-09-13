@@ -164,7 +164,11 @@ test.describe('StatCard', () => {
     const warningValue = card.getByTestId('value-tint-value-1');
 
     await expect(successValue).toHaveCSS('color', 'rgb(22, 163, 74)');
-    await expect(warningValue).toHaveCSS('color', 'rgb(245, 158, 11)');
+    // #b45309, not the amber-500 (#f59e0b) this asserted before 8672b35. That value
+    // measured 2.15:1 against the card's white surface and failed WCAG AA's 4.5:1
+    // for normal text; #b45309 measures 5.02:1. The component was corrected and this
+    // expectation was not, so the test went on asserting the inaccessible colour.
+    await expect(warningValue).toHaveCSS('color', 'rgb(180, 83, 9)');
   });
 
   test('row-level value typography override applies to that row and not its sibling', async ({

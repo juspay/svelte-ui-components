@@ -450,7 +450,8 @@
     width: 100%;
     max-width: var(--hitl-max-width, 100%);
     margin: var(--hitl-margin, 0);
-    animation: hitl-slide-in 0.3s ease-out forwards;
+    animation: hitl-slide-in var(--hitl-slide-in-animation-duration, var(--motion-duration, 0.3s))
+      var(--hitl-slide-in-animation-easing, var(--motion-easing, ease-out)) forwards;
     contain: layout style;
   }
 
@@ -465,7 +466,7 @@
     font-size: var(--hitl-badge-font-size, 0.6875rem);
     font-weight: var(--hitl-badge-font-weight, 600);
     letter-spacing: var(--hitl-badge-letter-spacing, 0.06em);
-    color: var(--hitl-badge-color, #858585);
+    color: var(--hitl-badge-color, #595959);
     text-transform: uppercase;
   }
 
@@ -485,7 +486,7 @@
     padding: var(--hitl-description-padding, 0.25rem 0);
     font-size: var(--hitl-description-font-size, 0.8125rem);
     line-height: var(--hitl-description-line-height, inherit);
-    color: var(--hitl-description-color, #858585);
+    color: var(--hitl-description-color, #5c5c5c);
   }
 
   .confirmation-body {
@@ -505,7 +506,7 @@
     font-size: var(--hitl-param-label-font-size, 0.6875rem);
     font-weight: var(--hitl-param-label-font-weight, 600);
     letter-spacing: var(--hitl-param-label-letter-spacing, 0.04em);
-    color: var(--hitl-param-label-color, #858585);
+    color: var(--hitl-param-label-color, #595959);
     word-spacing: var(--hitl-param-label-word-spacing, normal);
     text-transform: uppercase;
   }
@@ -552,7 +553,12 @@
     overflow: hidden;
     --progress-track-background: transparent;
     --progress-bar-background: transparent;
-    --progress-bar-transition: width 0.1s linear;
+    /* Named so a consumer can reach it. HITL sets the Progress child's token
+       directly, which beats anything declared at :root, so a `<sui-hitl>`
+       consumer had no way to slow or stop the countdown sweep -- custom
+       properties are the only thing that crosses a shadow boundary, and this
+       one was spoken for. */
+    --progress-bar-transition: var(--hitl-countdown-transition, width 0.1s linear);
     --progress-track-height: 100%;
     --progress-container-padding: 0;
   }
@@ -573,17 +579,24 @@
     background: var(--hitl-completion-background, #f4f4f5);
     border-radius: var(--hitl-border-radius, 0.5rem);
     padding: var(--hitl-completion-padding, 1rem);
-    animation: hitl-fade-in 0.3s ease-in-out;
+    animation: hitl-fade-in var(--hitl-completion-animation-duration, var(--motion-duration, 0.3s))
+      var(--hitl-completion-animation-easing, var(--motion-easing, ease-in-out));
   }
 
   .completion-icon {
     display: inline-flex;
     width: var(--hitl-completion-icon-size, 1.25rem);
     height: var(--hitl-completion-icon-size, 1.25rem);
-    color: var(--hitl-approved-color, #16a34a);
+    color: var(--hitl-approved-color, #166534);
   }
 
-  .completion-icon svg {
+  /* :global() rather than the plain scoped selector: sui-hitl's wrapper mirrors
+     this file's default SVG into a <slot> fallback so the icon survives when a
+     consumer slots nothing, and that markup is written in a different .svelte
+     file -- Svelte's scoped-style hash is only ever added to elements written in
+     THIS file's own template, so an unscoped selector is the only one that also
+     matches the mirrored copy. Same idiom as Checkbox.wc.svelte's `.icon :global(svg)`. */
+  .completion-icon :global(svg) {
     width: 100%;
     height: 100%;
   }
@@ -595,7 +608,7 @@
   .completion-text {
     font-size: var(--hitl-completion-font-size, 0.875rem);
     font-weight: var(--hitl-completion-font-weight, 600);
-    color: var(--hitl-approved-color, #16a34a);
+    color: var(--hitl-approved-color, light-dark(#15803d, #4ade80));
   }
 
   .completion-text.halted {
@@ -621,6 +634,19 @@
 
     to {
       opacity: 1;
+    }
+  }
+
+  /* Two entrance animations: a slide-in and a fade-in. `animation: none` is safe
+     for both -- an entrance animates FROM an offset TO the resting state, so
+     removing it shows the resting state immediately, which is the frame the
+     animation was travelling towards anyway. That is the opposite of the timed
+     loaders in Button and ListItem, where the base rule is the FINISHED state and
+     stopping the animation would claim completion that has not happened. */
+  @media (prefers-reduced-motion: reduce) {
+    .hitl-container,
+    .hitl-completion {
+      animation: none;
     }
   }
 </style>

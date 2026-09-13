@@ -1,5 +1,9 @@
 <script lang="ts">
-  import type { LineChartProperties, LineChartTooltipContext } from './properties';
+  import type {
+    LineChartDataPoint,
+    LineChartProperties,
+    LineChartTooltipContext
+  } from './properties';
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { ChartHighlightAPI } from '$lib/_chart/highlight';
   import { onMount } from 'svelte';
@@ -8,7 +12,7 @@
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
   import { createLinearScale, niceLinearDomain, computeLinearTicks } from '$lib/_chart/scales';
-  import { computeAutoLayout } from '$lib/_chart/geometry';
+  import { computeAutoLayout, joinByX } from '$lib/_chart/geometry';
   import { linePath, areaPath } from '$lib/_chart/paths';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber, defaultTickFormat } from '$lib/_chart/format';
@@ -73,7 +77,21 @@
   let plotEl: HTMLDivElement | null = $state(null);
   let chartWidth = $state(0);
   let chartHeight = $state(0);
-  let hovered = $state<{ si: number; pi: number } | null>(null);
+  // `x` is the shared column key from `joinByX` (a real x VALUE, not an array
+  // index), and `si` is the series that owns the hovered marker within that
+  // column. Joining by x (see below) is what lets two series with different
+  // x coverage each contribute their own point to a shared hover column
+  // instead of one series' array index being reused against another's data.
+  //
+  // `hovered` and `focused` are kept as two separate pieces of state rather
+  // than one shared by both input sources: a pointer leaving a mark must
+  // never erase that mark's focus, and a late/stale pointerleave -- which
+  // real browsers fire *after* a focus event when focusing an off-screen
+  // mark auto-scrolls the page under an unmoved cursor -- must not be able
+  // to clobber the focus highlight either. See `pointerOrFocused` below for
+  // the precedence between them.
+  let hovered = $state<{ x: number; si: number } | null>(null);
+  let focused = $state<{ x: number; si: number } | null>(null);
   // internalHighlight holds the index driven by the ChartHighlightAPI.highlight() call.
   // The effective highlighted index merges this with the prop-driven highlightedIndex.
   let internalHighlight = $state<number | null>(null);
@@ -246,19 +264,35 @@
     }))
   );
 
+  // ── Cross-series alignment ──────────────────────────────
+
+  // The ONE alignment contract for tooltip/hit-testing (and, via
+  // computeStackedValues, stacking) — see `$lib/_chart/geometry`. For the
+  // common case where every series already shares one x sequence this
+  // produces exactly the old positional pairing, so nothing changes there.
+  let joined = $derived(joinByX(series));
+  let joinedByX = $derived(new Map(joined.map((row) => [row.x, row])));
+
   // ── Tooltip ────────────────────────────────────────────────────
 
-  let hoveredPoint = $derived(
-    hovered === null ? null : (series[hovered.si]?.data[hovered.pi] ?? null)
-  );
+  // Precedence: keyboard focus wins over pointer hover -- see the comment on
+  // `focused`'s declaration. Hovering series A's mark while series B's mark
+  // holds focus keeps B active; A regains hover feedback once focus moves
+  // off it. Every derivation below reads this combined value rather than
+  // `hovered` directly, so all of them agree on what "active" means.
+  let pointerOrFocused = $derived(focused ?? hovered);
 
+  let hoveredRow = $derived(
+    pointerOrFocused === null ? null : (joinedByX.get(pointerOrFocused.x) ?? null)
+  );
   let hoverLineX = $derived.by<number | null>(() => {
-    if (hovered === null) {
+    if (pointerOrFocused === null) {
       return null;
     }
-    const x = lines[hovered.si]?.points[hovered.pi]?.x ?? null;
-    // A gap point (non-finite) anchors no crosshair.
-    return x !== null && Number.isFinite(x) ? x : null;
+    const x = xScale(pointerOrFocused.x);
+    // A non-finite pointerOrFocused.x cannot occur (joinByX excludes it), but a
+    // degenerate scale (e.g. zero-width plot) can still project to NaN.
+    return Number.isFinite(x) ? x : null;
   });
 
   // When a highlight index is active (imperative or prop), show the vertical
@@ -283,41 +317,47 @@
   let activeLineX = $derived(hoverLineX ?? highlightLineX);
 
   let tooltipContext = $derived.by<LineChartTooltipContext | null>(() => {
-    if (hovered === null || hoveredPoint === null) {
+    if (pointerOrFocused === null || hoveredRow === null) {
       return null;
     }
+    const row = hoveredRow;
     return {
-      x: hoveredPoint.x,
+      x: pointerOrFocused.x,
       points: series.map((s, si) => {
-        const p = s.data[hovered!.pi];
+        // Each series contributes ITS OWN sample at this x column — not
+        // whatever happens to sit at the anchor series' array index. A
+        // series absent at this x (row.values[si] is null) reports 0,
+        // matching the pre-fix fallback for a missing point.
+        const entry = row.values[si];
         return {
           name: s.name,
-          y: p?.y ?? 0,
+          y: entry?.point.y ?? 0,
           color: s.color ?? getColor(si),
-          label: p?.label
+          label: entry?.point.label
         };
       })
     };
   });
 
   let tooltipData = $derived.by(() => {
-    if (tooltipContext === null) {
+    if (tooltipContext === null || hoveredRow === null) {
       return null;
     }
+    const row = hoveredRow;
     const xLabel = resolvedXTickFormat
       ? resolvedXTickFormat(tooltipContext.x)
       : `x: ${formatNumber(tooltipContext.x)}`;
     return {
       title: xLabel,
       items: tooltipContext.points
-        .map((p, si) => ({ p, si }))
+        .map((p, si) => ({ p, si, entry: row.values[si] }))
         .filter(
-          ({ si }) =>
+          ({ si, entry }) =>
             !hiddenSeries.has(si) &&
-            (shared || si === hovered?.si) &&
-            series[si]?.data[hovered!.pi] != null &&
+            (shared || si === pointerOrFocused?.si) &&
+            entry !== null &&
             // A gap point (non-finite y) has nothing to report in the tooltip.
-            Number.isFinite(series[si].data[hovered!.pi].y)
+            Number.isFinite(entry.point.y)
         )
         .map(({ p }) => ({ label: p.name, value: formatNumber(p.y), color: p.color }))
     };
@@ -325,23 +365,29 @@
 
   // Highcharts hover halo: a translucent ring behind the active marker(s).
   let haloPoints = $derived.by(() => {
-    if (hovered === null) {
+    if (pointerOrFocused === null || hoveredRow === null) {
       return [];
     }
+    const row = hoveredRow;
     return lines.flatMap((line, si) => {
-      if (line.hidden || (!shared && si !== hovered!.si)) {
+      if (line.hidden || (!shared && si !== pointerOrFocused!.si)) {
         return [];
       }
-      const p = line.points[hovered!.pi];
-      // A gap point (non-finite) has no marker, so it gets no halo either.
-      return p && Number.isFinite(p.x) && Number.isFinite(p.y)
-        ? [{ x: p.x, y: p.y, color: line.color }]
-        : [];
+      // This series' OWN entry at the hovered column, projected through the
+      // shared scales — not `line.points[pointerOrFocused.pi]`, which would be
+      // this series' point at the ANCHOR series' array index.
+      const entry = row.values[si];
+      if (!entry || !Number.isFinite(entry.point.x) || !Number.isFinite(entry.point.y)) {
+        return [];
+      }
+      const x = xScale(entry.point.x);
+      const y = yScale(entry.point.y);
+      return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y, color: line.color }] : [];
     });
   });
 
   let anchor = $derived.by<TooltipAnchor | null>(() => {
-    if (hovered === null || haloPoints.length === 0) {
+    if (pointerOrFocused === null || haloPoints.length === 0) {
       return null;
     }
     return {
@@ -349,6 +395,74 @@
       y: Math.min(...haloPoints.map((p) => p.y)) + dims.margin.top,
       side: 'top'
     };
+  });
+
+  // ── Keyboard access & live status (family-wide contract; see
+  //    docs/PieChart.md#keyboard-access) ─────────────────────────
+
+  const instanceId = $props.id();
+  const statusId = `line-status-${instanceId}`;
+
+  // "Active" datum for announcement purposes, in the SAME precedence order
+  // PieChart's own activeIndex/statusText already documents: direct
+  // interaction (pointer hover or keyboard focus, both funnelled through
+  // `hovered`) ahead of the declarative highlightedIndex prop / imperative
+  // ChartHighlightAPI (effectiveHighlight) -- neither of which fires a focus
+  // event of its own, so a live region is the only way either one reaches
+  // assistive tech. AreaChart has no such non-focus-triggered highlight
+  // path (no highlightedIndex prop, no ChartHighlightAPI), so it relies on
+  // each mark's own aria-label alone, matching the family's majority
+  // (Bar/DualAxisBar/Funnel/Sankey) -- this live region exists here for the
+  // same reason it exists on PieChart, not as an inconsistency between the
+  // two new charts.
+  let activeDatum = $derived.by<{ si: number; point: LineChartDataPoint } | null>(() => {
+    if (pointerOrFocused !== null && hoveredRow !== null) {
+      const entry = hoveredRow.values[pointerOrFocused.si];
+      return entry ? { si: pointerOrFocused.si, point: entry.point } : null;
+    }
+    if (effectiveHighlight !== null) {
+      for (let si = 0; si < series.length; si++) {
+        if (hiddenSeries.has(si)) {
+          continue;
+        }
+        const point = series[si]?.data[effectiveHighlight];
+        if (point) {
+          return { si, point };
+        }
+      }
+    }
+    return null;
+  });
+
+  let statusText = $derived.by(() => {
+    const active = activeDatum;
+    if (active === null) {
+      return '';
+    }
+    const name = focusPointLabel(active.point, active.point.x);
+
+    // A SHARED tooltip shows every series at this x, so the live region has to
+    // as well. `shared` defaults to true whenever there is more than one series,
+    // so announcing only the focused one was the default configuration: a
+    // sighted user saw "Revenue: 10" and "Cost: 5" while a screen-reader user
+    // heard "Revenue: 10" alone -- the tooltip's whole comparison, which is the
+    // reason a shared tooltip exists, silently withheld from the people who
+    // cannot see it.
+    const row = joinedByX.get(active.point.x);
+    if (shared && series.length > 1 && row) {
+      const parts = series
+        .map((s, si) => ({ name: s.name, entry: row.values[si], si }))
+        .filter((candidate) => !hiddenSeries.has(candidate.si) && candidate.entry !== null)
+        .map((candidate) => `${candidate.name}: ${formatNumber(candidate.entry!.point.y)}`);
+      if (parts.length > 0) {
+        return `${name} — ${parts.join(', ')}`;
+      }
+    }
+
+    const value = formatNumber(active.point.y);
+    return series.length > 1
+      ? `${name} — ${series[active.si]?.name ?? ''}: ${value}`
+      : `${name}: ${value}`;
   });
 
   // ── Point labels ───────────────────────────────────────────────
@@ -372,21 +486,26 @@
 
   // ── Highlight dim logic ────────────────────────────────────────
 
-  // A point index is "dimmed" when the highlight system is active (hover or
-  // imperative highlight) and the point is not the active one.
+  // A point is "dimmed" when the highlight system is active (hover or
+  // imperative highlight) and the point is not the active one. `pi` here is
+  // always the series' OWN array index (as rendered), so the hover
+  // comparison must go through that point's actual x value rather than
+  // reusing `pi` as if it meant the same column in every series.
   const isDotDimmed = (si: number, pi: number): boolean => {
     if (shared) {
-      if (hovered !== null) {
-        return hovered.pi !== pi;
+      if (pointerOrFocused !== null) {
+        const dataX = series[si]?.data[pi]?.x ?? null;
+        return dataX === null || pointerOrFocused.x !== dataX;
       }
       if (effectiveHighlight !== null) {
         return pi !== effectiveHighlight;
       }
       return false;
     }
-    // Hover interaction takes precedence over imperative highlight.
-    if (hovered !== null) {
-      return hovered.si !== si || hovered.pi !== pi;
+    // Hover/focus interaction takes precedence over imperative highlight.
+    if (pointerOrFocused !== null) {
+      const dataX = series[si]?.data[pi]?.x ?? null;
+      return pointerOrFocused.si !== si || dataX === null || pointerOrFocused.x !== dataX;
     }
     if (effectiveHighlight !== null) {
       return pi !== effectiveHighlight;
@@ -398,22 +517,51 @@
     if (shared) {
       return false;
     }
-    if (hovered !== null) {
-      return hovered.si !== si;
+    if (pointerOrFocused !== null) {
+      return pointerOrFocused.si !== si;
     }
     // When only a point index is highlighted (no series index), dim no lines.
     return false;
   };
 
   const isHighlightedDot = (si: number, pi: number): boolean => {
-    if (hovered !== null) {
-      return hovered.si === si && hovered.pi === pi;
+    if (pointerOrFocused !== null) {
+      const dataX = series[si]?.data[pi]?.x ?? null;
+      return pointerOrFocused.si === si && dataX !== null && pointerOrFocused.x === dataX;
     }
     if (effectiveHighlight !== null) {
       return pi === effectiveHighlight;
     }
     return false;
   };
+
+  // AreaChart/LineChart are continuous series, not discrete categories like
+  // Bar/Funnel/Pie/Sankey/DualAxisBar -- there is no fixed set of "marks" to
+  // Tab through independent of data shape. The deliberate call here: each
+  // rendered (series, point) pair is its own Tab stop, in series-then-point
+  // DOM order, mirroring exactly what pointer hover already lands on via
+  // findNearest -- so keyboard and mouse users reach the same set of
+  // addressable data points, just via a different input.
+  function focusPointLabel(point: LineChartDataPoint, x: number): string {
+    if (point.label) {
+      return point.label;
+    }
+    return resolvedXTickFormat ? resolvedXTickFormat(x) : formatNumber(x);
+  }
+
+  // Matches the family's per-mark "{name}: {value}" convention (Bar/Funnel/
+  // Pie), extended with the "{name} — {series}: {value}" em-dash form for
+  // multi-series charts -- BarChart's own tooltip already disambiguates
+  // multi-series marks this way, but its aria-label omits the series name
+  // (a gap found while extracting this contract, not repeated here).
+  function focusAriaLabel(si: number, pi: number, x: number): string {
+    const point = series[si]?.data[pi];
+    const name = point ? focusPointLabel(point, x) : formatNumber(x);
+    const value = formatNumber(point?.y ?? 0);
+    return series.length > 1
+      ? `${name} — ${series[si]?.name ?? ''}: ${value}`
+      : `${name}: ${value}`;
+  }
 
   // ── Interactions ───────────────────────────────────────────────
 
@@ -425,61 +573,97 @@
     }
   };
 
-  const findNearest = (plotX: number, plotY: number): { si: number; pi: number } | null => {
-    if (series.length === 0) {
-      return null;
-    }
-    // Use the longest VISIBLE series as the index reference so hover still works
-    // when the first series is empty or shorter than the others, and never
-    // anchors to a series the user has toggled off via the legend.
-    const visibleEntries = series
-      .map((s, si) => ({ s, si }))
-      .filter((entry) => !hiddenSeries.has(entry.si));
-    if (visibleEntries.length === 0) {
-      return null;
-    }
-    const referenceEntry = visibleEntries.reduce((a, b) =>
-      b.s.data.length > a.s.data.length ? b : a
-    );
-    const reference = referenceEntry.s.data;
-    if (reference.length === 0) {
-      return null;
-    }
-    let nearestPi = 0;
+  // Nearest hit-test over the SAME `joined` columns used for tooltip/halo —
+  // one alignment contract, not a second position-based path. A column is
+  // only eligible if some visible series actually has a finite value there,
+  // so a shared gap column is skipped rather than reported as hoverable.
+  const findNearest = (plotX: number, plotY: number): { x: number; si: number } | null => {
+    let nearestRow: (typeof joined)[number] | null = null;
     let nearestXDist = Infinity;
-    for (let i = 0; i < reference.length; i++) {
-      // Gap points (non-finite) are not hoverable — NaN distances would never
-      // win the comparison, but skipping keeps nearestPi from defaulting to one.
-      if (!Number.isFinite(reference[i].x) || !Number.isFinite(reference[i].y)) {
+    for (const row of joined) {
+      const hasVisibleValue = row.values.some(
+        (entry, si) => entry !== null && !hiddenSeries.has(si) && Number.isFinite(entry.point.y)
+      );
+      if (!hasVisibleValue) {
         continue;
       }
-      const px = xScale(reference[i].x);
+      const px = xScale(row.x);
       const dist = Math.abs(px - plotX);
       if (dist < nearestXDist) {
         nearestXDist = dist;
-        nearestPi = i;
+        nearestRow = row;
       }
     }
-    // The reference series is visible and owns nearestPi by construction, so
-    // it's a safe default if no other visible series' point is nearer in y.
-    let nearestSi = referenceEntry.si;
+    if (nearestRow === null) {
+      return null;
+    }
+    let nearestSi = -1;
     let nearestYDist = Infinity;
     for (let si = 0; si < series.length; si++) {
       if (hiddenSeries.has(si)) {
         continue;
       }
-      const p = series[si].data[nearestPi];
-      if (!p) {
+      const entry = nearestRow.values[si];
+      if (!entry || !Number.isFinite(entry.point.y)) {
         continue;
       }
-      const py = yScale(p.y);
+      const py = yScale(entry.point.y);
       const dist = Math.abs(py - plotY);
       if (dist < nearestYDist) {
         nearestYDist = dist;
         nearestSi = si;
       }
     }
-    return { si: nearestSi, pi: nearestPi };
+    return nearestSi === -1 ? null : { x: nearestRow.x, si: nearestSi };
+  };
+
+  const sameMark = (
+    a: { x: number; si: number } | null,
+    b: { x: number; si: number } | null
+  ): boolean => a !== null && b !== null && a.x === b.x && a.si === b.si;
+
+  // onpointhover mirrors the combined pointer-or-focus mark (pointerOrFocused),
+  // once per actual change -- e.g. a pointer leaving a mark that is still
+  // keyboard-focused must not report a hover-cleared event for a highlight
+  // that never went away. Shared by activatePointer/activateFocus/
+  // handlePointerLeave/handleBlur so all four write paths agree on the same
+  // dedup.
+  let lastNotified: { x: number; si: number } | null = null;
+  const notifyPointHover = (): void => {
+    const next = pointerOrFocused;
+    if (sameMark(next, lastNotified)) {
+      return;
+    }
+    lastNotified = next;
+    if (next === null) {
+      onpointhover?.(null);
+      return;
+    }
+    const entry = joinedByX.get(next.x)?.values[next.si];
+    if (entry) {
+      // pointIndex is this series' own array index (entry.index), not the
+      // shared column key — the documented event contract is an index into
+      // `series[seriesIndex].data`, which differs from other series' own
+      // indices whenever their x coverage differs.
+      onpointhover?.({ seriesIndex: next.si, pointIndex: entry.index, point: entry.point });
+    }
+  };
+
+  // Pointer half of activation, used by handleOverlayMove. Skips the write
+  // (not just the notify) when the mark hasn't changed, since
+  // handleOverlayMove fires on every pointermove over the same mark.
+  const activatePointer = (next: { x: number; si: number }): void => {
+    if (!sameMark(hovered, next)) {
+      hovered = next;
+    }
+    notifyPointHover();
+  };
+
+  // Focus half of activation, used by handleMarkFocus. See `focused`'s
+  // declaration for why this writes separate state from activatePointer.
+  const activateFocus = (next: { x: number; si: number }): void => {
+    focused = next;
+    notifyPointHover();
   };
 
   const handleOverlayMove = (e: PointerEvent): void => {
@@ -491,27 +675,61 @@
       hovered = null;
       return;
     }
-    if (hovered === null || hovered.si !== next.si || hovered.pi !== next.pi) {
-      hovered = next;
-      const point = series[next.si].data[next.pi];
-      onpointhover?.({ seriesIndex: next.si, pointIndex: next.pi, point });
+    activatePointer(next);
+  };
+
+  // Wired to the hover-overlay's pointerleave. Clears ONLY the hover half of
+  // the state -- never `focused` -- so a late, stale pointerleave (see
+  // `focused`'s declaration comment) cannot erase a mark's focus highlight.
+  const handlePointerLeave = (): void => {
+    if (hovered !== null) {
+      hovered = null;
+      notifyPointHover();
     }
   };
 
-  const handleLeave = (): void => {
-    if (hovered !== null) {
-      hovered = null;
-      onpointhover?.(null);
+  // Keyboard mirror of pointer hover/click: focusing a mark activates it
+  // exactly like the nearest-point hover search would (same tooltip/halo/
+  // anchor/live-status state, via pointerOrFocused), blur mirrors
+  // pointer-leave for the focus half, and Enter/Space invoke the same click
+  // callback a pointer click would -- the Enter/Space-only contract every
+  // one of the five existing charts uses (none of Bar/DualAxisBar/Funnel/
+  // Pie/Sankey wires arrow keys, Home, End or Escape, so none are added
+  // here either).
+  const handleMarkFocus = (si: number, pi: number): void => {
+    const point = series[si]?.data[pi];
+    if (point) {
+      activateFocus({ x: point.x, si });
+    }
+  };
+
+  // Wired to the .focus-target circle's blur. Clears ONLY the focus half; a
+  // pointer that happens to still be over the mark keeps it hovered.
+  const handleBlur = (): void => {
+    if (focused !== null) {
+      focused = null;
+      notifyPointHover();
+    }
+  };
+
+  const handleMarkKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
     }
   };
 
   const handleClick = (): void => {
-    if (hovered === null) {
+    if (pointerOrFocused === null) {
       return;
     }
-    const point = series[hovered.si]?.data[hovered.pi];
-    if (point) {
-      onpointclick?.({ seriesIndex: hovered.si, pointIndex: hovered.pi, point });
+    const entry = joinedByX.get(pointerOrFocused.x)?.values[pointerOrFocused.si];
+    if (entry) {
+      onpointclick?.({
+        seriesIndex: pointerOrFocused.si,
+        pointIndex: entry.index,
+        point: entry.point
+      });
     }
   };
 
@@ -521,7 +739,7 @@
     if (hovered === null) {
       return;
     }
-    return dismissOnOutsidePointerDown(containerEl, handleLeave);
+    return dismissOnOutsidePointerDown(containerEl, handlePointerLeave);
   });
 </script>
 
@@ -534,6 +752,13 @@
   {#if isEmpty && typeof empty === 'function'}
     <div class="chart-empty">{@render empty()}</div>
   {:else}
+    <!-- Mirrors the tooltip's own text for every activation path (pointer,
+         keyboard focus, declarative highlightedIndex, imperative
+         ChartHighlightAPI) -- see statusText. -->
+    <div class="sr-only" role="status" aria-live="polite" id={statusId} data-pw="line-status">
+      {statusText}
+    </div>
+
     {#if showLegend && series.length > 1 && (chartWidth === 0 || hideLegendBelow === 0 || chartWidth >= hideLegendBelow)}
       {#if interactiveLegend}
         <Legend items={legendItems} position="top" onToggle={toggleSeries} />
@@ -570,7 +795,7 @@
                     offset="0%"
                     stop-color={line.color}
                     stop-opacity={Math.min(
-                      (hovered?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
+                      (pointerOrFocused?.si === si ? fillOpacity + 0.2 : fillOpacity) + 0.3,
                       1
                     )}
                   />
@@ -654,7 +879,7 @@
               {:else if gradientFill}
                 <path
                   class="line-area-fill"
-                  class:dimmed={hovered !== null && hovered.si !== si}
+                  class:dimmed={pointerOrFocused !== null && pointerOrFocused.si !== si}
                   d={line.areaD}
                   fill="url(#line-grad-{uid}-{si})"
                 />
@@ -729,6 +954,46 @@
             {/if}
           {/each}
 
+          <!-- Always rendered (independent of showDots), in natural series
+               order (paint order doesn't matter -- these stay transparent
+               until :focus-visible): one Tab stop per data point, giving
+               keyboard users the same per-point targets pointer hover
+               already reaches via findNearest. -->
+          {#each lines as line, si (si)}
+            {#if !line.hidden}
+              {#each line.points as point, pi (pi)}
+                {@const raw = series[si]?.data[pi]}
+                {#if raw && Number.isFinite(point.x) && Number.isFinite(point.y)}
+                  <!-- `onclick` as well as `onkeydown`, matching all five sibling
+                       charts, which put both on the same element. Assistive
+                       technology commonly realises its "activate control" gesture
+                       as a click DISPATCHED AT the focused node rather than as a
+                       raw keydown, so a mark carrying only `onkeydown` is
+                       reachable and announceable and still cannot be activated by
+                       the very users the focus target exists for.
+                       `pointer-events: none` does not block this: it suppresses
+                       hit-testing for real pointer input -- which is what keeps
+                       mouse hover flowing to the overlay underneath -- while a
+                       dispatched click still fires a listener on the element. -->
+                  <circle
+                    class="focus-target"
+                    cx={point.x}
+                    cy={point.y}
+                    r={6}
+                    tabindex="0"
+                    role="button"
+                    aria-label={focusAriaLabel(si, pi, raw.x)}
+                    aria-describedby={statusId}
+                    onfocus={() => handleMarkFocus(si, pi)}
+                    onblur={handleBlur}
+                    onkeydown={handleMarkKeydown}
+                    onclick={handleClick}
+                  />
+                {/if}
+              {/each}
+            {/if}
+          {/each}
+
           {#if activeLineX !== null}
             <line
               class="hover-line"
@@ -751,7 +1016,7 @@
             data-pw="hover-overlay"
             testID="hover-overlay"
             onpointermove={handleOverlayMove}
-            onpointerleave={handleLeave}
+            onpointerleave={handlePointerLeave}
             onclick={handleClick}
           />
         </g>
@@ -797,15 +1062,18 @@
   }
   .line-area-fill {
     transition:
-      fill-opacity var(--chart-transition-duration, 0.2s) ease,
-      opacity var(--chart-transition-duration, 0.2s) ease;
+      fill-opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease));
     pointer-events: none;
   }
   .line-area-fill.dimmed {
     opacity: var(--linechart-dimmed-opacity, 0.2);
   }
   .line-path {
-    transition: opacity var(--chart-transition-duration, 0.2s) ease;
+    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      var(--chart-transition-easing, var(--motion-easing, ease));
     stroke-linecap: round;
     stroke-linejoin: round;
     pointer-events: none;
@@ -821,8 +1089,10 @@
   }
   .dot {
     transition:
-      r var(--chart-transition-duration, 0.2s) ease,
-      opacity var(--chart-transition-duration, 0.2s) ease;
+      r var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease)),
+      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+        var(--chart-transition-easing, var(--motion-easing, ease));
     stroke: var(--chart-dot-stroke, light-dark(#fff, #111827));
     stroke-width: 2;
     pointer-events: none;
@@ -837,6 +1107,27 @@
   .dot-halo {
     opacity: 0.25;
     pointer-events: none;
+  }
+  .focus-target {
+    fill: transparent;
+    pointer-events: none;
+  }
+  .focus-target:focus-visible {
+    outline: 2px solid var(--chart-axis-label-color, light-dark(#333, #e5e7eb));
+    outline-offset: 1px;
+  }
+  /* Standard visually-hidden recipe (matches PieChart's own .sr-only): present
+     for assistive tech, removed from layout and the visual canvas. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
   }
   .point-value {
     fill: var(--linechart-value-color, light-dark(#333, #e5e7eb));

@@ -33,7 +33,7 @@
     "codemod": "node scripts/codemod/cli.ts",
     "check:wc": "svelte-check --tsconfig ./tsconfig.wc.json --compiler-warnings \"options_missing_custom_element:ignore\"",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "prettier --check src scripts tests && eslint src scripts tests && npm run lint:event-casing",
+    "lint": "prettier --check src scripts tests && eslint src scripts tests && npm run lint:event-casing && npm run lint:shadow-safety && npm run lint:css-contract && npm run lint:docs-contract && npm run lint:wc-contract && npm run lint:test-focus",
     "lint:event-casing": "node scripts/check-event-casing.js",
     "format": "prettier --write src scripts tests",
     "test:integration": "playwright test",
@@ -44,7 +44,13 @@
     "check:migrate": "tsc -p scripts/migrate/tsconfig.json",
     "check:release": "tsc -p scripts/release/tsconfig.json",
     "check:wc-parity": "tsc -p scripts/wc-parity/tsconfig.json",
-    "postinstall": "node scripts/postinstall.mjs"
+    "postinstall": "node scripts/postinstall.mjs",
+    "lint:shadow-safety": "node scripts/check-shadow-safety.js",
+    "lint:css-contract": "node scripts/check-css-contract.js",
+    "lint:docs-contract": "node scripts/check-docs-contract.js",
+    "lint:wc-contract": "node scripts/check-wc-contract.js",
+    "lint:test-focus": "node scripts/check-test-focus.js",
+    "test:walkthrough": "playwright test --config playwright.walkthrough.config.ts"
   },
   "exports": {
     ".": {
@@ -54,7 +60,8 @@
     "./wc": {
       "types": "./dist-wc/index.d.ts",
       "default": "./dist-wc/index.js"
-    }
+    },
+    "./theme-dark.css": "./dist/styles/theme-dark.css"
   },
   "files": [
     "dist",

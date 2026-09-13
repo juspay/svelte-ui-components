@@ -87,6 +87,18 @@
 <style>
   .chart-container {
     width: 100%;
+    /* Floor against the silent zero-collapse bug: a flex/grid ancestor that
+       sizes itself by shrink-to-fit/fit-content resolves this div's
+       `width: 100%` as an indefinite percentage and contributes 0 to that
+       calculation, so the ancestor -- and this div -- settle at 0px with no
+       signal, and the `{#if width > 0 && height > 0}` guard below then
+       renders nothing at all. A definite min-width isn't subject to that;
+       it gives the ancestor a real, non-zero size to lay out against, so
+       the collapse can't happen in the first place. Overridable per
+       instance via --chart-min-width; PieChart's legend-right layout
+       already sets this to 0 for its own case, where flex-basis is
+       definite (0, not auto) so shrink-to-fit never applies. */
+    min-width: var(--chart-min-width, 160px);
     background: var(--chart-background, transparent);
     font-family: var(--chart-font-family, inherit);
   }

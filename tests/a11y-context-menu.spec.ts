@@ -39,6 +39,14 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
     await gotoHydrated(page, '/components/context-menu');
     await page.getByTestId('context-menu-target').click({ button: 'right' });
 
+    // Opening is asynchronous: the menu mounts and moves focus after the
+    // right-click resolves. A key pressed before that lands on the page instead
+    // and is simply lost, so the assertion below fails as an unexplained
+    // timeout -- and does so only when the machine is loaded enough to widen the
+    // gap. Every test here that already gated on this never flaked; the three
+    // that did not are the three that did.
+    await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
+
     await page.keyboard.press('End');
     await expect(page.getByRole('menuitem', { name: 'Paste' })).toBeFocused();
 
@@ -86,6 +94,14 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
       activations.push(dialog.message());
       await dialog.dismiss();
     });
+
+    // Opening is asynchronous: the menu mounts and moves focus after the
+    // right-click resolves. A key pressed before that lands on the page instead
+    // and is simply lost, so the assertion below fails as an unexplained
+    // timeout -- and does so only when the machine is loaded enough to widen the
+    // gap. Every test here that already gated on this never flaked; the three
+    // that did not are the three that did.
+    await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
 
     await page.keyboard.press('ArrowDown'); // Cut -> Copy
     await page.keyboard.press('Enter');
@@ -148,6 +164,15 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
     const target = page.getByTestId('context-menu-target');
     await target.focus();
     await target.click({ button: 'right' });
+
+    // Opening is asynchronous: the menu mounts and moves focus after the
+    // right-click resolves. A key pressed before that lands on the page instead
+    // and is simply lost, so the assertion below fails as an unexplained
+    // timeout -- and does so only when the machine is loaded enough to widen the
+    // gap. Every test here that already gated on this never flaked; the three
+    // that did not are the three that did.
+    await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
+
     await page.keyboard.press('Escape');
 
     // The other half of the same rule: focus was still inside the menu, so it

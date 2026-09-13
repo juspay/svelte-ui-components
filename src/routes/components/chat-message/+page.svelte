@@ -250,7 +250,11 @@
      leaves the bar as the only thing distinguishing the turns. */
   .marker-gutter :global(.marker-flat) {
     --chat-message-sender-background: transparent;
-    --chat-message-sender-color: inherit;
+    /* Not `inherit`: for a custom property that means "take the parent's value
+       of this same property", which is undefined here in light mode -- leaving
+       the declaration invalid and handing the bubble var()'s #ffffff fallback,
+       white on white. Name the colour the flat surface actually wants. */
+    --chat-message-sender-color: var(--doc-text-primary, #374151);
     --chat-message-marker-offset: -14px;
     --chat-message-marker-width: 3px;
     --chat-message-marker-color: #0ea5e9;

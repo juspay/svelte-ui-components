@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { describeField } from '../_field/description';
   import type { RadioProperties } from './properties';
 
   let {
@@ -9,8 +10,24 @@
     disabled = false,
     testId,
     onchange,
-    classes
+    classes,
+    required = false,
+    form,
+    errorMessage,
+    infoMessage,
+    invalid = false
   }: RadioProperties = $props();
+
+  /* The control and the text that explains it were never linked: a screen-reader
+     user reaching this control heard its name and nothing about why it was
+     rejected. `describeField` composes the reference from the messages that are
+     actually rendered, so aria-describedby never points at an id that is not in
+     the DOM -- which passes an attribute assertion and resolves to nothing in a
+     real reader. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
 
   let checked = $derived(selectedValue === value);
 
@@ -31,11 +48,17 @@
 >
   <input
     type="radio"
+    aria-describedby={field.describedBy}
+    aria-invalid={field.ariaInvalid}
     class="radio-input"
     {name}
     {value}
     {checked}
     {disabled}
+    {required}
+    form={typeof form === 'string' ? form : null}
+    data-state={checked ? 'checked' : 'unchecked'}
+    data-disabled={disabled ? '' : null}
     onchange={handleChange}
   />
   <span class="radio-indicator" class:checked class:disabled>
@@ -45,6 +68,28 @@
     <span class="radio-text" class:disabled>{text}</span>
   {/if}
 </label>
+
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
 
 <style>
   .radio-container {
@@ -125,5 +170,17 @@
 
   .radio-text.disabled {
     color: var(--radio-disabled-text-color, #999999);
+  }
+
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
   }
 </style>

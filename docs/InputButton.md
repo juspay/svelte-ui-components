@@ -12,6 +12,25 @@ A composite component that combines an Input field with optional left, right, an
 <InputButton />
 ```
 
+## Validity messaging
+
+`InputButton` renders the error and helper text itself — it passes `actionInput` to the
+`Input` inside, which suppresses `Input`'s own copies. Both elements now carry ids and
+are referenced by `aria-describedby` on a `role="group"` wrapper around the control, and
+`aria-invalid` is set while an error is showing.
+
+The wrapper is described rather than the field itself because the field is inside
+`Input`, which composes its own `aria-describedby` from its own `onErrorMessage` /
+`infoMessage` props and offers no seam for an outside one. A group description is
+announced on entering the group rather than on the control, which is weaker than the
+per-control link `Checkbox`, `Radio` and `Input` get. Pass
+`inputProperties.onErrorMessage` instead when you want the message bound to the text
+field itself — note that `actionInput` then hides it, so you would be choosing the ARIA
+link over the visible message.
+
+Precedence is unchanged: a non-empty `error` wins over `inputProperties.onErrorMessage`,
+which itself only appears once validation has actually failed.
+
 ## Props
 
 | Prop                   | Type                                       | Required | Default | Description                                                                                                                                                                                                                                                                        |
@@ -23,7 +42,8 @@ A composite component that combines an Input field with optional left, right, an
 | leftButtonProperties   | `OptionalButtonProperties \| null`         | No       | `-`     | Configuration for the left-side Button. Pass text, icon, etc. Set to null to hide.                                                                                                                                                                                                 |
 | bottomButtonProperties | `OptionalButtonProperties \| null`         | No       | `-`     | Configuration for the bottom Button (rendered below the input row). Auto-disabled when input validation is not 'Valid'. Set to null to hide.                                                                                                                                       |
 | classes                | `string`                                   | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                             |
-| mandatory              | `boolean`                                  | No       | `-`     | When true, renders a red asterisk (\*) next to the label to signal the field is required. The marker is announced to screen readers via `aria-label="required"`.                                                                                                                   |
+| required               | `boolean`                                  | No       | `-`     | Marks the field required: native `required` and `aria-required` on the `Input` underneath — so an empty field blocks native form submission — plus the decorative asterisk (\*) beside the label.                                                                                  |
+| mandatory              | `boolean`                                  | No       | `-`     | **Deprecated.** Use `required`, the platform's name for this; checked only when `required` is not passed. It previously drew only the asterisk without making the field required — it now does both, matching `required` exactly.                                                  |
 | size                   | `InputButtonSize` (`'sm' \| 'md' \| 'lg'`) | No       | `-`     | Preset height/padding size variant: `sm` (36px), `md` (44px), `lg` (54px). Each size is fully overridable via its CSS variables. Omit to use default fit-content height.                                                                                                           |
 | error                  | `string`                                   | No       | `-`     | External error message rendered below the input-button row. **Takes precedence over internal validation errors** — when this prop is a non-empty string, `inputProperties.onErrorMessage` is suppressed. Pass an empty string or omit to let internal validation messages surface. |
 

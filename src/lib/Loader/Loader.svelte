@@ -44,8 +44,13 @@
       var(--loader-foreground-end) 42%
     );
     position: relative;
-    -webkit-animation: load3 1.4s infinite linear;
-    animation: load3 1.4s infinite linear;
+    /* --loader-spin-* rather than --loader-animation-* — GridItem already reads an
+       unrelated --loader-animation-duration for its own clipper animation (a
+       pre-existing, differently-scoped name this file must not collide with). */
+    -webkit-animation: load3 var(--loader-spin-duration, var(--motion-duration, 1.4s))
+      var(--loader-spin-easing, var(--motion-easing, linear)) infinite;
+    animation: load3 var(--loader-spin-duration, var(--motion-duration, 1.4s))
+      var(--loader-spin-easing, var(--motion-easing, linear)) infinite;
     -webkit-transform: translateZ(0);
     -ms-transform: translateZ(0);
     transform: translateZ(0);
@@ -89,6 +94,21 @@
     100% {
       -webkit-transform: rotate(360deg);
       transform: rotate(360deg);
+    }
+  }
+  /* An indefinite animation is the case this preference exists for: it never
+     ends, so a user who asked the OS to minimise motion gets a permanent loop.
+     The animation stops, but the element must still read as "busy" -- a guard
+     that leaves nothing on screen, or leaves a frame that means something else,
+     is worse than the motion it removed. This block lives in the component's own
+     <style> because that is the only stylesheet that reaches inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .loader,
+    .loader:before,
+    .loader:after {
+      -webkit-animation: none;
+      animation: none;
     }
   }
 </style>

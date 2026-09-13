@@ -201,7 +201,7 @@
     display: block;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #888;
+    color: var(--doc-text-muted, #888);
   }
 
   :global(.menu-selected-themed) {

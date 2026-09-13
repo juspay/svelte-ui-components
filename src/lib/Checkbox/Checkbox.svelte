@@ -1,5 +1,6 @@
 <script lang="ts">
   import { flushSync } from 'svelte';
+  import { describeField } from '../_field/description';
   import type { CheckboxProperties } from './properties';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import minusSvg from '$lib/assets/minus.svg?raw';
@@ -19,9 +20,37 @@
     controlled = false,
     attributes,
     name,
-    value
+    value,
+    required = false,
+    form,
+    errorMessage,
+    infoMessage,
+    invalid = false
   }: CheckboxProperties = $props();
 
+  /* The control and the text that explains it were never linked: a screen-reader
+     user reaching this control heard its name and nothing about why it was
+     rejected. `describeField` composes the reference from the messages that are
+     actually rendered, so aria-describedby never points at an id that is not in
+     the DOM -- which passes an attribute assertion and resolves to nothing in a
+     real reader. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+
+  // A mixed box submits nothing and satisfies nothing, so the control behind it is
+  // unchecked while `indeterminate` holds — the native property, not a third state.
+  const submitsChecked: boolean = $derived(indeterminate ? false : checked);
+  const boxState: 'checked' | 'unchecked' | 'indeterminate' = $derived(
+    indeterminate ? 'indeterminate' : checked ? 'checked' : 'unchecked'
+  );
+
+  let box: HTMLSpanElement | null = $state(null);
+  // Release's own ref, kept: the native input is aria-hidden, tabindex="-1" and
+  // pointer-events: none -- a form-submission mirror that never receives a real
+  // click, so the browser never fires `change` on it either. handleClick
+  // dispatches input/change manually through this ref.
   let nativeInputEl: HTMLInputElement | null = $state(null);
 
   // Visible text wins over `ariaLabel`, which is what `properties.ts` has always
@@ -90,6 +119,14 @@
     nativeInputEl?.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
   }
 
+  // The form control is `tabindex="-1"`, so the browser's own "focus the invalid
+  // field" step would land on an element the user cannot see or reach. Focus the
+  // box that carries the role instead.
+  function handleInvalid(e: Event): void {
+    e.preventDefault();
+    box?.focus();
+  }
+
   function handleKeyDown(e: KeyboardEvent): void {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
@@ -117,10 +154,14 @@
   <input
     type="checkbox"
     class="native-checkbox"
-    {checked}
+    checked={submitsChecked}
+    {indeterminate}
     {disabled}
-    name={name ?? null}
     value={value ?? null}
+    {required}
+    name={typeof name === 'string' ? name : null}
+    form={typeof form === 'string' ? form : null}
+    oninvalid={handleInvalid}
     tabindex={-1}
     aria-hidden="true"
     onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -129,10 +170,16 @@
     testID={typeof testId === 'string' ? `${testId}-native-input` : null}
   />
   <span
+    bind:this={box}
     class="box"
     class:checked
     class:indeterminate
     role="checkbox"
+    aria-describedby={field.describedBy}
+    aria-invalid={field.ariaInvalid}
+    data-state={boxState}
+    data-disabled={disabled ? '' : null}
+    aria-required={required ? 'true' : null}
     tabindex={disabled ? -1 : 0}
     aria-checked={indeterminate ? 'mixed' : checked}
     aria-disabled={disabled}
@@ -162,6 +209,28 @@
   </span>
   <span class="label" hidden={text.length === 0}>{text}</span>
 </label>
+
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
 
 <style>
   .container {
@@ -240,5 +309,17 @@
     font-size: var(--checkbox-label-font-size, 14px);
     font-weight: var(--checkbox-label-font-weight, 400);
     color: var(--checkbox-label-color, #212121);
+  }
+
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
   }
 </style>

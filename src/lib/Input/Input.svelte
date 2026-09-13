@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { prefersReducedMotion } from '../utils';
+  import { getActiveElement } from '../_interaction/focus';
   import { validateInput } from '$lib/utils';
   import type { InputProperties } from './properties';
   import type { ValidationState } from '$lib/types';
@@ -53,6 +55,7 @@
     leftIconLabel = 'Leading action',
     rightIconLabel = 'Trailing action',
     mandatory = false,
+    required,
     forceError = false,
     rows,
     autoResize = false,
@@ -61,6 +64,12 @@
     resize = 'none',
     showCount = false
   }: InputProperties = $props();
+
+  // `required` decides when it is supplied at all, so a caller migrating one call site
+  // at a time gets an unambiguous direction; `mandatory` answers only when `required`
+  // was not passed. Checked with typeof rather than a default, so an explicit
+  // `required={false}` beside a legacy `mandatory` really does turn the field optional.
+  const isRequired = $derived(typeof required === 'boolean' ? required : mandatory);
 
   /* `for` on a <label> resolves against an element's id, never its name. The label
      was emitted with for={name} while the field itself carried only name={name},
@@ -75,7 +84,12 @@
   export function focus() {
     try {
       inputElement?.focus();
-      inputElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // A scrollIntoView `behavior` is not a style, so no media query reaches it.
+      // 'auto' still brings the field into view -- it just arrives instead of gliding.
+      inputElement?.scrollIntoView({
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+        block: 'center'
+      });
     } catch (error) {
       console.error('Error focusing or scrolling inputElement:', error);
     }
@@ -107,7 +121,7 @@
       valueValidation === 'InProgress' &&
       value.length > 0 &&
       inputElement !== null &&
-      inputElement !== document.activeElement
+      inputElement !== getActiveElement(inputElement)
     ) {
       return 'Invalid';
     }
@@ -302,7 +316,7 @@
 <div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
   {#if hasVisibleLabel}
     <label class="label" for={effectiveId}>
-      {label}{#if mandatory}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
+      {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
     </label>
   {/if}
 
@@ -321,10 +335,10 @@
         aria-autocomplete={ariaAutocomplete}
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
-        aria-required={mandatory || null}
+        aria-required={isRequired || null}
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
-        required={mandatory || null}
+        required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}
@@ -359,10 +373,10 @@
         aria-autocomplete={ariaAutocomplete}
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
-        aria-required={mandatory || null}
+        aria-required={isRequired || null}
         aria-invalid={showError && !actionInput ? 'true' : null}
         aria-describedby={describedBy || null}
-        required={mandatory || null}
+        required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
         oninput={handleOnInput}
@@ -487,7 +501,7 @@
     visibility: var(--input-visibility, visible);
     text-align: var(--input-text-align, left);
     text-transform: var(--input-text-transform, none);
-    color: var(--input-text-color);
+    color: var(--input-text-color, #333333);
   }
 
   textarea:focus,
@@ -619,7 +633,7 @@
   .input-char-count {
     align-self: flex-end;
     font-size: var(--input-char-count-size, 12px);
-    color: var(--input-char-count-color, #98a2b3);
+    color: var(--input-char-count-color, #5c6b7a);
     margin: var(--input-char-count-margin, 4px 0 0);
     font-variant-numeric: tabular-nums;
   }
@@ -629,6 +643,6 @@
   }
 
   ::placeholder {
-    color: var(--input-placeholder-color);
+    color: var(--input-placeholder-color, #5c6b7a);
   }
 </style>

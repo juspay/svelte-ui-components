@@ -47,19 +47,19 @@ Override these custom properties to theme the component.
 
 ### Page Buttons
 
-| Variable                            | Default             | CSS Property  | Description                        |
-| ----------------------------------- | ------------------- | ------------- | ---------------------------------- |
-| `--pagination-button-padding`       | `6px 10px`          | padding       | Inner padding of each page button. |
-| `--pagination-button-font-size`     | `14px`              | font-size     | Font size of page button labels.   |
-| `--pagination-button-font-weight`   | `400`               | font-weight   | Font weight of page button labels. |
-| `--pagination-button-font-family`   | `inherit`           | font-family   | Font family of page button labels. |
-| `--pagination-button-color`         | `#3a4550`           | color         | Text color of page buttons.        |
-| `--pagination-button-background`    | `transparent`       | background    | Background color of page buttons.  |
-| `--pagination-button-border`        | `1px solid #d1d5db` | border        | Border style of page buttons.      |
-| `--pagination-button-border-radius` | `4px`               | border-radius | Corner rounding of page buttons.   |
-| `--pagination-button-cursor`        | `pointer`           | cursor        | Cursor style on page buttons.      |
-| `--pagination-button-min-width`     | `36px`              | min-width     | Minimum width of each page button. |
-| `--pagination-button-height`        | `36px`              | height        | Height of each page button.        |
+| Variable                            | Default             | CSS Property  | Description                                                                                                                                        |
+| ----------------------------------- | ------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--pagination-button-padding`       | `6px 10px`          | padding       | Inner padding of each page button.                                                                                                                 |
+| `--pagination-button-font-size`     | `14px`              | font-size     | Font size of page button labels.                                                                                                                   |
+| `--pagination-button-font-weight`   | `400`               | font-weight   | Font weight of page button labels.                                                                                                                 |
+| `--pagination-button-font-family`   | `inherit`           | font-family   | Font family of page button labels.                                                                                                                 |
+| `--pagination-button-color`         | `inherit`           | color         | Text color of page buttons. Base state has no background of its own, so it inherits the surrounding text colour by default — set this to override. |
+| `--pagination-button-background`    | `transparent`       | background    | Background color of page buttons.                                                                                                                  |
+| `--pagination-button-border`        | `1px solid #d1d5db` | border        | Border style of page buttons.                                                                                                                      |
+| `--pagination-button-border-radius` | `4px`               | border-radius | Corner rounding of page buttons.                                                                                                                   |
+| `--pagination-button-cursor`        | `pointer`           | cursor        | Cursor style on page buttons.                                                                                                                      |
+| `--pagination-button-min-width`     | `36px`              | min-width     | Minimum width of each page button.                                                                                                                 |
+| `--pagination-button-height`        | `36px`              | height        | Height of each page button.                                                                                                                        |
 
 ### Active Page
 
@@ -93,15 +93,15 @@ Override these custom properties to theme the component.
 
 ### Load-more Button
 
-| Variable                                  | Default       | CSS Property       | Description                                      |
-| ----------------------------------------- | ------------- | ------------------ | ------------------------------------------------ |
-| `--pagination-load-more-width`            | `auto`        | width              | Width of the load-more CTA button.               |
-| `--pagination-load-more-padding`          | `6px 14px`    | padding            | Padding of the load-more CTA button.             |
-| `--pagination-load-more-color`            | `#3a4550`     | color              | Text color of the load-more CTA button.          |
-| `--pagination-load-more-background`       | `transparent` | background         | Background of the load-more CTA button.          |
-| `--pagination-load-more-border-color`     | `#d1d5db`     | border-color       | Border color of the load-more CTA button.        |
-| `--pagination-load-more-hover-color`      | `#111827`     | color (hover)      | Text color of the load-more CTA button on hover. |
-| `--pagination-load-more-hover-background` | `#f3f4f6`     | background (hover) | Background of the load-more CTA button on hover. |
+| Variable                                  | Default       | CSS Property       | Description                                                                                                                  |
+| ----------------------------------------- | ------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--pagination-load-more-width`            | `auto`        | width              | Width of the load-more CTA button.                                                                                           |
+| `--pagination-load-more-padding`          | `6px 14px`    | padding            | Padding of the load-more CTA button.                                                                                         |
+| `--pagination-load-more-color`            | `inherit`     | color              | Text color of the load-more CTA button. Has no background of its own, so it inherits the surrounding text colour by default. |
+| `--pagination-load-more-background`       | `transparent` | background         | Background of the load-more CTA button.                                                                                      |
+| `--pagination-load-more-border-color`     | `#d1d5db`     | border-color       | Border color of the load-more CTA button.                                                                                    |
+| `--pagination-load-more-hover-color`      | `#111827`     | color (hover)      | Text color of the load-more CTA button on hover.                                                                             |
+| `--pagination-load-more-hover-background` | `#f3f4f6`     | background (hover) | Background of the load-more CTA button on hover.                                                                             |
 
 ### Transition
 
@@ -192,3 +192,9 @@ Tag: `<sui-pagination>`
   next-button-test-id="next-btn"
 ></sui-pagination>
 ```
+
+`onloadmore` also dispatches a same-named DOM custom event (bubbles, composed) for a consumer who
+only calls `addEventListener` — `el.addEventListener('loadmore', () => ...)`, with no `detail`.
+`onchange` does not: it is already `HTMLElement`'s own native event, so
+`el.addEventListener('change', ...)` registers without error but is never called by this
+component — assign the property instead (`el.onchange = (page) => ...`).

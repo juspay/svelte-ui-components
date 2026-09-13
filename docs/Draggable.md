@@ -92,7 +92,17 @@ type DragPosition = { x: number; y: number };
 Tag: `<sui-draggable>`
 
 ```html
-<sui-draggable x="0" y="0" bounds="viewport"></sui-draggable>
+<sui-draggable x="0" y="0" bounds="viewport">
+  <div class="drag-handle">⠿ Drag me</div>
+</sui-draggable>
 ```
 
-Set `.handle` and the drag callbacks via JavaScript.
+Set `.handle` and the drag callbacks via JavaScript. `onmovestart`, `onmove`, and
+`onmoveend` each also dispatch a same-named DOM custom event (bubbles, composed) with
+`detail` set to the same `{ x, y }` position the callback receives, for a consumer who
+only calls `addEventListener`:
+
+```js
+const el = document.querySelector('sui-draggable');
+el.addEventListener('move', (e) => console.log(e.detail.x, e.detail.y));
+```

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { describeField } from '../_field/description';
   import type { SliderProperties } from './properties';
 
   let {
@@ -14,11 +15,47 @@
     testId,
     onchange,
     oninput,
-    classes
+    classes,
+    ariaValueText,
+    name,
+    form,
+    errorMessage,
+    infoMessage,
+    invalid = false
   }: SliderProperties = $props();
 
-  let percentage = $derived(((value - min) / (max - min)) * 100);
+  /* The control and the text that explains it were never linked: a screen-reader
+     user reaching this control heard its name and nothing about why it was
+     rejected. `describeField` composes the reference from the messages that are
+     actually rendered, so aria-describedby never points at an id that is not in
+     the DOM -- which passes an attribute assertion and resolves to nothing in a
+     real reader. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+
+  // Only the paint is clamped. The value stays exactly what the consumer passed, so a
+  // slider handed a number outside its own bounds reports that number rather than
+  // being silently corrected — but the track never renders a negative, >100% or NaN
+  // fill. An unusable range (empty, reversed, non-finite, or one whose width or
+  // quotient overflows to Infinity) has no meaningful fill, so it paints none.
+  const percentage: number = $derived.by(() => {
+    const span = max - min;
+    if (![value, min, max, span].every((part) => Number.isFinite(part)) || span <= 0) {
+      return 0;
+    }
+    const raw = ((value - min) / span) * 100;
+    return Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
+  });
   let displayValue = $derived(labelFormatter ? labelFormatter(value) : String(value));
+  const valueText: string | null = $derived(
+    typeof ariaValueText === 'string'
+      ? ariaValueText
+      : labelFormatter
+        ? labelFormatter(value)
+        : null
+  );
 
   function handleInput(e: Event) {
     if (e.target instanceof HTMLInputElement) {
@@ -38,12 +75,18 @@
 <div class="slider-container {classes ?? ''}" class:disabled>
   <input
     type="range"
+    aria-describedby={field.describedBy}
+    aria-invalid={field.ariaInvalid}
     class="slider-input"
     {min}
     {max}
     {step}
     {value}
     {disabled}
+    {name}
+    form={typeof form === 'string' ? form : null}
+    aria-valuetext={valueText}
+    data-disabled={disabled ? '' : null}
     aria-label={typeof ariaLabel === 'string' ? ariaLabel : null}
     aria-labelledby={typeof ariaLabel === 'string' ? null : (ariaLabelledby ?? null)}
     data-pw={typeof testId === 'string' ? testId : null}
@@ -56,6 +99,28 @@
     <span class="slider-value">{displayValue}</span>
   {/if}
 </div>
+
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
 
 <style>
   .slider-container {
@@ -109,8 +174,10 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
+      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 
   .slider-input::-moz-range-thumb {
@@ -123,8 +190,10 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform 0.15s ease,
-      opacity 0.15s ease;
+      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
+      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+        var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 
   .slider-input:hover::-webkit-slider-thumb {
@@ -158,5 +227,17 @@
     font-weight: var(--slider-value-font-weight, 500);
     color: var(--slider-value-color, #333333);
     white-space: nowrap;
+  }
+
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
   }
 </style>

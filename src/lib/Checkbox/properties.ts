@@ -12,12 +12,37 @@ export type CheckboxProperties = OptionalCheckboxProperties & CheckboxEventPrope
 export type MandatoryCheckboxProperties = { text?: string };
 
 export type OptionalCheckboxProperties = {
-  /** Visible label. Optional, defaulting to `''` (unlabelled) -- matching Toggle's
-   *  own `text` contract (Toggle/properties.ts) -- so a form-only checkbox
-   *  (`<Checkbox name="agree" />`) does not need an empty string just to compile.
-   *  A checkbox with no visible text needs `ariaLabel` for an accessible name;
-   *  see `ariaLabel` below. */
+  /**
+   * Visible label. Optional, and empty by default -- matching Toggle's own `text`
+   * contract (Toggle/properties.ts) -- so a form-only checkbox
+   * (`<Checkbox name="agree" />`) does not need an empty string just to compile.
+   *
+   * It mattered beyond the type. `Checkbox` dereferences `text.length`, and the
+   * custom-element build type-checks nothing, so `<sui-checkbox name="terms">`
+   * with no `text` attribute threw during render and left an empty shadow root
+   * -- the same failure mode as the `attributes` collision, from a different
+   * cause. `Toggle` and `Radio` already declared it optional with a default.
+   *
+   * A checkbox with no visible text needs `ariaLabel` for an accessible name;
+   * see `ariaLabel` below.
+   */
   text?: string;
+  /**
+   * Text shown, and announced, when the control is in error. Linked to the
+   * control through `aria-describedby`, and sets `aria-invalid` while present.
+   */
+  errorMessage?: string | null;
+  /**
+   * Persistent helper text describing the control. Linked through
+   * `aria-describedby` too, so it is read before the user trips an error rather
+   * than only after.
+   */
+  infoMessage?: string | null;
+  /**
+   * Marks the control invalid without supplying a message, for a consumer
+   * driving validity from a server or its own rules.
+   */
+  invalid?: boolean;
   checked?: boolean;
   disabled?: boolean;
   indeterminate?: boolean;
@@ -41,16 +66,23 @@ export type OptionalCheckboxProperties = {
    *  `aria-controls` to point at, or a consumer's own test attribute. Spread
    *  last, so a value here wins over the component's own `data-pw`. */
   attributes?: Record<string, string>;
-  /** Native `name` on the underlying `<input type="checkbox">`, so the control
-   *  participates in a surrounding `<form>`'s submission. Omitted by default:
-   *  the input stays nameless and outside `FormData`, exactly as before this
-   *  prop existed. */
+  /** Submits the box under this name when it sits inside (or is associated with) a
+   *  form. Omitted by default: with no `name` the box stays outside `FormData`,
+   *  exactly as before this prop existed. Omitted from submission too when unchecked,
+   *  indeterminate or disabled, which is what a native `<input type="checkbox">` does. */
   name?: string;
-  /** Native `value` submitted when checked. Defaults to `"on"` — the native
-   *  checkbox default — when omitted, so setting `name` alone is enough to
-   *  form-associate a plain "checked or not" checkbox. An unchecked checkbox
-   *  never appears in `FormData`, matching native behaviour. */
+  /** Value submitted while checked. Left unset, the attribute is omitted and the native
+   *  checkbox's own `"on"` default is what submits -- so setting `name` alone is enough to
+   *  form-associate a plain "checked or not" box, and an existing consumer's DOM is
+   *  unchanged. The default is the platform's, not one this component hardcodes. */
   value?: string;
+  /** Makes an unchecked box block submission. Invalid validation moves focus to the
+   *  visible box, since the form control behind it is deliberately not a tab stop. */
+  required?: boolean;
+  /** `id` of a form elsewhere in the same document, for a box rendered outside it.
+   *  Custom elements have no form association: inside `<sui-checkbox>` the control
+   *  lives in a shadow root and cannot reach a form in the host document. */
+  form?: string;
 };
 
 export type CheckboxEventProperties = {

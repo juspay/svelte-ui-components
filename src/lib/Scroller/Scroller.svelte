@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { prefersReducedMotion } from '../utils';
   import type { ScrollerProperties, ScrollPosition } from './properties';
   import Button from '../Button/Button.svelte';
   import chevronLeft from '../assets/chevron-left.svg?raw';
@@ -76,7 +77,7 @@
     const { clientSize } = getScrollProps(containerEl);
     const amount = scrollAmount ?? clientSize;
     const options: ScrollToOptions = {
-      behavior: smoothScroll ? 'smooth' : 'auto'
+      behavior: scrollBehavior()
     };
     if (direction === 'horizontal') {
       options.left = delta * amount;
@@ -118,12 +119,35 @@
     }
   }
 
+  /**
+   * Whether a scroll should animate.
+   *
+   * `smoothScroll` is the consumer's preference and the OS setting overrides it, so
+   * both are consulted. Deliberately a function called at each use rather than a value
+   * captured once: the preference can change while the component is mounted, and the
+   * three call sites below run on interaction, not on render.
+   *
+   * This has to live in script. Two of the three sites are unreachable by any
+   * stylesheet -- a `ScrollToOptions.behavior` value is not a style at all, and an
+   * inline `style.scrollBehavior` write outranks every rule in this component's own
+   * stylesheet, media query included. A `@media (prefers-reduced-motion: reduce)`
+   * block here would read correctly in review and lose at runtime.
+   *
+   * (Written without the style tag spelled out: Svelte scans a script block as raw
+   * text looking for its closing tag, and a literal style tag inside a comment here
+   * ends that scan early -- the whole component then fails to compile with
+   * "`<script>` was left open" pointing at the last line of the file.)
+   */
+  function scrollBehavior(): ScrollBehavior {
+    return smoothScroll && !prefersReducedMotion() ? 'smooth' : 'auto';
+  }
+
   function handleDragEnd() {
     if (!isDragging || containerEl === null) {
       return;
     }
     isDragging = false;
-    containerEl.style.scrollBehavior = smoothScroll ? 'smooth' : 'auto';
+    containerEl.style.scrollBehavior = scrollBehavior();
     containerEl.style.userSelect = '';
   }
 
@@ -254,6 +278,17 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: var(--scroller-scroll-behavior, smooth);
+  }
+
+  /* The stylesheet half, for scrolls this component does not initiate -- a wheel,
+     a dragged scrollbar, an anchor jump. The script half above covers the three it
+     does initiate, and cannot be replaced by this: an inline style write and a
+     ScrollToOptions value both outrank or bypass every rule here. */
+  @media (prefers-reduced-motion: reduce) {
+    .scroller.horizontal .scroll-container,
+    .scroller.vertical .scroll-container {
+      scroll-behavior: auto;
+    }
   }
 
   .scroller.vertical .scroll-container {

@@ -130,3 +130,9 @@ Tag: `<sui-context-menu>`
 | Slot Name   | Maps to Snippet | Description                                                     |
 | ----------- | --------------- | --------------------------------------------------------------- |
 | _(default)_ | `children`      | The trigger element that opens the context menu on right-click. |
+
+> **Note:** `onopen` also dispatches a same-named DOM custom event (bubbles, composed)
+> for a consumer who only calls `addEventListener` — `menu.addEventListener('open', ...)`.
+> `onselect` and `onclose` do not: both are already `HTMLElement`'s own native events, so
+> `menu.addEventListener('select', ...)` registers without error but is never called by
+> this component — assign the property instead.

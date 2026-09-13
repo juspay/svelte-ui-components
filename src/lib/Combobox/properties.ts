@@ -69,6 +69,31 @@ export type OptionalComboboxProperties = {
   action?: ComboboxAction;
   /** Custom leading icon for the persistent action row. */
   actionIcon?: Snippet;
+
+  // ── Validity messaging ────────────────────────────────────────────────────
+  /**
+   * Text shown, and announced, when the control is in error. Referenced by
+   * `aria-describedby` on a group wrapping the control, and sets `aria-invalid`
+   * while present.
+   *
+   * Placed on the group rather than on the `role="combobox"` element itself:
+   * that element is rendered by `Input`, which derives its own description from
+   * its own `onErrorMessage` / `infoMessage` props and exposes no seam for an
+   * outside one. A group description is announced on entering the group rather
+   * than on the control, which is weaker; pass `inputProperties.onErrorMessage`
+   * instead when you want the message bound to the text field itself.
+   */
+  errorMessage?: string | null;
+  /**
+   * Persistent helper text describing the control. Referenced the same way, so
+   * it is read before the user trips an error rather than only after.
+   */
+  infoMessage?: string | null;
+  /**
+   * Marks the control invalid without supplying a message, for a consumer
+   * driving validity from a server or its own rules.
+   */
+  invalid?: boolean;
 };
 
 export type ComboboxEventProperties = {

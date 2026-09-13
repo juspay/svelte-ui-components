@@ -205,3 +205,30 @@ Tag: `<sui-chat-message>`
 ```html
 <sui-chat-message role="sender" content="Hello!"></sui-chat-message>
 ```
+
+### Web Component Events
+
+`onretry` and `onfeedback` are available as JS properties, and each also dispatches a
+same-named DOM custom event (bubbles, composed) for a consumer who only calls
+`addEventListener` — `retry` carries no detail, `feedback`'s detail is the
+`ChatMessageFeedback` value as-is:
+
+```js
+const message = document.querySelector('sui-chat-message');
+message.addEventListener('retry', () => resend());
+message.addEventListener('feedback', (e) => rate(e.detail));
+```
+
+`oncopy` stays a JS-property-only callback and does not dispatch a DOM event: `copy` is already
+`HTMLElement`'s own native event, so a `message.addEventListener('copy', ...)` listener would
+receive both the real one and a synthetic one under the same name.
+
+### Slots
+
+| Slot Name     | Maps to Snippet | Description                                                                                                                                                                                        |
+| ------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `body`        | `body`          | Replaces the rendered body while keeping the bubble chrome. Takes effect only once slotted — an unslotted `<sui-chat-message>` keeps rendering `markdown`/`html`/`content` instead of going blank. |
+| `avatar`      | `avatar`        | Avatar shown beside the bubble.                                                                                                                                                                    |
+| `header`      | `header`        | Header row above the bubble (author name, timestamp, etc.).                                                                                                                                        |
+| `attachments` | `attachments`   | Content rendered below the bubble.                                                                                                                                                                 |
+| `actions`     | `actions`       | Extra custom actions appended to the actions row.                                                                                                                                                  |

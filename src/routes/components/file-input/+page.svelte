@@ -101,3 +101,32 @@
     {/snippet}
   </FileInput>
 </div>
+
+<h2>Validity messaging</h2>
+<p>
+  <code>errorMessage</code> and <code>infoMessage</code> are referenced by
+  <code>aria-describedby</code> on the drop zone. It deliberately does not set
+  <code>aria-invalid</code> — ARIA does not define that attribute on <code>role="button"</code> — so
+  the error text itself, through <code>role="alert"</code>, is the announcement.
+</p>
+<div
+  class="demo-row"
+  data-pw="fileinput-field-contract"
+  style="flex-direction: column; align-items: flex-start; gap: 12px;"
+>
+  <FileInput errorMessage="Only images under 1 MB are accepted." testId="fileinput-described">
+    {#snippet trigger({ openFilePicker })}
+      <button class="toggle-btn" onclick={openFilePicker}>Upload (described)</button>
+    {/snippet}
+  </FileInput>
+  <FileInput infoMessage="PNG or JPG, up to 5 MB." testId="fileinput-info-only">
+    {#snippet trigger({ openFilePicker })}
+      <button class="toggle-btn" onclick={openFilePicker}>Upload (info only)</button>
+    {/snippet}
+  </FileInput>
+  <FileInput testId="fileinput-undescribed">
+    {#snippet trigger({ openFilePicker })}
+      <button class="toggle-btn" onclick={openFilePicker}>Upload (no messages)</button>
+    {/snippet}
+  </FileInput>
+</div>

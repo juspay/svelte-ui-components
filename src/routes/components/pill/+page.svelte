@@ -45,7 +45,10 @@
     />
     <span data-pw="pill-click-count">{pillClickCount}</span>
   </div>
-  <div class="demo-row app-theme-with-white-button-text" style="--pill-color: #123456;">
+  <div
+    class="demo-row app-theme-with-white-button-text"
+    style="--pill-color: light-dark(#123456, #9ec5ff);"
+  >
     <Pill testId="pill-dismiss-under-button-token" text="Element-level text token" dismissible />
   </div>
   <div class="demo-row app-theme-variant-scoped">
@@ -300,9 +303,9 @@
   }
 
   .app-theme-variant-scoped {
-    --pill-color: #1e1e1e;
-    --pill-background: #f1f1f1;
-    --pill-hover-background: #e8e8e8;
+    --pill-color: light-dark(#1e1e1e, #e5e7eb);
+    --pill-background: light-dark(#f1f1f1, #252535);
+    --pill-hover-background: light-dark(#e8e8e8, #2f2f45);
     --pill-dismiss-color: var(--pill-color);
   }
 
@@ -321,7 +324,7 @@
   :global(.app-theme-variant-scoped .button-container.variant-ghost:not([class*='global-btn'])) {
     --consumer-variant: ghost;
     --button-color: transparent;
-    --button-text-color: #1e1e1e;
+    --button-text-color: light-dark(#1e1e1e, #e5e7eb);
     --button-border: none;
     --button-hover-color: #f1f1f1;
     --button-hover-text-color: #1e1e1e;

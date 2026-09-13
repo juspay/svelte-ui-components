@@ -227,6 +227,53 @@
       data: Array.from({ length: 40 }, (_, i) => ({ x: i + 1, y: 50 + 40 * Math.sin(i / 3) }))
     }
   ];
+
+  // ── Cross-series alignment demo ───────────────────────────
+  // "This week" and "Last week" do NOT share one x sequence: This week is
+  // missing x=3, and Last week is missing x=6. Hover at any x and each
+  // series reports its OWN sample there (or is absent from the tooltip
+  // entirely) -- never a value copied from the other series' array index.
+  const misalignedSeries = [
+    {
+      name: 'This week',
+      data: [
+        { x: 1, y: 24 },
+        { x: 2, y: 30 },
+        { x: 4, y: 28 },
+        { x: 5, y: 34 },
+        { x: 6, y: 40 }
+      ]
+    },
+    {
+      name: 'Last week',
+      data: [
+        { x: 1, y: 18 },
+        { x: 2, y: 22 },
+        { x: 3, y: 20 },
+        { x: 4, y: 25 },
+        { x: 5, y: 21 }
+      ]
+    }
+  ];
+
+  // ── Gap points demo ────────────────────────────────────────
+  const gapSeries = [
+    {
+      name: 'Sales',
+      // x=4 and x=8 had no reading -- NaN marks a gap, not a fabricated 0.
+      data: [
+        { x: 1, y: 120 },
+        { x: 2, y: 150 },
+        { x: 3, y: 135 },
+        { x: 4, y: Number.NaN },
+        { x: 5, y: 160 },
+        { x: 6, y: 175 },
+        { x: 7, y: 168 },
+        { x: 8, y: Number.NaN },
+        { x: 9, y: 190 }
+      ]
+    }
+  ];
 </script>
 
 <div class="page-header">
@@ -394,6 +441,26 @@
   />
 </div>
 
+<h3>Cross-Series Alignment — mismatched x coverage</h3>
+<p>
+  "This week" has no sample at x=3; "Last week" has none at x=6. Series are joined by their
+  <strong>x value</strong>, not by array position, so hovering anywhere reports each series' own
+  value at that x (or omits it entirely) — never a value borrowed from the other series' array
+  index. See <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
+</p>
+<div class="demo-row">
+  <LineChart series={misalignedSeries} showLegend showDots testId="line-alignment-chart" />
+</div>
+
+<h3>Sparse Series — Gap Points</h3>
+<p>
+  A non-finite y (<code>NaN</code>) marks a gap: the line breaks around x=4 and x=8 below and
+  resumes at the next finite point, instead of one poisoned path or a misleading value drawn at 0.
+</p>
+<div class="demo-row">
+  <LineChart series={gapSeries} showDots testId="line-gap-chart" />
+</div>
+
 <h3>minHeight / maxHeight bounds</h3>
 <p>
   <code>minHeight</code>/<code>maxHeight</code> clamp the chart's rendered height regardless of the computed
@@ -452,18 +519,27 @@
     gap: 8px;
     margin-top: 12px;
   }
+  /* Border/background/text ride the doc-* theme tokens (see demo.css), not
+     literals: the button never set its own `color`, so it fell back to the
+     UA default button text colour, which follows the page's `color-scheme`
+     (light/dark) independently of this literal, always-light background —
+     white-on-#f9fafb in dark theme. */
   .highlight-btn {
     padding: 4px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--doc-btn-border);
     border-radius: 4px;
-    background: #f9fafb;
+    background: var(--doc-btn-bg);
+    color: var(--doc-text-primary);
     cursor: pointer;
     font-size: 13px;
   }
+  .highlight-btn:hover {
+    background: var(--doc-btn-hover-bg);
+  }
   .highlight-btn.active {
-    background: #6366f1;
+    background: #4f46e5;
     color: #fff;
-    border-color: #6366f1;
+    border-color: #4f46e5;
   }
   .narration-readout {
     margin-left: 12px;

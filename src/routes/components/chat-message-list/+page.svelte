@@ -279,6 +279,11 @@
     border-top: 1px solid var(--doc-border, #e5e7eb);
   }
 
+  .pin-input::placeholder {
+    color: light-dark(#5f6570, #9ca3af);
+    opacity: 1;
+  }
+
   .pin-input {
     flex: 1;
     padding: 8px 12px;
@@ -292,7 +297,7 @@
     padding: 8px 16px;
     border: none;
     border-radius: 8px;
-    background: var(--doc-accent, #6d28d9);
+    background: var(--doc-accent-solid, #4f46e5);
     color: #fff;
     cursor: pointer;
   }
@@ -322,7 +327,7 @@
   }
 
   .metric.up .metric-value {
-    color: #16a34a;
+    color: light-dark(#15803d, #4ade80);
   }
 
   .metric-label {

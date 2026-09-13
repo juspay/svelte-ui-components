@@ -143,6 +143,7 @@
         class:selected={currentValue === option.value}
         onclick={() => applyValue(option.value)}
         aria-label={option.label ?? option.value}
+        aria-pressed={currentValue === option.value}
       >
         <span class="icon">
           {#if typeof option.icon === 'function'}
@@ -254,5 +255,27 @@
 
   .segment-button.selected {
     color: var(--theme-switcher-icon-color-active, #1f2937);
+  }
+
+  /* Unlike the two progress-bar loaders elsewhere in this library, every
+     transition here moves between two states that are each fully meaningful
+     on their own (a background tint, an icon's shown/hidden pose, the
+     indicator's resting position, a label's active color) -- there is no
+     in-between frame that could be misread as a different state. Dropping the
+     transition just makes the swap instant instead of animated; nothing is
+     stranded mid-motion the way a freeze mid-fill would be. Four separate
+     rules declare `transition` in this file (toggle background, icon
+     opacity/transform, segment indicator left/width, segment label color) --
+     all four are covered here, not just the two the icon/indicator case calls
+     out, so no motion in this component is left unguarded. Lives in the
+     component's own <style> because that is the only stylesheet that reaches
+     inside the shadow root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .toggle-button,
+    .icon,
+    .segment-indicator,
+    .segment-button {
+      transition: none;
+    }
   }
 </style>

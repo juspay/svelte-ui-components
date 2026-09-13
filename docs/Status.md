@@ -197,3 +197,24 @@ Tag: `<sui-status>`
   status-description="Operation completed."
 ></sui-status>
 ```
+
+### Web Component Events
+
+`onbuttonclick` (set via `buttonProperties`, see [ButtonProperties](#buttonproperties)) is
+available as a JS property, and the same click also dispatches a `buttonclick` DOM custom
+event (bubbles, composed) for a consumer who only calls `addEventListener`. `detail` is the
+underlying click's `MouseEvent` — `onbuttonclick` is wired straight into the action button's
+own `onclick`, so it runs with that event rather than with no arguments:
+
+```js
+const status = document.querySelector('sui-status');
+status.buttonProperties = { text: 'Retry' };
+status.addEventListener('buttonclick', (e) => console.log(e.detail.target));
+```
+
+### Slots
+
+| Slot Name             | Maps to Snippet      | Description                                                                                                           |
+| --------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `icon`                | `icon`               | Replaces the status icon. Falls back to the `Img` resolved from `status-icon`/`status-icon-alt` when empty.           |
+| `description-snippet` | `descriptionSnippet` | Replaces the plain `status-description` text with custom markup. Falls back to that attribute when the slot is empty. |

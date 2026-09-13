@@ -64,15 +64,15 @@
   }
 
   .delta-positive {
-    color: var(--delta-indicator-positive-color, #1a9d6f);
+    color: var(--delta-indicator-positive-color, #007846);
   }
 
   .delta-negative {
-    color: var(--delta-indicator-negative-color, #e5484d);
+    color: var(--delta-indicator-negative-color, light-dark(#c81e26, #f87171));
   }
 
   .delta-neutral {
-    color: var(--delta-indicator-neutral-color, #8a8a8a);
+    color: var(--delta-indicator-neutral-color, #646464);
   }
 
   /* The tone color is set on the wrapper; the text span must inherit it explicitly.

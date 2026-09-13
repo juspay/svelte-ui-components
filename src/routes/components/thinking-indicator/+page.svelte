@@ -326,6 +326,7 @@
 
   .kind-switch :global(.kind-on) {
     --button-color: var(--doc-accent-subtle-bg);
+    --button-text-color: var(--doc-accent-text);
   }
 
   .trace-host {

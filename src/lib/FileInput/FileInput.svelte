@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { describeField } from '../_field/description';
   import type { FileInputProperties } from './properties';
 
   let {
@@ -10,8 +11,22 @@
     testId,
     classes,
     onfiles,
-    onerror
+    onerror,
+    errorMessage,
+    infoMessage,
+    invalid
   }: FileInputProperties = $props();
+
+  /* The drop zone is a `role="button"` with no linked text, so a rejected
+     file (wrong type, too large) had nowhere to be announced. It takes
+     `aria-describedby` but deliberately not `aria-invalid`: ARIA does not
+     support that attribute on `button`, and an unsupported attribute is not a
+     harmless extra -- it is one a reader is entitled to ignore. The error text
+     itself is the announcement, through `role="alert"`. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
 
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);
@@ -143,6 +158,7 @@
   role="button"
   tabindex={disabled ? -1 : 0}
   aria-disabled={disabled}
+  aria-describedby={field.describedBy}
   ondragover={handleDragOver}
   ondragleave={handleDragLeave}
   ondrop={handleDrop}
@@ -166,7 +182,40 @@
   {@render trigger({ openFilePicker, dragOver, disabled })}
 </div>
 
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
+
 <style>
+  .field-error {
+    color: var(--file-input-error-color, #b3261e);
+    font-size: var(--file-input-error-font-size, 12px);
+    margin-top: var(--file-input-error-margin-top, 4px);
+  }
+  .field-info {
+    color: var(--file-input-info-color, #5f6368);
+    font-size: var(--file-input-info-font-size, 12px);
+    margin-top: var(--file-input-info-margin-top, 4px);
+  }
+
   .file-input {
     display: var(--file-input-display, inline-flex);
     flex-direction: var(--file-input-flex-direction, column);

@@ -142,7 +142,14 @@
     font-size: var(--pagination-button-font-size, 14px);
     font-weight: var(--pagination-button-font-weight, 400);
     font-family: var(--pagination-button-font-family, inherit);
-    color: var(--pagination-button-color, #3a4550);
+    /* Base state (and .load-more-button below) pairs its text with a
+       transparent background, not one of its own -- same shape as the table
+       title bug. A hardcoded literal here doesn't track a dark ambient
+       surface, so prev/next/page buttons went unreadable on a themed dark
+       page even though .active and :hover are safe (each pairs its colour
+       with its own opaque background). Inheriting keeps it tied to whatever
+       text colour the surrounding surface already resolved to. */
+    color: var(--pagination-button-color, inherit);
     background: var(--pagination-button-background, transparent);
     border: var(--pagination-button-border, 1px solid #d1d5db);
     border-radius: var(--pagination-button-border-radius, var(--radius, 4px));
@@ -170,7 +177,7 @@
   .load-more-button {
     width: var(--pagination-load-more-width, auto);
     padding: var(--pagination-load-more-padding, 6px 14px);
-    color: var(--pagination-load-more-color, #3a4550);
+    color: var(--pagination-load-more-color, inherit);
     background: var(--pagination-load-more-background, transparent);
     border-color: var(--pagination-load-more-border-color, #d1d5db);
   }

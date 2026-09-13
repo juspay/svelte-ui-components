@@ -24,6 +24,11 @@
   let draftCompareStart = $state<Date | null>(null);
   let draftCompareEnd = $state<Date | null>(null);
 
+  // --- Standalone compare trigger state (separate instance, own bindings so it
+  //     doesn't share state with the inline-compare demo above) ---
+  let standaloneCompareStart = $state<Date | null>(null);
+  let standaloneCompareEnd = $state<Date | null>(null);
+
   function pad(n: number): string {
     return n.toString().padStart(2, '0');
   }
@@ -477,6 +482,46 @@
   <p class="result-label">Compare range: <strong>{compareLabel}</strong></p>
 </section>
 
+<!-- ── 5b. Compare mode (standalone trigger, independent panel) ── -->
+<section class="demo-section">
+  <h2>Range mode + compare period (standalone compareTrigger)</h2>
+  <p class="section-note">
+    <code>compareTrigger</code> renders a second, independent trigger button. Its panel opens next to
+    it, not inside the main panel, so the main and compare panels can be open at the same time — each
+    dismisses on its own Escape/outside-click without closing the other, per their documented precedence.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      bind:compareStart={standaloneCompareStart}
+      bind:compareEnd={standaloneCompareEnd}
+      placeholder="Pick main range"
+      testId="drp-standalone-compare-demo"
+      onapplycompare={(e) => {
+        standaloneCompareStart = e.compareStart;
+        standaloneCompareEnd = e.compareEnd;
+      }}
+    >
+      {#snippet compareTrigger(label)}
+        Compare: {label}
+      {/snippet}
+      {#snippet compareCalendar()}
+        <Calendar
+          mode="range"
+          bind:rangeStart={standaloneCompareStart}
+          bind:rangeEnd={standaloneCompareEnd}
+          classes="drp-calendar-embedded drp-compare-calendar"
+        />
+      {/snippet}
+    </DateRangePicker>
+  </div>
+  <p class="result-label">
+    Compare range: <strong
+      >{formatDate(standaloneCompareStart)} – {formatDate(standaloneCompareEnd)}</strong
+    >
+  </p>
+</section>
+
 <!-- ── 6. Constrained max date ── -->
 <section class="demo-section">
   <h2>Constrained range (max = today, no future dates)</h2>
@@ -707,7 +752,7 @@
 
 <style>
   .page-description {
-    color: #666;
+    color: var(--doc-text-muted, #666);
     max-width: 700px;
     margin-top: 8px;
   }
@@ -721,7 +766,7 @@
   }
 
   .section-note {
-    color: #666;
+    color: var(--doc-text-muted, #666);
     margin-bottom: 16px;
   }
 
@@ -734,7 +779,7 @@
 
   .result-label {
     margin-top: 12px;
-    color: #555;
+    color: var(--doc-text-muted, #555);
   }
 
   /* Consumer time-picker recipe styles */

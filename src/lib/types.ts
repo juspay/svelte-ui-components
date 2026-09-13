@@ -9,8 +9,10 @@ import type { HTMLAttributes } from 'svelte/elements';
  * which native types a consumer may ask for. The four added beyond the original
  * text/tel/password/email/number all keep `value` a plain string with no parallel
  * `checked`/`files` model, so Input's existing value plumbing covers them unchanged.
- * `validateInput()` switches on dataType with no default branch, and `number` has
- * always fallen through it unvalidated — these fall through identically.
+ * `validateInput()` switches on dataType with no default branch, so `number`,
+ * `time`, `date`, `search` and `url` are never validated by it and are always
+ * reported Valid. That limit is stated on `Input`'s own `dataType` prop too — a
+ * consumer picking a dataType reads the prop, not this union.
  *
  * Deliberately NOT included: checkbox and radio (driven by `checked`, which Input has
  * no prop for), and file (rejects scripted `value` writes outright). Those need new

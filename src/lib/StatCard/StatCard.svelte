@@ -444,7 +444,7 @@
   }
 
   .statcard-value-warning {
-    color: var(--statcard-value-warning-color, #f59e0b);
+    color: var(--statcard-value-warning-color, #b45309);
   }
 
   /* Per-row value typography override — falls back to the card-level value
@@ -465,7 +465,7 @@
   }
 
   .statcard-delta-positive {
-    color: var(--statcard-delta-positive-color, #16a34a);
+    color: var(--statcard-delta-positive-color, #166534);
   }
 
   .statcard-delta-negative {
@@ -490,7 +490,7 @@
     order: var(--statcard-subtitle-order, 0);
     font-size: var(--statcard-subtitle-font-size, 12px);
     font-weight: var(--statcard-subtitle-font-weight, 400);
-    color: var(--statcard-subtitle-color, #9ca3af);
+    color: var(--statcard-subtitle-color, #4b5563);
     line-height: var(--statcard-subtitle-line-height, 1.4);
   }
 
@@ -504,7 +504,7 @@
       --statcard-row-subtitle-font-weight,
       var(--statcard-subtitle-font-weight, 400)
     );
-    color: var(--statcard-row-subtitle-color, var(--statcard-subtitle-color, #9ca3af));
+    color: var(--statcard-row-subtitle-color, var(--statcard-subtitle-color, #4b5563));
     line-height: var(
       --statcard-row-subtitle-line-height,
       var(--statcard-subtitle-line-height, 1.4)
@@ -582,7 +582,7 @@
        does not fit — matches short unit suffixes like "%" or "ms". */
     font-size: var(--statcard-row-additional-font-size, 12px);
     font-weight: var(--statcard-row-additional-font-weight, 400);
-    color: var(--statcard-row-additional-color, #9ca3af);
+    color: var(--statcard-row-additional-color, #4b5563);
     line-height: 1.4;
   }
 
@@ -631,7 +631,7 @@
   .statcard-breakdown-label {
     font-size: var(--statcard-breakdown-label-font-size, 11px);
     font-weight: var(--statcard-breakdown-label-font-weight, 400);
-    color: var(--statcard-breakdown-label-color, #9ca3af);
+    color: var(--statcard-breakdown-label-color, #4b5563);
     line-height: 1.4;
   }
 

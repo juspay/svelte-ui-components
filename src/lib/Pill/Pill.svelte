@@ -148,8 +148,11 @@
     justify-content: var(--pill-justify-content, center);
     text-align: var(--pill-text-align, center);
     gap: var(--pill-gap, 4px);
-    background-color: var(--pill-background, var(--_pill-tone-background, #e0e0e0));
-    color: var(--pill-color, var(--_pill-tone-color, #333333));
+    background-color: var(
+      --pill-background,
+      var(--_pill-tone-background, var(--pill-tone-neutral-background, #e0e0e0))
+    );
+    color: var(--pill-color, var(--_pill-tone-color, var(--pill-tone-neutral-color, #333333)));
     font-size: var(--pill-font-size, 13px);
     font-weight: var(--pill-font-weight, 500);
     font-family: var(--pill-font-family);
@@ -215,15 +218,21 @@
   }
   .tone-muted {
     --_pill-tone-background: var(--pill-tone-muted-background, #f1f1f1);
-    --_pill-tone-color: var(--pill-tone-muted-color, #6b7280);
+    --_pill-tone-color: var(--pill-tone-muted-color, #5b626d);
   }
 
   .pill:hover:not(.disabled) {
     background-color: var(
       --pill-hover-background,
-      var(--pill-background, var(--_pill-tone-background, #d0d0d0))
+      var(
+        --pill-background,
+        var(--_pill-tone-background, var(--pill-tone-neutral-hover-background, #d0d0d0))
+      )
     );
-    color: var(--pill-hover-color, var(--pill-color, var(--_pill-tone-color, #333333)));
+    color: var(
+      --pill-hover-color,
+      var(--pill-color, var(--_pill-tone-color, var(--pill-tone-neutral-hover-color, #333333)))
+    );
   }
 
   .pill.disabled {

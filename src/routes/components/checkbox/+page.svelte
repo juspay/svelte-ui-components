@@ -14,6 +14,19 @@
   let formAgree = $state(false);
   let formSubscribe = $state(true);
   let checkboxEntries = $state('');
+
+  let submitted = $state('');
+
+  function capture(event: SubmitEvent): void {
+    event.preventDefault();
+    const target = event.target;
+    if (!(target instanceof HTMLFormElement)) {
+      return;
+    }
+    submitted = [...new FormData(target)]
+      .map(([key, value]) => `${key}=${String(value)}`)
+      .join(' ');
+  }
 </script>
 
 <div class="page-header">
@@ -101,3 +114,40 @@
   <button type="submit" data-pw="checkbox-form-submit">Submit</button>
 </form>
 <pre data-pw="checkbox-form-result">{checkboxEntries}</pre>
+
+<h3>Required boxes and where invalid focus lands</h3>
+<p class="demo-caption">
+  A second form, because a <code>required</code> box blocks submission entirely — it cannot share
+  one with the demo above, whose point is that submit lands. An unchecked, indeterminate or disabled
+  box submits nothing, and <code>required</code> moves invalid focus to the visible box rather than the
+  control behind it.
+</p>
+<form class="demo-row" onsubmit={capture} data-pw="checkbox-required-form">
+  <Checkbox
+    text="Accept terms"
+    name="terms"
+    value="accepted"
+    required
+    testId="checkbox-required-terms"
+  />
+  <Checkbox text="Send me updates" name="updates" testId="checkbox-required-updates" />
+  <button type="submit" data-pw="checkbox-required-submit">Submit</button>
+  <span data-pw="checkbox-required-result">{submitted}</span>
+</form>
+
+<h2>Error and helper text are linked to the control</h2>
+<p class="demo-caption">
+  <code>errorMessage</code> and <code>infoMessage</code> are referenced by
+  <code>aria-describedby</code> on the control the user actually reaches, and
+  <code>aria-invalid</code> is set only while an error is showing.
+</p>
+<div class="demo-row" data-pw="field-contract" style="flex-direction: column; align-items: start;">
+  <Checkbox
+    text="Accept terms"
+    errorMessage="You must accept the terms to continue."
+    infoMessage="We only email about outages."
+    testId="checkbox-described"
+  />
+  <Checkbox text="Send me updates" infoMessage="About one a month." testId="checkbox-info-only" />
+  <Checkbox text="No messages at all" testId="checkbox-undescribed" />
+</div>

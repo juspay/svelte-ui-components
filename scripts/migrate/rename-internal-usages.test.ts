@@ -46,6 +46,12 @@ describe('internal import resolution', () => {
 });
 
 describe('the repository itself', () => {
+  // This parses every component in the repository. It passes in about a second
+  // alone and takes six to eight under the full suite's parallel load, which is
+  // over vitest's 5s default -- so it failed on timing, never on its assertion.
+  // The budget is the thing that was wrong, not the check.
+  // Anything listed here is a call site that would warn in a consumer's
+  // console for code they did not write, and break outright in 4.0.0.
   it(
     'never uses a spelling it deprecates',
     () => {

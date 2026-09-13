@@ -5,9 +5,10 @@ import type { TooltipActionOptions, TooltipPosition } from './properties';
  *
  * Attaches hover and focus listeners to the host element without injecting any wrapper
  * div, which prevents flex-child sizing breakage inside toolbars and icon rows.
- * The tooltip bubble is mounted directly on `document.body` with `position:fixed`
- * coordinates derived from `getBoundingClientRect`, so it is never clipped by
- * `overflow:hidden` ancestors.
+ * The tooltip bubble is mounted directly on the host node's own root — `document.body`,
+ * or the shadow root when the host is inside one (see `portalTarget`) — with
+ * `position:fixed` coordinates derived from `getBoundingClientRect`, so it is never
+ * clipped by `overflow:hidden` ancestors.
  *
  * Usage:
  * ```svelte
@@ -19,6 +20,41 @@ import type { TooltipActionOptions, TooltipPosition } from './properties';
  */
 /** Monotonically-incrementing counter used to generate unique tooltip bubble IDs. */
 let tooltipIdCounter = 0;
+
+/**
+ * Where the bubble is allowed to land, asked of the HOST node rather than the
+ * bubble: a freshly created, still-detached element is its own root, so it can
+ * answer nothing useful about where the component lives.
+ *
+ * This action has no in-place fallback to fall back to -- not injecting a wrapper
+ * div is its entire reason to exist -- so the bubble is portalled either way, and
+ * the only question is where. `document.body` is the wrong answer from inside a
+ * `<sui-*>` element three times over: the `--tooltip-*` custom properties the
+ * inline styles below read inherit from the shadow host, not from `<body>`, so a
+ * themed host reverts to the literal fallbacks; `options.classes` names a class
+ * whose stylesheet is in the shadow root the bubble just left; and
+ * `aria-describedby` is an IDREF, which does not cross a shadow boundary at all,
+ * so the association the ARIA tooltip pattern requires simply does not exist.
+ * The node's own root keeps all three.
+ *
+ * Both the `ShadowRoot` constructor and `getRootNode` are checked for rather
+ * than assumed, which the five component copies of this helper do not need to
+ * do. Unlike them, this module is exercised outside a DOM: tooltip-action.test.ts
+ * declares `@vitest-environment node` and drives the action with a hand-rolled
+ * element stub carrying only the handful of methods it uses, so `ShadowRoot` is
+ * not a global there and the stub has no `getRootNode`. Either way the answer is
+ * the same one the pre-existing code gave -- a node that cannot say where it
+ * lives is not in a shadow root as far as this can tell. Duck-typing over an
+ * `instanceof` check is the idiom `_interaction/focus.ts` already sets for
+ * exactly this reason.
+ */
+const portalTarget = (node: Node): Node => {
+  if (typeof ShadowRoot === 'undefined' || typeof node.getRootNode !== 'function') {
+    return document.body;
+  }
+  const root = node.getRootNode();
+  return root instanceof ShadowRoot ? root : document.body;
+};
 
 export const tooltip = (
   node: HTMLElement,
@@ -98,7 +134,7 @@ export const tooltip = (
 
     bubbleEl.appendChild(arrowEl);
     bubbleEl.appendChild(textNode);
-    document.body.appendChild(bubbleEl);
+    portalTarget(node).appendChild(bubbleEl);
   };
 
   /**

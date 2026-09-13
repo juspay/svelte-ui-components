@@ -243,3 +243,25 @@ Tag: `<sui-chat-bubble>`
 ```
 
 Put panel content in the default slot, and set object props (`icon`, `openIcon`, `onopen`, …) via JavaScript. Boolean/number/string props map to attributes: `draggable`, `resizable`, `drag-mode`, `drag-x`, `drag-y`, `panel-width`, `panel-height`, `min-panel-width`, `min-panel-height`, `expanded`, `expanded-panel-width`, `expanded-panel-height`, `position`, `label`, `close-label`.
+
+### Web Component Events
+
+`onopen` is available as a JS property, and also dispatches a same-named `open` DOM custom event
+(bubbles, composed, no detail) for a consumer who only calls `addEventListener`:
+
+```js
+const bubble = document.querySelector('sui-chat-bubble');
+bubble.addEventListener('open', () => trackPanelOpened());
+```
+
+`onclose` and `ontoggle` stay JS-property-only callbacks and do not dispatch DOM events: `close`
+and `toggle` are already `HTMLElement`'s own native events, so a listener registered for either
+under the same name would receive both the real one and a synthetic one.
+
+### Slots
+
+| Slot Name   | Maps to Snippet | Description                                                                          |
+| ----------- | --------------- | ------------------------------------------------------------------------------------ |
+| (default)   | `children`      | Panel content, typically a `Chat`. The panel sizes it to `panelWidth`/`panelHeight`. |
+| `icon`      | `icon`          | Launcher contents when closed. Defaults to the built-in chat glyph.                  |
+| `open-icon` | `openIcon`      | Launcher contents when open. Defaults to the built-in close glyph.                   |

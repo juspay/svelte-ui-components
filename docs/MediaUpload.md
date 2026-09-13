@@ -169,3 +169,30 @@ Tag: `<sui-media-upload>`
 ```html
 <sui-media-upload label="Attachments" max-length="5" multiple></sui-media-upload>
 ```
+
+`onremove` also dispatches a same-named DOM custom event (bubbles, composed) for a consumer who
+only calls `addEventListener` —
+`upload.addEventListener('remove', (e) => console.log(e.detail.name))`, with `detail` set to the
+same `File` the property callback receives. `onchange` and `onerror` do not: both are already
+`HTMLElement`'s own native events, so `upload.addEventListener('change', ...)` and
+`upload.addEventListener('error', ...)` register without error but are never called by this
+component — assign the properties instead.
+
+### Slots
+
+| Slot Name  | Maps to Snippet | Description                                                  |
+| ---------- | --------------- | ------------------------------------------------------------ |
+| `add-icon` | `addIcon`       | Glyph on the drop tile. Defaults to the built-in plus glyph. |
+
+A JavaScript-assigned `addIcon` property wins over slotted markup; the slot is the fallback, and
+the slot's own fallback is the built-in glyph.
+
+`removeIcon` and `fileIcon` have no slot and are set as JavaScript properties only. Both render
+once per attachment, and a named slot can be filled only once: the browser assigns light-DOM
+children to the first matching slot in the shadow tree, so with two files the slotted glyph
+would appear on the first card and the second would render empty — not even the built-in glyph.
+Set them as properties, which applies to every card:
+
+```js
+document.querySelector('sui-media-upload').removeIcon = mySnippet;
+```

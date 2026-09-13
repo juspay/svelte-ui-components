@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { describeField } from '../_field/description';
   import Button from '$lib/Button/Button.svelte';
   import Input from '$lib/Input/Input.svelte';
   import type { InputButtonProperties } from './properties';
@@ -18,6 +19,7 @@
     rightIcon,
     classes,
     mandatory,
+    required,
     size,
     error,
     testId
@@ -53,6 +55,59 @@
     inputEventProperties?.onstatechange?.(state);
   }
 
+  /* `for` resolves against an element's id and never its name, so `for={name}`
+     never completed the association for any caller -- the same defect Input
+     fixed for itself. InputButton cannot read the id Input derives internally,
+     so it derives the identical one here and passes it down, which both
+     completes the label and keeps the two components agreeing on one id.
+     An explicit id still wins, for repeated rows that need uniqueness. */
+  const uid = $props.id();
+  const fieldId = $derived(
+    inputProperties.id ||
+      (typeof inputProperties.name === 'string' && inputProperties.name !== ''
+        ? `${inputProperties.name}-${uid}`
+        : uid)
+  );
+
+  /* `mandatory` drew an asterisk and stopped there: the Input underneath never
+     received it, so the field was not actually required and announced nothing.
+     Input maps both spellings to native `required` plus `aria-required`, and a
+     component whose own marker contradicts the control inside it is the worse
+     of the two behaviours to keep. `required` is the settled name; `mandatory`
+     stays as the deprecated alias. */
+  const isRequired = $derived(typeof required === 'boolean' ? required : mandatory === true);
+
+  /* InputButton renders the error and helper text ITSELF -- it passes
+     `actionInput={true}`, which is what suppresses Input's own copies -- and
+     those two divs carried no id, so nothing referenced them. A screen-reader
+     user heard the field and never the sentence explaining why it was rejected.
+
+     `describeField` composes the reference from the messages that are actually
+     rendered, so aria-describedby never points at an id that is not in the DOM.
+     It is keyed on `fieldId`, the id Input is given below, and that cannot
+     collide with Input's own `${id}-error` / `${id}-info`: `actionInput` is
+     hard-coded true here, so Input renders neither.
+
+     The existing precedence is preserved exactly -- an external `error` wins
+     over the internal validation message, which itself only shows once
+     validation has actually failed. */
+  const resolvedError = $derived(
+    typeof error === 'string' && error.length > 0
+      ? error
+      : validationState === 'Invalid' &&
+          typeof inputProperties.onErrorMessage === 'string' &&
+          inputProperties.onErrorMessage !== ''
+        ? inputProperties.onErrorMessage
+        : null
+  );
+  const field = $derived(
+    describeField(fieldId, {
+      error: resolvedError,
+      info: inputProperties.infoMessage,
+      invalid: validationState === 'Invalid'
+    })
+  );
+
   export function focus() {
     inputRef?.focus();
   }
@@ -62,15 +117,22 @@
   }
 </script>
 
+<!-- The described element has to carry a role for the description to reach the
+     accessibility tree, and the field itself is inside `Input`, which exposes no
+     `aria-describedby` seam. The role is conditional so an InputButton with no
+     messages keeps the accessibility tree it had before. -->
 <div
   class="container {classes ?? ''}"
+  role={field.describedBy !== null || field.ariaInvalid !== null ? 'group' : null}
+  aria-describedby={field.describedBy}
+  aria-invalid={field.ariaInvalid}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
   {#if inputProperties.label && inputProperties.label !== ''}
-    <label class="label" for={inputProperties.name}>
-      {inputProperties.label}{#if mandatory}<span class="mandatory-marker" aria-label="required">
-          *</span
+    <label class="label" for={fieldId}>
+      {inputProperties.label}{#if isRequired}<span class="mandatory-marker" aria-hidden="true"
+          >*</span
         >{/if}
     </label>
   {/if}
@@ -87,6 +149,8 @@
         <Input
           {...inputProperties}
           {...inputEventProperties}
+          id={fieldId}
+          required={isRequired}
           bind:value
           bind:this={inputRef}
           onstatechange={handleStateChange}
@@ -110,15 +174,26 @@
       </div>
     {/if}
   </div>
-  {#if typeof error === 'string' && error.length > 0}
-    <div class="external-error-message">{error}</div>
-  {:else if typeof inputProperties.onErrorMessage === 'string' && inputProperties.onErrorMessage !== '' && validationState === 'Invalid'}
-    <div class="error-message">
-      {inputProperties.onErrorMessage}
+  {#if field.showsError}
+    <div
+      id={field.errorId}
+      role="alert"
+      class={typeof error === 'string' && error.length > 0
+        ? 'external-error-message'
+        : 'error-message'}
+      data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+      testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+    >
+      {resolvedError}
     </div>
   {/if}
-  {#if typeof inputProperties.infoMessage === 'string' && inputProperties.infoMessage !== ''}
-    <div class="info-message">
+  {#if field.showsInfo}
+    <div
+      id={field.infoId}
+      class="info-message"
+      data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+      testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+    >
       {inputProperties.infoMessage}
     </div>
   {/if}
@@ -182,7 +257,7 @@
     font-weight: var(--input-label-msg-text-weight, 400);
     font-size: var(--input-label-msg-text-size, 12px);
     color: var(--input-label-msg-text-color, #4d6174);
-    line-height: var(--input-label-msg-text-line-height);
+    line-height: var(--input-label-msg-text-line-height, inherit);
     margin: var(--input-label-msg-text-margin, 0px 0px 6px 0px);
   }
 

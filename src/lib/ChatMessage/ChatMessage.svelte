@@ -455,6 +455,23 @@
     --button-hover-color: var(--chat-message-action-hover-background-color, #f4f4f5);
   }
 
+  /* The sender bubble is a dark fill in light mode, so the neutral action grey
+     above lands at 1.81:1 on it. Actions inside that bubble take their own ink. */
+  .chat-message.party-sender .actions {
+    --button-text-color: var(--chat-message-sender-action-color, #d4d4d8);
+  }
+
+  /* The sender bubble is a dark fill in light mode and a light one in dark, so
+     anything rendered inside it -- links and inline buttons included -- has to
+     invert with it rather than take one fixed colour. */
+  .chat-message.party-sender .bubble :global(a) {
+    color: var(--chat-message-sender-link-color, light-dark(#a5b4fc, #4338ca));
+  }
+
+  .chat-message.party-sender .bubble :global(.button-text) {
+    color: var(--chat-message-sender-action-color, light-dark(#d4d4d8, #27272a));
+  }
+
   .chat-message:hover .actions,
   .chat-message:focus-within .actions {
     opacity: 1;
@@ -499,7 +516,7 @@
   }
 
   .body :global(a) {
-    color: var(--chat-message-link-color, #6d28d9);
+    color: var(--chat-message-link-color, light-dark(#6d28d9, #a5b4fc));
     text-decoration: underline;
     text-underline-offset: 2px;
   }
@@ -637,5 +654,14 @@
     border: none;
     border-top: 1px solid var(--chat-message-hr-color, rgba(0, 0, 0, 0.12));
     margin: 0.8em 0;
+  }
+  /* The actions row is revealed on hover by fading opacity 0 -> 1. Under a
+     reduced-motion preference it appears at once instead: the row is a set of
+     controls the user is reaching for, so arriving instantly is the better
+     outcome, not a degraded one. */
+  @media (prefers-reduced-motion: reduce) {
+    .actions {
+      transition: none;
+    }
   }
 </style>

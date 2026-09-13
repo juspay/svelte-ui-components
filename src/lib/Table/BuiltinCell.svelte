@@ -650,7 +650,7 @@
     align-items: center;
     justify-content: center;
     background-color: var(--table-cell-thumb-placeholder-background, #f3f4f6);
-    color: var(--table-cell-thumb-placeholder-color, #6b7280);
+    color: var(--table-cell-thumb-placeholder-color, #4b5563);
     font-size: var(--table-cell-thumb-placeholder-font-size, 14px);
     font-weight: 600;
     line-height: 1;
@@ -682,7 +682,7 @@
   }
 
   .builtin-trend-up {
-    color: var(--table-trend-up-color, #16a34a);
+    color: var(--table-trend-up-color, #166534);
   }
 
   .builtin-trend-down {

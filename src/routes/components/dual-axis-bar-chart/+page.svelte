@@ -248,7 +248,7 @@
 <style>
   .page-intro {
     margin-bottom: 24px;
-    color: #555;
+    color: var(--doc-text-secondary, #555);
     max-width: 680px;
   }
 

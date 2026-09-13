@@ -1,3 +1,4 @@
+import { eventHitsInside } from '../_interaction/dismissal';
 /**
  * Shared pointer-interaction helpers used by the chart components.
  */
@@ -7,10 +8,14 @@ export type RelativePointerPosition = { x: number; y: number };
 /**
  * Pointer position relative to the top-left corner of `el`, or null when the
  * element is not mounted yet.
+ *
+ * Takes `MouseEvent` (which `PointerEvent` extends) since it only reads
+ * clientX/clientY — that also lets the mouse-only chart components (PieChart,
+ * SankeyChart) share this instead of hand-rolling the same formula.
  */
 export function pointerPositionIn(
   el: HTMLElement | null,
-  event: PointerEvent
+  event: MouseEvent
 ): RelativePointerPosition | null {
   if (el === null) {
     return null;
@@ -34,8 +39,10 @@ export function dismissOnOutsidePointerDown(
     return () => {};
   }
   const dismiss = (event: PointerEvent): void => {
-    const target = event.target;
-    if (containerEl !== null && !(target instanceof Node && containerEl.contains(target))) {
+    // Through the custom-element build this listener sits outside the shadow
+    // root the chart renders in, so `event.target` is the host rather than
+    // anything the pointer actually hit. See eventHitsInside.
+    if (containerEl !== null && !eventHitsInside(containerEl, event)) {
       onDismiss();
     }
   };

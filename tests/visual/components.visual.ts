@@ -220,6 +220,56 @@ async function waitForImages(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Forces Chromium to rasterise the page once, and discards the result.
+ *
+ * This is the fix for the 1px page-height oscillation, and it is not a settle:
+ * the page is provably idle when it happens. Measured on `accordion` -- after
+ * the clock is stopped and the page has been quiescent, `main.content` sits at
+ * 1745.1875px across six samples taken 100ms apart, and holds that height
+ * through four further seconds of real time with nothing touching it. Take one
+ * screenshot and it is 1767.1875px, permanently. Every element that moved was a
+ * `<code>`, and each one changed BOTH axes -- 46x17 becoming 55x15. Those are
+ * different font metrics, not a reflow.
+ *
+ * The cause is that `<code>` resolves to the generic `monospace` family, and
+ * Chromium does not bind a generic family to a physical face until it first
+ * paints. Until then the text is shaped against a fallback. `document.fonts`
+ * cannot see this coming: it reports `status: 'loaded'` with the real face
+ * absent, because no `@font-face` rule is involved -- there is nothing for
+ * `document.fonts.ready` to wait on.
+ *
+ * So the first screenshot of a test is also the first paint, which means it is
+ * the one capture guaranteed to be taken against stale metrics. Playwright then
+ * takes a second, gets the post-paint layout, sees the two disagree, and
+ * reports the page as never producing two identical consecutive captures.
+ * Whether the resulting height mismatch also crosses a rounding boundary is
+ * what decided pass or fail, which is why the same commit failed 11 specs, then
+ * 4, then a different 4.
+ *
+ * Warming up here, before anything measures, means the fit and the capture both
+ * see the resolved font. It is deliberately a real screenshot rather than a
+ * paint-forcing DOM read: `offsetHeight` and friends flush layout, and layout is
+ * exactly the stage that was already correct -- only rasterisation binds the
+ * face.
+ */
+async function warmUpRasterizer(page: Page): Promise<void> {
+  // `fullPage` is load-bearing, not incidental. The binding happens when text in
+  // that family is painted, and a viewport capture paints only the first 800px,
+  // so a demo whose first `<code>` sits below the fold rebinds during the real
+  // capture instead -- the same bug, further down the page. Measured: warming up
+  // with a viewport-sized capture left accordion oscillating between 1640px and
+  // 1641px, exactly as before the fix; `fullPage` pinned it to 1631px on every
+  // attempt.
+  //
+  // No settle is needed afterwards. The relayout is synchronous with the paint:
+  // measuring immediately after this returns already reports the post-binding
+  // geometry. Nothing here may await a frame, either -- `page.clock.install`
+  // fakes `requestAnimationFrame`, so a frame that the test does not explicitly
+  // advance the clock to never arrives.
+  await page.screenshot({ fullPage: true });
+}
+
 const VIEWPORT_WIDTH = 1280;
 const MIN_VIEWPORT_HEIGHT = 800;
 // Nothing should approach this; it exists so a runaway page cannot ask for a
@@ -350,11 +400,40 @@ async function prepare(page: Page, slug: string): Promise<void> {
          option finishes CSS animations, but a caret blinking inside a focused
          input is neither an animation nor a transition. */
       *, *::before, *::after { caret-color: transparent !important; }
+      /* Transitions are killed HERE, before anything measures the page, rather
+         than alongside the animation rule further down.
+         animations:'disabled' fast-forwards a running transition to its end
+         state at CAPTURE time. Any transition on a layout property therefore
+         resizes the page during the screenshot -- after fitViewportToContent
+         has already measured and sized the viewport. Accordion transitions
+         grid-template-rows (Accordion.svelte), so task-list grew from 852px
+         to 855px between the third and fourth consecutive capture of an
+         otherwise idle page. Suppressing transitions before the measurement
+         makes the layout the fit measures the same layout the capture sees.
+         transition:none is not a guess at the settled value: it makes the
+         property jump straight to its target, which IS the end state that
+         animations:'disabled' would have fast-forwarded to. */
+      *, *::before, *::after {
+        transition: none !important;
+        -webkit-transition: none !important;
+      }
     `
   });
 
   await page.evaluate(() => document.fonts.ready);
   await waitForImages(page);
+
+  // Advance the manual clock BEFORE anything measures the page.
+  //
+  // It used to run after the fit, which measured a demo mid-cascade and then
+  // let the remaining timers change the height the viewport had just been sized
+  // to. Every timer-driven demo therefore had a window in which its content
+  // could still move after the geometry was settled. Advancing first means the
+  // fit measures the terminal state. After this returns the clock stops again,
+  // so nothing can shift while the screenshot is taken.
+  await page.clock.runFor(SETTLE_OVERRIDES[slug] ?? SETTLE_MS);
+
+  await warmUpRasterizer(page);
 
   // Grow the viewport to the whole page before capturing.
   //
@@ -401,11 +480,6 @@ async function prepare(page: Page, slug: string): Promise<void> {
   const viewportFit = await fitViewportToContent(page);
   await page.evaluate(() => document.fonts.ready);
   await waitForImages(page);
-
-  // Advance the manual clock once, by a fixed amount, so timer-driven demos
-  // reach a settled state that is identical on every run. After this returns
-  // the clock stops again, so nothing can shift while the screenshot is taken.
-  await page.clock.runFor(SETTLE_OVERRIDES[slug] ?? SETTLE_MS);
 
   // Remove every CSS animation via a stylesheet, not per element.
   //

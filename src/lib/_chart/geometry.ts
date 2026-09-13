@@ -361,7 +361,15 @@ export function computeSankeyLayout(
 
   const nodeById = new Map(computedNodes.map((n) => [n.id, n]));
 
-  const linkKey = (l: { source: string; target: string }): string => `${l.source} ${l.target}`;
+  // The separator is written as the ESCAPE `\u0000`, not as a raw NUL byte. A
+  // literal NUL in the source makes the whole file binary to every text tool:
+  // `file` reports it as data, `grep` stops reporting matches in it, and a
+  // review diff renders it as unviewable. This file carried one from the commit
+  // that added the Sankey layout, and it silently hid `computeStackedValues`
+  // from a repo-wide grep. The runtime string is identical either way -- a NUL
+  // is still the delimiter, because it is the one character a node id cannot
+  // contain, which is the whole reason it was chosen.
+  const linkKey = (l: { source: string; target: string }): string => `${l.source}\u0000${l.target}`;
   // Link widths use the same global scale as node heights, so each node's link
   // stack fills its bar exactly and never runs past its bottom edge.
   const linkWidths = new Map<string, number>();
@@ -432,6 +440,87 @@ export function computeSankeyLayout(
   return { nodes: computedNodes, links: computedLinks };
 }
 
+// ── Cross-series X alignment ──────────────────────────────────────
+
+/**
+ * Minimal shape `joinByX` needs from a data point. `label` stays optional so
+ * both `LineChartDataPoint` and `AreaChartDataPoint` satisfy it structurally
+ * without either chart importing the other's types.
+ */
+export type JoinableXPoint = { x: number; y: number; label?: string };
+
+export type JoinableXSeries<P extends JoinableXPoint = JoinableXPoint> = {
+  data: ReadonlyArray<P>;
+};
+
+export type JoinedXValue<P extends JoinableXPoint = JoinableXPoint> = {
+  /** Index of `point` within that series' own `data` array (last-wins, see below). */
+  index: number;
+  point: P;
+};
+
+export type JoinedXRow<P extends JoinableXPoint = JoinableXPoint> = {
+  x: number;
+  /**
+   * One slot per input series, in the same order as `seriesList`. `null`
+   * marks a series with no sample at this x -- an absence, never a fabricated
+   * zero. A gap point (finite x, non-finite y) still gets a slot here; callers
+   * that must skip gaps check `Number.isFinite(value.point.y)` themselves.
+   */
+  values: ReadonlyArray<JoinedXValue<P> | null>;
+};
+
+/**
+ * Aligns multiple series by their x VALUE instead of by array position, so a
+ * shorter, offset, reordered or duplicate-x series never has another
+ * series' sample attributed to its column (array-position joins silently
+ * draw series B's 3rd point at series A's 3rd x instead of B's own x).
+ *
+ * One row is produced per distinct finite x across all series, sorted
+ * ascending -- callers do not need to pre-sort their data. Non-finite x
+ * (an unusual, distinct case from a gap's non-finite Y) cannot be placed in
+ * a column at all and is excluded from the join.
+ *
+ * Duplicate x within a single series: the LAST matching point wins. This
+ * matches `computeStackedValues` below (which is built on this same join)
+ * and avoids privileging an arbitrary "first sample" when a caller's array
+ * isn't time-ordered.
+ *
+ * This is the ONE alignment contract shared by tooltip context, hit-testing
+ * and stacking/normalization -- there is no second, position-based path for
+ * the common case where every series already shares one x sequence: with
+ * aligned input this produces exactly the positional pairing callers relied
+ * on before, because "nearest by x" and "same index" agree when the x's
+ * already match one-for-one.
+ */
+export function joinByX<P extends JoinableXPoint>(
+  seriesList: ReadonlyArray<JoinableXSeries<P>>
+): JoinedXRow<P>[] {
+  const perSeriesByX = seriesList.map((series) => {
+    const byX = new Map<number, JoinedXValue<P>>();
+    series.data.forEach((point, index) => {
+      if (Number.isFinite(point.x)) {
+        byX.set(point.x, { index, point });
+      }
+    });
+    return byX;
+  });
+
+  const allX = new Set<number>();
+  for (const byX of perSeriesByX) {
+    for (const x of byX.keys()) {
+      allX.add(x);
+    }
+  }
+
+  return [...allX]
+    .sort((a, b) => a - b)
+    .map((x) => ({
+      x,
+      values: perSeriesByX.map((byX) => byX.get(x) ?? null)
+    }));
+}
+
 // ── Stacked values ──────────────────────────────────────────────
 
 export function computeStackedValues(
@@ -441,17 +530,43 @@ export function computeStackedValues(
     return [];
   }
 
-  const stacked: StackedPoint[][] = [];
-  const baselines = new Map<number, number>();
+  // Built on joinByX -- the same by-x alignment used for tooltip/hit-testing
+  // -- rather than a second, independent accumulation. A series absent at a
+  // given x (including a NaN-gap point there) contributes no segment and no
+  // baseline shift at that column, instead of a fabricated zero-height slice
+  // or a NaN that would poison every series stacked above it.
+  const rows = joinByX(seriesData.map((data) => ({ data })));
+  const stacked: StackedPoint[][] = seriesData.map(() => []);
 
-  for (const series of seriesData) {
-    const stackedSeries: StackedPoint[] = [];
-    for (const point of series) {
-      const base = baselines.get(point.x) ?? 0;
-      stackedSeries.push({ x: point.x, y0: base, y1: base + point.y });
-      baselines.set(point.x, base + point.y);
+  for (const row of rows) {
+    let base = 0;
+    for (let si = 0; si < seriesData.length; si++) {
+      const entry = row.values[si];
+      if (entry === null || !Number.isFinite(entry.point.y)) {
+        continue;
+      }
+      // A negative contributes ZERO height, it does not subtract.
+      //
+      // docs/CHART_INPUT_POLICY.md has always said so -- "a negative
+      // contribution to a stack or a percent-of-total does not have a
+      // well-defined visual meaning (a slice cannot have negative height), so it
+      // is treated as a 0 contribution rather than inverting the stack" -- and
+      // the clamp existed only in AreaChart's normalized path, behind
+      // `stackNormalize`. Plain `stacked: true` renders through here, where
+      // `base + y` let a negative REDUCE the baseline for every series above it.
+      //
+      // It was invisible rather than merely wrong: AreaChart's stacked y-domain
+      // starts at 0, so the inverted segment had nowhere to be drawn and landed
+      // at pixel 510 of a 340px plot -- off the bottom of the chart entirely.
+      //
+      // The segment is still pushed, with zero height, rather than skipped:
+      // skipping means "this series has no point at this x", which is what a gap
+      // already means, and would silently drop the series from the column.
+      const contribution = Math.max(0, entry.point.y);
+      const y1 = base + contribution;
+      stacked[si].push({ x: row.x, y0: base, y1 });
+      base = y1;
     }
-    stacked.push(stackedSeries);
   }
 
   return stacked;

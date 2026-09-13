@@ -13,8 +13,14 @@
 </script>
 
 {#if fadeIn}
+  <!-- Same latent bug as Toast.svelte's `in:fly`: `fadeIn` (like Toast's
+       `showToast`) is whatever the caller passes on this component's own
+       first render, so a local `in:` would never play when a caller mounts
+       with `fadeIn` already true -- exactly the "fades in on mount" case
+       this prop exists for (see docs/OverlayAnimation.md). `|global` makes
+       the intro play on creation regardless. -->
   <div
-    in:fade={{ duration: 350 }}
+    in:fade|global={{ duration: 350 }}
     out:fade={{ duration: 350 }}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}

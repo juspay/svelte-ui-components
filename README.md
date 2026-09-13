@@ -122,33 +122,36 @@ fix to something that did not work.
 
 ### Inputs & Form Controls
 
-| Component       | Description                                                                                                                        | Docs                        |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| **Button**      | Action trigger with circular loader, progress bar, icon/children snippets, and aria-expanded support.                              | [docs](docs/Button.md)      |
-| **Input**       | Text field with built-in validation for email, phone, password, and custom patterns. Supports text transformers and textarea mode. | [docs](docs/Input.md)       |
-| **InputButton** | Input field fused with action buttons — for search bars, OTP entry, coupon codes.                                                  | [docs](docs/InputButton.md) |
-| **Select**      | Dropdown picker with single-select (with search), multi-select (checkboxes + Select All + Apply), and custom content slots.        | [docs](docs/Select.md)      |
-| **Toggle**      | Labeled on/off switch with sliding ball animation.                                                                                 | [docs](docs/Toggle.md)      |
-| **Checkbox**    | Styled checkbox input with custom SVG checkmark.                                                                                   | [docs](docs/Checkbox.md)    |
-| **Radio**       | Styled radio button with custom circular indicator.                                                                                | [docs](docs/Radio.md)       |
-| **Slider**      | Range slider with configurable min, max, step, and optional value display.                                                         | [docs](docs/Slider.md)      |
-| **Choicebox**   | Selectable option group with single-select (radio) or multi-select (checkbox) behavior and custom content.                         | [docs](docs/Choicebox.md)   |
+| Component       | Description                                                                                                                                                            | Docs                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| **Button**      | Action trigger with circular loader, progress bar, icon/children snippets, and aria-expanded support.                                                                  | [docs](docs/Button.md)      |
+| **Input**       | Text field with built-in validation for email, phone, password, and custom patterns. Supports text transformers and textarea mode.                                     | [docs](docs/Input.md)       |
+| **InputButton** | Input field fused with action buttons — for search bars, OTP entry, coupon codes.                                                                                      | [docs](docs/InputButton.md) |
+| **Select**      | Dropdown picker with single-select (with search), multi-select (checkboxes + Select All + Apply), and custom content slots.                                            | [docs](docs/Select.md)      |
+| **Toggle**      | Labeled on/off switch with sliding ball animation.                                                                                                                     | [docs](docs/Toggle.md)      |
+| **Checkbox**    | Styled checkbox input with custom SVG checkmark.                                                                                                                       | [docs](docs/Checkbox.md)    |
+| **Radio**       | Styled radio button with custom circular indicator.                                                                                                                    | [docs](docs/Radio.md)       |
+| **Slider**      | Range slider with configurable min, max, step, and optional value display.                                                                                             | [docs](docs/Slider.md)      |
+| **Choicebox**   | Selectable option group with single-select (radio) or multi-select (checkbox) behavior and custom content.                                                             | [docs](docs/Choicebox.md)   |
+| **Label**       | A real `<label>` element — clicking the text focuses (and for a checkbox or radio, activates) the control named by `for`, with an optional accessible required marker. | [docs](docs/Label.md)       |
+| **RatingGroup** | Star rating input — a single `role="slider"` tab stop driven by arrow keys, Home/End or a click, with optional half stars and native form participation.               | [docs](docs/RatingGroup.md) |
 
 ### Display & Data
 
-| Component        | Description                                                                                     | Docs                         |
-| ---------------- | ----------------------------------------------------------------------------------------------- | ---------------------------- |
-| **Avatar**       | Circular avatar with image (Img with fallback) or text initial.                                 | [docs](docs/Avatar.md)       |
-| **Badge**        | Icon with a numeric/text badge overlay in the corner.                                           | [docs](docs/Badge.md)        |
-| **GridItem**     | Grid cell with icon, label, and loading overlay animation.                                      | [docs](docs/GridItem.md)     |
-| **Icon**         | Clickable icon with optional text label.                                                        | [docs](docs/Icon.md)         |
-| **IconStack**    | Layered horizontal stack of overlapping circular icons/avatars.                                 | [docs](docs/IconStack.md)    |
-| **Img**          | Image with automatic fallback on load error.                                                    | [docs](docs/Img.md)          |
-| **ListItem**     | Multi-section list row with images, labels, and accordion expansion.                            | [docs](docs/ListItem.md)     |
-| **Pill**         | Compact label/tag for status or categories, optionally clickable with a11y.                     | [docs](docs/Pill.md)         |
-| **Status**       | Full-screen status display for success/failure screens.                                         | [docs](docs/Status.md)       |
-| **Table**        | Data table with keyed columns, built-in cell renderers, sorting, pagination and selection.      | [docs](docs/Table.md)        |
-| **RelativeTime** | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip. | [docs](docs/RelativeTime.md) |
+| Component        | Description                                                                                                                                  | Docs                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **Avatar**       | Circular avatar with image (Img with fallback) or text initial.                                                                              | [docs](docs/Avatar.md)       |
+| **Badge**        | Icon with a numeric/text badge overlay in the corner.                                                                                        | [docs](docs/Badge.md)        |
+| **GridItem**     | Grid cell with icon, label, and loading overlay animation.                                                                                   | [docs](docs/GridItem.md)     |
+| **Icon**         | Clickable icon with optional text label.                                                                                                     | [docs](docs/Icon.md)         |
+| **IconStack**    | Layered horizontal stack of overlapping circular icons/avatars.                                                                              | [docs](docs/IconStack.md)    |
+| **Img**          | Image with automatic fallback on load error.                                                                                                 | [docs](docs/Img.md)          |
+| **ListItem**     | Multi-section list row with images, labels, and accordion expansion.                                                                         | [docs](docs/ListItem.md)     |
+| **Pill**         | Compact label/tag for status or categories, optionally clickable with a11y.                                                                  | [docs](docs/Pill.md)         |
+| **Status**       | Full-screen status display for success/failure screens.                                                                                      | [docs](docs/Status.md)       |
+| **Table**        | Data table with keyed columns, built-in cell renderers, sorting, pagination and selection.                                                   | [docs](docs/Table.md)        |
+| **RelativeTime** | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip.                                              | [docs](docs/RelativeTime.md) |
+| **AspectRatio**  | Constrains content to a fixed width-to-height ratio using CSS `aspect-ratio`, reserving layout space before an image, video or iframe loads. | [docs](docs/AspectRatio.md)  |
 
 ### Feedback & Loading
 
@@ -178,17 +181,18 @@ fix to something that did not work.
 
 ### Navigation & Structure
 
-| Component         | Description                                                                                    | Docs                          |
-| ----------------- | ---------------------------------------------------------------------------------------------- | ----------------------------- |
-| **Accordion**     | Expandable/collapsible container with CSS grid animation.                                      | [docs](docs/Accordion.md)     |
-| **Carousel**      | Horizontal content slider with swipe and pagination dots.                                      | [docs](docs/Carousel.md)      |
-| **CheckListItem** | Checklist row with checkbox, label, and toggleable checked state.                              | [docs](docs/CheckListItem.md) |
-| **Pagination**    | Page navigation with previous/next buttons and numbered page links.                            | [docs](docs/Pagination.md)    |
-| **Scroller**      | Overflowing item list with arrow navigation, gradient edges, drag-to-scroll, and snap support. | [docs](docs/Scroller.md)      |
-| **Stepper**       | Multi-step progress indicator with completed, active, and pending states.                      | [docs](docs/Stepper.md)       |
-| **Step**          | Individual step within a Stepper — renders number, label, and connector.                       | [docs](docs/Step.md)          |
-| **Tabs**          | Tabbed interface with animated active indicator.                                               | [docs](docs/Tabs.md)          |
-| **Toolbar**       | Fixed header bar with back button, title, and customizable content areas.                      | [docs](docs/Toolbar.md)       |
+| Component         | Description                                                                                                                                          | Docs                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| **Accordion**     | Expandable/collapsible container with CSS grid animation.                                                                                            | [docs](docs/Accordion.md)     |
+| **Carousel**      | Horizontal content slider with swipe and pagination dots.                                                                                            | [docs](docs/Carousel.md)      |
+| **CheckListItem** | Checklist row with checkbox, label, and toggleable checked state.                                                                                    | [docs](docs/CheckListItem.md) |
+| **Pagination**    | Page navigation with previous/next buttons and numbered page links.                                                                                  | [docs](docs/Pagination.md)    |
+| **Scroller**      | Overflowing item list with arrow navigation, gradient edges, drag-to-scroll, and snap support.                                                       | [docs](docs/Scroller.md)      |
+| **Stepper**       | Multi-step progress indicator with completed, active, and pending states.                                                                            | [docs](docs/Stepper.md)       |
+| **Step**          | Individual step within a Stepper — renders number, label, and connector.                                                                             | [docs](docs/Step.md)          |
+| **Tabs**          | Tabbed interface with animated active indicator.                                                                                                     | [docs](docs/Tabs.md)          |
+| **Toolbar**       | Fixed header bar with back button, title, and customizable content areas.                                                                            | [docs](docs/Toolbar.md)       |
+| **Separator**     | Horizontal or vertical divider — decorative and out of the accessibility tree by default, `role="separator"` when it demarcates meaningful sections. | [docs](docs/Separator.md)     |
 
 ### Actions
 
@@ -317,6 +321,39 @@ Every component reads its visual properties from CSS custom properties with sens
 </div>
 ```
 
+### Dark Mode
+
+The library ships a dark theme. Import it once and every component follows
+`data-theme="dark"` on the document root — which is what `ThemeSwitcher`
+already writes:
+
+```js
+import '@juspay/svelte-ui-components/theme-dark.css';
+```
+
+```svelte
+<script>
+  import { ThemeSwitcher } from '@juspay/svelte-ui-components';
+</script>
+
+<ThemeSwitcher
+  mode="segment"
+  onchange={(_, resolved) => {
+    document.documentElement.dataset.theme = resolved;
+  }}
+/>
+```
+
+The stylesheet only re-declares custom properties, so it composes with your own
+theme rather than replacing it: anything you set on a more specific ancestor
+still wins, and any variable you have not set keeps the library's dark value.
+
+It also works for the `<sui-*>` custom elements. Custom properties inherit
+across shadow boundaries, which is the only route into a shadow root from
+outside — a selector-based override such as
+`[data-theme='dark'] .my-part { … }` applies in the Svelte build and is dead
+for the web component. Theme through variables and both work.
+
 ### Scoped Theming
 
 Because CSS variables cascade, you can scope different themes to different parts of your app:
@@ -343,6 +380,73 @@ Because CSS variables cascade, you can scope different themes to different parts
   }
 </style>
 ```
+
+### Bridging Your Own Token Scale
+
+The library names a property per component element (`--{component}-{element}-{property}`),
+so components render correctly with no stylesheet at all. Most design systems
+name the opposite thing: a short scale of values — a handful of neutrals, lines
+and radii — composed everywhere.
+
+Restating a scale as hundreds of per-component declarations, and keeping them in
+step by hand, is not the intended cost. Define your scale once and declare the
+component tokens **in terms of it**; the cascade does the rest, and a value
+changes in one place:
+
+```css
+/* Your scale — the only values you maintain. */
+:root {
+  --acme-surface-1: #ffffff;
+  --acme-surface-2: #f4f5f7;
+  --acme-line-2: #d6d9de;
+  --acme-ink-1: #1a1d21;
+  --acme-ink-2: #5b6371;
+  --acme-accent: #3b5bdb;
+  --acme-radius-md: 8px;
+}
+
+[data-theme='dark'] {
+  --acme-surface-1: #14161a;
+  --acme-surface-2: #1e2126;
+  --acme-line-2: #333942;
+  --acme-ink-1: #e6e8eb;
+  --acme-ink-2: #9aa3b2;
+  --acme-accent: #748ffc;
+}
+
+/* The bridge — component tokens expressed as your scale. Write it once. */
+:root {
+  --button-color: var(--acme-accent);
+  --button-text-color: var(--acme-surface-1);
+  --button-border-radius: var(--acme-radius-md);
+  --button-secondary-text-color: var(--acme-ink-1);
+  --button-secondary-border-color: var(--acme-line-2);
+
+  --input-background: var(--acme-surface-1);
+  --input-text-color: var(--acme-ink-1);
+  --input-border: 1px solid var(--acme-line-2);
+  --input-placeholder-color: var(--acme-ink-2);
+
+  --table-header-background: var(--acme-surface-2);
+  --table-content-color: var(--acme-ink-1);
+  --table-border: 1px solid var(--acme-line-2);
+}
+```
+
+Note that a few tokens take a full shorthand rather than a bare colour —
+`--input-border` and `--table-border` above are `1px solid …`, not `…`. Setting
+one to a colour alone produces an invalid declaration and no border at all,
+which is silent. Each component's page in [docs/](docs/) gives the shape it
+expects.
+
+Both themes now come from seven values. Because the bridge only re-declares
+custom properties it composes with the shipped dark theme rather than fighting
+it: import `theme-dark.css` for the components you have not bridged, and your
+own declarations win wherever they are more specific.
+
+The same file works for the `<sui-*>` elements, since custom properties are the
+one thing that crosses a shadow boundary. A rule that reaches _inside_ a
+component — `[data-theme='dark'] .my-part { … }` — silently does nothing there.
 
 ### CSS Variable Reference
 
@@ -467,7 +571,7 @@ src/lib/
     {Component}.svelte     # component implementation
     properties.ts          # prop type definitions
   types.ts                 # shared types (ValidationState, InputDataType, etc.)
-  utils.ts                 # shared utilities (validateInput, createDebouncer)
+  utils.ts                 # shared utilities (validateInput, prefersReducedMotion, body scroll lock)
   index.ts                 # public exports
 
 docs/                      # component documentation (one markdown file per component)

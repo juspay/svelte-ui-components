@@ -53,11 +53,11 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## CSS Variables
 
-| Variable                              | Default         | Description                                                   |
-| ------------------------------------- | --------------- | ------------------------------------------------------------- |
-| `--accordion-trigger-cursor`          | `pointer`       | Cursor style for the trigger element.                         |
-| `--accordion-trigger-disabled-cursor` | `not-allowed`   | Cursor style for the trigger element when `disabled` is true. |
-| `--accordion-transition`              | `0.2s ease-out` | Transition value for the `grid-template-rows` animation.      |
+| Variable                              | Default         | Description                                                                                                                                                                                                                                                |
+| ------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--accordion-trigger-cursor`          | `pointer`       | Cursor style for the trigger element.                                                                                                                                                                                                                      |
+| `--accordion-trigger-disabled-cursor` | `not-allowed`   | Cursor style for the trigger element when `disabled` is true.                                                                                                                                                                                              |
+| `--accordion-transition`              | `0.2s ease-out` | Transition value for the `grid-template-rows` animation.                                                                                                                                                                                                   |
 | `--accordion-align-self`              | `start`         | `align-self` for the panel when it is a grid/flex item of a consumer's own container (see [#550](https://github.com/juspay/svelte-ui-components/issues/550)). Override to `stretch` if you want the panel stretched to the container's row/column instead. |
 
 ## Web Component
@@ -69,6 +69,11 @@ Tag: `<sui-accordion>`
   <p>Expandable content here</p>
 </sui-accordion>
 ```
+
+`ontoggle` is a JS-property callback only (`accordion.ontoggle = (expanded) => ...`) and does
+not dispatch a DOM event: `toggle` is already `HTMLElement`'s own native event name, and adding
+a second, synthetic one under it would double-deliver to any
+`accordion.addEventListener('toggle', ...)` listener.
 
 ### Props (HTML Attributes)
 
@@ -85,3 +90,5 @@ Tag: `<sui-accordion>`
 | Slot Name   | Maps to Snippet | Description                                 |
 | ----------- | --------------- | ------------------------------------------- |
 | _(default)_ | `children`      | Content rendered inside the accordion body. |
+
+> **Svelte-only:** `trigger` (receives `{ expanded: boolean }`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.

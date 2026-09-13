@@ -49,6 +49,15 @@
       activeWorkspace = Math.max(0, workspaceFiles.length - 1);
     }
   }
+
+  const manualItems = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'billing', label: 'Billing', disabled: true },
+    { key: 'members', label: 'Members' },
+    { key: 'audit', label: 'Audit log' }
+  ];
+  let manualKey = $state('overview');
+  let rtlIndex = $state(1);
 </script>
 
 <div class="page-header">
@@ -82,13 +91,13 @@
         {#if workspaceFiles[index]?.dirty}
           <span
             style="width: 6px; height: 6px; border-radius: 50%; background: {active
-              ? '#1a73e8'
+              ? '#0b57d0'
               : '#999'}; flex-shrink: 0;"
           ></span>
         {/if}
         <span>{label}</span>
         <button
-          style="all: unset; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px; border-radius: 3px; color: inherit; opacity: 0.5;"
+          style="all: unset; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px; border-radius: 3px; color: inherit; opacity: 0.9;"
           onmouseenter={(event) => {
             if (event.currentTarget instanceof HTMLElement) {
               event.currentTarget.style.opacity = '1';
@@ -96,7 +105,7 @@
           }}
           onmouseleave={(event) => {
             if (event.currentTarget instanceof HTMLElement) {
-              event.currentTarget.style.opacity = '0.5';
+              event.currentTarget.style.opacity = '0.9';
             }
           }}
           onclick={(event) => {
@@ -166,6 +175,36 @@
   <p class="state-display">Active: {activeNav}</p>
 </div>
 
+<h3 class="demo-heading">Manual activation and disabled items</h3>
+<p class="demo-caption">
+  Arrow keys move focus and skip the disabled tab; Enter or Space selects. Use
+  <code>activationMode="manual"</code> when showing a panel is expensive.
+</p>
+<div class="demo-row" style="flex-direction: column; max-width: 520px;">
+  <Tabs
+    items={manualItems}
+    activeKey={manualKey}
+    activationMode="manual"
+    loop={false}
+    onkeychange={(key) => (manualKey = key)}
+    testId="tabs-manual-demo"
+  />
+  <p class="state-display">Active key: {manualKey}</p>
+</div>
+
+<h3 class="demo-heading">Right-to-left</h3>
+<p class="demo-caption">
+  Direction is inherited, so nothing is passed here: the arrow keys reverse because an ancestor is
+  right-to-left.
+</p>
+<div class="demo-row" style="direction: rtl; max-width: 520px;" data-pw="tabs-rtl-demo">
+  <Tabs
+    items={['Alpha', 'Beta', 'Gamma']}
+    activeIndex={rtlIndex}
+    onchange={(index) => (rtlIndex = index)}
+  />
+</div>
+
 <style>
   .demo-heading {
     margin: 24px 0 8px;
@@ -173,6 +212,6 @@
 
   .demo-caption {
     margin: 0 0 12px;
-    color: #666;
+    color: var(--doc-text-muted, #666);
   }
 </style>

@@ -107,7 +107,10 @@
   <h1>SankeyChart</h1>
 </div>
 
-<h3>Simple Flow</h3>
+<h3>
+  Simple Flow — keyboard access (Tab through nodes then links; Enter/Space activates the focused one
+  exactly like a click)
+</h3>
 <div class="demo-row">
   <SankeyChart nodes={simpleNodes} links={simpleLinks} />
 </div>
@@ -181,4 +184,24 @@
     maxHeight={180}
     testId="sankey-radius-demo"
   />
+</div>
+
+<h3>
+  Tooltip portal — chart sits inside an <code>overflow: hidden</code> box that would otherwise clip the
+  tooltip
+</h3>
+<div class="demo-row">
+  <!-- box-sizing + width: a shrink-to-fit flex item (.demo-row) wrapping a
+       width:100% chart collapses both to 0 with no explicit width here --
+       see ChartContainer.svelte's min-width comment. -->
+  <div
+    style="box-sizing: border-box; width: 100%; overflow: hidden; max-height: 160px; border: 1px dashed #d1d5db; padding: 8px;"
+  >
+    <SankeyChart
+      nodes={simpleNodes}
+      links={simpleLinks}
+      tooltipPortal
+      testId="sankey-tooltip-portal"
+    />
+  </div>
 </div>

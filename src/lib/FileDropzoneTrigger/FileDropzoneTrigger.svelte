@@ -81,7 +81,7 @@
 
   .file-dropzone-trigger-caption {
     margin: var(--file-dropzone-trigger-caption-margin, 0);
-    color: var(--file-dropzone-trigger-caption-color, #64748b);
+    color: var(--file-dropzone-trigger-caption-color, #f1f5f9);
     font-size: var(--file-dropzone-trigger-caption-font-size, 0.85em);
   }
 </style>

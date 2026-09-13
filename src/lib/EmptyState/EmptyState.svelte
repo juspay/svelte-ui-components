@@ -111,7 +111,7 @@
   .empty-state-description {
     font-size: var(--empty-state-description-font-size, 14px);
     color: var(--empty-state-description-color, inherit);
-    opacity: var(--empty-state-description-opacity, 0.6);
+    opacity: var(--empty-state-description-opacity, 0.8);
     max-width: var(--empty-state-description-max-width, 360px);
     margin-top: 4px;
   }

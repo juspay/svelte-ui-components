@@ -1,13 +1,102 @@
 import type { CustomValidator, Hsv, Hsl, InputDataType, Rgb, ValidationState } from '$lib/types';
 
 /**
+ * A phone-number shape a consumer opts into, as the pair of patterns the
+ * in-progress/committed distinction needs.
+ *
+ * Presets exist because `tel` cannot have a correct universal *format* rule --
+ * only a universal *character* rule (see `validateE164Shape`). A market-specific
+ * format is a real requirement and belongs to whoever knows the market, so it is
+ * named, exported and opted into rather than assumed.
+ */
+export type TelPreset = {
+  /** Matches a complete, committed number. */
+  readonly valid: RegExp;
+  /** Matches a number still being typed. Must accept every prefix of `valid`. */
+  readonly inProgress: RegExp;
+};
+
+/**
+ * Ten digits beginning 6-9 -- an Indian mobile number.
+ *
+ * This was the UNCONDITIONAL default for `dataType="tel"`. A consumer outside
+ * India got `+33 6 12 34 56 78` and `(555) 123-4567` marked Invalid by a rule
+ * they never chose and could not see, which is the worst shape for a default to
+ * fail in: correct input, silently rejected, no message naming the market.
+ * It is still here, still correct for the market it describes, and now has to be
+ * asked for.
+ */
+export const TEL_PRESET_IN_MOBILE: TelPreset = {
+  valid: /^[6-9][0-9]{9}$/,
+  inProgress: /^[6-9][0-9]{0,9}$/
+};
+
+/** Every preset this library ships, by name. */
+export const TEL_PRESETS: Readonly<Record<string, TelPreset>> = {
+  'in-mobile': TEL_PRESET_IN_MOBILE
+};
+
+/** Optional, additive settings for `validateInput`. */
+export type ValidateInputOptions = {
+  /**
+   * Format rule for `dataType="tel"` when no `validPattern` is supplied. Null or
+   * omitted keeps the locale-neutral character check described on
+   * `validateInput`.
+   */
+  readonly telPreset?: TelPreset | null;
+};
+
+/** Digits a number can hold under E.164, which caps the subscriber number at 15. */
+const E164_MAX_DIGITS = 15;
+/** Shortest real number anywhere; below this a number is still being typed. */
+const TEL_MIN_DIGITS = 4;
+
+/**
+ * The only rule about phone numbers that holds in every market: which
+ * CHARACTERS one may contain, and how many digits it may hold. Length, leading
+ * digit and grouping are all national, so none of them are asserted here.
+ *
+ * Rejects letters and stray punctuation, accepts `+33 6 12 34 56 78`,
+ * `(555) 123-4567` and `9876543210` alike.
+ */
+function validateE164Shape(phoneNumber: string): ValidationState {
+  if (phoneNumber.length === 0) {
+    return 'InProgress';
+  }
+  // A leading + is part of the international prefix and may appear only first.
+  const body = phoneNumber.startsWith('+') ? phoneNumber.slice(1) : phoneNumber;
+  if (/[^0-9\s()\-.]/.test(body)) {
+    return 'Invalid';
+  }
+  const digits = body.replace(/[^0-9]/g, '');
+  if (digits.length > E164_MAX_DIGITS) {
+    return 'Invalid';
+  }
+  return digits.length >= TEL_MIN_DIGITS ? 'Valid' : 'InProgress';
+}
+
+/**
  * @description A common function to validate value provided inside the input component
  * @param inputValue String value coming from input field
  * @param dataType Datatype of the value being entered in the input component
  * @param validPattern Regular expression which is supposed to be applied on the input string
  * @param inProgressPattern Regular expression which is supposed to be applied on the input string while input is in progress
  * @param customValidators Array of customer validator functions
+ * @param options Optional settings; see `ValidateInputOptions`
  * @returns ValidationState : InProgress | Valid | Invalid
+ *
+ * Only `email`, `tel`, `password` and `text` are validated here. `number`,
+ * `time`, `date`, `search` and `url` have NO branch and always return 'Valid'
+ * before custom validators run -- the browser's own constraint validation is the
+ * only thing checking them. That is a real gap rather than a deliberate policy,
+ * and it is stated on `Input`'s `dataType` prop as well as here, because a
+ * consumer choosing a dataType reads the prop and not this file.
+ *
+ * `tel` with no `validPattern` checks the CHARACTERS a number may contain and
+ * nothing about its national format (see `validateE164Shape`). It used to apply
+ * an Indian mobile pattern unconditionally; that rule is now
+ * `TEL_PRESET_IN_MOBILE`, passed through `options.telPreset` here or through
+ * `Input`'s `validationPattern` / `inProgressPattern` props.
  */
 
 export function validateInput(
@@ -15,7 +104,8 @@ export function validateInput(
   dataType: InputDataType,
   validPattern: RegExp | null,
   inProgressPattern: RegExp | null,
-  customValidators: CustomValidator[]
+  customValidators: CustomValidator[],
+  options: ValidateInputOptions = {}
 ): ValidationState {
   let validationResult: ValidationState = 'Valid';
 
@@ -27,7 +117,7 @@ export function validateInput(
     case 'tel':
       validationResult =
         validPattern === null
-          ? validatePhoneNumber(inputValue)
+          ? validatePhoneNumber(inputValue, options.telPreset ?? null)
           : validateTextWithPattern(inputValue, validPattern, inProgressPattern);
       break;
 
@@ -143,27 +233,20 @@ function validateEmailInput(emailId: string): ValidationState {
 }
 
 /**
- * @description Validates Indian phone numbers
- * @todo Update Regex to take different variations of input in next update
- * @link https://stackoverflow.com/questions/18351553/regular-expression-validation-for-indian-phone-number-and-mobile-number
+ * @description Validates a phone number against an opted-in preset, or against
+ * the locale-neutral character rule when none is given.
  * @param phoneNumber
+ * @param preset Market-specific format, or null for no format rule at all
  * @returns ValidationState
  */
-function validatePhoneNumber(phoneNumber: string): ValidationState {
-  try {
-    const validationPattern = new RegExp('^[6-9]{1}[0-9]{9}$');
-    const inProgressPattern = new RegExp('^[6-9]{1}[0-9]{0,9}$');
-    if (validationPattern.test(phoneNumber)) {
-      return 'Valid';
-    } else if (inProgressPattern.test(phoneNumber) || phoneNumber.length === 0) {
-      return 'InProgress';
-    } else {
-      return 'Invalid';
-    }
-  } catch (e) {
-    console.error('Phone Regex creation failed', e);
+function validatePhoneNumber(phoneNumber: string, preset: TelPreset | null): ValidationState {
+  if (preset === null) {
+    return validateE164Shape(phoneNumber);
   }
-  return phoneNumber.length === 10 ? 'Valid' : phoneNumber.length > 10 ? 'InProgress' : 'Invalid';
+  if (preset.valid.test(phoneNumber)) {
+    return 'Valid';
+  }
+  return preset.inProgress.test(phoneNumber) || phoneNumber.length === 0 ? 'InProgress' : 'Invalid';
 }
 
 /**
@@ -332,6 +415,16 @@ export function prefersReducedMotion(): boolean {
   );
 }
 
+/**
+ * Leading-edge throttle, despite the name: the first call runs immediately and
+ * every call within `delay` of it is dropped, rather than the last one being
+ * deferred as a debounce would. Modal relies on exactly that — the first
+ * dismissal must be acted on at once, and the repeats it guards against are the
+ * ones to discard.
+ *
+ * Not exported from the package; renaming it is a free change whenever the
+ * mismatch stops being worth the note.
+ */
 export function createDebouncer(delay: number) {
   let lastCallTime = 0;
   return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {

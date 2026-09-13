@@ -332,6 +332,8 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #f5f5f5;
+    /* See pie-chart: measured 1.09:1 in dark mode without this. */
+    color: #3a4550;
     cursor: pointer;
   }
   .demo-btn.active {

@@ -273,10 +273,23 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--book-dot-transition-duration, var(--motion-duration, 0.2s))
+      var(--book-dot-transition-easing, var(--motion-easing, ease));
   }
 
   .dot-active {
     background-color: var(--book-dot-active-color, #333333);
+  }
+
+  /* The page turn is a transform, which is the movement prefers-reduced-motion
+     exists for. Both ends of the transition are meaningful on their own -- a page
+     is either turned or not -- so removing it leaves no misleading frame, unlike
+     the timed loaders in Button and ListItem. This block lives in the component's
+     own <style> because that is the only stylesheet reaching inside the shadow
+     root a custom-element consumer gets. */
+  @media (prefers-reduced-motion: reduce) {
+    .page {
+      transition: none;
+    }
   }
 </style>

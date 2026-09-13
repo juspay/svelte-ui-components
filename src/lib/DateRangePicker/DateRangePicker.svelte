@@ -4,10 +4,13 @@
     DateRangePreset,
     TimeDisplayBoundary
   } from './properties';
-  import { tick, untrack } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import Calendar from '../Calendar/Calendar.svelte';
   import Button from '../Button/Button.svelte';
+  import { focusTrapTabTarget, getFocusTrapBoundary } from '../_interaction/focus';
+  import { getActiveElement } from '../_interaction/focus';
+  import { registerDismissible } from '../_interaction/dismissal';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
@@ -147,6 +150,10 @@
   let isOpen: boolean = $state(false);
   let panelRef: HTMLDivElement | null = $state(null);
   let triggerRef: HTMLDivElement | null = $state(null);
+  // The trigger, compare trigger, and both panels are all un-portaled descendants
+  // of this one root, so it alone is the dismissible layer's "inside" boundary --
+  // see the registration effect below.
+  let drpRootEl: HTMLDivElement | null = $state(null);
   // The panel anchors below the trigger by default. When the trigger sits low in
   // the viewport there is no room for it there, and because the panel is
   // position:absolute (not portaled, not fixed) it simply extends past the fold
@@ -157,6 +164,9 @@
   let compareTriggerRef: HTMLDivElement | null = $state(null);
   // Stores the element that opened the compare panel so focus can be restored on close.
   let compareFocusReturnEl: HTMLElement | null = null;
+  // Same bookkeeping for the main panel — both panels declare aria-modal="true", so both
+  // need to return focus to whatever opened them once they close.
+  let panelFocusReturnEl: HTMLElement | null = null;
 
   // Tracks the active preset label for the trigger display (seeded from initialPresetLabel on mount)
   const resolvedInitialPresetLabel: string | null = untrack(() => {
@@ -274,7 +284,43 @@
     return placeholder;
   });
 
+  // Shared focus-trap plumbing for both aria-modal="true" panels (main and compare).
+  // Originally written once, inline, for the compare panel only, then reimplemented
+  // a third time for the main panel; both now delegate to the same module Modal and
+  // Sheet use (src/lib/_interaction/focus.ts) instead of carrying their own copy.
+
+  // Moves focus to the first focusable descendant of an open panel, so a keyboard user
+  // lands inside the modal content instead of on whatever was focused before it opened.
+  // Uses the boundary directly rather than focusEntryPoint's container fallback: this
+  // panel has never focused itself when empty, and preserving that (unlikely, since a
+  // dialog with no focusable content isn't a case this component has) is simpler than
+  // auditing whether the fallback is safe everywhere this is called.
+  function focusFirstElement(panelNode: HTMLElement | null): void {
+    const { first } = getFocusTrapBoundary(panelNode);
+    first?.focus();
+  }
+
+  // Keeps Tab/Shift+Tab cycling within an open panel — required by aria-modal="true":
+  // focus must never leave the panel via keyboard until it closes.
+  function trapFocus(panelNode: HTMLElement | null, event: KeyboardEvent): void {
+    if (event.key !== 'Tab') {
+      return;
+    }
+    const target = focusTrapTabTarget({
+      container: panelNode,
+      activeElement: getActiveElement(panelNode),
+      shiftKey: event.shiftKey
+    });
+    if (target !== null) {
+      event.preventDefault();
+      target.focus();
+    }
+  }
+
   function openPicker(): void {
+    // Save whatever had focus (the trigger button) so it can be restored on close.
+    const panelOpener = getActiveElement(triggerRef);
+    panelFocusReturnEl = panelOpener instanceof HTMLElement ? panelOpener : null;
     // Seed draft from current committed values
     draftStart = rangeStart;
     draftEnd = rangeEnd;
@@ -309,12 +355,18 @@
 
     isOpen = true;
     onopentoggle?.({ open: true });
+    tick().then(() => focusFirstElement(panelRef));
   }
 
   function closePicker(): void {
     isOpen = false;
     opensUpward = false;
     onopentoggle?.({ open: false });
+    const returnEl = panelFocusReturnEl;
+    panelFocusReturnEl = null;
+    tick().then(() => {
+      returnEl?.focus();
+    });
   }
 
   /**
@@ -363,17 +415,12 @@
   }
 
   function openComparePicker(): void {
-    compareFocusReturnEl =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const compareOpener = getActiveElement(compareTriggerRef);
+    compareFocusReturnEl = compareOpener instanceof HTMLElement ? compareOpener : null;
     draftCompareStart = compareStart ?? null;
     draftCompareEnd = compareEnd ?? null;
     openCompare = true;
-    tick().then(() => {
-      const firstFocusable = comparePanelRef?.querySelector<HTMLElement>(
-        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      firstFocusable?.focus();
-    });
+    tick().then(() => focusFirstElement(comparePanelRef));
   }
 
   function closeComparePicker(): void {
@@ -623,6 +670,22 @@
     return parsedEndDate !== null && isTypedDateAcceptable('end', parsedEndDate);
   });
 
+  /* These four flags already drove `aria-invalid`, and nothing else. A
+     control that announces it is invalid while linking nothing that says why
+     tells a screen-reader user only that they are stuck. Each field now names
+     the message that explains it, and the message is rendered only while the
+     field is actually invalid so the reference never dangles.
+
+     The two layout branches below (`isInlineTime` and its `{:else}`) are
+     mutually exclusive, so the same four ids are never in the document twice. */
+  const drpFieldUid = $props.id();
+  const startDateErrorId = `${drpFieldUid}-start-date-error`;
+  const startTimeErrorId = `${drpFieldUid}-start-time-error`;
+  const endDateErrorId = `${drpFieldUid}-end-date-error`;
+  const endTimeErrorId = `${drpFieldUid}-end-time-error`;
+  const DATE_HINT = 'Enter a date this picker accepts, like 12 Mar 2025.';
+  const TIME_HINT = 'Enter a time like 12:00 AM.';
+
   // True when date's month is already one of the two visible calendar months (or the
   // single visible month outside dual-month mode) — used to avoid an unnecessary
   // re-navigation/remount when a typed date is already on screen.
@@ -704,48 +767,73 @@
     }
   }
 
-  // Close on outside-click
-  function handleDocumentClick(event: MouseEvent): void {
-    if (!isOpen && !openCompare) {
-      return;
+  /* Escape closes the compare panel first, matching the original priority: with
+     both surfaces open, compare is the one the user opened most recently (it can
+     only ever open while the main panel already is), so it is the one Escape
+     should answer. Unlike outside-press below, this goes through handleCancel /
+     handleCancelCompare rather than closePicker / closeComparePicker directly --
+     preserving the original's asymmetry where Escape fires `oncancel` and an
+     outside click does not. */
+  function handleDismissEscape(): void {
+    if (openCompare) {
+      handleCancelCompare();
+    } else if (isOpen) {
+      handleCancel();
     }
-    const target = event.target;
-    if (!(target instanceof Node)) {
-      return;
-    }
-    const clickedInsidePanel = panelRef !== null && panelRef.contains(target);
-    const clickedTrigger = triggerRef !== null && triggerRef.contains(target);
-    const clickedInsideComparePanel = comparePanelRef !== null && comparePanelRef.contains(target);
-    const clickedCompareTrigger = compareTriggerRef !== null && compareTriggerRef.contains(target);
-    if (
-      isOpen &&
-      !clickedInsidePanel &&
-      !clickedTrigger &&
-      !clickedInsideComparePanel &&
-      !clickedCompareTrigger
-    ) {
+  }
+
+  /* Two independent ifs, not else-if: the original closed whichever of the two
+     surfaces the click landed outside of, and a press outside drp-root is
+     outside both at once. */
+  function handleDismissOutside(): void {
+    if (isOpen) {
       closePicker();
     }
-    if (
-      openCompare &&
-      !clickedInsideComparePanel &&
-      !clickedCompareTrigger &&
-      !clickedInsidePanel &&
-      !clickedTrigger
-    ) {
+    if (openCompare) {
       closeComparePicker();
     }
   }
 
-  function handleDocumentKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      if (openCompare) {
-        handleCancelCompare();
-      } else if (isOpen) {
-        handleCancel();
-      }
+  let releaseDismissible: (() => void) | null = null;
+
+  /* Main panel and compare panel are two separately-toggleable surfaces sharing
+     one un-portaled root (drp-root), so a single registration -- rather than one
+     per panel -- reproduces the original four-way "clicked inside any of the two
+     triggers or two panels" boundary check in one go, while handleDismissEscape /
+     handleDismissOutside above keep their original mutual precedence.
+     registerDismissible has no notion of "this layer's boundary changed shape,
+     keep the same slot" -- release+register is the only way to update it, and
+     that always re-adds at the top of the stack. Guarding on an actual
+     unregistered->registered (or reverse) transition, rather than registering
+     fresh on every read of isOpen/openCompare, matters because opening the
+     compare panel while the main panel is already open reads openCompare without
+     isOpen changing -- naively re-registering there would pop this layer and
+     push it back on top, wrongly promoting it above an unrelated layer (e.g. a
+     Modal) that opened in between and should stay topmost. $effect is the
+     sanctioned reactive escape hatch here, as elsewhere in this library, for
+     reacting to a boolean that two independent, bindable pieces of state
+     jointly drive. */
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    const shouldBeRegistered = isOpen || openCompare;
+    if (shouldBeRegistered && releaseDismissible === null) {
+      releaseDismissible = registerDismissible({
+        element: () => drpRootEl,
+        onEscape: handleDismissEscape,
+        onOutside: handleDismissOutside
+      });
+    } else if (!shouldBeRegistered && releaseDismissible !== null) {
+      releaseDismissible();
+      releaseDismissible = null;
     }
-  }
+  });
+
+  // Safety net for unmounting while still open — the effect above only reacts to
+  // isOpen/openCompare transitions, not to the component going away mid-open.
+  onDestroy(() => {
+    releaseDismissible?.();
+    releaseDismissible = null;
+  });
 
   const canApply: boolean = $derived.by(() => {
     if (mode === 'range') {
@@ -796,10 +884,14 @@
   }
 </script>
 
-<svelte:document onclick={handleDocumentClick} onkeydown={handleDocumentKeyDown} />
+{#snippet drpFieldError(id: string, show: boolean, message: string)}
+  {#if show}
+    <span {id} class="drp-field-error" role="alert">{message}</span>
+  {/if}
+{/snippet}
 
-<div class="drp-root {classes ?? ''}" data-pw={testId} testID={testId}>
-  <!-- Trigger wrapper — bind:this here so outside-click detection works -->
+<div class="drp-root {classes ?? ''}" bind:this={drpRootEl} data-pw={testId} testID={testId}>
+  <!-- Trigger wrapper — bind:this here for panel positioning and focus-return -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
       onclick={togglePicker}
@@ -845,29 +937,7 @@
           aria-label="Compare period picker"
           aria-modal="true"
           tabindex="-1"
-          onkeydown={(event) => {
-            if (event.key === 'Tab') {
-              const focusable = comparePanelRef?.querySelectorAll<HTMLElement>(
-                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-              );
-              if (!focusable || focusable.length === 0) {
-                return;
-              }
-              const first = focusable[0];
-              const last = focusable[focusable.length - 1];
-              if (event.shiftKey) {
-                if (document.activeElement === first) {
-                  event.preventDefault();
-                  last.focus();
-                }
-              } else {
-                if (document.activeElement === last) {
-                  event.preventDefault();
-                  first.focus();
-                }
-              }
-            }
-          }}
+          onkeydown={(event) => trapFocus(comparePanelRef, event)}
         >
           {#if typeof compareCalendar === 'function'}
             <div class="drp-compare-panel-body">
@@ -904,6 +974,8 @@
       role="dialog"
       aria-label="Date range picker"
       aria-modal="true"
+      tabindex="-1"
+      onkeydown={(event) => trapFocus(panelRef, event)}
       data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
       testID={typeof testId === 'string' ? `${testId}-panel` : null}
     >
@@ -966,6 +1038,7 @@
                         placeholder="Start date"
                         aria-label="Start date"
                         aria-invalid={!isStartDateValid}
+                        aria-describedby={isStartDateValid ? null : startDateErrorId}
                         onblur={() => commitTypedDate('start')}
                         onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
                         data-pw={testId ? `${testId}-start-date` : null}
@@ -986,11 +1059,14 @@
                         placeholder="12:00 AM"
                         aria-label="Start time"
                         aria-invalid={!isStartTimeValid}
+                        aria-describedby={isStartTimeValid ? null : startTimeErrorId}
                         data-pw={testId ? `${testId}-start-time` : null}
                         testID={testId ? `${testId}-start-time` : null}
                       />
                     </div>
+                    {@render drpFieldError(startDateErrorId, !isStartDateValid, DATE_HINT)}
                   </div>
+                  {@render drpFieldError(startTimeErrorId, !isStartTimeValid, TIME_HINT)}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
                   <div class="drp-date-time-group">
@@ -1004,6 +1080,7 @@
                         placeholder="End date"
                         aria-label="End date"
                         aria-invalid={!isEndDateValid}
+                        aria-describedby={isEndDateValid ? null : endDateErrorId}
                         onblur={() => commitTypedDate('end')}
                         onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
                         data-pw={testId ? `${testId}-end-date` : null}
@@ -1024,11 +1101,14 @@
                         placeholder="11:59 PM"
                         aria-label="End time"
                         aria-invalid={!isEndTimeValid}
+                        aria-describedby={isEndTimeValid ? null : endTimeErrorId}
                         data-pw={testId ? `${testId}-end-time` : null}
                         testID={testId ? `${testId}-end-time` : null}
                       />
                     </div>
+                    {@render drpFieldError(endDateErrorId, !isEndDateValid, DATE_HINT)}
                   </div>
+                  {@render drpFieldError(endTimeErrorId, !isEndTimeValid, TIME_HINT)}
                 {:else}
                   <div class="drp-date-input" class:drp-date-input-invalid={!isStartDateValid}>
                     <input
@@ -1040,11 +1120,13 @@
                       placeholder="Start date"
                       aria-label="Start date"
                       aria-invalid={!isStartDateValid}
+                      aria-describedby={isStartDateValid ? null : startDateErrorId}
                       onblur={() => commitTypedDate('start')}
                       onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
                       data-pw={testId ? `${testId}-start-date` : null}
                       testID={testId ? `${testId}-start-date` : null}
                     />
+                    {@render drpFieldError(startDateErrorId, !isStartDateValid, DATE_HINT)}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1058,11 +1140,13 @@
                       placeholder="End date"
                       aria-label="End date"
                       aria-invalid={!isEndDateValid}
+                      aria-describedby={isEndDateValid ? null : endDateErrorId}
                       onblur={() => commitTypedDate('end')}
                       onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
                       data-pw={testId ? `${testId}-end-date` : null}
                       testID={testId ? `${testId}-end-date` : null}
                     />
+                    {@render drpFieldError(endDateErrorId, !isEndDateValid, DATE_HINT)}
                   </div>
                   {#if showTimeSelection}
                     <button
@@ -1094,9 +1178,11 @@
                       placeholder="12:00 AM"
                       aria-label="Start time"
                       aria-invalid={!isStartTimeValid}
+                      aria-describedby={isStartTimeValid ? null : startTimeErrorId}
                       data-pw={testId ? `${testId}-start-time` : null}
                       testID={testId ? `${testId}-start-time` : null}
                     />
+                    {@render drpFieldError(startTimeErrorId, !isStartTimeValid, TIME_HINT)}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1111,9 +1197,11 @@
                       placeholder="11:59 PM"
                       aria-label="End time"
                       aria-invalid={!isEndTimeValid}
+                      aria-describedby={isEndTimeValid ? null : endTimeErrorId}
                       data-pw={testId ? `${testId}-end-time` : null}
                       testID={testId ? `${testId}-end-time` : null}
                     />
+                    {@render drpFieldError(endTimeErrorId, !isEndTimeValid, TIME_HINT)}
                   </div>
                 </div>
               {/if}
@@ -1237,6 +1325,14 @@
 </div>
 
 <style>
+  .drp-field-error {
+    display: block;
+    color: var(--drp-field-error-color, #b3261e);
+    font-size: var(--drp-field-error-font-size, 11px);
+    line-height: var(--drp-field-error-line-height, 1.4);
+    margin-top: var(--drp-field-error-margin-top, 2px);
+  }
+
   .drp-root {
     position: relative;
     display: inline-block;
@@ -1292,7 +1388,7 @@
     position: absolute;
     top: calc(100% + var(--drp-panel-offset, 6px));
     z-index: var(--drp-panel-z-index, 1000);
-    background: var(--drp-panel-background, inherit);
+    background: var(--drp-panel-background, #ffffff);
     border: var(--drp-panel-border, 1px solid #e0e0e0);
     border-radius: var(--drp-panel-border-radius, var(--radius, 4px));
     box-shadow: var(--drp-panel-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));
@@ -1351,7 +1447,8 @@
     color: var(--drp-preset-color, inherit);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.12s ease;
+    transition: background var(--drp-preset-item-transition-duration, var(--motion-duration, 0.12s))
+      var(--drp-preset-item-transition-easing, var(--motion-easing, ease));
   }
 
   .drp-preset-item:hover {
@@ -1429,7 +1526,8 @@
     border-radius: var(--drp-nav-btn-border-radius, var(--radius, 4px));
     cursor: pointer;
     color: var(--drp-nav-btn-color, inherit);
-    transition: background 0.12s ease;
+    transition: background var(--drp-nav-btn-transition-duration, var(--motion-duration, 0.12s))
+      var(--drp-nav-btn-transition-easing, var(--motion-easing, ease));
     padding: 0;
   }
 
@@ -1751,7 +1849,7 @@
     top: calc(100% + var(--drp-panel-offset, 6px));
     left: var(--drp-compare-panel-left, 0);
     z-index: var(--drp-panel-z-index, 1000);
-    background: var(--drp-panel-background, inherit);
+    background: var(--drp-panel-background, #ffffff);
     border: var(--drp-panel-border, 1px solid #e0e0e0);
     border-radius: var(--drp-panel-border-radius, var(--radius, 4px));
     box-shadow: var(--drp-panel-shadow, 0 8px 24px rgba(0, 0, 0, 0.12));

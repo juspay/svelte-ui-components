@@ -7,6 +7,9 @@
   let inheritedTags = $state(['inherited']);
   let editableTags = $state(['sale', 'featured', 'clearance']);
   let editLog = $state<string[]>([]);
+  let describedTags = $state(['one']);
+  let infoOnlyTags = $state<string[]>([]);
+  let plainTags = $state<string[]>([]);
 </script>
 
 <div class="page-header">
@@ -66,6 +69,33 @@
     }}
   />
   <p data-pw="chip-input-editable-log">Edits: {editLog.join(', ') || '(none)'}</p>
+</div>
+
+<h2>Validity messaging</h2>
+<p>
+  <code>errorMessage</code> and <code>infoMessage</code> describe the whole chip collection through
+  <code>aria-describedby</code>
+  on the group, and set <code>aria-invalid</code> only while an error is showing.
+</p>
+<div
+  class="demo-row"
+  data-pw="chipinput-field-contract"
+  style="flex-direction: column; align-items: stretch;"
+>
+  <ChipInput
+    values={describedTags}
+    ariaLabel="Tags"
+    errorMessage="At most five tags."
+    infoMessage="Press Enter to add."
+    testId="chipinput-described"
+  />
+  <ChipInput
+    values={infoOnlyTags}
+    ariaLabel="Labels"
+    infoMessage="Press Enter to add."
+    testId="chipinput-info-only"
+  />
+  <ChipInput values={plainTags} ariaLabel="Plain" testId="chipinput-undescribed" />
 </div>
 
 <style>

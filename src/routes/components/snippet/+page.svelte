@@ -10,6 +10,12 @@
   const host = 'ssh://runner-04.internal.example.com:2222';
   const hostCopy = createCopyState({ copyResetMs: 300 });
   onDestroy(hostCopy.destroy);
+
+  let copyError = $state('');
+
+  function describeError(reason: unknown): string {
+    return reason instanceof Error ? reason.message : String(reason);
+  }
 </script>
 
 <div class="page-header">
@@ -37,6 +43,23 @@
     copiedLabel="Link copied!"
     copyResetMs={300}
   />
+</div>
+
+<h2>Error handling</h2>
+
+<div class="demo-row" style="max-width: 500px; flex-direction: column; gap: 12px;">
+  <!-- A failed or unavailable clipboard write is reported through onerror
+       instead of being swallowed -- try this over http, in a sandboxed
+       iframe, or with clipboard permission denied to see it fire. -->
+  <SnippetComponent
+    testId="snippet-error-handling"
+    text="echo hello"
+    prompt="$"
+    onerror={(reason) => (copyError = describeError(reason))}
+  />
+  {#if copyError}
+    <p class="state-display" style="color: #ef4444;">Copy failed: {copyError}</p>
+  {/if}
 </div>
 
 <h2>The affordance without the box</h2>

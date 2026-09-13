@@ -38,24 +38,25 @@ built-in list-view text block.
 
 ## Props
 
-| Prop           | Type                              | Required | Default  | Description                                                                                   |
-| -------------- | --------------------------------- | -------- | -------- | --------------------------------------------------------------------------------------------- |
-| images         | `GalleryImage[]`                  | Yes      | `-`      | The images to display.                                                                        |
-| view           | `'grid'\|'list'`                  | No       | `'grid'` | Layout mode.                                                                                  |
-| open           | `boolean`                         | No       | `false`  | Bindable. Whether the lightbox is open.                                                       |
-| activeIndex    | `number`                          | No       | `0`      | Bindable. Index of the lightbox's current image.                                              |
-| enableLightbox | `boolean`                         | No       | `true`   | Whether clicking an item opens the lightbox.                                                  |
-| loop           | `boolean`                         | No       | `false`  | Wrap previous/next navigation around at the ends.                                             |
-| showCounter    | `boolean`                         | No       | `true`   | Show the `N / total` counter in the lightbox.                                                 |
-| showCaption    | `boolean`                         | No       | `true`   | Show `image.caption` under the lightbox image, when present.                                  |
-| previousIcon   | `Snippet`                         | No       | `-`      | Custom previous-control icon.                                                                 |
-| nextIcon       | `Snippet`                         | No       | `-`      | Custom next-control icon.                                                                     |
-| closeIcon      | `Snippet`                         | No       | `-`      | Custom close-control icon.                                                                    |
-| editIcon       | `Snippet`                         | No       | `-`      | Custom edit-action icon.                                                                      |
-| deleteIcon     | `Snippet`                         | No       | `-`      | Custom delete-action icon.                                                                    |
-| itemFooter     | `Snippet<[GalleryImage, number]>` | No       | `-`      | Grid-only. Replaces the default item content entirely with custom markup below the thumbnail. |
-| testId         | `string`                          | No       | `-`      | `data-pw` on the root element.                                                                |
-| classes        | `string`                          | No       | `-`      | Class string on both the grid/list root and the lightbox root.                                |
+| Prop                       | Type                              | Required | Default  | Description                                                                                                                                                                                                                    |
+| -------------------------- | --------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| images                     | `GalleryImage[]`                  | Yes      | `-`      | The images to display.                                                                                                                                                                                                         |
+| view                       | `'grid'\|'list'`                  | No       | `'grid'` | Layout mode.                                                                                                                                                                                                                   |
+| open                       | `boolean`                         | No       | `false`  | Bindable. Whether the lightbox is open.                                                                                                                                                                                        |
+| activeIndex                | `number`                          | No       | `0`      | Bindable. Index of the lightbox's current image.                                                                                                                                                                               |
+| enableLightbox             | `boolean`                         | No       | `true`   | Whether clicking an item opens the lightbox.                                                                                                                                                                                   |
+| loop                       | `boolean`                         | No       | `false`  | Wrap previous/next navigation around at the ends.                                                                                                                                                                              |
+| showCounter                | `boolean`                         | No       | `true`   | Show the `N / total` counter in the lightbox.                                                                                                                                                                                  |
+| showCaption                | `boolean`                         | No       | `true`   | Show `image.caption` under the lightbox image, when present.                                                                                                                                                                   |
+| previousIcon               | `Snippet`                         | No       | `-`      | Custom previous-control icon.                                                                                                                                                                                                  |
+| nextIcon                   | `Snippet`                         | No       | `-`      | Custom next-control icon.                                                                                                                                                                                                      |
+| closeIcon                  | `Snippet`                         | No       | `-`      | Custom close-control icon.                                                                                                                                                                                                     |
+| editIcon                   | `Snippet`                         | No       | `-`      | Custom edit-action icon.                                                                                                                                                                                                       |
+| deleteIcon                 | `Snippet`                         | No       | `-`      | Custom delete-action icon.                                                                                                                                                                                                     |
+| itemFooter                 | `Snippet<[GalleryImage, number]>` | No       | `-`      | Grid-only. Replaces the default item content entirely with custom markup below the thumbnail.                                                                                                                                  |
+| testId                     | `string`                          | No       | `-`      | `data-pw` on the root element.                                                                                                                                                                                                 |
+| classes                    | `string`                          | No       | `-`      | Class string on both the grid/list root and the lightbox root.                                                                                                                                                                 |
+| lightboxTransitionDuration | `number \| null`                  | No       | `200`    | Duration (ms) of the lightbox's `fade` transition. A CSS custom property can't reach a Svelte transition directive's parameters, so this prop is the motion-token equivalent — see `DESIGN_PRINCIPLES.md`'s motion convention. |
 
 Edit/delete actions are opt-in by presence: pass `oneditclick`/`ondeleteclick` to show
 that action; omit either (or both) to hide it, no separate `show*` prop needed.
@@ -93,8 +94,10 @@ have implied a native-event relay this doesn't do.
 Grid/list root is `role="list"`, each item `role="listitem"`. An interactive item is a
 real `<button>` with an `aria-label` describing its position and alt text. The lightbox
 is `role="dialog"` `aria-modal="true"`, traps focus, restores focus to whatever opened
-it on close, and locks page scroll while open. The counter is `aria-live="polite"` so
-screen readers announce navigation.
+it on close, and locks page scroll while open. The lock is shared and reference-counted
+with Modal, Sheet, and CommandMenu, so opening the lightbox from inside one of those
+doesn't release scroll locking out from under it when only the lightbox closes. The
+counter is `aria-live="polite"` so screen readers announce navigation.
 
 ## Type Reference
 
@@ -196,3 +199,48 @@ Tag: `<sui-gallery>`
 ```
 
 Set `.images` and any event handlers via JavaScript.
+
+### Web Component Events
+
+`onimageclick`, `oneditclick`, `ondeleteclick`, and `onopen` are available as JS properties, and
+each also dispatches a same-named DOM custom event (bubbles, composed) for a consumer who only
+calls `addEventListener` — `imageclick`'s, `editclick`'s and `deleteclick`'s detail is
+`{ index, event }` (Gallery's own callback arguments); `open`'s detail is the bare index:
+
+```js
+const gallery = document.querySelector('sui-gallery');
+gallery.addEventListener('imageclick', (e) => console.log(e.detail.index));
+gallery.addEventListener('open', (e) => console.log(e.detail));
+```
+
+`onkeydown`, `onclose`, and `onchange` are JS-property callbacks only and do not dispatch a DOM
+event: their names collide with `HTMLElement`'s own handler-accessor surface, which is exactly the
+shape that risks double-delivery (for a real, natively-bubbling event like `keydown`) or a
+permanently shadowed accessor — so, per the same rule the rest of this library follows, they stay
+callback-only rather than also dispatching a same-named `CustomEvent`.
+
+> **Svelte-only:** `itemFooter` (receives `GalleryImage, number`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+### Slots
+
+The three lightbox controls are reachable from markup. They render only while the lightbox is
+open.
+
+| Slot Name       | Maps to Snippet | Description                                                   |
+| --------------- | --------------- | ------------------------------------------------------------- |
+| `close-icon`    | `closeIcon`     | Lightbox close button. Defaults to the built-in close glyph.  |
+| `previous-icon` | `previousIcon`  | Previous-image button. Defaults to the built-in left chevron. |
+| `next-icon`     | `nextIcon`      | Next-image button. Defaults to the built-in right chevron.    |
+
+A JavaScript-assigned property of the same name wins over slotted markup; the slot is the
+fallback, and the slot's own fallback is the built-in glyph.
+
+`editIcon` and `deleteIcon` have no slot and are set as JavaScript properties only. Both render
+once per image in the grid, and a named slot can be filled only once: the browser assigns
+light-DOM children to the first matching slot in the shadow tree, so with three images the
+slotted glyph would appear on the first tile and the other two would render empty — not even
+the built-in glyph. Set them as properties, which applies to every tile:
+
+```js
+document.querySelector('sui-gallery').editIcon = mySnippet;
+```

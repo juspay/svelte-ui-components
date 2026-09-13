@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
+  import { describeField } from '../_field/description';
   import Input from '$lib/Input/Input.svelte';
   import type { FieldConfig, SplitInputProperties } from './properties';
 
@@ -12,10 +13,33 @@
     separator,
     testId,
     classes,
+    ariaLabel,
+    errorMessage,
+    infoMessage,
+    invalid = false,
     onchange,
     oninput,
     oncomplete
   }: SplitInputProperties = $props();
+
+  /* "That code is not right" is a fact about the whole code, not about the box
+     the caret happens to be in, so the description belongs on the group -- and
+     there was none: a screen-reader user got four unlabelled boxes and no way to
+     reach the message. `describeField` composes the reference from the messages
+     that are actually rendered, so aria-describedby never points at an id that
+     is not in the DOM -- which passes an attribute assertion and resolves to
+     nothing in a real reader.
+
+     The role is conditional so a SplitInput with no messages and no label keeps
+     the accessibility tree it had before these props existed. */
+  const fieldUid = $props.id();
+  const field = $derived(
+    describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
+  );
+  const hasGroupLabel = $derived(typeof ariaLabel === 'string' && ariaLabel !== '');
+  const describedGroup = $derived(
+    field.describedBy !== null || field.ariaInvalid !== null || hasGroupLabel
+  );
 
   let fieldCount = $derived(typeof fields !== 'undefined' ? fields.length : length);
 
@@ -223,7 +247,15 @@
   }
 </script>
 
-<div class="field-group {classes ?? ''}" data-pw={testId} testID={testId}>
+<div
+  class="field-group {classes ?? ''}"
+  role={describedGroup ? 'group' : null}
+  aria-label={hasGroupLabel ? ariaLabel : null}
+  aria-describedby={field.describedBy}
+  aria-invalid={field.ariaInvalid}
+  data-pw={testId}
+  testID={testId}
+>
   {#each fieldConfigs as config, index (index)}
     {#if typeof separator === 'string' && index > 0}
       <span class="field-group-separator">{separator}</span>
@@ -256,7 +288,41 @@
   {/each}
 </div>
 
+{#if field.showsError}
+  <div
+    id={field.errorId}
+    role="alert"
+    class="field-error"
+    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+  >
+    {errorMessage}
+  </div>
+{/if}
+{#if field.showsInfo}
+  <div
+    id={field.infoId}
+    class="field-info"
+    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+  >
+    {infoMessage}
+  </div>
+{/if}
+
 <style>
+  .field-error {
+    color: var(--field-error-color, #c5120a);
+    font-size: var(--field-error-font-size, 12px);
+    margin: var(--field-error-margin, 4px 0 0 0);
+  }
+
+  .field-info {
+    color: var(--field-info-color, #6b7280);
+    font-size: var(--field-info-font-size, 12px);
+    margin: var(--field-info-margin, 4px 0 0 0);
+  }
+
   .field-group {
     display: flex;
     align-items: flex-start;
@@ -291,7 +357,7 @@
   .field-group-label {
     font-size: var(--field-group-label-font-size, 10px);
     font-weight: var(--field-group-label-font-weight, 500);
-    color: var(--field-group-label-color, #9ca3af);
+    color: var(--field-group-label-color, #4b5563);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }

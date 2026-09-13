@@ -69,7 +69,7 @@
 <style>
   .intro {
     max-width: 640px;
-    color: #4b5563;
+    color: var(--doc-text-secondary, #4b5563);
     line-height: 1.5;
   }
 

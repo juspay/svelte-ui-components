@@ -189,7 +189,7 @@
   .demo-subheading {
     margin: 0;
     font-size: 13px;
-    color: #59616e;
+    color: var(--doc-text-muted, #59616e);
   }
 
   .demo-actions {

@@ -83,19 +83,42 @@ The single primitive expresses both a compact button-style and an expanded dropz
 </style>
 ```
 
+## Validity messaging
+
+`errorMessage` and `infoMessage` are referenced by `aria-describedby` on the drop region, composed
+from whichever of the two is actually rendered so the attribute never points at an id that is not
+in the DOM. Unlike most fields, FileInput does **not** set `aria-invalid` — ARIA does not define
+that attribute on `role="button"`, and an unsupported attribute is not a harmless extra. The error
+text is instead announced through `role="alert"` on the message element itself.
+
+```svelte
+<FileInput
+  errorMessage={rejectionReason}
+  infoMessage="PNG or JPG, up to 5 MB."
+  onerror={(msg) => (rejectionReason = msg)}
+>
+  {#snippet trigger({ openFilePicker })}
+    <button onclick={openFilePicker}>Upload</button>
+  {/snippet}
+</FileInput>
+```
+
 ## Props
 
-| Prop         | Type                                                                              | Required | Default | Description                                                                                                                             |
-| ------------ | --------------------------------------------------------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| trigger      | `Snippet<[{ openFilePicker: () => void; dragOver: boolean; disabled: boolean }]>` | Yes      | —       | Content snippet. Receives the current drag-over state, disabled state, and an `openFilePicker` function to open the file-picker dialog. |
-| accept       | `string`                                                                          | No       | —       | Comma-separated list of accepted file types (MIME types or extensions, e.g. `"image/*,.pdf"`). Validated client-side on drop and input. |
-| multiple     | `boolean`                                                                         | No       | `false` | Allow selecting more than one file at a time.                                                                                           |
-| maxSizeBytes | `number`                                                                          | No       | —       | Maximum allowed file size in bytes. Files exceeding this limit are rejected and reported via `onerror`.                                 |
-| disabled     | `boolean`                                                                         | No       | `false` | Disables all interaction. The region becomes non-focusable and drops/clicks are ignored.                                                |
-| testId       | `string`                                                                          | No       | —       | Sets `data-pw` on the root element. The hidden `<input>` gets `data-pw="${testId}-input"`.                                              |
-| classes      | `string`                                                                          | No       | —       | CSS class string applied to the root element. Use to set `--file-input-*` CSS variables for theming.                                    |
-| onfiles      | `(files: File[]) => void`                                                         | No       | —       | Called with the accepted `File[]` after validation.                                                                                     |
-| onerror      | `(message: string) => void`                                                       | No       | —       | Called with a human-readable error string when one or more files are rejected.                                                          |
+| Prop         | Type                                                                              | Required | Default | Description                                                                                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| trigger      | `Snippet<[{ openFilePicker: () => void; dragOver: boolean; disabled: boolean }]>` | Yes      | —       | Content snippet. Receives the current drag-over state, disabled state, and an `openFilePicker` function to open the file-picker dialog.                                         |
+| accept       | `string`                                                                          | No       | —       | Comma-separated list of accepted file types (MIME types or extensions, e.g. `"image/*,.pdf"`). Validated client-side on drop and input.                                         |
+| multiple     | `boolean`                                                                         | No       | `false` | Allow selecting more than one file at a time.                                                                                                                                   |
+| maxSizeBytes | `number`                                                                          | No       | —       | Maximum allowed file size in bytes. Files exceeding this limit are rejected and reported via `onerror`.                                                                         |
+| disabled     | `boolean`                                                                         | No       | `false` | Disables all interaction. The region becomes non-focusable and drops/clicks are ignored.                                                                                        |
+| testId       | `string`                                                                          | No       | —       | Sets `data-pw` on the root element. The hidden `<input>` gets `data-pw="${testId}-input"`.                                                                                      |
+| classes      | `string`                                                                          | No       | —       | CSS class string applied to the root element. Use to set `--file-input-*` CSS variables for theming.                                                                            |
+| onfiles      | `(files: File[]) => void`                                                         | No       | —       | Called with the accepted `File[]` after validation.                                                                                                                             |
+| onerror      | `(message: string) => void`                                                       | No       | —       | Called with a human-readable error string when one or more files are rejected.                                                                                                  |
+| errorMessage | `string \| null`                                                                  | No       | —       | Text shown, and announced through `role="alert"`, when the control is in error. Referenced by `aria-describedby` on the drop region — see Validity messaging above.             |
+| infoMessage  | `string \| null`                                                                  | No       | —       | Persistent helper text describing the control. Referenced the same way, so it is read before a user trips an error rather than only after.                                      |
+| invalid      | `boolean`                                                                         | No       | —       | Marks the control invalid without supplying a message. Has no visible effect on its own, since FileInput deliberately never sets `aria-invalid` — see Validity messaging above. |
 
 ## CSS Variables
 
@@ -125,7 +148,7 @@ Override these custom properties (e.g. via the `classes` prop) to style the drop
 
 Tag: `<sui-file-input>`
 
-Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the web component exposes it as a named slot. Attach event handlers via `addEventListener` to react to accepted or rejected files.
+Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the web component exposes it as a named slot. Assigning `onfiles` and `onerror` as plain properties, as below, still works to react to accepted or rejected files. `onfiles` also dispatches a `files` DOM event with `detail` set to the same `File[]` array — `fi.addEventListener('files', (e) => console.log('accepted', e.detail))` fires too. `onerror` does not: it collides with the native `HTMLElement.onerror` handler, so it stays a callback-only property — `fi.addEventListener('error', ...)` registers without error but the handler is never called.
 
 ```html
 <sui-file-input id="fi" accept="image/*" multiple></sui-file-input>
@@ -141,3 +164,5 @@ Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the
 | Slot Name | Maps to Snippet | Description                                                |
 | --------- | --------------- | ---------------------------------------------------------- |
 | `trigger` | `trigger`       | Drop zone or button content rendered inside the container. |
+
+> **Svelte-only:** `trigger` (receives `FileInputSnippetProps`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.

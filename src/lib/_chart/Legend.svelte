@@ -1,3 +1,24 @@
+<script module lang="ts">
+  /**
+   * Resolves a caller-stable id (a category label, series name, or any other id
+   * the CALLER chose to remember) to its CURRENT position in a chart's live
+   * category list -- e.g. the array `ChartHighlightAPI.getCategories()` returns.
+   *
+   * Both `highlightedIndex` and `ChartHighlightAPI.highlight()` take a numeric
+   * index, but that index shifts whenever the chart reorders, filters, or
+   * folds tail categories into a `topN` "Other" bucket. A synchronized legend
+   * (or any external driver) should not cache the index it first saw; it
+   * should re-resolve the id against the current `getCategories()` output
+   * right before calling `highlight()`. Returns `null` when the id is not
+   * currently present (filtered out, or absorbed into an aggregate bucket),
+   * which callers should treat as "clear the highlight", not "highlight -1".
+   */
+  export function resolveLegendIndex(categories: readonly string[], id: string): number | null {
+    const index = categories.indexOf(id);
+    return index === -1 ? null : index;
+  }
+</script>
+
 <script lang="ts">
   import type { LegendProperties } from './types';
 

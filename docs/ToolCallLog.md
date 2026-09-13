@@ -4,9 +4,10 @@ A chip log of an agent turn's tool calls. Chips wrap into a row, each one carryi
 (`running`, `done`, `error`), an optional mono meta string, and optional `+N`/`−N` diff-stat pills
 (the library `Pill`). A chip with a `detail` string is expandable — clicking it opens a small
 popover anchored below the chip with the full detail text and its diff stats; only one popover is
-open at a time. The popover portals to `document.body` (reusing Menu's `usePortal` placement math)
-and repositions itself on scroll/resize, so an `overflow: hidden` or scrolling ancestor — a chat
-bubble, a narrow card — can never clip it.
+open at a time. The popover portals out to the root of the tree it lives in (reusing Menu's
+`usePortal` placement math) and repositions itself on scroll/resize, so an `overflow: hidden` or
+scrolling ancestor — a chat bubble, a narrow card — can never clip it. Set `usePortal={false}` to
+leave it in place.
 
 Unlike `Chat`'s tool-status row (a `ThinkingIndicator` `chip` showing "using a tool now," cleared by
 the host once the turn settles), `ToolCallLog` is the persistent, multi-call record: it stays in the
@@ -28,12 +29,13 @@ transcript after the turn, showing every tool the model called in order.
 
 ## Props
 
-| Prop          | Type                                          | Default | Description                                                                           |
-| ------------- | --------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `chips`       | `ToolCallChip[]`                              | —       | The tool calls made so far this turn; newly appended chips stagger in at 120ms steps. |
-| `onchipclick` | `(index: number, chip: ToolCallChip) => void` | —       | Fires when a chip **without** a `detail` string is clicked.                           |
-| `testId`      | `string`                                      | —       | `data-pw`/`testID` on the root; each chip gets `<testId>-chip-<index>`.               |
-| `classes`     | `string`                                      | —       | Extra classes on the root.                                                            |
+| Prop          | Type                                          | Default | Description                                                                                                                                                                                                                                                                                                                                              |
+| ------------- | --------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chips`       | `ToolCallChip[]`                              | —       | The tool calls made so far this turn; newly appended chips stagger in at 120ms steps.                                                                                                                                                                                                                                                                    |
+| `onchipclick` | `(index: number, chip: ToolCallChip) => void` | —       | Fires when a chip **without** a `detail` string is clicked.                                                                                                                                                                                                                                                                                              |
+| `testId`      | `string`                                      | —       | `data-pw`/`testID` on the root; each chip gets `<testId>-chip-<index>`.                                                                                                                                                                                                                                                                                  |
+| `classes`     | `string`                                      | —       | Extra classes on the root.                                                                                                                                                                                                                                                                                                                               |
+| `usePortal`   | `boolean`                                     | `true`  | Move the open popover out to the root of the tree it lives in — `document.body` normally, or the shadow root inside `<sui-tool-call-log>` — so a clipping or scrolling ancestor between the two cannot cut it off. Placement is identical either way (the popover is `position: fixed` in both modes), so turning it off costs only the clipping escape. |
 
 ### ToolCallChip
 
@@ -75,6 +77,10 @@ transcript after the turn, showing every tool the model called in order.
 | `--tool-call-log-popover-min-width` / `--tool-call-log-popover-max-width`                                                                     | `220px` / `340px`                 | Popover width bounds.                                                                                                                                         |
 | `--tool-call-log-popover-color` / `--tool-call-log-popover-font-size`                                                                         | `#2b2b2b` / `0.8125rem`           | The `detail` text ink and size.                                                                                                                               |
 | `--tool-call-log-popover-z-index`                                                                                                             | `1000`                            | Popover stacking order — the portaled panel sits in the same top-layer band as a portaled Menu/Tooltip; raise it if it must sit above an even higher overlay. |
+| `--tool-call-log-chip-animation-duration`                                                                                                     | `320ms`                           | Duration of a chip's fade-up entrance. Falls back through `--motion-duration`. Pairs with the existing `--tool-call-log-ease`.                                |
+| `--tool-call-log-chip-transition-duration`                                                                                                    | `150ms`                           | Duration of a chip's background/border-color transition. Falls back through `--motion-duration`.                                                              |
+| `--tool-call-log-chip-transition-easing`                                                                                                      | `ease`                            | Easing curve of a chip's background/border-color transition. Falls back through `--motion-easing`.                                                            |
+| `--tool-call-log-popover-animation-duration`                                                                                                  | `200ms`                           | Duration of the detail popover's fade-up entrance. Falls back through `--motion-duration`. Pairs with the existing `--tool-call-log-ease`.                    |
 
 The popover's anchor gap (6px below the chip) and its portal target (`document.body`) are fixed,
 matching Menu's own portal gap, which is likewise not exposed as a CSS variable.
@@ -94,7 +100,24 @@ This component uses the following library components internally:
 <sui-tool-call-log></sui-tool-call-log>
 ```
 
-`chips` is an array property (set it from script); `onchipclick` is property-only.
+`chips` is an array property (set it from script). `onchipclick` is available as a JS property
+(`log.onchipclick = (index, chip) => ...`), and the same click also dispatches a `chipclick` DOM
+custom event (bubbles, composed) with `detail: { index, chip }` for a consumer who only calls
+`addEventListener`:
+
+```js
+const log = document.querySelector('sui-tool-call-log');
+log.addEventListener('chipclick', (e) => console.log(e.detail.index, e.detail.chip));
+```
+
+The popover is portaled to this element's own shadow root, not to `document.body`. Svelte scopes a
+custom element's CSS to its shadow root, so a popover moved into the light DOM would keep its markup
+and lose every rule scoped to that root — it rendered as a bare unstyled paragraph at the end of the
+page. Its own root keeps the stylesheet and still clears any clipping ancestor inside the component.
+
+`usePortal` defaults to true and its `use-portal` attribute is a boolean attribute, so its presence
+means true and there is no attribute spelling for false. Turn it off with a property assignment:
+`el.usePortal = false`.
 
 ## Accessibility
 
@@ -103,9 +126,9 @@ Every chip is a real `<button>` — `Pill`'s root is a non-interactive `<div>` a
 (line-height, cursor) is pulled from Pill's own tokens. Chips with a `detail` string get
 `aria-expanded`, toggling their popover.
 
-The open popover is portaled to `document.body` (Menu's `usePortal` placement math, reused) and
-positioned `position: fixed` against the chip's live anchor rect, so it can never be clipped by an
-`overflow: hidden` or scrolling ancestor; it repositions on scroll and resize. It carries
+The open popover is portaled out to the root of the tree it lives in (Menu's `usePortal` placement
+math, reused) and positioned `position: fixed` against the chip's live anchor rect, so it can never
+be clipped by an `overflow: hidden` or scrolling ancestor; it repositions on scroll and resize. It carries
 `role="dialog"` and an `aria-label` naming the chip. It closes on: clicking the open chip again,
 clicking anywhere outside both the chip and the popover, or pressing Escape (bound at the window,
 so it works regardless of focus, without forcing an interactive role onto the popover). The

@@ -14,6 +14,7 @@
     copiedLabel = 'Copied!',
     copyResetMs = 2000,
     oncopy,
+    onerror,
     classes
   }: SnippetProperties = $props();
 
@@ -29,6 +30,9 @@
     },
     get oncopy() {
       return oncopy;
+    },
+    get onerror() {
+      return onerror;
     }
   });
   onDestroy(copyState.destroy);

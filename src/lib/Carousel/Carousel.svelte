@@ -230,7 +230,8 @@
   .slidesDiv {
     display: flex;
     transform: translateX(0);
-    transition: transform 0.5s ease-in-out;
+    transition: transform var(--carousel-track-transition-duration, var(--motion-duration, 0.5s))
+      var(--carousel-track-transition-easing, var(--motion-easing, ease-in-out));
   }
   .dots-wrapper {
     gap: var(--dot-gap, 10px);
@@ -244,7 +245,8 @@
     border-radius: 50%;
     background: var(--carousel-dot-color, #c4c4c4);
     cursor: pointer;
-    transition: 0.3s ease;
+    transition: all var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
+      var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 
   .active-dot {
@@ -253,7 +255,8 @@
     border-radius: 50%;
     cursor: pointer;
     background: var(--carousel-dot-active-color, #000000);
-    transition: 0.3s ease;
+    transition: all var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
+      var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 
   .dot:focus-visible,

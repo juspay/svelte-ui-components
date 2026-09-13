@@ -94,6 +94,24 @@
   let containerEl: HTMLDivElement | null = $state(null);
 
   /**
+   * Where the portalled bubble is allowed to land, asked of the TRIGGER rather
+   * than the bubble: a freshly created, still-detached element is its own root,
+   * so it can answer nothing useful about where the component lives.
+   *
+   * The bubble's own box survives `document.body` -- every rule of it is inline
+   * (see `createPortalBubble`) -- but two things it carries do not. The
+   * `--tooltip-*` custom properties those inline rules read inherit from the
+   * shadow host, not from `<body>`, so a themed `<sui-tooltip>` reverts to the
+   * literal fallbacks; and a `content` snippet is mounted into the bubble with
+   * the consumer's own `svelte-*` scoping classes, whose stylesheet is in the
+   * shadow root the bubble just left. Its own root keeps both.
+   */
+  const portalTarget = (node: Node): Node => {
+    const root = node.getRootNode();
+    return root instanceof ShadowRoot ? root : document.body;
+  };
+
+  /**
    * Imperatively managed portal bubble element.
    * Created in `showTooltip` and removed in `hideTooltip` when `usePortal=true`.
    * All styles are applied inline so the element is not subject to Svelte's CSS scoping.
@@ -303,7 +321,7 @@
         }
         portalBubbleEl = createPortalBubble(rect, pos);
         if (portalBubbleEl !== null) {
-          document.body.appendChild(portalBubbleEl);
+          portalTarget(containerEl).appendChild(portalBubbleEl);
           const effectivePos = flipPortalBubbleIfNeeded(portalBubbleEl, rect, pos);
           clampPortalBubble(portalBubbleEl, effectivePos);
         }
@@ -405,7 +423,7 @@
     color: var(--tooltip-color, #ffffff);
     font-size: var(--tooltip-font-size, 12px);
     font-weight: var(--tooltip-font-weight, 400);
-    font-family: var(--tooltip-font-family);
+    font-family: var(--tooltip-font-family, inherit);
     padding: var(--tooltip-padding, 6px 10px);
     border-radius: var(--tooltip-border-radius, var(--radius, 4px));
     border: var(--tooltip-border, none);

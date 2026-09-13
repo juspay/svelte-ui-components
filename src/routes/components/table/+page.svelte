@@ -2,8 +2,9 @@
   import Table from '$lib/Table/Table.svelte';
   import Pill from '$lib/Pill/Pill.svelte';
   import Button from '$lib/Button/Button.svelte';
+  import Menu from '$lib/Menu/Menu.svelte';
   import type { JSONValue } from 'type-decoder';
-  import type { TableColumn, TableRow } from '$lib/Table/properties';
+  import type { TableColumn, TableRow, TableSortState } from '$lib/Table/properties';
 
   let clickedRow = $state<string | null>(null);
   let currentPage = $state(1);
@@ -390,6 +391,101 @@
     );
   };
 
+  // ── Controlled sort + controlled search demo ──────────────────────────
+  // Stands in for sort/search state a real consumer holds elsewhere — a URL, a
+  // saved view, a server query — and restores into the built-in header.
+  const controlledColumns: TableColumn[] = [
+    { id: 'name', label: 'Name', testId: 'ctrl-name' },
+    { id: 'score', label: 'Score', testId: 'ctrl-score' }
+  ];
+
+  const controlledRows: TableRow[] = [
+    { name: 'Bob', score: 20 },
+    { name: 'Alice', score: 30 },
+    { name: 'Carol', score: 10 }
+  ];
+
+  let controlledSort = $state<TableSortState | null>({ columnId: 'score', direction: 'desc' });
+  let controlledSortLog = $state('none');
+  let controlledSearchTerm = $state('');
+  let hideControlledScore = $state(false);
+  let reverseControlledColumns = $state(false);
+
+  let visibleControlledColumns = $derived.by((): TableColumn[] => {
+    const kept = hideControlledScore
+      ? controlledColumns.filter((column) => column.id !== 'score')
+      : controlledColumns;
+    return reverseControlledColumns ? [...kept].reverse() : kept;
+  });
+
+  // ── Operational table demo: custom cells + data states ────────────────
+  type OpsState = 'ready' | 'loading' | 'empty' | 'error' | 'partial';
+
+  let opsState = $state<OpsState>('ready');
+  let opsLog = $state('none');
+  let opsSearch = $state('');
+
+  const opsRecords: TableRow[] = [
+    { record: 'INV-1041', owner: 'Alice', actions: null },
+    { record: 'INV-1042', owner: 'Bob', actions: null },
+    { record: 'INV-1043', owner: 'Carol', actions: null }
+  ];
+
+  let opsRows = $derived.by((): TableRow[] => {
+    if (opsState === 'empty' || opsState === 'error') {
+      return [];
+    }
+    // A partial result is a real, shorter page — not a different component.
+    return opsState === 'partial' ? opsRecords.slice(0, 1) : opsRecords;
+  });
+
+  const opsColumns: TableColumn[] = [
+    { id: 'record', label: 'Record', testId: 'ops-record' },
+    { id: 'owner', label: 'Owner' },
+    { id: 'actions', label: 'Actions', type: 'custom', sortable: false, cell: opsActionsCell }
+  ];
+
+  // ── Page ownership demo ───────────────────────────────────────────────
+  const shrinkColumns: TableColumn[] = [
+    { id: 'item', label: 'Item', testId: 'shrink-item' },
+    { id: 'qty', label: 'Qty', align: 'right' }
+  ];
+
+  const makeShrinkRows = (count: number): TableRow[] =>
+    Array.from({ length: count }, (_unused, index) => ({
+      item: `Row ${String(index + 1).padStart(2, '0')}`,
+      qty: index + 1
+    }));
+
+  let shrinkRows = $state<TableRow[]>(makeShrinkRows(23));
+
+  // Server pagination that refuses page requests until the consumer applies
+  // them — the "requests are callbacks" half of page ownership.
+  const refusalColumns: TableColumn[] = [
+    { id: 'record', label: 'Record', testId: 'refusal-record' }
+  ];
+
+  const refusalPageRows = (pageNumber: number, size: number): TableRow[] =>
+    Array.from({ length: size }, (_unused, index) => ({
+      record: `Record ${String((pageNumber - 1) * size + index + 1).padStart(2, '0')}`
+    }));
+
+  let refusalPage = $state(2);
+  let refusalPageSize = $state(5);
+  let requestedPage = $state<number | null>(null);
+  let requestedPageSize = $state<number | null>(null);
+
+  const applyRequestedPage = (): void => {
+    if (requestedPage !== null) {
+      refusalPage = requestedPage;
+      requestedPage = null;
+    }
+    if (requestedPageSize !== null) {
+      refusalPageSize = requestedPageSize;
+      requestedPageSize = null;
+    }
+  };
+
   // ── Built-in pagination + row numbers demo ───────────────────────────────────
   const pagedColumns: TableColumn[] = [
     { id: 'item', label: 'Item', testId: 'paged-item' },
@@ -633,7 +729,10 @@
 <div class="demo-row" style="max-width: 1000px;">
   <Table columns={builtinColumns} rows={builtinRows} testId="table-builtin-cells" />
   {#if toggledRow}
-    <p data-pw="builtin-toggle-result" style="margin-top: 8px; color: #64748b; font-size: 14px;">
+    <p
+      data-pw="builtin-toggle-result"
+      style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+    >
       Toggled: {toggledRow}
     </p>
   {/if}
@@ -650,10 +749,16 @@
       rowClickLog = `row ${rowIndex}`;
     }}
   />
-  <p data-pw="interactive-log" style="margin-top: 8px; color: #64748b; font-size: 14px;">
+  <p
+    data-pw="interactive-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
     Last action: {interactiveLog}
   </p>
-  <p data-pw="row-click-log" style="margin-top: 4px; color: #64748b; font-size: 14px;">
+  <p
+    data-pw="row-click-log"
+    style="margin-top: 4px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
     Last row click: {rowClickLog}
   </p>
 </div>
@@ -674,8 +779,321 @@
     testId="table-server-sort"
     onsort={handleServerSort}
   />
-  <p data-pw="server-sort-log" style="margin-top: 8px; color: #64748b; font-size: 14px;">
+  <p
+    data-pw="server-sort-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
     Sort request: {serverSortLog}
+  </p>
+</div>
+
+{#snippet opsActionsCell(row: TableRow)}
+  <!-- The four controls the pack names. Each opts out of row activation with
+       data-row-activation="ignore"; the keyboard needs no marking at all,
+       since the row only acts when the row itself is focused. -->
+  <span style="display: inline-flex; gap: 8px; align-items: center;">
+    <button
+      type="button"
+      data-row-activation="ignore"
+      data-pw="ops-approve"
+      onclick={() => {
+        opsLog = `approved ${String(row.record)}`;
+      }}
+    >
+      Approve
+    </button>
+    <a
+      href="#ops-detail"
+      data-row-activation="ignore"
+      data-pw="ops-link"
+      onclick={() => {
+        opsLog = `followed ${String(row.record)}`;
+      }}
+    >
+      Detail
+    </a>
+    <input
+      data-row-activation="ignore"
+      data-pw="ops-note"
+      aria-label="Note for {String(row.record)}"
+      placeholder="note"
+      style="width: 90px;"
+    />
+    <!-- A portaled popup: its panel renders outside the row entirely, so its
+         clicks never reach the row even without the marking. The marking is on
+         the TRIGGER, which does sit inside the row. -->
+    <span data-row-activation="ignore" data-pw="ops-menu">
+      <Menu
+        items={[
+          { value: 'archive', label: 'Archive' },
+          { value: 'delete', label: 'Delete' }
+        ]}
+        usePortal
+        interactiveTrigger
+        testId="ops-menu-{String(row.record)}"
+        onselect={(item) => {
+          opsLog = `${item.value} ${String(row.record)}`;
+        }}
+      >
+        {#snippet trigger(triggerProps)}
+          <Button
+            {...triggerProps}
+            ariaLabel="More actions for {String(row.record)}"
+            testId="ops-menu-trigger-{String(row.record)}"
+          >
+            &ctdot;
+          </Button>
+        {/snippet}
+      </Menu>
+    </span>
+  </span>
+{/snippet}
+
+<!-- Operational table: custom cells that do not steal row activation, and the
+     five data states a real table has to distinguish -->
+<h3 id="ops-detail">Operational Table — Custom Cells and Data States</h3>
+<div class="demo-row" style="max-width: 720px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+    {#each ['ready', 'loading', 'empty', 'error', 'partial'] as const as state (state)}
+      <Button
+        testId="ops-state-{state}"
+        onclick={() => {
+          opsState = state;
+          opsSearch = '';
+        }}
+      >
+        {state}
+      </Button>
+    {/each}
+  </div>
+
+  <!-- Error and partial notices sit OUTSIDE the scroll container, so a reader
+       scrolled sideways still sees them and the table keeps its own scroll. -->
+  {#if opsState === 'error'}
+    <div
+      role="alert"
+      data-pw="ops-error"
+      style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;"
+    >
+      <span>Could not load records.</span>
+      <Button
+        testId="ops-retry"
+        onclick={() => {
+          opsState = 'ready';
+          opsLog = 'retried';
+        }}
+      >
+        Retry
+      </Button>
+    </div>
+  {/if}
+  {#if opsState === 'partial'}
+    <p data-pw="ops-partial" style="margin: 0 0 8px; font-size: 14px;">
+      Showing 1 of 3 records — the rest are still loading.
+    </p>
+  {/if}
+
+  <!-- Busy lives on the consumer's own region: fetching is caller-owned, and
+       the rows stay mounted so row identity and scroll position survive. -->
+  <div aria-busy={opsState === 'loading'} data-pw="ops-region">
+    <Table
+      columns={opsColumns}
+      rows={opsRows}
+      testId="table-ops"
+      searchConfig={{
+        placeholder: 'Search records…',
+        testId: 'ops-search',
+        searchTerm: opsSearch,
+        onSearchTermChange: (term) => {
+          opsSearch = term;
+        }
+      }}
+      pagination={{ pageSize: 5, isLoading: opsState === 'loading', testId: 'ops-paged' }}
+      onrowclick={(_rowIndex, rowData) => {
+        opsLog = `opened ${String(rowData[0])}`;
+      }}
+    >
+      {#snippet empty(context)}
+        <!-- An error is not an empty result: the fetch never established that
+             there are no records, so the alert above owns that state and the
+             empty message stays out of its way. -->
+        {#if opsState !== 'error'}
+          <span data-pw="ops-empty">
+            {context.reason === 'no-matches'
+              ? `No records match “${context.searchTerm}”.`
+              : 'No records yet.'}
+          </span>
+        {/if}
+      {/snippet}
+    </Table>
+  </div>
+  <p
+    data-pw="ops-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
+    Last action: {opsLog}
+  </p>
+</div>
+
+<!-- Controlled sort (keyed by column id) + controlled search term -->
+<h3>Controlled Sort + Controlled Search</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+    <Button
+      testId="ctrl-restore-desc"
+      onclick={() => {
+        controlledSort = { columnId: 'name', direction: 'desc' };
+      }}
+    >
+      Restore Name ↓
+    </Button>
+    <Button
+      testId="ctrl-clear-sort"
+      onclick={() => {
+        controlledSort = null;
+      }}
+    >
+      Clear sort
+    </Button>
+    <Button
+      testId="ctrl-hide-score"
+      onclick={() => {
+        hideControlledScore = !hideControlledScore;
+      }}
+    >
+      {hideControlledScore ? 'Show' : 'Hide'} Score column
+    </Button>
+    <Button
+      testId="ctrl-reverse-columns"
+      onclick={() => {
+        reverseControlledColumns = !reverseControlledColumns;
+      }}
+    >
+      Reverse columns
+    </Button>
+    <Button
+      testId="ctrl-set-search"
+      onclick={() => {
+        controlledSearchTerm = 'Alice';
+      }}
+    >
+      Search "Alice"
+    </Button>
+  </div>
+  <Table
+    columns={visibleControlledColumns}
+    rows={controlledRows}
+    sortState={controlledSort}
+    searchConfig={{
+      placeholder: 'Search…',
+      testId: 'ctrl-search',
+      searchTerm: controlledSearchTerm,
+      onSearchTermChange: (term) => {
+        controlledSearchTerm = term;
+      }
+    }}
+    onsortchange={(next) => {
+      controlledSort = next;
+      controlledSortLog = `${next.columnId} ${next.direction}`;
+    }}
+    testId="table-controlled-sort"
+  />
+  <p
+    data-pw="ctrl-sort-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
+    Sort: {controlledSort === null
+      ? 'none'
+      : `${controlledSort.columnId} ${controlledSort.direction}`}
+    · Reported: {controlledSortLog} · Term: {controlledSearchTerm === ''
+      ? 'empty'
+      : controlledSearchTerm}
+  </p>
+</div>
+
+<!-- Client-mode page ownership: the dataset shrinks from outside the table -->
+<h3>Page Ownership — External Shrink</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+    <Button
+      testId="shrink-to-five"
+      onclick={() => {
+        shrinkRows = makeShrinkRows(5);
+      }}
+    >
+      Keep 5 rows
+    </Button>
+    <Button
+      testId="shrink-to-twelve"
+      onclick={() => {
+        shrinkRows = makeShrinkRows(12);
+      }}
+    >
+      Keep 12 rows
+    </Button>
+    <Button
+      testId="shrink-to-none"
+      onclick={() => {
+        shrinkRows = [];
+      }}
+    >
+      Delete all
+    </Button>
+    <Button
+      testId="shrink-restore"
+      onclick={() => {
+        shrinkRows = makeShrinkRows(23);
+      }}
+    >
+      Restore 23 rows
+    </Button>
+  </div>
+  <Table
+    columns={shrinkColumns}
+    rows={shrinkRows}
+    pagination={{
+      pageSize: 5,
+      pageSizeOptions: [5, 10],
+      showFooterOnSinglePage: true,
+      testId: 'shrink-paged'
+    }}
+    testId="table-page-shrink"
+  >
+    {#snippet empty()}
+      <span data-pw="shrink-empty">No rows left</span>
+    {/snippet}
+  </Table>
+</div>
+
+<!-- Server-mode page ownership: steppers are requests the consumer may refuse -->
+<h3>Page Ownership — Server Requests</h3>
+<div class="demo-row" style="max-width: 560px;">
+  <Button testId="refusal-apply" onclick={applyRequestedPage}>Apply requested page/size</Button>
+  <Table
+    columns={refusalColumns}
+    rows={refusalPageRows(refusalPage, refusalPageSize)}
+    pagination={{
+      mode: 'server',
+      page: refusalPage,
+      pageSize: refusalPageSize,
+      pageSizeOptions: [5, 10],
+      totalItems: 40,
+      testId: 'refusal-paged',
+      onPageChange: (page) => {
+        requestedPage = page;
+      },
+      onPageSizeChange: (size) => {
+        requestedPageSize = size;
+      }
+    }}
+    testId="table-server-refusal"
+  />
+  <p
+    data-pw="refusal-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
+    Serving page {refusalPage} × {refusalPageSize} · Requested: {requestedPage ?? '—'} / {requestedPageSize ??
+      '—'}
   </p>
 </div>
 
@@ -793,7 +1211,10 @@
     toolbarSlot={bulkToolbar}
     testId="table-controlled-selection"
   />
-  <p data-pw="bulk-action-log" style="margin-top: 8px; color: #64748b; font-size: 14px;">
+  <p
+    data-pw="bulk-action-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
     Last bulk action: {lastBulkAction}
   </p>
 </div>
@@ -816,7 +1237,10 @@
     pagination={{ pageSize: 5, pageSizeOptions: [5], testId: 'psel' }}
     testId="table-paged-select"
   />
-  <p data-pw="paged-select-log" style="margin-top: 8px; color: #64748b; font-size: 14px;">
+  <p
+    data-pw="paged-select-log"
+    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+  >
     Selected: {pagedSelectionLog}
   </p>
 </div>
@@ -871,7 +1295,11 @@
       {#if colIndex === 2 && typeof value === 'string'}
         <Pill text={value} classes={statusClasses[value] ?? ''} />
       {:else if colIndex === 3 && typeof value === 'number'}
-        <strong style="color: {value >= 80 ? '#16a34a' : '#dc2626'}">{value}</strong>
+        <strong
+          style="color: {value >= 80
+            ? 'light-dark(#15803d, #4ade80)'
+            : 'light-dark(#b91c1c, #f87171)'}">{value}</strong
+        >
       {:else}
         {value}
       {/if}
@@ -893,7 +1321,9 @@
     --table-row-hover-background="#f0f9ff"
   />
   {#if clickedRow}
-    <p style="margin-top: 8px; color: #64748b; font-size: 14px;">Clicked: {clickedRow}</p>
+    <p style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;">
+      Clicked: {clickedRow}
+    </p>
   {/if}
 </div>
 
@@ -906,7 +1336,7 @@
     stickyHeader
     isTableScrollable
     --table-container-height="260px"
-    --table-row-hover-background="#f9fafb"
+    --table-row-hover-background="light-dark(#f9fafb, #252535)"
   />
 </div>
 
@@ -922,7 +1352,7 @@
       ['Mumbai', 12440000, 603]
     ]}
     --table-row-border="1px solid #f0f0f0"
-    --table-header-background="#fafafa"
+    --table-header-background="light-dark(#fafafa, #1e1e2e)"
   >
     {#snippet sortAscIcon()}<span style="font-size: 12px;">↑</span>{/snippet}
     {#snippet sortDescIcon()}<span style="font-size: 12px;">↓</span>{/snippet}
@@ -935,7 +1365,7 @@
 <div class="demo-row" style="max-width: 600px;">
   <Table tableHeaders={['Name', 'Email', 'Role']} tableData={[]}>
     {#snippet empty()}
-      <div style="padding: 16px; color: #94a3b8;">
+      <div style="padding: 16px; color: var(--doc-text-muted, #6b7280);">
         <p style="font-size: 16px; margin: 0 0 4px 0;">No data found</p>
         <p style="font-size: 13px; margin: 0;">Try adjusting your search or filters.</p>
       </div>
@@ -953,7 +1383,7 @@
       ['Bob Smith', 'Design', 'Product Designer'],
       ['Carol White', 'Marketing', 'Growth Lead']
     ]}
-    --table-footer-background="#f9fafb"
+    --table-footer-background="light-dark(#f9fafb, #1e1e2e)"
   >
     {#snippet paginatorSlot()}
       <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
@@ -964,10 +1394,12 @@
             }
           }}
           disabled={currentPage === 1}
-          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
+          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white; color: #3a4550;"
           >‹ Prev</button
         >
-        <span style="color: #6b7280;">Page {currentPage} of {totalPages}</span>
+        <span style="color: var(--doc-text-muted, #6b7280);"
+          >Page {currentPage} of {totalPages}</span
+        >
         <button
           onclick={() => {
             if (currentPage < totalPages) {
@@ -975,7 +1407,7 @@
             }
           }}
           disabled={currentPage === totalPages}
-          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white;"
+          style="padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; background: white; color: #3a4550;"
           >Next ›</button
         >
       </div>
@@ -1068,7 +1500,7 @@
       searchableColumnIndices: [0, 1, 3],
       testId: 'employee-search'
     }}
-    --table-row-hover-background="#f9fafb"
+    --table-row-hover-background="light-dark(#f9fafb, #252535)"
   >
     {#snippet cell(value, _rowIndex, colIndex)}
       {#if colIndex === 3 && typeof value === 'string'}
@@ -1081,7 +1513,7 @@
 </div>
 
 <h3>Search (inline header trigger)</h3>
-<p style="color: #6b7280; margin: 0 0 8px 0;">
+<p style="color: var(--doc-text-muted, #6b7280); margin: 0 0 8px 0;">
   <code>searchConfig.displayMode: 'inline'</code> renders a compact magnifying-glass icon inside the last
   header cell instead of the persistent search bar above the table. Clicking it expands an input in place;
   it collapses back to the icon on blur once emptied.
@@ -1115,7 +1547,7 @@
     onsearchchange={(term) => {
       serverSearchTerm = term;
     }}
-    --table-row-hover-background="#f9fafb"
+    --table-row-hover-background="light-dark(#f9fafb, #252535)"
   />
   <p class="state-display">
     Showing {serverFilteredRows.length} of {allProductRows.length} products
@@ -1125,7 +1557,7 @@
 
 <!-- onCellChange Wiring Pattern -->
 <h3>Editable Cells (onCellChange pattern)</h3>
-<p style="color: #6b7280; margin: 0 0 8px 0;">
+<p style="color: var(--doc-text-muted, #6b7280); margin: 0 0 8px 0;">
   Table does not forward <code>onCellChange</code> internally — wire your handler directly inside
   the <code>cell</code> snippet, which runs in consumer scope.
 </p>
@@ -1159,6 +1591,18 @@
 <div class="table-portal-clipper" data-pw="table-portal-clipper">
   <Table columns={portalColumns} rows={portalRows} usePortal testId="table-portal-cells" />
 </div>
+
+<!-- mobileCardLayout: stacked record cards below 640px, in place of horizontal scroll -->
+<h3>Mobile Record Cards (mobileCardLayout)</h3>
+<p>
+  Resize below 640px (or open dev tools' device toolbar) to see each row become a bordered card of
+  label/value pairs instead of a horizontally-scrolling row. Every column header still renders in
+  the DOM as a visually-hidden <code>&lt;span aria-hidden="true"&gt;</code> label beside its value,
+  and <code>role="table"/"rowgroup"/"row"/"columnheader"/"cell"</code> are restated on the native elements
+  so the accessible structure survives the layout switch — see "Mobile Record Cards" in the Table docs
+  for why.
+</p>
+<Table columns={featureColumns} rows={featureRows} mobileCardLayout testId="table-mobile-cards" />
 
 <style>
   /* Fixed-height, overflow-clipping frame to demonstrate the portaled dropdown

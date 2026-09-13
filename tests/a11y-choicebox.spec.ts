@@ -68,25 +68,27 @@ test.describe('Choicebox keyboard interaction', () => {
   });
 
   // WAI-ARIA APG's Radio Group pattern requires a single Tab stop for the whole group
-  // plus arrow-key roving selection between members. Each Choicebox here is instead
-  // its own independent tab stop (mode="radio" gives it role="radio", but nothing
-  // groups sibling instances into a radiogroup or moves focus between them on
-  // ArrowUp/Down) — a real gap, but fixing it needs a way to discover sibling
-  // Choiceboxes that share a group, which the component has no concept of today (no
-  // `name`/group prop, no radiogroup wrapper). Threading that through safely is a
-  // feature addition, not a small keyboard-handler fix, so this is left failing on
-  // purpose rather than papered over with a fragile DOM-sibling walk.
-  test.fixme('sibling radio-mode Choiceboxes form a single-tab-stop group with arrow-key roving selection', async ({
+  // plus arrow-key roving selection between members. This was a `test.fixme` while
+  // Choicebox had no way to discover siblings sharing a group; that ability was
+  // added, so it runs.
+  //
+  // It asserts against the `name="plan"` cards rather than the ones above, because
+  // grouping is opt-in: the cards at the top of that page carry no `name` and are
+  // still independent tab stops by design, with the parent owning the selection.
+  // Pointing this at them would assert the controlled pattern behaves like the
+  // grouped one, which is exactly what the opt-in is there to keep apart.
+  test('sibling radio-mode Choiceboxes form a single-tab-stop group with arrow-key roving selection', async ({
     page
   }) => {
     await gotoHydrated(page, '/components/choicebox');
 
-    const standard = page.getByTestId('choicebox-radio-standard');
-    const express = page.getByTestId('choicebox-radio-express');
+    const basic = page.getByTestId('choicebox-form-basic');
+    const pro = page.getByTestId('choicebox-form-pro');
 
-    await standard.focus();
+    await basic.focus();
     await page.keyboard.press('ArrowDown');
-    await expect(express).toBeFocused();
-    await expect(express).toHaveAttribute('aria-checked', 'true');
+    await expect(pro).toBeFocused();
+    await expect(pro).toHaveAttribute('aria-checked', 'true');
+    await expect(basic).toHaveAttribute('aria-checked', 'false');
   });
 });

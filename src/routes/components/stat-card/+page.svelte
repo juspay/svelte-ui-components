@@ -353,7 +353,9 @@
 <div class="demo-row">
   <StatCard title="Total Orders" value="8,610" delta="+12.5%" testId="with-footer">
     {#snippet footer()}
-      <div style="font-size: 12px; color: #6b7280;">Updated 5 minutes ago</div>
+      <div style="font-size: 12px; color: var(--doc-text-muted, #6b7280);">
+        Updated 5 minutes ago
+      </div>
     {/snippet}
   </StatCard>
 </div>

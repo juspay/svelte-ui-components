@@ -20,6 +20,18 @@ set -euo pipefail
 # the bundled browser build, which changes rendering.
 IMAGE="mcr.microsoft.com/playwright:v1.60.0-noble"
 
+# The platform is pinned for the same reason the tag is. This image is multi-arch: on
+# an Apple Silicon machine Docker picks the arm64 variant, while
+# `.github/workflows/visual.yml` runs on ubuntu-latest and gets amd64, so without this
+# a local run and a CI run are not the same image however exactly the tag is pinned.
+#
+# Recorded because it was measured rather than assumed, and because the obvious
+# suspicion turned out to be wrong: running the same suite under both variants
+# produced BYTE-IDENTICAL size deltas on all 45 failing baselines. Text rasterisation
+# did not differ between them here. So this pin buys determinism as a property, not a
+# fix for any difference seen so far -- do not reach for it to explain a diff.
+PLATFORM="linux/amd64"
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if ! docker info >/dev/null 2>&1; then
@@ -52,7 +64,7 @@ fi
 # --store-dir keeps pnpm's store inside the container's own filesystem. The repo
 # is bind-mounted at /work, so the default location would write a .pnpm-store
 # directory into the working tree and leave it there as untracked noise.
-exec docker run --rm ${TTY_FLAGS[@]+"${TTY_FLAGS[@]}"} \
+exec docker run --rm --platform "$PLATFORM" ${TTY_FLAGS[@]+"${TTY_FLAGS[@]}"} \
   -v "$REPO_ROOT":/work \
   -v /work/node_modules \
   -w /work \

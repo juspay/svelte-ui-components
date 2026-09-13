@@ -326,6 +326,10 @@ describe('removeAliasesFromComponent', () => {
 });
 
 describe('the repository', () => {
+  // Parses every component in the repository. It passes in about a second
+  // alone and takes six to seven under the full suite's parallel load, which is
+  // over vitest's 5s default -- so it failed on timing, never on its assertion.
+  // The budget is the thing that was wrong, not the check.
   it(
     'has nothing left for the generator to do',
     () => {

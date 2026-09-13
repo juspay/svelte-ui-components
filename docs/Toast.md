@@ -187,6 +187,16 @@ Tag: `<sui-toast>`
 </sui-toast>
 ```
 
+### Web Component Events
+
+`ontoasthide` is available as a JS property, and the same moment also dispatches a `toasthide`
+DOM custom event (bubbles, composed) for a consumer who only calls `addEventListener`:
+
+```js
+const toast = document.querySelector('sui-toast');
+toast.addEventListener('toasthide', () => console.log('toast finished hiding'));
+```
+
 ### Slots
 
 | Slot Name        | Maps to Snippet | Description                               |

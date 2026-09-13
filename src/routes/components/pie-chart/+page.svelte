@@ -101,9 +101,12 @@
   <PieChart data={expenses} showLabels showValues labelPosition="outside" />
 </div>
 
-<h3>With Legend</h3>
+<h3>
+  With Legend — synchronized (Tab into a slice or hover/focus a legend row: both drive the same
+  highlight, and Enter/Space on either fires the click event)
+</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={expenses} innerRadius={0.5} showLegend />
+  <PieChart data={expenses} innerRadius={0.5} showLegend testId="pie-legend-sync-demo" />
 </div>
 
 <h3>With Legend — themed</h3>
@@ -240,7 +243,31 @@
   />
 </div>
 
+<h3>
+  Tooltip portal — chart sits inside an <code>overflow: hidden</code> box that would otherwise clip the
+  tooltip
+</h3>
+<div class="demo-row" style="max-width: 400px;">
+  <div class="clip-box">
+    <PieChart data={marketShare} tooltipPortal testId="pie-tooltip-portal" />
+  </div>
+</div>
+
 <style>
+  .clip-box {
+    /* A definite width, not just overflow/max-height: without one this is a
+       shrink-to-fit flex item (.demo-row) with a width:100% chart inside,
+       and the two collapse together to 0 -- see ChartContainer.svelte's
+       min-width comment. box-sizing keeps the fill within .demo-row's own
+       bounds despite the padding/border below. */
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+    max-height: 140px;
+    border: 1px dashed #d1d5db;
+    padding: 8px;
+  }
+
   .demo-controls {
     display: flex;
     flex-wrap: wrap;
@@ -252,6 +279,9 @@
     border: 1px solid #d1d5db;
     border-radius: 4px;
     background: #f9fafb;
+    /* Pinned with the background it sits on: without it the dark theme's
+       inherited #d1d5db lands on this near-white fill at 1.05:1. */
+    color: #3a4550;
     cursor: pointer;
     font-size: 13px;
   }
@@ -262,13 +292,15 @@
   }
 
   :global(.pie-legend-themed) {
-    --chart-legend-color: rgb(150, 30, 30);
+    /* The point of this demo is that the legend takes a custom colour. It still
+       has to be legible on both grounds, so it is set per theme rather than once. */
+    --chart-legend-color: light-dark(rgb(150, 30, 30), rgb(248, 113, 113));
     --chart-legend-font-size: 15px;
     --chart-legend-swatch-size: 20px;
   }
 
   :global(.pie-empty-themed) {
-    --chart-empty-color: rgb(150, 30, 30);
+    --chart-empty-color: light-dark(rgb(150, 30, 30), rgb(248, 113, 113));
     --chart-empty-padding: 60px 24px;
   }
 </style>

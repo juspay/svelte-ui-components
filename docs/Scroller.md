@@ -185,10 +185,21 @@ Tag: `<sui-scroller>`
 </sui-scroller>
 ```
 
+### Web Component Events
+
+`onscrollposition` is available as a JS property, and the same update also dispatches a
+`scrollposition` DOM custom event (bubbles, composed) with `detail` set to the
+`ScrollPosition` object, for a consumer who only calls `addEventListener`:
+
+```js
+const scroller = document.querySelector('sui-scroller');
+scroller.addEventListener('scrollposition', (e) => console.log(e.detail.progress));
+```
+
 ### Slots
 
 | Slot Name        | Maps to Snippet | Description                 |
 | ---------------- | --------------- | --------------------------- |
 | _(default)_      | `children`      | Scrollable content.         |
-| `arrow-previous` | `arrowPrevious` | Custom previous/left arrow. |
-| `arrow-next`     | `arrowNext`     | Custom next/right arrow.    |
+| `arrow-previous` | `arrowPrevious` | Custom previous/left arrow; defaults to the built-in chevron. |
+| `arrow-next`     | `arrowNext`     | Custom next/right arrow; defaults to the built-in chevron.    |

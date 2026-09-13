@@ -1,5 +1,10 @@
 <script lang="ts">
-  import type { TableProperties, TableCheckboxSelectionConfig, TableRow } from './properties';
+  import type {
+    TableProperties,
+    TableCheckboxSelectionConfig,
+    TableRow,
+    SortDirection
+  } from './properties';
   import { normalizeColumns } from './normalizeColumns';
   import BuiltinCell from './BuiltinCell.svelte';
   import type { JSONValue } from 'type-decoder';
@@ -25,6 +30,7 @@
     sortable = true,
     sortableColumns,
     sortMode = 'client',
+    sortState,
     stickyHeader = false,
     isTableScrollable = false,
     isContentScrollable = false,
@@ -37,6 +43,7 @@
     empty,
     onrowclick,
     onsort,
+    onsortchange,
     classes,
     paginatorSlot,
     getRowTestId,
@@ -52,6 +59,7 @@
     headerTooltipIcon,
     headerTooltipPosition,
     usePortal = false,
+    mobileCardLayout = false,
     labels
   }: TableProperties = $props();
 
@@ -86,8 +94,36 @@
   });
 
   // ─── Sort state ──────────────────────────────────────────────────────────────
-  let sortColumn = $state<number | null>(null);
-  let sortDirection = $state<'asc' | 'desc'>('asc');
+  // Held as a column ID, never as a column index. The index of a field changes
+  // when columns are reordered or hidden, so index-keyed state follows the
+  // POSITION and silently starts sorting whichever field moved into it.
+  let internalSortColumnId = $state<string | null>(null);
+  let internalSortDirection = $state<SortDirection>('asc');
+
+  /** Positional tables declare no identity, so the index string is the ID. */
+  const columnIdAt = (colIndex: number): string => columns?.[colIndex]?.id ?? String(colIndex);
+
+  // Controlled-sort overlay, mirroring the controlled-selection overlay below:
+  // when the consumer supplies `sortState` (including `null`, meaning "sorted
+  // by nothing"), Table renders FROM it and never mutates it. Absent — every
+  // pre-existing consumer — the internal state behaves exactly as before.
+  let isControlledSort = $derived(typeof sortState !== 'undefined');
+  let activeSortColumnId = $derived(
+    isControlledSort ? (sortState?.columnId ?? null) : internalSortColumnId
+  );
+  let sortDirection = $derived(
+    isControlledSort ? (sortState?.direction ?? 'asc') : internalSortDirection
+  );
+  /** The sorted column's CURRENT index, or null when its ID matches none. */
+  let sortColumn = $derived.by((): number | null => {
+    if (activeSortColumnId === null) {
+      return null;
+    }
+    const index = effectiveHeaders.findIndex(
+      (_header, colIndex) => columnIdAt(colIndex) === activeSortColumnId
+    );
+    return index === -1 ? null : index;
+  });
 
   const isColumnSortable = (colIndex: number): boolean => {
     if (!sortable) {
@@ -104,26 +140,52 @@
       return;
     }
 
-    if (sortColumn === colIndex) {
-      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      sortColumn = colIndex;
-      sortDirection = 'asc';
+    const columnId = columnIdAt(colIndex);
+    const nextDirection: SortDirection =
+      activeSortColumnId === columnId && sortDirection === 'asc' ? 'desc' : 'asc';
+
+    if (!isControlledSort) {
+      internalSortColumnId = columnId;
+      internalSortDirection = nextDirection;
     }
-    onsort?.(colIndex, sortDirection);
+    onsort?.(colIndex, nextDirection);
+    onsortchange?.({ columnId, direction: nextDirection });
   };
 
   // ─── Row click ───────────────────────────────────────────────────────────────
-  const handleRowClick = (rowIndex: number, rowData: JSONValue[], originalIndex: number): void => {
+  const handleRowClick = (
+    event: MouseEvent,
+    rowIndex: number,
+    rowData: JSONValue[],
+    originalIndex: number
+  ): void => {
+    if (isRowActivationIgnored(event.target)) {
+      return;
+    }
     onrowclick?.(rowIndex, rowData, originalIndex);
   };
 
+  /**
+   * Enter/Space activates the row only when the ROW ITSELF holds focus.
+   *
+   * Built-in cells stop propagation, but a caller's `cell` snippet deliberately
+   * does not, so every key pressed inside a custom control used to bubble here:
+   * typing a space in an editable cell opened the record AND lost the space to
+   * `preventDefault()`, and Enter on a cell button fired the button and the row.
+   * Asking whether the row is the event's target answers that exactly — a key
+   * event targets the focused element — without an allowlist of "interactive"
+   * tags, which cannot be complete for inputs, editable regions, custom
+   * elements or portaled controls.
+   */
   const handleRowKeydown = (
     event: KeyboardEvent,
     rowIndex: number,
     rowData: JSONValue[],
     originalIndex: number
   ): void => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onrowclick?.(rowIndex, rowData, originalIndex);
@@ -132,6 +194,27 @@
 
   let isRowClickable = $derived(typeof onrowclick === 'function');
   let isStickyHeader = $derived(stickyHeader || isTableScrollable);
+
+  /**
+   * Click is NOT guarded the way keydown is, because "click anywhere on the row
+   * to open it" is the feature — a guard by event target would break clicking
+   * the row's own text, which is most of the row. Interactive custom-cell
+   * content opts out instead, by marking itself:
+   *
+   *   <button data-row-activation="ignore">Retry</button>
+   *
+   * An attribute rather than an exported action, so it needs no import and
+   * survives being written by a consumer who only has markup. Built-in cells
+   * already stop propagation themselves and need nothing. Portaled controls
+   * (in-cell Menu/Select with `usePortal`) render outside the row entirely, so
+   * their clicks never reach it — they are safe without the marking, which is
+   * why this is deliberately not sold as a complete "is interactive" test.
+   */
+  const IGNORE_SELECTOR = '[data-row-activation="ignore"]';
+
+  const isRowActivationIgnored = (target: EventTarget | null): boolean => {
+    return target instanceof Element && target.closest(IGNORE_SELECTOR) !== null;
+  };
 
   // ─── Horizontal-scroll affordance ────────────────────────────────────────
   // The table clips columns behind an internal horizontal scroll on narrow
@@ -165,7 +248,15 @@
   };
 
   // ─── C2-3: Search ─────────────────────────────────────────────────────────
-  let searchTerm = $state('');
+  // Same overlay shape as sort and selection: `searchConfig.searchTerm` takes
+  // ownership of the visible term, `onSearchTermChange` reports the would-be
+  // next one. Note this is orthogonal to `onsearchchange`, which delegates
+  // FILTERING — a controlled term still filters client-side on its own.
+  let internalSearchTerm = $state('');
+  let isControlledSearch = $derived(typeof searchConfig?.searchTerm === 'string');
+  let searchTerm = $derived(
+    isControlledSearch ? (searchConfig?.searchTerm ?? '') : internalSearchTerm
+  );
   let hasSearchConfig = $derived(!!searchConfig);
   let isServerSearch = $derived(typeof onsearchchange === 'function');
   let searchInputRef = $state<HTMLInputElement | null>(null);
@@ -175,9 +266,12 @@
   let isInlineSearchExpanded = $state(false);
 
   const updateSearch = (term: string): void => {
-    searchTerm = term;
+    if (!isControlledSearch) {
+      internalSearchTerm = term;
+    }
     pageOverride = 1;
     pagination?.onPageChange?.(1);
+    searchConfig?.onSearchTermChange?.(term);
     if (isServerSearch) {
       onsearchchange?.(term);
     }
@@ -332,16 +426,20 @@
   let pageOverride = $state<number | null>(null);
   let pageSizeOverride = $state<number | null>(null);
   let paginationMode = $derived(pagination?.mode ?? 'client');
-  let effectivePageSize = $derived(pageSizeOverride ?? pagination?.pageSize ?? 10);
-  let effectivePage = $derived.by(() => {
-    if (!pagination) {
-      return 1;
-    }
-    if (paginationMode === 'server') {
-      return pagination.page ?? 1;
-    }
-    return pageOverride ?? pagination.page ?? 1;
-  });
+  // Server mode with a declared `pageSize` hands page-size ownership to the
+  // consumer, exactly as `selectedIds` does for selection: the selector emits
+  // `onPageSizeChange` as a REQUEST, and until the consumer answers by changing
+  // the prop, the chrome keeps describing the page the server actually served.
+  // Without a declared `pageSize` (and in client mode) the selector owns it, as
+  // before.
+  let isPageSizeControlled = $derived(
+    paginationMode === 'server' && typeof pagination?.pageSize === 'number'
+  );
+  let effectivePageSize = $derived(
+    isPageSizeControlled
+      ? (pagination?.pageSize ?? 10)
+      : (pageSizeOverride ?? pagination?.pageSize ?? 10)
+  );
   let paginationTotalItems = $derived.by(() => {
     if (!pagination) {
       return 0;
@@ -353,6 +451,29 @@
   });
   let paginationTotalPages = $derived(
     Math.max(1, Math.ceil(paginationTotalItems / Math.max(1, effectivePageSize)))
+  );
+  let requestedPage = $derived.by(() => {
+    if (!pagination) {
+      return 1;
+    }
+    if (paginationMode === 'server') {
+      return pagination.page ?? 1;
+    }
+    return pageOverride ?? pagination.page ?? 1;
+  });
+  // In client mode the row set can shrink from outside — rows deleted, replaced,
+  // or filtered away — while the reader sits on a later page, leaving the slice
+  // empty and the range text describing rows that no longer exist ("21-5 of 5").
+  // Table owns the page in this mode, so it resolves to the last page that has
+  // rows. Display-side only: no onPageChange is emitted, since no one asked for
+  // a page change, and the reader's chosen page is kept rather than overwritten,
+  // so a set that shrinks and comes back does not relocate them to page 1.
+  // Server mode is left alone — there the page is the consumer's and an
+  // unexpected page number is theirs to reconcile.
+  let effectivePage = $derived(
+    paginationMode === 'server'
+      ? requestedPage
+      : Math.min(Math.max(1, requestedPage), paginationTotalPages)
   );
   let paginatedTableData = $derived.by(() => {
     if (!pagination || paginationMode === 'server') {
@@ -614,8 +735,29 @@
     return { ...own, ...consumer };
   };
 
+  // ─── Empty-state reason ───────────────────────────────────────────────────
+  // "No records yet" and "nothing matched" need different messages and offer
+  // different remedies, and a consumer cannot tell them apart from `rows` alone
+  // once the built-in search owns the term. A filter being ACTIVE is the
+  // signal, not whether rows survived it: that stays true in server mode, where
+  // the consumer hands back an already-filtered (and empty) page.
+  let hasActiveColumnFilter = $derived(
+    (columns ?? []).some((column) => typeof column.filter?.selectedValue === 'string')
+  );
+  let emptyReason = $derived<'no-rows' | 'no-matches'>(
+    searchTerm.trim() !== '' || hasActiveColumnFilter ? 'no-matches' : 'no-rows'
+  );
+
   let isCheckboxMode = $derived(!!checkboxSelection && checkboxSelection.enabled !== false);
   let isSingleSelect = $derived(checkboxSelection?.selectionMode === 'single');
+
+  // ─── Mobile record cards ─────────────────────────────────────────────────────
+  // Restating a role that is already implicit at desktop width (table stays
+  // `display: table`) is a no-op there and is what keeps the AX tree a real
+  // table once `.table-mobile-cards` switches `display` to `block` below the
+  // breakpoint — see the accessibility comment on `mobileCardLayout` in
+  // properties.ts and the `.table-mobile-cards` rules below.
+  const mobileRole = (role: string): string | null => (mobileCardLayout ? role : null);
 </script>
 
 {#if typeof tableTitle === 'string' && tableTitle.length > 0}
@@ -665,6 +807,7 @@
 {#if effectiveHeaders.length !== 0 || effectiveData.length !== 0}
   <div
     class="table-container {isTableScrollable ? 'scrollable-table' : ''} {classes ?? ''}"
+    class:table-mobile-cards={mobileCardLayout}
     data-pw={testId}
     testID={testId}
   >
@@ -674,16 +817,17 @@
       class:scrollable-right={canScrollRight}
     >
       <div class="table-scroll" use:trackHorizontalScroll>
-        <table>
+        <table role={mobileRole('table')}>
           {#if caption}
             <caption class="sr-only">{caption}</caption>
           {/if}
-          <thead>
-            <tr>
+          <thead role={mobileRole('rowgroup')}>
+            <tr role={mobileRole('row')}>
               {#if isCheckboxMode && !isSingleSelect}
                 <th
                   class="table-header table-checkbox-col"
                   class:table-header-sticky={isStickyHeader}
+                  role={mobileRole('columnheader')}
                 >
                   <!-- Header tri-state checkbox: the library Checkbox in controlled mode,
                        so the tri-state is computed here and never flipped locally. -->
@@ -705,13 +849,15 @@
                 <th
                   class="table-header table-checkbox-col"
                   class:table-header-sticky={isStickyHeader}
+                  role={mobileRole('columnheader')}
                 >
                 </th>
               {/if}
               {#if rowNumberColumn}
                 <th
                   class="table-header table-row-number-col"
-                  class:table-header-sticky={isStickyHeader}>{rowNumberLabel}</th
+                  class:table-header-sticky={isStickyHeader}
+                  role={mobileRole('columnheader')}>{rowNumberLabel}</th
                 >
               {/if}
               {#each effectiveHeaders as header, colIndex (colIndex)}
@@ -720,6 +866,14 @@
                   class="table-header"
                   class:table-header-sticky={isStickyHeader}
                   class:table-col-highlighted={headerColumn?.highlighted === true}
+                  role={mobileRole('columnheader')}
+                  aria-sort={isColumnSortable(colIndex)
+                    ? sortColumn === colIndex
+                      ? sortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                    : null}
                   data-pw={headerColumn?.testId ?? null}
                   testID={headerColumn?.testId ?? null}
                   style:text-align={headerColumn?.align ?? null}
@@ -879,16 +1033,17 @@
               {/each}
             </tr>
           </thead>
-          <tbody>
+          <tbody role={mobileRole('rowgroup')}>
             {#if filteredTableData.length === 0 && typeof empty === 'function'}
-              <tr>
+              <tr role={mobileRole('row')}>
                 <td
                   class="table-empty"
+                  role={mobileRole('cell')}
                   colspan={effectiveHeaders.length +
                     (isCheckboxMode ? 1 : 0) +
                     (rowNumberColumn ? 1 : 0)}
                 >
-                  {@render empty()}
+                  {@render empty({ reason: emptyReason, searchTerm })}
                 </td>
               </tr>
             {:else}
@@ -904,10 +1059,11 @@
                   class:table-row-selected={rowSelected}
                   class:table-summary-row={summaryRowIndex !== null &&
                     originalIndex === summaryRowIndex}
+                  role={mobileRole('row')}
                   data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   testID={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   onclick={isRowClickable
-                    ? () => handleRowClick(rowIndex, row, originalIndex)
+                    ? (mouseEvent) => handleRowClick(mouseEvent, rowIndex, row, originalIndex)
                     : null}
                   onkeydown={isRowClickable
                     ? (keyboardEvent) =>
@@ -920,10 +1076,19 @@
                          also fire its own handler when the checkbox is toggled. -->
                     <td
                       class="table-content table-checkbox-col"
+                      role={mobileRole('cell')}
                       onclick={(mouseEvent) => mouseEvent.stopPropagation()}
                       onkeydown={(keyboardEvent) => keyboardEvent.stopPropagation()}
                     >
-                      <Checkbox
+                      {#if mobileCardLayout}
+                        <!-- Real element, not `::before` — see the accessibility note
+                             on `mobileCardLayout` in properties.ts for why generated
+                             content cannot be the label. `aria-hidden` keeps a screen
+                             reader from announcing it a second time on top of the
+                             `columnheader`-derived name the checkbox's own
+                             `Select row …` aria-label already carries. -->
+                        <span class="table-mobile-label" aria-hidden="true">Select</span>
+                      {/if}<Checkbox
                         text=""
                         ariaLabel={labels?.selectRow?.(rowId) ??
                           `Select row ${rowId || 'non-selectable'}`}
@@ -936,7 +1101,11 @@
                     </td>
                   {/if}
                   {#if rowNumberColumn}
-                    <td class="table-content table-row-number-col">{rowNumberFor(pageRowIndex)}</td>
+                    <td class="table-content table-row-number-col" role={mobileRole('cell')}>
+                      {#if mobileCardLayout}
+                        <span class="table-mobile-label" aria-hidden="true">{rowNumberLabel}</span>
+                      {/if}<span class="table-mobile-value">{rowNumberFor(pageRowIndex)}</span>
+                    </td>
                   {/if}
                   {#each row as cellValue, colIndex (colIndex)}
                     {@const keyedColumn = columns?.[colIndex]}
@@ -945,20 +1114,20 @@
                       typeof cellValue === 'string' ||
                       typeof cellValue === 'number' ||
                       typeof cellValue === 'boolean'}
-                    <td
-                      class="table-content"
-                      class:table-col-highlighted={keyedColumn?.highlighted === true}
-                      data-pw={typeof getCellTestId === 'function'
-                        ? getCellTestId(row, cellValue, rowIndex)
-                        : null}
-                      testID={typeof getCellTestId === 'function'
-                        ? getCellTestId(row, cellValue, rowIndex)
-                        : null}
-                      style:text-align={keyedColumn?.align ?? null}
-                      style:width={keyedColumn?.width ?? null}
-                      style:max-width={keyedColumn?.maxWidth ?? null}
-                      title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
-                    >
+                    {@const cellLabel = effectiveHeaders[colIndex] ?? ''}
+                    <!--
+                      The value markup is a snippet, called with `{@render}` rather than
+                      inlined as a `<div>` sibling of the `{#if mobileCardLayout}` label
+                      below, because a raw element there is whitespace-sensitive: Svelte
+                      bakes the newline prettier inserts between a control-block boundary
+                      and the following sibling into a real, always-present single-space
+                      text node (present even with `mobileCardLayout` off, since the `{#if}`
+                      still leaves its anchor comment behind) — verified with a throwaway
+                      component during development. `{@render ...}` is a mustache tag, not
+                      an element, so prettier never separates it from `{/if}` and the space
+                      never appears.
+                    -->
+                    {#snippet cellValueBody()}
                       <div
                         class={isContentScrollable ? 'scrollable-content' : ''}
                         class:table-cell-clamp={keyedColumn?.maxWidth && isScalarCell}
@@ -985,6 +1154,25 @@
                           {cellValue}
                         {/if}
                       </div>
+                    {/snippet}
+                    <td
+                      class="table-content"
+                      class:table-col-highlighted={keyedColumn?.highlighted === true}
+                      role={mobileRole('cell')}
+                      data-pw={typeof getCellTestId === 'function'
+                        ? getCellTestId(row, cellValue, rowIndex)
+                        : null}
+                      testID={typeof getCellTestId === 'function'
+                        ? getCellTestId(row, cellValue, rowIndex)
+                        : null}
+                      style:text-align={keyedColumn?.align ?? null}
+                      style:width={keyedColumn?.width ?? null}
+                      style:max-width={keyedColumn?.maxWidth ?? null}
+                      title={keyedColumn?.maxWidth && isScalarCell ? String(cellValue) : null}
+                    >
+                      {#if mobileCardLayout}
+                        <span class="table-mobile-label" aria-hidden="true">{cellLabel}</span>
+                      {/if}{@render cellValueBody()}
                     </td>
                   {/each}
                 </tr>
@@ -1074,8 +1262,17 @@
     margin: var(--table-title-margin, 0px 0px 12px 0px);
     font-size: var(--table-title-font-size, var(--table-tile-font-size, 18px));
     font-weight: var(--table-title-font-weight, 600);
-    color: var(--table-title-color, #111827);
-    font-family: var(--table-title-font-family);
+    /* Unlike .table-content, a heading legitimately has no background of its
+       own -- it sits directly on whatever surface the consumer places it on.
+       The old #111827 literal ignored that surface entirely: on a dark page
+       it measured a contrast of 1.03 against #1a1a26, i.e. invisible. `color`
+       already inherits by default, so `inherit` states that explicitly and
+       lets the title track its container's text colour; `currentColor` would
+       resolve to the same value here (the spec special-cases it to mean
+       exactly `inherit` for the `color` property) but reads as if it were
+       referencing a colour set elsewhere on this rule, which it isn't. */
+    color: var(--table-title-color, inherit);
+    font-family: var(--table-title-font-family, inherit);
     padding: var(--table-title-padding);
   }
 
@@ -1120,7 +1317,7 @@
   }
 
   .table-search-input::placeholder {
-    color: var(--table-search-placeholder-color, #9ca3af);
+    color: var(--table-search-placeholder-color, #4b5563);
   }
 
   /* Hide browser-default clear button on search inputs */
@@ -1226,7 +1423,8 @@
     width: var(--table-scroll-scrim-width, 32px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--table-scroll-scrim-transition-duration, var(--motion-duration, 0.2s))
+      var(--table-scroll-scrim-transition-easing, var(--motion-easing, ease));
     z-index: 2;
   }
 
@@ -1286,10 +1484,10 @@
   .table-header {
     background-color: var(--table-header-background, var(--table-header-border-bgcolor, #f9fafb));
     font-size: var(--table-header-font-size, 13px);
-    font-family: var(--table-header-font-family);
+    font-family: var(--table-header-font-family, inherit);
     font-weight: var(--table-header-font-weight, 600);
     letter-spacing: var(--table-header-letter-spacing, 0.02em);
-    text-transform: var(--table-header-text-transform);
+    text-transform: var(--table-header-text-transform, inherit);
     color: var(--table-header-color, var(--table-header-font-color, #6b7280));
     border-bottom: var(--table-header-border, var(--table-inner-border, none));
   }
@@ -1359,9 +1557,16 @@
   }
 
   .table-content {
-    background-color: var(--table-content-background, var(--table-content-border-bgcolor));
+    /* The terminal #ffffff matters as much as the colour beside it. Without it
+       the whole declaration is invalid at computed-value time when neither
+       variable is set, so the cell falls back to `transparent` and inherits
+       whatever surface it lands on -- while `color` still resolves to a
+       hardcoded near-black. On a dark page that is #111827 on #1a1a26: a
+       measured contrast of 1.03, i.e. invisible. The header row never had the
+       bug because it pairs its colour with a background of its own. */
+    background-color: var(--table-content-background, var(--table-content-border-bgcolor, #ffffff));
     font-size: var(--table-content-font-size, 14px);
-    font-family: var(--table-content-font-family);
+    font-family: var(--table-content-font-family, inherit);
     color: var(--table-content-color, var(--table-content-font-color, #111827));
   }
 
@@ -1461,7 +1666,12 @@
     --checkbox-icon-size: var(--table-checkbox-icon-size, 12px);
     --checkbox-checkmark-color: var(--table-checkbox-icon-color, #ffffff);
     --checkbox-dash-color: var(--table-checkbox-icon-color, #ffffff);
-    --checkbox-transition: 0.15s;
+    /* Named so a consumer can reach it. Table sets the Checkbox child's token
+       directly, and a rule on the element beats anything declared at :root, so
+       through <sui-table> the selection checkboxes' transition could not be
+       slowed or stopped by any means -- custom properties are the only route
+       across a shadow boundary and this one was already spoken for. */
+    --checkbox-transition: var(--table-checkbox-transition, 0.15s);
   }
 
   /* ── Sort button ────────────────────────────────────────────────────────── */
@@ -1569,6 +1779,11 @@
   .table-paginator-size {
     display: inline-flex;
     min-width: var(--table-paginator-size-width, 72px);
+    /* Select's standalone defaults (40px min-height, 8px 12px padding) render
+       58px tall next to the 36px pagination buttons sharing this row. Match the
+       steppers instead of towering over them. */
+    --select-trigger-min-height: var(--table-paginator-size-height, 36px);
+    --select-trigger-padding: var(--table-paginator-size-padding, 0 8px);
   }
 
   /* ── Toolbar (bulk actions) ─────────────────────────────────────────────── */
@@ -1602,5 +1817,108 @@
     clip-path: inset(50%);
     white-space: nowrap;
     border-width: 0;
+  }
+
+  /* ── Mobile record cards (opt-in via `mobileCardLayout`) ──────────────────
+     The label span is always in the DOM -- rendering it only under the media
+     query below would mean an AT that queries computed style rather than
+     layout (or a print stylesheet, or a future breakpoint change) sees no
+     label at all until the exact 640px condition is re-evaluated. Keeping the
+     element and toggling `display` is what lets `aria-hidden` on it (see the
+     template) stay meaningful at every width: hidden today, but never a
+     generated-content trick that could not carry that attribute in the first
+     place. */
+  .table-mobile-label {
+    display: none;
+  }
+
+  /* The breakpoint is a literal, not `var(--table-mobile-breakpoint)`: a
+     custom property can't be read inside an `@media` condition (only inside
+     a declaration value), so a themable breakpoint was never on the table --
+     documented in docs/Table.md rather than silently unsupported. */
+  @media (max-width: 640px) {
+    /* `display: table` (and its `-row`/`-cell`/etc. companions) is what gives
+       a table its IMPLICIT header/cell ARIA semantics -- switching every one
+       of these to `block` for the stacked-card look throws that away, which
+       is exactly why `mobileRole()` in the script restates it explicitly as
+       `table`/`rowgroup`/`row`/`columnheader`/`cell` on the elements below.
+       Without both halves this rule would silently turn every consumer's
+       table into an AX-tree list the moment their viewport narrowed. */
+    .table-mobile-cards table,
+    .table-mobile-cards thead,
+    .table-mobile-cards tbody,
+    .table-mobile-cards tr,
+    .table-mobile-cards th,
+    .table-mobile-cards td {
+      display: block;
+      width: 100%;
+    }
+
+    /* Headers are not shown as a row anymore -- their text now repeats per
+       card as the `.table-mobile-label` beside each value -- but they stay
+       in the DOM (not `display: none`) so `role="columnheader"` continues
+       naming its `role="cell"` for any reading that still associates the
+       two by DOM structure rather than only by the label span's text. */
+    .table-mobile-cards thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* The horizontal-scroll affordance this table uses at desktop width (see
+       .table-scroll / .table-scroll-shell above) has nothing to scroll once
+       every cell is a full-width block, and a lingering scrim would fade a
+       card edge that no longer clips anything. */
+    .table-mobile-cards .table-scroll {
+      overflow-x: visible;
+    }
+
+    .table-mobile-cards .table-scroll-shell::before,
+    .table-mobile-cards .table-scroll-shell::after {
+      display: none;
+    }
+
+    .table-mobile-cards tbody tr.table-row {
+      border: var(--table-mobile-card-border, 1px solid #e5e7eb);
+      border-radius: var(
+        --table-mobile-card-radius,
+        var(--table-border-radius, var(--radius, 4px))
+      );
+      padding: var(--table-mobile-card-padding, 12px);
+      margin-block-end: var(--table-mobile-card-gap, 12px);
+    }
+
+    .table-mobile-cards tbody tr.table-row:last-child {
+      margin-block-end: 0;
+    }
+
+    /* Each cell becomes a label/value pair instead of a table column; the
+       label span (hidden above) is the only thing `display: inline` turns
+       back on inside this query. */
+    .table-mobile-cards td.table-content {
+      display: flex;
+      align-items: baseline;
+      gap: var(--table-mobile-label-gap, 8px);
+      border: none;
+    }
+
+    .table-mobile-cards .table-mobile-label {
+      display: inline;
+      flex: 0 0 var(--table-mobile-label-width, 40%);
+      font-weight: var(--table-mobile-label-font-weight, 600);
+      color: var(--table-mobile-label-color, #6b7280);
+    }
+
+    .table-mobile-cards .table-mobile-value,
+    .table-mobile-cards td.table-content > div {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
   }
 </style>

@@ -129,10 +129,37 @@
   />
 </div>
 
+<h2>Validity messaging</h2>
+<p>
+  <code>errorMessage</code> and <code>infoMessage</code> are referenced by
+  <code>aria-describedby</code> on a group around the control, and set
+  <code>aria-invalid</code> only while an error is showing.
+</p>
+<div
+  class="demo-row"
+  data-pw="combobox-field-contract"
+  style="flex-direction: column; align-items: stretch;"
+>
+  <Combobox
+    items={fruits}
+    ariaLabel="Fruit"
+    errorMessage="Choose a fruit from the list."
+    infoMessage="Type to filter."
+    testId="combobox-described"
+  />
+  <Combobox
+    items={fruits}
+    ariaLabel="Fruit"
+    infoMessage="Type to filter."
+    testId="combobox-info-only"
+  />
+  <Combobox items={fruits} ariaLabel="Fruit" testId="combobox-undescribed" />
+</div>
+
 <style>
   .demo-info {
     font-size: 13px;
-    color: #666;
+    color: var(--doc-text-muted, #666);
     margin-top: 8px;
   }
 </style>

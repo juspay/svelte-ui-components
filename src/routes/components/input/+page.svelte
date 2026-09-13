@@ -1,5 +1,6 @@
 <script lang="ts">
   import Input from '$lib/Input/Input.svelte';
+  import { TEL_PRESET_IN_MOBILE } from '$lib/utils';
 
   let inputValue = $state('');
   let notes = $state('');
@@ -191,6 +192,43 @@
   />
 </div>
 
+<h3>tel validation (dataType="tel")</h3>
+<p>
+  Before 4.20, <code>dataType="tel"</code> with no <code>validationPattern</code> silently required
+  a ten-digit Indian mobile number (leading 6-9). It now checks only the characters and length a
+  phone number may hold — the two fields below validate the identical UK number differently: the
+  default rule accepts it, the legacy <code>TEL_PRESET_IN_MOBILE</code> pattern still rejects it, matching
+  what it did before.
+</p>
+<div
+  class="demo-row"
+  style="max-width: 400px; flex-direction: column; align-items: flex-start; gap: 12px;"
+>
+  <Input
+    value="+44 20 7946 0958"
+    dataType="tel"
+    label="Default rule (4.20+)"
+    infoMessage="Characters and length only — this UK number is accepted."
+    testId="input-tel-default-accepts"
+  />
+  <Input
+    value="+44 20 7946 0958"
+    dataType="tel"
+    validationPattern={TEL_PRESET_IN_MOBILE.valid}
+    inProgressPattern={TEL_PRESET_IN_MOBILE.inProgress}
+    label="Opted into TEL_PRESET_IN_MOBILE"
+    onErrorMessage="Not a 10-digit Indian mobile number."
+    testId="input-tel-legacy-preset"
+  />
+  <Input
+    value="555-CALL-NOW"
+    dataType="tel"
+    label="Genuinely invalid"
+    onErrorMessage="Phone numbers can only contain digits, spaces, +, -, ., and parentheses."
+    testId="input-tel-invalid"
+  />
+</div>
+
 <h3>spellcheck</h3>
 <p>
   Defaults to unset, so the browser default is untouched. Pass <code>false</code> for fields holding code,
@@ -312,6 +350,17 @@
 </div>
 
 <p data-pw="input-paste-count">paste events seen: {pasteCount}</p>
+
+<h2>Required field, and the deprecated mandatory alias</h2>
+<p class="demo-caption">
+  <code>required</code> is the platform's name and the one every other form control here uses.
+  <code>mandatory</code> is the original spelling and still works, so existing call sites need no change.
+</p>
+<div class="demo-row">
+  <Input value="" label="Email" placeholder="you@example.com" required testId="input-required" />
+  <Input value="" label="Phone" placeholder="Legacy spelling" mandatory testId="input-mandatory" />
+  <Input value="" label="Nickname" placeholder="Optional" testId="input-optional" />
+</div>
 
 <style>
   /* Start narrower so horizontal/both resizing has room to grow as well as shrink. */

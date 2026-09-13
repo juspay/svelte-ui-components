@@ -4,6 +4,12 @@
   import { componentNav } from './components/_nav';
   import ThemeSwitcher from '$lib/ThemeSwitcher/ThemeSwitcher.svelte';
   import { onMount, type Snippet } from 'svelte';
+  // The library's own dark theme. These used to live in demo.css, which made
+  // the docs app the only place that knew how to render this library on a dark
+  // page -- every other consumer of ThemeSwitcher got light components on a
+  // dark ground. It is library knowledge, so it now ships with the library and
+  // this app imports it like anyone else would.
+  import '$lib/styles/theme-dark.css';
   import './components/demo.css';
 
   let { children }: { children: Snippet } = $props();
@@ -103,7 +109,10 @@
 
   .app-layout {
     display: grid;
-    grid-template-columns: 260px 1fr;
+    /* minmax(0, 1fr) rather than 1fr: a grid track's automatic minimum is its
+       content's min-content width, so a wide code block or prop table widens the
+       track instead of scrolling inside it, and the whole page scrolls sideways. */
+    grid-template-columns: 260px minmax(0, 1fr);
     min-height: 100vh;
   }
 
@@ -211,6 +220,7 @@
   }
 
   .content {
+    box-sizing: border-box;
     padding: 32px 40px;
     max-width: 900px;
   }

@@ -80,7 +80,7 @@
     --delta-indicator-font-size: 18px;
     --delta-indicator-arrow-size: 14px;
     --delta-indicator-gap: 5px;
-    --delta-indicator-positive-color: #0d7f58;
-    --delta-indicator-negative-color: #c7373b;
+    --delta-indicator-positive-color: light-dark(#0d7f58, #4ade80);
+    --delta-indicator-negative-color: light-dark(#c7373b, #f87171);
   }
 </style>

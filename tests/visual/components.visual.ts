@@ -240,7 +240,12 @@ async function confirmViewportRelative(
   return height - probed >= (viewport - probe) * 0.9;
 }
 
-async function fitViewportToContent(page: Page): Promise<void> {
+/**
+ * Returns how the viewport was settled. `'viewport-pinned'` routes deliberately
+ * keep a viewport smaller than their content (see the escape path below), so a
+ * caller must not treat their capture box as fittable.
+ */
+async function fitViewportToContent(page: Page): Promise<'fitted' | 'viewport-pinned'> {
   const seen: number[] = [];
   let viewport = MIN_VIEWPORT_HEIGHT;
   let previousViewport = MIN_VIEWPORT_HEIGHT;
@@ -251,7 +256,7 @@ async function fitViewportToContent(page: Page): Promise<void> {
     );
     const previousHeight = seen.at(-1);
     if (height === previousHeight) {
-      return;
+      return 'fitted';
     }
 
     if (typeof previousHeight !== 'undefined') {
@@ -263,7 +268,7 @@ async function fitViewportToContent(page: Page): Promise<void> {
         // rather than silently captured at a different size than its neighbours.
         console.log('  pinned to the default viewport (content is viewport-relative)');
         await page.setViewportSize({ width: VIEWPORT_WIDTH, height: MIN_VIEWPORT_HEIGHT });
-        return;
+        return 'viewport-pinned';
       }
     }
 
@@ -328,7 +333,36 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // keeps baselines honest: `main.content` stretches to the viewport, so a
   // single tall viewport would pad every short demo with thousands of blank
   // pixels instead.
-  await fitViewportToContent(page);
+  /*
+   * Ordering invariant: nothing that changes layout may run after this measures,
+   * or the capture disagrees with the viewport it was sized for.
+   *
+   * That is the rule the sub-pixel pin at the end of this function restores --
+   * it broke the invariant by growing the element after the fit, and had to
+   * refit to put it back. The rule is stated here because nothing else in the
+   * file encodes it, which is how it has been broken three separate times.
+   *
+   * The three known ways, as failure modes rather than a status list -- whether
+   * any is live depends on the ordering below, so read that rather than trust
+   * this:
+   *
+   *   - Growing the captured element after the fit. What the pin did; it
+   *     refits for that reason.
+   *   - Advancing timers after the fit (`clock.runFor`), so a demo that settles
+   *     during it relayouts against a viewport already sized. Note the pin
+   *     absorbs this for fitted routes when it runs later in the function --
+   *     positionally, not by design, so do not rely on it.
+   *   - A transition on a layout property. Playwright's `animations:'disabled'`
+   *     fast-forwards a running transition to its end state at *capture* time,
+   *     after everything in this function, so no loop here can absorb it --
+   *     only suppressing transitions before the fit does. Accordion transitions
+   *     `grid-template-rows`, and `task-list` was observed growing 852px ->
+   *     855px between consecutive captures of an otherwise idle page.
+   *
+   * Anything added to this function after this line should either not affect
+   * layout, or re-establish the fit the way the pin does.
+   */
+  const viewportFit = await fitViewportToContent(page);
   await page.evaluate(() => document.fonts.ready);
   await waitForImages(page);
 
@@ -360,6 +394,121 @@ async function prepare(page: Page, slug: string): Promise<void> {
       }
     `
   });
+
+  /*
+   * Skipped for viewport-relative routes. Those took the escape path above and
+   * are deliberately pinned to a viewport smaller than their content, so they
+   * are captured by scrolling by design. Growing the viewport to match their
+   * padded height is exactly what that path refuses to do -- it would capture
+   * them at a different size from their neighbours -- and their height is a
+   * function of the viewport, so pinning then resizing would feed itself.
+   */
+  if (viewportFit === 'fitted') {
+    await pinCaptureHeightToWholePixels(page, slug);
+  }
+}
+
+/**
+ * Absorbs the capture target's sub-pixel remainder so its box lands on a whole
+ * pixel.
+ *
+ * `fitViewportToContent` settles on `scrollHeight`, which is *already* rounded,
+ * so it never constrains `main.content`'s own height -- and a fifth of the demo
+ * routes lay out to a fractional one. Playwright rounds a fractional element box
+ * when it captures, and which way it rounds depends on the element's sub-pixel
+ * offset, so those routes can emit a bitmap one pixel taller or shorter than
+ * their baseline on an otherwise identical run. A pixel tolerance cannot absorb
+ * that: `toHaveScreenshot` rejects a size mismatch before comparing any pixels.
+ *
+ * The remainder is added to the existing bottom padding rather than written as a
+ * height, because the element has to stay auto-height. Two earlier attempts show
+ * why this is the narrow path:
+ *
+ *   - Setting `box-sizing: border-box` so the measured box could be assigned
+ *     directly reinterpreted `.content`'s `max-width:900px` against the border
+ *     box, narrowing every capture from 980px to 900px and failing all 94 routes.
+ *   - Assigning an explicit `height` (with the padding subtracted, so the width
+ *     was safe) stopped the block growing for its descendants' trailing margins.
+ *     That moved pages by as much as 11px in both directions -- `accordion`
+ *     1613 -> 1602, `tool-call-log` 969 -> 975 -- which changes what the
+ *     screenshot contains rather than just how it rounds.
+ *
+ * Adding under a pixel of padding leaves the layout algorithm untouched and
+ * moves nothing that was not already ambiguous.
+ */
+async function pinCaptureHeightToWholePixels(page: Page, slug: string): Promise<void> {
+  /*
+   * Padding and viewport are settled together, and iteratively, because each can
+   * disturb the other: growing the element can leave the viewport a pixel short,
+   * and resizing the viewport relayouts the page, which can produce a fresh
+   * fractional height.
+   *
+   * Only a pass that changes nothing proves they agree, so that is the only way
+   * out -- exhausting the budget throws rather than returning. A silent give-up
+   * would be indistinguishable from convergence while leaving the route in the
+   * stitching state this function exists to prevent, and every baseline
+   * regenerated for it would look settled and not be. `fitViewportToContent`
+   * throws on the same kind of non-convergence, for the same reason.
+   */
+  const seen: string[] = [];
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const padded = await page.evaluate(() => {
+      const main = document.querySelector('main.content');
+      if (!(main instanceof HTMLElement)) {
+        return false;
+      }
+      const height = main.getBoundingClientRect().height;
+      const remainder = Math.ceil(height) - height;
+      if (remainder <= 0) {
+        return false;
+      }
+      const paddingBottom = parseFloat(window.getComputedStyle(main).paddingBottom);
+      main.style.paddingBottom = `${paddingBottom + remainder}px`;
+      return true;
+    });
+
+    /*
+     * The viewport was fitted from `scrollHeight` before this padding existed,
+     * so it can now be a pixel short of the content. Playwright scrolls a target
+     * taller than the viewport and stitches the capture -- the scroll-dependent
+     * screenshot this suite goes to lengths elsewhere to avoid, and which would
+     * reintroduce the instability the padding is here to remove.
+     */
+    const documentHeight = await page.evaluate(() =>
+      Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)
+    );
+    /*
+     * A route taller than the cap clamps here, so the viewport stops growing and
+     * this loop returns while the element still exceeds it -- stitched, on
+     * purpose. That is not the failure the throw below describes: the padding
+     * has already run, so the box is integral, and a stitched capture of an
+     * integral box still has one possible height. `fitViewportToContent` clamps
+     * the same way, noting that a demo past the cap is captured by scrolling as
+     * it always was. Nothing reaches it today, but the margin belongs to the
+     * merged tree rather than to either branch -- any branch that lengthens a
+     * demo moves the tallest route -- so measure it there before relying on it.
+     */
+    const wanted = Math.min(Math.max(documentHeight, MIN_VIEWPORT_HEIGHT), MAX_VIEWPORT_HEIGHT);
+    const current = page.viewportSize()?.height ?? MIN_VIEWPORT_HEIGHT;
+    const resized = wanted > current;
+    if (resized) {
+      await page.setViewportSize({ width: VIEWPORT_WIDTH, height: wanted });
+    }
+
+    seen.push(`${attempt}: document ${documentHeight}px, viewport ${current} -> ${wanted}`);
+
+    if (!padded && !resized) {
+      return;
+    }
+  }
+
+  throw new Error(
+    `capture box never settled for "${slug}": ${seen.join('; ')}. The padding and the ` +
+      'viewport are still moving each other, so the box is not integral and its captured ' +
+      'height would depend on sub-pixel rounding. (A route clamped at MAX_VIEWPORT_HEIGHT ' +
+      'does not reach this: it returns stitched but integral, which is safe.)'
+  );
 }
 
 test.describe('visual baselines', () => {

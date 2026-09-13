@@ -2,7 +2,64 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.26.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.0)
+
+toHaveScreenshot rounds a fractional element box when it captures, and
+which way it rounds depends on the element's sub-pixel offset. main.content
+lays out to a fractional height on a fifth of the demo routes -- bar-chart
+at 7947.40625, select at 5374.09375, dual-axis-bar-chart at 4243.03125 --
+so those routes could emit a bitmap a pixel taller or shorter than their
+baseline on an otherwise identical run. A single run could report both
+directions for one slug: expected 5412 received 5413, then expected 5413
+received 5412.
+
+fitViewportToContent cannot prevent it. It settles on scrollHeight, which is
+already rounded, so it never constrains the element's own height. A pixel
+tolerance cannot absorb it either: toHaveScreenshot rejects a size mismatch
+before it compares any pixels, so the run never reaches maxDiffPixels.
+
+The remainder is added to the existing bottom padding, so the element stays
+auto-height, and the viewport is then refitted to the padded content. Three
+things here are load-bearing:
+
+- Padding, not height. Assigning an explicit height stopped the block
+growing for its descendants' trailing margins, moving pages by up to
+11px in both directions (accordion 1613 -&gt; 1602, tool-call-log 969 -&gt;
+975) -- a change to what the screenshot contains, not how it rounds.
+Setting box-sizing:border-box so the measured box could be assigned
+directly was worse: it reinterpreted .content's max-width:900px against
+the border box, narrowing every capture from 980px to 900px.
+- Refit after padding. The viewport is sized from scrollHeight before the
+padding exists, so the padded element ends up a pixel taller than it.
+Playwright scrolls a target taller than the viewport and stitches the
+capture, which is the scroll-dependent screenshot this file already
+documents as the original flake. Without the refit the capture is
+silently clipped back to the viewport instead.
+- Converge or throw. Padding and viewport disturb each other, so only a
+pass that changes neither proves they agree, and that is the only way
+out of the loop. Exhausting the budget throws: giving up quietly would
+be indistinguishable from convergence while leaving the route in the
+stitching state this exists to prevent, and every baseline regenerated
+for it would look settled and not be. fitViewportToContent throws on
+the same kind of non-convergence.
+
+fitViewportToContent now reports which branch it exited on, and the pin is
+skipped for viewport-relative routes (brand-loader, status). Those take the
+escape path that deliberately pins them to a viewport smaller than their
+content; growing the viewport to match would capture them at a different
+size than their neighbours, and their height is a function of the viewport,
+so pinning then resizing would feed itself.
+
+15 baselines are regenerated to the size that is now unambiguous.
+
+Verified by three consecutive full-suite runs at 94/94 with no route failing
+to converge, and the throw exercised by forcing non-convergence. Before the
+change the same suite failed 4.
+
+-
+fix(visual): stop a fractional capture box flipping the baseline by a pixel ([4a92b3e](https://github.com/juspay/svelte-ui-components/commit/4a92b3eec98dc4e3a7b1c1d5222499835c995a3e))
+
+## [4.27.0](https://github.com/juspay/svelte-ui-components/compare/4.27.0..4.26.0) - 13 September 2026
 
 dropdownAlign only ever described the horizontal axis, and the vertical
 flip lived inside computeSelectDropdownPosition, which portalStyle gates

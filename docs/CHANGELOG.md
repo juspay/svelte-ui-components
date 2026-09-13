@@ -2,7 +2,57 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.23.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.24.0)
+
+Symmetric counterpart to SpeechToTextController, wrapping the browser
+speechSynthesis API: voice enumeration with the voiceschanged dance,
+speak()/stop() with rate/pitch/volume/voice, toggle-to-stop
+orchestration, and a self-hiding error toast. All state is per-instance
+(no module-level singletons, unlike the clientSpeech.ts reference this
+promotes), voice selection is a caller-supplied hook instead of a
+hardcoded name list, and the dead cloud-TTS stub was dropped since
+there is no cloud path.
+
+Fixes found in review:
+
+- createBrowserEngine() wired voiceschanged via the single-slot
+`synth.onvoiceschanged =` property on the page-wide speechSynthesis
+singleton, so a second controller's registration silently clobbered
+a first controller's. Switched to addEventListener/removeEventListener,
+which is additive; destroy() now removes exactly its own listener.
+The injected-engine contract (SpeechSynthesisEngineLike.onvoiceschanged)
+is unchanged. Added a regression suite covering two controllers
+sharing one browser-like engine.
+- The caller-supplied selectVoice hook ran unguarded inside speak(), so
+a throwing hook propagated out and stranded the utterance. Guarded it
+the same way getSynthesisEngine already is: report via onDiagnostic
+and fall back to the built-in default selection.
+- Voice-language matching sliced the first 2 characters of `lang`
+instead of the primary subtag before the first '-', so 3-letter
+subtags (fil, haw, yue) never matched. Now extracts the full primary
+subtag and compares case-insensitively; an empty subtag still matches
+nothing, as before.
+- docs/SpeechSynthesis.md documented the error callback as `onerror`
+while the option was named `onError`. scripts/migrate/rename-doc-usages.ts
+forces the lowercase spelling in docs regardless of component, so the
+option was renamed to `onerror` to match rather than fighting the
+migrate script.
+- rate, pitch, volume, and errorTimeoutMs came from caller options
+unvalidated. Added clampSpeechNumber/clampErrorTimeoutMs -- pure,
+exported helpers -- to clamp rate/pitch/volume to the Web Speech spec
+ranges (0.1-10 / 0-2 / 0-1) and floor errorTimeoutMs at 0, falling
+back to the numeric default for non-finite input.
+
+Docs and tests updated to match; each fix has a dedicated regression
+test and was mutation-tested by reverting it and confirming the test
+that should catch it fails for the right reason.
+
+-
+feat(speech): add SpeechSynthesisController ([2feb881](https://github.com/juspay/svelte-ui-components/commit/2feb881309ed7770a3d1c47efbea3f769754ed57))
+-
+feat(markdown-text): render raw HTML through a sanitizer the caller supplies ([3997114](https://github.com/juspay/svelte-ui-components/commit/3997114e08112d1e0291f5d35abc78176d7a342a))
+
+## [4.24.0](https://github.com/juspay/svelte-ui-components/compare/4.24.0..4.23.0) - 13 September 2026
 
 A model asked for markdown routinely returns the whole answer wrapped in
 ```markdown ... ```, which renders as a code block showing source rather than

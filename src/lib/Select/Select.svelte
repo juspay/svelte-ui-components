@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import type { SelectItem, SelectProperties } from './properties';
+  import type { SelectItem, SelectPlacement, SelectProperties } from './properties';
   import Pill from '$lib/Pill/Pill.svelte';
   import Img from '$lib/Img/Img.svelte';
   import { computeSelectDropdownPosition } from './dropdownPosition';
@@ -33,6 +33,7 @@
     classes,
     open = $bindable(false),
     dropdownAlign = 'left',
+    placement,
     hierarchy = 'default',
     leftIcon,
     leftIconTestId,
@@ -61,6 +62,67 @@
   // Gap between trigger and portaled panel, matching the --select-dropdown-gap
   // default. The in-flow panel still honours the CSS var via its margin-top.
   const PORTAL_DROPDOWN_GAP = 4;
+
+  /** Viewport padding the `'auto'` placement keeps between the panel and the edges. */
+  const AUTO_PLACEMENT_VIEWPORT_MARGIN = 8;
+
+  /* An unset `placement` is the pre-5.0 contract, kept exactly: the in-flow panel
+     always opens downward and only the portaled one flips on fit. Setting it opts
+     both paths into one resolved corner, which is the whole point of the prop. */
+  let placementRequest: SelectPlacement = $derived(
+    placement ?? (dropdownAlign === 'right' ? 'bottom-right' : 'bottom-left')
+  );
+  let placementPinned: boolean = $derived(placement != null);
+
+  /** Corner an `'auto'` measuring pass settled on; null until it has run. */
+  let autoResolved: Exclude<SelectPlacement, 'auto'> | null = $state(null);
+
+  /* Derived rather than assigned when the dropdown opens: `open` is bindable and
+     documented as something a parent can drive, so the panel can be rendered
+     without `openDropdown` ever running. Assigning on the click path left an
+     explicitly placed Select rendering at the default corner whenever its parent
+     opened it. */
+  let resolvedPlacement: Exclude<SelectPlacement, 'auto'> = $derived(
+    placementRequest === 'auto' ? (autoResolved ?? 'bottom-left') : placementRequest
+  );
+  /** True while an `'auto'` open measures the hidden panel -- suppresses paint. */
+  let measuringPlacement: boolean = $derived(placementRequest === 'auto' && autoResolved === null);
+
+  /* `$derived.by` rather than `$derived`: a bare expression here is evaluated in
+     the declaration's control flow, where TypeScript has `resolvedPlacement`
+     still narrowed to its initialiser literal and calls the comparison
+     unreachable. The closure resets that narrowing. */
+  let placementAlign: 'left' | 'right' = $derived.by(() =>
+    resolvedPlacement === 'bottom-right' || resolvedPlacement === 'top-right' ? 'right' : 'left'
+  );
+
+  /**
+   * Resolves `'auto'` against live geometry, mirroring Menu's pass: the panel is
+   * rendered hidden at the default corner first so it has real dimensions, then
+   * flips right/up only where the default overflows and the opposite side fits.
+   */
+  function resolveAutoPlacement(panel: HTMLElement): Exclude<SelectPlacement, 'auto'> {
+    if (containerEl === null || typeof window === 'undefined') {
+      return 'bottom-left';
+    }
+    const containerRect = containerEl.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const overflowsRight =
+      containerRect.left + panelRect.width > viewportWidth - AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const fitsRightAnchored =
+      containerRect.right - panelRect.width >= AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const horizontal = overflowsRight && fitsRightAnchored ? 'right' : 'left';
+
+    const overflowsBottom =
+      containerRect.bottom + panelRect.height > viewportHeight - AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const fitsAbove = containerRect.top - panelRect.height >= AUTO_PLACEMENT_VIEWPORT_MARGIN;
+    const vertical = overflowsBottom && fitsAbove ? 'top' : 'bottom';
+
+    return `${vertical}-${horizontal}`;
+  }
 
   const instanceId = $props.id();
   const listboxId = `select-listbox-${instanceId}`;
@@ -195,9 +257,9 @@
     return { destroy: () => node.remove() };
   };
 
-  let portalStyle = $derived.by(() => {
+  let portalPlacement = $derived.by(() => {
     if (!usePortal || !open || triggerEl === null) {
-      return '';
+      return null;
     }
     void portalTick;
     const rect = triggerEl.getBoundingClientRect();
@@ -215,12 +277,61 @@
       },
       dropdown: { width: dropdownWidth, height: dropdownHeight },
       viewport,
-      align: dropdownAlign,
+      align: placementAlign,
+      /* Unset `placement` keeps the fit-based flip this path always had; a pinned
+         corner is honoured on both axes instead. */
+      vertical: placementPinned
+        ? resolvedPlacement === 'top-left' || resolvedPlacement === 'top-right'
+          ? 'top'
+          : 'bottom'
+        : 'auto',
       gap: PORTAL_DROPDOWN_GAP
     });
+    return placement;
+  });
+
+  let portalStyle: string = $derived.by(() => {
+    const placement = portalPlacement;
+    if (placement === null) {
+      return '';
+    }
     const widthRule = placement.width === null ? '' : `width:${placement.width}px;`;
     return `top:${placement.top}px;left:${placement.left}px;min-width:${placement.minWidth}px;${widthRule}`;
   });
+
+  /* A portaled panel's side comes from the geometry, which still flips on fit
+     when `placement` is unset. Reporting the requested corner there would make
+     `data-placement` disagree with where the panel actually is -- the exact
+     thing the attribute exists to tell a consumer. */
+  let effectivePlacement: Exclude<SelectPlacement, 'auto'> = $derived.by(() => {
+    const placement = portalPlacement;
+    if (placement === null) {
+      return resolvedPlacement;
+    }
+    if (placement.flippedUp) {
+      return placementAlign === 'right' ? 'top-right' : 'top-left';
+    }
+    return placementAlign === 'right' ? 'bottom-right' : 'bottom-left';
+  });
+
+  /**
+   * Svelte action on the panel itself: `openDropdown` is not the only way the
+   * panel appears, so the `'auto'` measuring pass is driven by the panel's own
+   * lifecycle rather than by the open handler. Resetting on destroy is what
+   * makes a reopen re-measure against the trigger's current position.
+   */
+  const resolveAutoPlacementOnMount = (node: HTMLElement) => {
+    if (placementRequest === 'auto') {
+      void tick().then(() => {
+        autoResolved = resolveAutoPlacement(node);
+      });
+    }
+    return {
+      destroy: () => {
+        autoResolved = null;
+      }
+    };
+  };
 
   async function openDropdown(): Promise<void> {
     if (disabled || open) {
@@ -792,8 +903,13 @@
            the inner element that actually holds the options. -->
       <div
         class="select-dropdown"
-        class:select-dropdown-right={dropdownAlign === 'right'}
+        class:select-dropdown-right={placementAlign === 'right'}
+        class:select-dropdown-up={!usePortal &&
+          (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
+        class:select-dropdown-measuring={measuringPlacement}
         class:select-dropdown-portal={usePortal}
+        data-placement={effectivePlacement}
+        use:resolveAutoPlacementOnMount
         bind:this={dropdownEl}
         bind:clientWidth={dropdownWidth}
         bind:clientHeight={dropdownHeight}
@@ -841,8 +957,13 @@
     {:else}
       <div
         class="select-dropdown"
-        class:select-dropdown-right={dropdownAlign === 'right'}
+        class:select-dropdown-right={placementAlign === 'right'}
+        class:select-dropdown-up={!usePortal &&
+          (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
+        class:select-dropdown-measuring={measuringPlacement}
         class:select-dropdown-portal={usePortal}
+        data-placement={effectivePlacement}
+        use:resolveAutoPlacementOnMount
         bind:this={dropdownEl}
         bind:clientWidth={dropdownWidth}
         bind:clientHeight={dropdownHeight}
@@ -1043,6 +1164,23 @@
   .select-arrow :global(svg) {
     width: 100%;
     height: 100%;
+  }
+
+  /* Anchors the in-flow panel above the trigger. `margin-top` is what the
+     downward panel uses for the gap, so it has to be unset here or the panel
+     sits a gap's width too high. */
+  .select-dropdown.select-dropdown-up {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: var(--select-dropdown-gap, 4px);
+  }
+
+  /* One-tick measuring pass for placement="auto": the panel needs rendered
+     dimensions before the corner is chosen, without a visible flash at the
+     wrong corner. */
+  .select-dropdown.select-dropdown-measuring {
+    visibility: hidden;
   }
 
   .select-dropdown {

@@ -8,13 +8,17 @@ import { run } from './cli.ts';
 const LIB = '@juspay/svelte-ui-components';
 
 /**
- * The major this library is actually on, read here rather than imported from
+ * The version this library is actually on, read here rather than imported from
  * `cli.ts`, so this asserts the contract ("--apply moves a consumer to THIS
- * library's major") instead of asserting the CLI against itself.
+ * library's version") instead of asserting the CLI against itself.
  *
  * The literal it replaced was `'^3.0.0'`, which stayed green through the whole
  * 4.x line while the CLI offered to move consumers of 4.27.x back to 3.x. A
  * test that hardcodes the answer cannot notice the answer going stale.
+ *
+ * It is the FULL version rather than `^<major>.0.0` because 4.28.0 shipped
+ * breaking changes inside a minor — `^4.0.0` is satisfied by 4.27.x, which
+ * does not have them.
  */
 const OWN_MAJOR = ownMajor();
 
@@ -34,7 +38,7 @@ function ownMajor(): string {
   if (typeof version !== 'string') {
     throw new Error('cannot read the library version');
   }
-  return `^${version.split('.')[0]}.0.0`;
+  return `^${version}`;
 }
 
 function project(manifest: object, files: Record<string, string> = {}): string {

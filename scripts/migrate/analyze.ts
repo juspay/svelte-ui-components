@@ -1,6 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { intersects } from 'semver';
 import { parse } from 'svelte/compiler';
 
 export const LIBRARY = '@juspay/svelte-ui-components';
@@ -92,6 +91,35 @@ function readDependency(manifest: unknown, name: string): string | null {
  * 4 to a first-number read while genuinely intersecting. Range intersection is
  * the actual question being asked.
  */
+/**
+ * Injected rather than imported, because this module ships.
+ *
+ * `semver` is a devDependency, so a `import { intersects } from 'semver'` here
+ * loaded fine from a repo checkout and threw ERR_MODULE_NOT_FOUND the moment
+ * the compiled module was run from a consumer's node_modules -- where the
+ * detectors below are exactly what `sui-codemod migrate` needs and the peer
+ * check is not used at all. `npm run check:codemod` could not see it either:
+ * type-checking resolves devDependencies happily. Only installing the packed
+ * tarball and running the binary surfaced it.
+ *
+ * `scripts/migrate/cli.ts` passes the real `semver` implementation; the
+ * shipped audit never calls the manifest path and so never needs one.
+ */
+let rangesIntersect: (range: string, peer: string) => boolean = () => {
+  // Throws rather than defaulting to `true`. A permissive default would make a
+  // forgotten injection look like "every peer range is fine", which is the
+  // silent-pass shape this tool exists to catch in other people's code. The
+  // shipped audit never reaches `analyzeManifest`, so it never trips this.
+  throw new Error(
+    'analyzeManifest needs a range intersector: call setRangeIntersector() first ' +
+      '(scripts/migrate/cli.ts does). The shipped audit does not use this path.'
+  );
+};
+
+export function setRangeIntersector(fn: (range: string, peer: string) => boolean): void {
+  rangesIntersect = fn;
+}
+
 function satisfiesPeer(range: string): boolean {
   try {
     // `loose` changes the answer for exactly one shape worth having: a version
@@ -99,7 +127,7 @@ function satisfiesPeer(range: string): boolean {
     // and would therefore report as a blocker it is not. It does not loosen
     // prerelease handling -- `^5.41.2-alpha` and `>=5.0.0-0` resolve the same
     // either way -- and genuinely unparseable ranges still throw.
-    return intersects(range, SVELTE_PEER_RANGE, { loose: true });
+    return rangesIntersect(range, SVELTE_PEER_RANGE);
   } catch {
     // An unparseable range (a git URL, a workspace protocol) cannot be shown to
     // satisfy the peer, and silently passing it would be the wrong default.

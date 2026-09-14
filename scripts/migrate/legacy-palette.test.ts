@@ -459,7 +459,7 @@ describe('buildLegacyPalette (end to end against a real git history)', () => {
     // Mirrors what origin/release:src/lib/_chart/geometry.ts actually is: a
     // file `git show` must be able to read at the base ref even though a
     // plain-text tool choking on the NUL would see nothing at all.
-    const nulBearing = `/* marker:${' '}end */\n.n { color: var(--nul-adjacent-color, #445566); }\n`;
+    const nulBearing = `/* marker:${'\u0000'}end */\n.n { color: var(--nul-adjacent-color, #445566); }\n`;
 
     const { root, sha } = releaseRepo({
       'src/lib/Tabs/Tabs.svelte': '.item { color: var(--tabs-active-color, #1a73e8); }\n',
@@ -551,13 +551,33 @@ describe('buildLegacyPalette (end to end against a real git history)', () => {
 // ------------------------------------------------------- against this repo's own history
 
 /**
- * The same detector, proven against this library's own real component
- * source and its real `origin/release` history rather than a fixture --
- * matching how `cli.test.ts` proves `readWcComponents` against the real
- * `src/wc/components` instead of only a synthetic one. Skipped rather than
- * failed when `origin/release` is not fetchable in the environment this runs
- * in, since that is an environment gap, not a defect in the detector.
+ * The same detector, proven against this library's own real component source.
+ *
+ * `previous` comes from a committed fixture, NOT from `git show <ref>:<path>`.
+ * These tests originally read `origin/release`, which made their premise
+ * self-invalidating: on the PR branch `origin/release` was the old tree and a
+ * restore existed, and the moment the PR merged `origin/release` BECAME the
+ * new tree, so previous === current, the detector correctly found nothing, and
+ * the assertion failed forever. It blocked a release: a test that can only be
+ * green before the change it describes lands, while CI only runs it after.
+ *
+ * Pinning to an immutable tag fixes that half. It does not fix the other half:
+ * `skipIf` on a missing ref meant a shallow, tagless CI clone SKIPPED these
+ * rather than running them, so the same commit was green in one job and red in
+ * another based only on clone depth -- a false negative and a false positive
+ * from one guard. A fixture removes both failure modes: no ref to resolve, no
+ * skip, and the test runs identically everywhere.
+ *
+ * `current` is still read from the real working tree, so these stay connected
+ * to the actual components rather than becoming a test of two fixtures. If
+ * someone changes how BrandLoader or Phone declare these colours, that is a
+ * real signal and this should fail.
  */
+const PRE_428 = join(resolve(fileURLToPath(import.meta.url), '..'), '__fixtures__', 'pre-4.28');
+
+function preReleaseSource(basename: string): string {
+  return readFileSync(join(PRE_428, `${basename}.txt`), 'utf8');
+}
 describe('findInheritanceRestores — against this repo’s own real component history', () => {
   function repoRoot(): string {
     // Not `new URL('../../src/...', import.meta.url)`: Vite's static analysis
@@ -569,84 +589,44 @@ describe('findInheritanceRestores — against this repo’s own real component h
     return resolve(here, '..', '..', '..');
   }
 
-  function releaseHasRef(): boolean {
-    try {
-      execFileSync('git', ['rev-parse', '--verify', 'origin/release^{commit}'], {
-        cwd: repoRoot(),
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe']
-      });
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  // The `git show` reader and its `releaseHasRef` guard are deliberately gone.
+  // Between them they produced both failure directions from one mechanism: the
+  // read made the tests self-invalidating on merge, and the guard turned that
+  // failure into a silent skip wherever the ref was absent, so the same commit
+  // was green or red depending only on clone depth. The fixtures above need
+  // neither.
 
-  function showAtRelease(relPath: string): string | null {
-    try {
-      return execFileSync('git', ['show', `origin/release:${relPath}`], {
-        cwd: repoRoot(),
-        encoding: 'utf8'
-      });
-    } catch {
-      return null;
-    }
-  }
+  it('flags BrandLoader.svelte’s real .sub-text regression against the pre-4.28 release', () => {
+    const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
+    const previous = preReleaseSource('BrandLoader.svelte');
+    const current = readFileSync(join(repoRoot(), relPath), 'utf8');
 
-  const hasRelease = releaseHasRef();
+    const restores = findInheritanceRestores(previous, current, relPath);
 
-  it.skipIf(!hasRelease)(
-    'flags BrandLoader.svelte’s real .sub-text regression against origin/release',
-    () => {
-      const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
-      const previous = showAtRelease(relPath);
-      expect(previous).not.toBeNull();
-      if (previous === null) {
-        return;
-      }
-      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
+    expect(
+      restores.some((r) => r.name === '--loader-sub-text-color' && r.property === 'color')
+    ).toBe(true);
+  });
 
-      const restores = findInheritanceRestores(previous, current, relPath);
+  it('flags Phone.svelte’s real .phone-screen regression -- proving the detector generalises past the one documented example', () => {
+    const relPath = 'src/lib/Phone/Phone.svelte';
+    const previous = preReleaseSource('Phone.svelte');
+    const current = readFileSync(join(repoRoot(), relPath), 'utf8');
 
-      expect(
-        restores.some((r) => r.name === '--loader-sub-text-color' && r.property === 'color')
-      ).toBe(true);
-    }
-  );
+    const restores = findInheritanceRestores(previous, current, relPath);
 
-  it.skipIf(!hasRelease)(
-    'flags Phone.svelte’s real .phone-screen regression against origin/release -- proving the detector generalises past the one documented example',
-    () => {
-      const relPath = 'src/lib/Phone/Phone.svelte';
-      const previous = showAtRelease(relPath);
-      expect(previous).not.toBeNull();
-      if (previous === null) {
-        return;
-      }
-      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
+    expect(restores.some((r) => r.name === '--phone-screen-color' && r.property === 'color')).toBe(
+      true
+    );
+  });
 
-      const restores = findInheritanceRestores(previous, current, relPath);
+  it('does not flag BrandLoader’s .text -- it already had a color before 4.28, so its change is the already-covered changed-fallback case', () => {
+    const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
+    const previous = preReleaseSource('BrandLoader.svelte');
+    const current = readFileSync(join(repoRoot(), relPath), 'utf8');
 
-      expect(
-        restores.some((r) => r.name === '--phone-screen-color' && r.property === 'color')
-      ).toBe(true);
-    }
-  );
+    const restores = findInheritanceRestores(previous, current, relPath);
 
-  it.skipIf(!hasRelease)(
-    'does not flag BrandLoader’s .text -- it already had a color at origin/release, so its change is the already-covered changed-fallback case',
-    () => {
-      const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
-      const previous = showAtRelease(relPath);
-      expect(previous).not.toBeNull();
-      if (previous === null) {
-        return;
-      }
-      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
-
-      const restores = findInheritanceRestores(previous, current, relPath);
-
-      expect(restores.some((r) => r.name === '--loader-text-color')).toBe(false);
-    }
-  );
+    expect(restores.some((r) => r.name === '--loader-text-color')).toBe(false);
+  });
 });

@@ -1,28 +1,36 @@
-# Migration to 5.0.0
+# Migration to 4.28.0
 
 Seven things break. Four are detectable by tooling, one is fixable by a
 codemod, and two can only be handed to you with a compatibility shim and an
 explanation — because whether they break _you_ depends on your layout, which
 is not in this library's source.
 
+## Read this even though the version number says you can skip it
+
+**These changes shipped in 4.28.0 — a minor.** If your dependency is `^4.x`,
+a routine `npm update` brings all seven, and semver gave you no signal at all.
+That is the opposite of the usual situation, where the major number is the
+warning and the guide is the detail. Here the guide is the only warning.
+
+Three of the seven are functional, not cosmetic: a form field that used to
+submit empty now blocks submission, a chart in a narrow container now overflows
+it, and a custom-element attribute stops reflecting. Four are layout or visual.
+
+So the honest summary is: **pin, audit, then unpin.**
+
 ```bash
-npm run migrate -- ../your-app            # report only, writes nothing
-npm run migrate -- ../your-app --apply    # also writes the version range
+# pin before you update, so the audit happens on your schedule
+npm pkg set dependencies.@juspay/svelte-ui-components=4.27.6
+
+# audit your project against the 4.28 changes, writing nothing
+npx sui-codemod migrate --dry-run ./src
+
+# run it again without --dry-run to apply the one mechanical fix
+npx sui-codemod migrate ./src
 ```
 
-## Why this is a major
-
-The changes below alter what an unchanged call site renders or does. Some of
-them are corrections — a chart that silently drew nothing now draws correctly,
-text that failed WCAG AA now passes — but a correction that changes output is
-still a breaking change, and shipping one as a patch is how a consumer's build
-breaks overnight.
-
-This library has made that mistake once already. `3.5.1` removed the
-deprecated event-prop spellings in a patch release; `4.0.0` is that same
-content renumbered, and `docs/MIGRATION_4.0.md` exists because of it. The rule
-that came out of it is the one applied here: **if an unchanged call site
-renders differently, it is a major.**
+Contributors working from a checkout of this repo have the same audit through
+`npm run migrate -- ../your-app`, plus the two stylesheet generators below.
 
 ## The seven
 

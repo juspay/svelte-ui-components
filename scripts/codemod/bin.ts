@@ -6,6 +6,17 @@
 // not reuse cli.ts's own "am I the entry point" check — the bin is reached
 // through an npm symlink, whose path never matches the real module URL, so
 // that check would silently run nothing.
+//
+// This same check also gates the `migrate` subcommand (migrate-audit.ts):
+// it imports `analyzeStylesheet`/`analyzeSvelte` from `../migrate/analyze.ts`,
+// which imports `svelte/compiler` at module load too — unconditionally, for
+// both functions, since that import sits above the split between them. This
+// check runs, and can fail, before `cli.ts` is even imported, so it covers
+// that path regardless of how `cli.ts` itself reaches migrate-audit.ts —
+// which it now does with a dynamic `import()` inside `run` (see that
+// function's doc comment in cli.ts), specifically so the classic prop-rename
+// command below does not pay this same resolution cost, or fail the same
+// way, for a dependency only the audit needs.
 const REQUIRED = ['svelte/compiler'];
 
 const missing = REQUIRED.filter((specifier) => {
@@ -25,8 +36,8 @@ if (missing.length > 0) {
   );
   process.exitCode = 1;
 } else {
-  const { runCodemod } = await import('./cli.ts');
-  const summary = runCodemod(process.argv.slice(2), (line) => {
+  const { run } = await import('./cli.ts');
+  const summary = await run(process.argv.slice(2), (line) => {
     console.log(line);
   });
   process.exitCode = summary.exitCode;

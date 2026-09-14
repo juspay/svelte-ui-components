@@ -146,7 +146,7 @@ const EXCLUDED_DOCS: ReadonlySet<string> = new Set([
   'CHANGELOG.md',
   'EVENT_CASING_MIGRATION.md',
   'MIGRATION_4.0.md',
-  'MIGRATION_5.0.md'
+  'MIGRATION_4.28.md'
 ]);
 
 export function planDocRenames(root: string): readonly DocRename[] {

@@ -2,11 +2,22 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
+    // Explicit because the program spans two source trees, not one:
+    // `migrate-audit.ts` imports the detectors from `../migrate` rather than
+    // duplicating them, so tsc's inferred common source directory is `scripts`
+    // and it refuses to guess the output layout (TS5011). Naming it here fixes
+    // the layout as dist-codemod/{codemod,migrate}/**, which is why `bin`
+    // points at dist-codemod/codemod/bin.js.
+    //
+    // `check:codemod` cannot catch a regression here: it runs tsconfig.json,
+    // which sets noEmit and has no outDir, so no output layout is computed and
+    // TS5011 never fires. Only `npm run build:codemod` exercises this.
+    "rootDir": "..",
     "outDir": "../../dist-codemod",
     "rewriteRelativeImportExtensions": true,
     "declaration": false,
     "sourceMap": false
   },
   "include": ["./*.ts"],
-  "exclude": ["./*.test.ts", "./generate-maps.ts"]
+  "exclude": ["./*.test.ts", "./generate-maps.ts", "./generate-migration-assets.ts"]
 }

@@ -14,6 +14,7 @@
       analyser: { type: 'Object' },
       sensitivity: { type: 'Number' },
       persistKey: { type: 'String', attribute: 'persist-key' },
+      statusLabels: { type: 'Object', attribute: 'status-labels' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       onfirstframe: { type: 'Object' },

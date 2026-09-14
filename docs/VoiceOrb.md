@@ -31,6 +31,7 @@ The orb never opens a microphone itself. Permission, the `AudioContext` and the 
 | `analyser`        | `AnalyserNode \| null`    | —        | Drives `listening` from real sound. See below. Ignored while `idle`.                                                                                                                    |
 | `sensitivity`     | `number`                  | `1`      | Multiplies the measured level. Above `1` for a quiet speaker.                                                                                                                           |
 | `persistKey`      | `string`                  | —        | Persists rotation across mounts under this `localStorage` key prefix.                                                                                                                   |
+| `statusLabels`    | `Partial<Record<'idle' \| 'listening', string>>` | —        | Text announced to assistive technology when `variant` changes. Omitted, the orb announces nothing. See **Accessibility**.                                              |
 | `classes`         | `string`                  | —        | CSS class string applied to the root.                                                                                                                                                   |
 | `testId`          | `string`                  | —        | Value for `data-pw`, for test selectors.                                                                                                                                                |
 | `onfirstframe`    | `() => void`              | —        | Fires once, on the first painted frame.                                                                                                                                                 |
@@ -151,7 +152,20 @@ By default the orb starts from zero rotation on every mount, so navigating away 
 
 ## Accessibility
 
-The canvas is `aria-hidden`, because it carries no information a screen reader could use. **The orb is not a status indicator.** If it is showing that the microphone is live, that state must also be announced somewhere a screen reader can reach it — a live region, or the label on the control that toggles it.
+The canvas is `aria-hidden`, because it carries no information a screen reader could use. **The orb is not a status indicator.** If it is showing that the microphone is live, that state must also be announced somewhere a screen reader can reach it.
+
+`statusLabels` is the built-in way to do that: pass the words for each variant and the orb renders a visually hidden `aria-live="polite"` region that re-announces whenever `variant` changes.
+
+```svelte
+<VoiceOrb
+  variant={listening ? 'listening' : 'idle'}
+  statusLabels={{ idle: 'Microphone off', listening: 'Listening' }}
+/>
+```
+
+The copy is yours, and there is no default. The same animation means "the assistant is listening" on one surface and "recording" on another, so a component that guessed would announce the wrong thing confidently. A variant you leave unnamed announces nothing, and omitting the prop renders no live region at all — announcing it from the label on the control that toggles listening is just as valid, and avoids saying it twice.
+
+Pointer repulsion has **no keyboard equivalent by design.** It pushes particles aside and accomplishes nothing else, so a focus stop for it would be a tab stop that leads nowhere. There is no functionality here a keyboard user is locked out of — which is why the canvas can stay out of the accessibility tree.
 
 `touch-action: none` on the canvas is what lets pointer repulsion work on touch; it means a drag starting on the orb will not scroll the page. Set `interactive={false}` where that matters.
 

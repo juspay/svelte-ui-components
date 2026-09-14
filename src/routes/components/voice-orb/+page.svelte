@@ -110,6 +110,7 @@
     seed="sui-demo"
     height={320}
     testId="orb-main"
+    statusLabels={{ idle: 'Microphone off', listening: 'Listening' }}
     onfirstframe={() => (started = true)}
   />
 </div>

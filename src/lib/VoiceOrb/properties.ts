@@ -63,8 +63,25 @@ export type OptionalVoiceOrbProperties = {
   /**
    * Whether pointer movement pushes particles aside. Defaults to `true`.
    * Set `false` for a purely ambient orb that ignores the pointer.
+   *
+   * This is decoration, and deliberately has no keyboard equivalent: the
+   * repulsion accomplishes nothing and conveys nothing, so a focus stop for it
+   * would add a tab stop that leads nowhere. What the orb does convey is
+   * `variant`, and that is what `statusLabels` announces.
    */
   interactive?: boolean;
+  /**
+   * Text announced to assistive technology when `variant` changes, keyed by
+   * variant. Supplying it renders a visually hidden polite live region; the
+   * canvas itself stays out of the accessibility tree either way.
+   *
+   * Opt-in, and the caller's words, because the orb cannot know what it stands
+   * for. The same animation means "the assistant is listening" on one surface
+   * and "recording" on another, and a component that guessed would announce
+   * the wrong thing confidently. A variant left unnamed announces nothing
+   * rather than falling back to a label the caller did not choose.
+   */
+  statusLabels?: Partial<Record<VoiceOrbVariant, string>>;
   /** How far from the pointer the repulsion reaches, in pixels. Defaults to `200`. */
   repelRadius?: number;
   /**

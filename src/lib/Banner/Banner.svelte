@@ -108,7 +108,7 @@
     gap: var(--banner-gap, 8px);
     justify-content: var(--banner-justify-content, center);
     background-color: var(--banner-background, #f0f4f8);
-    color: var(--banner-color, #637c95);
+    color: var(--banner-color, #4d6174);
     font-family: var(--banner-font-family);
     font-size: var(--banner-font-size, 14px);
     font-weight: var(--banner-font-weight, 500);

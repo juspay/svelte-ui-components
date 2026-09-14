@@ -55,7 +55,10 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
 /**
  * Per-route pixel allowances, for a route whose baseline is stable everywhere
  * except one antialiased edge. Scoped to the named route only: every other
- * snapshot stays on the exact match below.
+ * snapshot stays on the zero-count comparison below -- which bounds how many
+ * pixels may exceed the per-pixel `threshold`, and is NOT a pixel-identity
+ * check. See that comparison's own comment, and the threshold in
+ * playwright.visual.config.ts.
  *
  * The allowance is a COUNT, not a ratio, and it is deliberately far below the
  * smallest real change this suite has ever caught, so a genuine regression
@@ -73,6 +76,39 @@ const TOLERANCES: Readonly<Record<string, number>> = {
   // hit it, so it is frequent enough to gate merges on noise.
   'task-list': 12
 };
+
+/*
+ * `hitl` is the route that sets the per-pixel `threshold` in
+ * playwright.visual.config.ts, so its instability is the suite's budget.
+ * Recorded here because the number in that config is meaningless without it.
+ *
+ * Measured across six captures of an unchanged tree: `hitl` differs from itself
+ * in 13 of 15 pairs, and the max delta is ALWAYS exactly 1314.3 while the
+ * differing-pixel count steps 212 / 412 / 612 / 1012 / 1212 / 1612. A constant
+ * magnitude with a quantised count is not a continuous tail -- it is one edge
+ * landing on a discrete set of positions, four screen columns apart.
+ *
+ * The edge is the auto-confirm countdown's progress fill on the Confirm button
+ * (x=587..598, y=605..654); 1314.3 is simply the distance between the fill
+ * colour and the track behind it. `startCountdown` decrements on a
+ * `setInterval(..., 100)` and the bar carries `width 0.1s linear`, so the
+ * captured width depends on how many ticks have landed.
+ *
+ * That matters because the injected stylesheet below kills `animation` but not
+ * `transition`, and Playwright's `animations: 'disabled'` fast-forwards a
+ * transition at CAPTURE time on the real compositor clock -- which the manual
+ * clock does not drive. So the tick count is pinned and the transition is not.
+ *
+ * The fix is to make this route deterministic, NOT to raise the threshold and
+ * not to mask the button. Masking is what the `voice-orb` entry below warns
+ * about: an over-broad mask once left a baseline of nothing but headings, and a
+ * passing suite that did not notice the orb had gone blank. Masking a Confirm
+ * button would hide the control this route exists to cover.
+ *
+ * Second-largest is `theme-switcher` at 520.2, in 5 of 15 pairs -- the segment
+ * indicator, same shape of problem. If both are pinned, the floor drops far
+ * enough that a materially tighter threshold becomes possible.
+ */
 
 const EXCLUDED: Readonly<Record<string, string>> = {
   // Measured across full-suite runs rather than assumed: the captured height
@@ -531,13 +567,40 @@ test.describe('visual baselines', () => {
 
       const allowance = TOLERANCES[slug];
 
-      // Exact match is the default, and stays the default. A blanket tolerance
-      // would be a slow leak: it hides the sub-threshold drift that accumulates
-      // into a real regression, and the container pins rendering tightly enough
-      // that we don't need one. A route in TOLERANCES trades that exactness for
-      // a bounded pixel count on that route alone -- and only maxDiffPixels is
-      // passed there, since maxDiffPixelRatio: 0 alongside it is the stricter
-      // bound and would fail the comparison anyway.
+      // Zero pixels may EXCEED the per-pixel threshold. That is the default and
+      // it stays the default -- but it is not an exact match, which an earlier
+      // revision of this comment claimed and which is worth correcting here
+      // rather than in a commit message nobody reads twice.
+      //
+      // `threshold` (set in playwright.visual.config.ts, 0.2) decides when a
+      // pixel counts as different at all: its pixelmatch YIQ delta must exceed
+      // 1408.6. `maxDiffPixelRatio: 0` then allows none of those. So a colour
+      // change under 1409 per pixel passes no matter how many pixels carry it.
+      //
+      // Measured, not assumed: a WCAG contrast fix on three components
+      // (#637c95 -> #4d6174, delta 354.6) passed 94/94 and rewrote nothing,
+      // leaving baselines asserting the failure it fixed. The control that
+      // proves the instrument still works is an injected #ff0000 at delta
+      // 10175.9, which fails with 3381 differing pixels.
+      //
+      // Two consequences worth knowing before trusting a green run:
+      //
+      //   - A green result means "no pixel differs by more than 1408.6", not
+      //     "the baselines match the tree". Colour regressions live under it;
+      //     geometry does not, because a size mismatch is rejected before any
+      //     pixel is compared. Pin colour in a unit test instead --
+      //     src/lib/a11y-contrast.test.ts is the working example.
+      //
+      //   - `--update-snapshots` CANNOT repair a sub-threshold stale baseline.
+      //     It applies this same threshold, so it writes nothing and reports
+      //     success. Verified: five tests ran, passed, and left an 8,351-pixel
+      //     drift in place. Delete the PNG and re-run instead -- a missing
+      //     baseline is not a comparison, so the threshold never applies.
+      //
+      // A route in TOLERANCES trades the zero-count for a bounded pixel count
+      // on that route alone -- and only maxDiffPixels is passed there, since
+      // maxDiffPixelRatio: 0 alongside it is the stricter bound and would fail
+      // the comparison anyway.
       const comparison =
         typeof allowance === 'number' ? { maxDiffPixels: allowance } : { maxDiffPixelRatio: 0 };
 

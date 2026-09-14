@@ -62,6 +62,31 @@ describe('default text colours meet WCAG AA', () => {
     expect(contrastRatio(colour, background)).toBeGreaterThanOrEqual(4.5);
   });
 
+  /*
+   * The tests above assert a FLOOR, not a value: any colour clearing 4.5:1
+   * satisfies them. That is the right assertion for accessibility, but it means
+   * a default silently changing to a *different passing* colour goes unnoticed
+   * here -- and the visual suite cannot see it either, because a colour-only
+   * change under a 1408.6 per-pixel delta does not register (see
+   * playwright.visual.config.ts). Between the two instruments there was no test
+   * that would notice at all, which is how two branches independently drifted
+   * these same three defaults apart.
+   *
+   * So this pins the literal as well. It is deliberately a separate test from
+   * the ratio ones: this failing means "the value moved, confirm it was meant
+   * to and update this line", while a ratio test failing means "the value is
+   * not accessible". Those are different problems and should not share a
+   * failure message.
+   */
+  it('pins the literal defaults, so a silent change to another passing colour is still caught', () => {
+    expect(tokenDefault('Input/Input.svelte', '--input-label-msg-text-color')).toBe('#4d6174');
+    expect(tokenDefault('InputButton/InputButton.svelte', '--input-label-msg-text-color')).toBe(
+      '#4d6174'
+    );
+    expect(tokenDefault('Banner/Banner.svelte', '--banner-color')).toBe('#4d6174');
+    expect(tokenDefault('Banner/Banner.svelte', '--banner-background')).toBe('#f0f4f8');
+  });
+
   it('the helper measures a known-failing pair as failing', () => {
     // Guards the guard: the previous default, so a broken ratio calculation
     // that returned a large number for everything could not pass this suite.

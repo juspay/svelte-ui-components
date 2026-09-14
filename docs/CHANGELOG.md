@@ -2,7 +2,110 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.5)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.6)
+
+4.28.0 never published. `Release and Publish` on ea00e985 died at verify with
+2 of 2133, skipping the publish entirely, and both failures were mine.
+
+## The two tests could not pass on release by construction
+
+`legacy-palette.test.ts` read its "before" side with `git show origin/release`.
+On the PR branch that was the old tree and a restore existed; the moment the PR
+merged, `origin/release` BECAME the new tree, previous === current, the
+detector correctly found nothing, and the assertion failed. A test that can
+only be green before the change it describes lands, while CI only runs it
+after.
+
+Pinning to an immutable tag fixed that and left the other half standing:
+`it.skipIf(!hasRelease)` turns a missing ref into a SKIP, and CI checks out
+shallow and tagless, so those tests would have quietly skipped there instead.
+One guard producing both directions — a false positive where the ref is present
+and stale, a false negative where it is absent — with the outcome decided by
+clone depth rather than by the code under test.
+
+They now read committed fixtures: no ref to resolve, nothing to skip, identical
+everywhere. `current` still comes from the working tree, so they stay connected
+to the real components rather than comparing two fixtures. The git reader and
+its guard are deleted rather than left unused.
+
+## The migration tooling did not ship at all
+
+`scripts/migrate` is not in `files`, so the audit, both generators and the
+codemod were reachable only from a clone of this repo — useless to the people
+who need them. Three defects stood in the way, none visible from the repo, all
+three passing check:codemod and check:migrate green:
+
+- `build:codemod` failed outright (TS5011): `migrate-audit.ts` imports the
+detectors from `../migrate` rather than duplicating them, so the program
+spans two trees and tsc refused to infer a layout. The check scripts run
+noEmit with no outDir, so no layout is computed and the error cannot fire
+there. Only the build exercises it.
+- the compiled audit imported a `migrate/` directory never emitted.
+- `analyze.ts` imported `semver`, a devDependency: fine from a checkout,
+ERR_MODULE_NOT_FOUND from a consumer's node_modules. The peer check is now
+injected by the repo-side CLI, and the unset default THROWS rather than
+returning true — a permissive default would make a forgotten injection look
+like "every range is fine".
+
+Verified from a packed tarball installed into a throwaway project, which is the
+distinction that matters: "it works here" was already true while all three were
+live.
+
+## The build must not depend on repository history
+
+Deriving legacy-palette.css at build time took down `build`, `checks` and
+`visual` together on one unresolvable ref — CI checks out shallow and tagless,
+and Playwright's webServer runs `build`. The guard that caught it was right;
+needing it in a build was not. The derivation now happens once and the result
+is committed and reviewable, with a drift test that re-derives and compares.
+That test states its skip in its own name, because "not checked here" and
+"checked and fine" are different claims.
+
+## Review findings
+
+An empty `wc-display.json` was accepted as valid, so the audit printed
+`ok (0 component(s))` and silently ran with two detectors disabled — a clean
+report that had checked less than it claimed. Now rejected, matching the rule
+the writing half already applied.
+
+The audit reported tooltip findings it had just fixed, so a second run looked
+like it changed nothing when it had nothing left to change.
+
+MIGRATION_4.28.md documented `migrate &lt;path&gt;` as the audit and `--apply` to
+write. The CLI writes by default and takes `--dry-run`, and rejects `--apply`
+outright — so the documented "audit" would have rewritten a consumer's files.
+Both commands are now verified against the installed binary.
+
+`assertRefExists` advised `git fetch origin release` after the default became a
+tag, which does not fetch it. An error that sends you round the same loop is
+worse than none.
+
+## Also
+
+MIGRATION_5.0.md is renamed and reframed: these ship in a minor, so a consumer
+on ^4.x gets all seven from a routine update with no semver signal. The guide
+is the only warning they get. `targetRange()` yields the full version, since
+^4.0.0 is satisfied by 4.27.x, which has none of these changes. A literal NUL
+byte in a test file is now an escape: byte-identical at runtime, greppable on
+disk.
+
+lint, check, build, 2176 unit tests, and an install from a packed tarball all
+pass.
+
+-
+feat: component capability and accessibility pass, and the defects it surfaced ([8ff28c1](https://github.com/juspay/svelte-ui-components/commit/8ff28c102d209addaeee75a5965d993cca73c7e9))
+-
+feat(migrate): consumer migration for the seven breaking changes in this release ([d0e9462](https://github.com/juspay/svelte-ui-components/commit/d0e9462021620a43ba0547115505cd0dd2313c5c))
+-
+fix(migrate): unblock the release and ship the migration to consumers ([56b9f08](https://github.com/juspay/svelte-ui-components/commit/56b9f08a06bf3b96590e6745330d68c983c6f8ed))
+-
+fix(migrate): close the gaps an adversarial pass found in this tooling ([ea00e98](https://github.com/juspay/svelte-ui-components/commit/ea00e98502a3b52d1f0b199ae96f3ec46defc80e))
+-
+fix(charts): honour the non-finite input policy in the five charts that never implemented it ([c2995d0](https://github.com/juspay/svelte-ui-components/commit/c2995d065b1775d0a5b8534d76bbefed818e3f97))
+-
+test(visual): rebaseline the five chart pages that gained a non-finite demo ([52849db](https://github.com/juspay/svelte-ui-components/commit/52849dba174cf2f5ceb3be15a763cfb7e17a8def))
+
+## [4.27.6](https://github.com/juspay/svelte-ui-components/compare/4.27.6..4.27.5) - 14 September 2026
 
 `validationState` is a `$derived.by`, and `_onFocusOut` assigns to it. In Svelte
 5.25+ that is a legal override, discarded the next time any dependency of the

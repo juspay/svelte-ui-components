@@ -2,7 +2,58 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.4)
+
+`maxDiffPixelRatio: 0` reads as an exact match, and the comment beside it said
+so. It is not. `threshold` is the per-pixel tolerance -- a pixel is not counted
+as different until its pixelmatch YIQ delta exceeds 35215*threshold^2 -- and
+Playwright defaults it to 0.2, or 1408.6, which this suite never set.
+
+0.2 is now set explicitly, at the same value, with the measurement that
+justifies it. Across six captures of an unchanged tree in the pinned container,
+`hitl` differs from itself by up to 1314.3 and `theme-switcher` by 520.2, so
+the suite's own capture noise reaches 93% of the budget. Lowering to 0.1 puts
+16 hitl pixels over the line on unchanged code; 0.05 puts 394 over. The number
+is a decision now rather than an inherited default, and the reason it cannot be
+tightened is beside it.
+
+The cost is stated rather than hidden: this suite cannot see a colour-only
+change under ~1409 per pixel. A WCAG contrast fix (#637c95 -&gt; #4d6174, delta
+354.6) passed 94/94 and left baselines asserting the failure it fixed. The
+control proving the instrument still works is an injected #ff0000 at 10175.9,
+which fails with 3381 pixels.
+
+`hitl`'s instability is diagnosed rather than absorbed. Its max delta is always
+exactly 1314.3 while the pixel count steps 212/412/612/1012/1212/1612 -- a
+constant magnitude with a quantised count, which is one edge landing on
+discrete positions, not a continuous tail. The edge is the auto-confirm
+countdown's progress fill; `startCountdown` ticks a `setInterval(...,100)` and
+the bar carries `width 0.1s linear`. The injected stylesheet kills `animation`
+but not `transition`, and `animations:'disabled'` fast-forwards a transition at
+capture time on the real compositor clock, which the manual clock does not
+drive. So the tick count is pinned and the transition is not. Fixing that route
+is the route to a tighter threshold; masking the button is not, for the reason
+the voice-orb mask entry already records.
+
+Two instruments left one gap between them: `a11y-contrast.test.ts` asserted a
+floor, so a default changing to a *different passing* colour was invisible to
+it, and invisible to the screenshot suite too. That is how two branches drifted
+these three defaults apart independently. The literal is now pinned in its own
+test, separate from the ratio ones because "the value moved, confirm it was
+meant to" and "the value is not accessible" are different failures. Red-green
+verified with #475569, which clears AA at 7.58:1 and still fails the pin.
+
+Also documents that `--update-snapshots` cannot repair a sub-threshold stale
+baseline -- it applies the same threshold, writes nothing, and reports success.
+Delete the PNG instead.
+
+Verified: check, lint, build exit 0; vitest 1280 passed; visual 94/94, unchanged
+because 0.2 is the value it was already running.
+
+-
+test(visual): state the per-pixel threshold, and pin the colours it cannot see ([3c8112c](https://github.com/juspay/svelte-ui-components/commit/3c8112c85b606e383c7e396c604b28ce97c4e78e))
+
+## [4.27.4](https://github.com/juspay/svelte-ui-components/compare/4.27.4..4.27.3) - 14 September 2026
 
 #619 changed the default label and banner colour from #637c95 to #4d6174, and
 the visual suite passed 94/94 without rewriting anything. It was not wrong to:

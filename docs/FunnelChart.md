@@ -82,6 +82,34 @@ tooltip contract shared with BarChart, DualAxisBarChart, PieChart and SankeyChar
 [PieChart's "Keyboard access" and "Synchronized legend recipe" sections](./PieChart.md#keyboard-access)
 for the full contract.
 
+## Invalid values
+
+A stage value that is not a real number (`NaN`, `Infinity`, `-Infinity`)
+**contributes 0**. The stage is still drawn — a funnel stage is a fixed
+structural column with its own category label, not a sample that can be
+omitted — so it renders at the minimum bar height, and its label and
+accessible name read `0` rather than `NaN`.
+
+Every other stage keeps its correct proportional height.
+
+`NaN` and `Infinity` failed differently here before this was enforced, which
+is the clearest illustration of why the guard tests `Number.isFinite` rather
+than `Number.isNaN`:
+
+| Value      | Pre-enforcement result                                                        |
+| ---------- | ----------------------------------------------------------------------------- |
+| `NaN`      | One bar with `height="NaN"`, unpainted; adjacent connector polygons malformed |
+| `Infinity` | `Infinity > max` is true, so **every** bar collapsed to the 2px floor         |
+
+In both cases the affected bar kept `tabindex="0"`, `role="button"` and an
+accessible name reading literally `"Product View: NaN  |  NaN%"`. See
+[Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
+
+> **Known edge case.** `isEmpty` tests `value === 0`, and `NaN !== 0`, so a
+> dataset in which _every_ stage is non-finite is not treated as empty: it
+> renders all bars at the minimum height instead of the `empty` snippet. This
+> is pinned by a test as current behaviour, not endorsed as correct.
+
 ## Props
 
 | Prop            | Type                                     | Required | Default                        | Description                                                                                                                                                                 |

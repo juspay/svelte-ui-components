@@ -1,6 +1,22 @@
 import type { LinearScale, BandScale } from './types';
 
 export function niceLinearDomain(min: number, max: number): [number, number] {
+  // Defense-in-depth: every current caller already filters to finite values
+  // before reaching here (LineChart/AreaChart/BarChart/DualAxisBarChart), so
+  // this never fires for them. It exists so a future caller that forgets to
+  // filter degrades to a neutral domain instead of propagating NaN through
+  // every downstream tick and pixel computation (min === max never catches
+  // NaN, since NaN === NaN is false).
+  //
+  // It also MASKS those callers' own filters, which matters when testing them:
+  // remove a chart's finite-filter and the axis no longer loses its ticks, it
+  // silently scales to [0, 1] instead. So a `ticks.length > 0` assertion is
+  // vacuous as a test of a caller-side guard — it passes either way. Assert on
+  // tick *content* against a reference render (see BarChart/non-finite.test.ts)
+  // instead.
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return [0, 1];
+  }
   if (min === max) {
     return min === 0 ? [0, 1] : [min > 0 ? 0 : min * 2, max > 0 ? max * 2 : 0];
   }

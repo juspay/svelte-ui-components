@@ -56,6 +56,17 @@
   const MARGIN_BOTTOM = 8;
   const MARGIN_LEFT = 8;
 
+  /**
+   * Funnel bars are fixed structural columns (one per stage, always drawn),
+   * not sparse samples that can be omitted like a LineChart/AreaChart gap
+   * point — so a non-finite stage value is treated as a 0 contribution
+   * (this file's own computeStackedValues precedent in geometry.ts for
+   * value-accumulating charts), not excluded from the dataset.
+   */
+  function safeValue(value: number): number {
+    return Number.isFinite(value) ? value : 0;
+  }
+
   let innerWidth = $derived(Math.max(0, chartWidth - MARGIN_LEFT - MARGIN_RIGHT));
   let innerHeight = $derived(Math.max(0, chartHeight - MARGIN_TOP - MARGIN_BOTTOM));
 
@@ -65,8 +76,14 @@
     }
     let max = 0;
     for (const stage of data) {
-      if (stage.value > max) {
-        max = stage.value;
+      // A non-finite value contributes nothing to the max (the same "0
+      // contribution" treatment computeStackedValues gives a non-finite or
+      // negative point) rather than a gap: `Infinity > max` is true, so an
+      // unguarded comparison lets one bad stage collapse every bar to the
+      // 2px floor.
+      const value = safeValue(stage.value);
+      if (value > max) {
+        max = value;
       }
     }
     return max === 0 ? 1 : max;
@@ -123,7 +140,10 @@
    * Clamped to at least 2px so zero-value stages remain visible.
    */
   function barHeight(stageValue: number, expandPixels: number = 0): number {
-    return Math.max(2, (stageValue / maxValue) * barAreaHeight + expandPixels);
+    // Sanitize before the division: an unguarded NaN/Infinity here reaches
+    // barY and connectorPoints (both call this), producing "NaN" SVG
+    // coordinates instead of the 2px-floor bar a 0 contribution renders as.
+    return Math.max(2, (safeValue(stageValue) / maxValue) * barAreaHeight + expandPixels);
   }
 
   /**
@@ -166,11 +186,15 @@
    * otherwise renders `"<value> | <pct>%"`.
    */
   function formatLabel(stage: FunnelStage): string {
+    // Feeds the in-bar label, tooltip, and aria-label alike: sanitizing once
+    // here keeps all three reading "0" for a non-finite stage instead of
+    // only some of them being patched and the rest still leaking "NaN".
+    const value = safeValue(stage.value);
     if (typeof valueFormat === 'function') {
-      return valueFormat(stage.value, maxValue);
+      return valueFormat(value, maxValue);
     }
-    const pct = formatPercent(stage.value, maxValue);
-    return `${formatNumber(stage.value)}  |  ${pct}`;
+    const pct = formatPercent(value, maxValue);
+    return `${formatNumber(value)}  |  ${pct}`;
   }
 
   // ── Label fitting ──────────────────────────────────────────────
@@ -189,7 +213,7 @@
     if (bh >= fullSize.height + 4 && stageColumnWidth >= fullSize.width + 8) {
       return full;
     }
-    const compact = formatPercent(stage.value, maxValue);
+    const compact = formatPercent(safeValue(stage.value), maxValue);
     const compactSize = measureText(compact, valueFont);
     if (bh >= compactSize.height + 4 && stageColumnWidth >= compactSize.width + 8) {
       return compact;

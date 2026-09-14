@@ -117,6 +117,28 @@
       color: '#4e79a7'
     }
   ];
+
+  // ── Demo 7: Non-finite value — axis domain guard ──────────────────
+
+  const nonFiniteCategories = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+
+  const nonFiniteSeries = [
+    {
+      // No reading for Mar -- NaN marks a gap, not a fabricated 0.
+      name: 'Revenue ($)',
+      data: [42000, 38500, Number.NaN, 46800, 58300],
+      yAxisIndex: 0 as const,
+      type: 'column' as const,
+      color: '#4e79a7'
+    },
+    {
+      name: 'Orders',
+      data: [120, 98, 143, 131, 165],
+      yAxisIndex: 1 as const,
+      type: 'column' as const,
+      color: '#59a14f'
+    }
+  ];
 </script>
 
 <div class="page-header">
@@ -242,6 +264,24 @@
     rightAxis={{ title: 'CTR', valueFormat: (v) => v.toFixed(1) + '%' }}
     showLegend
     testId="dual-axis-legend-aggregate-chart"
+  />
+</div>
+
+<!-- Demo 7: Non-finite value -->
+<h3>Non-Finite Value — Axis Domain Guard</h3>
+<p class="page-intro">
+  "Revenue" has no reading for Mar (<code>NaN</code>). <code>axisDomain()</code> filters non-finite
+  values out before computing the left axis extent, so Jan/Feb/Apr/May keep their real scale instead
+  of one <code>NaN</code> propagating through <code>Math.max</code> and collapsing the whole left axis.
+  The Mar bar itself renders as a gap; "Orders" on the right axis is unaffected.
+</p>
+<div class="demo-row">
+  <DualAxisBarChart
+    categories={nonFiniteCategories}
+    series={nonFiniteSeries}
+    leftAxis={{ title: 'Revenue ($)' }}
+    rightAxis={{ title: 'Orders' }}
+    testId="dual-axis-nonfinite-chart"
   />
 </div>
 

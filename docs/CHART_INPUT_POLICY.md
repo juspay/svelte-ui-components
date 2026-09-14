@@ -8,6 +8,15 @@ place that states, for every input shape either chart's tests exercise, what
 happens — so an unsupported or ambiguous shape reads as **explicit and
 inspectable**, never as a plausible-looking but wrong chart.
 
+The **non-finite** half of that contract binds every chart in the library, not
+only those two: `BarChart`, `DualAxisBarChart`, `PieChart`, `SankeyChart` and
+`FunnelChart` each honour it as well. They did not always, and the gap was not
+visible from the outside — see
+["Why a non-finite value is never just one bad point"](#why-a-non-finite-value-is-never-just-one-bad-point)
+for what each chart used to do instead, which is the reason this page now
+states the rule for all seven rather than for the two that happened to
+implement it first.
+
 ## "Unknown", "absent", "zero" and "invalid" are not synonyms
 
 These four words describe different data, and the charts render each one
@@ -36,6 +45,60 @@ sampled) and do not use `NaN` to mean "zero" (that erases a real measurement).
 | **Negative values**                   | `y: -40`                                                                                                     | Supported directly. Non-stacked mode's y-domain is `niceLinearDomain(Math.min(0, …allY), Math.max(…allY))`, so the domain always includes 0 and extends below it when any value is negative — the chart never silently clips a negative value out of view. **Stacked/normalized mode clamps negative values to 0** (`Math.max(0, entry.point.y)`) when computing a column's total and stack height: a negative contribution to a stack or a percent-of-total does not have a well-defined visual meaning (a slice cannot have negative height), so it is treated as a 0 contribution rather than inverting the stack or producing a negative percentage.                                                                                                                              |
 | **Reordered times**                   | `[{x:3,y:…},{x:1,y:…},{x:2,y:…}]`                                                                            | `joinByX` produces one row per distinct finite x, **sorted ascending**, regardless of input order — callers do not need to pre-sort. A duplicate x within one series resolves last-wins (the last matching point in array order), rather than privileging an arbitrary "first sample" when the array isn't time-ordered.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | **Unknown totals** (`stackNormalize`) | A stacked, normalized column where every series is absent or clamps to 0 at that x, so the column total is 0 | `columnTotalAtX` returns `0`; dividing by that would produce `NaN`/`Infinity`, so the normalized value is defined as `0` instead. This is a deliberate simplification, not a true "unknown" result: **a `0%` bar in a `stackNormalize` chart at a column whose real total is 0 looks identical to a column where every series is genuinely 0% of a nonzero total.** If that distinction matters for a given dataset, do not use `stackNormalize` for it — or check `columnTotalAtX`-equivalent totals yourself before rendering, since the chart does not surface "no total to normalize against" as a separate visual state.                                                                                                                                                         |
+
+## Two ways to honour the contract, and why the choice is forced
+
+"Treated as a gap" is the right rule for a chart whose marks have a position
+on an axis. It is not available to a chart whose marks are shares of a whole.
+A `LineChart` can simply not draw a point at x = 3; a `PieChart` cannot not
+draw a slice, because the slice's neighbours are positioned by its angle, and
+a `FunnelChart` stage is a fixed structural column with a category label above
+it. Dropping either one would renumber everything after it.
+
+So the contract has two shapes, and which one applies is decided by the chart,
+not by the caller:
+
+| Treatment             | Applies to                                                                | What a non-finite value does                                                                      |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **gap-exclusion**     | `LineChart`, `AreaChart`, `BarChart` (grouped/single), `DualAxisBarChart` | Excluded from the auto-computed domain. No marker, no label, no hit-testing. The mark is absent.  |
+| **zero-contribution** | `BarChart` (stacked), `PieChart`, `SankeyChart`, `FunnelChart`            | Contributes 0 to the total. The mark is still present, at zero size, keeping its index and label. |
+
+Both rules exist to enforce the same guarantee, which is the one that actually
+matters: **one invalid value may only damage itself.** It may never change how
+any other point in the chart is drawn.
+
+## Why a non-finite value is never just one bad point
+
+The reason this needs stating is that the failure it prevents is not local,
+and is not loud. `Math.max(…, NaN)` is `NaN`, so a single bad value reaching
+an extent poisons the scale that positions _every_ mark. `NaN === NaN` is
+`false`, so the `if (min === max)` degenerate-domain guard never fires for it.
+`NaN > max` is `false`, so a maximum-finding loop silently skips it — which
+looks like a guard and is an accident, and does not hold for `Infinity`, which
+passes that same comparison and poisons the maximum outright.
+
+Nothing throws. Browsers silently drop an SVG path whose `d` contains `NaN`,
+so the plot area simply empties while the axes, legend and focusable,
+ARIA-labelled mark elements all remain. Worse, accessible names are computed
+from the _raw_ values rather than the corrupted scale, so a bar with a
+perfectly good value still announces "Jan: 42" to a screen reader and to any
+test asserting on accessible text, while a sighted user sees nothing at all.
+A CI suite and an accessibility audit can both pass over a chart that renders
+nothing.
+
+What each chart did before honouring the contract, all from one bad value:
+
+| Chart              | Observable result                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| `BarChart`         | Every bar's path invalid and unpainted; **zero** ticks on the value axis; category axis fine      |
+| `DualAxisBarChart` | The same, via its own unguarded `axisDomain`                                                      |
+| `PieChart`         | Every slice invisible, and **every** slice's percentage — not just the bad one's — reading `NaN%` |
+| `SankeyChart`      | All nodes `y=NaN`, propagating two columns downstream of the bad link                             |
+| `FunnelChart`      | `NaN`: one bar. `Infinity`: **all** bars collapsed to the 2px floor                               |
+
+Note the last row. `NaN` and `Infinity` are not interchangeable, and a guard
+written with `Number.isNaN` rather than `Number.isFinite` catches only half of
+this table.
 
 ## NaN is not a JSON value
 

@@ -22,6 +22,20 @@
 
   const warmColors = ['#f28e2b', '#e15759', '#b07aa1', '#ff9da7', '#9c755f'];
 
+  // ── Non-finite stage value demo ──────────────────────────────────
+  // "Product View" has no reading this period -- NaN marks a gap, not a
+  // fabricated 0. safeValue() gives it a zero contribution at maxValue,
+  // barHeight and formatLabel alike, so the stage renders at the 2px floor
+  // with a "0" label instead of NaN reaching maxValue (collapsing every
+  // other stage's bar too) or leaking into the in-bar label/tooltip/aria-label.
+  const funnelWithGap = [
+    { category: 'Visit', value: 12000 },
+    { category: 'Product View', value: Number.NaN },
+    { category: 'Add to Cart', value: 4200 },
+    { category: 'Checkout', value: 2100 },
+    { category: 'Purchase', value: 980 }
+  ];
+
   const manyStagesFunnel = [
     { category: 'Impressions on all channels', value: 120000 },
     { category: 'Qualified marketing leads', value: 64000 },
@@ -119,6 +133,18 @@
 <h3>Many Stages with Long Names</h3>
 <div class="demo-row">
   <FunnelChart data={manyStagesFunnel} testId="funnel-many-stages-chart" />
+</div>
+
+<h3>Non-finite stage value — degrades to a zero-height bar, not NaN</h3>
+<p>
+  "Product View" has no reading this period (<code>NaN</code>). <code>safeValue()</code> treats it
+  as a zero contribution at <code>maxValue</code> and <code>barHeight</code> alike, so it renders at
+  the 2px floor with a "0" label — every other stage keeps its correct bar height and label instead
+  of the <code>NaN</code> reaching <code>maxValue</code> and collapsing the whole funnel. See
+  <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
+</p>
+<div class="demo-row">
+  <FunnelChart data={funnelWithGap} testId="funnel-nonfinite-chart" />
 </div>
 
 <style>

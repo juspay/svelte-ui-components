@@ -86,6 +86,28 @@
     { id: 'new', label: 'NEW' }
   ];
 
+  // ── Non-finite link value demo ───────────────────────────────────
+  // "Direct" -> "Landing Page" has no reading this period -- NaN marks a
+  // gap, not a fabricated 0. computeSankeyLayout's sanitized-links choke
+  // point gives it a zero value, so it collapses to the minLinkWidth floor
+  // and contributes nothing to "Landing Page"'s incoming total, instead of
+  // one NaN spreading through the per-column recentre step and the
+  // relaxation loop to every node sharing that column.
+  const nonFiniteNodes = [
+    { id: 'google', label: 'Google', color: '#4285f4' },
+    { id: 'direct', label: 'Direct', color: '#34a853' },
+    { id: 'landing', label: 'Landing Page', color: '#fbbc05' },
+    { id: 'signup', label: 'Sign Up', color: '#59a14f' },
+    { id: 'bounce', label: 'Bounce', color: '#bab0ac' }
+  ];
+
+  const nonFiniteLinks = [
+    { source: 'google', target: 'landing', value: 50 },
+    { source: 'direct', target: 'landing', value: Number.NaN },
+    { source: 'landing', target: 'signup', value: 45 },
+    { source: 'landing', target: 'bounce', value: 55 }
+  ];
+
   const crowdedLinks = [
     { source: 'sessions', target: 'checkout-initiated', value: 9000 },
     { source: 'sessions', target: 'dropped-off', value: 3200 },
@@ -204,4 +226,23 @@
       testId="sankey-tooltip-portal"
     />
   </div>
+</div>
+
+<h3>Non-finite link value — degrades to a zero-width link, not NaN geometry</h3>
+<p>
+  "Direct" → "Landing Page" has no reading this period (<code>NaN</code>). The sanitized-links choke
+  point in <code>computeSankeyLayout</code> gives it a zero value, so it collapses to the
+  <code>minLinkWidth</code> floor and contributes nothing to "Landing Page"'s incoming total — every
+  other node and link keeps its correct width and position instead of the one non-finite value
+  spreading through the layout's column-centring step. See <code>docs/CHART_INPUT_POLICY.md</code>
+  for the full input-shape table.
+</p>
+<div class="demo-row">
+  <SankeyChart
+    nodes={nonFiniteNodes}
+    links={nonFiniteLinks}
+    showValues
+    minLinkWidth={2}
+    testId="sankey-nonfinite-chart"
+  />
 </div>

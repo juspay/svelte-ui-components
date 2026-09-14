@@ -245,6 +245,24 @@ overlapping text:
   also dropped when their wedge is thinner than one text line.
 - Every dropped or truncated label keeps its full text on the slice tooltip and `aria-label`.
 
+## Invalid values
+
+A slice value that is not a real number (`NaN`, `Infinity`, `-Infinity`)
+**contributes 0** to the total. The slice is still present — keeping its
+index, its colour and its legend entry — but occupies zero angle, exactly as
+an explicit `0` would. It is not dropped, because a pie slice is positioned by
+the angles of its neighbours, so removing one would renumber the rest.
+
+Every other slice keeps its correct angle, and the remaining percentages still
+sum to 100%.
+
+This is worth stating because the pre-enforcement failure was not confined to
+the offending slice. The shared `total` is the denominator for _all_ labels,
+so a single `NaN` made **every** slice's percentage render as literal `NaN%`
+— in the values legend, in the tooltip, and in the `aria-live` status region
+— while the slices themselves became invalid SVG paths and vanished. See
+[Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
+
 ## Props
 
 | Prop               | Type                               | Required | Default      | Description                                                                                                                                                                                                                                                           |

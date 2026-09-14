@@ -94,7 +94,11 @@
     if (axisSeries.length === 0) {
       return [0, 1];
     }
-    const allValues = axisSeries.flatMap((s) => s.data);
+    // Non-finite values (NaN/Infinity) mark gap points; exclude them so one
+    // bad point cannot poison the axis extent (Infinity in particular passes
+    // right through a Math.max comparison). Matches the LineChart/AreaChart
+    // call-site filter.
+    const allValues = axisSeries.flatMap((s) => s.data).filter((v) => Number.isFinite(v));
     if (allValues.length === 0) {
       return [0, 1];
     }

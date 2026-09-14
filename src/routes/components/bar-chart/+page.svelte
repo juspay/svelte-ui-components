@@ -101,6 +101,42 @@
     apiHighlightStep = nextStep;
     highlightApi.highlight(nextStep < categories.length ? nextStep : null);
   };
+
+  // ── Non-finite value in a stack demo ────────────────────────────
+  // "Organic" has no reading at Q2 -- NaN marks a gap, not a fabricated 0.
+  // stackContribution() gives it a zero-height contribution AND keeps
+  // stackBase[Q2] correct for "Referral", stacked above it, instead of
+  // Math.max(0, NaN) poisoning the running base for every series above it
+  // in that one category.
+  const stackedGapSeries = [
+    {
+      name: 'Direct',
+      data: [
+        { label: 'Q1', value: 40 },
+        { label: 'Q2', value: 55 },
+        { label: 'Q3', value: 48 },
+        { label: 'Q4', value: 60 }
+      ]
+    },
+    {
+      name: 'Organic',
+      data: [
+        { label: 'Q1', value: 30 },
+        { label: 'Q2', value: Number.NaN },
+        { label: 'Q3', value: 35 },
+        { label: 'Q4', value: 42 }
+      ]
+    },
+    {
+      name: 'Referral',
+      data: [
+        { label: 'Q1', value: 20 },
+        { label: 'Q2', value: 25 },
+        { label: 'Q3', value: 18 },
+        { label: 'Q4', value: 28 }
+      ]
+    }
+  ];
 </script>
 
 <div class="page-header">
@@ -313,6 +349,26 @@
     showLegend={true}
     interactiveLegend
     testId="bar-legend-aggregate-chart"
+  />
+</div>
+
+<h3>Non-finite value in a stack — degrades to a zero contribution</h3>
+<p>
+  A non-finite (<code>NaN</code>) value in one stacked series contributes
+  <strong>zero height</strong>, and — critically — does not poison the running stack base for series
+  stacked above it. "Organic" has no reading at Q2 below; its segment there collapses to zero while
+  "Referral" still stacks correctly on top of "Direct", instead of the whole Q2 column turning to
+  <code>NaN</code>
+  geometry. See
+  <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
+</p>
+<div class="demo-row">
+  <BarChart
+    series={stackedGapSeries}
+    groupMode="stacked"
+    showLegend
+    showValues
+    testId="bar-stacked-gap-chart"
   />
 </div>
 

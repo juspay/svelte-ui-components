@@ -7,7 +7,7 @@
   import Legend from '$lib/_chart/Legend.svelte';
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
   import { arcPath } from '$lib/_chart/paths';
-  import { computePieLayout } from '$lib/_chart/geometry';
+  import { computePieLayout, pieSliceValue } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
   import { measureText, readCssVarPx } from '$lib/_chart/measure';
@@ -113,7 +113,11 @@
   // ── Layout ─────────────────────────────────────────────────────
 
   let format = $derived(valueFormat ?? formatNumber);
-  let total = $derived(data.reduce((sum, d) => sum + Math.max(0, d.value), 0));
+  // Mirrors computePieLayout's own total exactly (both use pieSliceValue) --
+  // this duplicate exists only because isEmpty/pctFormat need it before
+  // slices are computed; two independently-guarded reduces here is what let
+  // the NaN defect survive a first pass that fixed only geometry.ts.
+  let total = $derived(data.reduce((sum, d) => sum + pieSliceValue(d.value), 0));
   let pctFormat = $derived.by(
     () =>
       (v: number): string =>
@@ -586,7 +590,7 @@
               <span class="pie-legend-swatch" style="background: {d.color ?? getColor(i)}"></span>
               <span class="pie-legend-label">{d.label}</span>
               <span class="pie-legend-value">
-                {format(d.value)}&nbsp;{pctFormat(d.value)}
+                {format(pieSliceValue(d.value))}&nbsp;{pctFormat(pieSliceValue(d.value))}
               </span>
             </li>
           {/each}

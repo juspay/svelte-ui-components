@@ -179,6 +179,30 @@ Set `aggregate` on a series to show a computed value beside its legend label —
 />
 ```
 
+## Invalid values
+
+A stage value that is not a real number (`NaN`, `Infinity`, `-Infinity`) is
+handled rather than rendered. Which way depends on `groupMode`, because the
+two modes mean different things by "this value":
+
+- **grouped / single** — the value is **excluded from the auto-computed
+  domain**. Its own bar is absent; every other bar keeps its correct height,
+  and the value axis keeps its ticks.
+- **stacked** — the value **contributes 0** to its category's total. The
+  segment is still present at zero height, so the other series stacked in that
+  same category keep their correct baselines.
+
+The distinction matters because a stacked segment's value sets the baseline
+for everything above it, so excluding it would silently move other series.
+
+Before this was enforced, one `NaN` anywhere in `data` made _every_ bar's SVG
+path invalid — browsers drop such a path without an error, so the plot area
+emptied while the legend, category axis and focusable bar elements all stayed
+put, and the value axis rendered **zero** ticks. Accessible names are built
+from the raw values, so a screen reader still announced correct numbers for
+bars that were not being drawn at all. See
+[Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
+
 ## Props
 
 | Prop                  | Type                                   | Required | Default      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |

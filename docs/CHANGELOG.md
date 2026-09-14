@@ -2,7 +2,31 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.5)
+
+`validationState` is a `$derived.by`, and `_onFocusOut` assigns to it. In Svelte
+5.25+ that is a legal override, discarded the next time any dependency of the
+derived changes -- which reads like a latent bug: blur forces 'Invalid', then an
+unrelated prop change silently reverts it.
+
+It does not, and these tests pin why. The derived already carries the same rule
+the override applies (InProgress + non-empty + not document.activeElement =&gt;
+Invalid), so a recompute re-derives 'Invalid' rather than reverting. The
+assignment is not redundant either: document.activeElement is not reactive, so
+it pushes the one recomputation the derived cannot observe for itself.
+
+Verified red-green -- removing the derived's activeElement rule fails the
+recompute test and nothing else.
+
+The rerender calls re-pass `value` deliberately. Testing-library replays the
+props object, so omitting it pushes the original '' back down and resets the
+field, recomputing the derived for a reason unrelated to the override. Without
+that, the test measures the harness.
+
+-
+test(input): pin why assigning to a $derived on focus out is not a defect ([0523f87](https://github.com/juspay/svelte-ui-components/commit/0523f87c668f8ca6e4391454e9b9012b239df9ba))
+
+## [4.27.5](https://github.com/juspay/svelte-ui-components/compare/4.27.5..4.27.4) - 14 September 2026
 
 `maxDiffPixelRatio: 0` reads as an exact match, and the comment beside it said
 so. It is not. `threshold` is the per-pixel tolerance -- a pixel is not counted

@@ -1,15 +1,20 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   buildLegacyPalette,
   diffPalette,
   extractFallbackSites,
+  findInheritanceRestores,
   groupSites,
   renderStylesheet,
+  ruleBlocks,
+  stripComments,
   type FallbackSite,
+  type InheritanceRestore,
   type PaletteDiff
 } from './legacy-palette.ts';
 
@@ -160,6 +165,144 @@ describe('diffPalette', () => {
   });
 });
 
+describe('ruleBlocks', () => {
+  it('extracts a selector and its declaration body verbatim', () => {
+    const css = '.a { color: red; }\n.b {\n  color: blue;\n}\n';
+    const blocks = ruleBlocks(css);
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0]?.selector).toBe('.a');
+    expect(blocks[0]?.body).toBe(' color: red; ');
+    expect(blocks[1]?.selector).toBe('.b');
+    expect(blocks[1]?.body).toContain('color: blue;');
+  });
+
+  it('descends into an at-rule body without recording the at-rule’s own prelude as a selector', () => {
+    const css = '@supports (display: grid) {\n  .grid { display: grid; }\n}\n';
+    const blocks = ruleBlocks(css);
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]?.selector).toBe('.grid');
+  });
+});
+
+describe('stripComments', () => {
+  it('blanks comment content but keeps every other character and every newline in place', () => {
+    const css = '.a /* keep\nbraces { } out of the way */ { color: red; }\n';
+    const stripped = stripComments(css);
+
+    expect(stripped).not.toContain('braces');
+    expect(stripped.split('\n')).toHaveLength(css.split('\n').length);
+    expect(stripped.length).toBe(css.length);
+  });
+});
+
+describe('findInheritanceRestores', () => {
+  it('flags a selector that gained a var() default for color it never declared at all before -- the BrandLoader .sub-text case', () => {
+    const previous = '.sub-text { font-size: 0.75rem; }\n';
+    const current =
+      '.sub-text { font-size: 0.75rem; color: var(--loader-sub-text-color, #52525b); }\n';
+
+    // .css here, not .svelte: cssRegions only reads a .svelte file's <style>
+    // block, and this fixture is raw CSS text with no such wrapper -- the
+    // <style>-wrapped shape is covered separately below. .css exercises the
+    // same rule-block/property logic without that wrapper being the point.
+    expect(findInheritanceRestores(previous, current, 'BrandLoader.css')).toEqual([
+      {
+        name: '--loader-sub-text-color',
+        property: 'color',
+        selector: '.sub-text',
+        file: 'BrandLoader.css',
+        line: 1
+      }
+    ]);
+  });
+
+  // The non-regression this task exists to protect: a selector that already
+  // had SOME value for the property at base never resolved by inheritance,
+  // even when the literal moved behind a brand-new custom property -- that is
+  // the already-covered changed-fallback case (--loader-text-color, white ->
+  // #333333), not this one, and must stay out of this section.
+  it('does not flag a selector that already declared the property at base, even under a brand-new custom-property name', () => {
+    const previous = '.text { color: white; }\n';
+    const current = '.text { color: var(--loader-text-color, #333333); }\n';
+
+    expect(findInheritanceRestores(previous, current, 'BrandLoader.css')).toEqual([]);
+  });
+
+  it('does not flag a selector with no rule at all in the base version -- there is no prior render to have regressed from', () => {
+    const previous = '.other { color: red; }\n';
+    const current = '.new-thing { color: var(--new-thing-color, #111111); }\n';
+
+    expect(findInheritanceRestores(previous, current, 'x.css')).toEqual([]);
+  });
+
+  it('does not flag a newly-declared inherited property written as a plain literal -- nothing to pin, no var() fallback', () => {
+    const previous = '.label { font-weight: 400; }\n';
+    const current = '.label { font-weight: 400; color: #111111; }\n';
+
+    expect(findInheritanceRestores(previous, current, 'x.css')).toEqual([]);
+  });
+
+  it('does not flag a newly-declared NON-inherited property -- background-color has a fixed initial value, not an inheritance hazard', () => {
+    const previous = '.panel { color: black; }\n';
+    const current = '.panel { color: black; background-color: var(--panel-bg, #f5f5f5); }\n';
+
+    expect(findInheritanceRestores(previous, current, 'x.css')).toEqual([]);
+  });
+
+  it('generalises beyond color -- a font-size gained the same way is flagged too', () => {
+    const previous = '.caption { display: block; }\n';
+    const current = '.caption { display: block; font-size: var(--caption-font-size, 12px); }\n';
+
+    expect(findInheritanceRestores(previous, current, 'x.css')).toEqual([
+      {
+        name: '--caption-font-size',
+        property: 'font-size',
+        selector: '.caption',
+        file: 'x.css',
+        line: 1
+      }
+    ]);
+  });
+
+  it('returns nothing when there is no base version of the file to compare against', () => {
+    const current = '.a { color: var(--x, red); }\n';
+
+    expect(findInheritanceRestores(null, current, 'new.svelte')).toEqual([]);
+  });
+
+  it('works on a plain .css file, not only inside a .svelte <style> block', () => {
+    const previous = '.phone-screen { background: black; }\n';
+    const current =
+      '.phone-screen { background: black; color: var(--phone-screen-color, #f5f5f5); }\n';
+
+    const restores = findInheritanceRestores(previous, current, 'phone.css');
+
+    expect(restores).toHaveLength(1);
+    expect(restores[0]?.name).toBe('--phone-screen-color');
+  });
+
+  it('reads only the <style> block of a .svelte file -- markup braces do not desynchronise the parse', () => {
+    const previous =
+      '<div class="sub-text">{msg}</div>\n<style>\n.sub-text { font-size: 0.75rem; }\n</style>\n';
+    const current =
+      '<div class="sub-text">{msg}</div>\n<style>\n.sub-text { font-size: 0.75rem; color: var(--loader-sub-text-color, #52525b); }\n</style>\n';
+
+    const restores = findInheritanceRestores(previous, current, 'BrandLoader.svelte');
+
+    expect(restores).toHaveLength(1);
+    expect(restores[0]?.line).toBe(3);
+  });
+
+  it('excludes a delegating fallback (var(--x, var(--y, red))) the same way extractFallbackSites does -- it is not this property’s own literal', () => {
+    const previous = '.a { display: block; }\n';
+    const current = '.a { display: block; color: var(--a-color, var(--brand-color, red)); }\n';
+
+    expect(findInheritanceRestores(previous, current, 'x.css')).toEqual([]);
+  });
+});
+
 describe('renderStylesheet', () => {
   const diff: PaletteDiff = {
     pins: [{ name: '--tabs-active-color', previousLiteral: '#1a73e8' }],
@@ -205,6 +348,75 @@ describe('renderStylesheet', () => {
     const css = renderStylesheet({ pins: diff.pins, ambiguous: [] }, null);
 
     expect(css).toContain('/* was the pre-AA default */');
+  });
+});
+
+describe('renderStylesheet — inheritance restores', () => {
+  const noPins: PaletteDiff = { pins: [], ambiguous: [] };
+  const restore: InheritanceRestore = {
+    name: '--loader-sub-text-color',
+    property: 'color',
+    selector: '.sub-text',
+    file: 'src/lib/BrandLoader/BrandLoader.svelte',
+    line: 87
+  };
+
+  it('emits an empty-value :root rule naming the property, selector and site in a comment', () => {
+    const css = renderStylesheet(noPins, '4.27.x', [restore]);
+
+    expect(css).toContain(
+      ':root { --loader-sub-text-color: ; }   /* color on .sub-text (src/lib/BrandLoader/BrandLoader.svelte:87) was inherited, never declared */'
+    );
+  });
+
+  it('places the inheritance section after the literal pins, with its own header explaining the different claim', () => {
+    const withPin: PaletteDiff = {
+      pins: [{ name: '--tabs-active-color', previousLiteral: '#1a73e8' }],
+      ambiguous: []
+    };
+    const css = renderStylesheet(withPin, '4.27.x', [restore]);
+
+    const pinIndex = css.indexOf(':root { --tabs-active-color');
+    const restoreIndex = css.indexOf(':root { --loader-sub-text-color');
+    expect(pinIndex).toBeGreaterThan(-1);
+    expect(restoreIndex).toBeGreaterThan(pinIndex);
+    // The section states why an empty value is used, and explicitly rules
+    // out the `inherit` keyword -- guards against silently reverting to the
+    // task's originally-suggested but non-functional `--name: inherit;` rule.
+    expect(css).toMatch(/was inherited/);
+    expect(css).toMatch(/`--name: inherit;` would NOT do this/);
+  });
+
+  it('omits the section entirely -- no header, no trailing noise -- when nothing needs restoring', () => {
+    const css = renderStylesheet(noPins, '4.27.x', []);
+
+    expect(css).not.toMatch(/was inherited, never declared/);
+    expect(css).not.toMatch(/inherit\(/);
+  });
+
+  it('produces output identical to omitting the third argument -- backward compatible with every pre-existing caller', () => {
+    const withDefaultArg = renderStylesheet(noPins, '4.27.x');
+    const withExplicitEmpty = renderStylesheet(noPins, '4.27.x', []);
+
+    expect(withDefaultArg).toBe(withExplicitEmpty);
+  });
+
+  it('still renders the ambiguous-properties note after the inheritance section when both are present', () => {
+    const both: PaletteDiff = {
+      pins: [],
+      ambiguous: [
+        {
+          name: '--tabs-item-color',
+          sites: [{ file: 'Tabs.svelte', line: 10, name: '--tabs-item-color', literal: '#666666' }]
+        }
+      ]
+    };
+    const css = renderStylesheet(both, '4.27.x', [restore]);
+
+    const restoreIndex = css.indexOf(':root { --loader-sub-text-color');
+    const ambiguousIndex = css.indexOf('Not pinned above');
+    expect(restoreIndex).toBeGreaterThan(-1);
+    expect(ambiguousIndex).toBeGreaterThan(restoreIndex);
   });
 });
 
@@ -297,4 +509,144 @@ describe('buildLegacyPalette (end to end against a real git history)', () => {
     expect(css).not.toContain('--card-description-opacity');
     expect(css).toContain('0 properties pinned below.');
   });
+
+  it('runs the BrandLoader shape end to end through the real git pipeline: pins the changed fallback, restores the newly-inherited one, and leaves an unrelated already-declared property alone', () => {
+    const { root, sha } = releaseRepo({
+      'src/lib/BrandLoader/BrandLoader.svelte': [
+        '<div class="text">{title}</div>',
+        '<div class="sub-text">{subtitle}</div>',
+        '<style>',
+        '.text { color: var(--loader-text-color, white); }',
+        '.sub-text { font-size: 0.75rem; }',
+        '</style>'
+      ].join('\n'),
+      'package.json': '{ "version": "4.27.6" }\n'
+    });
+    roots.push(root);
+
+    // Mirrors the real regression exactly: .text's fallback darkened (an
+    // ordinary pin), and .sub-text gained a color it never had at all
+    // (an inheritance restore, not a pin).
+    writeFileSync(
+      join(root, 'src/lib/BrandLoader/BrandLoader.svelte'),
+      [
+        '<div class="text">{title}</div>',
+        '<div class="sub-text">{subtitle}</div>',
+        '<style>',
+        '.text { color: var(--loader-text-color, #333333); }',
+        '.sub-text { font-size: 0.75rem; color: var(--loader-sub-text-color, #52525b); }',
+        '</style>'
+      ].join('\n')
+    );
+
+    const css = buildLegacyPalette(root, sha);
+
+    expect(css).toContain(':root { --loader-text-color: white; }   /* was the 4.27.x default */');
+    expect(css).toContain(
+      ':root { --loader-sub-text-color: ; }   /* color on .sub-text (src/lib/BrandLoader/BrandLoader.svelte:5) was inherited, never declared */'
+    );
+  });
+});
+
+// ------------------------------------------------------- against this repo's own history
+
+/**
+ * The same detector, proven against this library's own real component
+ * source and its real `origin/release` history rather than a fixture --
+ * matching how `cli.test.ts` proves `readWcComponents` against the real
+ * `src/wc/components` instead of only a synthetic one. Skipped rather than
+ * failed when `origin/release` is not fetchable in the environment this runs
+ * in, since that is an environment gap, not a defect in the detector.
+ */
+describe('findInheritanceRestores — against this repo’s own real component history', () => {
+  function repoRoot(): string {
+    // Not `new URL('../../src/...', import.meta.url)`: Vite's static analysis
+    // special-cases that literal asset-URL form and rewrites it at transform
+    // time, resolving to an unrelated http://localhost URL under vitest --
+    // the same reason cli.ts's own libraryRoot() and cli.test.ts's ownMajor()
+    // walk up with `resolve` instead. See those for the fuller note.
+    const here = fileURLToPath(import.meta.url);
+    return resolve(here, '..', '..', '..');
+  }
+
+  function releaseHasRef(): boolean {
+    try {
+      execFileSync('git', ['rev-parse', '--verify', 'origin/release^{commit}'], {
+        cwd: repoRoot(),
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function showAtRelease(relPath: string): string | null {
+    try {
+      return execFileSync('git', ['show', `origin/release:${relPath}`], {
+        cwd: repoRoot(),
+        encoding: 'utf8'
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  const hasRelease = releaseHasRef();
+
+  it.skipIf(!hasRelease)(
+    'flags BrandLoader.svelte’s real .sub-text regression against origin/release',
+    () => {
+      const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
+      const previous = showAtRelease(relPath);
+      expect(previous).not.toBeNull();
+      if (previous === null) {
+        return;
+      }
+      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
+
+      const restores = findInheritanceRestores(previous, current, relPath);
+
+      expect(
+        restores.some((r) => r.name === '--loader-sub-text-color' && r.property === 'color')
+      ).toBe(true);
+    }
+  );
+
+  it.skipIf(!hasRelease)(
+    'flags Phone.svelte’s real .phone-screen regression against origin/release -- proving the detector generalises past the one documented example',
+    () => {
+      const relPath = 'src/lib/Phone/Phone.svelte';
+      const previous = showAtRelease(relPath);
+      expect(previous).not.toBeNull();
+      if (previous === null) {
+        return;
+      }
+      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
+
+      const restores = findInheritanceRestores(previous, current, relPath);
+
+      expect(
+        restores.some((r) => r.name === '--phone-screen-color' && r.property === 'color')
+      ).toBe(true);
+    }
+  );
+
+  it.skipIf(!hasRelease)(
+    'does not flag BrandLoader’s .text -- it already had a color at origin/release, so its change is the already-covered changed-fallback case',
+    () => {
+      const relPath = 'src/lib/BrandLoader/BrandLoader.svelte';
+      const previous = showAtRelease(relPath);
+      expect(previous).not.toBeNull();
+      if (previous === null) {
+        return;
+      }
+      const current = readFileSync(join(repoRoot(), relPath), 'utf8');
+
+      const restores = findInheritanceRestores(previous, current, relPath);
+
+      expect(restores.some((r) => r.name === '--loader-text-color')).toBe(false);
+    }
+  );
 });

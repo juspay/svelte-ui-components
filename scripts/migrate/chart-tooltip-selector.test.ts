@@ -23,22 +23,35 @@ function consumerProject(files: Record<string, string>): string {
 const silent = (): void => {};
 
 describe('rewriteCss', () => {
-  it('rewrites a bare class selector', () => {
+  it('rewrites a bare class selector to the qualified .unstyled form', () => {
+    // Not bare `.chart-tooltip`: ChartTooltip.svelte gives every tooltip --
+    // default charts included -- that base class, and adds `unstyled` only for
+    // the custom-snippet wrapper `.chart-tooltip-slot` used to name
+    // exclusively. See the proof-of-leak test below for what a bare rewrite
+    // would have broken.
     expect(rewriteCss('.chart-tooltip-slot { color: red; }')).toEqual({
-      code: '.chart-tooltip { color: red; }',
+      code: '.chart-tooltip.unstyled { color: red; }',
       count: 1
     });
   });
 
   it("keeps a compound selector's combinators and structure", () => {
     const result = rewriteCss('.foo .chart-tooltip-slot > .bar { top: 0; }');
-    expect(result.code).toBe('.foo .chart-tooltip > .bar { top: 0; }');
+    expect(result.code).toBe('.foo .chart-tooltip.unstyled > .bar { top: 0; }');
     expect(result.count).toBe(1);
   });
 
-  it('rewrites a chained class selector without disturbing its neighbour', () => {
+  // The compound case the codemod fix exists for: the consumer already
+  // qualified their selector with `.portal` (targeting the portalled instance
+  // of their own custom tooltip specifically). `.unstyled` is appended right
+  // after the replaced token rather than inserted before whatever follows, so
+  // `.portal` survives exactly once, in place -- not duplicated, not
+  // reordered. A compound class selector matches on the set of tokens present
+  // regardless of their order, so `.chart-tooltip.unstyled.portal` matches
+  // precisely the same element `.chart-tooltip.portal.unstyled` would.
+  it('rewrites a chained class selector, keeping the existing qualifier exactly once', () => {
     const result = rewriteCss('.chart-tooltip-slot.portal { position: fixed; }');
-    expect(result.code).toBe('.chart-tooltip.portal { position: fixed; }');
+    expect(result.code).toBe('.chart-tooltip.unstyled.portal { position: fixed; }');
   });
 
   it('counts and rewrites every occurrence in a stylesheet', () => {
@@ -66,8 +79,27 @@ describe('rewriteCss', () => {
     const result = rewriteCss(source);
 
     expect(result.count).toBe(2);
-    expect(result.code).toContain('.chart-tooltip {');
-    expect(result.code).toContain('.chart-tooltip.portal {');
+    expect(result.code).toContain('.chart-tooltip.unstyled {');
+    expect(result.code).toContain('.chart-tooltip.unstyled.portal {');
+  });
+
+  // Proves the bug this fix closes and would FAIL under the old codemod's
+  // output. `ChartTooltip.svelte` renders BOTH tooltip branches with
+  // `class="chart-tooltip {unstyled ? 'unstyled' : ''} ..."` -- a default
+  // (non-custom-snippet) chart's rendered class list is therefore exactly
+  // `chart-tooltip` (`unstyled` false, `classes` unset), while the wrapper
+  // `.chart-tooltip-slot` used to name exclusively renders with `unstyled`
+  // present. The old codemod rewrote to bare `.chart-tooltip`, which is a
+  // subset match of BOTH class lists: a consumer rule meant only for their own
+  // custom tooltip would, after that rewrite, also style every default
+  // tooltip in every chart on the page. This asserts the corrected output is
+  // not that bare form, and does require `.unstyled` -- the one token present
+  // on the custom-snippet tooltip and absent from the default one.
+  it('rewrites to a selector that requires .unstyled, not the old bare-.chart-tooltip leak', () => {
+    const result = rewriteCss('.chart-tooltip-slot { color: red; }');
+    const oldBuggyOutput = '.chart-tooltip { color: red; }';
+    expect(result.code).not.toBe(oldBuggyOutput);
+    expect(result.code).toBe('.chart-tooltip.unstyled { color: red; }');
   });
 
   it('does not touch a longer class name sharing the token as a prefix', () => {
@@ -97,20 +129,20 @@ describe('rewriteCss', () => {
 describe('rewriteScript', () => {
   it('rewrites the selector string inside querySelector', () => {
     expect(rewriteScript("const el = root.querySelector('.chart-tooltip-slot');")).toEqual({
-      code: "const el = root.querySelector('.chart-tooltip');",
+      code: "const el = root.querySelector('.chart-tooltip.unstyled');",
       count: 1
     });
   });
 
   it('rewrites querySelectorAll, closest and matches alike, preserving quote style', () => {
     expect(rewriteScript('root.querySelectorAll(".chart-tooltip-slot .tooltip-item")').code).toBe(
-      'root.querySelectorAll(".chart-tooltip .tooltip-item")'
+      'root.querySelectorAll(".chart-tooltip.unstyled .tooltip-item")'
     );
     expect(rewriteScript('node.closest(`.chart-tooltip-slot`)').code).toBe(
-      'node.closest(`.chart-tooltip`)'
+      'node.closest(`.chart-tooltip.unstyled`)'
     );
     expect(rewriteScript("node.matches('.chart-tooltip-slot')").code).toBe(
-      "node.matches('.chart-tooltip')"
+      "node.matches('.chart-tooltip.unstyled')"
     );
   });
 
@@ -146,8 +178,8 @@ describe('rewriteSvelteFile', () => {
 
     expect(result.selectorCount).toBe(1);
     expect(result.scriptCount).toBe(1);
-    expect(result.code).toContain(':global(.chart-tooltip)');
-    expect(result.code).toContain("document.querySelector('.chart-tooltip')");
+    expect(result.code).toContain(':global(.chart-tooltip.unstyled)');
+    expect(result.code).toContain("document.querySelector('.chart-tooltip.unstyled')");
     // The consumer's own template markup is untouched -- see rewriteSvelteFile's
     // doc comment for why that class token is out of scope there.
     expect(result.code).toContain('<div class="chart-tooltip-slot">');
@@ -215,7 +247,7 @@ describe('run (CLI)', () => {
 
     expect(summary.applied).toBe(true);
     expect(readFileSync(join(root, 'src/theme.css'), 'utf8')).toBe(
-      '.chart-tooltip { color: red; }'
+      '.chart-tooltip.unstyled { color: red; }'
     );
   });
 

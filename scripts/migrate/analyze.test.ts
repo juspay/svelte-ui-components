@@ -309,7 +309,7 @@ describe('analyzeSvelte — host-display-inline', () => {
     expect(findings[0]?.detail).toContain('display: inline-block');
   });
 
-  it('does not flag the same element inside a block-level parent', () => {
+  it('does not flag a lone sui-* element inside a div — nothing to sit beside', () => {
     const source = '<div><sui-badge></sui-badge></div>';
 
     expect(analyzeSvelte(source, 'a.svelte', context)).toEqual([]);
@@ -326,6 +326,75 @@ describe('analyzeSvelte — host-display-inline', () => {
       const source = `<${tag}><sui-badge></sui-badge></${tag}>`;
       expect(analyzeSvelte(source, 'a.svelte', context), tag).toHaveLength(1);
     }
+  });
+
+  // Gap A: the detector used to look only at the parent's tag, and was silent
+  // on the single most common real shape -- a toolbar row of siblings inside
+  // a plain <div>. Verified live in Chromium: two sui-button siblings inside
+  // <div style="width:400px"> sit on one line under the old implicit inline
+  // and stack under the new block default.
+  describe('widened rule: inline-level siblings', () => {
+    const button: WcComponent = { component: 'Button', tag: 'sui-button', display: 'block' };
+    const siblingContext: AnalyzeContext = { wcComponents: [button, badge] };
+
+    it('flags two sui-* siblings inside a plain div, the toolbar-row shape', () => {
+      const source =
+        '<div style="width:400px">\n  <sui-button></sui-button>\n  <sui-button></sui-button>\n</div>';
+
+      const findings = analyzeSvelte(source, 'a.svelte', siblingContext);
+
+      expect(findings).toHaveLength(2);
+      expect(findings.every((f) => f.reason === 'host-display-inline')).toBe(true);
+    });
+
+    it('flags a sui-* element immediately beside another with no whitespace at all', () => {
+      const source = '<div><sui-button></sui-button><sui-button></sui-button></div>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toHaveLength(2);
+    });
+
+    it('flags a sui-* element next to non-whitespace text', () => {
+      const source = '<div>Status <sui-badge></sui-badge></div>';
+
+      const findings = analyzeSvelte(source, 'a.svelte', siblingContext);
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0]?.detail).toContain('beside other inline-level content');
+    });
+
+    it('flags a sui-* element next to a known inline HTML tag', () => {
+      const source = '<div><sui-badge></sui-badge><span>x</span></div>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toHaveLength(1);
+    });
+
+    it('does not flag a sui-* element next to a block-level HTML sibling', () => {
+      const source = '<div><sui-badge></sui-badge><p>x</p></div>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toEqual([]);
+    });
+
+    it('does not flag when the parent is an inline-style flex container', () => {
+      const source =
+        '<div style="display:flex"><sui-button></sui-button><sui-button></sui-button></div>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toEqual([]);
+    });
+
+    it('does not flag when the parent is an inline-style grid container', () => {
+      const source =
+        '<div style="display:grid"><sui-button></sui-button><sui-button></sui-button></div>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toEqual([]);
+    });
+
+    it('does not double-count when both the text-flow-parent and sibling rules match the same element', () => {
+      // <p> is a text-flow parent AND "Status: " is a non-whitespace sibling --
+      // this must still be exactly one finding, not two.
+      const source = '<p>Status: <sui-badge></sui-badge></p>';
+
+      expect(analyzeSvelte(source, 'a.svelte', siblingContext)).toHaveLength(1);
+    });
   });
 });
 
@@ -374,6 +443,86 @@ describe('analyzeSvelte — chart-min-width', () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]?.reason).toBe('chart-min-width');
+  });
+});
+
+// Gap B: sui-chat-composer's `recording` went from `{ type: 'Boolean', reflect:
+// true }` to `{ type: 'String' }` with no reflect -- confirmed against
+// svelte/src/internal/client/dom/elements/custom-element.js, whose reflect loop
+// is gated on `this.$$p_d[key]?.reflect`. The property setter no longer touches
+// the attribute, so `el.recording = true; el.getAttribute('recording')` went
+// from `""` to `null`. Neither analyzeSvelte nor analyzeStylesheet needs
+// wcComponents context for this one -- the tag is a hardcoded literal, the
+// same design choice `.chart-tooltip-slot` already makes for its two components.
+describe('analyzeSvelte / analyzeStylesheet — chat-composer recording reflect', () => {
+  it('flags a CSS attribute selector on the recording attribute, in a <style> block', () => {
+    const source =
+      '<div>x</div>\n<style>\n  sui-chat-composer[recording] { outline: 2px solid red; }\n</style>';
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chat-composer-recording-reflect');
+    expect(findings[0]?.line).toBe(3);
+  });
+
+  it('flags the same selector in a standalone .css file via analyzeStylesheet', () => {
+    const css = 'sui-chat-composer[recording="true"] .voice {\n  color: red;\n}\n';
+
+    const findings = analyzeStylesheet(css, 'styles/app.css');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chat-composer-recording-reflect');
+    expect(findings[0]?.file).toBe('styles/app.css');
+  });
+
+  it('does not flag an unrelated attribute selector', () => {
+    expect(analyzeStylesheet('sui-chat-composer[disabled] { opacity: 0.5; }', 'a.css')).toEqual([]);
+  });
+
+  it('flags getAttribute("recording") on what looks like a chat-composer', () => {
+    const source = [
+      `<script>`,
+      `  import { onMount } from 'svelte';`,
+      `  let el;`,
+      `  onMount(() => {`,
+      `    el = document.querySelector('sui-chat-composer');`,
+      `    console.log(el.getAttribute('recording'));`,
+      `  });`,
+      `</script>`,
+      `<div bind:this={el}></div>`
+    ].join('\n');
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chat-composer-recording-reflect');
+    expect(findings[0]?.line).toBe(6);
+  });
+
+  it('flags hasAttribute("recording") the same way', () => {
+    const source =
+      "<script>const on = document.querySelector('sui-chat-composer').hasAttribute('recording');</script>";
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chat-composer-recording-reflect');
+  });
+
+  it('does not flag getAttribute("recording") when the file never mentions sui-chat-composer', () => {
+    // Bounds the false positives this textual, co-occurrence-based check would
+    // otherwise produce: a `recording` attribute on some unrelated element.
+    const source = "<script>el.getAttribute('recording');</script>";
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('does not flag reading an unrelated attribute off a chat-composer', () => {
+    const source =
+      "<script>document.querySelector('sui-chat-composer').getAttribute('disabled');</script>";
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
   });
 });
 

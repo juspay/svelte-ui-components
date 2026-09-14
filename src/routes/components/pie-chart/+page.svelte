@@ -68,6 +68,20 @@
     };
   });
 
+  // ── Non-finite slice value demo ──────────────────────────────────
+  // "Safari" has no reading this period -- NaN marks a gap, not a
+  // fabricated 0. pieSliceValue() gives it a zero contribution to both the
+  // slice angle total and the legend row's own value/percent, instead of
+  // NaN propagating through the total reduce and turning the whole pie
+  // (every slice's angle) to NaN.
+  const marketShareGap = [
+    { label: 'Chrome', value: 65 },
+    { label: 'Safari', value: Number.NaN },
+    { label: 'Firefox', value: 8 },
+    { label: 'Edge', value: 5 },
+    { label: 'Other', value: 3 }
+  ];
+
   // ── Highlight hook demo ────────────────────────────────────────
   let chartApi: ChartHighlightAPI | null = $state(null);
   let highlightedSlice = $state<number | null>(null);
@@ -148,6 +162,24 @@
       <p>No distribution data yet.</p>
     {/snippet}
   </PieChart>
+</div>
+
+<h3>Non-finite slice value — degrades to a zero-size slice, not NaN geometry</h3>
+<p>
+  "Safari" has no reading this period (<code>NaN</code>). <code>pieSliceValue()</code> gives it a
+  zero contribution to the total, so every other slice keeps its correct proportion of the circle
+  instead of one <code>NaN</code> propagating through the total reduce and breaking every slice's
+  angle. The legend row for "Safari" itself reads <code>0</code> / <code>0%</code>, not
+  <code>NaN</code>.
+</p>
+<div class="demo-row" style="max-width: 560px;">
+  <PieChart
+    data={marketShareGap}
+    innerRadius={0.5}
+    showLegend
+    legendShowValues
+    testId="pie-nonfinite-chart"
+  />
 </div>
 
 <h3>Delta Badge — positive change</h3>

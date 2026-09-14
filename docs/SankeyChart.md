@@ -156,6 +156,28 @@ tooltip:
 `tooltipPortal` only changes where the tooltip wrapper renders — it has no effect on
 `tooltipSnippet`'s content, so a custom tooltip snippet keeps working unchanged.
 
+## Invalid values
+
+A link `value` that is not a real number (`NaN`, `Infinity`, `-Infinity`), or
+is negative, **contributes 0**. The link is still present in the graph but
+carries no volume, so it renders at the minimum link width rather than
+disappearing — which keeps the node it connects in the layout.
+
+Every other link and node keeps its correct geometry.
+
+A Sankey diagram is where this mattered most, because the damage travelled
+furthest. Node positions are computed column by column, and a per-column
+recentring step propagates a shift across _every_ node in that column; a
+relaxation pass then carries each column's positions into the next. One
+invalid link value therefore reached nodes two columns downstream whose own
+links were entirely finite — in a five-node graph, all five nodes ended with
+`y=NaN` and every link path contained literal `NaN` coordinates. See
+[Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
+
+A graph whose links are _all_ invalid is still distinguishable from a
+genuinely empty one: an empty graph renders the empty state, while an invalid
+one renders its nodes at minimum width.
+
 ## Props
 
 | Prop                 | Type                                                    | Required | Default     | Description                                                                                                                                                                                                                                                                                                                                             |

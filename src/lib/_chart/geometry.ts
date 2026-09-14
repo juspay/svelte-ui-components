@@ -120,12 +120,25 @@ export function computeAutoLayout(input: AutoLayoutInput): AutoLayout {
 
 // ── Pie layout ──────────────────────────────────────────────────
 
+// Pie/funnel/sankey are value-accumulating charts: per docs/CHART_INPUT_POLICY.md
+// a negative contribution has no visual meaning and is a 0 contribution, and
+// (per computeStackedValues' precedent for this file) the same treatment is
+// extended to non-finite values here rather than excluding them as a gap --
+// unlike LineChart/AreaChart, a pie slice has no x-position to drop and
+// omitting a data row would shift every later slice's array index instead of
+// just rendering that one slice as zero-size. Exported so PieChart.svelte's
+// independent total (feeds isEmpty and the percentage denominator) can't drift
+// from this one -- two copies of an unguarded reduce is exactly how the
+// original defect stayed invisible in half the places it needed the guard.
+export const pieSliceValue = (value: number): number =>
+  Number.isFinite(value) && value > 0 ? value : 0;
+
 export function computePieLayout(
   data: Array<{ label: string; value: number; color?: string }>,
   startAngle: number = -Math.PI / 2,
   padAngle: number = 0
 ): PieSliceLayout[] {
-  const total = data.reduce((sum, d) => sum + Math.max(0, d.value), 0);
+  const total = data.reduce((sum, d) => sum + pieSliceValue(d.value), 0);
   if (total === 0) {
     return [];
   }
@@ -135,7 +148,7 @@ export function computePieLayout(
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i];
-    const val = Math.max(0, d.value);
+    const val = pieSliceValue(d.value);
     const sliceAngle = (val / total) * Math.PI * 2;
     const start = angle + padAngle / 2;
     const end = angle + sliceAngle - padAngle / 2;
@@ -159,7 +172,7 @@ export function computePieLayout(
 
 export function computeSankeyLayout(
   nodes: Array<{ id: string; label?: string; color?: string }>,
-  links: Array<{ source: string; target: string; value: number; color?: string }>,
+  rawLinks: Array<{ source: string; target: string; value: number; color?: string }>,
   width: number,
   height: number,
   nodeWidth: number = 16,
@@ -170,6 +183,21 @@ export function computeSankeyLayout(
   if (nodes.length === 0) {
     return { nodes: [], links: [] };
   }
+
+  // Single choke point: every downstream read of a link's value -- adjacency,
+  // node heights, the relaxation loop's weighted centring, link widths, and
+  // the returned links themselves -- goes through this sanitized array, not
+  // the raw prop. A non-finite value that reached any one of those sites was
+  // enough to broadcast NaN to the whole diagram (the per-column recentre
+  // step below spreads one node's NaN to every node sharing its column, and
+  // the relaxation loop then carries that into every downstream column too),
+  // so guarding only the site that happened to be probed was not sufficient.
+  // Zero-contribution, not gap-exclusion: matches computeStackedValues'
+  // precedent for this file (see pieSliceValue above) since a link has no
+  // x-position to drop the way a LineChart/AreaChart gap point does.
+  const links = rawLinks.map((l) =>
+    Number.isFinite(l.value) && l.value >= 0 ? l : { ...l, value: 0 }
+  );
 
   // Build adjacency
   const outgoing = new Map<string, Array<{ target: string; value: number }>>();
@@ -242,7 +270,12 @@ export function computeSankeyLayout(
     }
   }
   if (!Number.isFinite(pxPerValue)) {
-    // All-zero data: nothing carries volume, every bar collapses to the minimum.
+    // Nothing carries volume in any column, so every bar collapses to the
+    // minimum. Two different inputs land here: genuinely all-zero data, and
+    // a graph where every link was non-finite/negative and sanitized to 0
+    // above -- both reduce to the same "no volume anywhere" state, and the
+    // same minimum-width fallback is the correct degenerate render for
+    // either one (never NaN), so they do not need to stay distinguishable.
     pxPerValue = 0;
   }
 

@@ -254,6 +254,17 @@
 
   let isStackedMode = $derived(isMulti && groupMode === 'stacked');
 
+  /**
+   * A stacked bar's contribution to its category total and running baseline.
+   * Mirrors computeStackedValues' precedent (geometry.ts): in a value-accumulating
+   * stack, a negative or non-finite value has no well-defined height, so it
+   * contributes 0 rather than poisoning stackBase for every series stacked
+   * above it in the same category (Math.max(0, NaN) is NaN, not 0).
+   */
+  function stackContribution(value: number): number {
+    return Number.isFinite(value) ? Math.max(0, value) : 0;
+  }
+
   function getDisplayValue(bar: BarRect): string {
     if (typeof bar.dataPoint.valueLabel === 'string' && bar.dataPoint.valueLabel.length > 0) {
       return bar.dataPoint.valueLabel;
@@ -278,7 +289,10 @@
         return [0, 100];
       }
       const totalsPerLabel = labels.map((_, labelIndex) =>
-        visibleEntries.reduce((sum, { s }) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
+        visibleEntries.reduce(
+          (sum, { s }) => sum + stackContribution(s.data[labelIndex]?.value ?? 0),
+          0
+        )
       );
       return niceLinearDomain(0, Math.max(0, ...totalsPerLabel));
     }
@@ -293,10 +307,15 @@
         }
       }
     }
-    if (all.length === 0) {
+    // Non-finite values (NaN/Infinity) mark gap points; exclude them here so
+    // one bad point cannot poison the whole extent (Math.min/max propagate
+    // NaN, and Infinity passes right through a max comparison). Matches the
+    // LineChart/AreaChart call-site filter.
+    const finite = all.filter((v) => Number.isFinite(v));
+    if (finite.length === 0) {
       return [0, 1];
     }
-    return niceLinearDomain(Math.min(0, ...all), Math.max(0, ...all));
+    return niceLinearDomain(Math.min(0, ...finite), Math.max(0, ...finite));
   });
 
   let valTickCount = $derived(
@@ -421,7 +440,10 @@
       }
     } else if (isMulti && groupMode === 'stacked') {
       const categoryTotals = labels.map((_, labelIndex) =>
-        visibleEntries.reduce((sum, { s }) => sum + Math.max(0, s.data[labelIndex]?.value ?? 0), 0)
+        visibleEntries.reduce(
+          (sum, { s }) => sum + stackContribution(s.data[labelIndex]?.value ?? 0),
+          0
+        )
       );
       const stackBase = new Array(labels.length).fill(0);
       for (let vi = 0; vi < visibleEntries.length; vi++) {
@@ -429,7 +451,7 @@
         const seriesFill: BarFill = s.color ?? getColor(si);
         for (let pi = 0; pi < s.data.length; pi++) {
           const d = s.data[pi];
-          const rawVal = Math.max(0, d.value);
+          const rawVal = stackContribution(d.value);
           const normalizedValue = isNormalized
             ? categoryTotals[pi] > 0
               ? (rawVal / categoryTotals[pi]) * 100

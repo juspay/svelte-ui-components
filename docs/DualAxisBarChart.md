@@ -125,6 +125,21 @@ renders nothing rather than `NaN` or a fabricated `0`, `sum` included.
 />
 ```
 
+## Invalid values
+
+A value that is not a real number (`NaN`, `Infinity`, `-Infinity`) is
+**excluded from the auto-computed domain** of whichever axis it belongs to.
+Its own bar is absent; every other bar on both axes keeps its correct height,
+and both value axes keep their ticks.
+
+Each axis computes its domain independently, so an invalid value on the left
+axis cannot affect the right axis's scale — and vice versa.
+
+Before this was enforced, one `NaN` collapsed the affected axis's entire
+domain to `[NaN, NaN]`, which made every bar on that axis render an invalid,
+unpainted SVG path while its ticks disappeared. See
+[Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
+
 ## Props
 
 | Prop              | Type                                | Required | Default                                        | Description                                                                                                                                                                                                                  |

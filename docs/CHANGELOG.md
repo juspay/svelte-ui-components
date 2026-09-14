@@ -2,7 +2,40 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.3)
+
+#619 changed the default label and banner colour from #637c95 to #4d6174, and
+the visual suite passed 94/94 without rewriting anything. It was not wrong to:
+the per-pixel YIQ delta is 354.6, and `toHaveScreenshot`'s `threshold` defaults
+to 0.2, which admits 1408.6 before a pixel counts as different at all.
+`maxDiffPixelRatio: 0` bounds how many pixels may exceed that, not whether a
+pixel differs.
+
+The consequence is that release carried baselines asserting the WCAG failure
+#619 fixed -- banner.png held 292 pixels of #637c95 over 8,228 differing
+pixels, input.png 186 over 8,351 -- with a green gate.
+
+`--update-snapshots` does not repair this. Verified non-vacuously: five tests
+executed and passed against input.png's known 354.6 drift and wrote nothing,
+because the update path applies the same threshold as the assertion. Deleting
+the PNG does work, since a missing baseline is not a comparison.
+
+Only colour moved. At exact-match tolerance input goes 186 px of the old colour
+to 186 of the new, banner 292 to 289, and both keep their dimensions -- so the
+regeneration carried no geometry change with it.
+
+Not fixing the threshold here. Measured across two full container captures, the
+suite's own capture noise reaches 1314.3 on `hitl` against a limit of 1408.6, so
+0.2 is very nearly calibrated to this renderer's non-determinism and tightening
+it would trade colour detection for a flaky suite. That trade-off, and the fact
+that colour belongs in unit assertions rather than screenshots, is issue #622.
+
+Verified: scripts/visual-test.sh 94/94 passed on the regenerated baselines.
+
+-
+test(visual): refresh the two baselines that still assert the pre-AA colour ([9480135](https://github.com/juspay/svelte-ui-components/commit/9480135ebc92476e657fefbbfbf5c09a37d3b1c7))
+
+## [4.27.3](https://github.com/juspay/svelte-ui-components/compare/4.27.3..4.27.2) - 14 September 2026
 
 Two accessibility defects found while auditing the session's own closure, both
 verified against the merged tree rather than taken from a review comment.

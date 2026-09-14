@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { intersects } from 'semver';
 import { parse } from 'svelte/compiler';
 
@@ -9,7 +11,15 @@ export const SVELTE_PEER_RANGE = '^5.41.2';
 export type FindingReason =
   | 'default-back-control'
   | 'indeterminate-spread'
-  | 'legacy-back-selector';
+  | 'legacy-back-selector'
+  /** InputButton's `mandatory` now also sets native required/aria-required. */
+  | 'inputbutton-mandatory'
+  /** A stylesheet reaches into PieChart/SankeyChart's renamed tooltip class. */
+  | 'chart-tooltip-slot-selector'
+  /** A `sui-*` element used where the browser's old implicit inline mattered. */
+  | 'host-display-inline'
+  /** A chart's new 160px floor will overflow a narrower flex/grid cell. */
+  | 'chart-min-width';
 
 export type Finding = {
   readonly file: string;
@@ -124,22 +134,101 @@ export function analyzeManifest(manifest: unknown): ManifestReport {
   return { currentRange, svelteRange, blockers };
 }
 
-/** Local names bound to the library's Toolbar export in this file. */
-function toolbarNames(source: string): ReadonlySet<string> {
-  const names = new Set<string>();
+/**
+ * One `src/wc/components/*.wc.svelte` wrapper, as the 4.0.0 generator actually
+ * built it: which Svelte component it wraps, the custom-element tag it
+ * registered, and the `:host` display default it gave that tag.
+ */
+export type WcComponent = {
+  readonly component: string;
+  readonly tag: string;
+  readonly display: 'block' | 'inline-block';
+};
+
+/**
+ * Reads the {component, tag, display} of every `sui-*` wrapper straight from
+ * `src/wc/components`, rather than hardcoding the 98 -- a hardcoded list drifts
+ * the moment a component is added, renamed, or its display default changes,
+ * and would then silently under- or over-report `host-display-inline`,
+ * `chart-min-width`, and the `<sui-input-button>` spelling below it.
+ *
+ * `repoRoot` is this library's OWN repo root, not the consumer root the CLI is
+ * pointed at -- the wrapper sources this reads exist only here. A root that
+ * does not resolve to a checkout with these sources (a published tree with no
+ * `src/`, say) yields `[]` rather than a guess: the detectors that depend on
+ * this list then simply find nothing, which is what "the source of truth
+ * that used to answer this question is not present" ought to mean here.
+ */
+export function readWcComponents(repoRoot: string): readonly WcComponent[] {
+  const dir = join(repoRoot, 'src/wc/components');
+  let entries: readonly string[];
+  try {
+    entries = readdirSync(dir).filter((name) => name.endsWith('.wc.svelte'));
+  } catch {
+    return [];
+  }
+
+  const components: WcComponent[] = [];
+  for (const file of entries) {
+    const component = file.slice(0, -'.wc.svelte'.length);
+    const source = readFileSync(join(dir, file), 'utf8');
+
+    // The wrapped component's own name, read off the import that brings it in
+    // -- `Card.wc.svelte` always imports `Card` from `$lib/Card/Card.svelte` --
+    // rather than assumed equal to the filename, so a wrapper that diverges
+    // from that convention is skipped instead of silently mismatched.
+    const importPattern = new RegExp(
+      `import\\s+\\w+\\s+from\\s+'\\$lib/${component}/${component}\\.svelte'`
+    );
+    const tagMatch = /tag:\s*'([^']+)'/.exec(source);
+    const displayMatch = /display:\s*var\(--sui-[\w-]+-display,\s*(block|inline-block)\)/.exec(
+      source
+    );
+    if (!importPattern.test(source) || tagMatch === null || displayMatch === null) {
+      continue;
+    }
+    components.push({
+      component,
+      tag: tagMatch[1],
+      display: displayMatch[1] === 'inline-block' ? 'inline-block' : 'block'
+    });
+  }
+  return components;
+}
+
+export type AnalyzeContext = {
+  readonly wcComponents: readonly WcComponent[];
+};
+
+/**
+ * Default context for callers that only care about the Toolbar/InputButton
+ * checks reachable through a named import: those never need the wrapper list,
+ * and every existing caller of `analyzeSvelte` predates its existence.
+ */
+const EMPTY_CONTEXT: AnalyzeContext = { wcComponents: [] };
+
+const EMPTY_NAMES: ReadonlySet<string> = new Set();
+
+/** Local names this file binds to each of the library's named imports. */
+function importedNames(source: string): ReadonlyMap<string, ReadonlySet<string>> {
+  const byExport = new Map<string, Set<string>>();
   const importPattern = new RegExp(
     `import\\s*\\{([^}]*)\\}\\s*from\\s*['"]${LIBRARY.replace('/', '\\/')}['"]`,
     'g'
   );
   for (const match of source.matchAll(importPattern)) {
     for (const clause of match[1].split(',')) {
-      const [imported, local] = clause.split(/\s+as\s+/).map((part) => part.trim());
-      if (imported === 'Toolbar') {
-        names.add(local ?? imported);
+      const trimmed = clause.trim();
+      if (trimmed.length === 0) {
+        continue;
       }
+      const [imported, local] = trimmed.split(/\s+as\s+/).map((part) => part.trim());
+      const set = byExport.get(imported) ?? new Set<string>();
+      set.add(local ?? imported);
+      byExport.set(imported, set);
     }
   }
-  return names;
+  return byExport;
 }
 
 function lineOf(source: string, offset: number): number {
@@ -213,83 +302,414 @@ function walk(node: unknown, visit: (node: UnknownRecord) => void): void {
   }
 }
 
+/** An enclosing `RegularElement`, tracked so a node can ask "what tag is my nearest element ancestor". */
+type ElementAncestor = {
+  readonly name: string;
+  readonly node: UnknownRecord;
+};
+
 /**
- * Finds everything in one `.svelte` file that 3.0.0's Toolbar change affects.
+ * Same traversal as `walk`, threading the nearest enclosing `RegularElement`
+ * down to every visitor call. `host-display-inline` and `chart-min-width` both
+ * turn on "what does the immediate parent look like", which a parent-blind
+ * walk cannot answer -- kept separate from `walk` itself rather than adding a
+ * parameter there, so the existing Toolbar traversal is untouched.
  *
- * The change is narrow: with no `backIcon`, the default back control went from
- * `<div role="button"><img src="…cdn…"></div>` to `<button aria-label><svg/></button>`.
- * So a usage only matters when that control actually renders — which rules out
- * `showBackButton={false}` and any caller-supplied `backIcon`, both of which
- * keep their previous behaviour exactly.
+ * Non-element wrapper nodes (`IfBlock`, `EachBlock`, a `Component`) pass the
+ * ancestor through unchanged: an `{#if}` or another component between a chart
+ * and its styled `<div>` doesn't change which DOM element the chart actually
+ * lands inside.
  */
-export function analyzeSvelte(source: string, file: string): readonly Finding[] {
-  const names = toolbarNames(source);
-  if (names.size === 0) {
-    return [];
+function walkWithParent(
+  node: unknown,
+  parent: ElementAncestor | null,
+  visit: (node: UnknownRecord, parent: ElementAncestor | null) => void
+): void {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      walkWithParent(child, parent, visit);
+    }
+    return;
+  }
+  const record = asRecord(node);
+  if (typeof record.type !== 'string') {
+    return;
+  }
+  visit(record, parent);
+  const nextParent: ElementAncestor | null =
+    record.type === 'RegularElement' && typeof record.name === 'string'
+      ? { name: record.name, node: record }
+      : parent;
+  for (const value of Object.values(record)) {
+    if (typeof value === 'object' && value !== null) {
+      walkWithParent(value, nextParent, visit);
+    }
+  }
+}
+
+const CHART_TOOLTIP_SLOT_DETAIL =
+  "selector targets '.chart-tooltip-slot'; PieChart/SankeyChart's custom-tooltip " +
+  "wrapper is now '.chart-tooltip.unstyled' (plus '.portal' when tooltipPortal is set)";
+
+/**
+ * `.chart-tooltip-slot` findings inside one block of CSS text (a `.css` file's
+ * whole contents, or one `<style>` block's contents). `cssOffset` bridges CSS
+ * offsets back to `source` offsets for a `<style>` block, where the two differ
+ * by the length of everything before the block; it is `0` for a standalone
+ * `.css` file, where they are the same text.
+ */
+function chartTooltipSlotFindings(
+  css: string,
+  file: string,
+  source: string,
+  cssOffset: number
+): Finding[] {
+  const findings: Finding[] = [];
+  for (const match of css.matchAll(/\.chart-tooltip-slot\b/g)) {
+    findings.push({
+      file,
+      line: lineOf(source, cssOffset + match.index),
+      reason: 'chart-tooltip-slot-selector',
+      detail: CHART_TOOLTIP_SLOT_DETAIL
+    });
+  }
+  return findings;
+}
+
+type StyleBlock = {
+  readonly content: string;
+  readonly contentStart: number;
+};
+
+function styleBlocks(source: string): readonly StyleBlock[] {
+  const blocks: StyleBlock[] = [];
+  for (const match of source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) {
+    // match.index points at the opening <style> tag, while the content starts
+    // further in by the tag's own (variable) length -- bridged here or a
+    // multiline block reports the tag's line instead of the content's.
+    const contentStart = match.index + match[0].indexOf(match[1]);
+    blocks.push({ content: match[1], contentStart });
+  }
+  return blocks;
+}
+
+/**
+ * Checks a `<InputButton>` / `<sui-input-button>` node for the 4.0.0 defect:
+ * `mandatory` used to draw only a decorative asterisk, and now also sets
+ * native `required`/`aria-required` (`typeof required === 'boolean' ?
+ * required : mandatory === true` -- `required` wins whenever it is passed at
+ * all, matching its declared `boolean` prop type). A form that relied on
+ * submitting this field empty now fails client-side validation.
+ */
+function inputButtonFinding(
+  node: UnknownRecord,
+  displayName: string,
+  file: string,
+  source: string
+): Finding | null {
+  const attributes = Array.isArray(node.attributes) ? node.attributes : [];
+  let hasRequired = false;
+  let mandatoryTruthy = false;
+
+  for (const raw of attributes) {
+    const attribute = asRecord(raw);
+    if (attribute.type === 'SpreadAttribute') {
+      const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
+      return {
+        file,
+        line,
+        reason: 'indeterminate-spread',
+        detail: `<${displayName}> spreads props, so mandatory/required cannot be read statically — confirm by hand`
+      };
+    }
+    if (attribute.name === 'required') {
+      hasRequired = true;
+    }
+    if (attribute.name === 'mandatory') {
+      // A literal `mandatory={false}` behaves identically before and after
+      // 4.0.0 (no asterisk then, no `required` now), so it is not a defect.
+      mandatoryTruthy = !isFalseLiteral(attribute.value);
+    }
   }
 
+  if (hasRequired || !mandatoryTruthy) {
+    return null;
+  }
+  const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
+  return {
+    file,
+    line,
+    reason: 'inputbutton-mandatory',
+    detail: `<${displayName}> passes mandatory without required — mandatory now also sets native required/aria-required on the underlying Input, so a form that used to submit this field empty will fail client-side validation`
+  };
+}
+
+const TEXT_FLOW_ELEMENTS: ReadonlySet<string> = new Set([
+  'p',
+  'span',
+  'li',
+  'td',
+  'label',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'a',
+  'button'
+]);
+
+function hostDisplayInlineFinding(
+  node: UnknownRecord,
+  wc: WcComponent,
+  parent: ElementAncestor,
+  file: string,
+  source: string
+): Finding {
+  const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
+  return {
+    file,
+    line,
+    reason: 'host-display-inline',
+    detail:
+      `<${wc.tag}> is a direct child of <${parent.name}>, a text-flow element — the wrapper ` +
+      `now declares display: ${wc.display} (previously the browser's implicit inline for an ` +
+      `unknown element), which can change this line's layout; override with --${wc.tag}-display ` +
+      'if inline is still wanted'
+  };
+}
+
+/**
+ * A parent's inline `width`/`flex-basis`, when it is a plain literal string
+ * (`style="width: 120px"`) below the chart's new 160px floor. Anything else --
+ * a bound style, a `style:width` directive, a percentage or `rem` value, a
+ * class-based width -- is not readable from this file alone and is not
+ * reported, rather than guessed.
+ */
+function inlineNarrowWidth(
+  parent: UnknownRecord
+): { readonly property: string; readonly px: number } | null {
+  const attributes = Array.isArray(parent.attributes) ? parent.attributes : [];
+  for (const raw of attributes) {
+    const attribute = asRecord(raw);
+    if (attribute.type !== 'Attribute' || attribute.name !== 'style') {
+      continue;
+    }
+    const value = attribute.value;
+    if (!Array.isArray(value) || value.length !== 1) {
+      continue;
+    }
+    const text = asRecord(value[0]);
+    if (text.type !== 'Text' || typeof text.data !== 'string') {
+      continue;
+    }
+    const match = /(width|flex-basis)\s*:\s*(\d+(?:\.\d+)?)px/.exec(text.data);
+    if (match === null) {
+      continue;
+    }
+    const px = Number(match[2]);
+    if (px < 160) {
+      return { property: match[1], px };
+    }
+  }
+  return null;
+}
+
+function chartMinWidthFinding(
+  node: UnknownRecord,
+  componentName: string,
+  parent: ElementAncestor | null,
+  file: string,
+  source: string
+): Finding | null {
+  if (parent === null) {
+    return null;
+  }
+  const narrow = inlineNarrowWidth(parent.node);
+  if (narrow === null) {
+    return null;
+  }
+  const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
+  return {
+    file,
+    line,
+    reason: 'chart-min-width',
+    detail:
+      `<${componentName}> renders inside a <${parent.name}> with an inline ${narrow.property} ` +
+      `of ${narrow.px}px — the chart's new 160px min-width (--chart-min-width) will overflow it ` +
+      'instead of shrinking to fit'
+  };
+}
+
+/**
+ * Finds everything in one `.svelte` file that a 3.x-or-later change affects,
+ * across every reason this module knows about.
+ *
+ * `context.wcComponents` (from `readWcComponents`, over THIS library's own
+ * `src/wc/components`) is what lets `host-display-inline`, `chart-min-width`'s
+ * `<sui-*-chart>` form, and the `<sui-input-button>` spelling of
+ * `inputbutton-mandatory` recognise a raw custom-element tag; without it
+ * (the default) only the named-import forms — `<Toolbar>`, `<InputButton>`,
+ * `<PieChart>` and friends — are reachable, since only a resolved import name
+ * is available for free.
+ */
+export function analyzeSvelte(
+  source: string,
+  file: string,
+  context: AnalyzeContext = EMPTY_CONTEXT
+): readonly Finding[] {
   const findings: Finding[] = [];
+
+  // Textual and independent of every other check: a stylesheet can select
+  // `.chart-tooltip-slot` without this file rendering PieChart/SankeyChart
+  // itself (a shared global stylesheet, say), so this must not be gated behind
+  // a chart import the way legacy-back-selector below is gated behind Toolbar.
+  const blocks = styleBlocks(source);
+  for (const block of blocks) {
+    findings.push(...chartTooltipSlotFindings(block.content, file, source, block.contentStart));
+  }
+
+  const byExport = importedNames(source);
+  const toolbarNames = byExport.get('Toolbar') ?? EMPTY_NAMES;
+  const inputButtonNames = byExport.get('InputButton') ?? EMPTY_NAMES;
+
+  const chartComponents = context.wcComponents.filter((wc) => wc.component.endsWith('Chart'));
+  const chartLocalNames = new Map<string, string>();
+  for (const chart of chartComponents) {
+    for (const local of byExport.get(chart.component) ?? EMPTY_NAMES) {
+      chartLocalNames.set(local, chart.component);
+    }
+  }
+  const chartTagToComponent = new Map(chartComponents.map((wc) => [wc.tag, wc.component] as const));
+  const hostTagMap = new Map(context.wcComponents.map((wc) => [wc.tag, wc] as const));
+  const inputButtonTag =
+    context.wcComponents.find((wc) => wc.component === 'InputButton')?.tag ?? null;
+
+  const mightUseCustomElement = hostTagMap.size > 0 && source.includes('sui-');
+  const needsAst =
+    toolbarNames.size > 0 ||
+    inputButtonNames.size > 0 ||
+    chartLocalNames.size > 0 ||
+    mightUseCustomElement;
+  if (!needsAst) {
+    return findings;
+  }
 
   let ast: unknown;
   try {
     ast = parse(source, { modern: true });
   } catch {
-    return [
-      {
-        file,
-        line: 1,
-        reason: 'indeterminate-spread',
-        detail: 'file could not be parsed; review this Toolbar usage by hand'
-      }
-    ];
+    findings.push({
+      file,
+      line: 1,
+      reason: 'indeterminate-spread',
+      detail: 'file could not be parsed; review this usage by hand'
+    });
+    return findings;
   }
 
-  walk(ast, (node) => {
-    if (node.type !== 'Component' || typeof node.name !== 'string' || !names.has(node.name)) {
-      return;
-    }
-    const { explicitlyDisabled, hasOwnIcon, hasSpread } = summarize(node);
-    const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
+  // Toolbar: unchanged traversal, kept on the original parent-blind `walk` --
+  // this check never needed to know its parent, and reusing the newer,
+  // ancestor-tracking walker here would be a change with nothing to show for it.
+  if (toolbarNames.size > 0) {
+    walk(ast, (node) => {
+      if (
+        node.type !== 'Component' ||
+        typeof node.name !== 'string' ||
+        !toolbarNames.has(node.name)
+      ) {
+        return;
+      }
+      const { explicitlyDisabled, hasOwnIcon, hasSpread } = summarize(node);
+      const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
 
-    if (explicitlyDisabled || hasOwnIcon) {
-      return;
-    }
-    if (hasSpread) {
+      if (explicitlyDisabled || hasOwnIcon) {
+        return;
+      }
+      if (hasSpread) {
+        findings.push({
+          file,
+          line,
+          reason: 'indeterminate-spread',
+          detail: `<${node.name}> spreads props, so showBackButton/backIcon cannot be read statically — confirm by hand`
+        });
+        return;
+      }
       findings.push({
         file,
         line,
-        reason: 'indeterminate-spread',
-        detail: `<${node.name}> spreads props, so showBackButton/backIcon cannot be read statically — confirm by hand`
+        reason: 'default-back-control',
+        detail: `<${node.name}> renders the default back control, whose markup changed from <div><img></div> to <button><svg></button>`
       });
-      return;
-    }
-    findings.push({
-      file,
-      line,
-      reason: 'default-back-control',
-      detail: `<${node.name}> renders the default back control, whose markup changed from <div><img></div> to <button><svg></button>`
     });
-  });
 
-  // Styles are checked textually: a selector reaching into the back control's
-  // markup breaks regardless of which Toolbar instance it was written for.
-  const styleMatch = /<style[^>]*>([\s\S]*?)<\/style>/g;
-  for (const match of source.matchAll(styleMatch)) {
-    const legacy = /\.back[^{}]*\bimg\b/.exec(match[1]);
-    if (legacy !== null) {
-      // legacy.index is an offset into the style CONTENT, while match.index
-      // points at the opening <style> tag, so the two must be bridged by the
-      // tag's own length or a multiline block reports the tag's line instead.
-      const contentStart = match.index + match[0].indexOf(match[1]);
-      findings.push({
-        file,
-        line: lineOf(source, contentStart + legacy.index),
-        reason: 'legacy-back-selector',
-        detail:
-          'selector targets an <img> inside the back control; the default control now renders an inline <svg>'
-      });
+    // Styles are checked textually: a selector reaching into the back control's
+    // markup breaks regardless of which Toolbar instance it was written for.
+    for (const block of blocks) {
+      const legacy = /\.back[^{}]*\bimg\b/.exec(block.content);
+      if (legacy !== null) {
+        findings.push({
+          file,
+          line: lineOf(source, block.contentStart + legacy.index),
+          reason: 'legacy-back-selector',
+          detail:
+            'selector targets an <img> inside the back control; the default control now renders an inline <svg>'
+        });
+      }
     }
   }
 
+  walkWithParent(ast, null, (node, parent) => {
+    if (node.type === 'Component' && typeof node.name === 'string') {
+      if (inputButtonNames.has(node.name)) {
+        const finding = inputButtonFinding(node, node.name, file, source);
+        if (finding !== null) {
+          findings.push(finding);
+        }
+      }
+      const chartComponent = chartLocalNames.get(node.name);
+      if (typeof chartComponent !== 'undefined') {
+        const finding = chartMinWidthFinding(node, node.name, parent, file, source);
+        if (finding !== null) {
+          findings.push(finding);
+        }
+      }
+      return;
+    }
+    if (node.type === 'RegularElement' && typeof node.name === 'string') {
+      if (node.name === inputButtonTag) {
+        const finding = inputButtonFinding(node, node.name, file, source);
+        if (finding !== null) {
+          findings.push(finding);
+        }
+      }
+      const chartTagComponent = chartTagToComponent.get(node.name);
+      if (typeof chartTagComponent !== 'undefined') {
+        const finding = chartMinWidthFinding(node, node.name, parent, file, source);
+        if (finding !== null) {
+          findings.push(finding);
+        }
+      }
+      const hostDefault = hostTagMap.get(node.name);
+      if (
+        typeof hostDefault !== 'undefined' &&
+        parent !== null &&
+        TEXT_FLOW_ELEMENTS.has(parent.name)
+      ) {
+        findings.push(hostDisplayInlineFinding(node, hostDefault, parent, file, source));
+      }
+    }
+  });
+
   return findings;
+}
+
+/**
+ * `chart-tooltip-slot-selector` in a standalone `.css` file. Split out from
+ * `analyzeSvelte` because a `.css` file has no `<style>` tags to locate first
+ * — its whole content already is the CSS.
+ */
+export function analyzeStylesheet(source: string, file: string): readonly Finding[] {
+  return chartTooltipSlotFindings(source, file, source, 0);
 }

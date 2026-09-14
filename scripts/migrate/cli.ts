@@ -1,25 +1,62 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { pathToFileURL } from 'node:url';
-import { analyzeManifest, analyzeSvelte, LIBRARY, type Finding } from './analyze.ts';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  analyzeManifest,
+  analyzeStylesheet,
+  analyzeSvelte,
+  LIBRARY,
+  readWcComponents,
+  type AnalyzeContext,
+  type Finding
+} from './analyze.ts';
 
-const TARGET_RANGE = '^3.0.0';
+/**
+ * The range `--apply` writes, derived from this library's own version rather
+ * than written down.
+ *
+ * It used to be the literal `'^3.0.0'`, correct when the 3.x migration shipped
+ * and silently wrong from 4.0.0 on: the tool spent the whole 4.x line offering
+ * to move consumers of 4.27.x *back* to ^3.0.0, and nothing caught it because a
+ * hardcoded range is always a well-formed range. Reading the major from the
+ * package this file ships inside cannot drift the same way -- a release that
+ * bumps the major moves this with it.
+ */
+function targetRange(): string {
+  const manifest: unknown = JSON.parse(readFileSync(join(libraryRoot(), 'package.json'), 'utf8'));
+  const version =
+    typeof manifest === 'object' && manifest !== null && 'version' in manifest
+      ? manifest.version
+      : null;
+  if (typeof version !== 'string') {
+    throw new Error('cannot read this library’s own version from package.json');
+  }
+  const major = version.split('.')[0];
+  if (major === '' || Number.isNaN(Number(major))) {
+    throw new Error(`unreadable version in package.json: ${version}`);
+  }
+  return `^${major}.0.0`;
+}
+
+const TARGET_RANGE = targetRange();
 
 const USAGE = [
   'Usage: node scripts/migrate/cli.ts [--apply] [--target <range>] <consumer path>',
   '',
-  `Reports what a consumer must do to move to ${LIBRARY} 3.x, and can apply the`,
+  `Reports what a consumer must do to move to ${LIBRARY} ${TARGET_RANGE}, and can apply the`,
   'dependency bump. Reports by default; nothing is written without --apply.',
   '',
   '  --apply           write the new version range into package.json',
   `  --target <range>  version range to move to (default ${TARGET_RANGE})`,
   '  --help            show this help',
   '',
-  'The only breaking change in 3.0.0 is Toolbar: with no `backIcon`, the default',
-  'back control moved from <div role="button"><img></div> to',
-  '<button aria-label><svg></button>. Usages that pass showBackButton={false} or',
-  'their own backIcon are unaffected and are not reported.'
+  "Scans .svelte files for: Toolbar's changed default back control;",
+  "InputButton's mandatory prop now also setting native required; a sui-*",
+  "custom element used where the browser's old implicit inline mattered; and",
+  'a chart rendered into a parent narrower than its new 160px floor. Also',
+  'scans .svelte and .css files for the renamed chart tooltip slot selector.',
+  'See scripts/migrate/README.md for the full reason table.'
 ].join('\n');
 
 const SKIP = new Set([
@@ -34,8 +71,15 @@ const SKIP = new Set([
   'test-results'
 ]);
 
-function svelteFiles(root: string): readonly string[] {
-  const found: string[] = [];
+type ProjectFiles = {
+  readonly svelte: readonly string[];
+  readonly css: readonly string[];
+};
+
+/** Every `.svelte` and `.css` file under `root`, split by extension since each gets a different analyzer. */
+function projectFiles(root: string): ProjectFiles {
+  const svelte: string[] = [];
+  const css: string[] = [];
   const visit = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       if (entry.isDirectory()) {
@@ -45,17 +89,38 @@ function svelteFiles(root: string): readonly string[] {
         continue;
       }
       if (entry.name.endsWith('.svelte')) {
-        found.push(join(dir, entry.name));
+        svelte.push(join(dir, entry.name));
+      } else if (entry.name.endsWith('.css')) {
+        css.push(join(dir, entry.name));
       }
     }
   };
   visit(root);
-  return found;
+  return { svelte, css };
+}
+
+/**
+ * This library's OWN repo root (not the consumer root the CLI is pointed at),
+ * derived from this module's own URL so it is correct regardless of the
+ * caller's cwd. `readWcComponents` reads `src/wc/components` off of it to
+ * recognise `sui-*` custom-element usage -- a consumer checkout has no such
+ * directory, so that context is necessarily built from where this CLI itself
+ * lives, not from the project being scanned.
+ */
+function libraryRoot(): string {
+  // Not `new URL('../..', import.meta.url)`: Vite's static analysis special-cases
+  // that literal two-argument form as an asset-URL reference and rewrites it at
+  // transform time -- under vitest this silently produced an unrelated
+  // http://localhost URL instead of resolving this file's own path. Converting
+  // to a path first and walking up with `resolve` never matches that pattern.
+  const cliFile = fileURLToPath(import.meta.url);
+  return resolve(cliFile, '..', '..', '..');
 }
 
 export type MigrateSummary = {
   readonly exitCode: number;
   readonly filesScanned: number;
+  readonly cssFilesScanned: number;
   readonly findings: readonly Finding[];
   readonly blockers: readonly string[];
   readonly applied: boolean;
@@ -76,7 +141,14 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
   } catch (error) {
     log(error instanceof Error ? error.message : String(error));
     log(USAGE);
-    return { exitCode: 2, filesScanned: 0, findings: [], blockers: [], applied: false };
+    return {
+      exitCode: 2,
+      filesScanned: 0,
+      cssFilesScanned: 0,
+      findings: [],
+      blockers: [],
+      applied: false
+    };
   }
 
   if (parsed.values.help === true || parsed.positionals.length !== 1) {
@@ -84,6 +156,7 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
     return {
       exitCode: parsed.values.help === true ? 0 : 2,
       filesScanned: 0,
+      cssFilesScanned: 0,
       findings: [],
       blockers: [],
       applied: false
@@ -94,7 +167,14 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
   const manifestPath = join(root, 'package.json');
   if (!existsSync(manifestPath) || !statSync(root).isDirectory()) {
     log(`error: ${root} is not a project directory (no package.json)`);
-    return { exitCode: 2, filesScanned: 0, findings: [], blockers: [], applied: false };
+    return {
+      exitCode: 2,
+      filesScanned: 0,
+      cssFilesScanned: 0,
+      findings: [],
+      blockers: [],
+      applied: false
+    };
   }
 
   const manifestText = readFileSync(manifestPath, 'utf8');
@@ -104,10 +184,15 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
   log(`svelte: ${report.svelteRange ?? '(absent)'}`);
   log('');
 
-  const files = svelteFiles(root);
-  const findings = files.flatMap((file) =>
-    analyzeSvelte(readFileSync(file, 'utf8'), relative(root, file))
+  const context: AnalyzeContext = { wcComponents: readWcComponents(libraryRoot()) };
+  const files = projectFiles(root);
+  const svelteFindings = files.svelte.flatMap((file) =>
+    analyzeSvelte(readFileSync(file, 'utf8'), relative(root, file), context)
   );
+  const cssFindings = files.css.flatMap((file) =>
+    analyzeStylesheet(readFileSync(file, 'utf8'), relative(root, file))
+  );
+  const findings = [...svelteFindings, ...cssFindings];
 
   for (const blocker of report.blockers) {
     log(`BLOCKER  ${blocker}`);
@@ -118,8 +203,10 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
   }
 
   if (report.blockers.length === 0 && findings.length === 0) {
-    log(`No blockers and no affected Toolbar usage across ${files.length} .svelte files.`);
-    log('This project can take 3.x with a dependency bump alone.');
+    log(
+      `No blockers and nothing needing review across ${files.svelte.length} .svelte and ${files.css.length} .css files.`
+    );
+    log(`This project can take ${parsed.values.target} with a dependency bump alone.`);
   }
 
   let applied = false;
@@ -131,7 +218,8 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
       log('Refusing to --apply while blockers stand. Resolve them first.');
       return {
         exitCode: 1,
-        filesScanned: files.length,
+        filesScanned: files.svelte.length,
+        cssFilesScanned: files.css.length,
         findings,
         blockers: report.blockers,
         applied: false
@@ -144,7 +232,14 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
     const target = parsed.values.target;
     if (typeof target !== 'string') {
       log('error: --target requires a value');
-      return { exitCode: 2, filesScanned: files.length, findings, blockers: [], applied: false };
+      return {
+        exitCode: 2,
+        filesScanned: files.svelte.length,
+        cssFilesScanned: files.css.length,
+        findings,
+        blockers: [],
+        applied: false
+      };
     }
     const pattern = new RegExp(`("${LIBRARY.replace('/', '\\/')}"\\s*:\\s*)"[^"]*"`);
     const next = manifestText.replace(
@@ -156,7 +251,8 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
       log('Could not locate the dependency entry to rewrite; package.json untouched.');
       return {
         exitCode: 1,
-        filesScanned: files.length,
+        filesScanned: files.svelte.length,
+        cssFilesScanned: files.css.length,
         findings,
         blockers: report.blockers,
         applied: false
@@ -170,12 +266,13 @@ export function run(argv: readonly string[], log: (line: string) => void): Migra
 
   log('');
   log(
-    `scanned ${files.length} .svelte file(s), ${findings.length} needing review, ${report.blockers.length} blocker(s)`
+    `scanned ${files.svelte.length} .svelte and ${files.css.length} .css file(s), ${findings.length} needing review, ${report.blockers.length} blocker(s)`
   );
 
   return {
     exitCode: report.blockers.length > 0 ? 1 : 0,
-    filesScanned: files.length,
+    filesScanned: files.svelte.length,
+    cssFilesScanned: files.css.length,
     findings,
     blockers: report.blockers,
     applied

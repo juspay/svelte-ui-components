@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeManifest, analyzeSvelte } from './analyze.ts';
+import {
+  analyzeManifest,
+  analyzeStylesheet,
+  analyzeSvelte,
+  readWcComponents,
+  type AnalyzeContext,
+  type WcComponent
+} from './analyze.ts';
 
 const LIB = '@juspay/svelte-ui-components';
 
@@ -180,5 +187,229 @@ describe('review findings', () => {
     const findings = analyzeSvelte(source, 'a.svelte');
     expect(findings).toHaveLength(1);
     expect(findings[0]?.line).toBe(6);
+  });
+});
+
+describe('analyzeSvelte — InputButton mandatory', () => {
+  it('flags mandatory without required — the field now also gets native required/aria-required', () => {
+    const source = `<script>import { InputButton } from '${LIB}';</script><InputButton mandatory />`;
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('inputbutton-mandatory');
+  });
+
+  it('does not flag when required is also passed — required wins either way', () => {
+    const source = `<script>import { InputButton } from '${LIB}';</script><InputButton mandatory required={false} />`;
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('does not flag mandatory={false} — behaviour is identical before and after', () => {
+    const source = `<script>import { InputButton } from '${LIB}';</script><InputButton mandatory={false} />`;
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('does not flag an InputButton with neither prop', () => {
+    const source = `<script>import { InputButton } from '${LIB}';</script><InputButton />`;
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('warns rather than guesses when a spread could carry mandatory/required', () => {
+    const source = `<script>import { InputButton } from '${LIB}';</script><InputButton {...props} />`;
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('indeterminate-spread');
+  });
+
+  it('resolves an aliased import so the finding is not missed', () => {
+    const source = `<script>import { InputButton as Field } from '${LIB}';</script><Field mandatory />`;
+
+    expect(analyzeSvelte(source, 'a.svelte')).toHaveLength(1);
+  });
+
+  it('recognises the raw sui-input-button custom element when given the wc component context', () => {
+    const context: AnalyzeContext = {
+      wcComponents: [{ component: 'InputButton', tag: 'sui-input-button', display: 'block' }]
+    };
+    const source = '<sui-input-button mandatory></sui-input-button>';
+
+    const findings = analyzeSvelte(source, 'a.svelte', context);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('inputbutton-mandatory');
+  });
+
+  it('does not recognise a sui-input-button tag without the wc component context', () => {
+    const source = '<sui-input-button mandatory></sui-input-button>';
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+});
+
+describe('analyzeSvelte / analyzeStylesheet — chart tooltip slot selector', () => {
+  it('flags a .chart-tooltip-slot selector in a <style> block, independent of any chart import', () => {
+    const source = '<div>hello</div>\n<style>\n  .chart-tooltip-slot { color: red; }\n</style>';
+
+    const findings = analyzeSvelte(source, 'a.svelte');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chart-tooltip-slot-selector');
+    expect(findings[0]?.line).toBe(3);
+  });
+
+  it('does not flag an unrelated selector', () => {
+    const source = '<style>.chart-tooltip { color: red; }</style>';
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('flags the selector in a standalone .css file via analyzeStylesheet', () => {
+    const css = '.chart-tooltip-slot .tooltip-title {\n  font-weight: 600;\n}\n';
+
+    const findings = analyzeStylesheet(css, 'styles/app.css');
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chart-tooltip-slot-selector');
+    expect(findings[0]?.file).toBe('styles/app.css');
+    expect(findings[0]?.line).toBe(1);
+  });
+
+  it('does not flag a clean .css file', () => {
+    expect(analyzeStylesheet('.chart-tooltip.unstyled { padding: 0; }', 'a.css')).toEqual([]);
+  });
+});
+
+describe('analyzeSvelte — host-display-inline', () => {
+  const badge: WcComponent = { component: 'Badge', tag: 'sui-badge', display: 'block' };
+  const avatar: WcComponent = { component: 'Avatar', tag: 'sui-avatar', display: 'inline-block' };
+  const context: AnalyzeContext = { wcComponents: [badge, avatar] };
+
+  it('flags a sui-* element used as the direct child of a text-flow element', () => {
+    const source = '<p>Status: <sui-badge></sui-badge></p>';
+
+    const findings = analyzeSvelte(source, 'a.svelte', context);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('host-display-inline');
+    expect(findings[0]?.detail).toContain('display: block');
+  });
+
+  it('names the actual new default, including inline-block', () => {
+    const source = '<span><sui-avatar></sui-avatar></span>';
+
+    const findings = analyzeSvelte(source, 'a.svelte', context);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.detail).toContain('display: inline-block');
+  });
+
+  it('does not flag the same element inside a block-level parent', () => {
+    const source = '<div><sui-badge></sui-badge></div>';
+
+    expect(analyzeSvelte(source, 'a.svelte', context)).toEqual([]);
+  });
+
+  it('does not recognise the tag without wc component context', () => {
+    const source = '<p><sui-badge></sui-badge></p>';
+
+    expect(analyzeSvelte(source, 'a.svelte')).toEqual([]);
+  });
+
+  it('checks every text-flow element in the derived list, not just <p>', () => {
+    for (const tag of ['p', 'span', 'li', 'td', 'label', 'h1', 'a', 'button']) {
+      const source = `<${tag}><sui-badge></sui-badge></${tag}>`;
+      expect(analyzeSvelte(source, 'a.svelte', context), tag).toHaveLength(1);
+    }
+  });
+});
+
+describe('analyzeSvelte — chart-min-width', () => {
+  const pieChart: WcComponent = { component: 'PieChart', tag: 'sui-pie-chart', display: 'block' };
+  const context: AnalyzeContext = { wcComponents: [pieChart] };
+
+  it('flags a chart rendered inside a parent with an inline width under 160px', () => {
+    const source = `<script>import { PieChart } from '${LIB}';</script><div style="width: 120px"><PieChart /></div>`;
+
+    const findings = analyzeSvelte(source, 'a.svelte', context);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chart-min-width');
+    expect(findings[0]?.detail).toContain('120px');
+  });
+
+  it('flags a narrow inline flex-basis the same way', () => {
+    const source = `<script>import { PieChart } from '${LIB}';</script><div style="flex-basis: 80px"><PieChart /></div>`;
+
+    expect(analyzeSvelte(source, 'a.svelte', context)).toHaveLength(1);
+  });
+
+  it('does not flag a parent width at or above the 160px floor', () => {
+    const source = `<script>import { PieChart } from '${LIB}';</script><div style="width: 160px"><PieChart /></div>`;
+
+    expect(analyzeSvelte(source, 'a.svelte', context)).toEqual([]);
+  });
+
+  it('does not flag a chart with no styled parent to inspect', () => {
+    const source = `<script>import { PieChart } from '${LIB}';</script><PieChart />`;
+
+    expect(analyzeSvelte(source, 'a.svelte', context)).toEqual([]);
+  });
+
+  it('does not guess at a percentage width — not statically comparable to 160px', () => {
+    const source = `<script>import { PieChart } from '${LIB}';</script><div style="width: 10%"><PieChart /></div>`;
+
+    expect(analyzeSvelte(source, 'a.svelte', context)).toEqual([]);
+  });
+
+  it('recognises the raw sui-pie-chart custom element the same way', () => {
+    const source = '<div style="width: 100px"><sui-pie-chart></sui-pie-chart></div>';
+
+    const findings = analyzeSvelte(source, 'a.svelte', context);
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.reason).toBe('chart-min-width');
+  });
+});
+
+// Regression coverage over this library's OWN wc wrappers: proves the derivation
+// stays correct against the real source rather than a fixture that could drift
+// from it unnoticed.
+describe('readWcComponents', () => {
+  const components = readWcComponents(process.cwd());
+
+  it('finds all 98 wc wrappers, split 87 block / 11 inline-block', () => {
+    expect(components).toHaveLength(98);
+    expect(components.filter((c) => c.display === 'block')).toHaveLength(87);
+    expect(components.filter((c) => c.display === 'inline-block')).toHaveLength(11);
+  });
+
+  it('reads InputButton as sui-input-button, not the guessed sui-inputbutton', () => {
+    const inputButton = components.find((c) => c.component === 'InputButton');
+    expect(inputButton?.tag).toBe('sui-input-button');
+  });
+
+  it('finds exactly the 7 *Chart components', () => {
+    const charts = components.filter((c) => c.component.endsWith('Chart')).map((c) => c.component);
+    expect(charts.sort()).toEqual(
+      [
+        'AreaChart',
+        'BarChart',
+        'DualAxisBarChart',
+        'FunnelChart',
+        'LineChart',
+        'PieChart',
+        'SankeyChart'
+      ].sort()
+    );
+  });
+
+  it('returns an empty list for a root with no src/wc/components directory', () => {
+    expect(readWcComponents('/definitely/not/a/real/repo')).toEqual([]);
   });
 });

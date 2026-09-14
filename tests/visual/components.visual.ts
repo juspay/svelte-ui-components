@@ -390,6 +390,23 @@ async function prepare(page: Page, slug: string): Promise<void> {
   await page.clock.install({ time: FIXED_TIME });
   await page.goto(`/components/${slug}`, { waitUntil: 'networkidle' });
 
+  // `networkidle` resolves on network quiet, not on hydration, and every demo
+  // page is server-rendered -- so a timer-driven demo may not have registered
+  // its `setInterval` yet when the clock is advanced below, and the tick count
+  // it then receives would be a race.
+  //
+  // The rest of the suite already gates on this marker via
+  // `tests/support/hydrated.ts`, whose comment describes that race; the visual
+  // suite was the one place that did not. `+layout.svelte`'s onMount sets the
+  // marker after its children have mounted.
+  //
+  // Worth being straight about what this did NOT do, so nobody credits it with
+  // more than it earned: it was added as a candidate fix for `hitl`, and it
+  // fixed nothing. `hitl` still varies by exactly 1314.3 with it in place. It
+  // is kept because closing a real race in the one place that left it open is
+  // correct on its own, not because it moved a number.
+  await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true');
+
   await page.addStyleTag({
     content: `
       /* The demo layout appends the rendered docs/*.md below every demo. Those
@@ -496,6 +513,30 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // settled one, so components do not baseline mid-transition. The Modal and
   // Toast baselines were checked by eye afterwards to confirm they render
   // fully, rather than assuming it.
+  //
+  // Transitions are NOT killed here -- they are killed in the earlier style tag,
+  // before anything measures the page, and that placement is deliberate: see the
+  // note beside it. A second `transition: none` here would be a duplicate, and an
+  // earlier revision of this change added one before noticing the first existed.
+  //
+  // What the transition rule did and did not fix, measured by capturing each route
+  // twice and comparing with pixelmatch's own colorDelta against the 1408.6 that
+  // `threshold: 0.2` allows per pixel:
+  //
+  //   theme-switcher   unstable -> 0 px, byte-identical.  Fixed. Four declarations
+  //                    in ThemeSwitcher.svelte, all at 0.3s.
+  //   hitl             1314.3   -> 1314.3.                Not a transition at all.
+  //
+  // `hitl` was diagnosed as a transition on its countdown fill and that was wrong.
+  // What holds up: diffPx lands on a ladder (212/412/612/1012/1212/1612), the fill
+  // is 50 rows tall so 200px is four columns, and a ~400px bar over a 10s countdown
+  // moves ~4px per 100ms tick -- so each step is one interval tick and the count
+  // varies between runs. WHY it varies, with a manual clock and a fixed `runFor`,
+  // is not established; the hydration gate above did not change it either.
+  //
+  // So 1314.3 is still 93% of the budget and the threshold still cannot be lowered:
+  // at 0.1, sixteen `hitl` pixels exceed it with no source change. `theme-switcher`
+  // is off the list; `hitl` is open -- see issue #622.
   await page.addStyleTag({
     content: `
       *, *::before, *::after {

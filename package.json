@@ -71,6 +71,10 @@
     "dist-codemod",
     "scripts/postinstall.mjs"
   ],
+  "sideEffects": [
+    "./src/wc/**",
+    "./dist-wc/**"
+  ],
   "peerDependencies": {
     "lottie-web": ">=5.0.0",
     "marked": "^18.0.0",

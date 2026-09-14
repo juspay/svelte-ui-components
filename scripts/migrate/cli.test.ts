@@ -1,10 +1,41 @@
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { run } from './cli.ts';
 
 const LIB = '@juspay/svelte-ui-components';
+
+/**
+ * The major this library is actually on, read here rather than imported from
+ * `cli.ts`, so this asserts the contract ("--apply moves a consumer to THIS
+ * library's major") instead of asserting the CLI against itself.
+ *
+ * The literal it replaced was `'^3.0.0'`, which stayed green through the whole
+ * 4.x line while the CLI offered to move consumers of 4.27.x back to 3.x. A
+ * test that hardcodes the answer cannot notice the answer going stale.
+ */
+const OWN_MAJOR = ownMajor();
+
+function ownMajor(): string {
+  // Not `new URL('../../package.json', import.meta.url)`: Vite special-cases
+  // that literal form as an asset-URL reference and rewrites it at transform
+  // time, which under vitest resolves to an unrelated http:// URL. Same reason
+  // `cli.ts`'s own `libraryRoot()` walks up with `resolve` instead.
+  const here = fileURLToPath(import.meta.url);
+  const manifest: unknown = JSON.parse(
+    readFileSync(resolve(here, '..', '..', '..', 'package.json'), 'utf8')
+  );
+  const version =
+    typeof manifest === 'object' && manifest !== null && 'version' in manifest
+      ? manifest.version
+      : null;
+  if (typeof version !== 'string') {
+    throw new Error('cannot read the library version');
+  }
+  return `^${version.split('.')[0]}.0.0`;
+}
 
 function project(manifest: object, files: Record<string, string> = {}): string {
   const root = mkdtempSync(join(tmpdir(), 'sui-migrate-'));
@@ -43,7 +74,7 @@ describe('migrate cli', () => {
     const manifest = readFileSync(join(root, 'package.json'), 'utf8');
 
     expect(summary.applied).toBe(true);
-    expect(manifest).toContain(`"${LIB}": "^3.0.0"`);
+    expect(manifest).toContain(`"${LIB}": "${OWN_MAJOR}"`);
     expect(manifest).toContain('"name": "consumer"');
     expect(manifest).toContain('"svelte": "^5.55.9"');
   });
@@ -111,5 +142,70 @@ describe('review findings', () => {
 
     expect(summary.exitCode).toBe(1);
     expect(summary.applied).toBe(false);
+  });
+});
+
+// Each of these drives run() end-to-end against this repo's own real
+// src/wc/components — libraryRoot() always resolves to this checkout
+// regardless of where the scanned project (the temp `root` below) lives — so
+// they prove the wiring, not just the underlying analyze.ts function.
+describe('review findings — new reasons wired end-to-end', () => {
+  it('surfaces inputbutton-mandatory through the CLI', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/Form.svelte': `<script>import { InputButton } from '${LIB}';</script>\n<InputButton mandatory />`
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('inputbutton-mandatory');
+    expect(summary.findings[0]?.file).toBe('src/Form.svelte');
+  });
+
+  it('scans .css files for the renamed chart tooltip slot selector and counts them separately', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/app.css': '.chart-tooltip-slot { color: red; }\n'
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.cssFilesScanned).toBe(1);
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('chart-tooltip-slot-selector');
+    expect(summary.findings[0]?.file).toBe('src/app.css');
+  });
+
+  it('recognises a real sui-* custom element used inline via the derived wc component list', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/Page.svelte': '<p>Status: <sui-badge></sui-badge></p>'
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('host-display-inline');
+  });
+
+  it('flags a real chart component rendered into a narrow inline-width parent', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/Dash.svelte': `<script>import { PieChart } from '${LIB}';</script>\n<div style="width: 100px"><PieChart /></div>`
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('chart-min-width');
   });
 });

@@ -252,3 +252,61 @@ describe('VoiceOrb reduced-motion preference', () => {
     expect(lastReducedMotionArg()).toBe(true);
   });
 });
+
+/*
+ * The canvas is `aria-hidden` because it is decoration: pointer repulsion
+ * pushes particles aside and accomplishes nothing a keyboard user is missing
+ * out on. What IS meaningful is the variant -- "the microphone is open" --
+ * and nothing announced it. These cover the announcement, and that the
+ * component still invents no copy of its own when the caller supplies none.
+ */
+describe('VoiceOrb status announcement', () => {
+  it('renders no live region when the caller names no states', () => {
+    const { container } = render(VoiceOrb, { particleCount: 20 });
+
+    expect(container.querySelector('[aria-live]')).toBeNull();
+  });
+
+  it('announces the named state politely', () => {
+    const { container } = render(VoiceOrb, {
+      particleCount: 20,
+      variant: 'listening',
+      statusLabels: { idle: 'Microphone idle', listening: 'Listening' }
+    });
+
+    const region = container.querySelector('[aria-live]');
+    expect(region?.getAttribute('aria-live')).toBe('polite');
+    expect(region?.textContent?.trim()).toBe('Listening');
+  });
+
+  it('updates the announcement when the variant changes', async () => {
+    const { container, rerender } = render(VoiceOrb, {
+      particleCount: 20,
+      variant: 'listening',
+      statusLabels: { idle: 'Microphone idle', listening: 'Listening' }
+    });
+
+    await rerender({ variant: 'idle' });
+
+    expect(container.querySelector('[aria-live]')?.textContent?.trim()).toBe('Microphone idle');
+  });
+
+  it('stays silent for a state the caller did not name', () => {
+    const { container } = render(VoiceOrb, {
+      particleCount: 20,
+      variant: 'idle',
+      statusLabels: { listening: 'Listening' }
+    });
+
+    expect(container.querySelector('[aria-live]')?.textContent?.trim()).toBe('');
+  });
+
+  it('keeps the canvas out of the accessibility tree', () => {
+    const { container } = render(VoiceOrb, {
+      particleCount: 20,
+      statusLabels: { idle: 'Microphone idle', listening: 'Listening' }
+    });
+
+    expect(container.querySelector('canvas')?.getAttribute('aria-hidden')).toBe('true');
+  });
+});

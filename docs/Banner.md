@@ -121,7 +121,7 @@ Override these custom properties to theme the component.
 | `--banner-gap`                      | `8px`                | gap              | Gap between banner content elements (icon, text, right content, dismiss).                                                      |
 | `--banner-justify-content`          | `center`             | justify-content  | Horizontal alignment of banner content.                                                                                        |
 | `--banner-background`               | `#f0f4f8`            | background-color | Background color of the banner.                                                                                                |
-| `--banner-color`                    | `#637c95`            | color            | Text color of the banner.                                                                                                      |
+| `--banner-color`                    | `#4d6174`            | color            | Text color of the banner.                                                                                                      |
 | `--banner-font-family`              | `-`                  | font-family      | Font family of the banner text.                                                                                                |
 | `--banner-font-size`                | `14px`               | font-size        | Font size of the banner text.                                                                                                  |
 | `--banner-font-weight`              | `500`                | font-weight      | Font weight of the banner text.                                                                                                |

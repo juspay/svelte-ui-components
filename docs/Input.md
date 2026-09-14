@@ -139,7 +139,7 @@ Override these custom properties to theme the component.
 | `--input-container-width`           | `-`                                                    | width            | Width of the input container.                                                                  |
 | `--input-label-msg-text-weight`     | `400`                                                  | font-weight      | Font weight of the label text.                                                                 |
 | `--input-label-msg-text-size`       | `12px`                                                 | font-size        | Font size of the label text.                                                                   |
-| `--input-label-msg-text-color`      | `#637c95`                                              | color            | Color of the label text.                                                                       |
+| `--input-label-msg-text-color`      | `#4d6174`                                              | color            | Color of the label text.                                                                       |
 | `--input-label-msg-margin`          | `0px 0px 6px 0px`                                      | margin           | Margin around the label.                                                                       |
 | `--input-label-msg-padding`         | `-`                                                    | padding          | Padding inside the label.                                                                      |
 | `--input-error-msg-text-weight`     | `400`                                                  | font-weight      | Font weight of the error message.                                                              |

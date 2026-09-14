@@ -181,7 +181,7 @@
   .label {
     font-weight: var(--input-label-msg-text-weight, 400);
     font-size: var(--input-label-msg-text-size, 12px);
-    color: var(--input-label-msg-text-color, #637c95);
+    color: var(--input-label-msg-text-color, #4d6174);
     line-height: var(--input-label-msg-text-line-height);
     margin: var(--input-label-msg-text-margin, 0px 0px 6px 0px);
   }

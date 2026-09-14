@@ -34,9 +34,12 @@
     persistKey,
     classes,
     testId,
+    statusLabels,
     onfirstframe,
     onlevel
   }: VoiceOrbProperties = $props();
+
+  const statusText = $derived(statusLabels?.[variant] ?? '');
 
   const FOCAL_LENGTH = 600;
   const BASE_ROTATION_X = 0.0021;
@@ -383,6 +386,15 @@
     onpointercancel={releasePointer}
     aria-hidden="true"
   ></canvas>
+  <!-- The canvas above is decoration and stays out of the accessibility tree:
+       pointer repulsion pushes particles aside and accomplishes nothing, so
+       there is no functionality a keyboard user is locked out of. The variant
+       IS meaningful -- it says a microphone is open -- and nothing announced
+       it. polite so it never interrupts the assistant's own speech, atomic so
+       a state change reads as one phrase rather than a diff. -->
+  {#if typeof statusLabels === 'object'}
+    <div class="voice-orb-status" aria-live="polite" aria-atomic="true">{statusText}</div>
+  {/if}
 </div>
 
 <style>
@@ -396,5 +408,20 @@
     display: block;
     /* Pointer repulsion needs the move events a default touch gesture would eat. */
     touch-action: none;
+  }
+
+  /* Visually hidden but readable by assistive tech -- the standard clip pattern
+     rather than display:none, which would remove it from the a11y tree. */
+  .voice-orb-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 </style>

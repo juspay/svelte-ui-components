@@ -6,20 +6,36 @@ import { pathToFileURL } from 'node:url';
 /**
  * 3.x's ChartTooltip unification: PieChart and SankeyChart's own custom-tooltip
  * wrapper, `<div class="chart-tooltip-slot">`, was replaced by the shared
- * `<ChartTooltip>`, which renders `class="chart-tooltip unstyled"` (plus `portal`
- * when `tooltipPortal` is set) -- see `src/lib/_chart/ChartTooltip.svelte`. A
- * consumer stylesheet selecting `.chart-tooltip-slot` now matches nothing, with
- * no error: a CSS selector matching zero elements is not a build or runtime
+ * `<ChartTooltip>` -- see `src/lib/_chart/ChartTooltip.svelte`. That component
+ * renders EVERY tooltip, default and custom alike, with the base class
+ * `chart-tooltip`; `unstyled` is added only for the custom-snippet case (the
+ * one `.chart-tooltip-slot` ever meant), and `portal` only when `tooltipPortal`
+ * is set (independent of `unstyled` -- both branches carry it). A consumer
+ * stylesheet selecting `.chart-tooltip-slot` now matches nothing, with no
+ * error: a CSS selector matching zero elements is not a build or runtime
  * failure, so this is the one 3.x break a type checker or test suite cannot
  * catch on a consumer's behalf.
  *
- * The rename is mechanical -- one class token to another, nothing structural
- * changes around it -- so this rewrites `.chart-tooltip-slot` to `.chart-tooltip`
- * wherever it is genuinely a class-selector token: in a consumer's `.css` files,
- * inside the `<style>` block of its `.svelte` files, and inside the string
- * argument of a `querySelector`/`querySelectorAll`/`closest`/`matches` call in a
- * `.svelte` file's `<script>` block (see the doc comment on SELECTOR_CALL for
- * why that last one and nothing broader in script code). A `.svelte` file's own
+ * The correct rewrite is therefore `.chart-tooltip-slot` -> `.chart-tooltip.unstyled`,
+ * never bare `.chart-tooltip`: the base class alone also matches every
+ * DEFAULT tooltip in every chart, so a rewrite that dropped `.unstyled` would
+ * fix the break for the consumer's own custom tooltip while silently leaking
+ * their styling onto every chart's default one -- a new break introduced while
+ * fixing the old one. `.unstyled` is appended after whatever token the source
+ * selector already ends with rather than inserted before it, so a selector
+ * that was already qualified (`.chart-tooltip-slot.portal`) keeps that
+ * qualifier exactly once, in place, rather than gaining a duplicate or a
+ * reordered compound -- compound class selectors match regardless of token
+ * order, so `.chart-tooltip.unstyled.portal` matches precisely the portalled
+ * custom-snippet element, same as `.chart-tooltip.portal.unstyled` would.
+ *
+ * This is mechanical for the class token itself, but nothing here parses
+ * selector grammar, so it rewrites `.chart-tooltip-slot` wherever it is
+ * genuinely a class-selector token: in a consumer's `.css` files, inside the
+ * `<style>` block of its `.svelte` files, and inside the string argument of a
+ * `querySelector`/`querySelectorAll`/`closest`/`matches` call in a `.svelte`
+ * file's `<script>` block (see the doc comment on SELECTOR_CALL for why that
+ * last one and nothing broader in script code). A `.svelte` file's own
  * template is left untouched -- see rewriteSvelteFile.
  *
  *   node --experimental-strip-types scripts/migrate/chart-tooltip-selector.ts [--apply] <consumer-root>
@@ -32,9 +48,11 @@ const USAGE = [
   'Usage: node scripts/migrate/chart-tooltip-selector.ts [--apply] <consumer-root>',
   '',
   'Rewrites the .chart-tooltip-slot selector PieChart and SankeyChart rendered',
-  'before 3.x to .chart-tooltip, the class the shared <ChartTooltip> renders now,',
-  "across a consumer project's .css and .svelte files. Reports by default;",
-  '--apply writes the rewritten files.',
+  'before 3.x to .chart-tooltip.unstyled -- the shared <ChartTooltip> renders',
+  'every tooltip with the bare .chart-tooltip class, so .unstyled is what keeps',
+  'the match limited to the custom-snippet tooltip, as before -- across a',
+  "consumer project's .css and .svelte files. Reports by default; --apply",
+  'writes the rewritten files.',
   '',
   '  --apply   write the rewritten files',
   '  --help    show this help'
@@ -57,7 +75,22 @@ const CLASS_SELECTOR = /\.chart-tooltip-slot(?![\w-])/g;
 
 /**
  * Rewrites every bare `.chart-tooltip-slot` class-selector token to
- * `.chart-tooltip`, in place inside whatever surrounding selector it sits in.
+ * `.chart-tooltip.unstyled`, in place inside whatever surrounding selector it
+ * sits in.
+ *
+ * Not bare `.chart-tooltip`: `ChartTooltip.svelte` gives EVERY tooltip that
+ * base class, default charts included, and adds `unstyled` only for the
+ * custom-snippet wrapper `.chart-tooltip-slot` used to name exclusively. A
+ * rewrite that dropped `.unstyled` would still fix the consumer's own broken
+ * selector, but it would also start matching every default tooltip in every
+ * chart on the page -- trading the one break this migration is closing for a
+ * new one it would introduce. Appending `.unstyled` immediately after the
+ * replaced token, rather than inserting it before whatever already follows,
+ * is what keeps a selector that was already qualified
+ * (`.chart-tooltip-slot.portal`) from gaining a duplicate or reordered
+ * qualifier -- it becomes `.chart-tooltip.unstyled.portal`, and a compound
+ * class selector matches on the set of tokens present, not their order, so
+ * that is exactly equivalent to `.chart-tooltip.portal.unstyled`.
  *
  * Requiring a literal `.` immediately before the token is what keeps
  * `.my-chart-tooltip-slot` alone: there is no `.` directly before "chart"
@@ -73,7 +106,7 @@ export function rewriteCss(source: string): { readonly code: string; readonly co
   let count = 0;
   const code = source.replace(CLASS_SELECTOR, () => {
     count += 1;
-    return '.chart-tooltip';
+    return '.chart-tooltip.unstyled';
   });
   return { code, count };
 }

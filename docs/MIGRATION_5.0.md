@@ -66,10 +66,22 @@ read from each wrapper's own `:host` declaration, so it cannot drift from the
 source. Drop it in, confirm nothing moved, then delete rules as you adopt the
 new defaults. Keeping it forever re-introduces the width bug it papers over.
 
-`npm run migrate` reports `host-display-inline` for a `sui-*` element that is a
-direct child of a text-flow tag (`p`, `span`, `li`, `td`, `label`, `h1`–`h6`,
-`a`, `button`). It cannot see an element inside a `div` that your own CSS makes
-inline — that is a false negative it will never report, so treat the report as
+`npm run migrate` reports `host-display-inline` in two shapes: a `sui-*` element
+that is a direct child of a text-flow tag (`p`, `span`, `li`, `td`, `label`,
+`h1`–`h6`, `a`, `button`), and one that sits beside other inline-level content —
+another `sui-*` element, a non-whitespace text node, or an inline HTML tag. The
+second is the common one:
+
+```svelte
+<div class="toolbar"><sui-button /><sui-button /></div>
+```
+
+Two buttons on one line before, stacked after. It does not fire for a lone
+element (nothing to sit beside) or under a parent whose inline `style` makes it
+a flex or grid container, where a child's `display` does not move its siblings.
+
+It still cannot see inline-ness that comes from a CSS class rather than an
+inline `style`, or siblings separated by `{#if}`/`{#each}`. Treat the report as
 a floor, not a total.
 
 ### 2. `InputButton`'s `mandatory` now actually makes the field required
@@ -161,6 +173,22 @@ sui-brand-loader,
 }
 ```
 
+The generated `legacy-palette.css` covers both halves, but by different means
+and in different sections. `--loader-text-color` had a previous literal
+(`white`) and is pinned to it. `--loader-sub-text-color` did not exist before —
+`.sub-text` declared no `color` at all and inherited one — so there is no
+literal to restore, only inheritance. That is emitted as an empty value:
+
+```css
+:root {
+  --loader-sub-text-color: ;
+}
+```
+
+which makes `color: ;` invalid at computed-value time, which resolves to
+`unset`, which for an inherited property is `inherit`. It looks like a typo and
+is not one.
+
 ### 6. Roughly 48 default colours darkened for contrast
 
 A WCAG-AA pass changed the _fallback_ literal of about 48 CSS custom
@@ -199,6 +227,19 @@ el.getAttribute('recording'); // was "", now null
 
 Read the property, not the attribute.
 
+The sharper case is CSS, because it fails silently:
+
+```css
+sui-chat-composer[recording] {
+  /* never matches now */
+}
+```
+
+Reported as `chat-composer-recording-reflect`, for that selector and for a
+`getAttribute`/`hasAttribute('recording')` call in a file that also names
+`sui-chat-composer`. A presence attribute you set yourself still means `true`,
+so only the reflected-by-the-property path is affected.
+
 ## What does _not_ break
 
 Listed because they show up in the diff and look alarming:
@@ -225,13 +266,19 @@ Listed because they show up in the diff and look alarming:
 Stated plainly, because a migration report that looks exhaustive and is not is
 worse than no report:
 
-| Change            | Detected                                       | Missed                                                 |
-| ----------------- | ---------------------------------------------- | ------------------------------------------------------ |
-| `:host` display   | `sui-*` directly inside a text-flow tag        | inline-ness from your own CSS, or any deeper nesting   |
-| chart `min-width` | literal inline px width under 160              | widths from classes, `%`, `rem`, `vw`, or bound styles |
-| `mandatory`       | explicit attribute; spreads flagged separately | nothing                                                |
-| tooltip selector  | static selectors and literal query strings     | computed selectors, `getElementsByClassName`           |
-| colours           | `var(--name, <literal>)` fallbacks             | colours written without custom-property indirection    |
+| Change              | Detected                                         | Missed                                                      |
+| ------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| `:host` display     | text-flow parent, or beside inline siblings      | inline-ness from a CSS class; siblings split by `{#if}`     |
+| chart `min-width`   | literal inline px width under 160                | class widths, `%`/`rem`/`vw`, bound styles, **flex-shrink** |
+| `mandatory`         | explicit attribute; spreads flagged separately   | nothing                                                     |
+| tooltip selector    | static selectors and literal query strings       | computed selectors, `getElementsByClassName`                |
+| `recording` reflect | CSS attribute selector; same-file `getAttribute` | the tag name reached through an imported constant           |
+| colours             | `var(--name, <literal>)` fallbacks               | colours written without custom-property indirection         |
+
+The `min-width` row hides the worst of these. A chart in `flex: 1; min-width: 0`
+inside a tight row is narrowed by the flex algorithm with no width literal
+anywhere in your source — measured overflowing inside a 96px flex item, and
+invisible to static analysis. If you put charts in flex rows, look at them.
 
 The two layout changes (1 and 3) cannot be resolved from source at all: whether
 they break you depends on the box your element lands in. Generate the shims,

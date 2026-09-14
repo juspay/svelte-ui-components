@@ -19,7 +19,9 @@ export type FindingReason =
   /** A `sui-*` element used where the browser's old implicit inline mattered. */
   | 'host-display-inline'
   /** A chart's new 160px floor will overflow a narrower flex/grid cell. */
-  | 'chart-min-width';
+  | 'chart-min-width'
+  /** `sui-chat-composer`'s `recording` lost `reflect: true`; the attribute no longer tracks it. */
+  | 'chat-composer-recording-reflect';
 
 export type Finding = {
   readonly file: string;
@@ -308,26 +310,135 @@ type ElementAncestor = {
   readonly node: UnknownRecord;
 };
 
+/** True for a `Text` node whose content is only formatting whitespace -- it collapses in rendered HTML, so it does not itself break an inline run. */
+function isWhitespaceOnlyText(raw: unknown): boolean {
+  const record = asRecord(raw);
+  return (
+    record.type === 'Text' && typeof record.data === 'string' && record.data.trim().length === 0
+  );
+}
+
 /**
- * Same traversal as `walk`, threading the nearest enclosing `RegularElement`
- * down to every visitor call. `host-display-inline` and `chart-min-width` both
- * turn on "what does the immediate parent look like", which a parent-blind
- * walk cannot answer -- kept separate from `walk` itself rather than adding a
- * parameter there, so the existing Toolbar traversal is untouched.
+ * Standard HTML tags whose UA-stylesheet default is inline or inline-block --
+ * the shapes that genuinely sit *beside* a neighbour rather than stacking
+ * with it. Deliberately narrower than `TEXT_FLOW_ELEMENTS`: that set answers
+ * "is this tag's own content model text-flow" (so it includes block-level
+ * `p`/`li`/`td`/`h1`-`h6`), while this one answers "does this tag occupy a
+ * line the way an inline box does" -- a `<div>` sibling never counts, however
+ * text-flow-ish its own contents are.
+ */
+const INLINE_HTML_ELEMENTS: ReadonlySet<string> = new Set([
+  'a',
+  'abbr',
+  'b',
+  'bdi',
+  'bdo',
+  'br',
+  'button',
+  'cite',
+  'code',
+  'data',
+  'dfn',
+  'em',
+  'i',
+  'img',
+  'input',
+  'kbd',
+  'label',
+  'mark',
+  'output',
+  'q',
+  'rp',
+  'rt',
+  'ruby',
+  's',
+  'samp',
+  'select',
+  'small',
+  'span',
+  'strong',
+  'sub',
+  'sup',
+  'textarea',
+  'time',
+  'u',
+  'var',
+  'wbr'
+]);
+
+/** True for a raw sibling node that itself sits inline: another `sui-*` element, non-whitespace text, or a known inline HTML tag. */
+function isInlineLevelSibling(raw: unknown): boolean {
+  const record = asRecord(raw);
+  if (record.type === 'Text') {
+    return typeof record.data === 'string' && record.data.trim().length > 0;
+  }
+  if (record.type === 'RegularElement' && typeof record.name === 'string') {
+    return record.name.startsWith('sui-') || INLINE_HTML_ELEMENTS.has(record.name);
+  }
+  // Everything else (an ExpressionTag, a Comment, an IfBlock/EachBlock, a
+  // Component) is neither skippable whitespace nor a known inline shape, so
+  // scanning stops here without a verdict -- a false negative rather than a
+  // guess at what that construct renders.
+  return false;
+}
+
+/**
+ * Walks outward from `siblings[index]` in one direction, skipping only
+ * whitespace-only text (it collapses, so it does not separate two elements
+ * that are otherwise adjacent), and reports whether the first real neighbour
+ * found is itself inline-level.
+ */
+function nearestNeighbourIsInline(
+  siblings: readonly unknown[],
+  index: number,
+  step: 1 | -1
+): boolean {
+  for (let i = index + step; i >= 0 && i < siblings.length; i += step) {
+    if (!isWhitespaceOnlyText(siblings[i])) {
+      return isInlineLevelSibling(siblings[i]);
+    }
+  }
+  return false;
+}
+
+/** Whether the sibling at `index` has an inline-level neighbour on either side, formatting whitespace aside. */
+function hasAdjacentInlineContent(siblings: readonly unknown[], index: number): boolean {
+  return (
+    nearestNeighbourIsInline(siblings, index, -1) || nearestNeighbourIsInline(siblings, index, 1)
+  );
+}
+
+/**
+ * Same traversal as `walk`, threading the nearest enclosing `RegularElement`,
+ * and (for a node positioned directly in some Fragment's own child list)
+ * whether it has an inline-level sibling there. `host-display-inline` and
+ * `chart-min-width` both turn on "what does the immediate parent/neighbours
+ * look like", which a parent-blind walk cannot answer -- kept separate from
+ * `walk` itself rather than adding parameters there, so the existing Toolbar
+ * traversal is untouched.
  *
  * Non-element wrapper nodes (`IfBlock`, `EachBlock`, a `Component`) pass the
  * ancestor through unchanged: an `{#if}` or another component between a chart
  * and its styled `<div>` doesn't change which DOM element the chart actually
  * lands inside.
+ *
+ * `Fragment` nodes (every element's `.fragment`, and the file's own root one)
+ * are intercepted rather than walked generically: only there is the ordered,
+ * same-processing-pass sibling list available to compute adjacency against.
+ * Once inside an `{#if}`/`{#each}`'s own nested fragment, siblings are that
+ * construct's, not the surrounding DOM's -- a sui-* element that only sits
+ * beside inline content through a conditional branch is a false negative,
+ * not a guess.
  */
 function walkWithParent(
   node: unknown,
   parent: ElementAncestor | null,
-  visit: (node: UnknownRecord, parent: ElementAncestor | null) => void
+  visit: (node: UnknownRecord, parent: ElementAncestor | null, hasInlineSibling: boolean) => void,
+  hasInlineSibling = false
 ): void {
   if (Array.isArray(node)) {
     for (const child of node) {
-      walkWithParent(child, parent, visit);
+      walkWithParent(child, parent, visit, hasInlineSibling);
     }
     return;
   }
@@ -335,14 +446,28 @@ function walkWithParent(
   if (typeof record.type !== 'string') {
     return;
   }
-  visit(record, parent);
+  visit(record, parent, hasInlineSibling);
   const nextParent: ElementAncestor | null =
     record.type === 'RegularElement' && typeof record.name === 'string'
       ? { name: record.name, node: record }
       : parent;
+
+  if (record.type === 'Fragment' && Array.isArray(record.nodes)) {
+    // Bound to a local rather than read back off `record.nodes` inside the
+    // callback below: narrowing a property access does not survive into a
+    // nested closure, and re-reading it there would need an assertion to
+    // recover the array type -- banned repo-wide. A local const keeps the
+    // narrowing without one.
+    const siblings = record.nodes;
+    siblings.forEach((child, index) => {
+      walkWithParent(child, nextParent, visit, hasAdjacentInlineContent(siblings, index));
+    });
+    return;
+  }
+
   for (const value of Object.values(record)) {
     if (typeof value === 'object' && value !== null) {
-      walkWithParent(value, nextParent, visit);
+      walkWithParent(value, nextParent, visit, false);
     }
   }
 }
@@ -371,6 +496,76 @@ function chartTooltipSlotFindings(
       line: lineOf(source, cssOffset + match.index),
       reason: 'chart-tooltip-slot-selector',
       detail: CHART_TOOLTIP_SLOT_DETAIL
+    });
+  }
+  return findings;
+}
+
+const CHAT_COMPOSER_RECORDING_CSS_DETAIL =
+  "selector targets 'sui-chat-composer[recording]'; recording lost reflect: true (it is now " +
+  "{ type: 'String' }), so the attribute is never set by the property and this selector will " +
+  'never match — setting el.recording still works, and a presence attribute you set yourself ' +
+  'still means true, so read el.recording rather than chasing this as a real regression';
+
+/**
+ * `sui-chat-composer[recording]` findings inside one block of CSS text, same
+ * split as `chartTooltipSlotFindings` above and for the same reason: a `.css`
+ * file's whole contents, or one `<style>` block's contents, with `cssOffset`
+ * bridging back to `source` offsets. The tag is a literal here rather than
+ * read off `readWcComponents`: unlike the 98-wrapper detectors, this reason
+ * targets exactly one named component with a tag that cannot rename itself
+ * out from under a hardcoded string any more than `.chart-tooltip-slot` above
+ * can, so there is no drift risk to design around.
+ */
+function chatComposerRecordingSelectorFindings(
+  css: string,
+  file: string,
+  source: string,
+  cssOffset: number
+): Finding[] {
+  const findings: Finding[] = [];
+  for (const match of css.matchAll(/sui-chat-composer\[\s*recording\b[^\]]*\]/g)) {
+    findings.push({
+      file,
+      line: lineOf(source, cssOffset + match.index),
+      reason: 'chat-composer-recording-reflect',
+      detail: CHAT_COMPOSER_RECORDING_CSS_DETAIL
+    });
+  }
+  return findings;
+}
+
+const CHAT_COMPOSER_RECORDING_JS_DETAIL =
+  "reads 'recording' back with getAttribute/hasAttribute on what looks like a chat-composer — it " +
+  'lost reflect: true, so this now returns null/false even while recording is set; read the ' +
+  'el.recording PROPERTY instead. Setting the property still works, and a presence attribute you ' +
+  'set yourself still means true';
+
+/**
+ * `getAttribute('recording')` / `hasAttribute('recording')`, gated on the
+ * file also spelling out the literal tag somewhere (markup, or a
+ * `querySelector('sui-chat-composer')` string) -- the same same-file textual
+ * co-occurrence bound `legacy-back-selector` already relies on rather than
+ * tracing which element a variable actually holds, which this format cannot
+ * do without a real type checker. A file that reaches a chat-composer through
+ * a differently-named variable with no literal tag anywhere in the same file
+ * is a false negative this cannot see; a file that mentions the tag once and
+ * reads an unrelated element's `recording` attribute elsewhere is the false
+ * positive this bound accepts in exchange.
+ */
+function chatComposerRecordingAttributeFindings(source: string, file: string): Finding[] {
+  if (!source.includes('sui-chat-composer')) {
+    return [];
+  }
+  const findings: Finding[] = [];
+  for (const match of source.matchAll(
+    /\.(?:getAttribute|hasAttribute)\(\s*(['"])recording\1\s*\)/g
+  )) {
+    findings.push({
+      file,
+      line: lineOf(source, match.index),
+      reason: 'chat-composer-recording-reflect',
+      detail: CHAT_COMPOSER_RECORDING_JS_DETAIL
     });
   }
   return findings;
@@ -460,36 +655,42 @@ const TEXT_FLOW_ELEMENTS: ReadonlySet<string> = new Set([
   'button'
 ]);
 
+/** Which shape triggered `host-display-inline`, so the detail can name the actual reason instead of a generic one. */
+type HostDisplayTrigger = 'text-flow-parent' | 'inline-sibling';
+
 function hostDisplayInlineFinding(
   node: UnknownRecord,
   wc: WcComponent,
   parent: ElementAncestor,
   file: string,
-  source: string
+  source: string,
+  trigger: HostDisplayTrigger
 ): Finding {
   const line = lineOf(source, typeof node.start === 'number' ? node.start : 0);
-  return {
-    file,
-    line,
-    reason: 'host-display-inline',
-    detail:
-      `<${wc.tag}> is a direct child of <${parent.name}>, a text-flow element — the wrapper ` +
-      `now declares display: ${wc.display} (previously the browser's implicit inline for an ` +
-      `unknown element), which can change this line's layout; override with --${wc.tag}-display ` +
-      'if inline is still wanted'
-  };
+  // The text-flow-parent wording is unchanged from before this reason grew a
+  // second trigger, so an existing report naming this shape reads exactly as
+  // it always has.
+  const detail =
+    trigger === 'text-flow-parent'
+      ? `<${wc.tag}> is a direct child of <${parent.name}>, a text-flow element — the wrapper ` +
+        `now declares display: ${wc.display} (previously the browser's implicit inline for an ` +
+        `unknown element), which can change this line's layout; override with --${wc.tag}-display ` +
+        'if inline is still wanted'
+      : `<${wc.tag}> sits beside other inline-level content inside <${parent.name}> — the wrapper ` +
+        `now declares display: ${wc.display} (previously the browser's implicit inline for an ` +
+        'unknown element), which can pull it onto its own line instead of alongside its neighbour; ' +
+        `override with --${wc.tag}-display if inline is still wanted`;
+  return { file, line, reason: 'host-display-inline', detail };
 }
 
 /**
- * A parent's inline `width`/`flex-basis`, when it is a plain literal string
- * (`style="width: 120px"`) below the chart's new 160px floor. Anything else --
- * a bound style, a `style:width` directive, a percentage or `rem` value, a
- * class-based width -- is not readable from this file alone and is not
- * reported, rather than guessed.
+ * A parent's inline `style` attribute text, when it is expressible as a single
+ * plain string literal (`style="..."`) rather than a bound expression or a
+ * `style:` directive. Those aren't readable from source alone, so this
+ * returns `null` for them -- "unknown", not "absent" -- and callers must
+ * treat a `null` as "cannot tell", never as "no style".
  */
-function inlineNarrowWidth(
-  parent: UnknownRecord
-): { readonly property: string; readonly px: number } | null {
+function inlineStyleText(parent: UnknownRecord): string | null {
   const attributes = Array.isArray(parent.attributes) ? parent.attributes : [];
   for (const raw of attributes) {
     const attribute = asRecord(raw);
@@ -504,16 +705,48 @@ function inlineNarrowWidth(
     if (text.type !== 'Text' || typeof text.data !== 'string') {
       continue;
     }
-    const match = /(width|flex-basis)\s*:\s*(\d+(?:\.\d+)?)px/.exec(text.data);
-    if (match === null) {
-      continue;
-    }
-    const px = Number(match[2]);
-    if (px < 160) {
-      return { property: match[1], px };
-    }
+    return text.data;
   }
   return null;
+}
+
+/**
+ * A parent's inline `width`/`flex-basis`, when it is a plain literal string
+ * (`style="width: 120px"`) below the chart's new 160px floor. Anything else --
+ * a bound style, a `style:width` directive, a percentage or `rem` value, a
+ * class-based width -- is not readable from this file alone and is not
+ * reported, rather than guessed.
+ */
+function inlineNarrowWidth(
+  parent: UnknownRecord
+): { readonly property: string; readonly px: number } | null {
+  const style = inlineStyleText(parent);
+  if (style === null) {
+    return null;
+  }
+  const match = /(width|flex-basis)\s*:\s*(\d+(?:\.\d+)?)px/.exec(style);
+  if (match === null) {
+    return null;
+  }
+  const px = Number(match[2]);
+  return px < 160 ? { property: match[1], px } : null;
+}
+
+/**
+ * True when the parent's inline style makes it a flex or grid container. A
+ * flex/grid item's OWN `display` is overridden by the layout mode regardless
+ * of what it declares (the used value becomes `block` either way per the
+ * flex/grid box spec), so a `sui-*` child's new block default changes
+ * nothing about whether it shares a line with its siblings there -- the
+ * container decides that, not the child. Anything not readable as a plain
+ * literal (a class, a bound style, a `style:display` directive) is
+ * "unknown", not "false", and this fails open the same way `inlineNarrowWidth`
+ * does for a width it cannot read: it returns false, so the sibling check
+ * below still runs rather than silently skipping a real positive.
+ */
+function parentIsFlexOrGridContainer(parent: UnknownRecord): boolean {
+  const style = inlineStyleText(parent);
+  return style !== null && /display\s*:\s*(inline-)?(flex|grid)\b/.test(style);
 }
 
 function chartMinWidthFinding(
@@ -568,7 +801,16 @@ export function analyzeSvelte(
   const blocks = styleBlocks(source);
   for (const block of blocks) {
     findings.push(...chartTooltipSlotFindings(block.content, file, source, block.contentStart));
+    findings.push(
+      ...chatComposerRecordingSelectorFindings(block.content, file, source, block.contentStart)
+    );
   }
+  // Same independence, for the JS half of the same defect: a script can read
+  // `getAttribute('recording')` off a chat-composer without this file ever
+  // importing ChatComposer as a named export (a raw custom element, or an
+  // element obtained via `document.querySelector`), so this is not gated
+  // behind `context.wcComponents` the way the AST-based checks below are.
+  findings.push(...chatComposerRecordingAttributeFindings(source, file));
 
   const byExport = importedNames(source);
   const toolbarNames = byExport.get('Toolbar') ?? EMPTY_NAMES;
@@ -660,7 +902,7 @@ export function analyzeSvelte(
     }
   }
 
-  walkWithParent(ast, null, (node, parent) => {
+  walkWithParent(ast, null, (node, parent, hasInlineSibling) => {
     if (node.type === 'Component' && typeof node.name === 'string') {
       if (inputButtonNames.has(node.name)) {
         const finding = inputButtonFinding(node, node.name, file, source);
@@ -692,12 +934,22 @@ export function analyzeSvelte(
         }
       }
       const hostDefault = hostTagMap.get(node.name);
-      if (
-        typeof hostDefault !== 'undefined' &&
-        parent !== null &&
-        TEXT_FLOW_ELEMENTS.has(parent.name)
-      ) {
-        findings.push(hostDisplayInlineFinding(node, hostDefault, parent, file, source));
+      if (typeof hostDefault !== 'undefined' && parent !== null) {
+        // Two independent triggers, checked in this order so the more
+        // specific (and pre-existing) text-flow-parent wording wins when a
+        // usage happens to satisfy both, e.g. `<p>Status: <sui-badge/></p>`.
+        // The flex/grid guard applies only to the newer sibling trigger --
+        // widening it to also suppress the text-flow-parent path would be a
+        // behaviour change to a rule this pass was told to leave alone.
+        if (TEXT_FLOW_ELEMENTS.has(parent.name)) {
+          findings.push(
+            hostDisplayInlineFinding(node, hostDefault, parent, file, source, 'text-flow-parent')
+          );
+        } else if (hasInlineSibling && !parentIsFlexOrGridContainer(parent.node)) {
+          findings.push(
+            hostDisplayInlineFinding(node, hostDefault, parent, file, source, 'inline-sibling')
+          );
+        }
       }
     }
   });
@@ -706,10 +958,15 @@ export function analyzeSvelte(
 }
 
 /**
- * `chart-tooltip-slot-selector` in a standalone `.css` file. Split out from
- * `analyzeSvelte` because a `.css` file has no `<style>` tags to locate first
- * — its whole content already is the CSS.
+ * `chart-tooltip-slot-selector` and `chat-composer-recording-reflect`'s CSS
+ * shape in a standalone `.css` file. Split out from `analyzeSvelte` because a
+ * `.css` file has no `<style>` tags to locate first — its whole content
+ * already is the CSS. Does not also run `chatComposerRecordingAttributeFindings`:
+ * that one is JS-shaped, and a `.css` file has none.
  */
 export function analyzeStylesheet(source: string, file: string): readonly Finding[] {
-  return chartTooltipSlotFindings(source, file, source, 0);
+  return [
+    ...chartTooltipSlotFindings(source, file, source, 0),
+    ...chatComposerRecordingSelectorFindings(source, file, source, 0)
+  ];
 }

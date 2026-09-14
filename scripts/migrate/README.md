@@ -13,7 +13,7 @@ Nothing is written without `--apply`.
 
 ## What 3.0.0 actually breaks
 
-Five things this script can find, and it should not be read as an exhaustive
+Six things this script can find, and it should not be read as an exhaustive
 list of everything PR 598 changed — only of what `analyzeSvelte` /
 `analyzeStylesheet` below know how to look for:
 
@@ -31,22 +31,29 @@ list of everything PR 598 changed — only of what `analyzeSvelte` /
    default for an unknown element — `inline` — used to apply.
 5. **`.chart-container`'s new `min-width: 160px` floor**, which a narrow
    flex/grid parent that used to shrink the chart to fit will now overflow.
+6. **`sui-chat-composer`'s `recording` prop lost `reflect: true`.** Setting
+   the property still works exactly as before, and the bare presence of the
+   attribute in markup still means true — but the property setter no longer
+   calls `setAttribute`, so `el.getAttribute('recording')` /
+   `el.hasAttribute('recording')` and any CSS selecting `[recording]` stop
+   tracking the live property once it is set from script.
 
-Everything else in 3.0.0 is additive, so a consumer that avoids all five needs
+Everything else in 3.0.0 is additive, so a consumer that avoids all six needs
 only a version bump.
 
 ## What the script reports
 
-| Reason                        | Meaning                                                                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `default-back-control`        | A Toolbar that really does render the changed control. Review the markup.                                                                               |
-| `indeterminate-spread`        | A Toolbar or InputButton whose props are spread, so the relevant guard cannot be read statically.                                                       |
-| `legacy-back-selector`        | CSS selecting an `<img>` inside the back control, which is now an `<svg>`.                                                                              |
-| `inputbutton-mandatory`       | An InputButton passing `mandatory` without an explicit `required` — see point 2 above.                                                                  |
-| `chart-tooltip-slot-selector` | CSS (a `.css` file or a `<style>` block) selecting `.chart-tooltip-slot` — see point 3 above.                                                           |
-| `host-display-inline`         | A `sui-*` element found as the direct child of a text-flow element (`p`, `span`, `li`, `td`, `label`, `h1`–`h6`, `a`, `button`) — see the limits below. |
-| `chart-min-width`             | A chart rendered inside a parent with an inline `width`/`flex-basis` literal under 160px — see the limits below.                                        |
-| `BLOCKER`                     | Svelte below the `^5.41.2` peer, or the library not being a dependency.                                                                                 |
+| Reason                            | Meaning                                                                                                                                                                                                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default-back-control`            | A Toolbar that really does render the changed control. Review the markup.                                                                                                                                                                                                                                     |
+| `indeterminate-spread`            | A Toolbar or InputButton whose props are spread, so the relevant guard cannot be read statically.                                                                                                                                                                                                             |
+| `legacy-back-selector`            | CSS selecting an `<img>` inside the back control, which is now an `<svg>`.                                                                                                                                                                                                                                    |
+| `inputbutton-mandatory`           | An InputButton passing `mandatory` without an explicit `required` — see point 2 above.                                                                                                                                                                                                                        |
+| `chart-tooltip-slot-selector`     | CSS (a `.css` file or a `<style>` block) selecting `.chart-tooltip-slot` — see point 3 above.                                                                                                                                                                                                                 |
+| `host-display-inline`             | A `sui-*` element found as the direct child of a text-flow element (`p`, `span`, `li`, `td`, `label`, `h1`–`h6`, `a`, `button`), or sitting beside other inline-level content (another `sui-*` element, a non-whitespace text node, or a known inline HTML tag) inside a plain parent — see the limits below. |
+| `chart-min-width`                 | A chart rendered inside a parent with an inline `width`/`flex-basis` literal under 160px — see the limits below.                                                                                                                                                                                              |
+| `chat-composer-recording-reflect` | CSS selecting `sui-chat-composer[recording]`, or JS reading `getAttribute('recording')` / `hasAttribute('recording')` off one — the attribute no longer tracks a property set from script; see the limits below.                                                                                              |
+| `BLOCKER`                         | Svelte below the `^5.41.2` peer, or the library not being a dependency.                                                                                                                                                                                                                                       |
 
 A Toolbar usage is **not** reported when it passes `showBackButton={false}` or
 its own `backIcon` — both keep their previous behaviour exactly. Only a literal
@@ -62,11 +69,26 @@ Both of these ask a question static analysis cannot fully answer.
 
 - **`host-display-inline`** would need to know the _computed_ layout context
   of every `sui-*` usage — whether some ancestor's CSS makes an implicit
-  `inline` matter at all. That is not recoverable from source, so this only
-  reports the one shape that reliably signals it: the element sitting directly
-  inside a known text-flow tag. A `sui-*` element inside a `<div>` that itself
-  sits inline via CSS, or one whose surrounding layout depends on a class
-  defined elsewhere, is not reported — a false negative, not a false positive.
+  `inline` matter at all. That is not fully recoverable from source, so this
+  reports the two shapes that reliably signal it: the element sitting directly
+  inside a known text-flow tag, and the element sitting beside other
+  inline-level content (another `sui-*` element, a non-whitespace text node,
+  or a known inline HTML tag such as `<span>`) inside an otherwise plain
+  parent. The former was the original rule; the latter was added after a
+  real-browser check showed it is the more common break in practice — e.g.
+  two `sui-button`s side by side in a plain `<div>`, which used to sit on one
+  line under the old implicit `inline` and now stack under the new
+  `display: block`. A lone `sui-*` element with nothing beside it to sit next
+  to is deliberately not flagged — there is nothing for its own display change
+  to disturb. To keep this bounded, a parent carrying an inline `style`
+  attribute that makes it a flex or grid container is also not flagged: a
+  flex/grid item's own `display` no longer controls how it sits beside its
+  siblings, so the old inline-vs-block distinction stops mattering there. What
+  is still a false negative, not a false positive: a `sui-*` element nested
+  deeper than an immediate parent/sibling, one whose neighbour is separated by
+  an `{#if}`/`{#each}` block, or one whose surrounding layout is made inline
+  (or flex/grid) by a CSS _class_ rather than a literal inline `style` — none
+  of that is recoverable from source either.
 - **`chart-min-width`** would need the parent's _computed_ width, which is
   runtime information. This instead flags the one thing that IS visible
   statically: an inline `width` or `flex-basis` literal (in px) below 160.
@@ -80,6 +102,26 @@ recognition of the raw `sui-*` custom-element spelling, depend on
 library's own checkout at scan time — never a hardcoded list of tag names, so
 it cannot drift as components are added, renamed, or reassigned a display
 default.
+
+### Known limits: `chat-composer-recording-reflect`
+
+This asks whether a piece of CSS or JS cares about `sui-chat-composer`'s
+`recording` _attribute_ specifically — not just whether the attribute could in
+principle be read, which nothing short of a full type-aware dataflow analysis
+could answer. So it looks for the two textual shapes that reliably signal it:
+a CSS selector containing `sui-chat-composer[recording...]`, and a same-file
+`getAttribute('recording')` / `hasAttribute('recording')` call in a file that
+also mentions the literal string `sui-chat-composer` somewhere (mirroring how
+`legacy-back-selector` bounds itself — textual co-occurrence, not real
+dataflow). That means: a `.getAttribute('recording')` call on an element
+reached through a variable, without the tag name `sui-chat-composer` spelled
+out literally anywhere in the same file, is a false negative; and a file that
+mentions `sui-chat-composer` once while reading a `recording` attribute off
+some unrelated element elsewhere in the same file is a possible, if unlikely,
+false positive. Either way the finding's own detail is careful to say what
+still works — setting the property, and the bare presence of the attribute in
+markup — so a consumer chasing this finding isn't sent looking for a problem
+that isn't there.
 
 ## Design notes
 

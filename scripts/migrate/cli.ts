@@ -53,9 +53,11 @@ const USAGE = [
   '',
   "Scans .svelte files for: Toolbar's changed default back control;",
   "InputButton's mandatory prop now also setting native required; a sui-*",
-  "custom element used where the browser's old implicit inline mattered; and",
-  'a chart rendered into a parent narrower than its new 160px floor. Also',
-  'scans .svelte and .css files for the renamed chart tooltip slot selector.',
+  "custom element used where the browser's old implicit inline mattered --",
+  'either as the child of a text-flow tag or beside inline-level content --',
+  'and a chart rendered into a parent narrower than its new 160px floor. Also',
+  'scans .svelte and .css files for the renamed chart tooltip slot selector',
+  "and for sui-chat-composer's recording attribute, which no longer reflects.",
   'See scripts/migrate/README.md for the full reason table.'
 ].join('\n');
 

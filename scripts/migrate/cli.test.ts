@@ -208,4 +208,49 @@ describe('review findings — new reasons wired end-to-end', () => {
     expect(summary.findings).toHaveLength(1);
     expect(summary.findings[0]?.reason).toBe('chart-min-width');
   });
+
+  it('flags real sui-* siblings inside a plain div — the widened rule, gap A', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/Toolbar.svelte': '<div><sui-badge></sui-badge><sui-badge></sui-badge></div>'
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(2);
+    expect(summary.findings.every((f) => f.reason === 'host-display-inline')).toBe(true);
+  });
+
+  it('flags a real sui-chat-composer[recording] selector in a .css file — gap B', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/app.css': 'sui-chat-composer[recording] { outline: 2px solid red; }\n'
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('chat-composer-recording-reflect');
+    expect(summary.findings[0]?.file).toBe('src/app.css');
+  });
+
+  it('flags a real getAttribute("recording") read off a sui-chat-composer — gap B', () => {
+    const root = project(
+      { dependencies: { [LIB]: '2.136.0', svelte: '^5.55.9' } },
+      {
+        'src/Voice.svelte':
+          "<script>document.querySelector('sui-chat-composer').getAttribute('recording');</script>"
+      }
+    );
+
+    const summary = run([root], silent);
+
+    expect(summary.findings).toHaveLength(1);
+    expect(summary.findings[0]?.reason).toBe('chat-composer-recording-reflect');
+    expect(summary.findings[0]?.file).toBe('src/Voice.svelte');
+  });
 });

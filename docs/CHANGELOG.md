@@ -2,7 +2,25 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.1)
+
+`docs/Select.md` said a portaled panel flips up "when they cannot fit below"
+and "when there's no room below". The implementation requires both that and
+more space above than below:
+
+const flippedUp =
+vertical === 'auto' ? !fitsBelow && spaceAbove &gt; spaceBelow : ...
+
+As written, the docs described a panel that would flip into a space too small
+to hold it. It does not; a panel that fits nowhere stays below. Both rows --
+`placement` and `usePortal` -- now say so.
+
+Raised in review on #617 and left unresolved at merge.
+
+-
+docs(select): state both halves of the automatic flip condition ([7d8318f](https://github.com/juspay/svelte-ui-components/commit/7d8318f83afc8ea612c17cdf56e2b471ea59b979))
+
+## [4.27.1](https://github.com/juspay/svelte-ui-components/compare/4.27.1..4.27.0) - 13 September 2026
 
 toHaveScreenshot rounds a fractional element box when it captures, and
 which way it rounds depends on the element's sub-pixel offset. main.content

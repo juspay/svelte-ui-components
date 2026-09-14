@@ -2,7 +2,46 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.2)
+
+Two accessibility defects found while auditing the session's own closure, both
+verified against the merged tree rather than taken from a review comment.
+
+#637c95 was the default for Input's label, InputButton's label and Banner's
+text. It measures 4.33:1 on white and 3.92:1 on Banner's own #f0f4f8
+background -- below the 4.5:1 AA needs for normal text, in the configuration a
+consumer who sets no token actually gets. It is now #4d6174: same hue and
+saturation, darkened to 6.41:1 on white and 5.80:1 on the banner tint, which
+matches the headroom the earlier error-colour fix took (#c5120a, 6.06:1)
+rather than stopping at the first value that clears the line.
+
+`a11y-contrast.test.ts` pins all three, reading the literal out of the
+`var(--token, #hex)` fallback so it measures what ships, not a palette
+constant. It carries a negative control asserting the old value still fails,
+so a broken ratio calculation cannot make the suite vacuously green.
+
+VoiceOrb's canvas is `aria-hidden`, which is right -- pointer repulsion pushes
+particles aside and accomplishes nothing, so there is no functionality a
+keyboard user is locked out of and a focus stop would lead nowhere. What was
+genuinely unreachable is the variant: the orb says a microphone is open and
+nothing announced it. `statusLabels` is the caller's words for each variant,
+rendering a visually hidden polite live region on the Carousel's pattern.
+Opt-in and with no default, because the same animation means "listening" on
+one surface and "recording" on another, and a component that guessed would
+announce the wrong thing confidently.
+
+Verified: check, lint, build all exit 0; vitest 1279 passed across 68 files
+(up 9). The visual suite passes 94/94 unchanged -- and that is not the
+instrument agreeing with itself: injecting a bright red banner colour fails it
+with 3381 differing pixels, while this change measures a YIQ delta of 354.6
+against Playwright's default per-pixel threshold of 1408.6, so no baseline
+moves. That per-pixel tolerance is worth knowing about separately; the
+harness comment calls itself an exact match and it is not.
+
+-
+fix(a11y): bring default label and banner text to AA, and announce the orb's state ([4d9f83f](https://github.com/juspay/svelte-ui-components/commit/4d9f83f59d8232d24b6b2909474795df28f3c813))
+
+## [4.27.2](https://github.com/juspay/svelte-ui-components/compare/4.27.2..4.27.1) - 14 September 2026
 
 `docs/Select.md` said a portaled panel flips up "when they cannot fit below"
 and "when there's no room below". The implementation requires both that and

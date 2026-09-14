@@ -2,7 +2,73 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.27.6)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.28.0)
+
+`Release and Publish` on ea00e985 FAILED -- `verify` died after Type-check on
+scripts/migrate/legacy-palette.test.ts, so 4.27.7 never published. Reproduced
+on a clean worktree of ea00e985 with nothing else applied: 2 failed | 39
+passed.
+
+Its two history cases read `origin/release:&lt;path&gt;` as the "before" side and
+assert the detector flags a difference against the working tree. That
+self-invalidates on merge: while the fix sat on a branch the ref was the
+unfixed tree and a restore existed; once merged, `origin/release` IS the merged
+tree, previous === current, and both fail permanently for everyone who has
+fetched.
+
+`skipIf` made it worse rather than safer -- with no such ref (a shallow clone)
+the cases SKIP instead of failing, so the same code was green in one job and
+red in another purely by clone depth.
+
+Pinned to 8533bbc6 (4.27.6), the last release commit before the fix landed,
+verified to hold the pre-fix form of both files. 41 passed, was 2 failed.
+
+Measured on a CLEAN checkout of ea00e985 with none of this branch applied, so
+the attribution does not depend on anything here:
+
+theme-switcher.png   1006 px, maxDelta 204.8  (14.5% of budget)
+status.png          14990 px, maxDelta 931.2  (66.1% of budget)
+
+Both regenerate deterministically -- two independent captures produced
+byte-identical files, and the same two numbers came back on this branch and on
+clean release. 8ff28c10 added `transition: none` to the harness and regenerated
+some baselines but not these two, so they still encode the pre-transition
+rendering. Sub-threshold, so the suite could never see it.
+
+The `status` figures also reproduce a separate session's independent probe
+exactly -- same md5 9c52bb6d, same 14990 pixels.
+
+The visual suite navigated with `waitUntil: 'networkidle'` and never waited for
+the app to be interactive, while the rest of the suite gates on `data-hydrated`
+via tests/support/hydrated.ts, whose comment describes that exact race.
+
+It was added as a candidate fix for `hitl` and it fixed nothing -- `hitl` still
+varies by exactly 1314.3. It is kept because closing a real race in the one
+place that left it open is correct on its own, and the comment says so.
+
+An earlier revision added a second `transition: none !important` to the later
+style tag before noticing release already injects one at :416-419, placed
+earlier and deliberately -- before anything measures the page. Removed on
+review; the comment now records that it was a duplicate.
+
+That also withdraws this branch's earlier claim to have fixed `theme-switcher`:
+the 520.2 -&gt; 0.1 measurement was taken before 8ff28c10 landed, and the fix is
+8ff28c10's. What remains true is that its baseline was never regenerated.
+
+`hitl` is not fixed and was misdiagnosed as a transition; the source comment
+records that rather than dropping it. Its diffPx lands on a ladder
+(212/412/612/1012/1212/1612) -- one interval tick per step -- but WHY the tick
+count varies, with a manual clock and a fixed `runFor`, is not established.
+
+Verified: lint/check 0, 140 test files, 2133 tests, 98 visual passed. An md5
+diff across all 98 baselines confirms only the two named above moved.
+
+Refs #622
+
+-
+fix(visual): refresh two baselines stale on release, gate hydration, unblock the publish ([9867972](https://github.com/juspay/svelte-ui-components/commit/9867972f42b02018f78300edca045cff9344d45c))
+
+## [4.28.0](https://github.com/juspay/svelte-ui-components/compare/4.28.0..4.27.6) - 14 September 2026
 
 4.28.0 never published. `Release and Publish` on ea00e985 died at verify with
 2 of 2133, skipping the publish entirely, and both failures were mine.

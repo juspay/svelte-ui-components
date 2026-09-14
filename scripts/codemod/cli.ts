@@ -4,6 +4,10 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { transformSvelte } from './transform.ts';
 import { findChildrenAssignments } from './wc-children.ts';
+// `type` import only: erased at compile time, so it adds no runtime module
+// resolution. `runMigrateAudit` itself is loaded dynamically inside `run`
+// below -- see that function's doc comment for why the split matters.
+import type { MigrateAuditSummary } from './migrate-audit.ts';
 
 export type CliSummary = {
   readonly exitCode: number;
@@ -15,6 +19,7 @@ export type CliSummary = {
 
 const USAGE = [
   'Usage: npx sui-codemod [--dry-run] <path...>',
+  '       npx sui-codemod migrate [--dry-run] <path>',
   '       (inside this repository: node scripts/codemod/cli.ts ...)',
   '',
   'Prepares a @juspay/svelte-ui-components consumer for 4.0.0: renames every',
@@ -27,10 +32,18 @@ const USAGE = [
   '',
   'Paths may be files or directories; directories are walked recursively,',
   'skipping node_modules, .git, .svelte-kit, dist, dist-wc, build, coverage,',
-  'playwright-report and test-results.'
+  'playwright-report and test-results.',
+  '',
+  'Run `sui-codemod migrate <path> --help` instead to audit a project for',
+  'the seven 4.28.0 breaking changes (a different, single-project subcommand',
+  '-- see migrate-audit.ts).'
 ].join('\n');
 
-const SKIPPED_DIRECTORIES = new Set([
+/**
+ * Exported for `migrate-audit.ts`'s own consumer file walk, so the two
+ * subcommands can never drift on what "skip node_modules et al." means.
+ */
+export const SKIPPED_DIRECTORIES = new Set([
   'node_modules',
   '.git',
   '.svelte-kit',
@@ -189,9 +202,51 @@ export function runCodemod(argv: ReadonlyArray<string>, log: (line: string) => v
   };
 }
 
+export type CliDispatchSummary = CliSummary | MigrateAuditSummary;
+
+/**
+ * `sui-codemod`'s single entry point, callable directly by `bin.ts` and by
+ * tests: a leading `migrate` positional routes to the 4.28.0 breaking-change
+ * audit (`migrate-audit.ts`), matching `npm run migrate`'s findings but
+ * runnable against a project that only has the published package installed;
+ * anything else goes to `runCodemod`, unchanged from before this existed.
+ *
+ * A subcommand rather than a flag (`--migrate`) because the two take a
+ * different argv shape -- `runCodemod` accepts a variadic list of paths,
+ * `migrate` takes exactly one project root, mirroring `chart-tooltip-selector.ts`
+ * and `scripts/migrate/cli.ts` -- and because `migrate`'s own `--dry-run`
+ * means "preview the tooltip selector rewrite", a different question from
+ * `runCodemod`'s "preview the prop rename", so the two need separate
+ * `parseArgs` calls rather than one shared flag set. The trade-off is a
+ * consumer directory literally named `migrate` colliding with the
+ * subcommand if passed as this package's own single positional; no such
+ * conflict exists for `runCodemod`'s variadic form.
+ *
+ * `migrate-audit.ts` is imported dynamically here, inside the branch that
+ * actually needs it, rather than as a static top-level import. A static
+ * import is resolved and linked -- by Node, at module load, before any of
+ * this file's own code runs -- regardless of whether `argv` ever asks for
+ * `migrate`; `migrate-audit.ts` in turn imports `../migrate/analyze.ts`
+ * unconditionally, so a static import here would mean every invocation of
+ * `runCodemod`'s own prop-rename command, the one this package has shipped
+ * since 4.0.0, pays that resolution cost too, and fails outright if it
+ * can't be satisfied. A dynamic import defers that cost, and that failure
+ * mode, to only the invocations that actually take this branch.
+ */
+export async function run(
+  argv: readonly string[],
+  log: (line: string) => void
+): Promise<CliDispatchSummary> {
+  if (argv[0] === 'migrate') {
+    const { runMigrateAudit } = await import('./migrate-audit.ts');
+    return runMigrateAudit(argv.slice(1), log);
+  }
+  return runCodemod(argv, log);
+}
+
 const entryPoint = process.argv.at(1) ?? '';
 if (entryPoint !== '' && import.meta.url === pathToFileURL(entryPoint).href) {
-  const summary = runCodemod(process.argv.slice(2), (line) => {
+  const summary = await run(process.argv.slice(2), (line) => {
     console.log(line);
   });
   process.exitCode = summary.exitCode;

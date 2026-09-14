@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { intersects } from 'semver';
 import {
   analyzeManifest,
   analyzeStylesheet,
   analyzeSvelte,
   readWcComponents,
+  setRangeIntersector,
   type AnalyzeContext,
   type WcComponent
 } from './analyze.ts';
+
+// analyze.ts no longer imports semver so it can be loaded from a consumer's
+// node_modules; the repo-side callers supply it. cli.ts does this too.
+setRangeIntersector((range, peer) => intersects(range, peer, { loose: true }));
 
 const LIB = '@juspay/svelte-ui-components';
 

@@ -23,7 +23,7 @@
     "dev": "vite dev --host",
     "build": "vite build && npm run build:wc && npm run build:codemod && npm run package",
     "build:wc": "vite build --config vite.config.wc.ts && echo 'export {};' > dist-wc/index.d.ts",
-    "build:codemod": "rm -rf dist-codemod && tsc -p scripts/codemod/tsconfig.build.json",
+    "build:codemod": "rm -rf dist-codemod && tsc -p scripts/codemod/tsconfig.build.json && node --experimental-strip-types scripts/codemod/generate-migration-assets.ts",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run build:wc && npm run build:codemod && npm run package",
@@ -204,7 +204,7 @@
     }
   },
   "bin": {
-    "sui-codemod": "./dist-codemod/bin.js"
+    "sui-codemod": "./dist-codemod/codemod/bin.js"
   },
   "engines": {
     "node": ">=22.18"

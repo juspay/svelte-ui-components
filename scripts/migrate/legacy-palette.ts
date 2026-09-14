@@ -11,7 +11,8 @@ import { pathToFileURL } from 'node:url';
  *
  * The list is derived by diffing, never hand-written: for every property with
  * a literal (non-delegating) fallback under `src/lib/**`, the fallback on
- * `--base` (default `origin/release`) is compared against the one in the
+ * `--base` (default `DEFAULT_BASE`, the last pre-4.28 tag) is compared
+ * against the one in the
  * current working tree, and a rule is emitted for each one that changed. A
  * property whose fallback was ALREADY inconsistent across call sites before
  * this change -- two different literals for the same `--name` in different
@@ -32,7 +33,19 @@ import { pathToFileURL } from 'node:url';
  * this only ever produces the standalone stylesheet.
  */
 
-const DEFAULT_BASE = 'origin/release';
+/**
+ * The last release BEFORE the 4.28.0 contrast pass — a tag, deliberately, not
+ * `origin/release`.
+ *
+ * A branch name was the original default and became wrong the moment this work
+ * merged: `origin/release` now contains the very changes this tool exists to
+ * diff, so it compared the new palette against itself and found nothing to
+ * restore. It failed quietly, which is the worst shape for this particular
+ * tool, since an empty stylesheet is exactly what "nothing changed" looks like.
+ * A tag cannot drift that way — 4.27.6 is a fixed point in history and stays
+ * the right answer however far release moves on.
+ */
+export const DEFAULT_BASE = '4.27.6';
 const RELEVANT_FILE = /\.(?:svelte|ts|css)$/;
 const EXCLUDED_FILE = /\.(?:test|spec)\.(?:svelte|ts)$/;
 const VAR_WITH_FALLBACK = /var\(\s*(--[a-zA-Z0-9-]+)\s*,\s*/g;
@@ -675,9 +688,14 @@ function assertRefExists(root: string, ref: string): void {
       stdio: ['ignore', 'pipe', 'pipe']
     });
   } catch {
+    // `git fetch origin release` was the instruction while the default was a
+    // branch. The default is a TAG now, which that command does not fetch, so
+    // following the old advice failed again identically -- an error message
+    // that sends you round the same loop is worse than none.
     throw new Error(
       `cannot resolve --base '${ref}' in ${root}. ` +
-        `Fetch it first (git fetch origin release), or pass a ref that exists.`
+        `Fetch it first (git fetch origin --tags for a tag, git fetch origin <branch> ` +
+        `for a branch), or pass a ref that exists.`
     );
   }
 }

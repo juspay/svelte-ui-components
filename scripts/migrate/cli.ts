@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { intersects } from 'semver';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   analyzeManifest,
@@ -8,6 +9,7 @@ import {
   analyzeSvelte,
   LIBRARY,
   readWcComponents,
+  setRangeIntersector,
   type AnalyzeContext,
   type Finding
 } from './analyze.ts';
@@ -36,10 +38,22 @@ function targetRange(): string {
   if (major === '' || Number.isNaN(Number(major))) {
     throw new Error(`unreadable version in package.json: ${version}`);
   }
-  return `^${major}.0.0`;
+  // The full version, not `^<major>.0.0`. Those are the same range only when
+  // the breaking changes sit at a major boundary, and these do not: they
+  // shipped in 4.28.0, so `^4.0.0` would let a consumer resolve to 4.27.x and
+  // satisfy the range while missing everything the migration guide describes.
+  return `^${version}`;
 }
 
 const TARGET_RANGE = targetRange();
+
+// `analyze.ts` ships inside the published package, where `semver` (a
+// devDependency) does not exist, so it cannot import it and takes the
+// implementation from whoever runs it. This repo-side CLI is the caller that
+// has it. `loose` changes the answer for exactly one shape worth having: a
+// version written with a leading zero (`^05.41.2`), which strict parsing
+// throws on and would be reported as a blocker it is not.
+setRangeIntersector((range, peer) => intersects(range, peer, { loose: true }));
 
 const USAGE = [
   'Usage: node scripts/migrate/cli.ts [--apply] [--target <range>] <consumer path>',

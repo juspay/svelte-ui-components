@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { runCodemod } from './cli.ts';
+import { run, runCodemod } from './cli.ts';
 
 const APP = [
   '<script>',
@@ -119,5 +119,27 @@ describe('runCodemod', () => {
     const { dir, log } = project();
     const summary = runCodemod([join(dir, 'missing')], log);
     expect(summary.exitCode).toBe(2);
+  });
+});
+
+describe('run — dispatch to the migrate subcommand', () => {
+  it('routes a leading "migrate" positional to the audit, not the prop-rename transform', async () => {
+    const { dir, lines, log } = project();
+    const summary = await run(['migrate', dir], log);
+
+    // A CliSummary has filesChanged/propsRenamed; a MigrateAuditSummary has
+    // wcDisplay/rewrites instead — asserting the latter's shape is present
+    // is what proves this actually reached migrate-audit.ts, not just that
+    // *some* summary with an exitCode came back.
+    expect('wcDisplay' in summary).toBe(true);
+    expect(lines.join('\n')).toContain('sui-codemod migrate: auditing');
+  });
+
+  it('still runs the prop-rename transform when argv has no "migrate" positional', async () => {
+    const { dir, log } = project();
+    const summary = await run([dir], log);
+
+    expect('filesChanged' in summary).toBe(true);
+    expect('wcDisplay' in summary).toBe(false);
   });
 });

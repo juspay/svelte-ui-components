@@ -2,7 +2,56 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.28.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.28.1)
+
+The 85 commits of the Bits UI parity programme, rebased onto release after
+4.28.0. Collapsed to one commit first so each of the 230 conflicting files was
+resolved once rather than up to 85 times.
+
+## Why 230 files conflict between two trees that agree
+
+Nearly all of this branch's library content already reached release through
+PR 598, which folded and squashed it. Git cannot match a squashed
+re-expression to its own source, so the same content reads as a conflict on
+both sides. Release won all 230, and that was measured per file rather than
+assumed: where the two differ, release holds the LATER text. AreaChart's
+`handleMarkFocus` calls `activate()` here and `activateFocus()` on release,
+because release split the function and documented that blur clears only the
+focus half. `scripts/wc2-unreachable.mjs` states every exemption reason on
+release too, reworded into prose, correctly minus the reference to
+`parity-ledger.mjs`, which release does not have.
+
+What survives is 8 files: the parity ledger, the `.parity` records, the
+session hooks, and the Bits UI comparison documents. None shipped with 598.
+
+## The failure the conflict count cannot see
+
+An earlier attempt at this rebase used `-X ours` and exited 0 with a tree that
+declared `handleMarkFocus` twice and registered the same dispatch tests under
+two names. A file that exists on only one side cannot conflict, so twelve
+files were added cleanly, with no marker and no error. The conflict count is
+structurally blind to duplicate-by-addition, which makes it the wrong
+instrument to tune a merge strategy against.
+
+The six dispatch tests named by batch order are dropped in favour of release's
+six named by coverage. That is measured, not inferred: extracting every `sui-*`
+element each set touches gives 18 on each side, none unique to either.
+Identical coverage, different partitioning.
+
+## CW-5 could not fail
+
+The probe hardcoded five chart names, so it read "5 of 5" whatever the library
+did and could never become six. It now derives the set from
+docs/CHART_INPUT_POLICY.md's treatment table -- which names every chart bound
+by the non-finite contract, in two rows because the treatment is forced by
+whether the chart is positional or share-of-whole, with BarChart in both. It
+reads 7 of 7, and a negative control replacing one name with a chart that has
+no wrapper moves it to PARTIAL 6 of 7 rather than leaving it green.
+
+lint, check and 2177 unit tests pass, and the ledger runs clean against this
+tree: 46 items, 44 closed, 0 actionable.
+
+## [4.28.1](https://github.com/juspay/svelte-ui-components/compare/4.28.1..4.28.0) - 14 September 2026
 
 `Release and Publish` on ea00e985 FAILED -- `verify` died after Type-check on
 scripts/migrate/legacy-palette.test.ts, so 4.27.7 never published. Reproduced

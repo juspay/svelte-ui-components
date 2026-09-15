@@ -2,7 +2,29 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.28.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.29.0)
+
+Updates `@vitest/mocker` from 4.1.8 to 5.0.0
+- [Release notes](https://github.com/vitest-dev/vitest/releases)
+- [Changelog](https://github.com/vitest-dev/vitest/blob/main/docs/releases.md)
+- [Commits](https://github.com/vitest-dev/vitest/commits/v5.0.0/packages/mocker)
+
+---
+updated-dependencies:
+- dependency-name: "@vitest/mocker"
+dependency-version: 5.0.0
+dependency-type: indirect
+dependency-group: npm_and_yarn
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
+
+-
+build(deps): bump @vitest/mocker ([93e0577](https://github.com/juspay/svelte-ui-components/commit/93e057712a9361b6d3afc4c25597858fdac52848))
+-
+fix(package): enable barrel tree-shaking ([f3fc8f6](https://github.com/juspay/svelte-ui-components/commit/f3fc8f616cf5cc3d1664e023a53da744a7f087b6))
+
+## [4.29.0](https://github.com/juspay/svelte-ui-components/compare/4.29.0..4.28.1) - 15 September 2026
 
 The 85 commits of the Bits UI parity programme, rebased onto release after
 4.28.0. Collapsed to one commit first so each of the 230 conflicting files was

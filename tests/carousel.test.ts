@@ -85,6 +85,35 @@ test.describe('Carousel', () => {
       .locator('.slidesDiv')
       .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   });
+
+  test('dot and active-dot transitions are scoped to background, not outline', async ({ page }) => {
+    await gotoHydrated(page, '/components/carousel');
+
+    // dot1 is active-dot (aria-current) on load; dot2 stays a plain .dot.
+    // Checking both rules matters: `transition: all` on either one would let
+    // a keyboard focus ring animate in instead of appearing instantly, and
+    // the previous test's `outline-style: solid` assertion would not catch
+    // that regression -- it only proves an outline exists, not which
+    // properties transition. Reading the computed transition-property list
+    // does.
+    const activeDot = page.getByTestId('carousel-manual-dot-1');
+    const inactiveDot = page.getByTestId('carousel-manual-dot-2');
+    await expect(activeDot).toHaveClass(/active-dot/);
+    await expect(inactiveDot).not.toHaveClass(/active-dot/);
+
+    for (const dot of [activeDot, inactiveDot]) {
+      const transitionProperties = await dot.evaluate((el) =>
+        getComputedStyle(el)
+          .transitionProperty.split(',')
+          .map((property) => property.trim())
+      );
+      // `all` would also transition `outline`; assert the property list
+      // itself rather than merely that a focus outline is present.
+      expect(transitionProperties).not.toContain('all');
+      expect(transitionProperties).not.toContain('outline');
+      expect(transitionProperties).toEqual(['background']);
+    }
+  });
 });
 
 test.describe('Carousel backward compatibility and announcements', () => {

@@ -817,7 +817,8 @@
       data-pw="ops-note"
       aria-label="Note for {String(row.record)}"
       placeholder="note"
-      style="width: 90px;"
+      class="ops-note"
+      style="width: 90px; --input-placeholder-color: var(--table-ops-note-placeholder-color, #6b7280);"
     />
     <!-- A portaled popup: its panel renders outside the row entirely, so its
          clicks never reach the row even without the marking. The marking is on
@@ -1655,5 +1656,17 @@
     --pill-background: #d1ecf1;
     --pill-color: #0c5460;
     --pill-hover-background: #bee5eb;
+  }
+
+  /* The inline style on the ops-note input sets --input-placeholder-color, but
+     nothing consumed it -- there was no rule at all for this raw native input's
+     ::placeholder (unlike every library component, which pairs its own
+     `--x-placeholder-color` with a `::placeholder { color: var(--x-placeholder-color) }`
+     rule in its own stylesheet). Without this, the browser's own UA default
+     (~#757575) rendered instead and measured 2.43:1 on the dark row background,
+     caught by scripts/check-contrast.mjs.
+     See --table-ops-note-placeholder-color in theme-dark.css for the dark value. */
+  .ops-note::placeholder {
+    color: var(--input-placeholder-color, #6b7280);
   }
 </style>

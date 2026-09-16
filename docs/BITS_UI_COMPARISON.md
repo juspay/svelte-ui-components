@@ -88,6 +88,17 @@ missing list and are now built, in this library's own style rather than ported.
 **Toggle.** `checked` is bindable, so `bind:checked` reports the switch back to its parent
 as it already did on Checkbox, Radio and Slider.
 
+**ListItem.** `label` was rendered through `{@html}` unconditionally — the docs called this
+out as supporting HTML, but nothing in the component let a consumer opt out, so every
+`label` was a live injection surface with no way to render it as plain text. It now escapes
+`label` by default, matching `MarkdownText.htmlSanitizer`'s position: this library does not
+implement HTML sanitization itself. A new `sanitize` prop (`rawHtml: 'sanitize'` plus an
+`htmlSanitizer` callback) opts back into markup, called once per render with the raw label,
+falling back to escaping if it throws or returns a non-string. A consumer that relied on the
+old unconditional passthrough needs to add `sanitize={{ rawHtml: 'sanitize', htmlSanitizer: (html) => html }}`
+(or a real sanitizer) to keep rendering markup — see docs/ListItem.md, "Rendering markup in
+the label".
+
 **TypewriterText.** The optional `markdown` mode reuses `renderMarkdown` for every
 revealed prefix and ignores custom renderers while enabled. Raw HTML is escaped and
 unsafe link/image protocols are stripped. The optional parser loads lazily, with escaped
@@ -168,7 +179,7 @@ equivalent implementation. A dash means Bits UI has nothing in that area.
 | KeyboardInput       | —                               | Reviewed, no change                                                                     |
 | Label               | Label                           | Added                                                                                   |
 | LineChart           | —                               | Reviewed, no change                                                                     |
-| ListItem            | —                               | Reviewed, no change                                                                     |
+| ListItem            | —                               | `label` escapes by default; markup only via a consumer-supplied `sanitize.htmlSanitizer` |
 | Loader              | —                               | Reviewed, no change                                                                     |
 | LoadingDots         | —                               | Reviewed, no change                                                                     |
 | LottiePlayer        | —                               | Reviewed, no change                                                                     |
@@ -270,8 +281,17 @@ rejected or deferred rather than silently dropped.
 - **Reviewed and deliberately not changed:** `Img` fetches any cross-origin URL for
   `inlineSvg`. That is the component's purpose and its sanitisation is thorough, so an
   origin allowlist is a policy decision for consumers rather than a defect to fix here.
-- **Still open:** Select has no arrow wraparound; Calendar's month navigation is not
-  bounded by `minDate`/`maxDate`; ListItem renders its `label` through `{@html}`.
+- **Fixed:** Select's arrow-key navigation stopped at either end of the list; `ArrowDown`
+  from the last selectable option now wraps to the first and `ArrowUp` from the first wraps
+  to the last, landing on the nearest enabled row the same way `Home`/`End` already did
+  rather than on a disabled row sitting at the edge.
+- **Fixed:** ListItem rendered its `label` through `{@html}` unconditionally, with no way
+  to opt out — a real injection risk, not a documented capability with an escape hatch
+  (the docs said "supports HTML" but gave no way to turn it off). `label` now escapes by
+  default; a consumer that wants markup opts in with `sanitize.rawHtml: 'sanitize'` plus
+  a `sanitize.htmlSanitizer` it supplies, the same consumer-owns-the-sanitizer pattern
+  `MarkdownText.htmlSanitizer` already uses (PR 608). See docs/ListItem.md, "Rendering
+  markup in the label", for the migration a consumer relying on the old passthrough needs.
 
 ## Anti-goals
 

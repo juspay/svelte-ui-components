@@ -356,6 +356,15 @@
     opacity: var(--chat-composer-disabled-opacity, 0.6);
   }
 
+  /* .input below sets outline: none with nothing standing in for it, so the
+     visible replacement lives here on the surrounding surface instead --
+     :focus-within lights up whenever the textarea inside is focused, the same
+     pattern Select's .select-trigger uses for its nested search input. */
+  .chat-composer:focus-within {
+    border-color: var(--chat-composer-focus-border-color, #2563eb);
+    box-shadow: var(--chat-composer-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
+  }
+
   .attachments-rich {
     padding: var(--chat-composer-attachments-padding, 2px 4px 0);
   }

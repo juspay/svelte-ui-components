@@ -638,6 +638,22 @@
     transition: var(--tabs-transition, color 0.2s ease, background 0.2s ease);
   }
 
+  /* Roving focus really does move (see focusedKey/focusTabAt above) -- this
+     just replaces the INDICATOR that outline:none above strips, which is what
+     was actually missing (WCAG 2.4.7). :focus-visible only, so a mouse click
+     that activates a tab still shows nothing new, matching the rest of this
+     file's pattern (Sheet's .sheet-panel, Select's .select-clear, ...).
+     currentColor tracks --tabs-item-color / --tabs-active-color, which are
+     already themed per-mode and per-state, so the ring stays visible against
+     --tabs-bar-background in both themes with no extra token needed here. The
+     offset is inset, not the usual outward one: .tabs-bar is a same-axis
+     overflow:auto scroller with 0px padding/gap by default, so an outward ring
+     on an edge tab would be clipped by the scroll container's own edge. */
+  .tabs-item:focus-visible {
+    outline: var(--tabs-item-focus-outline, 2px solid currentColor);
+    outline-offset: var(--tabs-item-focus-outline-offset, -2px);
+  }
+
   .tabs-item :global(.tabs-item-icon) {
     --image-width: var(--tabs-item-icon-size, 16px);
     --image-height: var(--tabs-item-icon-size, 16px);

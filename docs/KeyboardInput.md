@@ -67,7 +67,7 @@ Override these custom properties to theme the component.
 | `--keyboard-input-font-family`         | `inherit`           | font-family      | Font family for the entire component.                                             |
 | `--keyboard-input-font-size`           | `13px`              | font-size        | Font size of the entire component.                                                |
 | `--keyboard-input-cursor`              | `default`           | cursor           | Cursor style when hovering over the component.                                    |
-| `--keyboard-input-separator-color`     | `#888888`           | color            | Text color of the separator character between keys.                               |
+| `--keyboard-input-separator-color`     | `#6b7280`           | color            | Text color of the separator character between keys.                               |
 | `--keyboard-input-separator-font-size` | `0.85em`            | font-size        | Font size of the separator character.                                             |
 | `--keyboard-input-key-font-family`     | `inherit`           | font-family      | Font family for individual key badges.                                            |
 | `--keyboard-input-key-font-weight`     | `500`               | font-weight      | Font weight of the key text.                                                      |

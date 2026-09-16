@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
-import { beat, caption, highlight, step } from './support/narrate.js';
+import { assertInViewport, beat, caption, highlight, step } from './support/narrate.js';
 
 /**
  * Table's largest gap area, and the one a screenshot proves the least about.
@@ -365,11 +365,42 @@ test.describe('Table walkthrough — custom cells and operational data states', 
   });
 });
 
+/**
+ * The demo shell's own sidebar nav (src/routes/+layout.svelte) is a fixed
+ * 260px CSS Grid column -- `grid-template-columns: 260px minmax(0, 1fr)` --
+ * with no narrow-viewport collapse of its own. At a 375px viewport that
+ * leaves only ~115px (minus the content area's own 40px side padding) for
+ * everything else, nowhere near enough to read a label/value card legibly.
+ * That crowding is the docs shell's gap, not the table's, and this
+ * walkthrough is about `mobileCardLayout` -- so it hides the shell chrome
+ * that would otherwise crowd the frame rather than film illegible cards.
+ * `!important` on both declarations because the injected tag lands after
+ * Svelte's own scoped stylesheet, whose selectors carry an extra scoping
+ * class and would otherwise still win on specificity.
+ *
+ * The replacement column keeps `minmax(0, ...)`, not bare `1fr`: an `fr`
+ * track's default minimum is `auto` (its content's min-content size), not
+ * zero, so a bare `1fr` lets the grid stretch to fit whatever unbreakable
+ * content lives elsewhere on the page -- on this route, a code sample in the
+ * "Usage" docs section rendered below the demo. That measured 900px wide
+ * against a 375px viewport and dragged the row along with it. `minmax(0, ...)`
+ * is what the original rule relied on to keep overflowing content scrolling
+ * instead of stretching the layout, and dropping it while "fixing" the
+ * sidebar reintroduced the same class of bug one line over.
+ */
+const collapseDemoSidebar = (page: Page) =>
+  page.addStyleTag({
+    content:
+      '.sidebar { display: none !important; } ' +
+      '.app-layout { grid-template-columns: minmax(0, 1fr) !important; }'
+  });
+
 test('mobileCardLayout reflows rows into label/value cards below 640px, and back', async ({
   page
 }) => {
   await gotoHydrated(page, '/components/table');
   const table = page.getByTestId('table-mobile-cards');
+  await table.scrollIntoViewIfNeeded();
   const tableElement = table.locator('table');
   const firstRow = table.locator('tbody tr.table-row').first();
   const firstCell = firstRow.locator('td.table-content').first();
@@ -390,6 +421,11 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
   });
   await beat(page, 800);
 
+  // See collapseDemoSidebar's own doc comment: without this, the sidebar's
+  // fixed 260px column leaves the card too narrow to read at 375px. Restored
+  // once back at desktop width below.
+  const sidebarOverride = await collapseDemoSidebar(page);
+
   await caption(
     page,
     'Every row is now a bordered card: the column header text reappears as a label directly beside its value.'
@@ -399,9 +435,24 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
   await expect(firstLabel).toBeVisible();
   await expect(firstLabel).toHaveText('Name');
   await expect(firstRow).toContainText('Alice Johnson');
+
+  // Narrowing the viewport can reflow everything above the table (nav, page
+  // header, the preceding demo sections) and leave it scrolled out of view
+  // even though scrollIntoViewIfNeeded already ran once at desktop width --
+  // that scroll position does not survive the resize. Scroll to the actual
+  // mobile card again now that the narrow layout has settled, and prove it
+  // landed on screen: an evidence video of an empty gutter must fail the
+  // spec, not just look wrong on review.
+  await firstRow.scrollIntoViewIfNeeded();
+  await assertInViewport(page, firstRow);
+  await highlight(firstRow, 1_600);
   // The layout changed; the accessible structure did not.
   await expect(tableElement).toHaveAttribute('role', 'table');
   await expect(firstCell).toHaveAttribute('role', 'cell');
+
+  // Restore the real shell before widening back, so the desktop half below
+  // shows the genuine page rather than a still-modified one.
+  await sidebarOverride.evaluate((node) => node.remove());
 
   await step(
     page,
@@ -410,8 +461,24 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
       await page.setViewportSize({ width: 1280, height: 720 });
     }
   );
+
+  // Reflowing tall narrow cards back into compact desktop rows shrinks
+  // everything above the table, so the browser's own preserved scroll
+  // position -- a pixel offset, not an anchor to any element -- now shows
+  // whatever else happens to sit at that offset once the page is shorter.
+  // On this route that lands on the "Usage" code block from docs/Table.md,
+  // rendered below the demo by src/routes/components/+layout.svelte: the
+  // exact gap the review caught, an "and back" that never actually appeared
+  // on screen. Scroll back to the table explicitly and prove it landed on
+  // screen before holding it, the same discipline the narrow-viewport pass
+  // above already follows.
+  await firstRow.scrollIntoViewIfNeeded();
+  await assertInViewport(page, firstRow);
+  await highlight(firstRow, 1_600);
+
   await expect(firstLabel).toBeHidden();
   await expect(firstCell).toHaveCSS('display', 'table-cell');
+  await expect(firstRow).toHaveCSS('display', 'table-row');
 });
 
 test('aria-sort tracks exactly one column at a time', async ({ page }) => {

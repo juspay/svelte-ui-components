@@ -1612,6 +1612,18 @@
     border-color: var(--drp-date-input-invalid-border, #e5484d);
   }
 
+  /* .drp-date-input-value below sets outline: none with nothing standing in
+     for it, so the visible replacement lives on the bordered wrapper instead
+     -- :focus-within lights up whenever the text input inside is focused.
+     class:drp-date-input-invalid sits alongside .drp-date-input on the same
+     div (see markup), and :focus-within's extra pseudo-class outweighs that
+     single class, so a focused invalid field shows the focus border, not the
+     invalid one -- focus location is the more time-sensitive signal. */
+  .drp-date-input:focus-within {
+    border-color: var(--drp-date-input-focus-border, #2563eb);
+    box-shadow: var(--drp-date-input-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
+  }
+
   .drp-date-input-value {
     display: block;
     width: 100%;
@@ -1689,6 +1701,14 @@
 
   .drp-time-input-invalid {
     border-color: var(--drp-time-input-invalid-border, #e5484d);
+  }
+
+  /* .drp-time-field below sets outline: none with nothing standing in for it;
+     same fix as .drp-date-input:focus-within above, same specificity
+     reasoning against .drp-time-input-invalid. */
+  .drp-time-input:focus-within {
+    border-color: var(--drp-time-input-focus-border, #2563eb);
+    box-shadow: var(--drp-time-input-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
   }
 
   .drp-time-input-icon {

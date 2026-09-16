@@ -19,6 +19,9 @@ test-results-walkthrough/
 playwright-report/
 playwright-report-visual/
 playwright-report-walkthrough/
+
+# scripts/check-contrast.mjs output
+contrast-report/
 .superpowers/
 juspay-svelte-ui-components-*.tgz
 

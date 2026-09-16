@@ -95,7 +95,7 @@ Override these custom properties to theme the component.
 | `--field-group-label-font-weight`   | `500`               | font-weight   | Font weight of per-field labels.                                                             |
 | `--field-group-label-color`         | `#9ca3af`           | color         | Text color of per-field labels.                                                              |
 | `--field-group-separator-font-size` | `16px`              | font-size     | Font size of separator characters rendered between fields.                                   |
-| `--field-group-separator-color`     | `#9ca3af`           | color         | Text color of separator characters.                                                          |
+| `--field-group-separator-color`     | `#6b7280`           | color         | Text color of separator characters.                                                          |
 
 ## Internal Dependencies
 

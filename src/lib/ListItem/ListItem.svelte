@@ -3,12 +3,14 @@
   import Loader from '$lib/Loader/Loader.svelte';
   import Img from '$lib/Img/Img.svelte';
   import type { ListItemProperties } from './properties';
+  import { resolveLabelHtml } from './label';
 
   let {
     leftImageUrl,
     leftImageFallbackUrl,
     rightImageUrl,
     label,
+    sanitize,
     useAccordion = false,
     rightContentText,
     testId,
@@ -59,6 +61,11 @@
     !suppressRoleAndTabindex && typeof onrightimageclick === 'function'
   );
   let itemInteractive = $derived(!suppressRoleAndTabindex && itemRole !== 'option');
+
+  // Escaped plain text by default; markup only through a consumer-supplied
+  // sanitizer -- see ListItemSanitizeOptions in properties.ts and
+  // docs/ListItem.md "Rendering markup in the label" for the full contract.
+  let labelHtml = $derived(typeof label === 'string' ? resolveLabelHtml(label, sanitize) : '');
 
   function handleLeftImageClick(event: MouseEvent): void {
     onleftimageclick?.(event);
@@ -182,8 +189,11 @@
               data-pw={centerTextTestId}
               testID={centerTextTestId}
             >
-              <!-- eslint-disable-next-line -->
-              {@html label}
+              <!-- labelHtml is escaped by default; markup only reaches here through a
+                   consumer-supplied sanitizer -- see ListItemSanitizeOptions.htmlSanitizer
+                   in properties.ts. -->
+              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html labelHtml}
             </div>
           {/if}
           {#if typeof centerContent === 'function'}
@@ -403,6 +413,21 @@
 
   .prevent-focus:focus {
     outline: none;
+  }
+
+  /* preventFocus does not touch tabindex (see the root's tabindex expression
+     above -- itemRole/suppressRoleAndTabindex govern that, unconditional on
+     this prop), so every element carrying .prevent-focus stays a real,
+     keyboard-Tab-reachable stop by default. docs/ListItem.md documents the
+     prop as removing the outline "for non-keyboard navigation contexts" --
+     :focus-visible is that exact distinction already built into the
+     platform: it does not match a mouse/touch-triggered focus (the case the
+     prop exists for) but does match a real keyboard Tab, so this restores
+     WCAG 2.4.7 visibility for the one case preventFocus was never meant to
+     hide it from. */
+  .prevent-focus:focus-visible {
+    outline: var(--list-item-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--list-item-focus-outline-offset, -2px);
   }
   /* The loader is not the only motion in this file, and this block sits at the
      END on purpose: `.item` is declared after the guard above, so an override

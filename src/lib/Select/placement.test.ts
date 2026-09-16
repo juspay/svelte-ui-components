@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import Select from './Select.svelte';
+import type { SelectPlacement } from './properties';
 
 const items = ['Apple', 'Banana', 'Cherry'];
 
@@ -187,4 +188,169 @@ describe('Select data-placement follows the portaled geometry', () => {
       restore();
     }
   });
+});
+
+/* Exercise the prop-to-geometry wiring: the helper already clamps vertical auto,
+ * but Select used to turn placement="auto" into a pinned side before calling it.
+ * Supply nonzero measurements so a broken call cannot hide behind jsdom layout.
+ */
+describe('Select portaled placement with measured geometry', () => {
+  const cases: {
+    name: string;
+    placement: SelectPlacement | null;
+    triggerTop: number;
+    panelHeight: number;
+    viewportHeight: number;
+    expectedTop: number;
+    expectedPlacement: string;
+    nearRightEdge?: boolean;
+  }[] = [
+    {
+      name: 'clamps explicit auto when neither side fits',
+      placement: 'auto',
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 300,
+      expectedTop: 8,
+      expectedPlacement: 'top-left'
+    },
+    {
+      name: 'preserves the unset placement in a short viewport',
+      placement: null,
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 300,
+      expectedTop: 8,
+      expectedPlacement: 'top-left'
+    },
+    {
+      name: 'clamps a taller auto panel',
+      placement: 'auto',
+      triggerTop: 250,
+      panelHeight: 300,
+      viewportHeight: 400,
+      expectedTop: 8,
+      expectedPlacement: 'top-left'
+    },
+    {
+      name: 'clamps auto even when more room below prevents a flip',
+      placement: 'auto',
+      triggerTop: 20,
+      panelHeight: 180,
+      viewportHeight: 200,
+      expectedTop: 12,
+      expectedPlacement: 'bottom-left'
+    },
+    {
+      name: 'leaves auto below when it fits',
+      placement: 'auto',
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 400,
+      expectedTop: 184,
+      expectedPlacement: 'bottom-left'
+    },
+    {
+      name: 'preserves an explicitly pinned bottom-left despite overflow',
+      placement: 'bottom-left',
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 300,
+      expectedTop: 184,
+      expectedPlacement: 'bottom-left'
+    },
+    {
+      name: 'preserves an explicitly pinned bottom-right despite overflow',
+      placement: 'bottom-right',
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 300,
+      expectedTop: 184,
+      expectedPlacement: 'bottom-right'
+    },
+    {
+      name: 'preserves an explicitly pinned top-left with room below',
+      placement: 'top-left',
+      triggerTop: 250,
+      panelHeight: 200,
+      viewportHeight: 800,
+      expectedTop: 46,
+      expectedPlacement: 'top-left'
+    },
+    {
+      name: 'preserves an explicitly pinned top-right with room below',
+      placement: 'top-right',
+      triggerTop: 250,
+      panelHeight: 200,
+      viewportHeight: 800,
+      expectedTop: 46,
+      expectedPlacement: 'top-right'
+    },
+    {
+      name: 'keeps the auto-resolved horizontal corner while clamping vertically',
+      placement: 'auto',
+      triggerTop: 150,
+      panelHeight: 200,
+      viewportHeight: 300,
+      expectedTop: 8,
+      expectedPlacement: 'top-right',
+      nearRightEdge: true
+    }
+  ];
+
+  it.each(cases)(
+    '$name',
+    async ({
+      placement,
+      triggerTop,
+      panelHeight,
+      viewportHeight,
+      expectedTop,
+      expectedPlacement,
+      nearRightEdge
+    }) => {
+      const originalHeight = window.innerHeight;
+      const originalWidth = window.innerWidth;
+      window.innerHeight = viewportHeight;
+      window.innerWidth = 1000;
+      const triggerLeft = nearRightEdge ? 900 : 100;
+      const triggerWidth = nearRightEdge ? 80 : 200;
+      const rect = vi
+        .spyOn(Element.prototype, 'getBoundingClientRect')
+        .mockImplementation(function (this: Element) {
+          return this.classList.contains('select-dropdown')
+            ? new DOMRect(0, 0, 200, panelHeight)
+            : new DOMRect(triggerLeft, triggerTop, triggerWidth, 30);
+        });
+      const height = vi
+        .spyOn(Element.prototype, 'clientHeight', 'get')
+        .mockImplementation(function (this: Element) {
+          return this.classList.contains('select-dropdown') ? panelHeight : 30;
+        });
+      const width = vi.spyOn(Element.prototype, 'clientWidth', 'get').mockReturnValue(200);
+      try {
+        render(Select, {
+          items,
+          usePortal: true,
+          open: true,
+          ...(placement === null ? {} : { placement })
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        const panel = document.body.querySelector<HTMLElement>('.select-dropdown');
+        expect(panel).not.toBeNull();
+        expect(panel?.classList.contains('select-dropdown-measuring')).toBe(false);
+        expect(panel?.style.top).toBe(`${expectedTop}px`);
+        expect(panel?.dataset.placement).toBe(expectedPlacement);
+        if (nearRightEdge) {
+          expect(panel?.style.left).toBe('780px');
+        }
+      } finally {
+        rect.mockRestore();
+        height.mockRestore();
+        width.mockRestore();
+        window.innerHeight = originalHeight;
+        window.innerWidth = originalWidth;
+      }
+    }
+  );
 });

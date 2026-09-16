@@ -11,6 +11,7 @@
   import { focusTrapTabTarget, getFocusTrapBoundary } from '../_interaction/focus';
   import { getActiveElement } from '../_interaction/focus';
   import { registerDismissible } from '../_interaction/dismissal';
+  import { describeField } from '../_field/description';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
@@ -679,12 +680,20 @@
      The two layout branches below (`isInlineTime` and its `{:else}`) are
      mutually exclusive, so the same four ids are never in the document twice. */
   const drpFieldUid = $props.id();
-  const startDateErrorId = `${drpFieldUid}-start-date-error`;
-  const startTimeErrorId = `${drpFieldUid}-start-time-error`;
-  const endDateErrorId = `${drpFieldUid}-end-date-error`;
-  const endTimeErrorId = `${drpFieldUid}-end-time-error`;
   const DATE_HINT = 'Enter a date this picker accepts, like 12 Mar 2025.';
   const TIME_HINT = 'Enter a time like 12:00 AM.';
+  const startDateField = $derived(
+    describeField(`${drpFieldUid}-start-date`, { error: isStartDateValid ? null : DATE_HINT })
+  );
+  const startTimeField = $derived(
+    describeField(`${drpFieldUid}-start-time`, { error: isStartTimeValid ? null : TIME_HINT })
+  );
+  const endDateField = $derived(
+    describeField(`${drpFieldUid}-end-date`, { error: isEndDateValid ? null : DATE_HINT })
+  );
+  const endTimeField = $derived(
+    describeField(`${drpFieldUid}-end-time`, { error: isEndTimeValid ? null : TIME_HINT })
+  );
 
   // True when date's month is already one of the two visible calendar months (or the
   // single visible month outside dual-month mode) — used to avoid an unnecessary
@@ -1038,7 +1047,7 @@
                         placeholder="Start date"
                         aria-label="Start date"
                         aria-invalid={!isStartDateValid}
-                        aria-describedby={isStartDateValid ? null : startDateErrorId}
+                        aria-describedby={startDateField.describedBy}
                         onblur={() => commitTypedDate('start')}
                         onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
                         data-pw={testId ? `${testId}-start-date` : null}
@@ -1059,14 +1068,14 @@
                         placeholder="12:00 AM"
                         aria-label="Start time"
                         aria-invalid={!isStartTimeValid}
-                        aria-describedby={isStartTimeValid ? null : startTimeErrorId}
+                        aria-describedby={startTimeField.describedBy}
                         data-pw={testId ? `${testId}-start-time` : null}
                         testID={testId ? `${testId}-start-time` : null}
                       />
                     </div>
-                    {@render drpFieldError(startDateErrorId, !isStartDateValid, DATE_HINT)}
+                    {@render drpFieldError(startDateField.errorId, startDateField.showsError, DATE_HINT)}
                   </div>
-                  {@render drpFieldError(startTimeErrorId, !isStartTimeValid, TIME_HINT)}
+                  {@render drpFieldError(startTimeField.errorId, startTimeField.showsError, TIME_HINT)}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
                   <div class="drp-date-time-group">
@@ -1080,7 +1089,7 @@
                         placeholder="End date"
                         aria-label="End date"
                         aria-invalid={!isEndDateValid}
-                        aria-describedby={isEndDateValid ? null : endDateErrorId}
+                        aria-describedby={endDateField.describedBy}
                         onblur={() => commitTypedDate('end')}
                         onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
                         data-pw={testId ? `${testId}-end-date` : null}
@@ -1101,14 +1110,14 @@
                         placeholder="11:59 PM"
                         aria-label="End time"
                         aria-invalid={!isEndTimeValid}
-                        aria-describedby={isEndTimeValid ? null : endTimeErrorId}
+                        aria-describedby={endTimeField.describedBy}
                         data-pw={testId ? `${testId}-end-time` : null}
                         testID={testId ? `${testId}-end-time` : null}
                       />
                     </div>
-                    {@render drpFieldError(endDateErrorId, !isEndDateValid, DATE_HINT)}
+                    {@render drpFieldError(endDateField.errorId, endDateField.showsError, DATE_HINT)}
                   </div>
-                  {@render drpFieldError(endTimeErrorId, !isEndTimeValid, TIME_HINT)}
+                  {@render drpFieldError(endTimeField.errorId, endTimeField.showsError, TIME_HINT)}
                 {:else}
                   <div class="drp-date-input" class:drp-date-input-invalid={!isStartDateValid}>
                     <input
@@ -1120,13 +1129,13 @@
                       placeholder="Start date"
                       aria-label="Start date"
                       aria-invalid={!isStartDateValid}
-                      aria-describedby={isStartDateValid ? null : startDateErrorId}
+                      aria-describedby={startDateField.describedBy}
                       onblur={() => commitTypedDate('start')}
                       onkeydown={(event) => handleDateInputKeyDown(event, 'start')}
                       data-pw={testId ? `${testId}-start-date` : null}
                       testID={testId ? `${testId}-start-date` : null}
                     />
-                    {@render drpFieldError(startDateErrorId, !isStartDateValid, DATE_HINT)}
+                    {@render drpFieldError(startDateField.errorId, startDateField.showsError, DATE_HINT)}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1140,13 +1149,13 @@
                       placeholder="End date"
                       aria-label="End date"
                       aria-invalid={!isEndDateValid}
-                      aria-describedby={isEndDateValid ? null : endDateErrorId}
+                      aria-describedby={endDateField.describedBy}
                       onblur={() => commitTypedDate('end')}
                       onkeydown={(event) => handleDateInputKeyDown(event, 'end')}
                       data-pw={testId ? `${testId}-end-date` : null}
                       testID={testId ? `${testId}-end-date` : null}
                     />
-                    {@render drpFieldError(endDateErrorId, !isEndDateValid, DATE_HINT)}
+                    {@render drpFieldError(endDateField.errorId, endDateField.showsError, DATE_HINT)}
                   </div>
                   {#if showTimeSelection}
                     <button
@@ -1178,11 +1187,11 @@
                       placeholder="12:00 AM"
                       aria-label="Start time"
                       aria-invalid={!isStartTimeValid}
-                      aria-describedby={isStartTimeValid ? null : startTimeErrorId}
+                      aria-describedby={startTimeField.describedBy}
                       data-pw={testId ? `${testId}-start-time` : null}
                       testID={testId ? `${testId}-start-time` : null}
                     />
-                    {@render drpFieldError(startTimeErrorId, !isStartTimeValid, TIME_HINT)}
+                    {@render drpFieldError(startTimeField.errorId, startTimeField.showsError, TIME_HINT)}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1197,11 +1206,11 @@
                       placeholder="11:59 PM"
                       aria-label="End time"
                       aria-invalid={!isEndTimeValid}
-                      aria-describedby={isEndTimeValid ? null : endTimeErrorId}
+                      aria-describedby={endTimeField.describedBy}
                       data-pw={testId ? `${testId}-end-time` : null}
                       testID={testId ? `${testId}-end-time` : null}
                     />
-                    {@render drpFieldError(endTimeErrorId, !isEndTimeValid, TIME_HINT)}
+                    {@render drpFieldError(endTimeField.errorId, endTimeField.showsError, TIME_HINT)}
                   </div>
                 </div>
               {/if}

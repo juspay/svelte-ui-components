@@ -1,6 +1,7 @@
 <script lang="ts">
   import { prefersReducedMotion } from '../utils';
   import { getActiveElement } from '../_interaction/focus';
+  import { describeField } from '../_field/description';
   import { validateInput } from '$lib/utils';
   import type { InputProperties } from './properties';
   import type { ValidationState } from '$lib/types';
@@ -137,25 +138,23 @@
   // forceError lets consumers drive the error border from server/runtime validation,
   // independent of validationPattern.
   const showError = $derived(showErrorMessage || forceError);
-  // The error text has to be reachable FROM the field it describes and announced when it
-  // appears. Without both, a screen-reader user submits, hears nothing, and is left on a form
-  // that did not move -- the message is on screen and absent from the accessibility tree.
-  const errorMessageId = $derived(`${effectiveId}-error`);
+  // `actionInput` renders no error/info UI at all, so it gates the whole field
+  // description off rather than being threaded through describeField itself.
+  const effectiveShowError = $derived(showError && !actionInput);
   // `onErrorMessage` is `string | null`, so null has to be excluded explicitly: `null !== ''`
   // is true, which would describe the field by an alert element carrying no message.
-  const isShowingError = $derived(
-    onErrorMessage != null && onErrorMessage !== '' && showError && !actionInput
-  );
-  const infoMessageId = $derived(`${effectiveId}-info`);
-  const isShowingInfo = $derived(infoMessage !== '' && !actionInput);
-  // Helper text is part of the field's description, not decoration: a consumer's `infoMessage`
-  // ("Enter a percentage between 1 and 100") is exactly the guidance a screen-reader user needs
-  // BEFORE they trip an error. Reference both, in reading order, so the field is described by
-  // everything visibly attached to it rather than only by its failure.
-  const describedBy = $derived(
-    [isShowingError ? errorMessageId : null, isShowingInfo ? infoMessageId : null]
-      .filter(Boolean)
-      .join(' ')
+  // forceError with no message still has to mark the field invalid -- describeField's
+  // `invalid` override exists for exactly that -- but it cannot be described by an
+  // element that will not be rendered, so only a real message is passed as `error`.
+  const field = $derived(
+    describeField(effectiveId, {
+      error:
+        effectiveShowError && onErrorMessage != null && onErrorMessage !== ''
+          ? onErrorMessage
+          : null,
+      info: !actionInput && infoMessage !== '' ? infoMessage : null,
+      invalid: effectiveShowError
+    })
   );
   const hasLeftIcon = $derived(typeof leftIcon === 'function');
   const hasRightIcon = $derived(typeof rightIcon === 'function');
@@ -336,8 +335,8 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={isRequired || null}
-        aria-invalid={showError && !actionInput ? 'true' : null}
-        aria-describedby={describedBy || null}
+        aria-invalid={field.ariaInvalid}
+        aria-describedby={field.describedBy}
         required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
@@ -374,8 +373,8 @@
         aria-controls={ariaControls}
         aria-activedescendant={ariaActivedescendant}
         aria-required={isRequired || null}
-        aria-invalid={showError && !actionInput ? 'true' : null}
-        aria-describedby={describedBy || null}
+        aria-invalid={field.ariaInvalid}
+        aria-describedby={field.describedBy}
         required={isRequired || null}
         {onfocus}
         onfocusout={_onFocusOut}
@@ -438,9 +437,9 @@
     {@render fieldElement()}
   {/if}
 
-  {#if isShowingError}
+  {#if field.showsError}
     <div
-      id={errorMessageId}
+      id={field.errorId}
       role="alert"
       class="error-message"
       data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
@@ -449,9 +448,9 @@
       {onErrorMessage}
     </div>
   {/if}
-  {#if isShowingInfo}
+  {#if field.showsInfo}
     <div
-      id={infoMessageId}
+      id={field.infoId}
       class="info-message"
       data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
       testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}

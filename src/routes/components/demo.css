@@ -17,6 +17,7 @@
   --doc-text-secondary: #4b5563;
   --doc-text-muted: #4b5563;
   --doc-text-faint: #656b76;
+  --line-chart-narration-readout-color: #4b5563;
   --doc-code-color: #be185d;
 
   --doc-accent: #4f46e5;
@@ -51,7 +52,8 @@
   --doc-text-primary: #d1d5db;
   --doc-text-secondary: #9ca3af;
   --doc-text-muted: #9ca3af;
-  --doc-text-faint: #8b93a1;
+  --doc-text-faint: #9ca3af;
+  --line-chart-narration-readout-color: #9ca3af;
   --doc-code-color: #f472b6;
 
   --doc-accent: #818cf8;

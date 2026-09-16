@@ -114,7 +114,10 @@
   .split-button-trigger {
     --menu-container-position: static;
     --menu-container-display: flex;
-    --menu-trigger-focus-outline: none;
+    /* Used to force --menu-trigger-focus-outline to `none` with nothing
+       standing in for it (WCAG 2.4.7) -- removed so the trigger falls
+       through to Menu's own :focus-visible default instead of suppressing
+       it. See Menu.svelte's .menu-trigger:focus-visible for the fix. */
     --menu-dropdown-left: 0;
     --menu-min-width: 100%;
     border-left: var(--split-button-trigger-separator, 1px solid rgba(255, 255, 255, 0.3));

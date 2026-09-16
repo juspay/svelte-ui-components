@@ -135,6 +135,8 @@
   --chat-composer-placeholder-color: #9ca3af;
   --chat-composer-action-color: #9ca3af;
   --chat-composer-action-hover-background-color: #252535;
+  --chat-composer-focus-border-color: #818cf8;
+  --chat-composer-focus-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
   --chat-composer-send-background-color: #e4e4e7;
   --chat-composer-send-color: #18181b;
   --chat-composer-send-hover-background-color: #d4d4d8;
@@ -167,6 +169,7 @@
   --chat-bubble-color: #18181b;
   --chat-bubble-hover-background-color: #d4d4d8;
   --chat-bubble-panel-background: #161621;
+  --chat-bubble-panel-focus-outline: 2px solid #818cf8;
 
   /* HITL */
   --hitl-background: #1e1e2e;
@@ -460,6 +463,7 @@
 
   /* Book */
   --book-dot-active-color: #818cf8;
+  --book-focus-outline: 2px solid #818cf8;
   --book-nav-color: #9ca3af;
 
   /* BrandLoader */
@@ -523,6 +527,7 @@
   --command-menu-background: #1e1e2e;
   --command-menu-input-caret-color: #818cf8;
   --command-menu-input-color: #d1d5db;
+  --command-menu-input-focus-outline: 2px solid #818cf8;
   --command-menu-item-active-background: #252535;
   --command-menu-item-active-color: #d1d5db;
   --command-menu-item-color: #9ca3af;
@@ -545,6 +550,8 @@
   --drp-clear-hover-background: #252535;
   --drp-date-input-background: #1e1e2e;
   --drp-date-input-color: #d1d5db;
+  --drp-date-input-focus-border: #818cf8;
+  --drp-date-input-focus-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
   --drp-date-input-invalid-border: #f87171;
   --drp-datetime-arrow-color: #9ca3af;
   --drp-field-error-color: #f87171;
@@ -553,6 +560,8 @@
   --drp-preset-hover-background: #252535;
   --drp-time-field-color: #d1d5db;
   --drp-time-input-background: #1e1e2e;
+  --drp-time-input-focus-border: #818cf8;
+  --drp-time-input-focus-shadow: 0 0 0 2px rgba(129, 140, 248, 0.3);
   --drp-time-input-icon-color: #9ca3af;
   --drp-time-input-invalid-border: #f87171;
   --drp-time-toggle-active-color: #60a5fa;
@@ -567,6 +576,9 @@
   /* FileInput */
   --file-input-error-color: #f87171;
   --file-input-info-color: #9ca3af;
+
+  /* Gallery */
+  --gallery-lightbox-focus-outline: 2px solid #818cf8;
 
   /* GridItem */
   --grid-item-background-color: #252535;
@@ -587,22 +599,25 @@
   --keyboard-input-key-background: #1e1e2e;
   --keyboard-input-key-color: #d1d5db;
   --keyboard-input-separator-color: #9ca3af;
+  --field-group-separator-color: #9ca3af;
 
   /* Label */
   --label-required-color: #f87171;
 
   /* ListItem */
+  --list-item-focus-outline: 2px solid #818cf8;
   --list-item-loader-background: #1a1a26;
 
   /* MarkdownText */
   --markdown-text-focus-outline-color: #818cf8;
+  --markdown-text-color: #d1d5db;
   --markdown-text-link-color: #a78bfa;
 
   /* MediaUpload */
   --media-upload-add-background-color: #1e1e2e;
   /* The tile's own text, on that #1e1e2e tile. The light defaults (#6b7280 /
      #9aa0a8) are tuned for a white tile and read at 3.4:1 and 3.8:1 here. */
-  --media-upload-add-color: #9ca3af;
+  --media-upload-add-color: #cbd5e1;
   --media-upload-add-hint-color: #9ca3af;
   --media-upload-add-dragging-background-color: #262b4a;
   --media-upload-add-dragging-color: #818cf8;
@@ -622,9 +637,11 @@
   --menu-item-danger-hover-background-color: #331519;
   --menu-item-focus-background-color: #252535;
   --menu-item-hover-background-color: #252535;
+  --menu-trigger-focus-outline: 2px solid #818cf8;
 
   /* Modal */
   --modal-content-background-color: #1e1e2e;
+  --modal-content-focus-outline: 2px solid #818cf8;
   --modal-footer-background-color: #1a1a26;
   --modal-footer-primary-button-color: #9ca3af;
   --modal-footer-secondary-button-color: #9ca3af;
@@ -737,6 +754,13 @@
   --table-header-border-bgcolor: #1e1e2e;
   --table-header-font-color: #9ca3af;
   --table-inline-search-clear-color: #9ca3af;
+  /* #9ca3af measured 4.41:1 here -- just under 4.5:1 -- because this input sits on
+     a row background that composites lighter than the table's own #1a1a26 (row
+     hover/alt tinting stacks on top). #b8bcc4 (already used for
+     --loader-sub-text-color, the same "muted text on a dark surface" role) clears
+     it with margin, verified at 5.88:1 by scripts/check-contrast.mjs against the
+     actual composited background rather than the nominal one. */
+  --table-ops-note-placeholder-color: #b8bcc4;
   --table-link-copy-color: #9ca3af;
   --table-sort-active-color: #60a5fa;
   --table-sort-hover-color: #9ca3af;
@@ -745,12 +769,12 @@
   --table-trend-up-color: #4ade80;
 
   /* Tabs */
-  --tabs-active-color: #818cf8;
+  --tabs-active-color: #a5b4fc;
   --tabs-bar-background: #1e1e2e;
   --tabs-hover-background: #252535;
   --tabs-hover-color: #d1d5db;
   --tabs-indicator-color: #818cf8;
-  --tabs-item-color: #9ca3af;
+  --tabs-item-color: #cbd5e1;
   --tabs-item-status-default-color: #818cf8;
   --tabs-item-status-error-color: #f87171;
 

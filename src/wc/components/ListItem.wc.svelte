@@ -7,6 +7,7 @@
       leftImageFallbackUrl: { type: 'String', attribute: 'left-image-fallback-url' },
       rightImageUrl: { type: 'String', reflect: true, attribute: 'right-image-url' },
       label: { type: 'String', reflect: true },
+      sanitize: { type: 'Object' },
       useAccordion: { type: 'Boolean', attribute: 'use-accordion' },
       rightContentText: { type: 'String', reflect: true, attribute: 'right-content-text' },
       testId: { type: 'String', attribute: 'test-id' },

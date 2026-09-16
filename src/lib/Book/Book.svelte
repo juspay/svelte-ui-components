@@ -185,6 +185,15 @@
     outline: none;
   }
 
+  /* role="region" tabindex="0" above makes this a real Tab stop (arrow keys
+     then page it via handleKeyDown), so removing its outline unconditionally
+     left a keyboard user with no visible sign it was focused. :focus-visible
+     so tapping/clicking into the book to swipe doesn't show a ring. */
+  .book:focus-visible {
+    outline: var(--book-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--book-focus-outline-offset, 2px);
+  }
+
   .book-viewport {
     position: relative;
     display: flex;

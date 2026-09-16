@@ -367,7 +367,7 @@
     align-items: center;
     height: var(--field-group-input-height, 36px);
     font-size: var(--field-group-separator-font-size, 16px);
-    color: var(--field-group-separator-color, #9ca3af);
+    color: var(--field-group-separator-color, #6b7280);
     flex-shrink: 0;
   }
 </style>

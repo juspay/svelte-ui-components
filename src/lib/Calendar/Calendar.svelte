@@ -202,7 +202,31 @@
     return false;
   }
 
+  // Bounds the prev/next month CONTROLS, distinct from isDateDisabled's per-day check
+  // above: a month is only unreachable when every one of its days would fail that same
+  // check, i.e. the whole month falls outside [minDate, maxDate] -- not merely when
+  // today's selection or the currently displayed month does. Comparing the previous
+  // month's LAST day against minDate (and the next month's FIRST day against maxDate)
+  // is the correct boundary: any later/earlier day in that month is enabled already.
+  const isPrevMonthDisabled = $derived(
+    minDate !== null &&
+      new SvelteDate(displayDate.getFullYear(), displayDate.getMonth(), 0).getTime() <
+        normalizeDate(minDate).getTime()
+  );
+
+  const isNextMonthDisabled = $derived(
+    maxDate !== null &&
+      new SvelteDate(displayDate.getFullYear(), displayDate.getMonth() + 1, 1).getTime() >
+        normalizeDate(maxDate).getTime()
+  );
+
   function navigateMonth(delta: number): void {
+    if (delta < 0 && isPrevMonthDisabled) {
+      return;
+    }
+    if (delta > 0 && isNextMonthDisabled) {
+      return;
+    }
     displayDate.setMonth(displayDate.getMonth() + delta);
     focusedDay = null;
     onmonthchange?.({ year: displayDate.getFullYear(), month: displayDate.getMonth() });
@@ -325,7 +349,11 @@
 >
   <div class="header">
     <div class="nav-button nav-prev">
-      <Button onclick={() => navigateMonth(-1)} ariaLabel="Previous month">
+      <Button
+        onclick={() => navigateMonth(-1)}
+        ariaLabel="Previous month"
+        disabled={isPrevMonthDisabled}
+      >
         {#if typeof previousMonthIcon === 'function'}
           {@render previousMonthIcon()}
         {:else}
@@ -336,7 +364,11 @@
     </div>
     <span class="header-label">{headerLabel}</span>
     <div class="nav-button nav-next">
-      <Button onclick={() => navigateMonth(1)} ariaLabel="Next month">
+      <Button
+        onclick={() => navigateMonth(1)}
+        ariaLabel="Next month"
+        disabled={isNextMonthDisabled}
+      >
         {#if typeof nextMonthIcon === 'function'}
           {@render nextMonthIcon()}
         {:else}

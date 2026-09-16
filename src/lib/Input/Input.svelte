@@ -504,9 +504,18 @@
     color: var(--input-text-color, #333333);
   }
 
+  /* The fallback used to be `1px solid transparent` -- a border that changes
+     width/style but not colour, so a mouse-focused OR keyboard-focused field
+     looked identical to unfocused. Text inputs use a real :focus (not
+     :focus-visible): unlike a button-shaped control, a text field's focus
+     ring has to stay visible regardless of input modality, since a mouse
+     click into a field is itself the start of a keyboard interaction.
+     --input-focus-border-color already exists for exactly this colour (see
+     .input-icon-button:focus-visible below), so this reuses it instead of
+     minting a second token for the same ring. */
   textarea:focus,
   input:focus {
-    border: var(--input-focus-border, 1px solid transparent);
+    border: var(--input-focus-border, 1px solid var(--input-focus-border-color, #005fcc));
   }
 
   .input-error {

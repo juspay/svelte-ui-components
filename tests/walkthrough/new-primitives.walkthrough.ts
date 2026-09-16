@@ -187,6 +187,7 @@ test.describe('RatingGroup', () => {
 
     const slider = page.getByTestId('rating-form-stars');
     const result = page.getByTestId('rating-form-result');
+    await slider.scrollIntoViewIfNeeded();
     await expect(result).toHaveText('');
 
     await step(page, 'Submit the form with nothing rated.', async () => {
@@ -197,6 +198,7 @@ test.describe('RatingGroup', () => {
     // The hidden native input carrying `required` is tabindex="-1" -- the
     // browser's own invalid-focus step is redirected to the visible slider.
     await expect(slider).toBeFocused();
+    await highlight(slider, 1_200);
 
     await step(page, 'Rate the group 4 stars.', async () => {
       await page.getByTestId('rating-form-stars-star-4').click();

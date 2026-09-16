@@ -30,6 +30,22 @@ function grid(container: HTMLElement): HTMLElement {
   return el;
 }
 
+function prevMonthButton(container: HTMLElement): HTMLButtonElement {
+  const el = container.querySelector('.nav-prev button');
+  if (!(el instanceof HTMLButtonElement)) {
+    throw new Error('no previous-month button rendered');
+  }
+  return el;
+}
+
+function nextMonthButton(container: HTMLElement): HTMLButtonElement {
+  const el = container.querySelector('.nav-next button');
+  if (!(el instanceof HTMLButtonElement)) {
+    throw new Error('no next-month button rendered');
+  }
+  return el;
+}
+
 // The whole calendar -- the grid container plus every day cell -- should carry exactly
 // one tabIndex 0 at a time, wherever it lands.
 function tabStops(container: HTMLElement): HTMLElement[] {
@@ -240,5 +256,102 @@ describe('Calendar arrow/Enter navigation on an all-enabled month is unchanged',
     expect(call[0].date.getMonth()).toBe(0);
     expect(call[0].date.getDate()).toBe(2);
     expect(dayButton(container, 2).classList.contains('selected')).toBe(true);
+  });
+});
+
+describe('Calendar month navigation is bounded by minDate/maxDate', () => {
+  it('disables the previous-month control when the whole previous month is before minDate', async () => {
+    const onmonthchange = vi.fn();
+    // minDate lands inside February 2024, so all of January 2024 -- the
+    // previous month -- has no selectable day.
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1), // February 2024
+      minDate: new Date(2024, 1, 10),
+      onmonthchange
+    });
+
+    const prevButton = prevMonthButton(container);
+    // Native `disabled` only, deliberately. These controls are real <button>
+    // elements, so `disabled` already conveys the state to assistive tech;
+    // adding `aria-disabled` on top would be redundant ARIA, which the first
+    // rule of ARIA warns against. Asserting the native property is asserting
+    // what the component actually does.
+    expect(prevButton.disabled).toBe(true);
+
+    await fireEvent.click(prevButton);
+    await settle();
+
+    expect(onmonthchange).not.toHaveBeenCalled();
+    expect(container.querySelector('.header-label')?.textContent).toContain('2024');
+    // Still on February: day 10 (in bounds) is rendered as a current-month cell.
+    expect(dayButton(container, 10).classList.contains('disabled')).toBe(false);
+  });
+
+  it('disables the next-month control when the whole next month is after maxDate', async () => {
+    const onmonthchange = vi.fn();
+    // maxDate lands inside February 2024, so all of March 2024 -- the next
+    // month -- has no selectable day.
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1), // February 2024
+      maxDate: new Date(2024, 1, 20),
+      onmonthchange
+    });
+
+    const nextButton = nextMonthButton(container);
+    expect(nextButton.disabled).toBe(true);
+
+    await fireEvent.click(nextButton);
+    await settle();
+
+    expect(onmonthchange).not.toHaveBeenCalled();
+    expect(dayButton(container, 20).classList.contains('disabled')).toBe(false);
+  });
+
+  it('leaves both controls enabled when minDate/maxDate are null (unbounded)', async () => {
+    const onmonthchange = vi.fn();
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1) // February 2024
+      // minDate/maxDate default to null.
+    });
+
+    const prevButton = prevMonthButton(container);
+    const nextButton = nextMonthButton(container);
+
+    expect(prevButton.disabled).toBe(false);
+    expect(nextButton.disabled).toBe(false);
+
+    const { container: c2 } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1),
+      onmonthchange
+    });
+    await fireEvent.click(prevMonthButton(c2));
+    await settle();
+    expect(onmonthchange).toHaveBeenCalledWith({ year: 2024, month: 0 });
+
+    await fireEvent.click(nextMonthButton(c2));
+    await settle();
+    expect(onmonthchange).toHaveBeenCalledWith({ year: 2024, month: 1 });
+  });
+
+  it('keeps the previous-month control enabled when minDate only trims part of the previous month', async () => {
+    // minDate is the LAST day of January 2024 -- January still has one
+    // selectable day, so paging back to it must stay allowed.
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1), // February 2024
+      minDate: new Date(2024, 0, 31)
+    });
+
+    expect(prevMonthButton(container).disabled).toBe(false);
+  });
+
+  it('keeps the next-month control enabled when maxDate only trims part of the next month', async () => {
+    // maxDate is the FIRST day of March 2024 -- March still has one
+    // selectable day, so paging forward to it must stay allowed.
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 1, 1), // February 2024
+      maxDate: new Date(2024, 2, 1)
+    });
+
+    expect(nextMonthButton(container).disabled).toBe(false);
   });
 });

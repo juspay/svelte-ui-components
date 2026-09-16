@@ -26,6 +26,7 @@ test('BarChart stacked bars treat a non-finite value as a zero contribution, not
 }) => {
   await gotoHydrated(page, '/components/bar-chart');
   const chart = page.getByTestId('bar-stacked-gap-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -65,6 +66,7 @@ test('DualAxisBarChart filters a non-finite value out of the axis extent instead
 }) => {
   await gotoHydrated(page, '/components/dual-axis-bar-chart');
   const chart = page.getByTestId('dual-axis-nonfinite-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -96,6 +98,7 @@ test('PieChart treats a non-finite slice value as a zero contribution instead of
 }) => {
   await gotoHydrated(page, '/components/pie-chart');
   const chart = page.getByTestId('pie-nonfinite-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -132,6 +135,7 @@ test('FunnelChart treats a non-finite stage value as a zero-height bar, not a Na
 }) => {
   await gotoHydrated(page, '/components/funnel-chart');
   const chart = page.getByTestId('funnel-nonfinite-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -159,6 +163,7 @@ test('SankeyChart sanitizes a non-finite link value at a single choke point inst
 }) => {
   await gotoHydrated(page, '/components/sankey-chart');
   const chart = page.getByTestId('sankey-nonfinite-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,

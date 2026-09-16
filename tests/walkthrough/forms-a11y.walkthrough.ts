@@ -484,7 +484,17 @@ test("DateRangePicker's typed date fields show inline error text while the typed
   await expect(startDateInput).toHaveAttribute('aria-invalid', 'false');
 });
 
-test('FileInput describes itself through aria-describedby and role="alert", never aria-invalid', async ({
+// The previous title for the test below ("...describes itself through
+// aria-describedby and role="alert", never aria-invalid") named three
+// accessibility-tree facts as the thing the RECORDING proves. role="alert"
+// and aria-invalid are attributes with no rendered-pixel signature -- there
+// is no frame of video where "this element does not carry aria-invalid" is
+// visible, so a title built from that fact is structurally unable to prove
+// its own name no matter how the footage turns out. The title now states
+// only what the camera actually shows (which message renders where); the
+// ARIA-tree facts are still fully verified, just by direct `expect()`
+// assertions instead of by the title.
+test('FileInput renders its error and info text as visible copy beneath the drop zone, and neither when no message is set', async ({
   page
 }) => {
   await gotoHydrated(page, '/components/file-input');
@@ -509,10 +519,12 @@ test('FileInput describes itself through aria-describedby and role="alert", neve
   );
   // FileInput deliberately never sets aria-invalid: ARIA does not define that
   // attribute on role="button", so the error text's own role="alert" IS the
-  // announcement. invalidOn() resolving to null here is the component doing
-  // the right thing, not an unfinished contract -- asserting 'true' would be
-  // testing for a behaviour this control correctly refuses to have.
-  expect(await invalidOn(page, described)).toBeNull();
+  // announcement. Asserting the attribute is genuinely absent from the DOM
+  // (not just resolving to a falsy string through the closest()-based
+  // invalidOn() helper) is the real regression test for that contract --
+  // asserting 'true' would be testing for a behaviour this control correctly
+  // refuses to have.
+  await expect(page.locator(described)).not.toHaveAttribute('aria-invalid');
 
   await step(
     page,
@@ -522,12 +534,17 @@ test('FileInput describes itself through aria-describedby and role="alert", neve
     }
   );
   expect(await resolvedDescription(page, infoOnly)).toBe('PNG or JPG, up to 5 MB.');
-  expect(await invalidOn(page, infoOnly)).toBeNull();
+  await expect(page.locator(infoOnly)).not.toHaveAttribute('aria-invalid');
+  // Info-only has nothing to announce as an alert either -- confirm no
+  // role="alert" node exists here, not merely that the error case's node is
+  // out of frame.
+  await expect(page.getByTestId('fileinput-info-only-error-message')).toHaveCount(0);
 
   // The third control has neither message -- checked, not shown, so pacing
   // doesn't stall on a control with nothing new on screen.
   expect(await resolvedDescription(page, undescribed)).toBeNull();
-  expect(await invalidOn(page, undescribed)).toBeNull();
+  await expect(page.locator(undescribed)).not.toHaveAttribute('aria-invalid');
+  await expect(page.getByTestId('fileinput-undescribed-error-message')).toHaveCount(0);
 });
 
 test("InputButton's required now reaches the real input and blocks native submission", async ({
@@ -544,6 +561,7 @@ test("InputButton's required now reaches the real input and blocks native submis
   const result = page.getByTestId('input-button-required-result');
 
   await form.scrollIntoViewIfNeeded();
+  await expect(input).toBeVisible();
 
   await step(
     page,
@@ -553,8 +571,8 @@ test("InputButton's required now reaches the real input and blocks native submis
     }
   );
   await expect(result).toHaveText('');
-  await highlight(input);
   await expect(input).toBeFocused();
+  await highlight(input, 1_200);
 
   await step(
     page,

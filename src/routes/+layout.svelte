@@ -215,7 +215,7 @@
   .nav-link.active {
     background: var(--doc-accent-bg);
     border-left-color: var(--doc-accent);
-    color: var(--doc-accent);
+    color: var(--doc-accent-text);
     font-weight: 600;
   }
 

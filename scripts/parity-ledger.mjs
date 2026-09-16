@@ -67,7 +67,16 @@ const NA = 'n/a';
 const BLOCKED = 'blocked';
 
 const countWhere = (files, re) => files.filter((f) => re.test(read(f))).length;
-const grade = (n, total) => (n === total ? CLOSED : n > 0 ? PARTIAL : OPEN);
+/**
+ * A zero denominator is not evidence of anything -- there was no population to
+ * grade, not a population that was satisfied. `n === total` is vacuously true
+ * at 0 === 0, so without this a probe whose detector stopped matching anything
+ * (a broken regex, a renamed API, a population that emptied out) reads CLOSED
+ * exactly like one that is genuinely done, and the headline cannot tell them
+ * apart. Proven: disabling ANIMATES's only match left "44 closed, 0
+ * actionable" unchanged with a dead detector behind it.
+ */
+const grade = (n, total) => (total === 0 ? OPEN : n === total ? CLOSED : n > 0 ? PARTIAL : OPEN);
 
 /** A file name, for evidence lines that would be unreadable as full paths. */
 const base = (file) => basename(file);
@@ -98,20 +107,181 @@ const MOVING_PROPERTY =
  * motion is a fade. Over-reporting here invents work, which the README costs the
  * same as losing it.
  */
-const movementIn = (text) => {
-  if (/@keyframes/.test(text)) {
-    return '@keyframes';
-  }
-  for (const m of text.matchAll(/transition:\s[^;{}]{0,160};/g)) {
-    if (MOVING_PROPERTY.test(m[0])) {
-      return m[0].replace(/\s+/g, ' ').slice(0, 48);
+// Motion a CSS `@media (prefers-reduced-motion: reduce)` block CAN switch off.
+const CSS_REACHABLE_MOTION = [
+  [/@keyframes/, () => '@keyframes'],
+  [
+    /transition:\s[^;{}]{0,160};/g,
+    (text) => {
+      for (const m of text.matchAll(/transition:\s[^;{}]{0,160};/g)) {
+        if (MOVING_PROPERTY.test(m[0])) {
+          return m[0].replace(/\s+/g, ' ').slice(0, 48);
+        }
+      }
+      return null;
     }
+  ],
+  // `scroll-behavior: smooth` in a stylesheet. Requiring the literal `smooth` is
+  // what keeps a guard's own `scroll-behavior: auto` from counting as motion.
+  [/scroll-behavior:[^;}]*\bsmooth\b/, (text) => /scroll-behavior:[^;}]*\bsmooth\b/.exec(text)[0]]
+];
+
+// Motion NO stylesheet can reach, so only a script-level read of the preference
+// switches it off. Each of these was invisible to this probe before, and three of
+// the four components carrying them had no guard at all.
+const SCRIPT_ONLY_MOTION = [
+  // Svelte transition directives. `transition:` is the two-way form; `in:`/`out:`
+  // are the one-way forms this probe used to miss entirely -- Toast and
+  // ModalAnimation animate exclusively through them. `fade` stays excluded with
+  // the other opacity-only cases.
+  [/\b(?:transition|in|out):(slide|fly|scale|draw)\b/, (m) => `svelte ${m[1]}`],
+  // A ScrollToOptions / scrollIntoView value. Not a style at all -- no rule, no
+  // media query and no `!important` reaches it.
+  //
+  // Matched by SHAPE -- any `behavior` value that is not a hardcoded 'auto' -- rather
+  // than by the literal 'smooth', because it must survive its own repair. Requiring
+  // 'smooth' adjacently meant rewriting a site as
+  // `behavior: prefersReducedMotion() ? 'auto' : 'smooth'` made the motion invisible,
+  // so the component left the population and the probe reported 25 of 25: fixing a
+  // component stopped it being counted. A population that shrinks as it is repaired is
+  // the same structural retirement as a bare count against a constant, reached from the
+  // other direction. It still scrolls smoothly whenever the preference is off, so it
+  // stays in and is counted as guarded.
+  //
+  // The lookahead absorbs its own whitespace. `\s*(?!…)` would let the engine backtrack
+  // to zero width and test the lookahead against a space, which always passes -- the
+  // same trap that made `transition:\s*(?!none)` match `transition: none` here before.
+  [
+    // The lookbehind matters: `behavior:` is a substring of the CSS property
+    // `scroll-behavior:`, so without it this script-only pattern claimed every
+    // stylesheet rule -- including a guard's own `scroll-behavior: auto` -- and
+    // reported ChatMessageList as unguarded script motion when it has none.
+    /(?<![-\w])behavior:(?![ \t]*['"`](?:auto|instant)['"`])[ \t]*[A-Za-z'"`(]/,
+    () => 'a scroll behavior value'
+  ],
+  // A canvas render loop. Pixels a stylesheet has no selector for, so like the three
+  // above it can only be reached from script. Both halves are required: a lone
+  // requestAnimationFrame is used for one-shot layout measurement in five components
+  // here and none of them animate. Matches nothing in this tree today and is here for
+  // the shape rather than a current count -- release's VoiceOrb is exactly this, and
+  // omitting the form would have let it enter the library outside the population.
+  //
+  // Note VoiceOrb's guard is deliberately PARTIAL: it freezes idle rotation and the
+  // sine fallback, and leaves analyser-driven motion running because that reports live
+  // microphone state (docs/VoiceOrb.md). This probe reads presence and says so, which
+  // is the right answer here -- a blanket "guard everything that moves" pass would
+  // regress it.
+  [
+    /requestAnimationFrame/,
+    (text) => (/getContext\(\s*['"`]2d|<canvas/.test(text) ? 'a canvas render loop' : null)
+  ],
+  // An INLINE style write, which outranks every rule in the component's own
+  // stylesheet. A CSS guard here would read correctly in review and lose at runtime,
+  // which is the sharpest case for separating the two guard forms. A write of a
+  // hardcoded 'auto' or 'instant' is excluded: that is a component turning motion OFF,
+  // not on. 'instant' cost a false positive before it was excluded -- ChatMessageList
+  // pins its scroll with `behavior: 'instant'` precisely so the correction does NOT
+  // animate, and the probe reported it as unguarded motion.
+  [
+    /\.style\.scrollBehavior[ \t]*=(?![ \t]*['"`](?:auto|instant)['"`])/,
+    (m) => m[0].replace(/\s+/g, ' ').slice(0, 48)
+  ]
+];
+
+/**
+ * What moves in this source, and WHICH GUARD FORM can switch it off.
+ *
+ * Returning the required form is the point. `prefers-reduced-motion` in a file used
+ * to be treated as one thing, so a `@media` block counted as a guard for motion no
+ * media query can reach -- Scroller would have reported CLOSED on a guard that
+ * cannot work. Where a file carries both kinds, the stricter requirement wins.
+ */
+/**
+ * Comments, removed before any motion is matched.
+ *
+ * Components in this library document the very directives they do NOT use.
+ * OverlayAnimation's markup comment names Toast's `in:fly` while its own motion
+ * is `in:fade`/`out:fade` -- opacity-only, which this probe deliberately
+ * excludes. Matching inside that comment put OverlayAnimation into the moving
+ * population and reported it unguarded, which is precisely the over-reporting
+ * the README costs the same as losing a finding: it invents work.
+ *
+ * SD-1 already records this lesson from the other direction -- the first version
+ * of that probe counted `document.activeElement` textually and reported OPEN
+ * while the real gate reported zero, because the gate strips comments and the
+ * components carry comments naming the API they avoid. A source-reading probe
+ * has to strip them too.
+ *
+ * `//` is only treated as a comment when it does not follow a colon, so a
+ * `https://` inside a string survives.
+ */
+const withoutComments = (text) =>
+  text
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
+const movementIn = (rawText) => {
+  const text = withoutComments(rawText);
+  // `?? null` rather than comparing against the literal: this repo's lint bans it,
+  // and `find` returning nothing is the one place it would otherwise appear.
+  const firstMatch = (patterns, apply) =>
+    patterns.map(apply).find((found) => found !== null) ?? null;
+
+  const script = firstMatch(SCRIPT_ONLY_MOTION, ([re, describe]) => {
+    const m = re.exec(text);
+    return m === null ? null : describe(m);
+  });
+  if (script !== null) {
+    return { what: script, needs: 'script' };
   }
-  // Svelte's own directives are motion too, and a CSS media query cannot reach
-  // them -- they need prefersReducedMotion() in script instead. `fade` is
-  // excluded with the other opacity-only cases.
-  const directive = /transition:(slide|fly|scale|draw)\b/.exec(text);
-  return directive === null ? null : `svelte ${directive[1]}`;
+  const css = firstMatch(CSS_REACHABLE_MOTION, ([re, describe]) => {
+    // A /g regex carries lastIndex between calls, so `test` on the shared literal
+    // would skip matches on later files. Probe with a fresh, non-global copy.
+    const probe = re.global ? new RegExp(re.source) : re;
+    return probe.test(text) ? describe(text) : null;
+  });
+  return css === null ? null : { what: css, needs: 'css' };
+};
+
+// A `@media (prefers-reduced-motion: reduce)` block. Switches off CSS motion only.
+const CSS_GUARD = /@media[^{]*prefers-reduced-motion/;
+// Reading the preference in script, which is the only thing that reaches a Svelte
+// transition directive, a ScrollToOptions value, an inline style write or a canvas.
+//
+// The CALL, not the identifier. Matching the bare name meant
+// `import { prefersReducedMotion } from '../utils'` satisfied it, so deleting the
+// only call site left this green -- both negative controls passed with the guard
+// removed. Same defect FI-1 had (`formAssociated(` rather than the word), caught the
+// same way: by mutating the guard and watching the probe fail to notice.
+//
+// `reducedMotion.current` (src/lib/reduced-motion.svelte.ts) is the THIRD form, and
+// it is the strongest of them. This probe's own evidence line warns that a script
+// guard may not stay CURRENT -- a component reading the preference once into a
+// variable never revisits it. Sheet is the component that solved exactly that, by
+// reading reactive `$state` instead of calling the plain un-reactive
+// `prefersReducedMotion()`, so a preference toggled mid-session reaches an
+// already-mounted panel. Omitting it reported Sheet as the single unguarded mover
+// in the library: the probe penalising the one component that fixed the weakness
+// the probe itself documents. A guard test that only knows the weaker idiom will
+// always drive callers back toward it.
+const SCRIPT_GUARD =
+  /prefersReducedMotion\s*\(|reducedMotion\.current|matchMedia\(\s*['"`]\(prefers-reduced-motion/;
+
+/**
+ * Does this file carry the guard FORM its own motion actually needs?
+ *
+ * Comments are stripped first, and this direction matters more than the
+ * population's: a comment that merely NAMES `prefersReducedMotion()` -- which
+ * several components carry while explaining why they do not need it -- would
+ * otherwise count as the guard itself and report a moving, unguarded component
+ * as CLOSED. A false finding wastes an hour; a false clearance ships the defect.
+ */
+const guardFor = (rawText, needs) => {
+  const text = withoutComments(rawText);
+  return needs === 'script'
+    ? SCRIPT_GUARD.test(text)
+    : CSS_GUARD.test(text) || SCRIPT_GUARD.test(text);
 };
 
 /**
@@ -201,7 +371,7 @@ const ITEMS = [
         .filter((f) => !/getRootNode\(\)/.test(read(f)))
         .map((f) => basename(f));
       return {
-        status: sites.length === 0 ? OPEN : grade(aware.length, sites.length),
+        status: grade(aware.length, sites.length),
         evidence: `${aware.length} of ${sites.length} portal sites resolve their destination from the node's own root${hardcoded.length > 0 ? `; hardcoded: ${hardcoded.join(', ')}` : ''}`
       };
     }
@@ -569,18 +739,28 @@ const ITEMS = [
         'DateRangePicker',
         'InputButton'
       ];
+      // The disjunction used to be /describeField|aria-describedby/, and a
+      // hand-rolled aria-describedby satisfies that identically to actually
+      // adopting the shared helper -- so a control that wires up its own
+      // attribute read CLOSED next to one that imports describeField from
+      // src/lib/_field/description.ts, though only the latter gets that
+      // module's two rules (reference only ids that are actually rendered;
+      // aria-invalid means invalid NOW, not "can be invalid") enforced once
+      // rather than re-derived, and possibly re-broken, at every call site.
+      // Require the IMPORT, the same discriminator FI-1 and MT-3 had to learn:
+      // match the thing that makes it true, not a word that merely co-occurs.
       const lacks = CONTROLS.filter((c) => {
         const dir = p('src/lib', c);
         return (
           existsSync(dir) &&
           !walk(dir, (f) => /\.(svelte|ts)$/.test(f)).some((f) =>
-            /describeField|aria-describedby/.test(read(f))
+            /from\s+['"][^'"]*_field\/description['"]/.test(read(f))
           )
         );
       });
       return {
         status: lacks.length === 0 ? CLOSED : PARTIAL,
-        evidence: `${CONTROLS.length - lacks.length} of ${CONTROLS.length} controls describe their field; lacking: ${lacks.join(', ')}`
+        evidence: `${CONTROLS.length - lacks.length} of ${CONTROLS.length} controls adopt the shared describeField helper (src/lib/_field/description.ts) rather than hand-rolling aria-describedby; bespoke: ${lacks.join(', ')}`
       };
     }
   },
@@ -699,21 +879,30 @@ const ITEMS = [
       // Keyframes, and transitions that translate, scale, rotate or resize.
       // Colour and opacity fades are deliberately out -- demanding guards on
       // those would invent work, which costs exactly as much as losing it.
-      const moving = libSvelte.filter((f) => movementIn(read(f)) !== null);
-      const guarded = moving.filter((f) =>
-        /prefers-reduced-motion|prefersReducedMotion/.test(read(f))
-      );
-      const missing = moving.filter((f) => !guarded.includes(f));
+      // Each entry carries the guard form its own motion needs. The old test was
+      // /prefers-reduced-motion|prefersReducedMotion/, which could not tell a CSS
+      // block from a script read and would have scored Scroller guarded the moment
+      // someone added the @media block that cannot reach a ScrollToOptions value.
+      // Widening the population without this would have turned a silent gap into a
+      // confident false CLOSED, which is strictly worse.
+      const moving = libSvelte
+        .map((f) => ({ file: f, motion: movementIn(read(f)) }))
+        .filter((entry) => entry.motion !== null);
+      const guarded = moving.filter((entry) => guardFor(read(entry.file), entry.motion.needs));
+      const missing = moving.filter((entry) => !guarded.includes(entry));
+      const scriptOnly = moving.filter((entry) => entry.motion.needs === 'script').length;
       return {
         status: grade(guarded.length, moving.length),
         evidence:
-          `${guarded.length} of ${moving.length} components that MOVE guard it` +
-          `${missing.length > 0 ? `; unguarded: ${missing.map((f) => `${base(f)} (${movementIn(read(f))})`).join(', ')}` : ''}` +
+          `${guarded.length} of ${moving.length} components that MOVE guard it, in the form` +
+          ` their own motion needs (${scriptOnly} can only be reached from script: a` +
+          ` transition directive, a ScrollToOptions value, an inline style write or a canvas)` +
+          `${missing.length > 0 ? `; unguarded: ${missing.map((e) => `${base(e.file)} (${e.motion.what}, needs ${e.motion.needs})`).join(', ')}` : ''}` +
           // Measured: disabling the Sheet guard's condition left this CLOSED,
           // because presence is all a source read can see. Saying so beats
           // implying a stronger guarantee -- the mistake this ledger exists to
           // stop being made about itself.
-          `. NOT verified: that a guard WORKS -- this reads presence, so a guard behind a false condition still counts, and only a browser run with emulateMedia can tell`
+          `. NOT verified: that a guard WORKS -- this reads presence, so a guard behind a false condition still counts, and only a browser run with emulateMedia can tell. Nor that a script guard stays CURRENT: a component reading the preference once into a variable and never listening for a change passes this, and stops honouring the setting the moment the user changes it mid-session`
       };
     }
   },
@@ -988,7 +1177,7 @@ const ITEMS = [
       });
       const missing = charts.filter((f) => !operable.includes(f));
       return {
-        status: charts.length === 0 ? OPEN : grade(operable.length, charts.length),
+        status: grade(operable.length, charts.length),
         evidence: `${operable.length} of ${charts.length} charts have marks that are focusable, key-operable AND named${missing.length > 0 ? `; missing: ${missing.map(base).join(', ')}` : ''}`
       };
     }

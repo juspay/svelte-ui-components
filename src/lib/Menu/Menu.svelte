@@ -527,8 +527,17 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .menu-trigger:focus {
-    outline: var(--menu-trigger-focus-outline, none);
+  /* :focus-visible, not :focus: the trigger is opened by mouse click as often
+     as by keyboard (onclick={toggle} above), and a ring on every mouse-opened
+     menu would be noise. The default used to be `none` with nothing standing
+     in for it, so a keyboard user tabbing to (or landing back on, after
+     Escape closes the dropdown) the trigger had no visible sign it was
+     focused. SplitButton's own trigger wraps this same element and used to
+     set --menu-trigger-focus-outline to `none` for the identical reason --
+     see its .split-button-trigger, now fixed to inherit this default instead. */
+  .menu-trigger:focus-visible {
+    outline: var(--menu-trigger-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--menu-trigger-focus-outline-offset, 2px);
   }
 
   .menu-dropdown {

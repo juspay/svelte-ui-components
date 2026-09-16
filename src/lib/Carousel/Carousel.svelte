@@ -245,7 +245,10 @@
     border-radius: 50%;
     background: var(--carousel-dot-color, #c4c4c4);
     cursor: pointer;
-    transition: all var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
+    /* Only background actually differs between .dot and .active-dot, so only
+       background is transitioned. `transition: all` used to catch `outline`
+       too, animating the keyboard focus ring in on every Tab. */
+    transition: background var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
       var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 
@@ -255,7 +258,8 @@
     border-radius: 50%;
     cursor: pointer;
     background: var(--carousel-dot-active-color, #000000);
-    transition: all var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
+    /* See .dot above: scoped to background so outline is never transitioned. */
+    transition: background var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
       var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 

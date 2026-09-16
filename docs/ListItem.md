@@ -1,6 +1,8 @@
 # ListItem
 
-A multi-section list row with left image (with fallback), center label (supports HTML), right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts. Has no selection/checkbox concept at all — for a checkbox-driven selectable row, use `CheckListItem` instead.
+A multi-section list row with left image (with fallback), center label, right image, and optional text on the right. Supports an accordion-expandable bottom section. Each section (left image, right image, center text, top section, whole item) has its own click handler. Shows a loading overlay and optional right-side circular loader spinner. The `preventFocus` prop removes focus outlines for non-keyboard navigation contexts. Has no selection/checkbox concept at all — for a checkbox-driven selectable row, use `CheckListItem` instead.
+
+`label` renders as **escaped plain text by default**. Markup only reaches the page through a `sanitize.htmlSanitizer` a consumer supplies — see Rendering markup in the label below.
 
 Only the region that was actually given its own click handler becomes an interactive control (`role="button"`, a tab stop, and Enter/Space activation) — see the Nested interactive semantics section below.
 
@@ -16,29 +18,30 @@ Only the region that was actually given its own click handler becomes an interac
 
 ## Props
 
-| Prop                    | Type                      | Required | Default    | Description                                                                                                                                                                                                                                 |
-| ----------------------- | ------------------------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| leftImageUrl            | `string \| null`          | No       | `-`        | URL for the left-side image. Rendered using the Img component with fallback support.                                                                                                                                                        |
-| leftImageFallbackUrl    | `string \| null`          | No       | `-`        | Fallback image URL if leftImageUrl fails to load.                                                                                                                                                                                           |
-| rightImageUrl           | `string \| null`          | No       | `-`        | URL for the right-side image (e.g., an arrow or action icon).                                                                                                                                                                               |
-| transformSvg            | `(svg: string) => string` | No       | `-`        | Rewrites either image's SVG markup before it is inlined. Providing it enables SVG inlining for both image URLs.                                                                                                                             |
-| label                   | `string \| null`          | No       | `-`        | Center text content. Supports HTML (rendered via {@html}). Used for the main list item label.                                                                                                                                               |
-| useAccordion            | `boolean`                 | No       | `false`    | When true, wraps the bottomContent in an Accordion component for expand/collapse animation.                                                                                                                                                 |
-| rightContentText        | `string \| null`          | No       | `-`        | Text displayed on the right side of the list item (e.g., a price or status).                                                                                                                                                                |
-| testId                  | `string`                  | No       | `-`        | Value for data-pw on the outer item container.                                                                                                                                                                                              |
-| topSectionTestId        | `string`                  | No       | `-`        | Value for data-pw on the top section (left + center + right).                                                                                                                                                                               |
-| rightImageTestId        | `string`                  | No       | `-`        | Value for data-pw on the right image wrapper.                                                                                                                                                                                               |
-| leftImageTestId         | `string`                  | No       | `-`        | Value for data-pw on the left image wrapper.                                                                                                                                                                                                |
-| centerTextTestId        | `string`                  | No       | `-`        | Value for data-pw on the center text element.                                                                                                                                                                                               |
-| showLoader              | `boolean`                 | No       | `false`    | When true, shows a semi-transparent animated overlay that fills across the item (progress bar animation).                                                                                                                                   |
-| showRightContentLoader  | `boolean`                 | No       | `false`    | When true, shows a circular Loader spinner in the right content area.                                                                                                                                                                       |
-| expand                  | `boolean`                 | No       | `false`    | Bindable. Controls whether the accordion bottom section is expanded or collapsed.                                                                                                                                                           |
-| preventFocus            | `boolean`                 | No       | `false`    | When true, removes the focus outline from interactive elements. Useful when the list item is used in a non-keyboard context.                                                                                                                |
-| suppressRoleAndTabindex | `boolean`                 | No       | `false`    | Explicit opt-in that removes ListItem's synthetic `role` and `tabindex` attributes from the item and its clickable subregions. Mouse click handlers remain active. Use when the consumer owns the semantic interactive control.             |
-| classes                 | `string`                  | No       | `-`        | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                      |
-| role                    | `string`                  | No       | `'button'` | ARIA role for the outer item container. Set to `'option'` when using ListItem inside a `role="listbox"` container (e.g., autocomplete dropdowns). When `'option'`, tabindex is automatically set to -1 for proper listbox focus management. |
-| ariaSelected            | `boolean`                 | No       | `-`        | Sets `aria-selected` on the item container. Use when the ListItem represents a selectable option (e.g., the currently highlighted item in a listbox).                                                                                       |
-| id                      | `string`                  | No       | `-`        | Sets the `id` attribute on the item container. Needed for `aria-activedescendant` references from a parent combobox input.                                                                                                                  |
+| Prop                    | Type                      | Required | Default    | Description                                                                                                                                                                                                                                                    |
+| ----------------------- | ------------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| leftImageUrl            | `string \| null`          | No       | `-`        | URL for the left-side image. Rendered using the Img component with fallback support.                                                                                                                                                                           |
+| leftImageFallbackUrl    | `string \| null`          | No       | `-`        | Fallback image URL if leftImageUrl fails to load.                                                                                                                                                                                                              |
+| rightImageUrl           | `string \| null`          | No       | `-`        | URL for the right-side image (e.g., an arrow or action icon).                                                                                                                                                                                                  |
+| transformSvg            | `(svg: string) => string` | No       | `-`        | Rewrites either image's SVG markup before it is inlined. Providing it enables SVG inlining for both image URLs.                                                                                                                                                |
+| label                   | `string \| null`          | No       | `-`        | Center text content. Used for the main list item label. Rendered as escaped plain text by default; pass `sanitize` to render it as markup instead. See Rendering markup in the label below.                                                                    |
+| sanitize                | `ListItemSanitizeOptions` | No       | `-`        | Governs how `label` is rendered when it contains markup: escaped plain text (default), or markup through a caller-supplied `htmlSanitizer`. See Rendering markup in the label below.                                                                           |
+| useAccordion            | `boolean`                 | No       | `false`    | When true, wraps the bottomContent in an Accordion component for expand/collapse animation.                                                                                                                                                                    |
+| rightContentText        | `string \| null`          | No       | `-`        | Text displayed on the right side of the list item (e.g., a price or status).                                                                                                                                                                                   |
+| testId                  | `string`                  | No       | `-`        | Value for data-pw on the outer item container.                                                                                                                                                                                                                 |
+| topSectionTestId        | `string`                  | No       | `-`        | Value for data-pw on the top section (left + center + right).                                                                                                                                                                                                  |
+| rightImageTestId        | `string`                  | No       | `-`        | Value for data-pw on the right image wrapper.                                                                                                                                                                                                                  |
+| leftImageTestId         | `string`                  | No       | `-`        | Value for data-pw on the left image wrapper.                                                                                                                                                                                                                   |
+| centerTextTestId        | `string`                  | No       | `-`        | Value for data-pw on the center text element.                                                                                                                                                                                                                  |
+| showLoader              | `boolean`                 | No       | `false`    | When true, shows a semi-transparent animated overlay that fills across the item (progress bar animation).                                                                                                                                                      |
+| showRightContentLoader  | `boolean`                 | No       | `false`    | When true, shows a circular Loader spinner in the right content area.                                                                                                                                                                                          |
+| expand                  | `boolean`                 | No       | `false`    | Bindable. Controls whether the accordion bottom section is expanded or collapsed.                                                                                                                                                                              |
+| preventFocus            | `boolean`                 | No       | `false`    | When true, suppresses the focus outline for mouse/touch-triggered focus on interactive elements. Does not affect `tabindex`, so the element is still a real Tab stop, and a genuine keyboard Tab still shows the indicator (`:focus-visible`), per WCAG 2.4.7. |
+| suppressRoleAndTabindex | `boolean`                 | No       | `false`    | Explicit opt-in that removes ListItem's synthetic `role` and `tabindex` attributes from the item and its clickable subregions. Mouse click handlers remain active. Use when the consumer owns the semantic interactive control.                                |
+| classes                 | `string`                  | No       | `-`        | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                         |
+| role                    | `string`                  | No       | `'button'` | ARIA role for the outer item container. Set to `'option'` when using ListItem inside a `role="listbox"` container (e.g., autocomplete dropdowns). When `'option'`, tabindex is automatically set to -1 for proper listbox focus management.                    |
+| ariaSelected            | `boolean`                 | No       | `-`        | Sets `aria-selected` on the item container. Use when the ListItem represents a selectable option (e.g., the currently highlighted item in a listbox).                                                                                                          |
+| id                      | `string`                  | No       | `-`        | Sets the `id` attribute on the item container. Needed for `aria-activedescendant` references from a parent combobox input.                                                                                                                                     |
 
 ## Snippets
 
@@ -179,6 +182,75 @@ item.addEventListener('leftimageclick', (e) => console.log(e.detail));
 native `HTMLElement` handler, so an `item.addEventListener('keydown', ...)` listener already sees
 the real event that bubbles out of the shadow root on its own, and a synthetic duplicate under the
 same name would double-deliver it.
+
+> **Web components.** `sui-list-item` declares `sanitize` as an object property, so
+> `htmlSanitizer` can only be supplied from script — `element.sanitize = { rawHtml: 'sanitize',
+htmlSanitizer }`. There is no attribute form, because an attribute is a string and this option is
+> a function. A vanilla-JS consumer setting `sanitize` as an HTML attribute gets escaping, the
+> default, rather than an error.
+
+## Rendering markup in the label
+
+`label` renders as **escaped plain text by default**: `<b>Bold</b>` shows those characters
+literally rather than rendering as bold. There is no sanitizer to configure and no way to make it
+render more without opting in — this is deliberate for the common case, a list row built from a
+title string that may come from user input or an external feed.
+
+```svelte
+<!-- Renders the literal characters "<b>Loud</b>", not a bold word. -->
+<ListItem label="<b>Loud</b>" />
+```
+
+If you genuinely need `label` rendered as markup, set `sanitize.rawHtml` to `'sanitize'` and supply
+`sanitize.htmlSanitizer`. Your function is called once, with the raw `label` string, and whatever
+it returns is rendered through `{@html}`, unmodified — this component does not re-check it, and
+cannot: re-escaping the result would turn the feature back into `'escape'`.
+
+DOMPurify is not bundled with this library and is not a peer dependency — install a sanitizer in
+your own app (`npm i dompurify`, or anything else you trust). Nothing here imports one.
+
+```svelte
+<script lang="ts">
+  import DOMPurify from 'dompurify';
+  import { ListItem } from '@juspay/svelte-ui-components';
+</script>
+
+<ListItem
+  label="<b>Payment Received</b>"
+  sanitize={{ rawHtml: 'sanitize', htmlSanitizer: (html) => DOMPurify.sanitize(html) }}
+/>
+```
+
+**This library deliberately does not implement HTML sanitization and does not depend on a
+sanitizer** — the same position `MarkdownText`'s `htmlSanitizer` takes. Escaping everything is a
+provably safe default, so a sanitizer written here could only ever subtract from it, and HTML
+sanitization is a specialist problem this package should not carry as a dependency.
+
+A few properties worth knowing, identical in spirit to `MarkdownText`'s:
+
+- **Omitting the sanitizer keeps the escaping.** `sanitize={{ rawHtml: 'sanitize' }}` with no
+  `htmlSanitizer` behaves exactly like the default. A half-configured list item does not start
+  emitting raw HTML.
+- **A failing sanitizer falls back to escaping.** If yours throws, or returns anything that is not
+  a string, `label` is escaped instead. The unsanitized string is never emitted.
+- **It has to work on the server too.** `ListItem` renders the result through `{@html}` from a
+  `$derived`, so on a server-rendered page the sanitizer runs during SSR and again on hydration. A
+  browser-only sanitizer (DOMPurify with no DOM around it) throws during SSR, falls back to escaped
+  output there, then succeeds on the client, and the two renders disagree. Give it a server
+  implementation, or leave `sanitize` unset on server-rendered routes.
+
+### Migrating from the previous unconditional `{@html label}`
+
+Before this change, `label` was always rendered through `{@html}` with no escaping — any consumer
+passing markup got it rendered. That is no longer the default: `label` is now escaped plain text
+unless `sanitize` opts back in. A consumer that relied on the old behaviour needs one of:
+
+- **The label was always plain text anyway.** No change needed — escaped plain text and
+  unescaped plain text render identically when there is no markup in it.
+- **The label does contain markup and it should keep rendering as markup.** Add
+  `sanitize={{ rawHtml: 'sanitize', htmlSanitizer: (html) => html }}` to reproduce the previous
+  unconditional passthrough exactly (a no-op "sanitizer"). This is not recommended if `label` can
+  ever contain untrusted text — supply a real sanitizer such as DOMPurify's `sanitize` instead.
 
 ## SVG transformation
 

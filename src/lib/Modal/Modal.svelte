@@ -445,10 +445,6 @@
     border-radius: var(--modal-border-radius, var(--radius, 4px));
     overflow: var(--modal-content-overflow, auto);
     border-top: var(--modal-content-border-top);
-    /* tabindex="-1" makes this the focus-trap's fallback target when the modal
-       has no focusable content of its own (see _interaction/focus.ts); it is
-       never in the Tab order itself, so it needs no visible focus ring the way
-       a real focusable element would. Matches Sheet's sheet-panel. */
     outline: none;
     /* Viewport containment for every size class: only .fit-content used to carry
        a max-height, so a size whose height var is overridden to fit-content (or
@@ -457,6 +453,20 @@
        viewport on mobile; the vh line is the fallback for engines without dvh. */
     max-height: var(--modal-max-height, calc(100vh - 32px));
     max-height: var(--modal-max-height, calc(100dvh - 32px));
+  }
+
+  /* The comment this replaced claimed tabindex="-1" meant this never needed a
+     ring because it's "never in the Tab order itself" -- true, but beside the
+     point: onMount calls focusEntryPoint(modalContent), which focuses THIS
+     element directly (real DOM focus, not merely reachable via Tab) whenever
+     the modal has no focusable content of its own. That is exactly Sheet's
+     sheet-panel problem, and sheet-panel got the fix this comment said it
+     "matches" -- this one didn't. :focus-visible so the trigger click that
+     opens the modal shows nothing new; offset is negative like Sheet's,
+     since a modal can be sized to fill nearly the whole viewport. */
+  .modal-content:focus-visible {
+    outline: var(--modal-content-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--modal-content-focus-outline-offset, -2px);
   }
 
   .slot-content {

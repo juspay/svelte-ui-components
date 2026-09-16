@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
-import { beat, caption, highlight, step } from './support/narrate.js';
+import { assertInViewport, beat, caption, highlight, step } from './support/narrate.js';
 
 /**
  * Proves the "motion" gaps from the audit packet (scratchpad/gaps/motion.json):
@@ -50,6 +50,11 @@ const setReducedMotion = async (page: Page, reduced: boolean): Promise<void> => 
   await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
   const matches = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
   expect(matches, 'the reduced-motion emulation must actually reach the page').toBe(reduced);
+};
+
+/** Removes narration before filming a component state, so the state itself stays unobscured. */
+const dismissCaption = async (page: Page): Promise<void> => {
+  await page.locator('[data-walkthrough-caption]').evaluate((node) => node.remove());
 };
 
 /**
@@ -172,6 +177,154 @@ const watchTransition = (
     { selector: options.selector, parent: options.parent === true, windowMs: options.windowMs }
   );
 
+type MidTransitionSample = {
+  readonly opacity: number;
+  readonly offset: number;
+};
+
+/**
+ * Freezes a freshly-mounting element's real transition on screen, so the
+ * paused frame can be held for a full-length hold instead of flashing past in
+ * whatever's left of a <400ms window.
+ *
+ * svelte/transition's fade/fly do not animate via a plain CSS class -- they
+ * call the element's own `Element.animate()` (Web Animations API) with the
+ * eased keyframes baked in (see node_modules/svelte's
+ * internal/client/dom/elements/transitions.js), which is a real,
+ * independently-controllable `Animation` object reachable through
+ * `element.getAnimations()`. This polls (via requestAnimationFrame, started
+ * BEFORE the triggering click for the same reason watchTransition's own doc
+ * comment gives) until the element's rendered opacity enters `opacityBand`,
+ * then calls `.pause()` on whatever `Animation` is running at that instant.
+ * Pausing stops `currentTime` from advancing, so every subsequent paint keeps
+ * showing that exact in-flight frame until `finishTransition` below seeks it
+ * again -- a real animation held open, not a synthetic slow-motion effect or
+ * a fabricated intermediate frame.
+ *
+ * Both fade (linear easing) and fly (cubic-out easing, and fly drives its
+ * opacity off the same eased `t` as its x/y offset -- see svelte's
+ * transition/index.js) reach a given opacity at *some* point in their run
+ * regardless of the curve's shape, which is why the trigger is opacity-based
+ * rather than raw elapsed-time-based: gating on elapsed time against a cubic
+ * curve can land arbitrarily close to either endpoint depending on exactly
+ * which frame the poll lands on, where opacity cannot.
+ */
+const pauseMidTransition = (
+  page: Page,
+  options: {
+    readonly selector: string;
+    readonly parent?: boolean;
+    readonly opacityBand?: readonly [number, number];
+    readonly timeoutMs?: number;
+  }
+): Promise<MidTransitionSample> =>
+  page.evaluate(
+    ({ selector, parent, opacityBand, timeoutMs }) =>
+      new Promise<MidTransitionSample>((resolve, reject) => {
+        const start = performance.now();
+        const [lo, hi] = opacityBand;
+
+        const readOffset = (transform: string): number => {
+          const match = /matrix\(([^)]+)\)/.exec(transform);
+          if (!match) {
+            return 0;
+          }
+          const parts = match[1].split(',').map((part) => Number.parseFloat(part.trim()));
+          if (parts.length < 6) {
+            return 0;
+          }
+          return Math.hypot(parts[4], parts[5]);
+        };
+
+        const tick = (): void => {
+          const found = document.querySelector(selector);
+          const el = parent ? (found?.parentElement ?? null) : found;
+          if (el instanceof HTMLElement) {
+            const style = getComputedStyle(el);
+            const opacity = Number.parseFloat(style.opacity);
+            if (opacity >= lo && opacity <= hi) {
+              const running = el.getAnimations().filter((anim) => anim.playState === 'running');
+              if (running.length > 0) {
+                running.forEach((anim) => anim.pause());
+                const paused = getComputedStyle(el);
+                resolve({
+                  opacity: Number.parseFloat(paused.opacity),
+                  offset: readOffset(paused.transform)
+                });
+                return;
+              }
+            }
+          }
+          if (performance.now() - start > timeoutMs) {
+            reject(
+              new Error(
+                `"${selector}" never showed a running animation with opacity in [${lo}, ${hi}] within ${timeoutMs}ms`
+              )
+            );
+            return;
+          }
+          requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      }),
+    {
+      selector: options.selector,
+      parent: options.parent === true,
+      opacityBand: options.opacityBand ?? [0.2, 0.8],
+      timeoutMs: options.timeoutMs ?? 2_000
+    }
+  );
+
+/**
+ * Seeks every animation `pauseMidTransition` paused on `selector` straight to
+ * its end (`Animation.finish()`, a standard Web Animations API call, not a
+ * fabricated jump-cut -- with `fill: 'forwards'` it lands on exactly the same
+ * end keyframe letting the animation run out the clock would) and reads the
+ * settled computed style, so the "did it come to rest correctly" assertions
+ * check the real tail of the same transition the hold just froze.
+ *
+ * Deliberately synchronous rather than resuming playback and awaiting real
+ * elapsed time: Toast's own auto-hide is a plain `setTimeout(hideToast,
+ * duration)` in Toast.svelte, started the instant the component mounts and
+ * running regardless of this animation's play state, with a 2000ms default
+ * in this file's demo. Between the required >=1.5s hold and the poll that
+ * finds the pausable frame, real time is already tight against that window;
+ * waiting out the remainder of the transition on top would risk the toast
+ * starting its own out-transition mid-assertion. `finish()` reaches the same
+ * pixels without spending any more of that budget.
+ */
+const finishTransition = (
+  page: Page,
+  options: { readonly selector: string; readonly parent?: boolean }
+): Promise<MidTransitionSample> =>
+  page.evaluate(({ selector, parent }) => {
+    const readOffset = (transform: string): number => {
+      const match = /matrix\(([^)]+)\)/.exec(transform);
+      if (!match) {
+        return 0;
+      }
+      const parts = match[1].split(',').map((part) => Number.parseFloat(part.trim()));
+      if (parts.length < 6) {
+        return 0;
+      }
+      return Math.hypot(parts[4], parts[5]);
+    };
+
+    const found = document.querySelector(selector);
+    const el = parent ? (found?.parentElement ?? null) : found;
+    if (!(el instanceof HTMLElement)) {
+      return { opacity: 1, offset: 0 };
+    }
+
+    el.getAnimations()
+      .filter((anim) => anim.playState === 'paused')
+      .forEach((anim) => anim.finish());
+
+    const style = getComputedStyle(el);
+    return { opacity: Number.parseFloat(style.opacity), offset: readOffset(style.transform) };
+  }, options);
+
 /**
  * A hand-authored, minimal Bodymovin/Lottie document: one shape layer whose
  * opacity keyframes from 20 to 100 back to 20 over 60 frames at 30fps (2s,
@@ -240,21 +393,38 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     const openFade = page.getByText('Open Modal', { exact: true });
     const openFly = page.getByText('Open centered modal (slide-up)', { exact: true });
 
-    await caption(page, 'Reduced motion is off. The default modal fades in over about 300ms.');
-    const fadeWatch = watchTransition(page, {
-      selector: '.modal-content',
-      parent: true,
-      windowMs: 500
-    });
+    // The fade is 300ms and the fly is 380ms -- both comfortably shorter than
+    // one frame interval at a 3fps review sampling rate (333ms), so without
+    // an explicit hold the in-flight frame can fall entirely between two
+    // sampled frames and never be seen. pauseMidTransition freezes the real
+    // Web Animations API animation svelte/transition creates (see its own
+    // doc comment) the instant it is genuinely partway through, so the held
+    // frame below is provable pixels, not a description of one.
+    await caption(
+      page,
+      'Reduced motion is off. Watch the fade pause mid-transition -- a genuinely half-visible frame, held long enough to see.'
+    );
+    await dismissCaption(page);
+    const fadeMidWatch = pauseMidTransition(page, { selector: '.modal-content', parent: true });
     await openFade.click();
-    const fadeResult = await fadeWatch;
+    const fadeMid = await fadeMidWatch;
     await highlight(modalContent);
+    await beat(page, 1_500);
 
     expect(
-      fadeResult.minOpacity,
-      'the fade-in must pass through a partially transparent frame'
+      fadeMid.opacity,
+      'the paused frame must be genuinely mid-fade, not still fully transparent'
+    ).toBeGreaterThan(0.1);
+    expect(
+      fadeMid.opacity,
+      'the paused frame must be genuinely mid-fade, not already fully opaque'
     ).toBeLessThan(0.9);
-    expect(fadeResult.finalOpacity, 'the modal must settle fully visible').toBeGreaterThan(0.95);
+
+    const fadeSettled = await finishTransition(page, { selector: '.modal-content', parent: true });
+    expect(
+      fadeSettled.opacity,
+      'the modal must settle fully visible once the paused animation resumes'
+    ).toBeGreaterThan(0.95);
     await expect(modalContent).toBeVisible();
 
     await beat(page);
@@ -263,26 +433,32 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
 
     await caption(
       page,
-      'Reduced motion is still off. The slide-up modal flies in from below over about 380ms.'
+      'Reduced motion is still off. Watch the slide-up modal pause mid-flight, still visibly off its resting position.'
     );
-    const flyWatch = watchTransition(page, {
-      selector: '.modal-content',
-      parent: true,
-      windowMs: 500
-    });
+    await dismissCaption(page);
+    const flyMidWatch = pauseMidTransition(page, { selector: '.modal-content', parent: true });
     await openFly.click();
-    const flyResult = await flyWatch;
+    const flyMid = await flyMidWatch;
     await highlight(modalContent);
+    await beat(page, 1_500);
 
-    expect(flyResult.maxOffset, 'the slide-up modal must actually travel').toBeGreaterThan(10);
     expect(
-      flyResult.finalOffset,
-      'the modal must settle back at its resting position'
-    ).toBeLessThan(5);
+      flyMid.offset,
+      'the paused frame must show real in-flight travel, not an already-settled modal'
+    ).toBeGreaterThan(30);
     // svelte/transition's fly defaults opacity to 0, so this path fades too,
     // independently of the translate above.
-    expect(flyResult.minOpacity, 'the fly-in also fades from transparent').toBeLessThan(0.9);
-    expect(flyResult.finalOpacity).toBeGreaterThan(0.95);
+    expect(
+      flyMid.opacity,
+      'the fly-in also fades from transparent while paused mid-flight'
+    ).toBeLessThan(0.9);
+
+    const flySettled = await finishTransition(page, { selector: '.modal-content', parent: true });
+    expect(
+      flySettled.offset,
+      'the modal must settle back at its resting position once the paused animation resumes'
+    ).toBeLessThan(5);
+    expect(flySettled.opacity).toBeGreaterThan(0.95);
 
     await beat(page);
     await page.getByTestId('slide-up-modal-close').click();
@@ -299,6 +475,7 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     const openFlyReduced = page.getByText('Open centered modal (slide-up)', { exact: true });
 
     await caption(page, 'Reduced motion is now on. The same fade modal should appear instantly.');
+    await dismissCaption(page);
     const fadeReducedWatch = watchTransition(page, {
       selector: '.modal-content',
       parent: true,
@@ -307,6 +484,7 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     await openFadeReduced.click();
     const fadeReducedResult = await fadeReducedWatch;
     await highlight(modalContentReduced);
+    await beat(page, 1_500);
 
     expect(
       fadeReducedResult.minOpacity,
@@ -320,6 +498,7 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     await beat(page);
 
     await caption(page, 'The slide-up modal should now appear instantly too, with no travel.');
+    await dismissCaption(page);
     const flyReducedWatch = watchTransition(page, {
       selector: '.modal-content',
       parent: true,
@@ -328,6 +507,7 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     await openFlyReduced.click();
     const flyReducedResult = await flyReducedWatch;
     await highlight(modalContentReduced);
+    await beat(page, 1_500);
 
     expect(flyReducedResult.maxOffset, 'a zero-duration fly must not visibly travel').toBeLessThan(
       10
@@ -341,6 +521,37 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     await beat(page);
   });
 });
+
+/**
+ * `--toast-top` is Toast's own documented CSS override point (Toast.svelte:
+ * `top: var(--toast-top, 10px)`), not a private internal. The toast demo route
+ * never sets it, so the default `top: 10px` applies, and this route's Toast
+ * never passes `direction` or `overlapPage` either -- both default (top-to-bottom,
+ * true -- see the PRODUCT DEFECT note below), giving the intro an inY of -500.
+ *
+ * That combination is why a previous attempt at pausing the WAAPI animation
+ * mid-flight never showed up on camera: `fly`'s own css callback (svelte/
+ * transition/index.js) is `translate((1-t)*x, (1-t)*y)` with opacity `target *
+ * t`, so at the moment `pauseMidTransition` first sees opacity >= 0.2 (its
+ * default band's floor), `t` has just crossed 0.2 and the remaining offset
+ * `(1-t)*y` is bounded at *worst* 0.8 * 500 = 400px. A paused offset that large
+ * against a 10px resting position paints the toast at y <= 10 - 400 = -390 --
+ * physically above the viewport -- for the entire hold. The frozen frame was
+ * real and the transform offset assertion genuinely passed; it was simply
+ * never inside the frame the recording could show, exactly the "frame band
+ * ... entirely toast-free" the review caught.
+ *
+ * Resting the toast 500px down instead keeps the worst-case paused y at
+ * 500 - 400 = 100 -- comfortably inside the 1280x720 walkthrough viewport for
+ * the whole hold, and still well clear of the 720px bottom edge once settled
+ * at rest. This changes nothing about the component or the demo route: it is
+ * the same public CSS hook a real consumer would reach for to anchor a toast
+ * lower on their own page.
+ */
+const TOAST_VISIBLE_REST_TOP_PX = 500;
+const raiseToastRestPosition = async (page: Page): Promise<void> => {
+  await page.addStyleTag({ content: `.toast { --toast-top: ${TOAST_VISIBLE_REST_TOP_PX}px; }` });
+};
 
 test.describe('Toast: fly-in/out collapses to an instant appear/disappear under reduced motion', () => {
   // PRODUCT DEFECT (fixed) -- was filed instead of asserted around.
@@ -407,11 +618,72 @@ test.describe('Toast: fly-in/out collapses to an instant appear/disappear under 
     await beat(page);
   });
 
-  test('the toast simply appears, with no travel, once reduced motion is set', async ({ page }) => {
+  test('the toast pauses mid-flight under normal motion so the travel is provable, then appears instantly with no travel once reduced motion is set', async ({
+    page
+  }) => {
+    await gotoHydrated(page, '/components/toast');
+    await setReducedMotion(page, false);
+    // See raiseToastRestPosition's own doc comment: without this, the paused
+    // mid-flight frame below is real but physically off the top of the
+    // viewport for the whole hold.
+    await raiseToastRestPosition(page);
+
+    const showToast = page.getByRole('button', { name: 'Show Toast', exact: true });
+    const toast = page.locator('.toast');
+
+    // The `in` fly is 400ms -- shorter than one frame interval at a 3fps
+    // review sampling rate (333ms) -- so without an explicit hold the
+    // in-flight frame can fall entirely between two sampled frames. This
+    // freezes the real animation mid-flight (pauseMidTransition's own doc
+    // comment) instead of only asserting on it in JS.
+    //
+    // The hold below is intentionally a single `highlight(toast, 1_500)`
+    // rather than the highlight-then-beat combo used elsewhere in this file:
+    // Toast.svelte starts a real `setTimeout(hideToast, duration)` (2000ms
+    // here) the instant the component mounts, independent of this paused
+    // animation's own play state, and finishTransition below is deliberately
+    // instantaneous (see its doc comment) to keep the whole paused-hold to
+    // assert-and-move-on sequence comfortably inside that window rather than
+    // racing the toast's own auto-hide.
+    await caption(
+      page,
+      'Reduced motion is off. Watch the toast pause mid-flight, still visibly off its resting position.'
+    );
+    await dismissCaption(page);
+    const flyMidWatch = pauseMidTransition(page, { selector: '.toast' });
+    await showToast.click();
+    const flyMid = await flyMidWatch;
+    await highlight(toast, 1_500);
+
+    expect(
+      flyMid.offset,
+      'the paused frame must show real in-flight travel, not an already-settled toast'
+    ).toBeGreaterThan(30);
+    expect(
+      flyMid.opacity,
+      'the fly-in also fades from transparent while paused mid-flight'
+    ).toBeLessThan(0.9);
+    // The gap this closes: a genuinely mid-flight, paused toast is worthless
+    // as proof if it is paused off screen. Assert the frame being held is
+    // actually inside the viewport, not just that its transform looks
+    // mid-transition.
+    await assertInViewport(page, toast);
+
+    const flySettled = await finishTransition(page, { selector: '.toast' });
+    expect(
+      flySettled.offset,
+      'the toast must settle at its resting position once the paused animation resumes'
+    ).toBeLessThan(5);
+    expect(flySettled.opacity, 'the toast must settle fully visible').toBeGreaterThan(0.95);
+    await expect(toast).toBeVisible();
+
+    // A fresh navigation, not waiting out this toast's own 2000ms auto-hide:
     // Toast's fly properties are a memoised $derived (see the identical note
     // on the ModalAnimation test above) -- the preference is set before the
     // navigation that mounts it, matching every other reduced-motion-only
-    // scenario in this file.
+    // scenario in this file. The navigation itself tears down the old
+    // document (and its pending auto-hide timer) regardless of exactly when
+    // it lands.
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await gotoHydrated(page, '/components/toast');
     await setReducedMotion(page, true);
@@ -421,12 +693,12 @@ test.describe('Toast: fly-in/out collapses to an instant appear/disappear under 
 
     await caption(
       page,
-      'Reduced motion is on. Showing the toast should simply place it, with no travel.'
+      'Reduced motion is now on. Showing the toast should simply place it, with no travel.'
     );
-    const instantWatch = watchTransition(page, { selector: '.toast', windowMs: 300 });
+    await dismissCaption(page);
+    const instantWatch = watchTransition(page, { selector: '.toast', windowMs: 200 });
     await showToastReduced.click();
     const instantResult = await instantWatch;
-    await highlight(toastReduced);
 
     expect(instantResult.maxOffset, 'a zero-duration fly must not visibly travel').toBeLessThan(10);
     expect(
@@ -436,7 +708,11 @@ test.describe('Toast: fly-in/out collapses to an instant appear/disappear under 
     expect(instantResult.finalOpacity).toBeGreaterThan(0.95);
     await expect(toastReduced).toBeVisible();
 
-    await beat(page);
+    // Same reasoning as the motion-enabled hold above: this toast's own
+    // 2000ms auto-hide is already running, so the >=1.5s hold requirement is
+    // met with a single highlight call instead of stacking a separate beat
+    // on top and drifting into that window.
+    await highlight(toastReduced, 1_500);
   });
 });
 
@@ -651,15 +927,46 @@ test.describe('TypewriterText: markdown mode honours the reduced-motion reveal g
     const demo = page.getByTestId('typewriter-markdown-demo');
     const startButton = page.getByTestId('typewriter-markdown-start');
 
+    // The markdown demo sits below three earlier TypewriterText sections, so
+    // it starts off-screen at the top of a fresh navigation. A previous
+    // repair moved the toast that was covering it, but never brought the
+    // region itself into view -- scroll to it and prove the demo landed on
+    // screen BEFORE narrating or typing, so an invisible reveal fails the
+    // spec. The output element itself is legitimately empty and therefore
+    // zero-size at this point -- .demo-row is a flex column with
+    // align-items:flex-start, and markdown hasn't rendered anything until
+    // the button is clicked -- so the pre-content viewport proof is anchored
+    // on its always-sized sibling, the start button, right beside it in the
+    // same row. `demo` is asserted directly further down, once it actually
+    // has content to be visible.
+    await demo.scrollIntoViewIfNeeded();
+    await assertInViewport(page, startButton);
+
     await caption(
       page,
       'Reduced motion is off. Revealing markdown should type in character by character.'
     );
+    await dismissCaption(page);
     await startButton.click();
+    await beat(page, 250);
     const immediateItems = await demo.locator('li').count();
-    await beat(page, 1_500);
-    const settledItems = await demo.locator('li').count();
+
+    // The scroll above landed on `demo` while it was still empty -- as it
+    // types in, the box grows and outgrows that position, sliding its own
+    // bottom edge below the fold. Wait for the reveal to fully settle, then
+    // scroll again against the now-final box before highlighting and
+    // holding, so the position we scroll to, highlight, and hold is the one
+    // that is still true 1.5s from now -- not a shorter one about to be
+    // outgrown mid-hold.
+    await expect(demo.locator('li')).toHaveCount(2);
+    await demo.scrollIntoViewIfNeeded();
     await highlight(demo);
+    await beat(page, 1_500);
+    // Re-assert after the hold, not just before it: this is the frame a
+    // reviewer actually samples, and typed content growing the list must not
+    // have pushed the region itself back out of the viewport.
+    await assertInViewport(page, demo);
+    const settledItems = await demo.locator('li').count();
 
     expect(settledItems, 'the full markdown list must finish rendering').toBe(2);
     expect(
@@ -679,17 +986,35 @@ test.describe('TypewriterText: markdown mode honours the reduced-motion reveal g
     const demoAgain = page.getByTestId('typewriter-markdown-demo');
     const startButtonAgain = page.getByTestId('typewriter-markdown-start');
 
+    // The fresh navigation above resets scroll to the top of the page, so the
+    // region is off-screen again regardless of where the previous pass left
+    // it. Same proof as the first pass: scroll, then confirm the row landed
+    // on screen, before doing anything the recording is supposed to show.
+    // Anchored on the button for the same reason as the first pass: `demoAgain`
+    // has not rendered anything yet and is genuinely zero-size until clicked.
+    await demoAgain.scrollIntoViewIfNeeded();
+    await assertInViewport(page, startButtonAgain);
+
     await caption(
       page,
       'Reduced motion is now on. The same reveal should show the finished markdown at once.'
     );
+    await dismissCaption(page);
     await startButtonAgain.click();
     // A short, deterministic wait rather than an immediate same-tick read: it
     // only needs to be well inside the ~900ms a character-by-character reveal
     // takes above, not an actual measurement of "instant".
     await beat(page, 150);
     const earlyItemsReduced = await demoAgain.locator('li').count();
+
+    // Same reason as the first pass: the scroll above landed on `demoAgain`
+    // while it was still empty, and reduced motion reveals the whole list
+    // in that same beat, growing the box past where that scroll put it.
+    // Re-scroll against the now-settled box before highlighting and holding.
+    await demoAgain.scrollIntoViewIfNeeded();
     await highlight(demoAgain);
+    await beat(page, 1_500);
+    await assertInViewport(page, demoAgain);
 
     expect(
       earlyItemsReduced,
@@ -859,10 +1184,12 @@ test.describe('The indefinite-loop population: running, then stopped and still v
     expect(await animationName(page, selector)).not.toBe('none');
 
     await caption(page, 'Reduced motion is off. The ring spins continuously.');
+    await dismissCaption(page);
     const angleBefore = await readTransformAngle(page, selector);
     await beat(page, 400);
     const angleAfter = await readTransformAngle(page, selector);
     await highlight(loader);
+    await beat(page, 1_500);
     expect(
       rotationDelta(angleAfter, angleBefore),
       'the ring must have visibly rotated during an unfrozen 400ms window'
@@ -870,10 +1197,12 @@ test.describe('The indefinite-loop population: running, then stopped and still v
 
     await setReducedMotion(page, true);
     await caption(page, 'Reduced motion is now on. The spin stops, but the ring stays on screen.');
+    await dismissCaption(page);
     expect(await animationName(page, selector)).toBe('none');
 
     const frozenFirst = await readTransformAngle(page, selector);
-    await beat(page, 700);
+    await highlight(loader);
+    await beat(page, 1_500);
     const frozenSecond = await readTransformAngle(page, selector);
     expect(frozenSecond, 'a stopped ring must not still be rotating').toBe(frozenFirst);
 
@@ -906,10 +1235,12 @@ test.describe('The indefinite-loop population: running, then stopped and still v
     expect(await animationName(page, secondDot)).not.toBe('none');
 
     await caption(page, 'Reduced motion is off. The second dot glides continuously.');
+    await dismissCaption(page);
     const offsetBefore = await readTransformOffset(page, secondDot);
     await beat(page, 400);
     const offsetAfter = await readTransformOffset(page, secondDot);
     await highlight(loader);
+    await beat(page, 1_500);
     expect(
       Math.abs(offsetAfter - offsetBefore),
       'the dot must have visibly moved during an unfrozen 400ms window'
@@ -920,11 +1251,13 @@ test.describe('The indefinite-loop population: running, then stopped and still v
       page,
       'Reduced motion is now on. The background pulse and the dots both stop, leaving three dots visible.'
     );
+    await dismissCaption(page);
     expect(await animationName(page, '[data-pw="brand-loader-default-demo"]')).toBe('none');
     expect(await animationName(page, secondDot)).toBe('none');
 
     const frozenFirst = await readTransformOffset(page, secondDot);
-    await beat(page, 400);
+    await highlight(loader);
+    await beat(page, 1_500);
     const frozenSecond = await readTransformOffset(page, secondDot);
     expect(frozenSecond, 'a stopped dot must not still be moving').toBe(frozenFirst);
 

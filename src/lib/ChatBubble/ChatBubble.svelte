@@ -385,6 +385,18 @@
     outline: none;
   }
 
+  /* setOpen() (see script) calls panel.focus() directly on open, and the panel
+     -- not a child -- is the Tab-trap's own boundary, so removing its outline
+     unconditionally left a keyboard user with no visible sign focus had moved
+     into the launcher's panel at all. :focus-visible restores a ring only for
+     keyboard/programmatic focus, so the launcher click that opens the panel
+     shows nothing new. Matches Sheet's sheet-panel fix for the identical
+     shape of problem. */
+  .panel:focus-visible {
+    outline: var(--chat-bubble-panel-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--chat-bubble-panel-focus-outline-offset, -2px);
+  }
+
   .launcher {
     --button-width: var(--chat-bubble-width, var(--chat-bubble-size, 56px));
     --button-height: var(--chat-bubble-height, var(--chat-bubble-size, 56px));

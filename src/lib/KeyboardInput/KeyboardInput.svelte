@@ -79,7 +79,7 @@
   }
 
   .separator {
-    color: var(--keyboard-input-separator-color, #888888);
+    color: var(--keyboard-input-separator-color, #6b7280);
     font-size: var(--keyboard-input-separator-font-size, 0.85em);
     user-select: none;
   }

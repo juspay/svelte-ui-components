@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
@@ -121,7 +122,7 @@ export const step = async (
  */
 export const highlight = async (target: Locator, ms: number = 900): Promise<void> => {
   const previous = await target.evaluate((node) => {
-    if (!(node instanceof HTMLElement)) {
+    if (!(node instanceof HTMLElement || node instanceof SVGElement)) {
       return '';
     }
     const before = node.style.outline;
@@ -131,10 +132,61 @@ export const highlight = async (target: Locator, ms: number = 900): Promise<void
   });
   await target.page().waitForTimeout(ms);
   await target.evaluate((node, before: string) => {
-    if (!(node instanceof HTMLElement)) {
+    if (!(node instanceof HTMLElement || node instanceof SVGElement)) {
       return;
     }
     node.style.outline = before;
     node.style.outlineOffset = '';
   }, previous);
+};
+
+/**
+ * Asserts a target's real, on-screen bounding box sits inside the current
+ * viewport -- not merely that it is attached and unclipped, which is all
+ * Playwright's own `toBeVisible` requires. An element can pass `toBeVisible`
+ * and `scrollIntoViewIfNeeded` can run earlier in a test and still leave it
+ * off screen by the time a recording actually samples it, if anything reflows
+ * the page in between (a viewport resize, a fresh navigation resetting
+ * scroll, a layout shift). That gap is exactly how a walkthrough can hold a
+ * caption and a highlight over an empty gutter and still pass: nothing it
+ * asserted was ever "is this actually in frame". This makes that a real,
+ * failing assertion instead of evidence nobody checks.
+ */
+export const assertInViewport = async (page: Page, target: Locator): Promise<void> => {
+  const box = await target.boundingBox();
+  expect(
+    box,
+    'target element must have a real bounding box (attached and rendered)'
+  ).not.toBeNull();
+  const viewport = page.viewportSize();
+  expect(viewport, 'page must report a viewport size').not.toBeNull();
+  if (box === null || viewport === null) {
+    return;
+  }
+  expect(box.width, 'target must have non-zero width').toBeGreaterThan(0);
+  expect(box.height, 'target must have non-zero height').toBeGreaterThan(0);
+  // A sliver -- fractional flex/font-metrics layout routinely lands an edge a
+  // few tenths of a pixel past the boundary (observed: 720.34 against a 720
+  // viewport) with nothing actually cropped. That is real geometry, not
+  // rounding in this function -- `boundingBox()` already returns the exact
+  // float the browser computed. The tolerance exists to separate that from an
+  // actual crop, which misses by tens or hundreds of pixels, not a fraction
+  // of one; it must stay far too small to hide one.
+  const EDGE_TOLERANCE_PX = 1;
+  expect(
+    box.x,
+    'target left edge must not be scrolled past the viewport’s left'
+  ).toBeGreaterThanOrEqual(-EDGE_TOLERANCE_PX);
+  expect(
+    box.y,
+    'target top edge must not be scrolled past the viewport’s top'
+  ).toBeGreaterThanOrEqual(-EDGE_TOLERANCE_PX);
+  expect(
+    box.x + box.width,
+    'target right edge must not extend past the viewport’s right'
+  ).toBeLessThanOrEqual(viewport.width + EDGE_TOLERANCE_PX);
+  expect(
+    box.y + box.height,
+    'target bottom edge must not extend past the viewport’s bottom'
+  ).toBeLessThanOrEqual(viewport.height + EDGE_TOLERANCE_PX);
 };

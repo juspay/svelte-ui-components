@@ -533,6 +533,22 @@
     outline: none;
   }
 
+  /* lightboxAction focuses this element directly on open (and goToIndex
+     re-focuses it whenever focus isn't already inside), and it's the
+     Tab-trap's own boundary, so the unconditional :focus suppression above
+     left a keyboard user with no visible sign focus had moved into the
+     lightbox at all. :focus-visible wins the cascade over the plain :focus
+     rule above (equal specificity, later in source, and a strict subset) only
+     when the browser judges this came from keyboard/programmatic focus, so
+     the thumbnail click that opens the lightbox still shows nothing new.
+     outline-offset is negative (inset), matching Sheet's sheet-panel: the
+     lightbox sits flush against all four viewport edges, so a positive offset
+     would clip. */
+  .lightbox:focus-visible {
+    outline: var(--gallery-lightbox-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--gallery-lightbox-focus-outline-offset, -2px);
+  }
+
   .lightbox-figure {
     display: flex;
     flex-direction: column;

@@ -431,6 +431,19 @@
     caret-color: var(--command-menu-input-caret-color, #3b82f6);
   }
 
+  /* The input is the only real Tab stop the overlay currently renders (list
+     items are a roving aria-activedescendant selection, not DOM focus -- see
+     .active below), so it is also the only element here that WCAG 2.4.7
+     applies to. A real text input, so :focus rather than :focus-visible: the
+     ring must stay visible regardless of input modality, matching Input.svelte's
+     own textarea/input convention. Positive offset (not Sheet/Modal's inset
+     -2px) because the input sits inside .command-menu-input-wrapper's own
+     padding, not flush against the dialog's edge. */
+  .command-menu-input:focus {
+    outline: var(--command-menu-input-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--command-menu-input-focus-outline-offset, 2px);
+  }
+
   .command-menu-input::placeholder {
     color: var(--command-menu-input-placeholder-color, #94a3b8);
   }

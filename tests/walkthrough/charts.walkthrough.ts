@@ -195,6 +195,7 @@ test('LineChart marks announce every series at a shared x through a live region,
 }) => {
   await gotoHydrated(page, '/components/line-chart');
   const chart = page.getByTestId('line-shared-tooltip-chart');
+  await chart.scrollIntoViewIfNeeded();
   const marks = chart.locator('circle.focus-target');
   const status = chart.getByTestId('line-status');
 
@@ -230,6 +231,7 @@ test('AreaChart and LineChart join series by x value, never by array position', 
 }) => {
   await gotoHydrated(page, '/components/area-chart');
   const areaChart = page.getByTestId('area-alignment-chart');
+  await areaChart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -256,6 +258,7 @@ test('AreaChart and LineChart join series by x value, never by array position', 
 
   await gotoHydrated(page, '/components/line-chart');
   const lineChart = page.getByTestId('line-alignment-chart');
+  await lineChart.scrollIntoViewIfNeeded();
 
   await caption(page, 'Same joined-by-x contract on LineChart, with its own gaps at x=3 and x=6.');
 
@@ -279,6 +282,7 @@ test('AreaChart and LineChart break the path at a NaN gap instead of drawing a p
 }) => {
   await gotoHydrated(page, '/components/area-chart');
   const areaChart = page.getByTestId('area-gap-chart');
+  await areaChart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -299,6 +303,7 @@ test('AreaChart and LineChart break the path at a NaN gap instead of drawing a p
 
   await gotoHydrated(page, '/components/line-chart');
   const lineChart = page.getByTestId('line-gap-chart');
+  await lineChart.scrollIntoViewIfNeeded();
 
   await caption(page, 'Same break-and-resume contract on LineChart.');
 
@@ -315,6 +320,7 @@ test('AreaChart clamps a negative stacked value to zero height instead of invert
 }) => {
   await gotoHydrated(page, '/components/area-chart');
   const chart = page.getByTestId('area-stacked-negative-chart');
+  await chart.scrollIntoViewIfNeeded();
 
   await caption(
     page,
@@ -389,6 +395,7 @@ test('BarChart grouped bars announce their own series name, not a shared categor
 }) => {
   await gotoHydrated(page, '/components/bar-chart');
   const chart = page.getByTestId('bar-legend-toggle-chart');
+  await chart.scrollIntoViewIfNeeded();
   await expect(chart.getByTestId(/^bar-\d+$/)).toHaveCount(12);
 
   await caption(
@@ -415,6 +422,7 @@ test('PieChart legend rows and slices share one synchronized highlight when a le
 }) => {
   await gotoHydrated(page, '/components/pie-chart');
   const chart = page.getByTestId('pie-legend-sync-demo');
+  await chart.scrollIntoViewIfNeeded();
   const rentLegend = chart.getByTestId('pie-legend-sync-0');
   const rentSlice = chart.locator('path.slice[aria-label="Rent: 1.2K"]');
   const status = chart.getByTestId('pie-status');
@@ -486,6 +494,7 @@ test("PieChart slice focus overrides a legend row's stale hover instead of being
 }) => {
   await gotoHydrated(page, '/components/pie-chart');
   const chart = page.getByTestId('pie-legend-sync-demo');
+  await chart.scrollIntoViewIfNeeded();
   const rentLegend = chart.getByTestId('pie-legend-sync-0');
   const status = chart.getByTestId('pie-status');
 
@@ -576,6 +585,7 @@ test('PieChart and SankeyChart tooltips escape a clipping ancestor via tooltipPo
 }) => {
   await gotoHydrated(page, '/components/pie-chart');
   const pieChart = page.getByTestId('pie-tooltip-portal');
+  await pieChart.scrollIntoViewIfNeeded();
   const pieSlice = pieChart.locator('path.slice').first();
 
   await caption(
@@ -598,6 +608,7 @@ test('PieChart and SankeyChart tooltips escape a clipping ancestor via tooltipPo
 
   await gotoHydrated(page, '/components/sankey-chart');
   const sankeyChart = page.getByTestId('sankey-tooltip-portal');
+  await sankeyChart.scrollIntoViewIfNeeded();
   const sankeyNode = sankeyChart.locator('rect.sankey-node').first();
 
   await caption(page, 'The same escape hatch on SankeyChart, clipped the same way.');
@@ -621,6 +632,7 @@ test('SankeyChart nodes and links are keyboard reachable and the tooltip follows
   // its own "radius + maxHeight" demo does, and uses the same simple
   // 5-node graph, so it stands in for it.
   const chart = page.getByTestId('sankey-radius-demo');
+  await chart.scrollIntoViewIfNeeded();
   const tooltip = chart.getByTestId('chart-tooltip');
 
   await caption(

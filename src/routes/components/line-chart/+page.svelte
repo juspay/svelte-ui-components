@@ -544,7 +544,7 @@
   .narration-readout {
     margin-left: 12px;
     font-size: 13px;
-    color: #4b5563;
+    color: var(--line-chart-narration-readout-color, #4b5563);
   }
   .narration-transcript {
     min-height: 1.4em;

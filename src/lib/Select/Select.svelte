@@ -451,10 +451,18 @@
 
   async function moveHighlight(delta: number): Promise<void> {
     const next = highlightedIndex + delta;
-    if (next < 0 || next >= optionRows.length) {
+    const inBounds = next >= 0 && next < optionRows.length;
+    // Off either end, wrap to the opposite edge instead of stopping -- landing
+    // on the nearest selectable row there the same way moveHighlightToEdge
+    // does for Home/End, rather than the raw first/last row which may be
+    // disabled. Wrapping only makes sense once the panel is open and has rows
+    // to land on; ArrowUp (unlike ArrowDown) reaches here even while closed,
+    // and closed this must stay the plain out-of-bounds no-op it always was.
+    const target = inBounds ? next : open ? nearestSelectableEdge(next < 0 ? 'last' : 'first') : -1;
+    if (target < 0) {
       return;
     }
-    highlightedIndex = next;
+    highlightedIndex = target;
     await tick();
     // Query the dropdown node itself, not containerEl, so highlight-scrolling
     // keeps working once the panel is portaled out to <body>.
@@ -476,17 +484,24 @@
     return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
   }
 
+  // The nearest selectable row from an edge, or -1 when nothing in that
+  // direction is selectable (including an empty list). Shared by Home/End
+  // (moveHighlightToEdge) and arrow-key wraparound (moveHighlight), which both
+  // need to land on a real option rather than a disabled row sitting at the
+  // very edge of the list.
+  function nearestSelectableEdge(edge: 'first' | 'last'): number {
+    return edge === 'first'
+      ? optionRows.findIndex(isRowSelectable)
+      : optionRows.findLastIndex(isRowSelectable);
+  }
+
   /**
    * Home/End: jump the highlight to the first/last selectable row, skipping
-   * disabled options the same way `moveHighlight` skips nothing -- it just
-   * targets a different index and reuses the same scroll-into-view step. A
+   * disabled options the same way arrow-key wraparound does at the ends. A
    * no-op when no row in that direction is selectable, including an empty list.
    */
   async function moveHighlightToEdge(edge: 'first' | 'last'): Promise<void> {
-    const target =
-      edge === 'first'
-        ? optionRows.findIndex(isRowSelectable)
-        : optionRows.findLastIndex(isRowSelectable);
+    const target = nearestSelectableEdge(edge);
     if (target < 0) {
       return;
     }

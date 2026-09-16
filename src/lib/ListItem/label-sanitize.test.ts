@@ -4,9 +4,8 @@ import ListItem from './ListItem.svelte';
 import { resolveLabelHtml } from './label';
 
 /**
- * Regression coverage for docs/BITS_UI_COMPARISON.md's "Still open" finding:
- * ListItem rendered `label` through `{@html}` unconditionally, with no way to
- * opt out. That made every `label` a live injection surface -- a consumer
+ * Regression coverage for a real injection surface: ListItem rendered `label`
+ * through `{@html}` unconditionally, with no way to opt out, so a consumer
  * passing user- or feed-sourced text into `label` got it rendered as markup,
  * whether they wanted that or not.
  *
@@ -14,7 +13,8 @@ import { resolveLabelHtml } from './label';
  * (PR 608): this library does not implement HTML sanitization itself.
  * `label` now escapes by default -- a provably safe default -- and a consumer
  * who genuinely wants markup opts in with `sanitize.rawHtml: 'sanitize'` plus
- * a `sanitize.htmlSanitizer` they supply.
+ * a `sanitize.htmlSanitizer` they supply. The consumer-facing migration lives
+ * in docs/ListItem.md, "Rendering markup in the label".
  */
 describe('resolveLabelHtml', () => {
   it('escapes markup by default', () => {
@@ -65,7 +65,7 @@ describe('resolveLabelHtml', () => {
   });
 });
 
-describe('ListItem label rendering -- injection risk closed (docs/BITS_UI_COMPARISON.md "Still open")', () => {
+describe('ListItem label rendering -- injection risk closed', () => {
   it('renders a markup-bearing label as escaped plain text by default, creating no element from it', () => {
     const { container } = render(ListItem, {
       label: '<img src="x" onerror="window.__xss_fired = true">'

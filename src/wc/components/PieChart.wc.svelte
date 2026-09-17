@@ -21,6 +21,7 @@
       legendShowValues: { type: 'Boolean', attribute: 'legend-show-values' },
       legendPosition: { type: 'String', attribute: 'legend-position' },
       legendMaxItems: { type: 'Number', attribute: 'legend-max-items' },
+      animateLegendValues: { type: 'Boolean', attribute: 'animate-legend-values' },
       percentDecimals: { type: 'Number', attribute: 'percent-decimals' },
       highlightedIndex: { type: 'Number', attribute: 'highlighted-index' },
       changePercentage: { type: 'Number', attribute: 'change-percentage' },

@@ -86,6 +86,7 @@ export { default as FileDropzoneTrigger } from './FileDropzoneTrigger/FileDropzo
 export { default as Separator } from './Separator/Separator.svelte';
 export { default as Label } from './Label/Label.svelte';
 export { default as AspectRatio } from './AspectRatio/AspectRatio.svelte';
+export { default as AnimatedNumber } from './AnimatedNumber/AnimatedNumber.svelte';
 export { default as RatingGroup } from './RatingGroup/RatingGroup.svelte';
 
 export { default as Chat } from './Chat/Chat.svelte';
@@ -159,6 +160,7 @@ export type * from './LoadingDots/properties';
 export type * from './Separator/properties';
 export type * from './Label/properties';
 export type * from './AspectRatio/properties';
+export type * from './AnimatedNumber/properties';
 export type * from './RatingGroup/properties';
 export type * from './Menu/properties';
 export type * from './Sheet/properties';

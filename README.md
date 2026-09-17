@@ -138,20 +138,21 @@ fix to something that did not work.
 
 ### Display & Data
 
-| Component        | Description                                                                                                                                  | Docs                         |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| **Avatar**       | Circular avatar with image (Img with fallback) or text initial.                                                                              | [docs](docs/Avatar.md)       |
-| **Badge**        | Icon with a numeric/text badge overlay in the corner.                                                                                        | [docs](docs/Badge.md)        |
-| **GridItem**     | Grid cell with icon, label, and loading overlay animation.                                                                                   | [docs](docs/GridItem.md)     |
-| **Icon**         | Clickable icon with optional text label.                                                                                                     | [docs](docs/Icon.md)         |
-| **IconStack**    | Layered horizontal stack of overlapping circular icons/avatars.                                                                              | [docs](docs/IconStack.md)    |
-| **Img**          | Image with automatic fallback on load error.                                                                                                 | [docs](docs/Img.md)          |
-| **ListItem**     | Multi-section list row with images, labels, and accordion expansion.                                                                         | [docs](docs/ListItem.md)     |
-| **Pill**         | Compact label/tag for status or categories, optionally clickable with a11y.                                                                  | [docs](docs/Pill.md)         |
-| **Status**       | Full-screen status display for success/failure screens.                                                                                      | [docs](docs/Status.md)       |
-| **Table**        | Data table with keyed columns, built-in cell renderers, sorting, pagination and selection.                                                   | [docs](docs/Table.md)        |
-| **RelativeTime** | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip.                                              | [docs](docs/RelativeTime.md) |
-| **AspectRatio**  | Constrains content to a fixed width-to-height ratio using CSS `aspect-ratio`, reserving layout space before an image, video or iframe loads. | [docs](docs/AspectRatio.md)  |
+| Component          | Description                                                                                                                                    | Docs                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| **AnimatedNumber** | Per-digit odometer that rolls a number to its new value. Takes a number formatted through `Intl.NumberFormat`, or an already-formatted string. | [docs](docs/AnimatedNumber.md) |
+| **Avatar**         | Circular avatar with image (Img with fallback) or text initial.                                                                                | [docs](docs/Avatar.md)         |
+| **Badge**          | Icon with a numeric/text badge overlay in the corner.                                                                                          | [docs](docs/Badge.md)          |
+| **GridItem**       | Grid cell with icon, label, and loading overlay animation.                                                                                     | [docs](docs/GridItem.md)       |
+| **Icon**           | Clickable icon with optional text label.                                                                                                       | [docs](docs/Icon.md)           |
+| **IconStack**      | Layered horizontal stack of overlapping circular icons/avatars.                                                                                | [docs](docs/IconStack.md)      |
+| **Img**            | Image with automatic fallback on load error.                                                                                                   | [docs](docs/Img.md)            |
+| **ListItem**       | Multi-section list row with images, labels, and accordion expansion.                                                                           | [docs](docs/ListItem.md)       |
+| **Pill**           | Compact label/tag for status or categories, optionally clickable with a11y.                                                                    | [docs](docs/Pill.md)           |
+| **Status**         | Full-screen status display for success/failure screens.                                                                                        | [docs](docs/Status.md)         |
+| **Table**          | Data table with keyed columns, built-in cell renderers, sorting, pagination and selection.                                                     | [docs](docs/Table.md)          |
+| **RelativeTime**   | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip.                                                | [docs](docs/RelativeTime.md)   |
+| **AspectRatio**    | Constrains content to a fixed width-to-height ratio using CSS `aspect-ratio`, reserving layout space before an image, video or iframe loads.   | [docs](docs/AspectRatio.md)    |
 
 ### Feedback & Loading
 

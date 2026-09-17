@@ -12,16 +12,30 @@ A linear progress bar showing task completion or usage. The `value` prop control
 <Progress value={60} />
 ```
 
+Pass `animateValue` alongside `showLabel` to have the percentage count up to its new value with `AnimatedNumber` instead of jumping straight there, for a bar whose `value` updates in place rather than mounting fresh each time:
+
+```svelte
+<script>
+  import { Progress } from '@juspay/svelte-ui-components';
+
+  let uploaded = $state(60);
+</script>
+
+<Progress value={uploaded} showLabel animateValue />
+<button onclick={() => (uploaded = Math.min(100, uploaded + 7))}>+7%</button>
+```
+
 ## Props
 
-| Prop      | Type      | Required | Default | Description                                                                                                                                                                                                                                                                     |
-| --------- | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value     | `number`  | Yes      | `-`     | Current progress value (0 to max). Values are clamped to the 0-max range. A negative value activates the indeterminate animation for unknown-duration tasks. A non-finite value (e.g. `NaN`) is treated as an invalid range -- see `max` below.                                 |
-| max       | `number`  | No       | `100`   | The maximum value representing 100% completion. The filled percentage is calculated as (value / max) \* 100. `max` must be finite and positive; a zero, negative, or non-finite `max` (or a non-finite `value`) is an invalid range and renders the bar at 0% instead of `NaN`. |
-| showLabel | `boolean` | No       | `false` | Whether to display the rounded percentage text next to the progress bar. Hidden during indeterminate mode.                                                                                                                                                                      |
-| ariaLabel | `string`  | No       | `-`     | Accessible name for the progress bar. Falls back to the same percentage text as `showLabel` (e.g. `"75%"`) when determinate, or `"Loading"` when indeterminate.                                                                                                                 |
-| testId    | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                                                                                                                         |
-| classes   | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                          |
+| Prop         | Type      | Required | Default | Description                                                                                                                                                                                                                                                                     |
+| ------------ | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| value        | `number`  | Yes      | `-`     | Current progress value (0 to max). Values are clamped to the 0-max range. A negative value activates the indeterminate animation for unknown-duration tasks. A non-finite value (e.g. `NaN`) is treated as an invalid range -- see `max` below.                                 |
+| max          | `number`  | No       | `100`   | The maximum value representing 100% completion. The filled percentage is calculated as (value / max) \* 100. `max` must be finite and positive; a zero, negative, or non-finite `max` (or a non-finite `value`) is an invalid range and renders the bar at 0% instead of `NaN`. |
+| showLabel    | `boolean` | No       | `false` | Whether to display the rounded percentage text next to the progress bar. Hidden during indeterminate mode.                                                                                                                                                                      |
+| animateValue | `boolean` | No       | `false` | Renders the `showLabel` percentage through `AnimatedNumber` so it counts to its new value instead of jumping. No effect unless `showLabel` is also true, and silently inert in indeterminate mode, since there is no percentage there to animate towards.                       |
+| ariaLabel    | `string`  | No       | `-`     | Accessible name for the progress bar. Falls back to the same percentage text as `showLabel` (e.g. `"75%"`) when determinate, or `"Loading"` when indeterminate.                                                                                                                 |
+| testId       | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                                                                                                                         |
+| classes      | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                          |
 
 ## Accessibility
 

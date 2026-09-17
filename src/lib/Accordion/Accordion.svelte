@@ -106,6 +106,24 @@
     grid-template-rows: 1fr;
   }
 
+  /* The expand/collapse is a real size change, which is what the preference is
+     about, and nothing was stopping it: DESIGN_PRINCIPLES.md section 1 reasons a
+     finite transition needs no guard because --motion-duration handles it, but
+     this rule reads --accordion-transition, and no stylesheet in this library
+     assigns either token -- both exist purely as fallback rungs for a consumer to
+     reach. Safe to drop outright because the transition is finite: the panel
+     lands open or closed rather than stranded part-way, unlike an indefinite
+     animation collapsed onto its 0% keyframe.
+
+     Declared on `.accordion` to match the base rule's specificity and placed
+     after it, so it wins; `.accordion.expanded` sets only grid-template-rows and
+     never re-declares the transition, so it cannot silently override this. */
+  @media (prefers-reduced-motion: reduce) {
+    .accordion {
+      transition: none;
+    }
+  }
+
   .accordion-content {
     min-height: 0;
   }

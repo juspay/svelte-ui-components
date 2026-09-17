@@ -18,6 +18,7 @@
    *
    * @see docs/ProportionBar.md
    */
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import type { ProportionBarProperties, ProportionBarSegment } from './properties';
 
   const DEFAULT_PALETTE = ['#8F49DE', '#FFC533', '#62D5C0', '#FF74CD', '#D1E7FF'];
@@ -27,6 +28,7 @@
     showLegend = true,
     valueFormat,
     trackHeight,
+    animateValue = false,
     testId,
     classes
   }: ProportionBarProperties = $props();
@@ -152,7 +154,11 @@
           ></span>
           <span class="proportion-bar-legend-label">{computedSegment.label}</span>
           <span class="proportion-bar-legend-value">
-            {formatValue(computedSegment.value, computedSegment.percent)}
+            {#if animateValue}
+              <AnimatedNumber value={formatValue(computedSegment.value, computedSegment.percent)} />
+            {:else}
+              {formatValue(computedSegment.value, computedSegment.percent)}
+            {/if}
           </span>
         </li>
       {/each}

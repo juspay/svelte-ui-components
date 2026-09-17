@@ -6,6 +6,7 @@
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import { arcPath } from '$lib/_chart/paths';
   import { computePieLayout, pieSliceValue } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
@@ -45,6 +46,7 @@
     legendPosition = 'bottom',
     legendMaxItems,
     onlegendmore,
+    animateLegendValues = false,
     percentDecimals = 0,
     onchartready,
     highlightedIndex = null,
@@ -122,6 +124,15 @@
     () =>
       (v: number): string =>
         total === 0 ? '0%' : ((v / total) * 100).toFixed(percentDecimals) + '%'
+  );
+  // Builds the exact text the static legend branch below prints -- value,
+  // then a non-breaking space, then the percentage -- as one string, so
+  // the animateLegendValues branch feeds AnimatedNumber literally what a
+  // reader already sees today rather than a re-derived approximation of it.
+  let legendValueText = $derived.by(
+    () =>
+      (v: number): string =>
+        `${format(v)}\u00A0${pctFormat(v)}`
   );
   let isEmpty = $derived(data.length === 0 || total === 0);
 
@@ -590,7 +601,11 @@
               <span class="pie-legend-swatch" style="background: {d.color ?? getColor(i)}"></span>
               <span class="pie-legend-label">{d.label}</span>
               <span class="pie-legend-value">
-                {format(pieSliceValue(d.value))}&nbsp;{pctFormat(pieSliceValue(d.value))}
+                {#if animateLegendValues}
+                  <AnimatedNumber value={legendValueText(pieSliceValue(d.value))} />
+                {:else}
+                  {format(pieSliceValue(d.value))}&nbsp;{pctFormat(pieSliceValue(d.value))}
+                {/if}
               </span>
             </li>
           {/each}

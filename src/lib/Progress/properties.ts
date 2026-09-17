@@ -15,6 +15,18 @@ export type OptionalProgressProperties = {
   max?: number;
   showLabel?: boolean;
   /**
+   * Routes the completion percentage through `AnimatedNumber` instead of
+   * static text, so a consumer that already renders `showLabel` gets the
+   * label visibly counting to its new value for free. Kept opt-in rather
+   * than folded into `showLabel` itself, since `AnimatedNumber` is a new
+   * dependency this component didn't previously have and existing markup
+   * must stay untouched by default. An indeterminate bar has no percentage
+   * to animate towards, so this is silently inert there rather than a state
+   * that would need its own documentation.
+   * @default false
+   */
+  animateValue?: boolean;
+  /**
    * Accessible label for the progress element (`role="progressbar"`). Falls
    * back to the computed percentage text (e.g. `"75%"`) when determinate, or
    * `"Loading"` when indeterminate, so assistive technology always announces

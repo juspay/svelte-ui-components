@@ -8,6 +8,7 @@
       delta: { type: 'String', reflect: true },
       deltaPositive: { type: 'Boolean', attribute: 'delta-positive', reflect: true },
       subtitle: { type: 'String', reflect: true },
+      animateValue: { type: 'Boolean', attribute: 'animate-value', reflect: true },
       // Complex props (arrays / objects / functions) cannot cross the HTML-attribute
       // boundary, so they are exposed as JS properties only:
       //   document.querySelector('sui-stat-card').rows = [{ heading: 'Revenue', value: '₹1.2Cr', change: 8.2 }];
@@ -28,6 +29,7 @@
 
 <script lang="ts">
   import StatCard from '$lib/StatCard/StatCard.svelte';
+  import AnimatedNumber from '$lib/AnimatedNumber/AnimatedNumber.svelte';
   import { dispatchEvents } from '../dispatch';
   let { statCardTitle, ...props } = $props();
 
@@ -49,6 +51,20 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
+<!-- Mirrors StatCard.svelte's own fallback for `value`, including its animateValue
+     branch. The wrapper passes `valueSnippet` UNCONDITIONALLY to bridge the
+     value-snippet slot, and StatCard gives that snippet full precedence -- so
+     without this branch the custom element could never animate its value however
+     the attribute was set, while the Svelte component could.
+
+     Kept as a separate snippet rather than inlined into the slot because
+     check-wc-contract.js reads a slot's fallback with indexOf('</slot>'), and the
+     inline form was long enough that Prettier broke the closing tag across lines,
+     leaving the rule unable to see any fallback at all. -->
+{#snippet valueFallback()}
+  {#if props.animateValue}<AnimatedNumber value={props.value} />{:else}{props.value}{/if}
+{/snippet}
+
 <StatCard {...props} {...dispatchers} title={statCardTitle}>
   {#snippet headerRight()}
     <slot name="header-right"></slot>
@@ -57,8 +73,7 @@
     <slot name="footer"></slot>
   {/snippet}
   {#snippet valueSnippet()}
-    <!-- Mirrors StatCard.svelte's valueSnippet fallback: {value} -->
-    <slot name="value-snippet">{props.value}</slot>
+    <slot name="value-snippet">{@render valueFallback()}</slot>
   {/snippet}
   <slot></slot>
 </StatCard>

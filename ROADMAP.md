@@ -200,3 +200,17 @@ surface what is indexed.
 **Added during the 2026-08-31 → 09-04 gap review:** `Draggable`, `Gallery`,
 `MediaPlayer`, `MediaUpload`; `Modal.lockScroll` / `Modal.autoDismissAfter`;
 `Choicebox.showIndicator`. `MarkdownText` and `Resizable` also ship and are documented.
+
+**Added 2026-09-17:** `AnimatedNumber`, a per-digit odometer that runs no timer and no
+`$effect`: a value change hands the browser one interpolated custom property per column, and
+every glyph's position is CSS arithmetic over it. It takes the `--motion-duration` /
+`--motion-easing` pair natively — the chain is resolved in CSS and read back before anything
+animates, so the tokens and the `prefers-reduced-motion` block work exactly as they would on
+a `transition`. The visual suite captures it at rest for a stronger reason than its injected
+`transition: none`, which does not reach a script-driven animation: the roll is gated behind
+a mount latch and so cannot run on load at all, which `tests/animated-number-motion.test.ts`
+asserts directly. It accepts a `number` formatted through `Intl.NumberFormat` or
+an already-formatted `string`, and that second form is what let nine components adopt it
+without any of them changing a public prop's type: `Gauge`, `DeltaIndicator`, `Progress`,
+`PieChart`, `ProportionBar`, `Badge`, `MediaUpload`, `Table`'s compare cell and `StatCard`
+each gained one additive boolean defaulting to `false`.

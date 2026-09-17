@@ -21,6 +21,7 @@
       fileIcon: { type: 'Object' },
       errorMessages: { type: 'Object' },
       files: { type: 'Object' },
+      animateCounter: { type: 'Boolean', attribute: 'animate-counter' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onchange: { type: 'Object' },

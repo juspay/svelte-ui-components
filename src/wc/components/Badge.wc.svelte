@@ -10,7 +10,8 @@
       badgeHidden: { type: 'Boolean', reflect: true, attribute: 'hidden' },
       badgeAriaLabel: { type: 'String', reflect: true, attribute: 'arialabel' },
       testId: { type: 'String', reflect: true },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      animateValue: { type: 'Boolean', reflect: true, attribute: 'animate-value' }
     }
   }}
 />

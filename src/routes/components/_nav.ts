@@ -77,6 +77,7 @@ export const componentNav: NavGroup[] = [
       { name: 'GridItem', slug: 'grid-item' },
       { name: 'CheckListItem', slug: 'check-list-item' },
       { name: 'Badge', slug: 'badge' },
+      { name: 'AnimatedNumber', slug: 'animated-number' },
       { name: 'Status', slug: 'status' },
       { name: 'IconStack', slug: 'icon-stack' },
       { name: 'Snippet', slug: 'snippet' },

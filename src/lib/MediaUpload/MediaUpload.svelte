@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
   import Shimmer from '../Shimmer/Shimmer.svelte';
@@ -26,6 +27,7 @@
     fileIcon,
     errorMessages,
     files = $bindable([]),
+    animateCounter = false,
     onchange,
     onremove,
     onerror,
@@ -191,7 +193,16 @@
         <div class="label">{label}</div>
       {/if}
       {#if showCounter}
-        <div class="counter">{items.length} / {maxLength}</div>
+        {#if animateCounter}
+          <!-- The whole "N / max" reads as one value to assistive technology.
+               Only the count changes, so only its digits roll; the separator and
+               the maximum sit still as literal columns. -->
+          <div class="counter">
+            <AnimatedNumber value={`${items.length} / ${maxLength}`} />
+          </div>
+        {:else}
+          <div class="counter">{items.length} / {maxLength}</div>
+        {/if}
       {/if}
     </div>
   {/if}

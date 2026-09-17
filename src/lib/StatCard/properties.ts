@@ -118,6 +118,18 @@ export type OptionalStatCardProperties = {
   /** Replaces the string `value` with a custom snippet for advanced value rendering. */
   valueSnippet?: Snippet;
   /**
+   * Rolls `value`, each row's `value`/`comparisonValue`, and each breakdown
+   * item's `value` through AnimatedNumber's per-digit odometer instead of
+   * swapping the text outright. Every one of those is already a
+   * consumer-preformatted string, not a raw number -- AnimatedNumber diffs a
+   * string by character position, so `'₹1.23Cr'` -> `'₹1.45Cr'` rolls only the
+   * two digits that changed and leaves `₹`, the decimal point and `Cr` alone,
+   * with nothing here ever surfacing the number underneath. `valueSnippet`
+   * still wins outright when set, exactly as it does today.
+   * @default false
+   */
+  animateValue?: boolean;
+  /**
    * Multiple metric rows. When provided, replaces the single value/delta row with
    * a column of rows separated by dividers.
    */

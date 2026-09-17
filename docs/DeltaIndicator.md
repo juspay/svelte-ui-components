@@ -58,6 +58,19 @@ Pass a `format` function `(value: number) => string` to control the displayed te
 <DeltaIndicator value={42.5} format={currencyFormat} />
 ```
 
+### Animated Value
+
+Set `animateValue` to roll the displayed text through `AnimatedNumber` on every change, instead of swapping it as plain text. The formatted STRING (the output of `format`, or the default `${Math.round(Math.abs(value))}%`) is what animates — not the raw `value` — so a custom `format` still rolls, without `DeltaIndicator` having to know how to reproduce it.
+
+```svelte
+<script>
+  let churn = $state(4.2);
+</script>
+
+<DeltaIndicator value={churn} animateValue />
+<button onclick={() => (churn = 6.8)}>+2.6</button>
+```
+
 ### Theming with Classes
 
 Define a class in your CSS that sets DeltaIndicator CSS variables and pass it via `classes`:
@@ -77,15 +90,16 @@ Define a class in your CSS that sets DeltaIndicator CSS variables and pass it vi
 
 ## Props
 
-| Prop             | Type                        | Required | Default                              | Description                                                                                                                                              |
-| ---------------- | --------------------------- | -------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| value            | `number`                    | Yes      | `-`                                  | The change amount. Its sign determines direction: positive → up, negative → down. When the absolute value is ≤ `neutralThreshold`, direction is neutral. |
-| format           | `(value: number) => string` | No       | `v => Math.round(Math.abs(v)) + '%'` | Custom formatter for the displayed text. Receives the raw signed value. Default shows the rounded absolute value followed by a percent sign.             |
-| invertColors     | `boolean`                   | No       | `false`                              | Swaps the up/down color tone for lower-is-better metrics. When `true`, an upward change renders in red and a downward change renders in green.           |
-| hideArrow        | `boolean`                   | No       | `false`                              | Hides the directional triangle arrow, rendering only the formatted text string.                                                                          |
-| neutralThreshold | `number`                    | No       | `0`                                  | Absolute values at or below this threshold are classified as neutral (muted color, no arrow). Useful for suppressing noise on near-zero changes.         |
-| testId           | `string`                    | No       | `-`                                  | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                            |
-| classes          | `string`                    | No       | `-`                                  | CSS class string applied to the root element. Useful for theming via class-scoped CSS variable overrides.                                                |
+| Prop             | Type                        | Required | Default                              | Description                                                                                                                                                          |
+| ---------------- | --------------------------- | -------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| value            | `number`                    | Yes      | `-`                                  | The change amount. Its sign determines direction: positive → up, negative → down. When the absolute value is ≤ `neutralThreshold`, direction is neutral.             |
+| format           | `(value: number) => string` | No       | `v => Math.round(Math.abs(v)) + '%'` | Custom formatter for the displayed text. Receives the raw signed value. Default shows the rounded absolute value followed by a percent sign.                         |
+| invertColors     | `boolean`                   | No       | `false`                              | Swaps the up/down color tone for lower-is-better metrics. When `true`, an upward change renders in red and a downward change renders in green.                       |
+| hideArrow        | `boolean`                   | No       | `false`                              | Hides the directional triangle arrow, rendering only the formatted text string.                                                                                      |
+| neutralThreshold | `number`                    | No       | `0`                                  | Absolute values at or below this threshold are classified as neutral (muted color, no arrow). Useful for suppressing noise on near-zero changes.                     |
+| animateValue     | `boolean`                   | No       | `false`                              | Rolls the displayed text through `AnimatedNumber` instead of swapping it as plain text. Animates the formatter's output string, so a custom `format` still animates. |
+| testId           | `string`                    | No       | `-`                                  | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                        |
+| classes          | `string`                    | No       | `-`                                  | CSS class string applied to the root element. Useful for theming via class-scoped CSS variable overrides.                                                            |
 
 ## CSS Variables
 
@@ -111,6 +125,7 @@ Tag: `<sui-delta-indicator>`
 <sui-delta-indicator value="-7.3" invert-colors></sui-delta-indicator>
 <sui-delta-indicator value="18" hide-arrow></sui-delta-indicator>
 <sui-delta-indicator value="0.4" neutral-threshold="0.5"></sui-delta-indicator>
+<sui-delta-indicator value="12.5" animate-value></sui-delta-indicator>
 ```
 
 Passing a custom `format` function via the web component requires setting the property programmatically:

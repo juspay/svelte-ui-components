@@ -115,6 +115,21 @@ export type TableCompareCellData = {
   comparison?: string;
   trendPercent?: number;
   trendLabel?: string;
+  /**
+   * Rolls `trendPercent` through `AnimatedNumber` instead of the plain text
+   * it renders as today, so a comparison row that updates in place (a live
+   * dashboard, a polling total) visibly counts to its new value rather than
+   * jumping. Per-cell rather than a Table-level prop, since a single column
+   * can mix trend rows a consumer wants live with historical ones that don't
+   * need to move. `AnimatedNumber` is handed the complete string
+   * `` `${trendPercent}%` ``, so the unit sits inside its accessible name
+   * rather than beside it, where a reader navigating by graphic would never
+   * reach it. The `%` stays a literal character rather than an
+   * `Intl.NumberFormat` percent style, which would divide the value by 100
+   * and render the wrong figure, and it is a literal column that never rolls.
+   * @default false
+   */
+  animateTrend?: boolean;
 };
 
 /** Cell shape for `type: 'toggle'` — the handler lives on the column. */

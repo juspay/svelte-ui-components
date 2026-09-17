@@ -28,30 +28,39 @@ only the offending selection is dropped, with a single summary error message.
 />
 ```
 
+### Animated Counter
+
+Set `animateCounter` to route the header's `N / maxLength` counter through [`AnimatedNumber`](./AnimatedNumber.md), so adding or removing a file rolls the count to its new value instead of swapping it as plain text. The whole `N / maxLength` string goes in, not just the count: `AnimatedNumber` carries `role="img"` with its own accessible name, so a separator left outside it would be lost to anyone navigating by graphic, who hears only that element's label. Only the count's digits actually move — the separator and the maximum are literal columns that never roll.
+
+```svelte
+<MediaUpload bind:files label="Attachments" maxLength={5} animateCounter />
+```
+
 ## Props
 
-| Prop          | Type                       | Required | Default     | Description                                                                 |
-| ------------- | -------------------------- | -------- | ----------- | --------------------------------------------------------------------------- |
-| label         | `string`                   | No       | `-`         | Header label.                                                               |
-| description   | `string`                   | No       | `-`         | Helper text under the header.                                               |
-| addText       | `string`                   | No       | `-`         | Primary text on the drop tile.                                              |
-| hintText      | `string`                   | No       | `-`         | Secondary text on the drop tile (e.g. accepted types/size).                 |
-| maxLength     | `number`                   | No       | `3`         | Maximum number of files.                                                    |
-| accept        | `string`                   | No       | `'image/*'` | `<input accept>` syntax — MIME types, `.ext`, or `type/*`, comma-separated. |
-| maxFileSize   | `number`                   | No       | `0`         | Max bytes per file. `0` = no limit.                                         |
-| multiple      | `boolean`                  | No       | `false`     | Allow selecting/dropping more than one file at a time.                      |
-| dragAndDrop   | `boolean`                  | No       | `true`      | Enable the drop-tile drag-and-drop target (picker button always works).     |
-| disabled      | `boolean`                  | No       | `false`     | Hide the drop tile and remove buttons.                                      |
-| showCounter   | `boolean`                  | No       | `true`      | Show the `N / maxLength` counter in the header.                             |
-| showFileName  | `boolean`                  | No       | `true`      | Show each file's name on its card.                                          |
-| showFileSize  | `boolean`                  | No       | `true`      | Show each file's formatted size on its card.                                |
-| addIcon       | `Snippet`                  | No       | `-`         | Custom drop-tile icon. Falls back to the built-in asset.                    |
-| removeIcon    | `Snippet`                  | No       | `-`         | Custom remove-button icon. Falls back to the built-in asset.                |
-| fileIcon      | `Snippet`                  | No       | `-`         | Custom non-image file icon. Falls back to the built-in asset.               |
-| errorMessages | `MediaUploadErrorMessages` | No       | `-`         | Override the default message per rejection reason (`type`/`size`/`max`).    |
-| files         | `File[]`                   | No       | `[]`        | Bindable. The current staged file list.                                     |
-| testId        | `string`                   | No       | `-`         | `data-pw` on the root element.                                              |
-| classes       | `string`                   | No       | `-`         | Class string on the root element.                                           |
+| Prop           | Type                       | Required | Default     | Description                                                                                                                                             |
+| -------------- | -------------------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| label          | `string`                   | No       | `-`         | Header label.                                                                                                                                           |
+| description    | `string`                   | No       | `-`         | Helper text under the header.                                                                                                                           |
+| addText        | `string`                   | No       | `-`         | Primary text on the drop tile.                                                                                                                          |
+| hintText       | `string`                   | No       | `-`         | Secondary text on the drop tile (e.g. accepted types/size).                                                                                             |
+| maxLength      | `number`                   | No       | `3`         | Maximum number of files.                                                                                                                                |
+| accept         | `string`                   | No       | `'image/*'` | `<input accept>` syntax — MIME types, `.ext`, or `type/*`, comma-separated.                                                                             |
+| maxFileSize    | `number`                   | No       | `0`         | Max bytes per file. `0` = no limit.                                                                                                                     |
+| multiple       | `boolean`                  | No       | `false`     | Allow selecting/dropping more than one file at a time.                                                                                                  |
+| dragAndDrop    | `boolean`                  | No       | `true`      | Enable the drop-tile drag-and-drop target (picker button always works).                                                                                 |
+| disabled       | `boolean`                  | No       | `false`     | Hide the drop tile and remove buttons.                                                                                                                  |
+| showCounter    | `boolean`                  | No       | `true`      | Show the `N / maxLength` counter in the header.                                                                                                         |
+| showFileName   | `boolean`                  | No       | `true`      | Show each file's name on its card.                                                                                                                      |
+| showFileSize   | `boolean`                  | No       | `true`      | Show each file's formatted size on its card.                                                                                                            |
+| addIcon        | `Snippet`                  | No       | `-`         | Custom drop-tile icon. Falls back to the built-in asset.                                                                                                |
+| removeIcon     | `Snippet`                  | No       | `-`         | Custom remove-button icon. Falls back to the built-in asset.                                                                                            |
+| fileIcon       | `Snippet`                  | No       | `-`         | Custom non-image file icon. Falls back to the built-in asset.                                                                                           |
+| errorMessages  | `MediaUploadErrorMessages` | No       | `-`         | Override the default message per rejection reason (`type`/`size`/`max`).                                                                                |
+| files          | `File[]`                   | No       | `[]`        | Bindable. The current staged file list.                                                                                                                 |
+| animateCounter | `boolean`                  | No       | `false`     | Route the `N / maxLength` counter's count through `AnimatedNumber` on change, instead of a static text node. See [Animated Counter](#animated-counter). |
+| testId         | `string`                   | No       | `-`         | `data-pw` on the root element.                                                                                                                          |
+| classes        | `string`                   | No       | `-`         | Class string on the root element.                                                                                                                       |
 
 ## Events
 

@@ -4,6 +4,10 @@
     "description": "An expandable/collapsible container that uses CSS grid row animation for smooth open/close transitions. When `expand` is true, the content is visible (grid-template-rows: 1fr); when false, it collapses to 0fr. Render children content using the default `children` snippet."
   },
   {
+    "name": "AnimatedNumber",
+    "description": "A per-digit odometer for numeric values. Each digit is an overflow-clipped column holding the ten digits of whichever numbering system `Intl` resolves for the locale; a value change rewrites one CSS custom property per column and animates a second one, from which every glyph's position is recomputed, so the component runs no timer and still honours `--motion-duration`/`--motion-easing`. Accepts a `number`, formatted through `Intl.NumberFormat`, or an already-formatted `string` such as `StatCard`'s pre-formatted value."
+  },
+  {
     "name": "AreaChart",
     "description": "A responsive SVG area chart for visualizing volume under a trend. Supports multiple series with regular stacking, 100% (normalized) stacking, configurable fill opacity, data labels, hover overlay with crosshair, and custom tooltips. Shares the same curve types and axis options as LineChart."
   },

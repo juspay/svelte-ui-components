@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import type { DeltaIndicatorProperties, DeltaDirection } from './properties';
 
   let {
@@ -7,6 +8,7 @@
     invertColors = false,
     hideArrow = false,
     neutralThreshold = 0,
+    animateValue = false,
     testId,
     classes
   }: DeltaIndicatorProperties = $props();
@@ -50,7 +52,16 @@
          place of the trend arrow, so a flat delta still reads as a stated state. -->
     <span class="delta-indicator-dash" aria-hidden="true">—</span>
   {/if}
-  <span class="delta-indicator-text">{text}</span>
+  <span class="delta-indicator-text">
+    {#if animateValue}
+      <!-- The formatter's STRING output, not `value` -- a consumer's own `format`
+           must still animate, and this component has no business re-deriving or
+           second-guessing what that formatter produced. -->
+      <AnimatedNumber value={text} />
+    {:else}
+      {text}
+    {/if}
+  </span>
 </span>
 
 <style>

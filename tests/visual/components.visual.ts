@@ -101,20 +101,25 @@ const TOLERANCES: Readonly<Record<string, number>> = {
  * `setInterval(..., 100)` and the bar carries `width 0.1s linear`, so the
  * captured width depends on how many ticks have landed.
  *
- * That matters because the injected stylesheet below kills `animation` but not
- * `transition`, and Playwright's `animations: 'disabled'` fast-forwards a
- * transition at CAPTURE time on the real compositor clock -- which the manual
- * clock does not drive. So the tick count is pinned and the transition is not.
+ * The diagnosis above was right about WHICH edge moved and wrong about why the
+ * tick count varied. It read "the tick count is pinned and the transition is
+ * not", on the premise that `clock.install` leaves time manual. It does not --
+ * see `prepare`. The clock kept running, so the countdown received a different
+ * number of ticks on every run, and on a slow enough host received all 100 and
+ * finished. `clock.pauseAt` pins the tick count for real; what remains here is
+ * only the transition, which `animations: 'disabled'` still fast-forwards at
+ * capture time on the compositor clock.
  *
- * The fix is to make this route deterministic, NOT to raise the threshold and
- * not to mask the button. Masking is what the `voice-orb` entry below warns
- * about: an over-broad mask once left a baseline of nothing but headings, and a
- * passing suite that did not notice the orb had gone blank. Masking a Confirm
- * button would hide the control this route exists to cover.
+ * Masking was rejected then and stays rejected, for the reason the `voice-orb`
+ * entry below gives: an over-broad mask once left a baseline of nothing but
+ * headings, and a passing suite that did not notice the orb had gone blank.
+ * Masking a Confirm button would hide the control this route exists to cover.
  *
  * Second-largest is `theme-switcher` at 520.2, in 5 of 15 pairs -- the segment
- * indicator, same shape of problem. If both are pinned, the floor drops far
- * enough that a materially tighter threshold becomes possible.
+ * indicator, same shape of problem. Whether pinning the clock also settles that
+ * one, and how far the threshold can then drop, is a measurement to make in the
+ * container rather than a number to guess at here: the 0.2 above is left alone
+ * until someone has re-run the six-capture comparison that produced it.
  */
 
 const EXCLUDED: Readonly<Record<string, string>> = {
@@ -181,9 +186,35 @@ const DRAIN_CAP_MS = 3_000;
 const settleClock = async (page: Page, slug: string): Promise<void> => {
   const budget = SETTLE_OVERRIDES[slug] ?? SETTLE_MS;
 
+  const before = await page.evaluate(() => Date.now());
+
   for (let advanced = 0; advanced < budget; advanced += DRAIN_SLICE_MS) {
     await page.clock.runFor(Math.min(DRAIN_SLICE_MS, budget - advanced));
     await waitForDomQuiet(page);
+  }
+
+  // The page must have seen exactly the budget and not one millisecond more.
+  //
+  // This is the assumption the whole suite rests on -- "every route is captured
+  // after exactly the same amount of elapsed time" -- and it was silently false
+  // for as long as the suite existed, because `clock.install` does not stop the
+  // clock on its own. Nothing failed loudly; two routes just drifted, and the
+  // drift read as rendering noise for long enough to earn a threshold, a
+  // tolerance table and three rounds of investigation into the wrong layer.
+  //
+  // Asserted per route rather than once, because a leak is per page, and
+  // exactly rather than within a tolerance, because once the clock is paused
+  // this is deterministic by construction -- a tolerance would only let the
+  // next leak through while looking rigorous.
+  const elapsed = (await page.evaluate(() => Date.now())) - before;
+  if (elapsed !== budget) {
+    throw new Error(
+      `the page clock is not paused: "${slug}" saw ${elapsed}ms elapse while this advanced it ` +
+        `by ${budget}ms. Real time is reaching the page's timers, so every baseline that ` +
+        'depends on one is a race. Check that `prepare` still calls `clock.pauseAt` after ' +
+        '`clock.install` -- `install` alone replaces the timer functions but leaves them ' +
+        'ticking.'
+    );
   }
 };
 
@@ -473,9 +504,30 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // -> 2270px), so the comparison never stabilised and no baseline could be
   // written at all. Masking cannot fix a changing element height.
   //
-  // `install` makes the clock manual: timers fire only when we advance it, so
-  // every route is captured after exactly the same amount of elapsed time.
+  // `install` alone does NOT make the clock manual, which is what this comment
+  // claimed for as long as the suite has existed. It replaces the timer
+  // functions, but the replacement keeps ticking with real time -- so elapsed
+  // time was `runFor`'s budget PLUS however long the run spent waiting, and
+  // every wait between here and the capture leaked into the page.
+  //
+  // Measured on the hitl route, which advances 1500ms of budget: the page saw
+  // 9578ms with the drain in place and 4541ms without it, varying run to run
+  // (9312 / 9303 / 9341 / 9317 across four). That is the whole of that route's
+  // reputation for instability. Its demo auto-approves after a 10s countdown,
+  // so on a slow enough host the countdown *finished* mid-capture and the card
+  // rendered "Completed" instead of Confirm/Cancel -- 2px shorter, which a size
+  // mismatch rejects outright before any pixel is compared. `carousel` is the
+  // same cause with a smaller number: autoplay every 2500ms, so the track was
+  // caught mid-slide at a different offset each run (-41.3522 / -35.9429 /
+  // -41.342).
+  //
+  // `pauseAt` is what stops the clock. With it, both routes settle at exactly
+  // 1500ms every time: hitl holds Confirm/Cancel and carousel's track sits at
+  // translateX(0). Of the 99 baselined routes, hitl is the only one whose
+  // settled DOM changes at all -- the rest never had a timer still running by
+  // the time they were captured.
   await page.clock.install({ time: FIXED_TIME });
+  await page.clock.pauseAt(FIXED_TIME);
   await page.goto(`/components/${slug}`, { waitUntil: 'networkidle' });
 
   // `networkidle` resolves on network quiet, not on hydration, and every demo

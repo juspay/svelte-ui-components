@@ -3,6 +3,7 @@
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
   import Tooltip from '../Tooltip/Tooltip.svelte';
   import CheckListItem from '../CheckListItem/CheckListItem.svelte';
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
 
   let {
     title,
@@ -12,6 +13,7 @@
     subtitle,
     footer,
     valueSnippet,
+    animateValue = false,
     rows,
     rowsDirection = 'column',
     tooltip,
@@ -190,7 +192,11 @@
               data-pw={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
               testID={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
             >
-              {row.value}
+              {#if animateValue}
+                <AnimatedNumber value={row.value} />
+              {:else}
+                {row.value}
+              {/if}
             </div>
             {#if typeof row.comparisonValue === 'string' && row.comparisonValue.length > 0}
               <div
@@ -198,7 +204,9 @@
                 data-pw={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
                 testID={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
               >
-                / {row.comparisonValue}
+                / {#if animateValue}<AnimatedNumber
+                    value={row.comparisonValue}
+                  />{:else}{row.comparisonValue}{/if}
               </div>
             {/if}
             {#if typeof row.change === 'number'}
@@ -255,7 +263,13 @@
                 >
                   <div class="statcard-breakdown-label">{breakdownItem.label}</div>
                   <div class="statcard-breakdown-value-line">
-                    <div class="statcard-breakdown-value">{breakdownItem.value}</div>
+                    <div class="statcard-breakdown-value">
+                      {#if animateValue}
+                        <AnimatedNumber value={breakdownItem.value} />
+                      {:else}
+                        {breakdownItem.value}
+                      {/if}
+                    </div>
                     {#if typeof breakdownItem.change === 'number'}
                       <DeltaIndicator
                         value={breakdownItem.change}
@@ -286,7 +300,11 @@
           data-pw={typeof testId === 'string' ? `${testId}-value` : null}
           testID={typeof testId === 'string' ? `${testId}-value` : null}
         >
-          {value}
+          {#if animateValue}
+            <AnimatedNumber {value} />
+          {:else}
+            {value}
+          {/if}
         </div>
       {/if}
 

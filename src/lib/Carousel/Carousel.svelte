@@ -233,6 +233,17 @@
     transition: transform var(--carousel-track-transition-duration, var(--motion-duration, 0.5s))
       var(--carousel-track-transition-easing, var(--motion-easing, ease-in-out));
   }
+  /* The track slide is the component's motion. The dots below transition only
+     `background`, which is a colour change rather than movement, so they are
+     deliberately left alone -- silencing them would remove feedback the
+     preference never asked to remove. Finite, so dropping it lands the track on
+     the slide it was moving to. */
+  @media (prefers-reduced-motion: reduce) {
+    .slidesDiv {
+      transition: none;
+    }
+  }
+
   .dots-wrapper {
     gap: var(--dot-gap, 10px);
     padding-top: var(--dot-padding-top, 10px);

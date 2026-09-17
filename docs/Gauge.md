@@ -14,6 +14,15 @@ A circular visual indicator for displaying values against a configurable maximum
 <Gauge value={50} max={200} labelFormatter={(v, m) => `${v} / ${m}`} />
 ```
 
+### Animating the label
+
+Set `animateValue` to route the centered label through [`AnimatedNumber`](./AnimatedNumber.md) so it rolls to its new value on a fill change instead of jumping. With no `labelFormatter`, the rounded percentage and its `%` are passed to `AnimatedNumber` together as one string, so the `%` forms part of the odometer's accessible name rather than sitting outside the `role="img"` element where graphic navigation would never reach it. Only the digits roll; the `%` is a literal column that stays put. With `labelFormatter` set, its string output is passed straight through and diffed character by character, same as `StatCard.value`.
+
+```svelte
+<Gauge value={75} animateValue />
+<Gauge value={50} max={200} labelFormatter={(v, m) => `${v} / ${m}`} animateValue />
+```
+
 ## Props
 
 | Prop           | Type                                     | Required | Default        | Description                                                                                                                                                                                           |
@@ -22,6 +31,7 @@ A circular visual indicator for displaying values against a configurable maximum
 | max            | `number`                                 | No       | `100`          | Maximum value of the gauge. Defaults to 100 so that `value` acts as a direct percentage when `max` is omitted. When `max` is 0 or negative the gauge renders empty (0%) to avoid division by zero.    |
 | showLabel      | `boolean`                                | No       | `true`         | Whether to display the label centered inside the gauge ring.                                                                                                                                          |
 | labelFormatter | `(value: number, max: number) => string` | No       | `-`            | Custom label renderer. Receives the raw `value` and `max` and returns a display string. Defaults to the computed percentage string (e.g. `"25%"`).                                                    |
+| animateValue   | `boolean`                                | No       | `false`        | Routes the centered label through `AnimatedNumber` so it rolls to its new value instead of jumping. See [Animating the label](#animating-the-label).                                                  |
 | ariaLabel      | `string`                                 | No       | computed label | Accessible name for the gauge element (`role="progressbar"`). Falls back to the computed label text (e.g. `"75%"`) when omitted, so assistive technology announces the current percentage by default. |
 | testId         | `string`                                 | No       | `-`            | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                                               |
 | classes        | `string`                                 | No       | `-`            | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                |

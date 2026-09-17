@@ -47,6 +47,34 @@ Pass `valueFormat` `(value, percent) => string` to control the legend value colu
 <ProportionBar segments={revenueSegments} valueFormat={currencyFormat} trackHeight="14px" />
 ```
 
+### Animated Legend Values
+
+Set `animateValue` to route the legend value column through `AnimatedNumber` — the same formatted string `formatValue` already produces (`valueFormat` when supplied, otherwise the `"N (X%)"` default) is passed straight to it, so a segment's value rolls to its new figure instead of jumping. The bar geometry and the hidden-legend `aria-label` fallback are unaffected either way.
+
+```svelte
+<script>
+  import { ProportionBar } from '@juspay/svelte-ui-components';
+
+  const currencyFormat = (value, percent) => `₹${value.toLocaleString('en-IN')} (${percent}%)`;
+
+  let segments = $state([
+    { label: 'UPI', value: 4820 },
+    { label: 'Cards', value: 2150 }
+  ]);
+</script>
+
+<ProportionBar {segments} valueFormat={currencyFormat} animateValue />
+<button
+  onclick={() =>
+    (segments = [
+      { label: 'UPI', value: 6310 },
+      { label: 'Cards', value: 1400 }
+    ])}
+>
+  Refresh
+</button>
+```
+
 ### Without a Legend
 
 When `showLegend={false}`, the legend list is removed and the SVG itself carries the full breakdown as its accessible name.
@@ -74,14 +102,15 @@ When `showLegend={false}`, the legend list is removed and the SVG itself carries
 
 ## Props
 
-| Prop        | Type                                         | Required | Default | Description                                                                                               |
-| ----------- | -------------------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| segments    | `ProportionBarSegment[]`                     | Yes      | `-`     | Segments whose values define the proportions. Each is `{ label: string; value: number; color?: string }`. |
-| showLegend  | `boolean`                                    | No       | `true`  | Whether to render the legend list below the bar.                                                          |
-| valueFormat | `(value: number, percent: number) => string` | No       | `-`     | Custom formatter for the legend value column. Defaults to `"N (X%)"`.                                     |
-| trackHeight | `string`                                     | No       | `-`     | Height of the bar track (e.g. `"8px"`). Also settable via `--proportion-bar-track-height`.                |
-| testId      | `string`                                     | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                |
-| classes     | `string`                                     | No       | `-`     | Extra CSS class names appended to the root element. Useful for theming via CSS-variable overrides.        |
+| Prop         | Type                                         | Required | Default | Description                                                                                               |
+| ------------ | -------------------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| segments     | `ProportionBarSegment[]`                     | Yes      | `-`     | Segments whose values define the proportions. Each is `{ label: string; value: number; color?: string }`. |
+| showLegend   | `boolean`                                    | No       | `true`  | Whether to render the legend list below the bar.                                                          |
+| valueFormat  | `(value: number, percent: number) => string` | No       | `-`     | Custom formatter for the legend value column. Defaults to `"N (X%)"`.                                     |
+| trackHeight  | `string`                                     | No       | `-`     | Height of the bar track (e.g. `"8px"`). Also settable via `--proportion-bar-track-height`.                |
+| animateValue | `boolean`                                    | No       | `false` | Roll the legend value column through `AnimatedNumber` on change, instead of a static text node.           |
+| testId       | `string`                                     | No       | `-`     | Value for the `data-pw` attribute on the root element. Used for Playwright test selectors.                |
+| classes      | `string`                                     | No       | `-`     | Extra CSS class names appended to the root element. Useful for theming via CSS-variable overrides.        |
 
 ### ProportionBarSegment
 

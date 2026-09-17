@@ -12,18 +12,34 @@ An icon with a numeric/text badge overlay positioned in the top-right corner, or
 <Badge />
 ```
 
+### Animating the count
+
+Set `animateValue` to roll the badge to its new count instead of jumping. `value` stays the same already-formatted string it always was — AnimatedNumber diffs it character by character, so a suffix like `'99+'` keeps its `+` still while the digits roll.
+
+```svelte
+<script>
+  import { Badge } from '@juspay/svelte-ui-components';
+
+  let unread = $state(3);
+</script>
+
+<Badge value={String(unread)} animateValue />
+<button onclick={() => (unread += 1)}>+1</button>
+```
+
 ## Props
 
-| Prop      | Type               | Required | Default   | Description                                                                                                                                                                                                                |
-| --------- | ------------------ | -------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| image     | `string`           | No       | `-`       | URL of the main icon/image behind the badge. When omitted the badge renders standalone (no image wrapper).                                                                                                                 |
-| alt       | `string`           | No       | `''`      | Alt text for the icon image. Use a descriptive string when the image conveys meaning; leave empty (default) for purely decorative images.                                                                                  |
-| value     | `string`           | No       | `-`       | Text displayed inside the badge bubble (e.g., notification count like '3' or '99+'). Ignored when `mode` is `'dot'`.                                                                                                       |
-| mode      | `'count' \| 'dot'` | No       | `'count'` | Render mode. `'count'` shows the `value` text; `'dot'` renders a small indicator dot with no text.                                                                                                                         |
-| hidden    | `boolean`          | No       | `false`   | When `true` the badge bubble is not rendered (the image wrapper, if any, is still visible).                                                                                                                                |
-| ariaLabel | `string`           | No       | `-`       | Overrides the auto-derived `aria-label` on a standalone count badge. Has no effect in dot mode or when `image` is provided.                                                                                                |
-| testId    | `string`           | No       | `-`       | Value for the `data-pw` attribute on the root element, used by Playwright tests.                                                                                                                                           |
-| classes   | `string`           | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
+| Prop         | Type               | Required | Default   | Description                                                                                                                                                                                                                                                           |
+| ------------ | ------------------ | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| image        | `string`           | No       | `-`       | URL of the main icon/image behind the badge. When omitted the badge renders standalone (no image wrapper).                                                                                                                                                            |
+| alt          | `string`           | No       | `''`      | Alt text for the icon image. Use a descriptive string when the image conveys meaning; leave empty (default) for purely decorative images.                                                                                                                             |
+| value        | `string`           | No       | `-`       | Text displayed inside the badge bubble (e.g., notification count like '3' or '99+'). Ignored when `mode` is `'dot'`.                                                                                                                                                  |
+| mode         | `'count' \| 'dot'` | No       | `'count'` | Render mode. `'count'` shows the `value` text; `'dot'` renders a small indicator dot with no text.                                                                                                                                                                    |
+| hidden       | `boolean`          | No       | `false`   | When `true` the badge bubble is not rendered (the image wrapper, if any, is still visible).                                                                                                                                                                           |
+| ariaLabel    | `string`           | No       | `-`       | Overrides the auto-derived `aria-label` on a standalone count badge. Has no effect in dot mode or when `image` is provided.                                                                                                                                           |
+| testId       | `string`           | No       | `-`       | Value for the `data-pw` attribute on the root element, used by Playwright tests.                                                                                                                                                                                      |
+| classes      | `string`           | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles.                                            |
+| animateValue | `boolean`          | No       | `false`   | Rolls `value` through [`AnimatedNumber`](./AnimatedNumber.md) instead of swapping it in place. `value` is passed through unchanged as a string, so `'99+'` rolls the two digits and leaves the `+` alone. Has no effect in `mode="dot"`, which never renders `value`. |
 
 ## Accessibility
 

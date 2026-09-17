@@ -19,6 +19,7 @@ const REAL_COMPONENTS_DIR = resolve(process.cwd(), 'src/wc/components');
  * list, so the two cannot drift the way a tool that hardcoded this set could.
  */
 const EXPECTED_INLINE_BLOCK_TAGS = new Set([
+  'sui-animated-number',
   'sui-avatar',
   'sui-chat-suggestions',
   'sui-checkbox',

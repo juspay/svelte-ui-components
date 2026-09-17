@@ -7,6 +7,7 @@
       invertColors: { type: 'Boolean', attribute: 'invert-colors' },
       hideArrow: { type: 'Boolean', attribute: 'hide-arrow' },
       neutralThreshold: { type: 'Number', attribute: 'neutral-threshold' },
+      animateValue: { type: 'Boolean', attribute: 'animate-value' },
       format: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }

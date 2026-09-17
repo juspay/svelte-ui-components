@@ -31,6 +31,16 @@ export type OptionalProportionBarProperties = {
    * `--proportion-bar-track-height` CSS variable.
    */
   trackHeight?: string;
+  /**
+   * Routes the legend value column through `AnimatedNumber` so a changed
+   * value rolls instead of jumping. Off by default because it is new: with it
+   * left unset, the legend renders the same static text node it always has.
+   * The formatted string from `valueFormat` (or the built-in default) is
+   * passed straight through, never the raw `value` number, so a consumer's
+   * own formatter keeps deciding what the digits say.
+   * @default false
+   */
+  animateValue?: boolean;
   /** Test selector applied as the `data-pw` attribute on the root element. */
   testId?: string;
   /** Extra CSS class names appended to the root element. */

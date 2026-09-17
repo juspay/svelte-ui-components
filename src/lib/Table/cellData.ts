@@ -142,6 +142,9 @@ export const asCompareCellData = (value: TableCellValue): TableCompareCellData |
   if (typeof record.trendLabel === 'string') {
     compareData.trendLabel = record.trendLabel;
   }
+  if (typeof record.animateTrend === 'boolean') {
+    compareData.animateTrend = record.animateTrend;
+  }
   return compareData;
 };
 

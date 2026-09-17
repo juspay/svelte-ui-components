@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { ProgressProperties } from './properties';
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
 
   let {
     value,
     max = 100,
     showLabel = false,
+    animateValue = false,
     ariaLabel,
     testId,
     classes
@@ -58,7 +60,25 @@
     ></div>
   </div>
   {#if showLabel && !isIndeterminate}
-    <div class="label">{labelText}</div>
+    <div class="label">
+      {#if animateValue}
+        <!-- The rounded percentage is already the display value labelText
+             computes, so it is passed as a plain number rather than through
+             `format`: `AnimatedNumber`'s Intl percent style expects a 0-1
+             fraction and would re-derive a different number from this
+             already-0-100 one. The % is a literal beside it instead, exactly
+             mirroring what labelText already spells out below. -->
+        <!-- The unit goes INSIDE AnimatedNumber, not beside it. The odometer
+             carries role="img" with its own aria-label, so a unit left outside is
+             invisible to anyone navigating by graphic -- the rotor reads "75" with
+             no sign of what it measures. Passing the formatted string keeps the
+             unit in the accessible name; only the digits move, since the string
+             path rolls the characters that changed and leaves the rest. -->
+        <AnimatedNumber value={`${Math.round(percentage)}%`} />
+      {:else}
+        {labelText}
+      {/if}
+    </div>
   {/if}
 </div>
 

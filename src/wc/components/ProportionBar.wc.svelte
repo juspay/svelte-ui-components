@@ -10,6 +10,7 @@
       //   document.querySelector('sui-proportion-bar').valueFormat = (v, p) => `${v} (${p}%)`;
       valueFormat: { type: 'Object' },
       trackHeight: { type: 'String', attribute: 'track-height' },
+      animateValue: { type: 'Boolean', attribute: 'animate-value' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }

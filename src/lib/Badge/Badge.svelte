@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import type { BadgeProperties } from './properties';
 
   let {
@@ -9,7 +10,8 @@
     hidden = false,
     ariaLabel,
     testId,
-    classes
+    classes,
+    animateValue = false
   }: BadgeProperties = $props();
 
   let showImage = $derived(typeof image === 'string' && image.length > 0);
@@ -20,6 +22,11 @@
   let standaloneAriaLabel = $derived(
     isDot ? null : (ariaLabel ?? (typeof value === 'string' ? value : null))
   );
+
+  // `value` is a general-purpose display string ('99+' included), so the dot
+  // check gates AnimatedNumber the same way it already gates the plain text --
+  // dot mode never had a value to animate in the first place.
+  let animateThisValue = $derived(animateValue && !isDot);
 </script>
 
 {#if showImage}
@@ -31,7 +38,13 @@
     <div class="badge-wrap">
       <img class="icon-img" src={image} {alt} />
       {#if showBadge}
-        <div class="badge" class:badge-dot={isDot}>{isDot ? '' : (value ?? '')}</div>
+        <div class="badge" class:badge-dot={isDot}>
+          {#if animateThisValue}
+            <AnimatedNumber value={value ?? ''} />
+          {:else}
+            {isDot ? '' : (value ?? '')}
+          {/if}
+        </div>
       {/if}
     </div>
   </div>
@@ -44,7 +57,11 @@
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
   >
-    {isDot ? '' : (value ?? '')}
+    {#if animateThisValue}
+      <AnimatedNumber value={value ?? ''} />
+    {:else}
+      {isDot ? '' : (value ?? '')}
+    {/if}
   </div>
 {/if}
 

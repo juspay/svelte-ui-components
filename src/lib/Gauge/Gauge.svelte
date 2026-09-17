@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import type { GaugeProperties } from './properties';
 
   let {
@@ -6,6 +7,7 @@
     max = 100,
     showLabel = true,
     labelFormatter,
+    animateValue = false,
     ariaLabel,
     testId,
     classes
@@ -24,7 +26,8 @@
   // labelFormatter receives the raw (value, max) pair so callers have full
   // context. The built-in fallback shows the computed percentage string
   // (e.g. value=50, max=200 → "25%").
-  let labelText = $derived(labelFormatter ? labelFormatter(value, max) : `${Math.round(clamped)}%`);
+  let roundedPercentage = $derived(Math.round(clamped));
+  let labelText = $derived(labelFormatter ? labelFormatter(value, max) : `${roundedPercentage}%`);
 </script>
 
 <div
@@ -52,7 +55,23 @@
     />
   </svg>
   {#if showLabel}
-    <div class="label">{labelText}</div>
+    <div class="label">
+      {#if animateValue}
+        {#if labelFormatter}
+          <AnimatedNumber value={labelText} />
+        {:else}
+          <!-- The unit goes INSIDE AnimatedNumber, not beside it. The odometer
+             carries role="img" with its own aria-label, so a unit left outside is
+             invisible to anyone navigating by graphic -- the rotor reads "75" with
+             no sign of what it measures. Passing the formatted string keeps the
+             unit in the accessible name; only the digits move, since the string
+             path rolls the characters that changed and leaves the rest. -->
+          <AnimatedNumber value={`${roundedPercentage}%`} />
+        {/if}
+      {:else}
+        {labelText}
+      {/if}
+    </div>
   {/if}
 </div>
 

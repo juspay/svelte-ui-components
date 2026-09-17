@@ -73,6 +73,19 @@ export type OptionalPieChartProperties = {
    * the control toggles the hidden rows in place.
    */
   onlegendmore?: () => void;
+  /**
+   * Routes `.pie-legend-value` (the `legendShowValues` list) through
+   * `AnimatedNumber` so a changed slice value rolls instead of jumping. Off
+   * by default because it is new: with it left unset, the legend renders the
+   * same static text node it always has. The exact string the static branch
+   * already prints -- `valueFormat` when supplied, else the built-in
+   * default, plus the percentage -- is passed straight through, so a
+   * consumer's own formatter keeps deciding what the digits say. The on-arc
+   * `<text>` labels can't host per-digit spans and are unaffected either
+   * way.
+   * @default false
+   */
+  animateLegendValues?: boolean;
   percentDecimals?: number;
   /**
    * Called once on mount with the imperative highlight API. Pass the returned

@@ -22,6 +22,19 @@ export type OptionalGaugeProperties = {
    */
   labelFormatter?: (value: number, max: number) => string;
   /**
+   * Routes the centered label through `AnimatedNumber` so it rolls to its new
+   * value instead of jumping. Both routes pass a complete STRING and diff it
+   * character by character: `labelFormatter`'s own output when it is set, and
+   * `` `${roundedPercentage}%` `` when it is not. The unit goes inside rather
+   * than beside, because the odometer carries `role="img"` with its own
+   * accessible name and anything left outside is invisible to a reader
+   * navigating by graphic. Only the digits move; the `%` is a literal column
+   * that never rolls. Off by default so an unset prop renders the exact static
+   * text node it always has.
+   * @default false
+   */
+  animateValue?: boolean;
+  /**
    * Accessible label for the gauge element (`role="progressbar"`). Falls back
    * to the computed `labelText` (e.g. `"75%"`) when not provided, so assistive
    * technology announces the current percentage by default.

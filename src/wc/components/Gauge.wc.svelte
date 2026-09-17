@@ -8,7 +8,8 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       max: { type: 'Number', attribute: 'max' },
-      labelFormatter: { type: 'Object' }
+      labelFormatter: { type: 'Object' },
+      animateValue: { type: 'Boolean', reflect: true, attribute: 'animate-value' }
     }
   }}
 />

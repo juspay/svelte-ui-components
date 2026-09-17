@@ -452,7 +452,18 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
 
   // Restore the real shell before widening back, so the desktop half below
   // shows the genuine page rather than a still-modified one.
-  await sidebarOverride.evaluate((node) => node.remove());
+  // `addStyleTag` is typed as returning `ElementHandle<Node>`, and `remove()`
+  // lives on `ChildNode`, not `Node`. Narrowed rather than asserted: this file
+  // is not a `.test.ts`/`.spec.ts`, so it does not get the type-assertion
+  // exemption those have. The throw is deliberate -- a silent skip here would
+  // leave the sidebar collapsed for the rest of the walkthrough and the desktop
+  // half below would quietly measure a still-modified page.
+  await sidebarOverride.evaluate((node) => {
+    if (!(node instanceof Element)) {
+      throw new Error('expected addStyleTag to hand back the <style> element it injected');
+    }
+    node.remove();
+  });
 
   await step(
     page,

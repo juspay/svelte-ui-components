@@ -175,6 +175,21 @@ The header renders even without a title. `oncheckboxchange` fires with the new c
 />
 ```
 
+### Animated Values
+
+Set `animateValue` to roll `value` (and, with `rows`, each row's `value`/`comparisonValue` plus every breakdown item's `value`) through [`AnimatedNumber`](./AnimatedNumber.md) instead of swapping the text outright. Every one of those fields is already a pre-formatted string, so nothing here surfaces the number behind it — `'₹1.23Cr'` → `'₹1.45Cr'` rolls the two digits that changed and leaves `₹`, the decimal point and `Cr` in place. `valueSnippet` still takes full precedence when set, exactly as it does today.
+
+```svelte
+<script>
+  import { StatCard } from '@juspay/svelte-ui-components';
+
+  let gmv = $state('₹1.23Cr');
+</script>
+
+<StatCard title="GMV" value={gmv} animateValue={true} />
+<button onclick={() => (gmv = '₹1.45Cr')}>next value</button>
+```
+
 ### Header-Right Content & Children
 
 ```svelte
@@ -197,6 +212,7 @@ The header renders even without a title. `oncheckboxchange` fires with the new c
 | subtitle         | `string`                              | No       | `-`        | Secondary label rendered below the value row.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | footer           | `Snippet`                             | No       | `-`        | Snippet rendered in the card footer area, separated by a border-top line.                                                                                                                                                                                                                                                                                                                                                                                  |
 | valueSnippet     | `Snippet`                             | No       | `-`        | Replaces the string `value` with a custom snippet for advanced value rendering.                                                                                                                                                                                                                                                                                                                                                                            |
+| animateValue     | `boolean`                             | No       | `false`    | Rolls `value` (and, with `rows`, each row's `value`/`comparisonValue` and every breakdown item's `value`) through [`AnimatedNumber`](./AnimatedNumber.md)'s per-digit odometer instead of swapping the text outright. `valueSnippet` still wins outright when set. See [Animated Values](#animated-values).                                                                                                                                                |
 | rows             | `StatCardRow[]`                       | No       | `-`        | Multiple metric rows. When set, replaces the single value/delta row with a divider-separated column. Each row supports `heading`, `comparisonValue` (inline "/ ₹10L" denominator), `change` (`number` renders the delta with a "—" glyph at 0; `null` renders "N/A"; `undefined` renders nothing), `invertChangeColors`, `tooltip`, `additionalContent`, `additionalContentBreak`, `valueVariant`, `subtitle`, `breakdownHeading`, and a `breakdown` grid. |
 | rowsDirection    | `'column' \| 'row'`                   | No       | `'column'` | Layout direction for `rows`. `'column'` stacks rows vertically with horizontal dividers; `'row'` lays the sections side by side with vertical dividers, each section flexing to share the width equally.                                                                                                                                                                                                                                                   |
 | tooltip          | `StatCardTooltip`                     | No       | `-`        | Tooltip shown on the card title — `{ text, position?, testId? }`.                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -369,7 +385,11 @@ Tag: `<sui-stat-card>`
 ></sui-stat-card>
 ```
 
-Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively:
+Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/objects/arrays and so are exposed as JS properties only (not HTML attributes); the `headerRight` and `children` snippets map to the `header-right` named slot and the default slot respectively. `animateValue` is a plain boolean and reflects to/from the `animate-value` attribute, the same as `delta-positive`:
+
+```html
+<sui-stat-card title="GMV" value="₹1.23Cr" animate-value></sui-stat-card>
+```
 
 ### Web Component Events
 

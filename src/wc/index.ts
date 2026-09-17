@@ -1,3 +1,4 @@
+import './components/AnimatedNumber.wc.svelte';
 import './components/Avatar.wc.svelte';
 import './components/Badge.wc.svelte';
 import './components/Breadcrumb.wc.svelte';

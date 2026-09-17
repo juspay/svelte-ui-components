@@ -1073,9 +1073,17 @@
                         testID={testId ? `${testId}-start-time` : null}
                       />
                     </div>
-                    {@render drpFieldError(startDateField.errorId, startDateField.showsError, DATE_HINT)}
+                    {@render drpFieldError(
+                      startDateField.errorId,
+                      startDateField.showsError,
+                      DATE_HINT
+                    )}
                   </div>
-                  {@render drpFieldError(startTimeField.errorId, startTimeField.showsError, TIME_HINT)}
+                  {@render drpFieldError(
+                    startTimeField.errorId,
+                    startTimeField.showsError,
+                    TIME_HINT
+                  )}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
                   <div class="drp-date-time-group">
@@ -1115,7 +1123,11 @@
                         testID={testId ? `${testId}-end-time` : null}
                       />
                     </div>
-                    {@render drpFieldError(endDateField.errorId, endDateField.showsError, DATE_HINT)}
+                    {@render drpFieldError(
+                      endDateField.errorId,
+                      endDateField.showsError,
+                      DATE_HINT
+                    )}
                   </div>
                   {@render drpFieldError(endTimeField.errorId, endTimeField.showsError, TIME_HINT)}
                 {:else}
@@ -1135,7 +1147,11 @@
                       data-pw={testId ? `${testId}-start-date` : null}
                       testID={testId ? `${testId}-start-date` : null}
                     />
-                    {@render drpFieldError(startDateField.errorId, startDateField.showsError, DATE_HINT)}
+                    {@render drpFieldError(
+                      startDateField.errorId,
+                      startDateField.showsError,
+                      DATE_HINT
+                    )}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1155,7 +1171,11 @@
                       data-pw={testId ? `${testId}-end-date` : null}
                       testID={testId ? `${testId}-end-date` : null}
                     />
-                    {@render drpFieldError(endDateField.errorId, endDateField.showsError, DATE_HINT)}
+                    {@render drpFieldError(
+                      endDateField.errorId,
+                      endDateField.showsError,
+                      DATE_HINT
+                    )}
                   </div>
                   {#if showTimeSelection}
                     <button
@@ -1191,7 +1211,11 @@
                       data-pw={testId ? `${testId}-start-time` : null}
                       testID={testId ? `${testId}-start-time` : null}
                     />
-                    {@render drpFieldError(startTimeField.errorId, startTimeField.showsError, TIME_HINT)}
+                    {@render drpFieldError(
+                      startTimeField.errorId,
+                      startTimeField.showsError,
+                      TIME_HINT
+                    )}
                   </div>
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   <span class="drp-datetime-arrow" aria-hidden="true">{@html chevronRightSvg}</span>
@@ -1210,7 +1234,11 @@
                       data-pw={testId ? `${testId}-end-time` : null}
                       testID={testId ? `${testId}-end-time` : null}
                     />
-                    {@render drpFieldError(endTimeField.errorId, endTimeField.showsError, TIME_HINT)}
+                    {@render drpFieldError(
+                      endTimeField.errorId,
+                      endTimeField.showsError,
+                      TIME_HINT
+                    )}
                   </div>
                 </div>
               {/if}

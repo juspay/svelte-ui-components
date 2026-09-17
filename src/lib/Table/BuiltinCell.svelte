@@ -25,6 +25,7 @@
   import Select from '../Select/Select.svelte';
   import Input from '../Input/Input.svelte';
   import Menu from '../Menu/Menu.svelte';
+  import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
   import trendUpSvg from '$lib/assets/trend-up.svg?raw';
   import trendDownSvg from '$lib/assets/trend-down.svg?raw';
   import copySvg from '$lib/assets/copy.svg?raw';
@@ -258,7 +259,15 @@
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendUpSvg}</span>
-              {compare.trendPercent}%
+              {#if compare.animateTrend}
+                <!-- The string form, not the raw number: it keeps the % inside the
+                     odometer's accessible name, and avoids Intl grouping a raw
+                     trendPercent into "1,234.5" where the plain branch shows
+                     "1234.5". -->
+                <AnimatedNumber value={`${compare.trendPercent}%`} />
+              {:else}
+                {compare.trendPercent}%
+              {/if}
             </span>
           {:else if compare.trendPercent < 0}
             <span
@@ -268,7 +277,15 @@
             >
               <!-- eslint-disable svelte/no-at-html-tags -->
               <span class="builtin-trend-icon">{@html trendDownSvg}</span>
-              {compare.trendPercent}%
+              {#if compare.animateTrend}
+                <!-- The string form, not the raw number: it keeps the % inside the
+                     odometer's accessible name, and avoids Intl grouping a raw
+                     trendPercent into "1,234.5" where the plain branch shows
+                     "1234.5". -->
+                <AnimatedNumber value={`${compare.trendPercent}%`} />
+              {:else}
+                {compare.trendPercent}%
+              {/if}
             </span>
           {:else}
             <span class="builtin-trend builtin-trend-flat">↔ 0%</span>

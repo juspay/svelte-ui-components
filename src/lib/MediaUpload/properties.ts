@@ -42,6 +42,15 @@ export type OptionalMediaUploadProperties = {
   fileIcon?: Snippet;
   errorMessages?: MediaUploadErrorMessages;
   files?: File[];
+  /**
+   * Routes the header's `N / maxLength` counter through `AnimatedNumber` so an
+   * add/remove rolls the count instead of swapping it as plain text. Only
+   * `items.length` animates -- the `/` separator and `maxLength` stay static,
+   * since neither of those actually changes. Off by default so an unset prop
+   * renders the exact static text node it always has.
+   * @default false
+   */
+  animateCounter?: boolean;
   testId?: string;
   classes?: string;
 };

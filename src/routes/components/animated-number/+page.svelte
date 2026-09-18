@@ -111,7 +111,11 @@
   <AnimatedNumber value={3.14159} format={{ minimumFractionDigits: 5 }} testId="fraction" />
   <AnimatedNumber value={98765432109876} testId="huge" />
   <AnimatedNumber value="N/A" testId="no-digits" />
+  <!-- A string whose literals include an ordinary space. Durations reach this
+       shape ("12m 15s"), and so does any caller formatting its own value. -->
+  <AnimatedNumber value="12m 15s" testId="spaced" />
 </div>
+
 <div class="demo-row">
   <button onclick={() => (signed = signed > 0 ? -signed : Math.abs(signed) || 5)}>flip sign</button>
   <button onclick={burst}>burst: 5 changes in 200ms</button>
@@ -121,6 +125,23 @@
   digits at all. The burst button checks that rapid retargeting settles on the final value rather
   than stranding mid-roll.
 </p>
+
+<h3>Entry animation</h3>
+<p>
+  <code>animateOnMount</code> rolls the columns up from zero when the number first appears. It is off
+  by default. It matters most where the figure lands once and then never changes &mdash; a dashboard metric
+  that arrives with a fetch and then sits there &mdash; because without it such a number is static for
+  its whole life and the odometer never does anything at all.
+</p>
+<div class="demo-row big">
+  <AnimatedNumber value={60000} animateOnMount testId="entry" />
+  <AnimatedNumber
+    value={1240}
+    format={{ style: 'currency', currency: 'INR' }}
+    animateOnMount
+    testId="entry-currency"
+  />
+</div>
 
 <h3>Theming through the motion tokens</h3>
 <div class="demo-row big">

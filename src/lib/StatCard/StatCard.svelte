@@ -4,6 +4,7 @@
   import Tooltip from '../Tooltip/Tooltip.svelte';
   import CheckListItem from '../CheckListItem/CheckListItem.svelte';
   import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
+  import { isAnimatableMetric } from './metric';
 
   let {
     title,
@@ -14,6 +15,9 @@
     footer,
     valueSnippet,
     animateValue = false,
+    animatePrimary = false,
+    primary = 'auto',
+    animateOnMount = false,
     rows,
     rowsDirection = 'column',
     tooltip,
@@ -27,6 +31,99 @@
   }: StatCardProperties = $props();
 
   const isInteractive = $derived(typeof onclick === 'function');
+
+  /**
+   * Which ONE value on this card rolls.
+   *
+   * A card has several numeric slots and they are not equally important. The
+   * business variant renders `subtitle` at 44px as the headline and its rows at
+   * 18-20px underneath, so animating "the values" animated the small ones and
+   * left the number the card is actually about sitting still -- backwards, and
+   * visible on every dashboard.
+   *
+   * `primary` resolves three ways so a caller can be as specific as it needs:
+   *   'auto'      measure the rendered slots and pick the largest metric
+   *   'subtitle'  | 'value' | <row index>   name it outright
+   * 'auto' is the default because it follows the card's own type scale rather
+   * than a second copy of it kept in a mapper, so a card that restyles keeps
+   * animating the right thing. A caller that disagrees names the slot instead.
+   *
+   * Measured after mount rather than guessed from props: the sizes come from
+   * tokens the consuming app can override, so only the resolved style knows.
+   */
+  let autoKey = $state<string | null>(null);
+
+  /**
+   * Re-measured whenever the card's values change, not once at mount.
+   *
+   * A card whose figures arrive from a fetch renders empty first: the balance
+   * card mounted with no balance, so the measurement found no metric, and
+   * because an attachment only re-runs when its argument changes it never looked
+   * again -- the number arrived and sat there unanimated. Keying the attachment
+   * on the values themselves fixes that, and also re-picks the primary if the
+   * card's content later changes shape.
+   */
+  const valueSignature = $derived(
+    JSON.stringify([
+      value,
+      subtitle,
+      (rows ?? []).map((row) => [
+        row.value,
+        row.comparisonValue,
+        (row.breakdown ?? []).map((item) => item.value)
+      ])
+    ])
+  );
+
+  const measurePrimary =
+    (_signature: string) =>
+    (node: HTMLElement): void => {
+      if (!animatePrimary || primary !== 'auto') {
+        return;
+      }
+      let best: string | null = null;
+      let bestSize = -1;
+      for (const slot of node.querySelectorAll('[data-sc-slot]')) {
+        if (!(slot instanceof HTMLElement)) {
+          continue;
+        }
+        if (!isAnimatableMetric(slot.textContent ?? '')) {
+          continue;
+        }
+        const size = Number.parseFloat(getComputedStyle(slot).fontSize);
+        if (Number.isFinite(size) && size > bestSize) {
+          bestSize = size;
+          best = slot.dataset.scSlot ?? null;
+        }
+      }
+      autoKey = best;
+    };
+
+  /**
+   * A numeric `primary` names a row by index, and rows carry `data-sc-slot`
+   * values of `row-<index>`. Passing the number through `String` alone yielded
+   * `'0'`, which matches no slot at all, so `primary={0}` resolved to nothing
+   * and the card animated none of its values. The custom element declares the
+   * prop as a String, so `primary="0"` arrives the same way and needs the same
+   * normalisation -- hence matching the digits rather than only `typeof`.
+   */
+  const slotKeyFor = (value: 'auto' | 'subtitle' | 'value' | number | string): string =>
+    typeof value === 'number' || /^\d+$/.test(String(value)) ? `row-${value}` : String(value);
+
+  const primaryKey = $derived(primary === 'auto' ? autoKey : slotKeyFor(primary));
+
+  /**
+   * `animateValue` keeps its old meaning -- every value on the card -- but is
+   * now gated on the value being a metric at all, so an identifier that merely
+   * contains digits is never rolled. See metric.ts: this is what stopped a store
+   * domain and a GA4 account id spinning on the anomaly cards.
+   */
+  const animates = (key: string, text: unknown): boolean => {
+    if (typeof text !== 'string' || !isAnimatableMetric(text)) {
+      return false;
+    }
+    return animatePrimary ? key === primaryKey : animateValue;
+  };
 
   /**
    * When `deltaPositive` is explicitly provided use it; otherwise infer from
@@ -84,6 +181,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
+  {@attach measurePrimary(valueSignature)}
   class="statcard {classes ?? ''}"
   class:statcard-interactive={isInteractive}
   data-pw={typeof testId === 'string' ? testId : null}
@@ -189,11 +287,12 @@
               class="statcard-value"
               class:statcard-value-success={row.valueVariant === 'success'}
               class:statcard-value-warning={row.valueVariant === 'warning'}
+              data-sc-slot={`row-${rowIndex}`}
               data-pw={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
               testID={typeof testId === 'string' ? `${testId}-value-${rowIndex}` : null}
             >
-              {#if animateValue}
-                <AnimatedNumber value={row.value} />
+              {#if animates(`row-${rowIndex}`, row.value)}
+                <AnimatedNumber value={row.value} {animateOnMount} />
               {:else}
                 {row.value}
               {/if}
@@ -204,7 +303,8 @@
                 data-pw={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
                 testID={typeof testId === 'string' ? `${testId}-comparison-${rowIndex}` : null}
               >
-                / {#if animateValue}<AnimatedNumber
+                / {#if animates(`row-${rowIndex}-comparison`, row.comparisonValue)}<AnimatedNumber
+                    {animateOnMount}
                     value={row.comparisonValue}
                   />{:else}{row.comparisonValue}{/if}
               </div>
@@ -264,8 +364,8 @@
                   <div class="statcard-breakdown-label">{breakdownItem.label}</div>
                   <div class="statcard-breakdown-value-line">
                     <div class="statcard-breakdown-value">
-                      {#if animateValue}
-                        <AnimatedNumber value={breakdownItem.value} />
+                      {#if animates(`breakdown-${rowIndex}-${breakdownIndex}`, breakdownItem.value)}
+                        <AnimatedNumber value={breakdownItem.value} {animateOnMount} />
                       {:else}
                         {breakdownItem.value}
                       {/if}
@@ -297,11 +397,12 @@
       {:else if typeof value === 'string' && value.length > 0}
         <div
           class="statcard-value"
+          data-sc-slot="value"
           data-pw={typeof testId === 'string' ? `${testId}-value` : null}
           testID={typeof testId === 'string' ? `${testId}-value` : null}
         >
-          {#if animateValue}
-            <AnimatedNumber {value} />
+          {#if animates('value', value)}
+            <AnimatedNumber {value} {animateOnMount} />
           {:else}
             {value}
           {/if}
@@ -323,10 +424,15 @@
   {#if typeof subtitle === 'string' && subtitle.length > 0}
     <div
       class="statcard-subtitle"
+      data-sc-slot="subtitle"
       data-pw={typeof testId === 'string' ? `${testId}-subtitle` : null}
       testID={typeof testId === 'string' ? `${testId}-subtitle` : null}
     >
-      {subtitle}
+      {#if animates('subtitle', subtitle)}
+        <AnimatedNumber value={subtitle} {animateOnMount} />
+      {:else}
+        {subtitle}
+      {/if}
     </div>
   {/if}
 

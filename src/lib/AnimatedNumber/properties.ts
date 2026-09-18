@@ -37,6 +37,22 @@ export type OptionalAnimatedNumberProperties = {
    * @default 'off'
    */
   live?: AnimatedNumberLive;
+  /**
+   * Rolls every column up from zero when the number first appears, instead of
+   * painting it outright.
+   *
+   * Off by default, because a number that was always going to be on screen
+   * should not make the reader wait for it. Turn it on where the figure ARRIVES
+   * -- a dashboard whose metrics land after a fetch, a total that appears at the
+   * end of a flow -- and especially where the value then never changes again:
+   * without this, such a number is static for its whole life and the odometer
+   * does nothing at all.
+   *
+   * Independent of the rolls that follow. A later change animates either way,
+   * and this only governs the first paint.
+   * @default false
+   */
+  animateOnMount?: boolean;
   /** Overrides the accessible name, which otherwise mirrors the visible text. */
   ariaLabel?: string;
   /** Value for the `data-pw` attribute on the root element for E2E selection. */

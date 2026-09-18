@@ -399,14 +399,19 @@ test.describe('AnimatedNumber motion', () => {
           return (
             effect instanceof KeyframeEffect &&
             effect.target !== null &&
-            effect.target.classList.contains('animated-number-digit')
+            effect.target.classList.contains('animated-number-digit') &&
+            // Except the ones that asked to. `animateOnMount` is opt-in and
+            // rolling up from zero is exactly what it is for, so those are not
+            // violations of this rule -- they are the other half of it, and the
+            // test below asserts they DO move.
+            effect.target.closest('[data-pw^="entry"]') === null
           );
         }).length
     );
 
-    // Every AnimatedNumber demo on the page counts, not just `counter`: the
-    // point is that first paint shows every one of them at rest rather than
-    // counting up from zero.
+    // Every other AnimatedNumber demo on the page counts, not just `counter`:
+    // the point is that first paint shows them at rest rather than counting up
+    // from zero without being asked.
     expect(running).toBe(0);
   });
 
@@ -581,4 +586,155 @@ test.describe('AnimatedNumber motion', () => {
     expect(await settledGlyph(ones)).toBe('6');
     expect(await page.locator('[data-pw="counter"]').getAttribute('aria-label')).toBe('106');
   });
+});
+
+/*
+ * A space among the literals has to occupy space.
+ *
+ * Every column -- digit or literal -- is `display: inline-block`, which makes
+ * each one its own inline formatting context. Collapsible whitespace at the
+ * start and end of one of those is removed, so a literal column holding exactly
+ * one ordinary space rendered at zero width and the string closed up: "12m 15s"
+ * painted as "12m15s". Nothing else showed it. The accessible name is built
+ * from the value rather than the columns, so it still read "12m 15s"; the
+ * column count was right; only the pixels were wrong.
+ *
+ * Reachable from any caller that formats its own string -- durations are the
+ * obvious shape -- and found by adopting the component in a dashboard rather
+ * than by any test here, which is why this one exists. Asserted as a width
+ * because that is the thing that was wrong; asserting `white-space` would pin
+ * the current fix rather than the behaviour.
+ */
+test('a space between literals keeps its width', async ({ page }) => {
+  await gotoHydrated(page, ROUTE);
+
+  const spaced = page.getByTestId('spaced');
+  await expect(spaced).toBeVisible();
+
+  const widths = await spaced.evaluate((node: HTMLElement) =>
+    Array.from(node.querySelectorAll('.animated-number-literal')).map((literal) => ({
+      text: literal.textContent ?? '',
+      width: literal.getBoundingClientRect().width
+    }))
+  );
+
+  const space = widths.find((literal) => literal.text === ' ');
+  expect(space, 'the space should be its own literal column').toBeDefined();
+  expect(space?.width ?? 0).toBeGreaterThan(0);
+
+  // And it should be a real space rather than a hair of rounding: the narrowest
+  // glyph on the row is a useful floor, and a collapsed column measured 0.
+  const letter = widths.find((literal) => literal.text === 'm');
+  expect(space?.width ?? 0).toBeGreaterThan((letter?.width ?? 0) * 0.15);
+});
+
+/*
+ * The other half of "nothing animates on first paint".
+ *
+ * That rule is right for a number that was always going to be on screen, and
+ * wrong for one that ARRIVES -- and it is actively harmful where the value then
+ * never changes again, which is the ordinary case on a dashboard: metrics land
+ * with a fetch and sit there. Gated off on mount, such a number is static for
+ * its whole life and the odometer does nothing at all, so adopting it buys
+ * nothing. `animateOnMount` is what makes that case worth anything.
+ *
+ * Asserted by sampling the rendered position rather than by counting
+ * animations: an animation object can exist and still not move anything, which
+ * is the failure this whole suite was built to catch.
+ */
+test('animateOnMount rolls the columns up from zero as the number appears', async ({ page }) => {
+  await page.goto(ROUTE);
+
+  // Deliberately NOT gotoHydrated: the entry roll starts at hydration, and
+  // waiting for the hydration marker can land after a short roll has finished.
+  const column = page.getByTestId('entry').locator('.animated-number-digit').first();
+  await column.waitFor({ state: 'attached', timeout: 15_000 });
+
+  const positions = await column.evaluate(async (node: HTMLElement) => {
+    const seen: number[] = [];
+    const glyph = node.querySelector('.animated-number-glyph') ?? node.firstElementChild;
+    for (let frame = 0; frame < 45; frame += 1) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      if (glyph instanceof HTMLElement) {
+        seen.push(Math.round(glyph.getBoundingClientRect().top));
+      }
+    }
+    return seen;
+  });
+
+  const distinct = new Set(positions);
+  expect(
+    distinct.size,
+    `the entry column should travel, but it sat at ${[...distinct].join(', ')}`
+  ).toBeGreaterThan(1);
+});
+
+/*
+ * A consumer's bare element selector must not repaint the number.
+ *
+ * The component renders its root, its columns, its glyphs and its
+ * selection-copy node as `<span>`s. A host stylesheet carrying a bare `span`
+ * rule therefore hits every one of them, and a bare type selector beats plain
+ * inheritance -- so the number stopped looking like the text it replaced while
+ * the surrounding label, being a text node in a div, was untouched.
+ *
+ * Not hypothetical, and not a small difference: Lighthouse's static/style/text.css
+ * carries `span { color: var(--text-color-tertiary); font-size: var(--font-size-xxs);
+ * font-weight: var(--font-weight-regular) }`. Adopting the odometer there took
+ * every headline dashboard metric from 24px/600 to 12px/400 in the tertiary text
+ * colour -- measured on /analytics, /, /identity and six other routes. Before the
+ * adoption the value was a bare text node inside `.statcard-value` and inherited
+ * correctly, so nothing in the library's own pages could have shown this.
+ *
+ * The rule injected here is that exact shape. Asserted against the PARENT's
+ * resolved font rather than against fixed numbers, because the contract is
+ * "renders as the text it replaces", not "renders at 24px".
+ */
+test('a host stylesheet with a bare span rule cannot restyle the number', async ({ page }) => {
+  await gotoHydrated(page, ROUTE);
+
+  await page.addStyleTag({
+    content: `span { font-size: 9px; font-weight: 100; color: rgb(255, 0, 0); }`
+  });
+  // Deliberately NOT `!important`. The real rule is not, and a consumer who
+  // does write `!important` on a type selector has overridden the component on
+  // purpose and can keep both halves. What this pins is the ordinary case: a
+  // plain type selector loses to a class, but only if the class actually
+  // DECLARES the property -- inheritance alone loses to it, which is exactly
+  // how this got through.
+  await page.waitForTimeout(150);
+
+  const compared = await page.getByTestId('counter').evaluate((node: HTMLElement) => {
+    const parent = node.parentElement;
+    if (!parent) {
+      throw new Error('no parent to compare against');
+    }
+    const wrap = getComputedStyle(parent);
+    const readable = (el: Element) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, family: s.fontFamily, color: s.color };
+    };
+    const glyph = node.querySelector('.animated-number-digit-glyph');
+    return {
+      parent: {
+        size: wrap.fontSize,
+        weight: wrap.fontWeight,
+        family: wrap.fontFamily,
+        color: wrap.color
+      },
+      root: readable(node),
+      glyph: glyph ? readable(glyph) : null
+    };
+  });
+
+  expect(compared.root.size, 'root font-size should track the surrounding text').toBe(
+    compared.parent.size
+  );
+  expect(compared.root.weight).toBe(compared.parent.weight);
+  expect(compared.root.color).toBe(compared.parent.color);
+  expect(compared.glyph?.size, 'the visible glyph is what the reader sees').toBe(
+    compared.parent.size
+  );
+  expect(compared.glyph?.weight).toBe(compared.parent.weight);
+  expect(compared.glyph?.color).toBe(compared.parent.color);
 });

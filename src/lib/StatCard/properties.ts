@@ -130,6 +130,38 @@ export type OptionalStatCardProperties = {
    */
   animateValue?: boolean;
   /**
+   * Rolls the animated values up from zero as the card appears, rather than
+   * painting them outright. Requires an animation mode to be active -- either
+   * `animateValue`, or `animatePrimary` having resolved a slot to animate.
+   * Ignored when neither applies, because there is then nothing to roll.
+   *
+   * Worth turning on for a card whose figures arrive once with a fetch and then
+   * do not change, which is the ordinary dashboard case -- otherwise the
+   * odometer has nothing to react to for the life of the page.
+   * @default false
+   */
+  animateOnMount?: boolean;
+  /**
+   * Animate exactly ONE value on the card instead of all of them.
+   *
+   * Prefer this to `animateValue` on a dashboard. A card carries several numeric
+   * slots at different sizes, and animating all of them puts motion on the small
+   * supporting figures as loudly as on the headline -- which reads as noise, and
+   * on the business variant actually animated the 18px rows while the 44px
+   * subtitle above them sat still.
+   * @default false
+   */
+  animatePrimary?: boolean;
+  /**
+   * Which slot `animatePrimary` animates.
+   *
+   * `'auto'` measures the rendered slots and picks the largest one holding a
+   * metric, so the card follows its own type scale. Name a slot to override:
+   * `'subtitle'`, `'value'`, or a row index. Ignored unless `animatePrimary`.
+   * @default 'auto'
+   */
+  primary?: 'auto' | 'subtitle' | 'value' | number;
+  /**
    * Multiple metric rows. When provided, replaces the single value/delta row with
    * a column of rows separated by dividers.
    */

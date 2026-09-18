@@ -8,6 +8,7 @@
     locale = 'en-US',
     format,
     live = 'off',
+    animateOnMount = false,
     ariaLabel,
     testId,
     classes
@@ -397,7 +398,7 @@
         <span
           class="animated-number-digit"
           style="--_animated-number-digit: {column.digit};"
-          {@attach roll(column.digit, mounted, numeric)}
+          {@attach roll(column.digit, mounted || animateOnMount, numeric)}
         >
           {#each glyphs as glyph, index (glyph)}
             <!--
@@ -449,6 +450,64 @@
     color: var(--animated-number-color, inherit);
   }
 
+  /*
+   * The number renders as the text it replaced, even against a host stylesheet
+   * that styles bare elements.
+   *
+   * Every part of this component is a `<span>`: the root, the columns, the
+   * glyphs and the selection-copy node. A consumer carrying a bare `span` rule
+   * therefore hits all of them, and a type selector beats plain inheritance, so
+   * the number silently stopped matching its own label -- which is a text node
+   * in the parent and never affected.
+   *
+   * Measured rather than imagined: Lighthouse ships a bare `span` rule in
+   * static/style/text.css that sets colour, font-size and font-weight from its
+   * own tokens, and adopting the odometer there took every headline dashboard
+   * metric from 24px/600 to 12px/400 in the tertiary text colour, across nine
+   * routes. Nothing in this repo could have shown it: our own pages carry no
+   * such rule.
+   *
+   * Declared on the classes rather than left to inheritance so a bare type
+   * selector cannot win. `line-height` is deliberately NOT inherited -- the
+   * column box is this component's own geometry and is set below.
+   */
+  .animated-number,
+  .animated-number-plain,
+  .animated-number-visual,
+  .animated-number-digit,
+  .animated-number-digit-glyph,
+  .animated-number-literal {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    font-style: inherit;
+    letter-spacing: inherit;
+  }
+
+  /*
+   * Colour is deliberately NOT in the group above, and the root is deliberately
+   * not in this one.
+   *
+   * The root already resolves its colour through the token, and that
+   * declaration sits EARLIER in this stylesheet. A grouped rule that also
+   * matched `.animated-number` would set `color: inherit` at equal specificity
+   * and later source order, so the token lost every time and the root silently
+   * took the parent's colour instead -- which is indistinguishable from the
+   * token working, because the token's own fallback IS `inherit`. Only a caller
+   * that actually set `--animated-number-color` would have seen it ignored.
+   *
+   * The descendants still need the explicit declaration: a bare `span` selector
+   * in a host stylesheet outranks plain inheritance, which is the whole reason
+   * this block exists.
+   */
+  .animated-number-plain,
+  .animated-number-visual,
+  .animated-number-digit,
+  .animated-number-digit-glyph,
+  .animated-number-literal {
+    color: inherit;
+  }
+
   .animated-number-visual {
     /* Decorative glyph content, same treatment Avatar, KeyboardInput, Tabs,
        Calendar and Draggable already give theirs. */
@@ -493,6 +552,21 @@
     height: var(--_animated-number-box, 1.76em);
     line-height: var(--_animated-number-box, 1.76em);
     margin-block: calc(-1 * var(--animated-number-fade-height, 0.28em));
+  }
+
+  /*
+   * `inline-block` above makes every column its own inline formatting context,
+   * and collapsible whitespace at the edges of one of those is dropped -- so a
+   * literal column holding exactly one space measured zero wide and "12m 15s"
+   * painted as "12m15s". `pre` is the narrowest fix that keeps the space: it
+   * changes nothing for a literal that is not whitespace, and a column is a
+   * single character, so there is no wrapping behaviour to lose.
+   *
+   * Digits are exempt because they are never whitespace and their column has
+   * its own width.
+   */
+  .animated-number-literal {
+    white-space: pre;
   }
 
   .animated-number-digit {

@@ -134,6 +134,26 @@ const EXCLUDED: Readonly<Record<string, string>> = {
 
 const FIXED_TIME = new Date('2026-01-15T09:30:00.000Z');
 
+// `install` is deliberately given an EARLIER time than `pauseAt` targets.
+//
+// `clock.install` does not stop time -- that is the whole point of pausing
+// separately below -- so the fake clock keeps ticking in the gap between the two
+// calls. `pauseAt` is implemented as a fast-forward, and fast-forwarding to an
+// instant the clock has already passed throws
+// `clock.pauseAt: Cannot fast-forward to the past`. Installing AT `FIXED_TIME`
+// therefore fails whenever that gap rounds above zero, which on an idle machine
+// it does not and under load it does: a full local run with the machine busy
+// failed `chat-compositions`, `iframe-viewer` and `media-upload` that way, and
+// all three passed on a quiet re-run of the same commit.
+//
+// Backdating the install makes the fast-forward always move FORWARDS, and land
+// on exactly `FIXED_TIME` regardless of how long the gap took. The margin is
+// virtual time, so it costs nothing in wall-clock, and it is consumed before
+// `goto` -- there is no document yet, so no timer can be scheduled inside the
+// window it skips.
+const INSTALL_MARGIN_MS = 60_000;
+const INSTALL_TIME = new Date(FIXED_TIME.getTime() - INSTALL_MARGIN_MS);
+
 // How much fake time to let elapse after load. Long enough for mount-time
 // timers (a demo's initial setTimeout, a staged reveal) to finish, short enough
 // that a repeating timer produces a small, fixed number of iterations.
@@ -526,7 +546,7 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // translateX(0). Of the 99 baselined routes, hitl is the only one whose
   // settled DOM changes at all -- the rest never had a timer still running by
   // the time they were captured.
-  await page.clock.install({ time: FIXED_TIME });
+  await page.clock.install({ time: INSTALL_TIME });
   await page.clock.pauseAt(FIXED_TIME);
   await page.goto(`/components/${slug}`, { waitUntil: 'networkidle' });
 

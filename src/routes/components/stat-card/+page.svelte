@@ -126,6 +126,36 @@
   <StatCard title="Avg Order Value" value="₹1,240" delta="0%" testId="basic-neutral" />
 </div>
 
+<h3>Primary-only animation</h3>
+<p>
+  <code>animatePrimary</code> animates ONE value per card. With
+  <code>primary="auto"</code> the card measures its own rendered slots and takes the largest that is actually
+  a metric &mdash; here the 44px subtitle, not the 18px rows beneath it. The identifier row is never animated
+  whatever the setting, because it is not a metric.
+</p>
+<div class="demo-row">
+  <StatCard
+    title="Total Sales"
+    subtitle="60000"
+    rows={[
+      { heading: 'PREPAID', value: '36000' },
+      { heading: 'COD', value: '24000' }
+    ]}
+    animatePrimary
+    animateOnMount
+    classes="primary-auto-demo"
+    testId="primary-auto"
+  />
+  <StatCard
+    title="Anomaly source"
+    subtitle="demo-store.myshopify.com"
+    rows={[{ heading: 'ACCOUNT', value: 'Shinchan Store GA4 (987654321)' }]}
+    animatePrimary
+    animateOnMount
+    testId="primary-identifiers"
+  />
+</div>
+
 <h3>With Subtitle</h3>
 <div class="demo-row">
   <StatCard
@@ -361,6 +391,16 @@
 </div>
 
 <style>
+  /* Reproduces the business variant's scale: a 44px subtitle above 18px rows.
+     `auto` has to pick the subtitle here, and that is the case that was broken. */
+  :global(.primary-auto-demo .statcard-subtitle) {
+    font-size: 44px;
+    font-weight: 600;
+  }
+  :global(.primary-auto-demo .statcard-value) {
+    font-size: 18px;
+  }
+
   .intro {
     color: var(--doc-text-secondary);
     margin-bottom: 24px;

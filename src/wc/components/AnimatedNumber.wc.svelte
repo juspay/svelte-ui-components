@@ -46,6 +46,7 @@
       // attribute is unaffected -- `<sui-animated-number aria-label="...">`
       // still works, only the JavaScript property name moved.
       animatedNumberAriaLabel: { type: 'String', attribute: 'aria-label' },
+      animateOnMount: { type: 'Boolean', attribute: 'animate-on-mount', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }

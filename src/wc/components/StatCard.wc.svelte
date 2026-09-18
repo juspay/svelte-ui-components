@@ -9,6 +9,14 @@
       deltaPositive: { type: 'Boolean', attribute: 'delta-positive', reflect: true },
       subtitle: { type: 'String', reflect: true },
       animateValue: { type: 'Boolean', attribute: 'animate-value', reflect: true },
+      // `animatePrimary` animates ONE value -- the card's largest metric -- and
+      // is what a dashboard should reach for; `animateValue` animates them all.
+      animatePrimary: { type: 'Boolean', attribute: 'animate-primary', reflect: true },
+      // 'auto' | 'subtitle' | 'value' | a row index. A number crosses the
+      // attribute boundary as a string, which StatCard's own String() coercion
+      // of `primary` already handles, so it is safe as an attribute.
+      primary: { type: 'String', reflect: true },
+      animateOnMount: { type: 'Boolean', attribute: 'animate-on-mount', reflect: true },
       // Complex props (arrays / objects / functions) cannot cross the HTML-attribute
       // boundary, so they are exposed as JS properties only:
       //   document.querySelector('sui-stat-card').rows = [{ heading: 'Revenue', value: '₹1.2Cr', change: 8.2 }];
@@ -30,6 +38,7 @@
 <script lang="ts">
   import StatCard from '$lib/StatCard/StatCard.svelte';
   import AnimatedNumber from '$lib/AnimatedNumber/AnimatedNumber.svelte';
+  import { isAnimatableMetric } from '$lib/StatCard/metric';
   import { dispatchEvents } from '../dispatch';
   let { statCardTitle, ...props } = $props();
 
@@ -49,10 +58,30 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+
+  const animatesValue = $derived(
+    isAnimatableMetric(String(props.value ?? '')) &&
+      (props.animatePrimary
+        ? props.primary === undefined || props.primary === 'auto' || props.primary === 'value'
+        : Boolean(props.animateValue))
+  );
 </script>
 
 <!-- Mirrors StatCard.svelte's own fallback for `value`, including its animateValue
-     branch. The wrapper passes `valueSnippet` UNCONDITIONALLY to bridge the
+     branch, and its metric gate -- `animateValue` alone used to be enough here,
+     so the wrapper rolled identifiers the Svelte component would have refused.
+
+     `animatePrimary` alone is NOT enough either: it means "animate ONE slot",
+     and that slot is only this one when `primary` resolves to the value. With
+     `primary="subtitle"` the wrapper animated the value while StatCard animated
+     the subtitle, so the custom element rolled two things and the component
+     rolled one.
+
+     `'auto'` is treated as selecting the value here because this fallback only
+     renders when the card has no rows, which leaves the value as the sole
+     animatable slot in every case but a subtitle that happens to be larger.
+     Resolving it exactly needs the measurement StatCard does on mounted DOM,
+     which a snippet cannot reach. The wrapper passes `valueSnippet` UNCONDITIONALLY to bridge the
      value-snippet slot, and StatCard gives that snippet full precedence -- so
      without this branch the custom element could never animate its value however
      the attribute was set, while the Svelte component could.
@@ -62,7 +91,10 @@
      inline form was long enough that Prettier broke the closing tag across lines,
      leaving the rule unable to see any fallback at all. -->
 {#snippet valueFallback()}
-  {#if props.animateValue}<AnimatedNumber value={props.value} />{:else}{props.value}{/if}
+  {#if animatesValue}<AnimatedNumber
+      value={props.value}
+      animateOnMount={props.animateOnMount}
+    />{:else}{props.value}{/if}
 {/snippet}
 
 <StatCard {...props} {...dispatchers} title={statCardTitle}>

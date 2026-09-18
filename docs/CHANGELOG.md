@@ -2,7 +2,199 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.29.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.29.1)
+
+AnimatedNumber renders a number as one overflow-clipped column per digit and
+rolls each column to its new digit. It accepts a `number`, formatted through
+`Intl.NumberFormat`, or an already-formatted `string`, which is what let nine
+components adopt it without any of them changing a public prop's type. Every
+adoption is a new boolean defaulting to false, and each has a test asserting
+that unset renders the previous markup with no AnimatedNumber in the DOM at all.
+
+The motion is not a CSS transition, and that is the component rather than a
+detail of it. Each column holds all ten glyphs and each glyph resolves its OWN
+position from one scalar: mod() places it on the wheel relative to the digit on
+show, round(down, ...) re-centres that so a glyph sits on whichever side it is
+nearer, and clamp() parks anything further than one box away at exactly one box
+away. The scalar is `--animated-number-digit + --animated-number-delta`: the
+digit jumps to its new value and the delta is animated from -delta back to 0, so
+their sum travels from the old digit to the new one.
+
+Animating each glyph's own transform instead interpolates the RESOLVED before
+and after values, so a glyph parked a full box above whose offset wrapped to a
+full box below is tweened straight through the middle -- 99 -&gt; 100 put a
+full-size 5 across the digits, caught frame by frame. Recomputing every offset
+from one moving scalar cannot do that. A single sliding strip cannot either, but
+pays for it at the wrap: 9 -&gt; 0 travels nine positions to express a step of one.
+Both are now pinned by tests that fail on the old behaviour.
+
+How far a wheel turns is taken from the direction the whole NUMBER moved rather
+than the column's own before-and-after. That is what makes 99 -&gt; 100 work:
+judged per column each nine sees a difference of -9 and rolls nine positions
+backwards while its neighbour rolls one forwards.
+
+Three things this cost that are worth recording:
+
+- `@property` declared inside a shadow root does not register, measured in both
+Chromium and WebKit. Relying on the at-rule would have left
+&lt;sui-animated-number&gt; silently un-animated while the Svelte component moved,
+which no unit test could see. Registration is done from script instead, and
+the custom elements were driven through both shadow boundaries to confirm it.
+- A burst dropped the "still rolling" class while four animations were still
+running, because each roll waits on the animations present when it started and
+an earlier roll waits on a strictly smaller set. Measured popping the outgoing
+digit out of existence from 948ms.
+- WebKit rounds the used height a percentage translate resolves against: at a
+70.39px box it parked a clamped glyph 70.0px away, leaving a 0.39px sliver of
+the wrong digit inside the window on every frame. The column and the glyph now
+share one box LENGTH, so they are the same size by construction.
+
+Without @property, mod(), round() and linear() the component changes instantly
+instead: transform falls back to none, which is where the current glyph already
+sits. The duration and easing chain is resolved in CSS and read back before
+anything animates, so --motion-duration, the component's own token and the
+prefers-reduced-motion block all work exactly as they would on a transition.
+
+A post-completion audit against the reference's full source found four more,
+each proved with a failing test before it was fixed:
+
+- The string path split its input with `\D`, which is ASCII-only without the
+`u` flag, so every Arabic-Indic, Bengali and Devanagari numeral counted as a
+non-digit and the leading run swallowed the whole string. The value, the
+accessible name and the absence of a throw all stayed correct -- the number
+just silently stopped rolling, on the path seven of the nine adopters use.
+The split now asks the same `digitValue` the columns do.
+- Literals were keyed by the column count, so adding a digit renumbered every
+literal after it and Svelte rebuilt each one: `99% -&gt; 100%` discarded the `%`
+node. Counted within the type instead, which still keeps accounting format's
+two `literal` parts distinct.
+- An empty value announced `role="img"` with `aria-label=""` -- a graphic with
+no accessible name, reachable from Badge, which renders
+`&lt;AnimatedNumber value={value ?? ''} /&gt;`. It is now a plain span unless it has
+something to say. `aria-live` stays regardless: a live region has to be in the
+DOM before the change it announces.
+- Ten internal custom properties shared the public `--animated-number-*`
+namespace with the seven documented tokens. Renamed to `--_animated-number-*`
+while this is still unpublished and the rename is free.
+
+The locale test that came out of the first of those was itself wrong: it wrote
+Devanagari code points literally, and engines disagree about which numbering
+system a locale resolves to -- bn-BD is `beng` in Node and Chromium but `latn`
+in WebKit, ne-NP is `deva` in Node and WebKit but `latn` in Chromium. It now
+formats its own input through the locale under test, which is the actual
+contract and holds everywhere.
+
+`BuiltinCell.svelte.test.ts` also carried an eslint error and a dead helper.
+Neither surfaced because `npm run lint` chains prettier before eslint with `&&`,
+and prettier already fails on release for an unrelated file.
+
+A second audit, this time of the nine adopters rather than the odometer, found
+one more. Every column keeps a visually-hidden node carrying the real value, so
+that selecting and copying the number yields the number rather than the glyph
+stack. Being clipped rather than `display: none` is what keeps it in the text
+layer where selection reaches it -- and that kept it in the accessibility tree
+too. Sitting inside the `role="img"` root was assumed to be enough, on the
+reading that `img` has presentational children; ARIA says a user agent SHOULD
+treat them that way and Chromium does not. Measured inside one counter:
+`image "99"`, `StaticText "99"` and `InlineTextBox "99"` -- the number announced
+twice, and for Badge, whose root is a `status` live region, twice on every
+change. It now carries `aria-hidden` of its own, which selection is unaffected
+by. `tests/animated-number-a11y.test.ts` reads the browser's own accessibility
+tree over CDP, because no DOM-level assertion can tell the two states apart.
+
+That audit also drove all nine adopters in a real browser for the first time --
+they were covered only by jsdom, which has no animation at all. All nine roll and
+settle correctly. Their accessibility trees now differ from the unanimated form
+only by `StaticText "x"` becoming `image "x"`, which is the point: the unit
+travels with the number for anyone navigating by graphic. Six are pixel-identical
+either way; Badge grows 1.39px taller and DeltaIndicator 3.31px wider, both
+documented, and Badge's is removed exactly by `--animated-number-row-height: 1em`.
+
+Two failures already on release are fixed here rather than separately, because
+one of them was hiding a defect in this branch. `npm run lint` chains prettier
+before eslint with `&&`, prettier failed on DateRangePicker.svelte, and so eslint
+had not run in that script for anyone. DateRangePicker.svelte is reformatted, and
+two check-focus-visible allowlist entries had stale line numbers -- the tool
+advises removing such entries, which here would turn two real, compensated
+outline suppressions into WCAG 2.4.7 violations, so the line numbers were
+corrected instead. `npm run lint` now reaches eslint and all seven contract
+checks.
+
+Review on the pull request found two more, both real and both reachable through
+ordinary props.
+
+The first is the same ASCII-only `\D` this commit already fixed once. `digitRun`
+in motion.ts is a separate code path that never got the same treatment, so
+`trendBetween` stripped every Arabic-Indic, Devanagari and Bengali numeral to an
+empty run, returned 0 for "no direction", and left each column judging itself --
+which is exactly the state that rolls a 9 -&gt; 0 column nine positions backwards.
+Measured on the real module: trendBetween('٩٩', '١٠٠') was 0, and wheelDelta(0,
+9, 0) was -9. It now reduces a run through the caller's own glyph lookup, and
+the default lookup reads any Unicode decimal digit rather than only ASCII.
+
+The second is that glyphs were built as `zero + index`, which assumes a
+numbering system's ten digits are ten consecutive code points. `hanidec` is not:
+its digits are the Han numerals, whose code points are scattered, so the derived
+list was ten unrelated characters and the number rendered as motionless
+literals. `zh-u-nu-hanidec` reaches it with a plain locale string. Separately,
+integer length counted `part.value.length`, which counts UTF-16 units, so every
+digit of a supplementary-plane system such as `mathbold` counted twice and the
+place-value keys stopped lining up across a magnitude change -- columns that
+should have survived were rebuilt. Glyphs now come from formatting 0-9 through
+the resolved system, and the length counts code points.
+
+Two CI jobs were failing for reasons that predate this branch. `svelte-check`
+had one error in tests/walkthrough/table.walkthrough.ts, which CI only ever runs
+on pull_request and so had never run on release's own pushes; narrowed rather
+than asserted, since that file is not a `.test.ts` and does not get the
+type-assertion exemption those have. And the visual suite had no baseline for
+the new route, which it generated itself in its pinned container; that PNG is
+committed here.
+
+The visual suite then failed on two routes this branch does not touch, and the
+cause turned out to predate it by a long way. `hitl` has been failing on every
+branch since the drain fix landed -- measured identical on fix/visual-clock-drain
+(#638, merged with this check red), on fix/633-select-auto-placement (#639) and
+on both runs here: 900x3519 against a 900x3517 baseline.
+
+`clock.install` does not stop the clock. It replaces the timer functions and the
+replacements keep ticking with real time, so elapsed time in the page was the
+`runFor` budget PLUS however long the run spent waiting -- and every wait between
+install and capture leaked in. On the hitl route, which advances 1500ms of
+budget, the page saw 9578ms with the drain and 4541ms without it, varying run to
+run (9312 / 9303 / 9341 / 9317 across four). Its demo auto-approves after a 10s
+countdown, so on a slow enough host the countdown finished mid-capture and the
+card rendered "Completed" instead of Confirm/Cancel -- 2px shorter, and a size
+mismatch is rejected before any pixel is compared, so the threshold that exists
+for this route's noise never applied. `carousel` is the same cause with a smaller
+number: autoplay every 2500ms, the track caught mid-slide at -41.3522 / -35.9429
+/ -41.342 on three consecutive runs. That one is intermittent, which is why it
+failed once here and passed on the re-run.
+
+`clock.pauseAt` is what stops it. Both routes then settle at exactly 1500ms every
+time: hitl holds Confirm/Cancel, carousel's track sits at translateX(0) -- which
+are the states their existing baselines already encode, so neither needed
+regenerating. Of the 99 baselined routes, hitl is the only one whose settled DOM
+changes at all; the other 98 had no timer still running by the time they were
+captured, which is why this went unnoticed.
+
+`settleClock` now asserts the page saw exactly its budget, per route and without
+a tolerance. That assumption is what the suite rests on and it was silently false
+throughout: nothing failed loudly, two routes just drifted, and the drift read as
+rendering noise for long enough to earn a threshold, a tolerance table and three
+rounds of investigation into the wrong layer. The assertion fails on the old
+behaviour and passes on the new one, checked both ways on both routes.
+
+The threshold in playwright.visual.config.ts is deliberately left at 0.2. Pinning
+the clock removes the source its value was derived from, but lowering it is a
+measurement to make in the container, not a number to guess at from here.
+
+-
+docs(parity): remove the Bits UI comparison documents ([8a2848f](https://github.com/juspay/svelte-ui-components/commit/8a2848f9b6a45255661a7e3215d6edab5f741345))
+-
+fix(visual): let the page drain between clock advances, not after all of them ([f0b1be6](https://github.com/juspay/svelte-ui-components/commit/f0b1be655d0f5f5f90ddea6cd17b67c879dbf63b))
+
+## [4.29.1](https://github.com/juspay/svelte-ui-components/compare/4.29.1..4.29.0) - 15 September 2026
 
 Updates `@vitest/mocker` from 4.1.8 to 5.0.0
 - [Release notes](https://github.com/vitest-dev/vitest/releases)

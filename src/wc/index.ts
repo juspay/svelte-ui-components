@@ -102,3 +102,8 @@ import './components/Separator.wc.svelte';
 import './components/Label.wc.svelte';
 import './components/AspectRatio.wc.svelte';
 import './components/RatingGroup.wc.svelte';
+
+// The standalone WC entry bundles its own Svelte runtime. Snippets created by a
+// consumer's separate `svelte` import close over different runtime state and fail
+// when this bundle renders them, so expose the matching factory from this entry.
+export { createRawSnippet } from 'svelte';

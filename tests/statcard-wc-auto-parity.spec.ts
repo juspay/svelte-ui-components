@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
 
@@ -20,6 +21,39 @@ import { gotoHydrated } from './support/hydrated';
  * into a same-origin page. `pnpm run build` runs build:wc, so it exists
  * whenever these run.
  */
+
+type ValueSnippetElement = HTMLElement & {
+  value: string;
+  valueSnippet: unknown;
+};
+
+type WcModule = {
+  createRawSnippet?: (factory: () => { render: () => string }) => unknown;
+};
+
+const loadBundleModule = async (page: import('@playwright/test').Page): Promise<void> => {
+  await gotoHydrated(page, '/');
+  await page.route('**/__sui-wc.js', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: readFileSync('dist-wc/index.js', 'utf8')
+    })
+  );
+  await page.addScriptTag({
+    content: `import('/__sui-wc.js').then((module) => {
+      window.__suiWcModule = module;
+    });`,
+    type: 'module'
+  });
+  await page.waitForFunction(
+    () =>
+      typeof customElements.get('sui-stat-card') !== 'undefined' &&
+      typeof (window as Window & { __suiWcModule?: WcModule }).__suiWcModule === 'object',
+    { timeout: 15_000 }
+  );
+};
+
 const loadBundle = async (page: import('@playwright/test').Page): Promise<void> => {
   await gotoHydrated(page, '/');
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
@@ -187,5 +221,61 @@ test.describe('sui-stat-card animatePrimary parity', () => {
     expect(slotted.assignedIds).toContain('slotted-value');
     // The consumer replaced the value rendering, so nothing of ours animates it.
     expect(slotted.odometers).toBe(0);
+  });
+
+  test('a pre-connect valueSnippet made by the WC bundle renders', async ({ page }) => {
+    await loadBundleModule(page);
+
+    const rendered = await page.evaluate(async () => {
+      const module = (window as Window & { __suiWcModule?: WcModule }).__suiWcModule;
+      if (typeof module?.createRawSnippet !== 'function') {
+        return { hasFactory: false, text: null };
+      }
+
+      const el = document.createElement('sui-stat-card') as ValueSnippetElement;
+      el.value = '60000';
+      el.valueSnippet = module.createRawSnippet(() => ({
+        render: () => '<span data-pw="pre-connect-snippet">FROM-JS</span>'
+      }));
+      document.body.appendChild(el);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      return {
+        hasFactory: true,
+        text: el.shadowRoot?.querySelector('[data-pw="pre-connect-snippet"]')?.textContent ?? null
+      };
+    });
+
+    expect(rendered.hasFactory, 'the WC entry must export its matching snippet factory').toBe(true);
+    expect(rendered.text).toBe('FROM-JS');
+  });
+
+  test('a post-connect valueSnippet made by the WC bundle replaces the value', async ({ page }) => {
+    await loadBundleModule(page);
+
+    const rendered = await page.evaluate(async () => {
+      const module = (window as Window & { __suiWcModule?: WcModule }).__suiWcModule;
+      if (typeof module?.createRawSnippet !== 'function') {
+        return { hasFactory: false, text: null };
+      }
+
+      const el = document.createElement('sui-stat-card') as ValueSnippetElement;
+      el.value = '60000';
+      document.body.appendChild(el);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      el.valueSnippet = module.createRawSnippet(() => ({
+        render: () => '<span data-pw="post-connect-snippet">UPDATED-FROM-JS</span>'
+      }));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      return {
+        hasFactory: true,
+        text: el.shadowRoot?.querySelector('[data-pw="post-connect-snippet"]')?.textContent ?? null
+      };
+    });
+
+    expect(rendered.hasFactory, 'the WC entry must export its matching snippet factory').toBe(true);
+    expect(rendered.text).toBe('UPDATED-FROM-JS');
   });
 });

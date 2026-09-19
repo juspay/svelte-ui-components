@@ -36,18 +36,21 @@ root rather than a build error. PieChart.wc.svelte carries the same shape for
 the same reason.
 
 The guard also stops this snippet shadowing `props.valueSnippet` in Svelte's
-spread-props lookup. An earlier version of this message claimed that made
-`el.valueSnippet = fn` work; it does not. Measured with a real `createRawSnippet`
-against a built element, the JS-assigned snippet still does not render, so
-something further down the custom-element prop path drops it. Not chased here.
-The light-DOM `value-snippet` slot is the supported route and is tested.
+spread-props lookup, so a JS-assigned snippet reaches StatCard before or after
+the element connects. A snippet created by a consumer's separate `svelte`
+runtime is not portable into the standalone WC bundle, however: its closure
+expects different runtime state and fails while rendering. The WC entry now
+exports its own `createRawSnippet`, and consumers use that matching factory.
+The light-DOM `value-snippet` slot remains the simpler route for plain HTML.
 
-Four browser cases, red-checked against the previous wrapper (3 of the 4 fail on
-it; the fourth guards that the fix does not break the slot it guards):
+Six browser cases cover the three animation paths, preserve the light-DOM slot,
+and prove JS-property assignment both before and after connection:
 - `auto` + larger subtitle animates ONE value  (the reported defect)
 - `auto` + larger value animates the VALUE     (impossible before, not merely wrong)
 - `animate-value` still animates through the element
 - slotted `value-snippet` content still replaces the built-in value
+- pre-connect `valueSnippet` from the WC-owned factory renders
+- post-connect `valueSnippet` from the WC-owned factory replaces the value
 
 Known and unchanged: `hasValueSnippetSlot` is read once at setup, so light-DOM
 content slotted after connect is not picked up. That is the same accepted

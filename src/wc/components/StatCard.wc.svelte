@@ -74,12 +74,11 @@
    * opinion to disagree with.
    *
    * It also stops this snippet shadowing `props.valueSnippet` in Svelte's
-   * spread-props lookup. That removes the shadowing, but it does NOT make
-   * `el.valueSnippet = fn` work end to end -- measured with a real
-   * `createRawSnippet` against a built element, and the snippet still does not
-   * render. Something further down the custom-element prop path drops it. Left
-   * as-is rather than guessed at: the light-DOM `value-snippet` slot is the
-   * supported route and is covered by tests.
+   * spread-props lookup, leaving a JS-assigned property working when no light-DOM
+   * slot was present at setup. Because the standalone WC bundle owns its Svelte
+   * runtime, consumers must create that property with the `createRawSnippet`
+   * exported by `@juspay/svelte-ui-components/wc`, not a separate `svelte`
+   * import; the latter closes over incompatible runtime state.
    */
   const hasValueSnippetSlot = $host().querySelector('[slot="value-snippet"]') !== null;
 </script>

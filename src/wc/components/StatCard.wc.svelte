@@ -37,8 +37,6 @@
 
 <script lang="ts">
   import StatCard from '$lib/StatCard/StatCard.svelte';
-  import AnimatedNumber from '$lib/AnimatedNumber/AnimatedNumber.svelte';
-  import { isAnimatableMetric } from '$lib/StatCard/metric';
   import { dispatchEvents } from '../dispatch';
   let { statCardTitle, ...props } = $props();
 
@@ -59,56 +57,66 @@
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 
-  const animatesValue = $derived(
-    isAnimatableMetric(String(props.value ?? '')) &&
-      (props.animatePrimary
-        ? props.primary === undefined || props.primary === 'auto' || props.primary === 'value'
-        : Boolean(props.animateValue))
-  );
+  /*
+   * Claimed only when the consumer really slotted content.
+   *
+   * Passing `valueSnippet` unconditionally made StatCard take its
+   * `{#if typeof valueSnippet === 'function'}` branch on EVERY `<sui-stat-card>`,
+   * and that branch is the one without `data-sc-slot="value"`. So through the
+   * custom element the value was never a candidate for `primary: 'auto'`, which
+   * measures `[data-sc-slot]` elements -- `auto` could only ever resolve to the
+   * subtitle. The wrapper then re-implemented the animation decision from props
+   * and animated the value as well, so the element rolled TWO values where the
+   * Svelte component rolls one.
+   *
+   * Guarding the snippet lets StatCard render its own value branch and make its
+   * own decision, which is the whole fix: the wrapper no longer has an animation
+   * opinion to disagree with.
+   *
+   * It also stops this snippet shadowing `props.valueSnippet` in Svelte's
+   * spread-props lookup. That removes the shadowing, but it does NOT make
+   * `el.valueSnippet = fn` work end to end -- measured with a real
+   * `createRawSnippet` against a built element, and the snippet still does not
+   * render. Something further down the custom-element prop path drops it. Left
+   * as-is rather than guessed at: the light-DOM `value-snippet` slot is the
+   * supported route and is covered by tests.
+   */
+  const hasValueSnippetSlot = $host().querySelector('[slot="value-snippet"]') !== null;
 </script>
 
-<!-- Mirrors StatCard.svelte's own fallback for `value`, including its animateValue
-     branch, and its metric gate -- `animateValue` alone used to be enough here,
-     so the wrapper rolled identifiers the Svelte component would have refused.
-
-     `animatePrimary` alone is NOT enough either: it means "animate ONE slot",
-     and that slot is only this one when `primary` resolves to the value. With
-     `primary="subtitle"` the wrapper animated the value while StatCard animated
-     the subtitle, so the custom element rolled two things and the component
-     rolled one.
-
-     `'auto'` is treated as selecting the value here because this fallback only
-     renders when the card has no rows, which leaves the value as the sole
-     animatable slot in every case but a subtitle that happens to be larger.
-     Resolving it exactly needs the measurement StatCard does on mounted DOM,
-     which a snippet cannot reach. The wrapper passes `valueSnippet` UNCONDITIONALLY to bridge the
-     value-snippet slot, and StatCard gives that snippet full precedence -- so
-     without this branch the custom element could never animate its value however
-     the attribute was set, while the Svelte component could.
-
-     Kept as a separate snippet rather than inlined into the slot because
-     check-wc-contract.js reads a slot's fallback with indexOf('</slot>'), and the
-     inline form was long enough that Prettier broke the closing tag across lines,
-     leaving the rule unable to see any fallback at all. -->
-{#snippet valueFallback()}
-  {#if animatesValue}<AnimatedNumber
-      value={props.value}
-      animateOnMount={props.animateOnMount}
-    />{:else}{props.value}{/if}
-{/snippet}
-
-<StatCard {...props} {...dispatchers} title={statCardTitle}>
-  {#snippet headerRight()}
-    <slot name="header-right"></slot>
-  {/snippet}
-  {#snippet footer()}
-    <slot name="footer"></slot>
-  {/snippet}
-  {#snippet valueSnippet()}
-    <slot name="value-snippet">{@render valueFallback()}</slot>
-  {/snippet}
-  <slot></slot>
-</StatCard>
+<!--
+  Two branches rather than one conditional snippet prop, because a `{#snippet}`
+  declared at the top level of the template is hoisted to module scope while the
+  `<slot>` inside it compiles to `$.slot(node, $$props, ...)` -- and `$$props`
+  only exists inside the component function. The hoisted version throws
+  `$$props is not defined` when rendered, which surfaces as a silently empty
+  shadow root rather than a build error. PieChart.wc.svelte carries the same
+  shape and the same reason.
+-->
+{#if hasValueSnippetSlot}
+  <StatCard {...props} {...dispatchers} title={statCardTitle}>
+    {#snippet headerRight()}
+      <slot name="header-right"></slot>
+    {/snippet}
+    {#snippet footer()}
+      <slot name="footer"></slot>
+    {/snippet}
+    {#snippet valueSnippet()}
+      <slot name="value-snippet"></slot>
+    {/snippet}
+    <slot></slot>
+  </StatCard>
+{:else}
+  <StatCard {...props} {...dispatchers} title={statCardTitle}>
+    {#snippet headerRight()}
+      <slot name="header-right"></slot>
+    {/snippet}
+    {#snippet footer()}
+      <slot name="footer"></slot>
+    {/snippet}
+    <slot></slot>
+  </StatCard>
+{/if}
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

@@ -2,7 +2,76 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.30.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.0)
+
+`&lt;sui-stat-card animate-primary primary="auto"&gt;` rolled TWO values where the
+Svelte component rolls one. Yama flagged it as MAJOR on #641; this is the fix.
+
+The wrapper passed `valueSnippet` UNCONDITIONALLY, to bridge the light-DOM
+`value-snippet` slot. That put StatCard permanently into its
+`{#if typeof valueSnippet === 'function'}` branch -- which is the one branch
+that does NOT carry `data-sc-slot="value"`. `measurePrimary` only scans
+`[data-sc-slot]`, so through the custom element the value was never a candidate
+for `primary: 'auto'` at all: `auto` could only ever resolve to the subtitle.
+The wrapper then re-implemented the animation decision from props and animated
+the value as well, so the element rendered a second odometer that the component
+never would.
+
+Patching that condition was not enough, and an earlier attempt at it is what
+Yama caught: it treated `'auto'` as "the value is primary", which is wrong
+exactly when the subtitle is larger, and it left `auto` unable to select the
+value in any case.
+
+So the wrapper stops having an opinion. `hasValueSnippetSlot` claims the snippet
+only when the consumer really slotted content -- the same `$host().querySelector`
+idiom Card.wc.svelte and ~12 other wrappers already use. Otherwise StatCard
+renders its own value branch and makes its own decision, which means one
+implementation of "which value is primary" instead of two that can disagree.
+
+Two branches rather than one conditional snippet prop: a `{#snippet}` declared
+at template top level is hoisted to module scope while the `&lt;slot&gt;` inside it
+compiles to `$.slot(node, $$props, ...)`, and `$$props` exists only inside the
+component function. The hoisted form throws at render as a silently empty shadow
+root rather than a build error. PieChart.wc.svelte carries the same shape for
+the same reason.
+
+The guard also stops this snippet shadowing `props.valueSnippet` in Svelte's
+spread-props lookup. An earlier version of this message claimed that made
+`el.valueSnippet = fn` work; it does not. Measured with a real `createRawSnippet`
+against a built element, the JS-assigned snippet still does not render, so
+something further down the custom-element prop path drops it. Not chased here.
+The light-DOM `value-snippet` slot is the supported route and is tested.
+
+Four browser cases, red-checked against the previous wrapper (3 of the 4 fail on
+it; the fourth guards that the fix does not break the slot it guards):
+- `auto` + larger subtitle animates ONE value  (the reported defect)
+- `auto` + larger value animates the VALUE     (impossible before, not merely wrong)
+- `animate-value` still animates through the element
+- slotted `value-snippet` content still replaces the built-in value
+
+Known and unchanged: `hasValueSnippetSlot` is read once at setup, so light-DOM
+content slotted after connect is not picked up. That is the same accepted
+limitation every host-guarded wrapper here carries, not something this
+introduces.
+
+Drops the now-dead `AnimatedNumber` import with the fallback snippet it served.
+eslint did not catch it: `.wc.svelte` files match an ignore pattern, so
+eslint-plugin-unused-imports never sees them. Yama did.
+
+Review round 2 also asked for the two `&lt;StatCard&gt;` branches to be collapsed into
+one call with `valueSnippet={hasValueSnippetSlot ? impl : props.valueSnippet}`.
+Tried it: it builds cleanly and then silently drops slotted content, because the
+top-level snippet is hoisted and its `&lt;slot&gt;` never assigns. The parity spec
+catches it. Kept the branching and recorded the measurement next to it.
+
+The two `auto` tests no longer gate their wait on an odometer existing -- a
+zero-animation regression would have surfaced as a wait timeout rather than a
+count. They wait for the card to render and then assert the count.
+
+-
+fix(stat-card): let StatCard decide which value animates, in the custom element too ([08c7ea4](https://github.com/juspay/svelte-ui-components/commit/08c7ea477c4ce6d6d7cffe5158b11953dc27e463))
+
+## [4.31.0](https://github.com/juspay/svelte-ui-components/compare/4.31.0..4.30.0) - 19 September 2026
 
 Two things found by adopting the odometer in a real dashboard rather than by any
 test in this repo.

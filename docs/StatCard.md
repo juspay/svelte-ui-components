@@ -391,6 +391,19 @@ Complex props (`rows`, `tooltip`, `checkbox`, `oncheckboxchange`) are functions/
 <sui-stat-card title="GMV" value="₹1.23Cr" animate-value></sui-stat-card>
 ```
 
+A JavaScript-assigned `valueSnippet` works before or after the element connects. Create it with the factory exported by the web-component entry, not with a separate `svelte` import: the standalone web-component bundle owns its own Svelte runtime, and snippets must use that same runtime.
+
+```js
+import { createRawSnippet } from '@juspay/svelte-ui-components/wc';
+
+const card = document.querySelector('sui-stat-card');
+card.valueSnippet = createRawSnippet(() => ({
+  render: () => '<strong>₹1.23Cr</strong>'
+}));
+```
+
+When `rows` is non-empty, StatCard renders its row layout instead of the single-value area, so `valueSnippet` is intentionally not rendered. Prefer the `value-snippet` light-DOM slot when plain HTML is sufficient.
+
 ### Web Component Events
 
 `oncheckboxchange` is available as a JS property, and the same toggle also dispatches a

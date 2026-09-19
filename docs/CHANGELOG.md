@@ -2,7 +2,143 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.29.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.30.0)
+
+Two things found by adopting the odometer in a real dashboard rather than by any
+test in this repo.
+
+The first is that the component was useless on exactly the surface it was built
+for. Rolling was gated on the mount latch, which is right for a number that was
+always going to be on screen and wrong for one that ARRIVES -- and actively
+wrong where the value then never changes again. That is the ordinary dashboard
+case: metrics land once with a fetch and sit there. Gated off on mount, such a
+number is static for its whole life and the odometer does nothing at all, so
+adopting it buys nothing. The previous commit's own adoption notes argued the
+first-paint suppression was a feature; on a dashboard it is the whole problem.
+
+`animateOnMount` rolls every column up from zero as the number appears. Opt-in,
+default off, and independent of the rolls that follow -- a later change animates
+either way. The mechanism needed nothing new: a newly-born column already rolls
+in from 0, because 0 is what it implicitly was before it existed. Only the latch
+had to let it. StatCard forwards it to all four of its AnimatedNumber sites.
+
+`nothing animates on first paint` still holds for every instance that did not
+ask, and now says so explicitly rather than by accident; the new test asserts
+the opt-in one DOES move, by sampling its rendered position rather than by
+counting animation objects, since an animation can exist and move nothing.
+
+The second is a space. Every column is `display: inline-block`, which makes each
+one its own inline formatting context, and collapsible whitespace at the edges
+of one of those is removed -- so a literal column holding one ordinary space
+rendered at zero width and the string closed up: "12m 15s" painted as "12m15s".
+Nothing here could have caught it. The accessible name is built from the value
+rather than the columns, so it still read "12m 15s"; the column count was right;
+only the pixels were wrong. Measured on the dashboard: the `m` literal 14.97px,
+the `s` 9.36px, the space between them 0.
+
+`white-space: pre` on the literal is the narrowest fix. It changes nothing for a
+literal that is not whitespace, and a column holds a single character, so there
+is no wrapping behaviour to lose. Digits are exempt -- never whitespace, and
+their column carries its own width. The test asserts the rendered WIDTH rather
+than the property, so it pins the behaviour rather than this fix, and it fails
+on the old CSS at exactly 0px.
+
+Reachable from any caller that formats its own string, which is seven of the
+nine adopters.
+
+A third thing, found by pixel-comparing all 85 Lighthouse routes before and
+after rather than by reading anything: a consumer's bare element selector
+repainted the number.
+
+Every part of this component is a `&lt;span&gt;` -- root, columns, glyphs, and the
+selection-copy node. Lighthouse ships a bare `span` rule in static/style/text.css
+setting colour, font-size and font-weight from its own tokens, and a type
+selector beats plain inheritance. So adopting the odometer took every headline
+dashboard metric from 24px/600 to 12px/400 in the tertiary text colour, on nine
+routes, while the label beside it -- a text node in a div -- was untouched.
+Before the adoption the value was itself a bare text node and inherited
+correctly, which is why no test here could have caught it and why the sweep did.
+
+The classes now declare the inherited font properties rather than leaving them
+to inheritance, so a plain type selector loses on specificity. `line-height` is
+deliberately excluded: the column box is this component's own geometry. The test
+injects the real rule shape -- without `!important`, because the real rule has
+none and a consumer who writes one has overridden on purpose -- and asserts
+against the PARENT's resolved font, since the contract is "renders as the text
+it replaces" rather than any fixed size. It fails on the old CSS at 9px against
+a 40px parent.
+
+Measured after the fix across the nine affected routes: 115 odometers, zero
+font mismatches against their parents.
+
+Adopting this on a real dashboard showed the opt-in was aimed wrongly, in two
+ways that only a populated page could reveal.
+
+A card has several numeric slots and they are not equally important. The business
+variant renders its headline in `subtitle` at 44px with supporting rows at 18-20px
+beneath it, so "animate this card's values" animated the small ones and left the
+number the card is about sitting still. Backwards, on every dashboard.
+
+And those values are not all metrics. The anomaly cards put a store domain and a
+GA4 account id through the same slot, so `demo-store.myshopify.com` and
+`Shinchan Store GA4 (987654321)` rolled digit by digit as though they were
+measurements.
+
+`animatePrimary` animates exactly ONE value per card. `primary` resolves three
+ways: 'auto' measures the card's own rendered slots and takes the largest that is
+actually a metric, or a caller names 'subtitle', 'value' or a row index. 'auto' is
+the default because it follows the card's type scale rather than a second copy of
+it kept in a mapper, and it is measured after mount because the sizes come from
+tokens a consuming app can override. `subtitle` is now animatable at all, which it
+was not.
+
+metric.ts decides what counts. Digits plus decoration -- currency, sign, percent,
+separators and SHORT unit words -- so `₹60k`, `90%`, `₹1.23Cr`, `12m 15s` and `-8%`
+animate, while a dotted hostname, a parenthesised id or any long alphabetic run
+does not. `animateValue` keeps its old meaning but is gated on the same test, so
+no path can animate an identifier any more.
+
+Measured on the dashboard after the change: /ai went from 15 animated values to 7,
+one per card, and the two 44px headlines now roll where they previously did not.
+/analytics went from 17 to 8. /ai/anomaly went from 26 to 0.
+
+The auto measurement re-runs when the card's values change, rather than once at
+mount. A card whose figures arrive from a fetch renders empty first -- the credit
+balance card mounted with no balance, so the measurement found no metric, and an
+attachment only re-runs when its argument changes, so it never looked again and
+the number arrived unanimated. Keying it on the values themselves also re-picks
+the primary if the card's content later changes shape.
+
+primary.test.ts pins the half of this that does not need a layout engine: an
+explicit `primary` animates exactly one slot, and the metric gate keeps an
+identifier out even when it IS the named slot or when `animateValue` asks for
+everything -- 15 cases.
+
+`auto` needs real font sizes, which jsdom reports as 0, so it is covered by
+tests/statcard-primary.test.ts in the browser: a card shaped like the business
+variant (44px subtitle over 18px rows) must animate the subtitle and nothing
+else, and must animate NOTHING on a card whose values are a hostname and a
+parenthesised account id. An earlier draft of this message claimed the browser
+suite already covered `auto`. It did not -- there was no such test, and the
+default path every adopter uses was the one path with no end-to-end coverage.
+
+The custom-element wrappers declare the new props. prop-parity caught that they
+did not: a prop the Svelte component accepts and the element does not is a
+capability that silently exists in one build and not the other. StatCard's value
+fallback also honours `animatePrimary`, not only `animateValue`, so the element
+can animate its value however the flag is set -- the same reason that branch
+exists at all.
+
+The StatCard demo route gains the shape this exists for -- a 44px subtitle over
+18px rows -- and a second card whose values are a hostname and a parenthesised
+account id, so both halves of `auto` are visible and testable in a browser. The
+first test fails on the old behaviour: with subtitle animation removed, no slot
+animates at all and the card reports its three slots unanimated.
+
+-
+feat(animated-number): add an entry animation, and keep a literal space from collapsing ([8339db8](https://github.com/juspay/svelte-ui-components/commit/8339db8888b69f917094bf3f77b17680ec95f0c9))
+
+## [4.30.0](https://github.com/juspay/svelte-ui-components/compare/4.30.0..4.29.1) - 18 September 2026
 
 AnimatedNumber renders a number as one overflow-clipped column per digit and
 rolls each column to its new digit. It accepts a `number`, formatted through

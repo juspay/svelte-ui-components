@@ -2,7 +2,32 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.1)
+
+`eslint.config.js` ignores `src/wc/**` wholesale. The exclusion arrived with
+the wrapper build in b209cb7 and carries no stated reason, and it has a cost:
+a dead `AnimatedNumber` import survived a refactor in StatCard.wc.svelte until
+a reviewer read the diff, because `unused-imports/no-unused-imports` never ran
+on the file. `pnpm run lint` was green the whole time.
+
+Un-ignoring the directory is not a small change -- the main config over
+`src/wc/**` reports 106 errors today, mostly `no-restricted-syntax` and
+type-assertion rules the wrappers were never written against. That is a real
+cleanup and it is not this one.
+
+So this runs exactly one rule over exactly that directory. It is not a step
+toward linting `src/wc/**` properly; it is the narrow rule that pays for itself
+now. Red-checked: injecting an unused import into a wrapper fails it.
+
+`reportUnusedDisableDirectives` is off here because the wrappers' inline
+`@typescript-eslint` disables are load-bearing under the main config and only
+look unused under this narrowed one -- reporting them would be an artefact of
+the narrowing.
+
+-
+chore(lint): catch dead imports in the web-component wrappers ([5b19fb8](https://github.com/juspay/svelte-ui-components/commit/5b19fb84245996e6b141256b7f4c5a3d50038d4d))
+
+## [4.31.1](https://github.com/juspay/svelte-ui-components/compare/4.31.1..4.31.0) - 19 September 2026
 
 `&lt;sui-stat-card animate-primary primary="auto"&gt;` rolled TWO values where the
 Svelte component rolls one. Yama flagged it as MAJOR on #641; this is the fix.

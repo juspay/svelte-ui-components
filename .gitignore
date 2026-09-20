@@ -19,6 +19,7 @@ test-results-walkthrough/
 playwright-report/
 playwright-report-visual/
 playwright-report-walkthrough/
+.playwright-fixtures/
 
 # scripts/check-contrast.mjs output
 contrast-report/

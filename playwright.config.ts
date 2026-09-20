@@ -1,5 +1,6 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { FUNCTIONAL, playwrightPort, reuseExistingServer } from './scripts/pw-port.js';
+import { fixtureBaseURL, fixturePort } from './tests/support/fixture-server';
 
 // Derived from this checkout's path, so two worktrees never share a server.
 // 4173 is vite's shared default and a preview server from an unrelated project
@@ -9,15 +10,23 @@ import { FUNCTIONAL, playwrightPort, reuseExistingServer } from './scripts/pw-po
 const port = playwrightPort(FUNCTIONAL);
 
 const config: PlaywrightTestConfig = {
-  webServer: {
-    command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
-    port,
-    // Only reuse a server on a port someone named deliberately; see
-    // scripts/pw-port.ts. On a derived port, `--strictPort` failing loudly beats
-    // silently testing another checkout's build.
-    reuseExistingServer: reuseExistingServer(),
-    timeout: 120_000
-  },
+  webServer: [
+    {
+      command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
+      port,
+      // Only reuse a server on a port someone named deliberately; see
+      // scripts/pw-port.ts. On a derived port, `--strictPort` failing loudly beats
+      // silently testing another checkout's build.
+      reuseExistingServer: reuseExistingServer(),
+      timeout: 120_000
+    },
+    {
+      command: `pnpm exec vite build --config vite.config.fixtures.ts && pnpm exec vite preview --config vite.config.fixtures.ts --port ${fixturePort} --strictPort`,
+      url: `${fixtureBaseURL}/form-association/`,
+      reuseExistingServer: false,
+      timeout: 120_000
+    }
+  ],
   testDir: 'tests',
   testMatch: /(.+\.)?(test|spec)\.[jt]s/,
   timeout: 30_000,

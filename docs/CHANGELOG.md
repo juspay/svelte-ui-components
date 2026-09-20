@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.2)
+
+-
+fix(stat-card): support value snippets through the WC bundle ([3893440](https://github.com/juspay/svelte-ui-components/commit/3893440ee9b5f7bc3433991b3c53af78d16990c8))
+
+## [4.31.2](https://github.com/juspay/svelte-ui-components/compare/4.31.2..4.31.1) - 20 September 2026
 
 `eslint.config.js` ignores `src/wc/**` wholesale. The exclusion arrived with
 the wrapper build in b209cb7 and carries no stated reason, and it has a cost:
@@ -61,21 +66,18 @@ root rather than a build error. PieChart.wc.svelte carries the same shape for
 the same reason.
 
 The guard also stops this snippet shadowing `props.valueSnippet` in Svelte's
-spread-props lookup, so a JS-assigned snippet reaches StatCard before or after
-the element connects. A snippet created by a consumer's separate `svelte`
-runtime is not portable into the standalone WC bundle, however: its closure
-expects different runtime state and fails while rendering. The WC entry now
-exports its own `createRawSnippet`, and consumers use that matching factory.
-The light-DOM `value-snippet` slot remains the simpler route for plain HTML.
+spread-props lookup. An earlier version of this message claimed that made
+`el.valueSnippet = fn` work; it does not. Measured with a real `createRawSnippet`
+against a built element, the JS-assigned snippet still does not render, so
+something further down the custom-element prop path drops it. Not chased here.
+The light-DOM `value-snippet` slot is the supported route and is tested.
 
-Six browser cases cover the three animation paths, preserve the light-DOM slot,
-and prove JS-property assignment both before and after connection:
+Four browser cases, red-checked against the previous wrapper (3 of the 4 fail on
+it; the fourth guards that the fix does not break the slot it guards):
 - `auto` + larger subtitle animates ONE value  (the reported defect)
 - `auto` + larger value animates the VALUE     (impossible before, not merely wrong)
 - `animate-value` still animates through the element
 - slotted `value-snippet` content still replaces the built-in value
-- pre-connect `valueSnippet` from the WC-owned factory renders
-- post-connect `valueSnippet` from the WC-owned factory replaces the value
 
 Known and unchanged: `hasValueSnippetSlot` is read once at setup, so light-DOM
 content slotted after connect is not picked up. That is the same accepted

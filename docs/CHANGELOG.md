@@ -2,7 +2,107 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.3)
+
+Builds a named-tier CSS token system (--duration-*, --ease-*, --distance-*)
+sitting between each component's own override token and the existing
+--motion-duration/--motion-easing root, documented in DESIGN_PRINCIPLES.md
+and anchored on values this library's own AI/chat components already
+proved out.
+
+## Motion mechanics
+
+Modal, Sheet, CommandMenu, Menu and ContextMenu are tokenized via a new
+shared src/lib/Animations/tokenizedFly.ts helper (reads duration/distance/
+easing from getComputedStyle: element token -&gt; named tier -&gt; root token,
+first non-empty wins, real cubic-bezier() parsing via a Newton-Raphson
+solver verified against a published CSS reference value and an
+independent brute-force implementation). All five keep Svelte's in:/out:
+transition directives rather than moving to @starting-style: they share a
+global scroll-lock reference count and dismissal-owner stack, and the
+outro-wait those directives provide is load-bearing for that cleanup
+timing. Entrance travel distance drops from 300-500px to 60px (frame-
+scrubbed against several candidates -- reads as sliding into place, not
+flying in). CommandMenu/Menu/ContextMenu gain a tokenized entrance where
+none existed before.
+
+Toast is fully migrated to CSS-native @starting-style + allow-discrete
+(zero animation JavaScript) -- the one component with no side effect
+beyond a completion callback, so no outro-wait is load-bearing. Fixes a
+real, empirically-confirmed reduced-motion staleness bug as a side
+effect: the old check was a $derived reading a plain, non-reactive
+function, so toggling the OS preference mid-session could leave it stale.
+A CSS media query has no dependency list to get stale the same way.
+
+ThinkingIndicator/ToolCallLog/TaskList/ChatBubble converge on one shared
+--ease-smooth-out token (the two prior curves were frame-scrubbed and
+found visually identical). The chart family and ~20 more components adopt
+the token tier additively, with no rendered-value change. Two standalone
+bugs fixed: MediaUpload's reduced-motion guard targeted a class absent
+from its markup, and RatingGroup's hover scale had no transition at all
+(now guarded under prefers-reduced-motion itself).
+
+## Correctness fixes from review
+
+An external review pass plus three independent adversarial-review agents
+found and verified several real issues beyond the initial implementation,
+all fixed here:
+
+- CommandMenu/Menu/ContextMenu/Sheet's close()/selectItem() (and Modal's
+handleEscape/handlePopstate, via the debounce() it already used for
+handleOverlayClick) were not idempotent: the new out: transitions keep
+a closing panel's handlers live for the outro's duration, so a second
+Escape/click/selection landing in that window could fire onclose/
+onselect a second time. All five are now guarded.
+- CommandMenu/Menu/ContextMenu's panels now go `inert` the instant they
+close, not only once their outro finishes, so a screen reader doesn't
+perceive a still-fully-exposed dialog/menu after aria-expanded already
+reports it closed. Verified live that this only works when applied to
+the element actually carrying the out: transition, not an ancestor --
+Svelte stops reactively updating an ancestor's own bindings once a
+descendant's outro begins.
+- Checkbox/Radio's --checkbox-transition/--radio-transition are restored
+to wrapping the WHOLE transition value (matching every sibling
+"-transition" token in this same change), not just the duration slot --
+the prior shape broke a consumer override that already included its own
+easing keyword, silently dropping the whole declaration.
+- Gallery's lightboxFade now gives an explicitly-passed
+lightboxTransitionDuration prop precedence over the ambient CSS token
+chain, not the reverse.
+- tokenizedFly.ts's parseCssTime/parseCssLength now reject a
+unit-matching-but-numberless value (NaN bypasses `??`'s null/undefined-
+only check) instead of letting it flow into the transition output, and
+its distance resolution now clamps to a non-negative magnitude so a
+misconfigured negative distance token cannot flip travel direction,
+contradicting its own documented sign-preservation invariant.
+
+One known, deliberately-deferred limitation, documented in place rather
+than patched half-verified: CommandMenu's opener-focus capture only runs
+on a fresh DOM mount, not on every logical open, so reopening via a
+different trigger while still mid-outro from a prior close can restore
+focus to the wrong (but still valid) opener. A correct fix needs
+reactive re-capture that stays shadow-DOM-aware without an already-
+connected node to anchor to, and risks a worse regression (focus
+restoring nowhere) if done without live-browser verification.
+
+## Verification
+
+pnpm run check / lint / vitest all clean (2385 tests, including ~25 new
+ones added by this change: tokenizedFly.ts's bezier solver, token
+resolution, and reduced-motion backstop; idempotency and inert-timing
+regressions for all five tokenized overlay components). Docker-pinned
+Playwright visual suite: 94 passed, 5 re-confirmed clean on an isolated
+re-run after flagging as end-of-run resource fatigue in the initial
+sequential pass (not pixel diffs), 1 pre-existing documented exclusion --
+zero unexpected visual regressions anywhere in the library. Live-browser
+spot checks on Modal/Sheet/Toast/CommandMenu confirmed correct open/
+close, scroll-lock, and a mid-transition capture directly confirming the
+60px distance and direction resolve correctly at runtime.
+
+-
+feat(motion): unified motion token system, tokenized overlay transitions ([13cd979](https://github.com/juspay/svelte-ui-components/commit/13cd979ba3be1d1df4324f9e7402691a62bf1b7d))
+
+## [4.31.3](https://github.com/juspay/svelte-ui-components/compare/4.31.3..4.31.2) - 20 September 2026
 
 -
 fix(stat-card): support value snippets through the WC bundle ([3893440](https://github.com/juspay/svelte-ui-components/commit/3893440ee9b5f7bc3433991b3c53af78d16990c8))

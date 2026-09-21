@@ -140,12 +140,14 @@
     background-color: var(--slider-unchecked-color, #ccc);
     -webkit-transition: var(
       --toggle-slider-transition,
-      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+      all
+        var(--toggle-slider-transition-duration, var(--duration-slow, var(--motion-duration, 0.4s)))
         var(--toggle-slider-transition-easing, var(--motion-easing, ease))
     );
     transition: var(
       --toggle-slider-transition,
-      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+      all
+        var(--toggle-slider-transition-duration, var(--duration-slow, var(--motion-duration, 0.4s)))
         var(--toggle-slider-transition-easing, var(--motion-easing, ease))
     );
   }
@@ -161,12 +163,14 @@
     background-color: var(--toggle-slider-before-background-color, white);
     -webkit-transition: var(
       --toggle-slider-transition,
-      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+      all
+        var(--toggle-slider-transition-duration, var(--duration-slow, var(--motion-duration, 0.4s)))
         var(--toggle-slider-transition-easing, var(--motion-easing, ease))
     );
     transition: var(
       --toggle-slider-transition,
-      all var(--toggle-slider-transition-duration, var(--motion-duration, 0.4s))
+      all
+        var(--toggle-slider-transition-duration, var(--duration-slow, var(--motion-duration, 0.4s)))
         var(--toggle-slider-transition-easing, var(--motion-easing, ease))
     );
   }

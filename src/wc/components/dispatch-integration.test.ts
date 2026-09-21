@@ -161,6 +161,10 @@ describe('Toast.wc.svelte (ontoasthide, 0 arguments)', () => {
     el.ontoasthide = original;
     // @ts-expect-error -- declared custom-element prop, not typed on HTMLElement
     el.message = 'saved';
+    // @ts-expect-error -- declared custom-element prop, not typed on HTMLElement
+    el.rightIcon = 'x'; // renders the close button -- the only public way to
+    // drive Toast's internal showToast to false, which handleTransitionEnd's
+    // guard now requires (see below).
     await tick();
 
     let seenDetail: unknown = 'not fired';
@@ -170,13 +174,22 @@ describe('Toast.wc.svelte (ontoasthide, 0 arguments)', () => {
       seenDetail = (e as CustomEvent).detail;
     });
 
-    // Toast.svelte's handleAnimationEnd runs off the root element's own 'outroend'
-    // listener (onoutroend={handleAnimationEnd}), fired for real once its out:fly
-    // transition finishes. Dispatching that event directly drives the same handler
-    // without depending on jsdom completing a real CSS/JS transition on a timer.
+    // Post CSS-native migration, Toast.svelte's handleTransitionEnd fires
+    // ontoasthide off the root element's own 'transitionend' for the opacity
+    // property (ontransitionend={handleTransitionEnd}), guarded on
+    // `!showToast` so the entrance's own opacity transition can't trigger it.
+    // The real close button is the only way to reach showToast=false from
+    // this WC-level test (internal $state, not a prop) -- clicking it exactly
+    // like a user would, then dispatching transitionend directly drives the
+    // handler without depending on jsdom completing a real CSS transition on
+    // a timer.
     const root = el.shadowRoot?.querySelector('[role="alert"]');
     expect(root).not.toBeNull();
-    root?.dispatchEvent(new Event('outroend'));
+    const closeButton = el.shadowRoot?.querySelector('.close-button');
+    expect(closeButton).not.toBeNull();
+    closeButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    root?.dispatchEvent(new TransitionEvent('transitionend', { propertyName: 'opacity' }));
 
     expect(fired).toBe(1);
     expect(seenDetail).toBeNull();

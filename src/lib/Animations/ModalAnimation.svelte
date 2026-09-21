@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { fly, fade } from 'svelte/transition';
+  import { linear } from 'svelte/easing';
+  import { tokenizedFly } from './tokenizedFly';
   import { prefersReducedMotion } from '../utils';
   import type { ModalAlign, ModalEntryAnimation } from '$lib/Modal/properties';
   import type { ModalTransition } from '$lib/types';
@@ -31,7 +32,11 @@
     // paints the modal 300px off-target on its first frame and then snaps. Returning
     // `base` unchanged is exactly "appear in place" -- it already has x and y at 0 --
     // so only the duration needs zeroing alongside it. These values feed
-    // `in:fly|global={...}`, which no stylesheet can reach, so the guard is here.
+    // `in:tokenizedFly|global={...}`: x/y at 0 stay exactly 0 regardless of any
+    // distance token (tokenizedFly preserves a 0 rather than resizing it). A
+    // consumer-set duration token can no longer revive motion here either --
+    // tokenizedFly's own reduced-motion backstop (reducedMotion.current) clamps
+    // duration to near-zero regardless of what any token chain resolves to.
     if (prefersReducedMotion()) {
       return { ...base, duration: 0 };
     }
@@ -61,6 +66,64 @@
   // rather than argue the distinction at every call site.
   let fadeAnimationProperties = $derived({ duration: prefersReducedMotion() ? 0 : 300 });
 
+  // Open/close get distinct duration tokens (the literal fallback stays 380 both
+  // ways, matching flyAnimationProperties today) so a consumer can set an
+  // asymmetric close duration without this component inventing that gap itself.
+  // The fade-shaped branches below reuse the same token names: exactly one of
+  // the four template branches renders per instance, so "content-open" means
+  // the same thing to a consumer whether this instance flies or fades in.
+  // Each token array is element-token -> --motion-duration/-easing root, skipping
+  // a named tier: 380ms/300ms don't match any named duration tier, consistent
+  // with every other agent in this batch skipping non-matching literals rather
+  // than forcing one. --distance-overlay is the named tier both fly branches
+  // share (60px, this batch's Modal/Sheet travel-distance reduction).
+  let flyInParams = $derived({
+    x: flyAnimationProperties.x,
+    y: flyAnimationProperties.y,
+    durationTokens: ['--modal-content-open-transition-duration', '--motion-duration'],
+    fallbackDuration: flyAnimationProperties.duration,
+    distanceTokens: ['--modal-content-open-transition-distance', '--distance-overlay'],
+    fallbackDistance: 60,
+    easingTokens: ['--modal-content-open-transition-easing', '--ease-smooth-out', '--motion-easing']
+  });
+  let flyOutParams = $derived({
+    x: flyAnimationProperties.x,
+    y: flyAnimationProperties.y,
+    durationTokens: ['--modal-content-close-transition-duration', '--motion-duration'],
+    fallbackDuration: flyAnimationProperties.duration,
+    distanceTokens: ['--modal-content-close-transition-distance', '--distance-overlay'],
+    fallbackDistance: 60,
+    easingTokens: [
+      '--modal-content-close-transition-easing',
+      '--ease-smooth-out',
+      '--motion-easing'
+    ]
+  });
+  // No distanceTokens: these branches are opacity-only, same as fade's own
+  // params today. `easing` stays the ultimate JS fallback -- tokenizedFly
+  // otherwise defaults to cubicOut (fly's default), fade's own default is
+  // linear -- used only if no easingTokens entry resolves either.
+  let fadeInParams = $derived({
+    durationTokens: ['--modal-content-open-transition-duration', '--motion-duration'],
+    fallbackDuration: fadeAnimationProperties.duration,
+    easingTokens: [
+      '--modal-content-open-transition-easing',
+      '--ease-smooth-out',
+      '--motion-easing'
+    ],
+    easing: linear
+  });
+  let fadeOutParams = $derived({
+    durationTokens: ['--modal-content-close-transition-duration', '--motion-duration'],
+    fallbackDuration: fadeAnimationProperties.duration,
+    easingTokens: [
+      '--modal-content-close-transition-easing',
+      '--ease-smooth-out',
+      '--motion-easing'
+    ],
+    easing: linear
+  });
+
   let useFlyAnimation = $derived(
     entryAnimation != null ? entryAnimation !== 'fade' : align === 'top' || align === 'bottom'
   );
@@ -70,8 +133,8 @@
 {#if enable}
   {#if useFlyAnimation && useOutTransition}
     <div
-      in:fly|global={flyAnimationProperties}
-      out:fly|global={flyAnimationProperties}
+      in:tokenizedFly|global={flyInParams}
+      out:tokenizedFly|global={flyOutParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}
     >
@@ -79,7 +142,7 @@
     </div>
   {:else if useFlyAnimation}
     <div
-      in:fly|global={flyAnimationProperties}
+      in:tokenizedFly|global={flyInParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}
     >
@@ -87,8 +150,8 @@
     </div>
   {:else if useOutTransition}
     <div
-      in:fade|global={fadeAnimationProperties}
-      out:fade|global={fadeAnimationProperties}
+      in:tokenizedFly|global={fadeInParams}
+      out:tokenizedFly|global={fadeOutParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}
     >
@@ -96,7 +159,7 @@
     </div>
   {:else}
     <div
-      in:fade|global={fadeAnimationProperties}
+      in:tokenizedFly|global={fadeInParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}
     >

@@ -88,6 +88,17 @@ Override these custom properties to theme the component.
 | `--command-menu-max-height`    | `60vh`                           | max-height       | Maximum height of the dialog panel before scrolling. |
 | `--command-menu-border`        | `1px solid #e2e8f0`              | border           | Border of the dialog panel.                          |
 
+### Dialog Transition
+
+Tokens are read via `getComputedStyle` rather than CSS cascading, so each is checked in the
+order listed below rather than relying on `var()` fallback.
+
+| Variable                                    | Default   | CSS Property        | Description                                                                                                        |
+| -------------------------------------------- | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--command-menu-panel-transition-duration`  | `200ms`   | transform, opacity | Duration of the dialog panel's entrance/exit transition. Checked in order: this token, then `--duration-base`, then `--motion-duration`, then `200ms`. |
+| `--command-menu-panel-transition-distance`  | `30px`    | transform            | Distance (px) the dialog panel travels on entrance/exit. Checked in order: this token, then `--distance-large`, then `30px`.                            |
+| `--command-menu-panel-transition-easing`    | `cubicOut`| transform, opacity | Easing curve of the transition, parsed from a CSS easing keyword or `cubic-bezier(...)`. Checked in order: this token, then `--ease-smooth-out`, then `--motion-easing`, then `cubicOut`. |
+
 ### Search Input
 
 | Variable                                 | Default     | CSS Property  | Description                                     |

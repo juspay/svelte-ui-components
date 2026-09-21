@@ -806,7 +806,8 @@
     pointer-events: none;
   }
   .sankey-link {
-    transition: stroke-opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: stroke-opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
@@ -815,7 +816,8 @@
     outline-offset: var(--sankey-focus-outline-offset, 2px);
   }
   .sankey-node {
-    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
@@ -839,7 +841,8 @@
     stroke-width: var(--sankey-label-halo-width, 0);
     stroke-linejoin: round;
     pointer-events: none;
-    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
   }
   .sankey-col-label {

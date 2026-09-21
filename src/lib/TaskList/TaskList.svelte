@@ -148,7 +148,11 @@
        and both fall back through the library-wide --motion-* tokens. */
     animation: task-list-fade-up
       var(--task-list-row-animation-duration, var(--motion-duration, 320ms))
-      var(--task-list-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
+      var(
+        --task-list-ease,
+        var(--ease-smooth-out, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1)))
+      )
+      both;
   }
 
   .row-glyph {
@@ -206,7 +210,11 @@
     color: var(--task-list-done-color, #6b6b6b);
     animation: task-list-check-pop
       var(--task-list-check-pop-animation-duration, var(--motion-duration, 200ms))
-      var(--task-list-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
+      var(
+        --task-list-ease,
+        var(--ease-smooth-out, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1)))
+      )
+      both;
   }
   .glyph-x {
     color: var(--task-list-error-color, #c93f38);

@@ -1122,7 +1122,21 @@
     cursor: pointer;
     outline: none;
     -webkit-tap-highlight-color: transparent;
-    transition: var(--select-trigger-transition, border-color 0.15s, box-shadow 0.15s);
+    transition: var(
+      --select-trigger-transition,
+      border-color
+        var(
+          --select-trigger-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
+        var(--select-trigger-transition-easing, var(--motion-easing, ease)),
+      box-shadow
+        var(
+          --select-trigger-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
+        var(--select-trigger-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .select-trigger :global(.select-left-icon) {
@@ -1269,7 +1283,8 @@
     height: var(--select-arrow-size, 16px);
     color: var(--select-arrow-color, #666666);
     flex-shrink: 0;
-    transition: transform var(--select-arrow-transition-duration, var(--motion-duration, 0.15s))
+    transition: transform
+      var(--select-arrow-transition-duration, var(--duration-quick, var(--motion-duration, 0.15s)))
       var(--select-arrow-transition-easing, var(--motion-easing, ease));
   }
 
@@ -1450,9 +1465,16 @@
     color: var(--select-option-indicator-color, currentColor);
     transition:
       background-color
-        var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+        var(
+          --select-option-indicator-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--select-option-indicator-transition-easing, var(--motion-easing, ease)),
-      border-color var(--select-option-indicator-transition-duration, var(--motion-duration, 0.15s))
+      border-color
+        var(
+          --select-option-indicator-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--select-option-indicator-transition-easing, var(--motion-easing, ease));
   }
 

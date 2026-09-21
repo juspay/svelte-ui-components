@@ -542,7 +542,7 @@
      consumer overriding the token is most likely adding more of it. Dropping the
      whole declaration is right here because every end state is a resting state. */
   @media (prefers-reduced-motion: reduce) {
-    .media-item {
+    .card {
       transition: none;
     }
   }

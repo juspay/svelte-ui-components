@@ -153,7 +153,12 @@
       )
     );
     outline: none;
-    transition: var(--slider-transition, background 0.2s ease);
+    transition: var(
+      --slider-transition,
+      background
+        var(--slider-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--slider-transition-easing, var(--motion-easing, ease))
+    );
     cursor: pointer;
   }
 
@@ -174,9 +179,17 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+      transform
+        var(
+          --slider-thumb-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
-      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+      opacity
+        var(
+          --slider-thumb-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 
@@ -190,9 +203,17 @@
     opacity: var(--slider-thumb-opacity, 1);
     cursor: pointer;
     transition:
-      transform var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+      transform
+        var(
+          --slider-thumb-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--slider-thumb-transition-easing, var(--motion-easing, ease)),
-      opacity var(--slider-thumb-transition-duration, var(--motion-duration, 0.15s))
+      opacity
+        var(
+          --slider-thumb-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
         var(--slider-thumb-transition-easing, var(--motion-easing, ease));
   }
 

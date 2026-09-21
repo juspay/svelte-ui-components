@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { HOST_EVENT_HANDLER_PROPS } from './host-event-handler-props.js';
 import { DISPATCH_COLLISION_EXCEPTIONS } from './dispatch-collision-exceptions.js';
 import { PRESENCE_GATED_CALLBACKS } from './presence-gated-callbacks.js';
+import { REPO_SCAN_TIMEOUT_MS } from '../migrate/repo-scan-timeout.ts';
 
 /**
  * Keeps PRESENCE_GATED_CALLBACKS honest by re-deriving it from source.
@@ -86,28 +87,36 @@ function derivedRegistry(): ReadonlySet<string> {
 }
 
 describe('PRESENCE_GATED_CALLBACKS', () => {
-  it('lists every callback whose presence a component reads, and nothing else', () => {
-    const derived = derivedRegistry();
-    const missing = [...derived].filter((key) => !PRESENCE_GATED_CALLBACKS.has(key)).sort();
-    const stale = [...PRESENCE_GATED_CALLBACKS].filter((key) => !derived.has(key)).sort();
+  it(
+    'lists every callback whose presence a component reads, and nothing else',
+    () => {
+      const derived = derivedRegistry();
+      const missing = [...derived].filter((key) => !PRESENCE_GATED_CALLBACKS.has(key)).sort();
+      const stale = [...PRESENCE_GATED_CALLBACKS].filter((key) => !derived.has(key)).sort();
 
-    expect(
-      missing,
-      "a component reads this callback's presence but dispatch.ts still passes an " +
-        'unconditional dispatcher for it, so the check is permanently true -- add it to ' +
-        'PRESENCE_GATED_CALLBACKS'
-    ).toEqual([]);
-    expect(
-      stale,
-      'listed as presence-gated, but no component reads its presence any more -- remove it ' +
-        'so the event fires for listener-only consumers again'
-    ).toEqual([]);
-  });
+      expect(
+        missing,
+        "a component reads this callback's presence but dispatch.ts still passes an " +
+          'unconditional dispatcher for it, so the check is permanently true -- add it to ' +
+          'PRESENCE_GATED_CALLBACKS'
+      ).toEqual([]);
+      expect(
+        stale,
+        'listed as presence-gated, but no component reads its presence any more -- remove it ' +
+          'so the event fires for listener-only consumers again'
+      ).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 
-  it('re-derives a non-empty set, so a silent scan failure cannot pass this file', () => {
-    // Both assertions above are satisfied by two empty sets. If the scan ever stops
-    // finding files -- a moved directory, a renamed extension -- it would report
-    // agreement while measuring nothing.
-    expect(derivedRegistry().size).toBeGreaterThan(20);
-  });
+  it(
+    're-derives a non-empty set, so a silent scan failure cannot pass this file',
+    () => {
+      // Both assertions above are satisfied by two empty sets. If the scan ever stops
+      // finding files -- a moved directory, a renamed extension -- it would report
+      // agreement while measuring nothing.
+      expect(derivedRegistry().size).toBeGreaterThan(20);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

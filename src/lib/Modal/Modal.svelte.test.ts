@@ -76,4 +76,25 @@ describe('Modal dismissal ownership', () => {
     view.unmount();
     await tick();
   });
+
+  it('a second Escape within the debounce window does not fire ondismiss again', async () => {
+    // OverlayAnimation's out:tokenizedFly outro (~350ms fallback) keeps the
+    // popstate/Escape listeners registered for as long as the overlay is
+    // still fading out, so a second Escape landing in that window used to
+    // fire onoverlayclick/ondismiss a second time for one dismissal.
+    // handleEscape is now routed through the same debounce() instance
+    // handleOverlayClick already used, at its 700ms default -- comfortably
+    // wider than two synchronous presses in this test.
+    const ondismiss = vi.fn();
+    const view = render(Modal, { ondismiss });
+    await tick();
+
+    press('Escape');
+    press('Escape');
+
+    expect(ondismiss).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+    await tick();
+  });
 });

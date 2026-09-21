@@ -3,22 +3,25 @@ import { createRawSnippet } from 'svelte';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import Sheet from './Sheet.svelte';
 import SheetHarness from './Sheet.test.svelte';
-import { fly } from 'svelte/transition';
+import { tokenizedFly } from '../Animations/tokenizedFly';
 import { registerDismissible } from '../_interaction/dismissal';
 
 /*
- * Spies on `fly` (wrapping the real implementation, the same shape
+ * Spies on `tokenizedFly` (wrapping the real implementation, the same shape
  * VoiceOrb.svelte.test.ts uses on orbMath) so the params it is actually
  * called with -- not just the transition's visible effect, which jsdom's
  * stubbed Element.prototype.animate below cannot render -- are directly
- * observable.
+ * observable. Sheet's panel transition used Svelte's own `fly` before the
+ * motion-token migration; it now goes through this shared wrapper instead,
+ * which is why this mocks `../Animations/tokenizedFly` rather than
+ * `svelte/transition` -- the overlay's own `fade` is untouched by either.
  */
-vi.mock('svelte/transition', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('svelte/transition')>();
-  return { ...actual, fly: vi.fn(actual.fly) };
+vi.mock('../Animations/tokenizedFly', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../Animations/tokenizedFly')>();
+  return { ...actual, tokenizedFly: vi.fn(actual.tokenizedFly) };
 });
 
-const flyMock = vi.mocked(fly);
+const tokenizedFlyMock = vi.mocked(tokenizedFly);
 
 type ReducedMotionChangeListener = (event: MediaQueryListEvent) => void;
 
@@ -336,7 +339,11 @@ describe('Sheet reduced-motion preference reactivity', () => {
         expect(container.querySelector('.sheet-panel')).not.toBeNull();
       });
       // Fresh mount, preference off, default side="right": the un-degraded case.
-      expect(flyMock.mock.calls.at(-1)?.[1]).toMatchObject({ x: 400, y: 0 });
+      // These are the params Sheet computes and hands to tokenizedFly, before
+      // its own distanceTokens resizing (400 -> the resolved --distance-overlay,
+      // 60 by default) -- checking the input, same as this test always did,
+      // just against the wrapper Sheet's panel transition now goes through.
+      expect(tokenizedFlyMock.mock.calls.at(-1)?.[1]).toMatchObject({ x: 400, y: 0 });
 
       // A real close, through Sheet's own Close button -- an internal write
       // to its bindable `open`, exactly like a user dismissing it.
@@ -359,9 +366,35 @@ describe('Sheet reduced-motion preference reactivity', () => {
 
       // Latched (the bug): still { x: 400, y: 0 }, the pre-toggle value. Fixed:
       // the panel degrades to the reduced-motion params on this second open.
-      expect(flyMock.mock.calls.at(-1)?.[1]).toMatchObject({ x: 0, y: 0, duration: 300 });
+      // `fallbackDuration` is tokenizedFly's param name for what `flyParams`
+      // still computes as `duration` internally -- same value, new key.
+      expect(tokenizedFlyMock.mock.calls.at(-1)?.[1]).toMatchObject({
+        x: 0,
+        y: 0,
+        fallbackDuration: 300
+      });
     } finally {
       Element.prototype.animate = sharedAnimate;
     }
+  });
+});
+
+describe('Sheet close idempotency', () => {
+  it('a second Escape during the out:tokenizedFly outro does not fire onclose again', async () => {
+    // The shared beforeAll stub above never completes the outro, so the panel
+    // -- and its Escape/dismissal wiring -- stays mounted exactly like it
+    // would mid-fade with a real animation. A second Escape landing in that
+    // window used to re-run close() unconditionally, firing onclose twice for
+    // what a consumer sees as a single dismissal.
+    const onclose = vi.fn();
+    const { container } = render(Sheet, { open: true, content, onclose });
+    await waitFor(() => {
+      expect(container.querySelector('.sheet-panel')).not.toBeNull();
+    });
+
+    press('Escape');
+    press('Escape');
+
+    expect(onclose).toHaveBeenCalledTimes(1);
   });
 });

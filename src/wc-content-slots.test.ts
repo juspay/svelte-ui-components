@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { compile } from 'svelte/compiler';
 import { describe, expect, it } from 'vitest';
 import { WC2_UNREACHABLE } from '../scripts/wc2-unreachable.mjs';
+import { REPO_SCAN_TIMEOUT_MS } from '../scripts/migrate/repo-scan-timeout';
 
 /**
  * The content-slot rule's closing claim, held in place: the argument-less content props
@@ -234,38 +235,42 @@ describe('argument-less content props reachable from markup', () => {
     expect(wrapper(component)).toContain(`$host().querySelector('[slot="${slot}"]')`);
   });
 
-  it('no wrapper hoists a slot-bearing snippet out of component scope', () => {
-    /*
-     * The failure this catches produces no build error and no console warning. A
-     * `{#snippet}` declared at the TOP LEVEL of a template is hoisted to module scope when
-     * it closes over nothing from the instance, but the `<slot>` inside it compiles to
-     * `$.slot(node, $$props, …)` -- and `$$props` is a parameter of the component function.
-     * The hoisted copy therefore throws `$$props is not defined` the moment it renders, and
-     * what a consumer sees is an empty shadow root.
-     *
-     * Compiling as a custom element and asking where `$.slot(` lands relative to the
-     * component function is the whole test: above it means hoisted. Verified to be capable
-     * of failing by hoisting a wrapper's snippet to the top level, which reports here and
-     * nowhere else in the suite.
-     */
-    const dir = join(ROOT, 'src/wc/components');
-    const hoisted: string[] = [];
-    for (const file of readdirSync(dir).filter((name) => name.endsWith('.wc.svelte'))) {
-      const js = compile(readFileSync(join(dir, file), 'utf8'), {
-        generate: 'client',
-        runes: true,
-        customElement: true,
-        filename: file
-      }).js.code;
-      const componentFn = js.search(/^export default function /m);
-      for (const match of js.matchAll(/\$\.slot\(/g)) {
-        if (match.index < componentFn) {
-          hoisted.push(file);
+  it(
+    'no wrapper hoists a slot-bearing snippet out of component scope',
+    () => {
+      /*
+       * The failure this catches produces no build error and no console warning. A
+       * `{#snippet}` declared at the TOP LEVEL of a template is hoisted to module scope when
+       * it closes over nothing from the instance, but the `<slot>` inside it compiles to
+       * `$.slot(node, $$props, …)` -- and `$$props` is a parameter of the component function.
+       * The hoisted copy therefore throws `$$props is not defined` the moment it renders, and
+       * what a consumer sees is an empty shadow root.
+       *
+       * Compiling as a custom element and asking where `$.slot(` lands relative to the
+       * component function is the whole test: above it means hoisted. Verified to be capable
+       * of failing by hoisting a wrapper's snippet to the top level, which reports here and
+       * nowhere else in the suite.
+       */
+      const dir = join(ROOT, 'src/wc/components');
+      const hoisted: string[] = [];
+      for (const file of readdirSync(dir).filter((name) => name.endsWith('.wc.svelte'))) {
+        const js = compile(readFileSync(join(dir, file), 'utf8'), {
+          generate: 'client',
+          runes: true,
+          customElement: true,
+          filename: file
+        }).js.code;
+        const componentFn = js.search(/^export default function /m);
+        for (const match of js.matchAll(/\$\.slot\(/g)) {
+          if (match.index < componentFn) {
+            hoisted.push(file);
+          }
         }
       }
-    }
-    expect(hoisted).toEqual([]);
-  });
+      expect(hoisted).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 
   it('no bridged slot is rendered per array entry', () => {
     const offenders: string[] = [];

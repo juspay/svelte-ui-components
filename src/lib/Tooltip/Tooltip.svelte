@@ -276,7 +276,7 @@
       `white-space:normal`,
       `word-wrap:break-word`,
       `pointer-events:none`,
-      `transition:opacity var(--tooltip-opacity-duration,0.15s) ease-in-out`
+      `transition:opacity var(--tooltip-opacity-duration,var(--duration-quick,var(--motion-duration,0.15s))) var(--tooltip-opacity-easing,var(--ease-in-out,var(--motion-easing,ease-in-out)))`
     ].join(';');
 
     const arrowEl = document.createElement('div');
@@ -432,7 +432,9 @@
     word-wrap: break-word;
     pointer-events: none;
     opacity: 1;
-    transition: opacity var(--tooltip-opacity-duration, 0.15s) ease-in-out;
+    transition: opacity
+      var(--tooltip-opacity-duration, var(--duration-quick, var(--motion-duration, 0.15s)))
+      var(--tooltip-opacity-easing, var(--ease-in-out, var(--motion-easing, ease-in-out)));
   }
 
   .tooltip-arrow {

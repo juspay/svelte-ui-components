@@ -99,7 +99,8 @@
   .bar {
     stroke: var(--gauge-bar-color, #2196f3);
     stroke-width: var(--gauge-stroke-width, 8);
-    transition: stroke-dashoffset var(--gauge-transition-duration, 0.3s) ease;
+    transition: stroke-dashoffset var(--gauge-transition-duration, var(--motion-duration, 0.3s))
+      var(--gauge-transition-easing, var(--motion-easing, ease));
   }
 
   .label {

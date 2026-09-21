@@ -225,7 +225,15 @@
     gap: var(--choicebox-gap, 12px);
     cursor: var(--choicebox-cursor, pointer);
     font-family: var(--choicebox-font-family, inherit);
-    transition: var(--choicebox-transition, border-color 0.2s, background 0.2s);
+    transition: var(
+      --choicebox-transition,
+      border-color
+        var(--choicebox-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--choicebox-transition-easing, var(--motion-easing, ease)),
+      background
+        var(--choicebox-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--choicebox-transition-easing, var(--motion-easing, ease))
+    );
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -265,7 +273,21 @@
     height: var(--choicebox-indicator-size, 20px);
     border: var(--choicebox-indicator-border, 2px solid #757575);
     background: var(--choicebox-indicator-background, transparent);
-    transition: var(--choicebox-indicator-transition, background 0.2s, border-color 0.2s);
+    transition: var(
+      --choicebox-indicator-transition,
+      background
+        var(
+          --choicebox-indicator-transition-duration,
+          var(--duration-base, var(--motion-duration, 0.2s))
+        )
+        var(--choicebox-indicator-transition-easing, var(--motion-easing, ease)),
+      border-color
+        var(
+          --choicebox-indicator-transition-duration,
+          var(--duration-base, var(--motion-duration, 0.2s))
+        )
+        var(--choicebox-indicator-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .indicator.radio {

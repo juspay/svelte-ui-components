@@ -172,7 +172,9 @@
     background-color: var(--theme-switcher-bg, transparent);
     cursor: pointer;
     color: var(--theme-switcher-icon-color, #374151);
-    transition: background-color var(--theme-switcher-transition-duration, 0.3s);
+    transition: background-color
+      var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+      var(--theme-switcher-transition-easing, var(--motion-easing, ease));
     font-family: inherit;
   }
 
@@ -191,8 +193,10 @@
     width: var(--theme-switcher-icon-size, 18px);
     height: var(--theme-switcher-icon-size, 18px);
     transition:
-      opacity var(--theme-switcher-transition-duration, 0.3s),
-      transform var(--theme-switcher-transition-duration, 0.3s);
+      opacity var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+        var(--theme-switcher-transition-easing, var(--motion-easing, ease)),
+      transform var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+        var(--theme-switcher-transition-easing, var(--motion-easing, ease));
   }
 
   .icon :global(svg) {
@@ -232,8 +236,10 @@
     background-color: var(--theme-switcher-segment-active-bg, #ffffff);
     box-shadow: var(--theme-switcher-segment-shadow, 0 1px 2px rgba(0, 0, 0, 0.1));
     transition:
-      left var(--theme-switcher-transition-duration, 0.3s),
-      width var(--theme-switcher-transition-duration, 0.3s);
+      left var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+        var(--theme-switcher-transition-easing, var(--motion-easing, ease)),
+      width var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+        var(--theme-switcher-transition-easing, var(--motion-easing, ease));
     z-index: 0;
   }
 
@@ -249,7 +255,8 @@
     background: transparent;
     cursor: pointer;
     color: var(--theme-switcher-icon-color, #374151);
-    transition: color var(--theme-switcher-transition-duration, 0.3s);
+    transition: color var(--theme-switcher-transition-duration, var(--motion-duration, 0.3s))
+      var(--theme-switcher-transition-easing, var(--motion-easing, ease));
     font-family: inherit;
   }
 

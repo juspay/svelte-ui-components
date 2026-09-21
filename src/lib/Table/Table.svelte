@@ -1423,7 +1423,11 @@
     width: var(--table-scroll-scrim-width, 32px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--table-scroll-scrim-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(
+        --table-scroll-scrim-transition-duration,
+        var(--duration-base, var(--motion-duration, 0.2s))
+      )
       var(--table-scroll-scrim-transition-easing, var(--motion-easing, ease));
     z-index: 2;
   }
@@ -1671,7 +1675,10 @@
        through <sui-table> the selection checkboxes' transition could not be
        slowed or stopped by any means -- custom properties are the only route
        across a shadow boundary and this one was already spoken for. */
-    --checkbox-transition: var(--table-checkbox-transition, 0.15s);
+    --checkbox-transition: var(
+      --table-checkbox-transition,
+      var(--duration-quick, var(--motion-duration, 0.15s))
+    );
   }
 
   /* ── Sort button ────────────────────────────────────────────────────────── */

@@ -1182,7 +1182,8 @@
     position: relative;
   }
   .bar {
-    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }

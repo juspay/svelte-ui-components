@@ -319,7 +319,14 @@
   .chat-bubble {
     position: fixed;
     z-index: var(--chat-bubble-z-index, 1000);
-    transition: var(--chat-bubble-snap-transition, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1));
+    transition: var(
+      --chat-bubble-snap-transition,
+      transform 0.28s
+        var(
+          --chat-bubble-snap-transition-easing,
+          var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1))
+        )
+    );
   }
 
   .chat-bubble.dragging {
@@ -351,8 +358,16 @@
     --resizable-handle-color: var(--chat-bubble-resize-handle-color, transparent);
     --resizable-transition: var(
       --chat-bubble-expand-transition,
-      width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-      height 0.32s cubic-bezier(0.22, 1, 0.36, 1)
+      width 0.32s
+        var(
+          --chat-bubble-expand-transition-easing,
+          var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1))
+        ),
+      height 0.32s
+        var(
+          --chat-bubble-expand-transition-easing,
+          var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1))
+        )
     );
   }
 

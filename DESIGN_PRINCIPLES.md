@@ -122,6 +122,146 @@ preference governs whether it runs at all. Watch the specificity: where the anim
 declared on a compound or `:nth-child()` selector, the guard has to match it, or it is
 silently overridden and the component keeps animating.
 
+**Entry/exit motion is a third shape, and picking the wrong one is a lifecycle bug, not a
+style bug.** The two-token convention above covers a value that's already on screen
+changing state. It says nothing about a component *appearing and disappearing*, which is a
+different problem: something has to decide when the DOM node itself is created and
+destroyed, and that decision has consequences the token pair alone can't express. Three
+shapes exist in this codebase, and the choice between them is determined by what else is
+tied to the component's mount/unmount, not by preference:
+
+- **No side effect beyond a completion callback** (most dropdown/panel/toast-style
+  components): always render the node, drive visibility through a class or attribute, and
+  let `@starting-style` supply the pre-first-paint values with
+  `transition-behavior: allow-discrete` carrying `display` into the transition timeline.
+  Baseline since August 2024, ~91% global support, and degrades to "no animation, correct
+  end state" rather than breaking on anything older. This is the only shape with zero
+  animation JavaScript, and the only one where `display: none` removes the closed state
+  from the tab order and accessibility tree for free.
+- **A real `onMount`/`onDestroy` side effect that something else's correctness depends on**
+  (a reference-counted resource shared across components, a focus trap, dismissal
+  ownership): keep Svelte's `in:`/`out:` transition directives. The outro-wait they
+  provide — deferring real destruction until the exit animation finishes — is load-bearing
+  for that cleanup timing, and `@starting-style` does not replace it without the component
+  taking on its own open/closing/closed state machine in its place. Tokenize by reading
+  the duration/easing from `getComputedStyle(node)` inside the transition function itself,
+  the same way `svelte/transition`'s own `fly` already reads computed style once for the
+  current opacity/transform.
+- **A dynamically created/destroyed list item**, not a single boolean slot: plain CSS
+  classes own the motion, and removal from the backing store is driven by a
+  `transitionend` listener on whichever property finishes last, not a `setTimeout`
+  guessing the duration.
+
+Decide the shape before writing the CSS. `Modal`, `Sheet`, `CommandMenu`, `Menu`, and
+`ContextMenu` all share a global scroll-lock reference count and a global dismissal-owner
+stack (`lockBodyScroll`/`registerDismissible`), so all five keep their Svelte transition
+directives. `Toast` has no side effect beyond `ontoasthide?.()`, so it takes the first
+shape.
+
+**A named tier sits between the element token and the root token, for the values that
+recur.** The two-token convention above lets one root declaration retune every animated
+element at once, or a single component override retune one element — nothing addressable
+in between. Measured across `src/lib`: nine different literal duration values do the same
+job ("something responds quickly") with no name behind any of them, and
+`cubic-bezier(0.23, 1, 0.32, 1)` was independently hand-written in three separate
+components before anyone noticed it was the same curve three times. The fix is one more
+`var()` in the same chain, not a new mechanism:
+
+```css
+transition: transform
+  var(--modal-content-transition-duration, var(--motion-duration, 60ms))
+  var(--modal-content-transition-easing, var(--ease-smooth-out, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))));
+```
+
+(`--distance-overlay` is a length, not a duration — it resolves the *travel distance* through a separate chain, not shown here, the same way `Modal`/`Sheet`'s actual `tokenizedFly` calls keep a `distanceTokens` array distinct from `durationTokens`.)
+
+Left unset, every level falls through to the innermost literal — adding the named tier to
+an existing component's chain is a no-op until either the tier or the root token is
+actually set. That's what makes it safe to add gradually.
+
+Values here are not copied wholesale from any external source. This library measured what
+its own shipped components already do, cross-checked those against transitions.dev's
+published motion-token reference where the two agreed or usefully disagreed, and settled
+every close call by rendering both candidates frame-by-frame and comparing them rather
+than by picking the mathematically-nearest number:
+
+```css
+:root {
+  /* durations */
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-base: 200ms;      /* this library's own de facto value, 29+ call sites before
+                                   this token existed. Kept as its own tier rather than
+                                   rounded onto quick/fast — a frame-by-frame comparison at
+                                   150/200/250ms showed a real, if subtle, difference at
+                                   every step, not three names for one look. */
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+
+  /* easing */
+  --ease-smooth-out: cubic-bezier(0.23, 1, 0.32, 1);  /* already the literal in
+             ThinkingIndicator, ToolCallLog and TaskList. Frame-by-frame identical to
+             cubic-bezier(0.22, 1, 0.36, 1), the one-component (ChatBubble) value and
+             transitions.dev's own — kept as the three-component number, ChatBubble
+             brought onto it instead, least total churn for a visually identical curve. */
+  --ease-in-out: ease-in-out;
+  --ease-out: ease-out;
+  --ease-linear: linear;
+  --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-bounce-strong: cubic-bezier(0.34, 3.85, 0.64, 1);
+
+  /* distance — how far a translate-based entrance travels */
+  --distance-micro: 4px;
+  --distance-small: 6px;
+  --distance-base: 8px;
+  --distance-medium: 12px;
+  --distance-large: 30px;
+  --distance-overlay: 60px;    /* full-surface entrances (Modal/Sheet/Toast) only — see
+                                   below. Chosen by rendering 24/40/60/80px and the
+                                   then-current 400px side by side: below ~40px a surface
+                                   this size reads as a rendering jiggle, not motion; 60px
+                                   reads as a deliberate slide into place without reading
+                                   as travel. */
+
+  /* blur — entrance-only, net-new capability, zero usage in src/lib before this */
+  --blur-small: 2px;
+  --blur-medium: 3px;
+  --blur-large: 8px;
+
+  /* scale — two families, opposite directions, not interchangeable */
+  --scale-enter-large: 0.96;   /* modal-class entrance, growing in from just under full size */
+  --scale-enter-medium: 0.97;
+  --scale-enter-small: 0.98;
+  --scale-enter-tiny: 0.99;
+  --scale-hover-small: 1.05;   /* hover emphasis, growing past 1 */
+  --scale-hover-medium: 1.1;
+  --scale-hover-large: 1.15;
+}
+```
+
+None of the above is declared anywhere as an actual `:root` rule this library ships — same
+as `--motion-duration`/`--motion-easing` today, these are names a fallback chain can
+reference and a consumer can set, not values this package hands down. The block above is
+the reference for what each name means and defaults to when nothing sets it, not a file to
+import.
+
+**Not every existing value moves onto this scale, and that is deliberate, not unfinished
+work.** `ThinkingIndicator`, `ToolCallLog`, and `TaskList` already animate their entrances
+at **9px** — more conservative than `--distance-base` itself — and stay there rather than
+being nudged onto the named tier to make the numbers match; they were the evidence this
+scale is right, not components waiting to be corrected by it. `ToolCallLog`/`TaskList`'s
+row stagger (120ms, applied only within a newly-arrived batch — see `chipDelay`/
+`rowDelay`'s `staggerBase` reset) stays its own literal rather than adopting a shared
+`--duration-stagger` token: it is solving a different problem than a dense multi-element
+reveal, and a synthetic test confirmed the existing batch-relative design is already
+correct for how these components actually grow. The `_chart` family's `ease` easing
+default stays un-named — it matches no curve on this scale, and a token for one keyword
+used one way is not the kind of recurrence this section exists to name. A value earns a
+place on the scale because two or more places already agree on it, not to make the scale
+feel complete.
+
 ## 2. Framework-agnosticism is a real target, not just a Svelte library
 
 This library ships both a Svelte 5 package and a web-component build (`sui-*` custom

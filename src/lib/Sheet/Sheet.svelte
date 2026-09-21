@@ -1,7 +1,8 @@
 <script lang="ts">
   import { reducedMotion } from '../reduced-motion.svelte';
   import type { SheetProperties } from './properties';
-  import { fly, fade } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
+  import { tokenizedFly } from '../Animations/tokenizedFly';
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
@@ -66,7 +67,38 @@
     }
   });
 
+  // Feeds flyParams' own x/y/duration (reduced-motion already folded in above)
+  // into tokenizedFly, which only resizes the distance magnitude -- fallback
+  // 60px, down from the 400px literal above -- and reads a duration token.
+  // Token name is `sheet-panel`, not `sheet-content`: the element carrying this
+  // transition is `.sheet-panel` below; `--sheet-content-*` already names the
+  // nested scrollable body (`--sheet-content-overflow-y`/-padding), a different
+  // element, so reusing that prefix here would point a consumer at the wrong
+  // node. Single duration token/literal, no open/close split: unlike Modal,
+  // nothing here already has an in/out asymmetry to preserve. Each array falls
+  // back from the element token through the shared --distance-overlay tier (the
+  // same 60px this batch settled on for Modal) to the --motion-duration/-easing
+  // roots; 300ms doesn't match any named duration tier so it skips straight to
+  // the root, same reasoning as Modal's own duration chain.
+  let sheetFlyParams = $derived({
+    x: flyParams.x,
+    y: flyParams.y,
+    durationTokens: ['--sheet-panel-transition-duration', '--motion-duration'],
+    fallbackDuration: flyParams.duration,
+    distanceTokens: ['--sheet-panel-transition-distance', '--distance-overlay'],
+    fallbackDistance: 60,
+    easingTokens: ['--sheet-panel-transition-easing', '--ease-smooth-out', '--motion-easing']
+  });
+
+  // Guarded rather than assumed single-fire: the panel's transition:tokenizedFly
+  // outro (and the overlay's own transition:fade) keep this mounted -- and every
+  // dismiss path (overlay click, Enter/Space, Escape, the close button) live --
+  // for the outro's duration after open first flips false. A second dismissal
+  // landing in that window would otherwise fire onclose a second time.
   function close() {
+    if (!open) {
+      return;
+    }
     open = false;
     onclose?.();
   }
@@ -229,7 +261,7 @@
       tabindex="-1"
       data-pw={typeof testId === 'string' ? `${testId}-panel` : null}
       testID={typeof testId === 'string' ? `${testId}-panel` : null}
-      transition:fly|global={flyParams}
+      transition:tokenizedFly|global={sheetFlyParams}
       onintroend={handleIntroEnd}
       onoutroend={handleOutroEnd}
     >

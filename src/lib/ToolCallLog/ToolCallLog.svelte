@@ -309,7 +309,11 @@
     max-width: 100%;
     animation: tool-call-log-fade-up
       var(--tool-call-log-chip-animation-duration, var(--motion-duration, 320ms))
-      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
+      var(
+        --tool-call-log-ease,
+        var(--ease-smooth-out, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1)))
+      )
+      both;
     transition:
       background var(--tool-call-log-chip-transition-duration, var(--motion-duration, 150ms))
         var(--tool-call-log-chip-transition-easing, var(--motion-easing, ease)),
@@ -425,7 +429,11 @@
     box-shadow: var(--tool-call-log-popover-shadow, 0 10px 30px rgba(0, 0, 0, 0.12));
     animation: tool-call-log-fade-up
       var(--tool-call-log-popover-animation-duration, var(--motion-duration, 200ms))
-      var(--tool-call-log-ease, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1))) both;
+      var(
+        --tool-call-log-ease,
+        var(--ease-smooth-out, var(--motion-easing, cubic-bezier(0.23, 1, 0.32, 1)))
+      )
+      both;
   }
 
   .popover-detail {

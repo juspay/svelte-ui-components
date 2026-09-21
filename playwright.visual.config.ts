@@ -17,7 +17,17 @@ const config: PlaywrightTestConfig = {
     port,
     // See playwright.config.ts — reuse only a deliberately named port.
     reuseExistingServer: reuseExistingServer(),
-    timeout: 180_000
+    // A cold run inside the pinned container (see visual-test.sh) has no
+    // cached node_modules or pnpm store — --rm plus the anonymous volume it
+    // mounts node_modules into mean every run reinstalls and rebuilds from
+    // scratch. Measured directly: the build step alone (vite build +
+    // build:wc + build:codemod + package) regularly consumes the full
+    // previous 180_000ms budget on its own, leaving `vite preview` no room
+    // to start before Playwright gave up waiting for it — a false failure
+    // with zero visual comparisons run, not a real regression. Still a hang
+    // detector, not a performance budget: raised with margin above the
+    // observed cold-build cost, not tuned to be tight.
+    timeout: 360_000
   },
   testDir: 'tests/visual',
   testMatch: /.*\.visual\.ts/,

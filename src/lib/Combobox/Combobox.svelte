@@ -580,7 +580,21 @@
     background: var(--combobox-input-background, #ffffff);
     border: var(--combobox-input-border, 1px solid #cccccc);
     border-radius: var(--combobox-input-border-radius, var(--radius, 4px));
-    transition: var(--combobox-input-transition, border-color 0.15s, box-shadow 0.15s);
+    transition: var(
+      --combobox-input-transition,
+      border-color
+        var(
+          --combobox-input-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
+        var(--combobox-input-transition-easing, var(--motion-easing, ease)),
+      box-shadow
+        var(
+          --combobox-input-transition-duration,
+          var(--duration-quick, var(--motion-duration, 0.15s))
+        )
+        var(--combobox-input-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   /* Multi-select control: pills wrap above the typeahead input. */

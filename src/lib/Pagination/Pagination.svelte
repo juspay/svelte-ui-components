@@ -159,7 +159,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--pagination-transition, background 0.15s ease, color 0.15s ease);
+    transition: var(
+      --pagination-transition,
+      background
+        var(--pagination-transition-duration, var(--duration-quick, var(--motion-duration, 0.15s)))
+        var(--pagination-transition-easing, var(--motion-easing, ease)),
+      color
+        var(--pagination-transition-duration, var(--duration-quick, var(--motion-duration, 0.15s)))
+        var(--pagination-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .page-button:hover:not(:disabled):not(.active) {

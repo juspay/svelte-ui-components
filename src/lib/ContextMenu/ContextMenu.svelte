@@ -1,6 +1,7 @@
 <script lang="ts">
   import { registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
+  import { tokenizedFly } from '../Animations/tokenizedFly';
   import type { ContextMenuProperties, ContextMenuItem } from './properties';
 
   let {
@@ -24,6 +25,27 @@
   // focus (or triggered the native contextmenu event) is where focus belongs once
   // the menu goes away, matching Menu.svelte's own restore-on-close contract.
   let openerElement: HTMLElement | null = $state(null);
+
+  // Small anchored dropdown: --distance-medium / --duration-quick tiers — snappier
+  // and less travel than CommandMenu's centered palette, matching Menu.svelte's own.
+  // 150ms matches --duration-quick exactly, so the duration chain picks up that
+  // named tier before falling to --motion-duration. easingTokens is new:
+  // tokenizedFly now parses a CSS easing-token string (keyword or cubic-bezier)
+  // into a JS EasingFunction, so --context-menu-panel-transition-easing has a
+  // live hook -- --ease-smooth-out is the shared named tier, cubicOut stays the
+  // ultimate JS fallback if no token resolves.
+  const panelTransitionParams = {
+    y: 12,
+    durationTokens: [
+      '--context-menu-panel-transition-duration',
+      '--duration-quick',
+      '--motion-duration'
+    ],
+    fallbackDuration: 150,
+    distanceTokens: ['--context-menu-panel-transition-distance', '--distance-medium'],
+    fallbackDistance: 12,
+    easingTokens: ['--context-menu-panel-transition-easing', '--ease-smooth-out', '--motion-easing']
+  };
 
   let selectableItems: ContextMenuItem[] = $derived(
     items.filter((item) => !item.separator && !item.disabled)
@@ -57,7 +79,14 @@
     });
   }
 
+  // Guarded rather than assumed single-fire: out:tokenizedFly keeps the dropdown
+  // (and its handlers) mounted for the outro's duration, so a second Escape,
+  // outside click, or item interaction landing during that window would
+  // otherwise fire onclose/onselect again before Svelte actually tears it down.
   function close() {
+    if (!open) {
+      return;
+    }
     cancelOpenFrame();
     open = false;
     focusedIndex = -1;
@@ -83,7 +112,7 @@
   }
 
   function selectMenuItem(item: ContextMenuItem) {
-    if (item.disabled) {
+    if (!open || item.disabled) {
       return;
     }
     onselect?.(item);
@@ -225,14 +254,25 @@
 </div>
 
 {#if open}
+  <!-- `open` flips false the instant close()/selectMenuItem() run, but this
+       subtree stays mounted for the out:tokenizedFly outro below -- Svelte
+       only destroys it once its own out-transition finishes. `inert` pulls
+       the fading-but-still-mounted dropdown out of the accessibility tree
+       (and tab order) on that same instant, matching what the trigger's own
+       state already reports. close()/selectMenuItem() are already guarded
+       against a stray interaction landing here regardless -- this is the
+       matching fix for what AT perceives, not a second copy of that guard. -->
   <div
     class="context-menu-dropdown"
     style="left: {posX}px; top: {posY}px; --context-menu-max-height: {maxHeight};"
     bind:this={menuEl}
     role="menu"
     tabindex="-1"
+    inert={!open}
     onkeydown={handleMenuKeydown}
     use:dismissalAction
+    in:tokenizedFly={panelTransitionParams}
+    out:tokenizedFly={panelTransitionParams}
   >
     {#each items as item (item.value)}
       {#if item.separator}

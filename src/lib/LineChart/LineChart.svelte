@@ -1062,9 +1062,10 @@
   }
   .line-area-fill {
     transition:
-      fill-opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      fill-opacity
+        var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease)),
-      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      opacity var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease));
     pointer-events: none;
   }
@@ -1072,7 +1073,8 @@
     opacity: var(--linechart-dimmed-opacity, 0.2);
   }
   .line-path {
-    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -1089,9 +1091,9 @@
   }
   .dot {
     transition:
-      r var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      r var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease)),
-      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      opacity var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease));
     stroke: var(--chart-dot-stroke, light-dark(#fff, #111827));
     stroke-width: 2;

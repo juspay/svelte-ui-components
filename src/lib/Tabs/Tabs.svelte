@@ -605,7 +605,12 @@
     color: var(--tabs-arrow-color, var(--tabs-item-color, #666666));
     cursor: pointer;
     z-index: 1;
-    transition: var(--tabs-arrow-transition, color 0.2s ease);
+    transition: var(
+      --tabs-arrow-transition,
+      color
+        var(--tabs-arrow-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--tabs-arrow-transition-easing, var(--motion-easing, ease))
+    );
     font-family: inherit;
   }
 
@@ -635,7 +640,13 @@
     white-space: nowrap;
     flex-shrink: 0;
     user-select: none;
-    transition: var(--tabs-transition, color 0.2s ease, background 0.2s ease);
+    transition: var(
+      --tabs-transition,
+      color var(--tabs-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--tabs-transition-easing, var(--motion-easing, ease)),
+      background var(--tabs-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--tabs-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   /* Roving focus really does move (see focusedKey/focusTabAt above) -- this
@@ -736,7 +747,13 @@
     height: var(--tabs-indicator-height, 2px);
     background-color: var(--tabs-indicator-color, #1a73e8);
     border-radius: var(--tabs-indicator-border-radius, 2px 2px 0 0);
-    transition: var(--tabs-indicator-transition, left 0.3s ease, width 0.3s ease);
+    transition: var(
+      --tabs-indicator-transition,
+      left var(--tabs-indicator-transition-duration, var(--motion-duration, 0.3s))
+        var(--tabs-indicator-transition-easing, var(--motion-easing, ease)),
+      width var(--tabs-indicator-transition-duration, var(--motion-duration, 0.3s))
+        var(--tabs-indicator-transition-easing, var(--motion-easing, ease))
+    );
     pointer-events: none;
   }
 
@@ -812,7 +829,13 @@
     width: var(--tabs-indicator-height, 2px);
     height: var(--tabs-indicator-height, 2px);
     border-radius: var(--tabs-indicator-border-radius-vertical, 0 2px 2px 0);
-    transition: var(--tabs-indicator-transition-vertical, top 0.3s ease, height 0.3s ease);
+    transition: var(
+      --tabs-indicator-transition-vertical,
+      top var(--tabs-indicator-transition-vertical-duration, var(--motion-duration, 0.3s))
+        var(--tabs-indicator-transition-vertical-easing, var(--motion-easing, ease)),
+      height var(--tabs-indicator-transition-vertical-duration, var(--motion-duration, 0.3s))
+        var(--tabs-indicator-transition-vertical-easing, var(--motion-easing, ease))
+    );
   }
 
   /* Section header rendered above a group of vertical nav items. */

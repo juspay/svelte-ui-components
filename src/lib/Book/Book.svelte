@@ -216,7 +216,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    transition: transform var(--book-transition-duration, 0.3s) ease;
+    transition: transform var(--book-transition-duration, var(--motion-duration, 0.3s))
+      var(--book-transition-easing, var(--motion-easing, ease));
   }
 
   .page-fade {
@@ -224,7 +225,8 @@
     top: 0;
     left: 0;
     opacity: 0;
-    transition: opacity var(--book-transition-duration, 0.3s) ease;
+    transition: opacity var(--book-transition-duration, var(--motion-duration, 0.3s))
+      var(--book-transition-easing, var(--motion-easing, ease));
     pointer-events: none;
   }
 
@@ -282,7 +284,8 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    transition: background-color var(--book-dot-transition-duration, var(--motion-duration, 0.2s))
+    transition: background-color
+      var(--book-dot-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--book-dot-transition-easing, var(--motion-easing, ease));
   }
 

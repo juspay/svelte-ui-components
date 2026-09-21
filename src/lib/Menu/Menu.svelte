@@ -4,6 +4,7 @@
   import Img from '../Img/Img.svelte';
   import { computeMenuDropdownPosition } from './dropdownPosition';
   import { eventHitsInside, registerDismissible } from '../_interaction/dismissal';
+  import { tokenizedFly } from '../Animations/tokenizedFly';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
   let {
@@ -78,6 +79,23 @@
 
   // Gap between trigger and portaled panel, matching the --menu-margin default.
   const PORTAL_MENU_GAP = 4;
+
+  // Small anchored dropdown: --distance-medium / --duration-quick tiers — snappier
+  // and less travel than CommandMenu's centered palette. 150ms matches
+  // --duration-quick exactly, so the duration chain picks up that named tier
+  // before falling to --motion-duration. easingTokens is new: tokenizedFly now
+  // parses a CSS easing-token string (keyword or cubic-bezier) into a JS
+  // EasingFunction, so --menu-panel-transition-easing has a live hook --
+  // --ease-smooth-out is the shared named tier, cubicOut stays the ultimate JS
+  // fallback if no token resolves.
+  const panelTransitionParams = {
+    y: 12,
+    durationTokens: ['--menu-panel-transition-duration', '--duration-quick', '--motion-duration'],
+    fallbackDuration: 150,
+    distanceTokens: ['--menu-panel-transition-distance', '--distance-medium'],
+    fallbackDistance: 12,
+    easingTokens: ['--menu-panel-transition-easing', '--ease-smooth-out', '--motion-easing']
+  };
 
   // Keep the portaled panel anchored to its trigger while the page scrolls or
   // resizes. Mirrors the chart-tooltip portal pattern; $effect is the sanctioned
@@ -213,7 +231,15 @@
     });
   }
 
+  // Guarded rather than assumed single-fire: out:tokenizedFly keeps the dropdown
+  // (and its handlers) mounted for the outro's duration, so a second Escape,
+  // outside click, or item interaction landing during that window would
+  // otherwise fire onclose/onselect (and re-run focus restoration) again before
+  // Svelte actually tears it down.
   function close() {
+    if (!open) {
+      return;
+    }
     open = false;
     focusedIndex = -1;
     typeaheadQuery = '';
@@ -243,7 +269,7 @@
   }
 
   function selectItem(item: MenuItem) {
-    if (item.disabled === true) {
+    if (!open || item.disabled === true) {
       return;
     }
     onselect?.(item);
@@ -453,6 +479,14 @@
   {/if}
 
   {#if open}
+    <!-- `open` flips false the instant close()/selectItem() run, but this
+         subtree stays mounted for the out:tokenizedFly outro below -- Svelte
+         only destroys it once its own out-transition finishes. `inert` pulls
+         the fading-but-still-mounted dropdown out of the accessibility tree
+         (and tab order) on that same instant, matching what aria-expanded on
+         the trigger already reports. close()/selectItem() are already guarded
+         against a stray interaction landing here regardless -- this is the
+         matching fix for what AT perceives, not a second copy of that guard. -->
     <div
       class="menu-dropdown menu-dropdown-{placement === 'auto' ? resolvedPlacement : placement}"
       class:menu-dropdown-measuring={measuringPlacement}
@@ -463,10 +497,13 @@
       id={menuId}
       aria-label={menuAriaLabel}
       tabindex="-1"
+      inert={!open}
       style={portalStyle}
       onkeydown={handleMenuKeydown}
       use:portalToRoot
       use:dismissalAction
+      in:tokenizedFly={panelTransitionParams}
+      out:tokenizedFly={panelTransitionParams}
     >
       {#each items as item (item.value)}
         {#if item.separator === true}

@@ -122,7 +122,15 @@
     border: var(--radio-border, 2px solid #9e9e9e);
     border-radius: var(--radio-border-radius, 50%);
     background-color: var(--radio-background, #ffffff);
-    transition: var(--radio-transition, 0.2s);
+    /* --radio-transition wraps the WHOLE value, not just the duration -- see the
+       matching comment on Checkbox's .box rule for why appending a separate
+       easing term after it (the prior shape here) breaks a consumer override
+       that already includes its own timing function. */
+    transition: var(
+      --radio-transition,
+      var(--radio-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--radio-transition-easing, var(--motion-easing, ease))
+    );
     box-sizing: border-box;
     flex-shrink: 0;
   }
@@ -150,7 +158,11 @@
     height: 0;
     border-radius: var(--radio-dot-border-radius, 50%);
     background-color: var(--radio-dot-color, #2196f3);
-    transition: var(--radio-transition, 0.2s);
+    transition: var(
+      --radio-transition,
+      var(--radio-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--radio-transition-easing, var(--motion-easing, ease))
+    );
   }
 
   .radio-dot.checked {

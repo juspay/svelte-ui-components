@@ -4,6 +4,7 @@
   import { lockBodyScroll, unlockBodyScroll } from '../utils';
   import { registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
+  import { tokenizedFly } from '$lib/Animations/tokenizedFly';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '$lib/Img/Img.svelte';
   import searchSvg from '$lib/assets/search.svg?raw';
@@ -24,6 +25,27 @@
   // Stable per-instance ids keep ARIA references distinct across menus.
   const uid = $props.id();
   const listboxId = `command-menu-listbox-${uid}`;
+
+  // Centered, medium-large panel: --distance-large / --duration-base tiers —
+  // a command palette warrants more presence than a small anchored dropdown.
+  // 200ms matches --duration-base exactly, so the duration chain picks up that
+  // named tier before falling to --motion-duration. easingTokens is new:
+  // tokenizedFly now parses a CSS easing-token string (keyword or cubic-bezier)
+  // into a JS EasingFunction, so --command-menu-panel-transition-easing has a
+  // live hook -- --ease-smooth-out is the shared named tier, cubicOut stays the
+  // ultimate JS fallback if no token resolves.
+  const panelTransitionParams = {
+    y: 30,
+    durationTokens: [
+      '--command-menu-panel-transition-duration',
+      '--duration-base',
+      '--motion-duration'
+    ],
+    fallbackDuration: 200,
+    distanceTokens: ['--command-menu-panel-transition-distance', '--distance-large'],
+    fallbackDistance: 30,
+    easingTokens: ['--command-menu-panel-transition-easing', '--ease-smooth-out', '--motion-easing']
+  };
 
   let query = $state('');
   let activeIndex = $state(0);
@@ -86,7 +108,14 @@
     flatItems.length > 0 ? `command-menu-option-${uid}-${activeIndex}` : null
   );
 
+  // Guarded rather than assumed single-fire: out:tokenizedFly keeps the dialog
+  // (and its handlers) mounted for the outro's duration, so a second Escape,
+  // outside click, or item interaction landing during that window would
+  // otherwise fire onclose/onselect again before Svelte actually tears it down.
   function close() {
+    if (!open) {
+      return;
+    }
     open = false;
     query = '';
     activeIndex = 0;
@@ -94,7 +123,7 @@
   }
 
   function selectItem(item: CommandItem) {
-    if (item.disabled) {
+    if (!open || item.disabled) {
       return;
     }
     onselect?.(item);
@@ -228,6 +257,23 @@
   // point in a fresh open. Ctrl+K stays on `handleGlobalKeyDown`/`window`
   // below rather than moving here: it is an OPEN shortcut that must keep
   // working while the menu is closed, and this layer only exists while open.
+  // KNOWN LIMITATION, not yet fixed: this action's mount function -- and so
+  // this capture -- only runs once, when `.command-menu-overlay` is first
+  // created. `open` is `$bindable`, so an external trigger button and the
+  // built-in Ctrl+K shortcut commonly coexist; if the menu is reopened via a
+  // DIFFERENT trigger while still mid-outro from a just-finished close
+  // (out:tokenizedFly's ~200ms fallback keeps this instance alive, and Svelte
+  // reverses rather than recreates the block on a same-window reopen), this
+  // function does not run again -- `openerElement` stays whatever the FIRST
+  // opener was, and focus incorrectly returns there instead of to the trigger
+  // that actually opened the currently-visible session. A correct fix needs
+  // to re-capture on every logical open, not just the first DOM mount (e.g. an
+  // `$effect` watching `open`), while still finding the right shadow-DOM-aware
+  // active element (getActiveElement needs an already-connected node, and this
+  // component renders nothing while closed) and without racing the focus-the-
+  // input logic below it. Deferred rather than shipped half-verified: a wrong
+  // guess here risks a worse regression (stealing focus into the wrong
+  // element on every open) than the narrow bug it would fix.
   function scrollLockAction(node: HTMLElement) {
     const opener = getActiveElement(node);
     if (openerElement === null && opener instanceof HTMLElement) {
@@ -267,6 +313,23 @@
 </script>
 
 {#if open}
+  <!-- `open` flips false (and aria-expanded on the trigger follows suit) the
+       instant close()/selectItem() run, but this whole subtree stays mounted
+       for .command-menu-dialog's out:tokenizedFly outro below -- Svelte only
+       destroys an ancestor once a descendant's own out-transition finishes.
+       `inert` pulls the fading-but-still-mounted dialog out of the
+       accessibility tree (and out of tab order) on that same instant, so a
+       screen reader doesn't still see role="dialog" aria-modal="true" for a
+       surface that's already reported itself closed. Set on BOTH this element
+       and .command-menu-dialog below, not just the one carrying
+       role="dialog": verified live that Svelte stops applying reactive
+       attribute updates to an ancestor once a descendant's own outro begins,
+       so the binding here alone would go stale the moment the transition
+       starts -- only the element actually running the out: transition is
+       guaranteed to keep updating through it. close()/selectItem() are
+       already guarded against a stray interaction landing here regardless --
+       this is the matching fix for what AT perceives, not a second copy of
+       that guard. -->
   <div
     class="command-menu-overlay {classes ?? ''}"
     use:scrollLockAction
@@ -276,10 +339,17 @@
     aria-modal="true"
     aria-label="Command menu"
     tabindex="-1"
+    inert={!open}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
   >
-    <div class="command-menu-dialog" bind:this={dialogElement}>
+    <div
+      class="command-menu-dialog"
+      bind:this={dialogElement}
+      inert={!open}
+      in:tokenizedFly={panelTransitionParams}
+      out:tokenizedFly={panelTransitionParams}
+    >
       <div class="command-menu-input-wrapper">
         {#if typeof searchIcon === 'function'}
           {@render searchIcon()}

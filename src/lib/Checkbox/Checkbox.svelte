@@ -262,9 +262,21 @@
     border: var(--checkbox-border, 2px solid #757575);
     border-radius: var(--checkbox-border-radius, var(--radius, 4px));
     background-color: var(--checkbox-background, transparent);
-    transition:
-      background-color var(--checkbox-transition, 0.2s),
-      border var(--checkbox-transition, 0.2s);
+    /* --checkbox-transition wraps the WHOLE value (matching Choicebox/Toggle's
+       own "-transition" tokens), not just the duration -- a consumer filling it
+       with e.g. "0.3s ease-in-out" replaces the entire expression cleanly. Putting
+       it in only the duration slot with a separate -easing term appended after
+       would make that same override produce an invalid transition (two
+       timing-function components), dropping the whole declaration to its
+       initial value instead of just using a different timing. */
+    transition: var(
+      --checkbox-transition,
+      background-color
+        var(--checkbox-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--checkbox-transition-easing, var(--motion-easing, ease)),
+      border var(--checkbox-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+        var(--checkbox-transition-easing, var(--motion-easing, ease))
+    );
     flex-shrink: 0;
   }
 

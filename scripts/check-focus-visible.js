@@ -95,10 +95,10 @@ const isStyled = (f) => /\.(svelte|css)$/.test(f) && !/\.test\./.test(f);
  */
 const ANCESTOR_FOCUS_WITHIN_ALLOWLIST = new Map([
   [
-    'src/lib/Select/Select.svelte:1251',
+    'src/lib/Select/Select.svelte:1265',
     {
       ancestorToken: '.select-trigger',
-      note: '.select-search has no focus rule of its own; compensated by the ancestor .select-trigger:focus-within (same file, ~line 1146). Pre-existing.'
+      note: '.select-search has no focus rule of its own; compensated by the ancestor .select-trigger:focus-within (same file, ~line 1161). Pre-existing; line numbers shifted +15 when the motion-token migration tokenized .select-trigger.'
     }
   ],
   [

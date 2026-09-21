@@ -6,6 +6,7 @@ import {
   readDispatchParity,
   readWrapperParity
 } from './prop-parity.ts';
+import { REPO_SCAN_TIMEOUT_MS } from '../migrate/repo-scan-timeout.ts';
 
 /**
  * Adding a prop to a Svelte component and forgetting its custom-element wrapper
@@ -445,11 +446,15 @@ describe('callback-dispatch gate: what a pass here does NOT check', () => {
  * simply does not exist.
  */
 describe('every declared prop reaches the component', () => {
-  it('declares nothing the wrapped component cannot receive', () => {
-    const wired = readWrapperParity().filter((entry) => entry.dead.length > 0);
-    expect(
-      wired.map((entry) => `${entry.wrapper}: ${entry.dead.join(', ')}`),
-      'these element props are wired to nothing -- a consumer sets them and silently gets no effect'
-    ).toEqual([]);
-  });
+  it(
+    'declares nothing the wrapped component cannot receive',
+    () => {
+      const wired = readWrapperParity().filter((entry) => entry.dead.length > 0);
+      expect(
+        wired.map((entry) => `${entry.wrapper}: ${entry.dead.join(', ')}`),
+        'these element props are wired to nothing -- a consumer sets them and silently gets no effect'
+      ).toEqual([]);
+    },
+    REPO_SCAN_TIMEOUT_MS
+  );
 });

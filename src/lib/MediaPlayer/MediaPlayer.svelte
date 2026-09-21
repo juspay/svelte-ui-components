@@ -455,7 +455,15 @@
     z-index: var(--media-player-overlay-z-index, 20);
     border-radius: inherit;
     background-color: var(--media-player-overlay-color, transparent);
-    transition: var(--media-player-overlay-transition, background-color 0.2s ease);
+    transition: var(
+      --media-player-overlay-transition,
+      background-color
+        var(
+          --media-player-overlay-transition-duration,
+          var(--duration-base, var(--motion-duration, 0.2s))
+        )
+        var(--media-player-overlay-transition-easing, var(--motion-easing, ease))
+    );
     --center-controls-visibility: var(--media-player-center-controls-visibility, hidden);
     --bottom-controls-visibility: var(--media-player-bottom-controls-visibility, hidden);
   }

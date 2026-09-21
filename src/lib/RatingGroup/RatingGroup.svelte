@@ -240,10 +240,19 @@
     width: var(--rating-group-star-size, 24px);
     height: var(--rating-group-star-size, 24px);
     flex-shrink: 0;
+    transition: transform
+      var(--rating-group-star-transition-duration, var(--motion-duration, 0.15s))
+      var(--rating-group-star-transition-easing, var(--motion-easing, ease));
   }
 
   .rating-group:not(.disabled):not(.readonly) .star:hover {
     transform: var(--rating-group-star-hover-transform, scale(1.1));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .star {
+      transition: none;
+    }
   }
 
   .star-empty,

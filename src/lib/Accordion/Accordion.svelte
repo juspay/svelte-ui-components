@@ -99,7 +99,12 @@
        the panel stretched (or centered, etc.) could not otherwise override
        this one declaration without reaching for :global() or !important. */
     align-self: var(--accordion-align-self, start);
-    transition: grid-template-rows var(--accordion-transition, 0.2s ease-out);
+    transition: grid-template-rows
+      var(
+        --accordion-transition,
+        var(--accordion-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
+          var(--accordion-transition-easing, var(--ease-out, var(--motion-easing, ease-out)))
+      );
   }
 
   .accordion.expanded {

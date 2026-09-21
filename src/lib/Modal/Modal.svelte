@@ -106,10 +106,18 @@
     };
   };
 
+  // Debounced through the same leading-edge debounce() handleOverlayClick
+  // already uses below, for the same reason: OverlayAnimation's out:tokenizedFly
+  // keeps the popstate listener registered (onMount/onDestroy span the outro,
+  // ~350ms fallback) for as long as the overlay is still fading out, so a
+  // second rapid back-press in that window would otherwise fire onclose/
+  // ondismiss a second time for one dismissal.
   const handlePopstate = (): void => {
     backPressed = true;
-    onclose?.();
-    ondismiss?.();
+    debounce(() => {
+      onclose?.();
+      ondismiss?.();
+    });
   };
 
   const handleRightImageClick = (event: MouseEvent): void => {
@@ -161,9 +169,15 @@
   // dismissible layer and Escape is pressed -- same callbacks the old
   // Escape branch in handleKeyDown used to invoke directly, just gated on
   // ownership now instead of firing for every open modal unconditionally.
+  // Debounced through the same debounce() handleOverlayClick/handlePopstate
+  // use, for the same reason: a second Escape landing while
+  // OverlayAnimation's out:tokenizedFly outro is still keeping this modal's
+  // dismissal listeners registered would otherwise fire the callbacks twice.
   const handleEscape = (): void => {
-    onoverlayclick?.();
-    ondismiss?.();
+    debounce(() => {
+      onoverlayclick?.();
+      ondismiss?.();
+    });
   };
 
   // The overlay's own Enter/Space activation, additional to the shared

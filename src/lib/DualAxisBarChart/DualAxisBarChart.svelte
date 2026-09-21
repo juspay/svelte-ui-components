@@ -655,7 +655,8 @@
   }
 
   .bar-shape {
-    transition: opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+    transition: opacity
+      var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }
@@ -677,9 +678,9 @@
 
   .line-dot {
     transition:
-      r var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      r var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease)),
-      opacity var(--chart-transition-duration, var(--motion-duration, 0.2s))
+      opacity var(--chart-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--chart-transition-easing, var(--motion-easing, ease));
     cursor: pointer;
   }

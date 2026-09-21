@@ -79,6 +79,54 @@
     };
   }
 
+  /**
+   * Resolves a CSS time value (e.g. `"0.2s"`, `"150ms"`) to milliseconds.
+   * Returns `null` rather than 0 when nothing parses, so an explicit `0s`
+   * override is never confused with "no token set".
+   */
+  function parseCssDurationMs(value: string): number | null {
+    const text = value.trim();
+    if (text.length === 0) {
+      return null;
+    }
+    const amount = Number.parseFloat(text);
+    if (!Number.isFinite(amount)) {
+      return null;
+    }
+    if (text.endsWith('ms')) {
+      return amount;
+    }
+    if (text.endsWith('s')) {
+      return amount * 1000;
+    }
+    return null;
+  }
+
+  /**
+   * Wraps `fade` so the lightbox honours the CSS token chain
+   * (`--gallery-lightbox-transition-duration` / `--duration-base` /
+   * `--motion-duration`, resolved once on `.lightbox` below as
+   * `--_gallery-lightbox-transition-duration`) when a consumer sets one, and
+   * otherwise falls back to the `lightboxTransitionDuration` prop --
+   * unchanged default of 200ms when NEITHER is set. An explicit prop wins over
+   * the CSS token when BOTH are set, not the other way around: `--motion-duration`
+   * is an ambient, root-level default meant for a consumer who never touches
+   * this component directly, while `lightboxTransitionDuration` is an explicit,
+   * per-instance choice -- the more specific override has to win, the same way
+   * an inline style beats a stylesheet rule. `typeof … === 'number'` (not `??`)
+   * is what makes that precedence real: `??` would let the CSS token jump the
+   * queue the moment a consumer sets one globally, silently overriding a prop
+   * they explicitly passed to this specific instance.
+   */
+  function lightboxFade(node: Element) {
+    if (typeof lightboxTransitionDuration === 'number') {
+      return fade(node, { duration: lightboxTransitionDuration });
+    }
+    const raw = getComputedStyle(node).getPropertyValue('--_gallery-lightbox-transition-duration');
+    const duration = parseCssDurationMs(raw) ?? 200;
+    return fade(node, { duration });
+  }
+
   function openLightbox(index: number, opener: EventTarget | null): void {
     if (opener instanceof HTMLElement) {
       openerElement = opener;
@@ -273,7 +321,7 @@
     use:lightboxAction
     onclick={handleBackdropClick}
     onkeydown={handleLightboxKeydown}
-    transition:fade={{ duration: lightboxTransitionDuration ?? 200 }}
+    transition:lightboxFade
   >
     <div class="lightbox-close" bind:this={closeButtonWrap}>
       <Button ariaLabel="Close gallery" onclick={closeLightbox}>
@@ -527,6 +575,10 @@
     align-items: center;
     background: var(--gallery-lightbox-background, #000000e6);
     -webkit-tap-highlight-color: transparent;
+    --_gallery-lightbox-transition-duration: var(
+      --gallery-lightbox-transition-duration,
+      var(--duration-base, var(--motion-duration))
+    );
   }
 
   .lightbox:focus {

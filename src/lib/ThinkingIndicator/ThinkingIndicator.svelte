@@ -492,7 +492,7 @@
     margin-bottom: var(--thinking-indicator-margin-bottom, 1rem);
     min-height: 0;
     transition: min-height 400ms
-      var(--thinking-indicator-trace-ease, cubic-bezier(0.23, 1, 0.32, 1));
+      var(--thinking-indicator-trace-ease, var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1)));
   }
 
   .expandable.busy {
@@ -721,7 +721,8 @@
     background: var(--thinking-indicator-trace-connector-color, #dcdcdc);
     margin-left: 6px;
     flex-shrink: 0;
-    transition: height 500ms var(--thinking-indicator-trace-ease, cubic-bezier(0.23, 1, 0.32, 1));
+    transition: height 500ms
+      var(--thinking-indicator-trace-ease, var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1)));
   }
 
   .trace-rows {
@@ -740,7 +741,8 @@
     font-size: var(--thinking-indicator-trace-row-font-size, 0.8125rem);
     color: var(--thinking-indicator-trace-row-color, #2b2b2b);
     animation: thinking-indicator-fade-up 320ms
-      var(--thinking-indicator-trace-ease, cubic-bezier(0.23, 1, 0.32, 1)) both;
+      var(--thinking-indicator-trace-ease, var(--ease-smooth-out, cubic-bezier(0.23, 1, 0.32, 1)))
+      both;
     text-decoration: none;
   }
 

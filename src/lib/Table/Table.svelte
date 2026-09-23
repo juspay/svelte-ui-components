@@ -947,6 +947,7 @@
                     {#if isColumnSortable(colIndex)}
                       <div class="sort-button">
                         <Button
+                          variant="ghost"
                           onclick={() => handleSort(colIndex)}
                           ariaLabel={labels?.sortBy?.(header) ?? `Sort by ${header}`}
                         >

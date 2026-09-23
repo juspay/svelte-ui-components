@@ -57,7 +57,11 @@
            visible text of its own. Keeping it once the label swaps to
            "Copied!" would leave a screen reader announcing "Copy to clipboard"
            over the visible feedback (WCAG 2.5.3, Label in Name). -->
-      <Button onclick={handleCopy} {...copyState.copied ? {} : { ariaLabel: 'Copy to clipboard' }}>
+      <Button
+        variant="ghost"
+        onclick={handleCopy}
+        {...copyState.copied ? {} : { ariaLabel: 'Copy to clipboard' }}
+      >
         {#if copyState.copied}
           <span class="snippet-copied">{copiedLabel}</span>
         {:else if typeof copyIcon === 'function'}
@@ -124,6 +128,8 @@
     --button-border-radius: var(--snippet-copy-border-radius, var(--radius, 4px));
     --cursor: var(--snippet-copy-cursor, pointer);
     --button-hover-color: var(--snippet-copy-hover-background, #333);
+    /* Ghost brings its own hover label; keep this button's. */
+    --button-hover-text-color: var(--button-text-color);
     display: flex;
     align-items: center;
     justify-content: center;

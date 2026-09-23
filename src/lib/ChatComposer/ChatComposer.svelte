@@ -225,6 +225,7 @@
     {#if showAttach}
       <div class="control attach">
         <Button
+          variant="ghost"
           onclick={() => {
             if (typeof onattachclick === 'function') {
               onattachclick();
@@ -281,6 +282,7 @@
         class:busy={dictationState === 'busy'}
       >
         <Button
+          variant="ghost"
           onclick={() => onvoice?.()}
           disabled={resolvedVoiceDisabled}
           ariaLabel={voiceLabel}
@@ -429,6 +431,8 @@
     --button-text-color: var(--chat-composer-action-color, #52525b);
     --button-content-gap: 0px;
     --button-hover-color: var(--chat-composer-action-hover-background-color, #f4f4f5);
+    /* Ghost brings its own hover label; keep this control's, recording red included. */
+    --button-hover-text-color: var(--button-text-color);
   }
 
   .voice.recording {

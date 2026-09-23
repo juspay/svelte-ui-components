@@ -101,6 +101,8 @@
     dictationCancelCount += 1;
     dictationState = 'idle';
   }
+
+  let attachClicks = $state(0);
 </script>
 
 <div class="page-header">
@@ -157,6 +159,18 @@
     }}
   />
 </div>
+
+<h2>Attach control — onattachclick hands the click to the caller's own picker</h2>
+<div class="chat-theme composer-frame">
+  <ChatComposer
+    placeholder="Attach a file…"
+    onattachclick={() => {
+      attachClicks += 1;
+    }}
+    onsubmit={() => {}}
+  />
+</div>
+<p class="demo-note">Attach clicked {attachClicks} times</p>
 
 <h2>Async submit — keeps the draft when the send fails</h2>
 <label class="demo-toggle">

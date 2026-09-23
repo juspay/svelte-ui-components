@@ -75,7 +75,7 @@
   let placementRequest: SelectPlacement = $derived(
     placement ?? (dropdownAlign === 'right' ? 'bottom-right' : 'bottom-left')
   );
-  let placementPinned: boolean = $derived(placement != null);
+  let placementPinned: boolean = $derived(placement != null && placement !== 'auto');
 
   /** Corner an `'auto'` measuring pass settled on; null until it has run. */
   let autoResolved: Exclude<SelectPlacement, 'auto'> | null = $state(null);
@@ -315,8 +315,8 @@
       dropdown: { width: dropdownWidth, height: dropdownHeight },
       viewport,
       align: placementAlign,
-      /* Unset `placement` keeps the fit-based flip this path always had; a pinned
-         corner is honoured on both axes instead. */
+      /* Unset and explicit 'auto' placements keep the fit-based flip and viewport
+         clamp; only a caller-pinned corner overrides the vertical fit. */
       vertical: placementPinned
         ? resolvedPlacement === 'top-left' || resolvedPlacement === 'top-right'
           ? 'top'

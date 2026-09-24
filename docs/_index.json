@@ -392,6 +392,10 @@
     "description": "An AI status line for chat turns: a shimmering label while the model works, an optional expandable detail — either a plain reasoning paragraph or a kind-aware trace (steps checklist with a live frontier spinner, prose reasoning, linked search sources with toned badges, or selectable file edits with diff stats) — plus a host-driven busy machine (auto-open, once-only `onsettled`, post-settle auto-collapse a user toggle overrides) and an opt-in live elapsed-seconds counter that ticks while busy and freezes on settle."
   },
   {
+    "name": "ThinkingOrb",
+    "description": "A small canvas dot animation for an AI or agent turn in progress, with nine distinct states (working, searching, solving, listening, connecting, weaving, composing, breathing, shaping) so a chat UI can show which phase is running. Supports three fixed sizes, speed/density/dot-size multipliers, a themeable dot colour, opt-in pointer gravity scoped to its own canvas, a single held instant under prefers-reduced-motion, a role=\"img\" default per-state label, and a <sui-thinking-orb> custom element."
+  },
+  {
     "name": "Toast",
     "description": "An animated notification that slides in from a configurable direction, stays visible for a duration, then slides out. Supports type variants (success/error/info/warn) with different background colors, optional icons, subtext, and bottom content."
   },

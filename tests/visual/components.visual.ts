@@ -40,7 +40,12 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
   // every canvas on the route -- which the first revision of this entry did --
   // left a baseline of nothing but headings, and a passing visual suite that
   // would not have noticed the orb going blank. It did go blank.
-  'voice-orb': ['.demo-row', '.orb-grid']
+  'voice-orb': ['.demo-row', '.orb-grid'],
+  // Same rAF-canvas reason as voice-orb, and the same `.orb-still` exception. A
+  // `paused` orb alone is NOT enough: it freezes at its mount time, which drifts a
+  // few ms between runs and moved a `connecting` packet. `speed={0}` pins the
+  // frame to t=0, and the engine has no randomness, so those canvases compare.
+  'thinking-orb': ['.orb-grid']
 };
 
 /**

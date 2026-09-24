@@ -140,13 +140,13 @@ describe('collectWcDisplayEntries', () => {
 // ------------------------------------------------ against this repo's own real components
 
 describe('collectWcDisplayEntries — against this repo’s own real src/wc/components', () => {
-  it('proves reachability: the real directory this build reads from yields the 99 rules the docs claim, with nothing skipped', () => {
+  it('proves reachability: the real directory this build reads from yields the 100 rules the docs claim, with nothing skipped', () => {
     const realDir = resolve(process.cwd(), 'src/wc/components');
 
     const entries = collectWcDisplayEntries(realDir);
 
-    expect(entries.length).toBe(99);
-    expect(new Set(entries.map((e) => e.tag)).size).toBe(99);
+    expect(entries.length).toBe(100);
+    expect(new Set(entries.map((e) => e.tag)).size).toBe(100);
   });
 });
 

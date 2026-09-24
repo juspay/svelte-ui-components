@@ -538,9 +538,9 @@ describe('analyzeSvelte / analyzeStylesheet — chat-composer recording reflect'
 describe('readWcComponents', () => {
   const components = readWcComponents(process.cwd());
 
-  it('finds all 99 wc wrappers, split 87 block / 12 inline-block', () => {
-    expect(components).toHaveLength(99);
-    expect(components.filter((c) => c.display === 'block')).toHaveLength(87);
+  it('finds all 100 wc wrappers, split 88 block / 12 inline-block', () => {
+    expect(components).toHaveLength(100);
+    expect(components.filter((c) => c.display === 'block')).toHaveLength(88);
     expect(components.filter((c) => c.display === 'inline-block')).toHaveLength(12);
   });
 

@@ -56,6 +56,7 @@ import './components/Sheet.wc.svelte';
 import './components/Snippet.wc.svelte';
 import './components/SplitButton.wc.svelte';
 import './components/Table.wc.svelte';
+import './components/ThinkingOrb.wc.svelte';
 import './components/Toast.wc.svelte';
 import './components/Toolbar.wc.svelte';
 import './components/Tooltip.wc.svelte';

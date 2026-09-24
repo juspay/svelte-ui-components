@@ -152,6 +152,7 @@ export const componentNav: NavGroup[] = [
       { name: 'ChatBubble', slug: 'chat-bubble' },
       { name: 'HITL', slug: 'hitl' },
       { name: 'ThinkingIndicator', slug: 'thinking-indicator' },
+      { name: 'ThinkingOrb', slug: 'thinking-orb' },
       { name: 'TaskList', slug: 'task-list' },
       { name: 'TypewriterText', slug: 'typewriter-text' },
       { name: 'MarkdownText', slug: 'markdown-text' },

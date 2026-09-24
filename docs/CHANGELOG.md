@@ -2,7 +2,37 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.31.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.32.0)
+
+The Table sort button, the Snippet copy button and the ChatComposer attach
+and voice controls are transparent by design, but each rendered through the
+default primary variant and repainted itself from a wrapper
+(--button-color: transparent on .sort-button, .snippet-copy, .attach/.voice).
+
+A consumer theme that restyles a variant does so on the variant's own
+container. Lighthouse's embedded Shopify surface pins the host's ink fill on
+every .variant-primary container, and a declaration on the container beats
+anything a wrapper passes down, so every one of these buttons painted as a
+solid #303030 button there. Measured across 53 embedded routes: 61 table sort
+buttons plus the snippet and composer controls.
+
+They are ghost buttons, so they now say so. A primary theme no longer
+matches them, and a ghost theme gives them the host's transparent look.
+
+Ghost supplies its own hover label (--_btn-hover-text-color) where primary
+supplied none, so an unthemed Snippet copy button would have hovered to
+#3a4550 on its #333 fill. Snippet and the composer controls now pair the
+hover label with their own text colour, recording red included, which keeps
+the unthemed look unchanged. The Table sort button already set its own.
+
+Adds an attach-control demo to the ChatComposer page (no demo rendered the
+attach button, so nothing could test it), re-baselines chat-composer.png
+for that section alone (every existing control is pixel-identical), and
+moves the focus-visible allowlist entry for .input from line 396 to 398.
+
+Refs BZ-6377
+
+## [4.32.0](https://github.com/juspay/svelte-ui-components/compare/4.32.0..4.31.3) - 21 September 2026
 
 Builds a named-tier CSS token system (--duration-*, --ease-*, --distance-*)
 sitting between each component's own override token and the existing

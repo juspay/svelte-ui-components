@@ -2,7 +2,29 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.32.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.32.1)
+
+Adds ThinkingOrb and the &lt;sui-thinking-orb&gt; custom element: a small canvas
+animation built from dots for the moment a chat UI waits on an AI or agent
+turn. Refs BZ-6370.
+
+- Nine states (working, searching, solving, listening, connecting, weaving,
+composing, breathing, shaping). Each is a pure (t, ctx) =&gt; Frame function
+under src/lib/ThinkingOrb/orb/modes; paintFrame owns the canvas.
+- Three fixed sizes (64, 32, 20) with speed, dots and dotSize multipliers.
+- The dot colour comes from the color prop, then --sui-thinking-orb-color,
+then the inherited text colour. Orbs repaint live on a theme change,
+including paused and reduced-motion orbs.
+- Opt-in gravity pulls nearby dots and line ends toward the pointer inside
+the orb's own canvas. It is off under prefers-reduced-motion.
+- role="img" with a default label per state and an ariaLabel override.
+Reduced motion holds one still instant.
+- The orb keeps its own clock, so a paused or off-screen orb resumes where
+it stopped and a speed change never jumps.
+- Docs page, docs/_index.json entry, /components/thinking-orb demo, and a
+visual baseline.
+
+## [4.32.1](https://github.com/juspay/svelte-ui-components/compare/4.32.1..4.32.0) - 24 September 2026
 
 The Table sort button, the Snippet copy button and the ChatComposer attach
 and voice controls are transparent by design, but each rendered through the

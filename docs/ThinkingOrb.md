@@ -49,7 +49,7 @@ A small canvas animation, built from dots, for the moment a chat UI is waiting o
 
 **You do not have to set this.** The orb draws in the text colour it inherits by default, following your theme with no configuration. Set the variable to give the orb a different colour from the surrounding text. If neither the variable nor the inherited colour is a colour the canvas can parse, the orb falls back to a mid-grey — the same fallback chain `VoiceOrb` uses.
 
-Dark/light is detected automatically from this repo's own `data-theme` attribute (set by `ThemeSwitcher`) — there is no `theme` prop.
+The orb never checks how a host marks dark mode — there is no `theme` prop and it reads no `data-theme` attribute. Depth is drawn as transparency against whatever the resolved colour is, so it reads correctly under any theme mechanism: a `data-theme` attribute, a `class`, `color-scheme`, or anything else, on `<html>` or `<body>`. A still (paused, reduced-motion, or off-screen) orb re-checks its resolved colour whenever such an attribute changes and repaints its held pose if the colour actually moved, so switching themes instantly still looks right even with no CSS transition.
 
 ## Interactivity
 

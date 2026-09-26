@@ -8,7 +8,7 @@
     { state: 'solving', blurb: 'bands turn out of place in turn, then straighten back' },
     { state: 'listening', blurb: 'a wave of brightness rises through stacked rings' },
     { state: 'connecting', blurb: 'nodes link to their nearest neighbours' },
-    { state: 'weaving', blurb: 'three spiral strands swing past each other end to end' },
+    { state: 'weaving', blurb: 'three strands wind round the sphere like a ball of yarn' },
     { state: 'composing', blurb: 'a soft-edged ribbon ripples like fabric' },
     { state: 'breathing', blurb: 'a ring swells and settles on a slow cycle' },
     { state: 'shaping', blurb: 'a ring reshapes from round to a triangle to a square' }

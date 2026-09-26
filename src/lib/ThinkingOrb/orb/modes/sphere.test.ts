@@ -152,6 +152,23 @@ describe('solving', () => {
     // an earlier equivalent point in the cycle rather than drifting forever.
     expect(wellPastAScramble).not.toEqual(start);
   });
+
+  it('joins its meridian lines unbroken when solved and breaks them when scrambled', () => {
+    // After the 3 seams x 12 segments come the meridians: 4 bands x 3 landmarks x 2 segments, so
+    // band b / landmark s owns segments (b * 3 + s) * 2 and + 1, top to bottom.
+    const meridianGaps = (t: number): number[] => {
+      const meridians = solving(t, contextFor(64)).strokes.slice(36);
+      return [0, 1, 2].flatMap((slot) =>
+        [0, 1, 2].map((band) => {
+          const bottom = meridians[(band * 3 + slot) * 2 + 1];
+          const nextTop = meridians[((band + 1) * 3 + slot) * 2];
+          return Math.hypot(bottom.x2 - nextTop.x1, bottom.y2 - nextTop.y1);
+        })
+      );
+    };
+    expect(Math.max(...meridianGaps(0))).toBeLessThan(0.01);
+    expect(Math.max(...meridianGaps(1.6))).toBeGreaterThan(3);
+  });
 });
 
 describe('searching', () => {
@@ -176,6 +193,13 @@ describe('listening', () => {
     const frame = listening(0, contextFor(20));
     expect(frame.dots.length).toBeGreaterThan(0);
   });
+
+  it('draws denser rings at 32px than at 20px instead of both falling to the same minimum', () => {
+    // 4 rings at 32px, 3 at 20px (LISTENING_RING_COUNT).
+    const perRingAt32 = listening(0, contextFor(32)).dots.length / 4;
+    const perRingAt20 = listening(0, contextFor(20)).dots.length / 3;
+    expect(perRingAt32).toBeGreaterThan(perRingAt20);
+  });
 });
 
 describe('working', () => {
@@ -188,5 +212,41 @@ describe('working', () => {
     const frame = working(0.3, contextFor(64));
     const depths = new Set(frame.dots.map((dot) => dot.depth));
     expect(depths.size).toBeGreaterThan(1);
+  });
+
+  it('draws its small-size orbits as distinct tilted ellipses, not one shared circle', () => {
+    // 3 orbits at 20px and 4 at 32px (WORKING_SMALL_LAYOUT), each a 24-segment path.
+    for (const [size, orbits] of [
+      [32, 4],
+      [20, 3]
+    ] as const) {
+      const { strokes } = working(0.4, contextFor(size));
+      expect(strokes.length).toBe(orbits * 24);
+      const axes = Array.from({ length: orbits }, (_unused, orbit) => {
+        const path = strokes.slice(orbit * 24, (orbit + 1) * 24);
+        const mx = path.reduce((sum, s) => sum + s.x1, 0) / path.length;
+        const my = path.reduce((sum, s) => sum + s.y1, 0) / path.length;
+        const sxx = path.reduce((sum, s) => sum + (s.x1 - mx) ** 2, 0);
+        const syy = path.reduce((sum, s) => sum + (s.y1 - my) ** 2, 0);
+        const sxy = path.reduce((sum, s) => sum + (s.x1 - mx) * (s.y1 - my), 0);
+        const spread = Math.sqrt((sxx - syy) ** 2 + 4 * sxy ** 2);
+        return {
+          flatness: Math.sqrt((sxx + syy - spread) / (sxx + syy + spread)),
+          angle: 0.5 * Math.atan2(2 * sxy, sxx - syy)
+        };
+      });
+      for (const { flatness } of axes) {
+        expect(flatness).toBeLessThan(0.75);
+      }
+      const angles = axes.map(({ angle }) => angle);
+      expect(Math.max(...angles) - Math.min(...angles)).toBeGreaterThan(0.5);
+    }
+  });
+
+  it('keeps its dots wide enough at 20px for a train to read as a stroke, not a smudge', () => {
+    for (const t of T_VALUES) {
+      const smallest = Math.min(...working(t, contextFor(20)).dots.map((dot) => dot.radius));
+      expect(smallest).toBeGreaterThanOrEqual(0.9);
+    }
   });
 });

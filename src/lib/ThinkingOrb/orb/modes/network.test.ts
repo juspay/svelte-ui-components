@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { connecting, weaving } from './network';
+import { inkAlpha } from '../paint';
 import type { Frame, ModeContext, ModeFn, ModeSize } from '../types';
 
 const SIZES: readonly ModeSize[] = [64, 32, 20];
@@ -133,6 +134,61 @@ describe('weaving', () => {
       const frame = weaving(0.3, contextFor(size));
       expect(frame.dots.length % 3).toBe(0);
       expect(frame.strokes.length).toBe(frame.dots.length - 3);
+    }
+  });
+
+  it('starts each of the three strands in its own place instead of pinching them into one point', () => {
+    for (const size of SIZES) {
+      for (const t of [0, 1.7, 12.25]) {
+        const { dots } = weaving(t, contextFor(size));
+        const perStrand = dots.length / 3;
+        for (const end of [0, perStrand - 1]) {
+          const ends = [0, 1, 2].map((strand) => dots[strand * perStrand + end]);
+          for (const [a, b] of [
+            [0, 1],
+            [1, 2],
+            [0, 2]
+          ]) {
+            const apart = Math.hypot(ends[a].x - ends[b].x, ends[a].y - ends[b].y);
+            expect(apart).toBeGreaterThan(size * 0.05);
+          }
+        }
+      }
+    }
+  });
+
+  it('keeps every stretch of every strand on screen: no mark paints below 10% opacity', () => {
+    for (const size of SIZES) {
+      for (const t of SAMPLE_TIMES) {
+        const frame = weaving(t, contextFor(size));
+        for (const mark of [...frame.dots, ...frame.strokes]) {
+          expect(inkAlpha(mark.ink, mark.alpha)).toBeGreaterThanOrEqual(0.1);
+        }
+      }
+    }
+  });
+
+  it('never turns a strand edge-on into a straight bar, at any instant of its spin', () => {
+    // A strand is a closed loop; its projected outline's narrow extent over its wide one (from the
+    // spread of its points) drops toward 0 as the loop turns edge-on.
+    const flatness = (points: ReadonlyArray<{ x: number; y: number }>): number => {
+      const mx = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+      const my = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+      const sxx = points.reduce((sum, p) => sum + (p.x - mx) ** 2, 0);
+      const syy = points.reduce((sum, p) => sum + (p.y - my) ** 2, 0);
+      const sxy = points.reduce((sum, p) => sum + (p.x - mx) * (p.y - my), 0);
+      const spread = Math.sqrt((sxx - syy) ** 2 + 4 * sxy ** 2);
+      return Math.sqrt((sxx + syy - spread) / (sxx + syy + spread));
+    };
+    for (const size of SIZES) {
+      for (let step = 0; step < 48; step += 1) {
+        const { dots } = weaving(step * 0.45, contextFor(size));
+        const perStrand = dots.length / 3;
+        for (const strand of [0, 1, 2]) {
+          const points = dots.slice(strand * perStrand, (strand + 1) * perStrand);
+          expect(flatness(points)).toBeGreaterThan(0.4);
+        }
+      }
     }
   });
 });

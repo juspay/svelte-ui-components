@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { breathing, composing, shaping } from './form';
+import { inkAlpha } from '../paint';
 import type { ModeContext, ModeFn, ModeSize } from '../types';
 
 const SIZES: readonly ModeSize[] = [64, 32, 20];
@@ -207,6 +208,36 @@ describe('composing / breathing / shaping', () => {
         expect(a).not.toEqual(b);
         expect(b).not.toEqual(c);
         expect(a).not.toEqual(c);
+      }
+    }
+  });
+});
+
+describe.each([
+  ['breathing', breathing],
+  ['shaping', shaping]
+] as const)('%s ring legibility', (_name, mode) => {
+  it('draws separate dots: neighbours sit further apart than a dot is wide, at every size', () => {
+    for (const size of SIZES) {
+      for (const t of [0, 2.5, 6]) {
+        const { dots } = mode(t, baseContext(size));
+        const gaps = dots.map((dot, i) => {
+          const next = dots[(i + 1) % dots.length];
+          return Math.hypot(next.x - dot.x, next.y - dot.y);
+        });
+        const meanGap = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
+        const meanDiameter = (2 * dots.reduce((sum, dot) => sum + dot.radius, 0)) / dots.length;
+        expect(meanGap).toBeGreaterThan(meanDiameter);
+      }
+    }
+  });
+
+  it('keeps the far side of the ring on screen: no dot paints below 15% opacity', () => {
+    for (const size of SIZES) {
+      for (const t of [0, 2.5, 6]) {
+        for (const dot of mode(t, baseContext(size)).dots) {
+          expect(inkAlpha(dot.ink, dot.alpha)).toBeGreaterThanOrEqual(0.15);
+        }
       }
     }
   });

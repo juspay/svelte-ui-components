@@ -72,21 +72,17 @@ const toStroke = (from: Vec, to: Vec, width: number, ink: number, alpha: number)
  * as noise once density thins the count out at 32/20px, while a handful of
  * particles held close together always reads as motion along a path. */
 const WORKING_TRAIN_BASE_COUNT = 22;
-/** Keeps at least this many short arcs on screen at each size. At 32/64px the
- * area scaler alone already clears this floor, so it only bites at 20px. More
- * than one train per orbit (WORKING_ORBIT_COUNT = 6) matters because depth
- * shading fades whichever half of each orbit is on the far side of the
- * sphere at a given instant almost to the background -- one train per orbit
- * left whole quadrants with no train currently on the near side to fill
- * them; two independently-phased laps around the six orbits keeps at least
- * a couple of quadrants covered at every instant, not just on average. */
-const WORKING_MIN_TRAINS: Record<ModeSize, number> = { 64: 3, 32: 3, 20: 12 };
+/** Keeps at least this many short arcs on screen at 64px (32/20px use WORKING_SMALL_LAYOUT). The
+ * area scaler alone already clears it at the default density; it only bites when density is low. */
+const WORKING_MIN_TRAINS_64 = 3;
 const WORKING_TRAIN_LENGTH = 5;
 /** How far apart, in radians, a train's particles trail behind its lead --
  * wide enough to read as a short curved arc, short enough to stay a cluster
  * rather than smearing back into the full-orbit scatter this replaces. */
 const WORKING_TRAIN_ARC_SPAN = 0.5;
-const WORKING_BASE_RADIUS_PX = 1.6;
+/** At 1.6, with a +/-25% jitter, 20px dots came out 0.6-1px across and the arcs blurred into a
+ * smudge; this and the narrower jitter below keep a train a visible stroke at every size. */
+const WORKING_BASE_RADIUS_PX = 2.2;
 const WORKING_ORBIT_COUNT = 6;
 const WORKING_ANGULAR_SPEED = 1.1;
 /** How far an orbit's `weight` can push its dots' ink away from the shared
@@ -119,21 +115,66 @@ const workingOrbit = (
   };
 };
 
+/** At 32/20px six randomly tilted orbits of short arcs collapse into one busy cluster: each arc is
+ * only a few px long and the orbits overlap. These sizes instead spread a few orbits evenly around
+ * the view axis (like an atom symbol) and give each train a long arc, so every train draws a
+ * visible curve and the separate orbits stay readable. */
+const WORKING_SMALL_LAYOUT: Partial<
+  Record<ModeSize, { orbits: number; trainLength: number; arcSpan: number }>
+> = {
+  32: { orbits: 4, trainLength: 6, arcSpan: 1 },
+  20: { orbits: 3, trainLength: 7, arcSpan: 1.25 }
+};
+/** How far each small-size orbit tips out of edge-on. Its projection is an ellipse sin(tilt) as
+ * tall as it is wide; near 1 rad every orbit projects to nearly the same circle and rolling it
+ * about the view axis changes nothing, so the orbits merged into one ring. */
+const WORKING_SMALL_ORBIT_TILT = 0.5;
+/** At 32/20px each orbit's path is drawn as a faint thin ellipse under its trains: a 20px train
+ * alone is too short to show which ellipse it is travelling, so without the path the trains read
+ * as a pinwheel rather than as particles circling several tilted orbits. */
+const WORKING_PATH_SEGMENTS = 24;
+const WORKING_PATH_WIDTH_PX = 0.8;
+const WORKING_PATH_INK = 0.5;
+const WORKING_PATH_ALPHA = 0.45;
+const WORKING_SMALL_ORBIT_RADIUS = 0.85;
+const WORKING_SMALL_SPEEDS = [0.8, 1.15, 1.45, 1];
+
+type WorkingOrbit = ReturnType<typeof workingOrbit>;
+
+/** One orbit of the small-size layout: shared tilt, rolled evenly around the view axis. */
+const workingSmallOrbit = (orbit: number, orbits: number): WorkingOrbit => ({
+  ...workingOrbit(orbit),
+  tilt: WORKING_SMALL_ORBIT_TILT,
+  roll: (orbit / orbits) * Math.PI,
+  orbitRadiusFactor: WORKING_SMALL_ORBIT_RADIUS,
+  speedFactor: WORKING_SMALL_SPEEDS[orbit % WORKING_SMALL_SPEEDS.length]
+});
+
 export const working: ModeFn = (t, ctx) => {
   const sizing = modeSizing(ctx.size, ctx.density, ctx.dotScale);
   const origin = originOf(ctx);
   const worldRadius = worldRadiusOf(ctx);
-  const trainCount = Math.max(WORKING_MIN_TRAINS[ctx.size], sizing.count(WORKING_TRAIN_BASE_COUNT));
-  const arcStep = WORKING_TRAIN_ARC_SPAN / (WORKING_TRAIN_LENGTH - 1);
+  const small = WORKING_SMALL_LAYOUT[ctx.size];
+  // Small sizes run two opposite trains per orbit (scaled by density); 64px keeps its own swarm.
+  const lapsPerOrbit = Math.max(1, Math.round(2 * ctx.density));
+  const trainCount = small
+    ? small.orbits * lapsPerOrbit
+    : Math.max(WORKING_MIN_TRAINS_64, sizing.count(WORKING_TRAIN_BASE_COUNT));
+  const trainLength = small ? small.trainLength : WORKING_TRAIN_LENGTH;
+  const arcStep = (small ? small.arcSpan : WORKING_TRAIN_ARC_SPAN) / (trainLength - 1);
 
   const dots: Dot[] = [];
   for (let train = 0; train < trainCount; train += 1) {
-    const orbit = workingOrbit(train % WORKING_ORBIT_COUNT);
-    const leadPhase = hashUnit(train * 5 + 1) * TWO_PI;
+    const orbit = small
+      ? workingSmallOrbit(train % small.orbits, small.orbits)
+      : workingOrbit(train % WORKING_ORBIT_COUNT);
+    const leadPhase = small
+      ? (Math.floor(train / small.orbits) / lapsPerOrbit) * TWO_PI + (train % small.orbits) * 0.9
+      : hashUnit(train * 5 + 1) * TWO_PI;
     const leadAngle = leadPhase + t * WORKING_ANGULAR_SPEED * orbit.speedFactor;
     const orbitRadius = worldRadius * orbit.orbitRadiusFactor;
 
-    for (let slot = 0; slot < WORKING_TRAIN_LENGTH; slot += 1) {
+    for (let slot = 0; slot < trainLength; slot += 1) {
       const angle = leadAngle - slot * arcStep;
       const planar: Point3 = {
         x: Math.cos(angle) * orbitRadius,
@@ -145,7 +186,7 @@ export const working: ModeFn = (t, ctx) => {
       const projected = project(point, origin, worldRadius);
 
       const seed = train * 13 + slot * 7 + 2;
-      const trail = 1 - slot / (WORKING_TRAIN_LENGTH - 1);
+      const trail = 1 - slot / (trainLength - 1);
       const ink =
         shadeByDepth(projected.depth) +
         (hashUnit(seed) - 0.5) * 0.08 -
@@ -153,13 +194,40 @@ export const working: ModeFn = (t, ctx) => {
       const alpha =
         (WORKING_TRAIL_ALPHA_FLOOR + (1 - WORKING_TRAIL_ALPHA_FLOOR) * trail) *
         (WORKING_ORBIT_ALPHA_FLOOR + (1 - WORKING_ORBIT_ALPHA_FLOOR) * orbit.weight);
-      const radius = sizing.radius(WORKING_BASE_RADIUS_PX) * (0.75 + 0.5 * hashUnit(seed + 3));
+      const radius = sizing.radius(WORKING_BASE_RADIUS_PX) * (0.9 + 0.25 * hashUnit(seed + 3));
 
       dots.push(toDot(projected, radius, ink, alpha));
     }
   }
 
-  return { dots, strokes: [] };
+  const paths: Stroke[] = small
+    ? Array.from({ length: small.orbits }, (_unused, orbitIndex) => {
+        const orbit = workingSmallOrbit(orbitIndex, small.orbits);
+        const orbitRadius = worldRadius * orbit.orbitRadiusFactor;
+        const points = Array.from({ length: WORKING_PATH_SEGMENTS + 1 }, (_unusedPoint, j) => {
+          const angle = (j / WORKING_PATH_SEGMENTS) * TWO_PI;
+          const planar: Point3 = {
+            x: Math.cos(angle) * orbitRadius,
+            y: 0,
+            z: Math.sin(angle) * orbitRadius
+          };
+          return project(rotateZ(rotateX(planar, orbit.tilt), orbit.roll), origin, worldRadius);
+        });
+        return points
+          .slice(1)
+          .map((to, j) =>
+            toStroke(
+              points[j],
+              to,
+              sizing.radius(WORKING_PATH_WIDTH_PX),
+              WORKING_PATH_INK,
+              WORKING_PATH_ALPHA
+            )
+          );
+      }).flat()
+    : [];
+
+  return { dots, strokes: paths };
 };
 
 // ---------------------------------------------------------------------------
@@ -260,9 +328,23 @@ const SOLVING_TILT = -0.5;
  * cluster relative to its neighbours instead of only reshuffling texture
  * that looks the same before and after. */
 const SOLVING_LANDMARKS_PER_TIER = 3;
+/** One phase for every tier, so in the solved pose each tier's landmarks line up into the same
+ * three columns and a turned tier visibly breaks out of them. A per-tier phase scattered them
+ * even when solved, leaving nothing for a turn to disturb. */
+const SOLVING_LANDMARK_PHASE = hashUnit(5) * TWO_PI;
 const SOLVING_LANDMARK_RADIUS_PX = 3.1;
 const SOLVING_LANDMARK_INK_BOOST = 0.45;
 const SOLVING_LANDMARK_ALPHA = 0.9;
+/** Each landmark also draws a short meridian stroke spanning its tier. Solved, the strokes of all
+ * tiers join into three unbroken vertical lines; a turned tier's strokes jump sideways and break
+ * the lines into a visible staircase. Held scrambled, loose landmark dots alone still formed tidy
+ * columns of their own and read as just another solved pose. */
+const SOLVING_MERIDIAN_POINTS_PER_TIER = 3;
+const SOLVING_MERIDIAN_WIDTH_PX = 1.6;
+const SOLVING_MERIDIAN_INK_BOOST = 0.35;
+const SOLVING_MERIDIAN_ALPHA = 0.85;
+/** The meridians stop this far short of the poles, where all three would otherwise converge. */
+const SOLVING_MERIDIAN_Y_LIMIT = 0.9;
 
 /** A static ring of short strokes at each cut between tiers, unaffected by
  * any turn, so the "cut into bands" structure reads even while the puzzle
@@ -348,8 +430,7 @@ export const solving: ModeFn = (t, ctx) => {
       const yUnit = solvingTierCenterYUnit(tier);
       const y = yUnit * worldRadius;
       const ringRadius = Math.sqrt(Math.max(0, 1 - yUnit * yUnit)) * worldRadius;
-      const phase = hashUnit(tier * 29 + 5) * TWO_PI;
-      const longitude = phase + (slot / SOLVING_LANDMARKS_PER_TIER) * TWO_PI;
+      const longitude = SOLVING_LANDMARK_PHASE + (slot / SOLVING_LANDMARKS_PER_TIER) * TWO_PI;
       const base: Point3 = {
         x: Math.cos(longitude) * ringRadius,
         y,
@@ -388,7 +469,45 @@ export const solving: ModeFn = (t, ctx) => {
     );
   }).flat();
 
-  return { dots: [...texture, ...landmarks], strokes: seams };
+  const meridianWidth = sizing.radius(SOLVING_MERIDIAN_WIDTH_PX);
+  const meridians = Array.from(
+    { length: SOLVING_TIER_COUNT * SOLVING_LANDMARKS_PER_TIER },
+    (_unused, i) => {
+      const tier = Math.floor(i / SOLVING_LANDMARKS_PER_TIER);
+      const slot = i % SOLVING_LANDMARKS_PER_TIER;
+      const longitude = SOLVING_LANDMARK_PHASE + (slot / SOLVING_LANDMARKS_PER_TIER) * TWO_PI;
+      const topYUnit = Math.min(SOLVING_MERIDIAN_Y_LIMIT, 1 - (2 * tier) / SOLVING_TIER_COUNT);
+      const bottomYUnit = Math.max(
+        -SOLVING_MERIDIAN_Y_LIMIT,
+        1 - (2 * (tier + 1)) / SOLVING_TIER_COUNT
+      );
+      const points = Array.from({ length: SOLVING_MERIDIAN_POINTS_PER_TIER }, (_unusedPoint, j) => {
+        const yUnit =
+          topYUnit + ((bottomYUnit - topYUnit) * j) / (SOLVING_MERIDIAN_POINTS_PER_TIER - 1);
+        const ringRadius = Math.sqrt(Math.max(0, 1 - yUnit * yUnit)) * worldRadius;
+        const base: Point3 = {
+          x: Math.cos(longitude) * ringRadius,
+          y: yUnit * worldRadius,
+          z: Math.sin(longitude) * ringRadius
+        };
+        const turned = rotateY(base, solvingTurnAngle(tier, cyclePos));
+        return project(rotateX(turned, SOLVING_TILT), origin, worldRadius);
+      });
+      return points.slice(1).map((to, j) => {
+        const from = points[j];
+        const depth = (from.depth + to.depth) / 2;
+        return toStroke(
+          from,
+          to,
+          meridianWidth,
+          shadeByDepth(depth) - SOLVING_MERIDIAN_INK_BOOST,
+          SOLVING_MERIDIAN_ALPHA
+        );
+      });
+    }
+  ).flat();
+
+  return { dots: [...texture, ...landmarks], strokes: [...seams, ...meridians] };
 };
 
 // ---------------------------------------------------------------------------
@@ -398,13 +517,17 @@ export const solving: ModeFn = (t, ctx) => {
 /** Fewer, fatter rings at the smaller presets read as distinct stacked bands;
  * six thin rings at 20px used to compress into a single smudge. */
 const LISTENING_RING_COUNT: Record<ModeSize, number> = { 64: 5, 32: 4, 20: 3 };
+/** Dots per ring at 64px, through `countAlongPath` so 32px keeps a denser ring than 20px
+ * instead of both falling to the minimum below. */
 const LISTENING_DOTS_PER_RING_BASE = 26;
 /** A ring below this many dots reads as a loose cluster of points rather than
  * a line, especially once it is a small ellipse at 20px. */
 const LISTENING_MIN_DOTS_PER_RING = 10;
 const LISTENING_BASE_RADIUS_PX = 1.5;
 const LISTENING_WAVE_SPEED = 0.6;
-const LISTENING_SWELL = 0.55;
+/** How much a ring's dots grow as the wave crests through it. At 0.55 the crest ate most of the
+ * gap between rings at 32/20px, where the rings sit only a few px apart. */
+const LISTENING_SWELL = 0.3;
 const LISTENING_LIFT_INK = 0.45;
 const LISTENING_SPIN_SPEED = 0.12;
 /** A ring's own vertical thickness once tilted is (its radius) x sin(tilt); a
@@ -413,10 +536,10 @@ const LISTENING_SPIN_SPEED = 0.12;
  * neighbouring rings' ellipses swallow the empty space between them. Kept
  * shallow rather than flattened to zero so a ring still reads as an ellipse
  * seen slightly from above, not a flat line. */
-const LISTENING_TILT = -0.13;
+const LISTENING_TILT = -0.1;
 /** Rings are stacked between +/- this fraction of the world radius, short of
  * the poles so the top and bottom rings stay full circles, not points. */
-const LISTENING_Y_SPAN = 0.82;
+const LISTENING_Y_SPAN = 0.86;
 
 const listeningRing = (
   ring: number,
@@ -437,10 +560,9 @@ export const listening: ModeFn = (t, ctx) => {
   const origin = originOf(ctx);
   const worldRadius = worldRadiusOf(ctx);
   const ringCount = LISTENING_RING_COUNT[ctx.size];
-  const totalBase = ringCount * LISTENING_DOTS_PER_RING_BASE;
   const dotsPerRing = Math.max(
     LISTENING_MIN_DOTS_PER_RING,
-    Math.round(sizing.count(totalBase) / ringCount)
+    sizing.countAlongPath(LISTENING_DOTS_PER_RING_BASE)
   );
 
   const dots = Array.from({ length: ringCount }, (_unused, r) => {

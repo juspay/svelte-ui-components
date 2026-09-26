@@ -29,17 +29,17 @@ A small canvas animation, built from dots, for the moment a chat UI is waiting o
 
 ## States
 
-| `state`      | What it shows                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------ |
-| `working`    | Dots travel in short trails along six differently tilted loops around a centre             |
-| `searching`  | A bright band sweeps around a speckled sphere, top to bottom, lighting the dots it crosses |
-| `solving`    | Horizontal bands turn a quarter out of place in sequence, pause, then straighten back      |
-| `listening`  | A wave of brightness rises through a stack of rings, swelling each as it reaches it        |
-| `connecting` | Scattered nodes link to their nearest neighbours; small dots travel along the links        |
-| `weaving`    | Three spiral strands wrap the sphere end to end, swinging past each other as it turns      |
-| `composing`  | A broad, soft-edged ribbon of dots ripples like fabric as it turns                         |
-| `breathing`  | A ring of dots swells and settles on a slow, unresting cycle                               |
-| `shaping`    | A ring of dots reshapes itself smoothly from round to a triangle to a square and back      |
+| `state`      | What it shows                                                                                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `working`    | Dots trail in short arcs along six tilted loops around a centre at 64px; at 32/20px a few evenly spaced orbits show as faint ellipses, each carrying a bright comet-like train of dots |
+| `searching`  | A bright band sweeps around a speckled sphere, top to bottom, lighting the dots it crosses                                                                                             |
+| `solving`    | Horizontal bands turn a quarter out of place in sequence, pause, then straighten back                                                                                                  |
+| `listening`  | A wave of brightness rises through a stack of rings, swelling each as it reaches it                                                                                                    |
+| `connecting` | Scattered nodes link to their nearest neighbours; small dots travel along the links                                                                                                    |
+| `weaving`    | Three strands wind round the sphere like a ball of yarn, crossing over and under each other as it turns                                                                                |
+| `composing`  | A soft-edged ribbon of dots ripples like fabric as it turns                                                                                                                            |
+| `breathing`  | A ring of dots swells and settles on a slow, unresting cycle                                                                                                                           |
+| `shaping`    | A ring of dots reshapes itself smoothly from round to a triangle to a square and back                                                                                                  |
 
 ## Theming
 

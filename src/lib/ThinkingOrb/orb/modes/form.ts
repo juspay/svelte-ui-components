@@ -33,8 +33,12 @@ const FORM_RADIUS_RATIO = 0.4;
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));
 
+/** How far toward transparent the farthest dot's ink goes. `paintFrame` multiplies (1 - ink) with
+ * `alpha`, so ink reaching 1 would erase the far side of a ring or ribbon however high its alpha. */
+const FAR_INK = 0.6;
+
 /** Nearer dots read as more saturated tint; `paintFrame` turns low ink into more of `tint`. */
-const depthToInk = (depth: number): number => clamp01(1 - depth);
+const depthToInk = (depth: number): number => clamp01((1 - depth) * FAR_INK);
 
 /** Farther dots stay at partial opacity rather than fading to nothing, so no instant reads blank. */
 const depthToAlpha = (depth: number): number => clamp01(0.5 + depth * 0.5);
@@ -78,10 +82,13 @@ const EMPTY_STROKES: readonly [] = [];
 
 // --- composing ---------------------------------------------------------
 
-const RIBBON_BASE_COUNT = 260;
+/** Dots along each thread at 64px; `countAlongPath` keeps their spacing as the canvas shrinks. */
+const RIBBON_PER_THREAD_BASE = 36;
 const RIBBON_BASE_DOT_RADIUS = 2.2;
-const RIBBON_THREADS: Record<64 | 32 | 20, number> = { 64: 7, 32: 5, 20: 4 };
-const RIBBON_HALF_WIDTH = 0.4;
+/** Fewer, narrower threads than a full band: at 7 threads across 0.4 rad the 64px ribbon covered
+ * most of the sphere and read as a filled ball rather than a strip of cloth. */
+const RIBBON_THREADS: Record<64 | 32 | 20, number> = { 64: 5, 32: 4, 20: 3 };
+const RIBBON_HALF_WIDTH = 0.3;
 /** The ribbon's own great circle sits tilted off the spin axis by this much,
  * so spinning genuinely sweeps its width through the frame -- a band that
  * happened to lie flat on the equator would look identical at every spin
@@ -89,7 +96,9 @@ const RIBBON_HALF_WIDTH = 0.4;
 const RIBBON_AXIS_TILT = 0.68;
 const RIBBON_RIPPLE_WAVES = 3;
 const RIBBON_RIPPLE_SPEED = 1.15;
-const RIBBON_RIPPLE_AMPLITUDE = 0.5;
+/** Kept under RIBBON_HALF_WIDTH: a ripple wider than the band itself swings the ribbon toward
+ * the pole and folds it over itself, which reads as a knot rather than cloth. */
+const RIBBON_RIPPLE_AMPLITUDE = 0.18;
 const RIBBON_THREAD_JITTER = 0.1;
 const RIBBON_SPIN_SPEED = 0.48;
 const RIBBON_CAMERA_TILT = 0.45;
@@ -109,7 +118,7 @@ export const composing: ModeFn = (t: number, ctx: ModeContext): Frame => {
   const worldRadius = ctx.size * FORM_RADIUS_RATIO;
   const originPx = ctx.size / 2;
   const threads = RIBBON_THREADS[ctx.size];
-  const perThread = Math.max(1, Math.ceil(sizing.count(RIBBON_BASE_COUNT) / threads));
+  const perThread = sizing.countAlongPath(RIBBON_PER_THREAD_BASE);
   const total = threads * perThread;
 
   const dots: Dot[] = [];
@@ -155,7 +164,9 @@ export const composing: ModeFn = (t: number, ctx: ModeContext): Frame => {
 
 // --- breathing -----------------------------------------------------------
 
-const BREATHING_BASE_COUNT = 210;
+/** Dots around the ring at 64px. A ring's length grows with `size`, not its area, so this goes
+ * through `countAlongPath`: 210 area-scaled dots sat 0.65px apart at 64px and fused into a line. */
+const BREATHING_BASE_COUNT = 32;
 const BREATHING_BASE_DOT_RADIUS = 1.7;
 /** Sits below composing/shaping's ~0.4: at the peak of its breath this ring
  * already swells by its amplitude plus its shape wobble below, so a resting
@@ -179,7 +190,7 @@ export const breathing: ModeFn = (t: number, ctx: ModeContext): Frame => {
   const sizing = modeSizing(ctx.size, ctx.density, ctx.dotScale);
   const worldRadius = ctx.size * BREATHING_WORLD_RADIUS_RATIO;
   const originPx = ctx.size / 2;
-  const count = sizing.count(BREATHING_BASE_COUNT);
+  const count = sizing.countAlongPath(BREATHING_BASE_COUNT);
   const breathe = Math.sin(t * BREATHING_SPEED);
 
   const dots: Dot[] = [];
@@ -214,7 +225,8 @@ export const breathing: ModeFn = (t: number, ctx: ModeContext): Frame => {
 
 // --- shaping ---------------------------------------------------------------
 
-const SHAPING_BASE_COUNT = 210;
+/** Dots around the outline at 64px, through `countAlongPath` for the same reason as breathing. */
+const SHAPING_BASE_COUNT = 36;
 const SHAPING_BASE_DOT_RADIUS = 1.7;
 const SHAPING_CYCLE_SECONDS = 12;
 // One full turn per morph cycle, so the shape and its orientation both land
@@ -242,7 +254,7 @@ export const shaping: ModeFn = (t: number, ctx: ModeContext): Frame => {
   const sizing = modeSizing(ctx.size, ctx.density, ctx.dotScale);
   const worldRadius = ctx.size * FORM_RADIUS_RATIO;
   const originPx = ctx.size / 2;
-  const count = sizing.count(SHAPING_BASE_COUNT);
+  const count = sizing.countAlongPath(SHAPING_BASE_COUNT);
 
   const cyclePos = (((t / SHAPING_CYCLE_SECONDS) % 1) + 1) % 1;
   const phaseFloat = cyclePos * 3;

@@ -6,7 +6,7 @@
  * projection setup below.
  */
 
-import type { Dot, Frame, ModeContext, ModeFn, Stroke } from '../types';
+import type { Dot, Frame, ModeContext, ModeFn, ModeSize, Stroke } from '../types';
 import type { ModeSizing, Point3 } from '../space';
 import { hashUnit, modeSizing, project, rotateX, rotateY, sampleSphere } from '../space';
 
@@ -40,11 +40,14 @@ const squaredDistance = (a: Point3, b: Point3): number => {
 // with small bright pulses running along the links.
 // ---------------------------------------------------------------------------
 
-const NODE_BASE_COUNT = 16;
+/** A few nodes, not a molecule: at 16 nodes x 3 neighbours the 64px graph carried ~24 edges, each
+ * with its own pulse, and the pulses were lost among the nodes. */
+const NODE_BASE_COUNT = 10;
 const MIN_NODE_COUNT = 6;
-const NEIGHBOR_COUNT = 3;
+const NEIGHBOR_COUNT = 2;
 const NODE_BASE_RADIUS = 3.4;
-const PULSE_BASE_RADIUS = 2;
+/** Well under a node's radius, so a pulse reads as something travelling a link, not another node. */
+const PULSE_BASE_RADIUS = 1.4;
 const EDGE_BASE_WIDTH = 1.1;
 const NODE_ROTATE_SPEED = 0.35;
 const NODE_TILT = 0.45;
@@ -139,43 +142,53 @@ export const connecting: ModeFn = (t, ctx): Frame => {
 };
 
 // ---------------------------------------------------------------------------
-// weaving -- three strands spiralling from top to bottom around a sphere, offset
-// in phase so they interleave; the depth sort in `paintFrame` is what makes
-// them cross over and under each other.
+// weaving -- three closed strands wrapped around a sphere like the windings on
+// a ball of yarn; the depth sort in `paintFrame` is what makes them cross over
+// and under each other.
 // ---------------------------------------------------------------------------
 
 const STRAND_COUNT = 3;
-const STRAND_POINTS_BASE_COUNT = 26;
-const MIN_STRAND_POINTS = 10;
-/** Lower than a bare spiral would use: the braid swing below is what supplies
- * the winding, so the longitude term only needs to carry the strands most of
- * the way around, not add its own extra turns on top. */
-const STRAND_WRAPS = 1.1;
+/** Points around each closed strand at 64px, through `countAlongPath`. */
+const STRAND_POINTS_BASE_COUNT = 40;
+/** Enough points that a strand still draws as a curve at 20px; at 10 its segments were long
+ * enough to show as straight edges and the three strands drew an angular cage. */
+const MIN_STRAND_POINTS = 16;
+/** Each strand is a great circle tilted this far off the horizontal, and the three are turned
+ * 120 degrees apart about the vertical axis, so every pair crosses twice per turn. A pole-to-pole
+ * spiral kept projecting two strands onto nearly the same path. */
+const STRAND_INCLINATION = 0.6;
+/** A slow wave running along each strand, so the three read as threads being worked rather than
+ * three rigid hoops. Small, so the wave never folds a strand across its neighbour's path. */
+const STRAND_WAVE_COUNT = 3;
+const STRAND_WAVE_AMPLITUDE = 0.12;
+const STRAND_WAVE_SPEED = 0.9;
 const STRAND_ROTATE_SPEED = 0.3;
-const STRAND_TILT = 0.5;
+/** How far the camera looks down on the sphere: 1.1 rad, about 63 degrees. A ring turns edge-on,
+ * and draws as a straight bar, when its axis is square to the line of sight. Each ring's axis sits
+ * STRAND_INCLINATION (about 34 degrees) off vertical, and this tilt leaves the vertical about
+ * 90 - 63 = 27 degrees off the line of sight, so a ring's axis is never more than 34 + 27 = 61
+ * degrees off it. No spin angle, and so no paused frame, draws a ring flatter than about
+ * cos 61 = 48% of its width. */
+const STRAND_TILT = 1.1;
 const STRAND_DOT_BASE_RADIUS = 1.6;
 const STRAND_STROKE_BASE_WIDTH = 1.4;
-/** How many times a strand swings past its neighbours along its own pole-to-
- * pole length -- enough that a still frame always lands inside more than one
- * crossing, not so many the braid blurs into texture. */
-const STRAND_BRAID_CYCLES = 2.5;
-/** A constant 120-degree offset alone keeps the three strands in the same
- * relative order the whole way, which reads as one thick spiral rather than
- * three distinct ones. Two strands only visibly swap places, i.e. actually
- * cross, once the swing below overtakes half their 120-degree separation;
- * this sits comfortably past that so every pair of strands crosses, not just
- * wobbles toward each other. */
-const STRAND_BRAID_SWING = 1.3;
+/** At the small sizes the strand lines carry the motif and the beads only clutter it, so lines
+ * thicken and beads shrink as the canvas does. */
+const STRAND_STROKE_SIZE_FACTOR: Record<ModeSize, number> = { 64: 1, 32: 1.2, 20: 1.5 };
+const STRAND_DOT_SIZE_FACTOR: Record<ModeSize, number> = { 64: 1, 32: 0.85, 20: 0.7 };
+/** Depth still dims a strand's far side, but only this far, so no stretch of it disappears. */
+const STRAND_DEPTH_INK = 0.45;
+/** A slight per-strand shade; the paths and their over/under crossings are what separate them. */
+const STRAND_SHADE_STEP = 0.1;
 
 const strandBaseAngle = (strand: number): number => (strand / STRAND_COUNT) * Math.PI * 2;
 
 /**
- * The `pointIndex`-th of `pointsPerStrand` points of `strand`, spiralling
- * from the top of the sphere to the bottom. Each strand's longitude oscillates around its own
- * 120-degree slot (the braid swing) on top of the shared spiral term, so
- * strands actually change places rather than staying a fixed distance apart;
- * folding `t` into the shared longitude term spins the whole braid rigidly,
- * which is what keeps every point exactly on the sphere at every instant.
+ * The `pointIndex`-th of `pointsPerStrand` points around closed `strand`: a
+ * great circle (the first and last points meet) with a small wave in latitude
+ * travelling along it, inclined by `STRAND_INCLINATION`, turned to its own
+ * 120-degree slot and spun with the rest. Latitude and longitude keep every
+ * point exactly on the sphere, whatever the wave does.
  */
 const strandPoint = (
   strand: number,
@@ -184,21 +197,27 @@ const strandPoint = (
   sphereRadius: number,
   t: number
 ): Point3 => {
-  const u = pointIndex / (pointsPerStrand - 1);
-  const phi = u * Math.PI - Math.PI / 2;
-  const y = sphereRadius * Math.sin(phi);
-  const ringRadius = sphereRadius * Math.cos(phi);
-  const base = strandBaseAngle(strand);
-  const swing = STRAND_BRAID_SWING * Math.sin(u * STRAND_BRAID_CYCLES * Math.PI * 2 + base);
-  const theta = u * STRAND_WRAPS * Math.PI * 2 + base + swing + t * STRAND_ROTATE_SPEED;
-  const spun: Point3 = { x: ringRadius * Math.cos(theta), y, z: ringRadius * Math.sin(theta) };
-  return rotateX(spun, STRAND_TILT);
+  const u = (pointIndex / (pointsPerStrand - 1)) * Math.PI * 2;
+  const latitude =
+    STRAND_WAVE_AMPLITUDE *
+    Math.sin(u * STRAND_WAVE_COUNT + t * STRAND_WAVE_SPEED + strandBaseAngle(strand));
+  const onCircle: Point3 = {
+    x: sphereRadius * Math.cos(latitude) * Math.cos(u),
+    y: sphereRadius * Math.sin(latitude),
+    z: sphereRadius * Math.cos(latitude) * Math.sin(u)
+  };
+  const inclined = rotateX(onCircle, STRAND_INCLINATION);
+  const turned = rotateY(inclined, strandBaseAngle(strand) + t * STRAND_ROTATE_SPEED);
+  return rotateX(turned, STRAND_TILT);
 };
 
-/** Three strands wrapped around a sphere, crossing as they spiral from top to bottom. */
+/** Three closed strands wrapped around a sphere, crossing over and under each other as they turn. */
 export const weaving: ModeFn = (t, ctx): Frame => {
   const { sizing, originPx, sphereRadius } = sphereGeometry(ctx);
-  const pointsPerStrand = Math.max(MIN_STRAND_POINTS, sizing.count(STRAND_POINTS_BASE_COUNT));
+  const pointsPerStrand = Math.max(
+    MIN_STRAND_POINTS,
+    sizing.countAlongPath(STRAND_POINTS_BASE_COUNT)
+  );
 
   const strands = Array.from({ length: STRAND_COUNT }, (_, strand) =>
     Array.from({ length: pointsPerStrand }, (_, pointIndex) =>
@@ -215,8 +234,8 @@ export const weaving: ModeFn = (t, ctx): Frame => {
       x: p.x,
       y: p.y,
       depth: p.depth,
-      radius: sizing.radius(STRAND_DOT_BASE_RADIUS),
-      ink: clamp01(1 - p.depth * 0.8 + strand * 0.08),
+      radius: sizing.radius(STRAND_DOT_BASE_RADIUS) * STRAND_DOT_SIZE_FACTOR[ctx.size],
+      ink: clamp01((1 - p.depth) * STRAND_DEPTH_INK + strand * STRAND_SHADE_STEP),
       alpha: 0.55 + p.depth * 0.4
     }))
   );
@@ -231,8 +250,8 @@ export const weaving: ModeFn = (t, ctx): Frame => {
         x2: p.x,
         y2: p.y,
         depth,
-        width: sizing.radius(STRAND_STROKE_BASE_WIDTH),
-        ink: clamp01(1 - depth * 0.75 + strand * 0.06),
+        width: sizing.radius(STRAND_STROKE_BASE_WIDTH) * STRAND_STROKE_SIZE_FACTOR[ctx.size],
+        ink: clamp01((1 - depth) * STRAND_DEPTH_INK + strand * STRAND_SHADE_STEP),
         alpha: 0.6 + depth * 0.35
       };
     })

@@ -2,7 +2,24 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.32.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.0)
+
+ThinkingOrb decided light or dark by reading data-theme="dark" on &lt;html&gt;
+and faded far dots toward white or black accordingly. Hosts that mark
+dark mode another way (a theme attribute, a class, color-scheme) always
+got the light ramp, so in their dark mode the far dots faded toward
+white and the depth read inside out.
+
+- Every mark now draws in the base colour and fades with transparency
+as it recedes, so the orb reads right on any background with no
+theme detection at all.
+- A still orb repaints its held pose when its resolved colour changes
+after any attribute change on &lt;html&gt; or &lt;body&gt;, an OS colour-scheme
+flip, or a colour transition landing.
+
+Refs BZ-6457.
+
+## [4.33.0](https://github.com/juspay/svelte-ui-components/compare/4.33.0..4.32.1) - 25 September 2026
 
 Adds ThinkingOrb and the &lt;sui-thinking-orb&gt; custom element: a small canvas
 animation built from dots for the moment a chat UI waits on an AI or agent

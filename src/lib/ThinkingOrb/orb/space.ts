@@ -13,9 +13,13 @@ export type Point3 = { x: number; y: number; z: number };
 /** A `Point3` projected onto the canvas: screen px plus normalised depth and raw scale. */
 export type Projected = { x: number; y: number; depth: number; scale: number };
 
-/** The two scalers `modeSizing` hands back: multiply a mode's own base counts and radii by them. */
+/** The scalers `modeSizing` hands back: multiply a mode's own base counts and radii by them. */
 export type ModeSizing = {
+  /** For marks spread over an area (a swarm, a globe's surface): scales with `size` squared. */
   count: (base: number) => number;
+  /** For marks spaced along a line (a ring, a thread): scales with `size`, so the gap between
+   * neighbours keeps the same share of the canvas at every size instead of closing up. */
+  countAlongPath: (base: number) => number;
   radius: (base: number) => number;
 };
 
@@ -127,7 +131,8 @@ const MIN_DOT_RADIUS_PX = 0.6;
 /**
  * Turns `(size, density, dotScale)` into a count scaler and a radius scaler,
  * so every mode derives its dot counts and radii the same way instead of
- * keeping its own per-size table. Counts scale with area (`size` squared);
+ * keeping its own per-size table. Counts scale with area (`size` squared) for
+ * marks spread over a surface and with `size` for marks spaced along a path;
  * radii grow sub-linearly, with a floor that keeps dots visible at 20px.
  */
 export const modeSizing = (size: ModeSize, density: number, dotScale: number): ModeSizing => {
@@ -137,6 +142,8 @@ export const modeSizing = (size: ModeSize, density: number, dotScale: number): M
   const safeDotScale = dotScale > 0 ? dotScale : 0.1;
   return {
     count: (base: number): number => Math.max(1, Math.round(base * areaRatio * safeDensity)),
+    countAlongPath: (base: number): number =>
+      Math.max(1, Math.round(base * sizeRatio * safeDensity)),
     radius: (base: number): number =>
       Math.max(MIN_DOT_RADIUS_PX, base * sizeRatio ** RADIUS_GROWTH_EXPONENT * safeDotScale)
   };

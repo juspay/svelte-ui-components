@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inkColor, paintFrame } from './paint';
+import { inkAlpha, inkColor, paintFrame } from './paint';
 import type { Dot, Frame, Stroke } from './types';
 
 type RecordedCall =
@@ -104,34 +104,46 @@ const stroke = (overrides: Partial<Stroke>): Stroke => ({
 const TINT = { r: 100, g: 150, b: 200 };
 
 describe('inkColor', () => {
-  it('is exactly the tint at ink 0, regardless of theme', () => {
-    expect(inkColor(TINT, 0, false)).toBe('rgb(100 150 200)');
-    expect(inkColor(TINT, 0, true)).toBe('rgb(100 150 200)');
+  it('is always exactly the tint colour, with no fade of its own', () => {
+    expect(inkColor(TINT)).toBe('rgb(100 150 200)');
+  });
+});
+
+describe('inkAlpha', () => {
+  it('is exactly the mark alpha at ink 0', () => {
+    expect(inkAlpha(0, 1)).toBe(1);
+    expect(inkAlpha(0, 0.4)).toBe(0.4);
   });
 
-  it('fades to exactly white at ink 1 in light theme', () => {
-    expect(inkColor(TINT, 1, false)).toBe('rgb(255 255 255)');
-  });
-
-  it('fades to exactly black at ink 1 in dark theme', () => {
-    expect(inkColor(TINT, 1, true)).toBe('rgb(0 0 0)');
+  it('is exactly zero at ink 1, regardless of the mark alpha', () => {
+    expect(inkAlpha(1, 1)).toBe(0);
+    expect(inkAlpha(1, 0.4)).toBe(0);
   });
 
   it('is exactly the midpoint at ink 0.5', () => {
-    expect(inkColor(TINT, 0.5, false)).toBe('rgb(178 203 228)');
-    expect(inkColor(TINT, 0.5, true)).toBe('rgb(50 75 100)');
+    expect(inkAlpha(0.5, 1)).toBe(0.5);
+    expect(inkAlpha(0.5, 0.4)).toBeCloseTo(0.2);
+  });
+
+  it("multiplies ink's fade with the mark's own alpha rather than overriding it", () => {
+    expect(inkAlpha(0.75, 0.4)).toBeCloseTo(0.1);
   });
 
   it('clamps ink outside 0..1 to the same endpoints', () => {
-    expect(inkColor(TINT, -1, false)).toBe(inkColor(TINT, 0, false));
-    expect(inkColor(TINT, 2, false)).toBe(inkColor(TINT, 1, false));
+    expect(inkAlpha(-1, 1)).toBe(inkAlpha(0, 1));
+    expect(inkAlpha(2, 1)).toBe(inkAlpha(1, 1));
+  });
+
+  it('clamps alpha outside 0..1 to the same endpoints', () => {
+    expect(inkAlpha(0, -1)).toBe(0);
+    expect(inkAlpha(0, 2)).toBe(1);
   });
 });
 
 describe('paintFrame', () => {
   it('clears using the context canvas size, before anything else', () => {
     const { ctx, calls } = createRecordingContext(64, 64);
-    paintFrame(ctx, { dots: [], strokes: [] }, { dark: false, tint: TINT });
+    paintFrame(ctx, { dots: [], strokes: [] }, { tint: TINT });
     expect(calls).toEqual([{ type: 'clear', width: 64, height: 64 }]);
   });
 
@@ -141,7 +153,7 @@ describe('paintFrame', () => {
       strokes: [stroke({})],
       dots: [dot({})]
     };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     const kinds = calls.map((call) => call.type);
     expect(kinds).toEqual(['clear', 'stroke', 'dot']);
   });
@@ -152,7 +164,7 @@ describe('paintFrame', () => {
       strokes: [],
       dots: [dot({ x: 1, depth: 0.9 }), dot({ x: 2, depth: 0.1 }), dot({ x: 3, depth: 0.5 })]
     };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     const order = calls.filter((call) => call.type === 'dot').map((call) => call.x);
     expect(order).toEqual([2, 3, 1]);
   });
@@ -163,42 +175,68 @@ describe('paintFrame', () => {
       strokes: [stroke({ x1: 1, depth: 0.9 }), stroke({ x1: 2, depth: 0.1 })],
       dots: []
     };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     const order = calls.filter((call) => call.type === 'stroke').map((call) => call.x1);
     expect(order).toEqual([2, 1]);
   });
 
-  it('paints each dot with its own ink turned into an exact colour', () => {
+  it('paints every mark in the tint colour itself, regardless of its own ink', () => {
     const { ctx, calls } = createRecordingContext(64, 64);
-    const frame: Frame = { strokes: [], dots: [dot({ ink: 1 })] };
-    paintFrame(ctx, frame, { dark: true, tint: TINT });
-    const [drawn] = calls.filter((call) => call.type === 'dot');
-    expect(drawn).toMatchObject({ color: 'rgb(0 0 0)' });
+    const frame: Frame = {
+      strokes: [stroke({ ink: 1 })],
+      dots: [dot({ ink: 0 }), dot({ x: 1, ink: 1 })]
+    };
+    paintFrame(ctx, frame, { tint: TINT });
+    for (const call of calls) {
+      if (call.type !== 'clear') {
+        expect(call.color).toBe('rgb(100 150 200)');
+      }
+    }
   });
 
-  it("carries a dot's own alpha and radius through to the draw call", () => {
+  it('fades a dot fully transparent as its ink rises to 1, at the unchanged tint colour', () => {
     const { ctx, calls } = createRecordingContext(64, 64);
-    const frame: Frame = { strokes: [], dots: [dot({ alpha: 0.4, radius: 3 })] };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
-    const [drawn] = calls.filter((call) => call.type === 'dot');
-    expect(drawn).toMatchObject({ alpha: 0.4, radius: 3 });
+    const frame: Frame = {
+      strokes: [],
+      dots: [dot({ ink: 0 }), dot({ x: 1, ink: 0.5 }), dot({ x: 2, ink: 1 })]
+    };
+    paintFrame(ctx, frame, { tint: TINT });
+    const drawn = calls.filter((call) => call.type === 'dot');
+    expect(drawn.map((call) => call.alpha)).toEqual([1, 0.5, 0]);
+    expect(drawn.every((call) => call.color === 'rgb(100 150 200)')).toBe(true);
   });
 
-  it("carries a stroke's own end points, width and alpha through to the draw call", () => {
+  it("is at full tint and full mark alpha at ink 0, whatever the mark's own alpha", () => {
+    const { ctx, calls } = createRecordingContext(64, 64);
+    const frame: Frame = { strokes: [], dots: [dot({ ink: 0, alpha: 0.4, radius: 3 })] };
+    paintFrame(ctx, frame, { tint: TINT });
+    const [drawn] = calls.filter((call) => call.type === 'dot');
+    expect(drawn).toMatchObject({ color: 'rgb(100 150 200)', alpha: 0.4, radius: 3 });
+  });
+
+  it("compounds a dot's ink fade with its own alpha rather than overriding it", () => {
+    const { ctx, calls } = createRecordingContext(64, 64);
+    const frame: Frame = { strokes: [], dots: [dot({ ink: 0.5, alpha: 0.4 })] };
+    paintFrame(ctx, frame, { tint: TINT });
+    const [drawn] = calls.filter((call) => call.type === 'dot');
+    expect(drawn.alpha).toBeCloseTo(0.2);
+  });
+
+  it("carries a stroke's own end points and width through to the draw call", () => {
     const { ctx, calls } = createRecordingContext(64, 64);
     const frame: Frame = {
       strokes: [stroke({ x1: 1, y1: 2, x2: 3, y2: 4, width: 2.5, alpha: 0.6 })],
       dots: []
     };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     const [drawn] = calls.filter((call) => call.type === 'stroke');
-    expect(drawn).toMatchObject({ x1: 1, y1: 2, x2: 3, y2: 4, width: 2.5, alpha: 0.6 });
+    expect(drawn).toMatchObject({ x1: 1, y1: 2, x2: 3, y2: 4, width: 2.5 });
   });
 
   it('leaves globalAlpha at 1 once finished, so it never leaks into the next painter', () => {
     const { ctx } = createRecordingContext(64, 64);
     const frame: Frame = { strokes: [], dots: [dot({ alpha: 0.2 })] };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     expect(ctx.globalAlpha).toBe(1);
   });
 
@@ -207,7 +245,7 @@ describe('paintFrame', () => {
     const dots = [dot({ x: 1, depth: 0.9 }), dot({ x: 2, depth: 0.1 })];
     const strokes = [stroke({ x1: 1, depth: 0.9 }), stroke({ x1: 2, depth: 0.1 })];
     const frame: Frame = { dots, strokes };
-    paintFrame(ctx, frame, { dark: false, tint: TINT });
+    paintFrame(ctx, frame, { tint: TINT });
     expect(frame.dots).toBe(dots);
     expect(frame.strokes).toBe(strokes);
     expect(dots.map((d) => d.x)).toEqual([1, 2]);

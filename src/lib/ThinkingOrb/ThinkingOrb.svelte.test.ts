@@ -185,20 +185,77 @@ describe('ThinkingOrb still-orb repaint', () => {
     expect(inks.length).toBe(painted);
   });
 
-  it('keeps a paused orb on the pose it froze at when the theme flips', async () => {
+  it('repaints a paused orb with its new colour after a theme attribute flips on <html>, holding the same pose', async () => {
     const clock = vi.spyOn(performance, 'now').mockReturnValue(1_000);
-    const { frames } = await renderPaused(() => 'rgb(20, 20, 20)');
-    const drawsBefore = frames.length;
-    const frozenPose = frames[drawsBefore - 1];
+    let inherited = 'rgb(20, 20, 20)';
+    const { inks, frames } = await renderPaused(() => inherited);
+    const paintedBefore = inks.length;
+    const inkBefore = inks[paintedBefore - 1];
+    const frozenPose = frames[frames.length - 1];
     expect(frozenPose.length).toBeGreaterThan(0);
 
     clock.mockReturnValue(9_000);
+    inherited = 'rgb(230, 230, 230)';
+    // Lighthouse's own mechanism, not `data-theme`: proves the orb follows
+    // the resolved colour rather than any one theme attribute's name.
+    document.documentElement.setAttribute('theme', 'dark');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await tick();
+      expect(inks.length).toBeGreaterThan(paintedBefore);
+      expect(inks[inks.length - 1]).not.toBe(inkBefore);
+      // Same pose, only the colour moved -- a still orb never re-derives "now".
+      expect(frames[frames.length - 1]).toEqual(frozenPose);
+    } finally {
+      document.documentElement.removeAttribute('theme');
+    }
+  });
+
+  it('repaints a paused orb with its new colour after a class flips on <html>', async () => {
+    let inherited = 'rgb(20, 20, 20)';
+    const { inks } = await renderPaused(() => inherited);
+    const paintedBefore = inks.length;
+    const inkBefore = inks[paintedBefore - 1];
+
+    inherited = 'rgb(230, 230, 230)';
+    document.documentElement.classList.add('dark');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await tick();
+      expect(inks.length).toBeGreaterThan(paintedBefore);
+      expect(inks[inks.length - 1]).not.toBe(inkBefore);
+    } finally {
+      document.documentElement.classList.remove('dark');
+    }
+  });
+
+  it('repaints a paused orb with its new colour after a class flips on <body>', async () => {
+    let inherited = 'rgb(20, 20, 20)';
+    const { inks } = await renderPaused(() => inherited);
+    const paintedBefore = inks.length;
+    const inkBefore = inks[paintedBefore - 1];
+
+    inherited = 'rgb(230, 230, 230)';
+    document.body.classList.add('dark');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await tick();
+      expect(inks.length).toBeGreaterThan(paintedBefore);
+      expect(inks[inks.length - 1]).not.toBe(inkBefore);
+    } finally {
+      document.body.classList.remove('dark');
+    }
+  });
+
+  it('does not repaint when an attribute changes but the resolved colour stays the same', async () => {
+    const { inks } = await renderPaused(() => 'rgb(20, 20, 20)');
+    const paintedBefore = inks.length;
+
     document.documentElement.setAttribute('data-theme', 'dark');
     try {
       await new Promise((resolve) => setTimeout(resolve, 0));
       await tick();
-      expect(frames.length).toBeGreaterThan(drawsBefore);
-      expect(frames[frames.length - 1]).toEqual(frozenPose);
+      expect(inks.length).toBe(paintedBefore);
     } finally {
       document.documentElement.removeAttribute('data-theme');
     }
@@ -221,6 +278,35 @@ describe('ThinkingOrb still-orb repaint', () => {
     clock.mockReturnValue(9_000);
     await rerender({ paused: true, speed: 2 });
     expect(recorder.frames[recorder.frames.length - 1]).toEqual(frozenPose);
+  });
+
+  it('repaints a paused orb with its new colour when the OS colour scheme flips', async () => {
+    const schemeListeners: Array<() => void> = [];
+    vi.stubGlobal(
+      'matchMedia',
+      (query: string) =>
+        ({
+          matches: false,
+          media: query,
+          addEventListener: (_type: string, listener: () => void): void => {
+            if (query.includes('prefers-color-scheme')) {
+              schemeListeners.push(listener);
+            }
+          },
+          removeEventListener: (): void => {}
+        }) as unknown as MediaQueryList
+    );
+    let inherited = 'rgb(20, 20, 20)';
+    const { inks } = await renderPaused(() => inherited);
+    const paintedBefore = inks.length;
+    const inkBefore = inks[paintedBefore - 1];
+    expect(schemeListeners.length).toBeGreaterThan(0);
+
+    inherited = 'rgb(230, 230, 230)';
+    schemeListeners.forEach((listener) => listener());
+
+    expect(inks.length).toBeGreaterThan(paintedBefore);
+    expect(inks[inks.length - 1]).not.toBe(inkBefore);
   });
 
   it('keeps a reduced-motion orb on its fixed instant when speed changes', async () => {

@@ -61,20 +61,19 @@
   /*
    * `reducedMotion`/`onScreen`/`tabVisible` feed `shouldRun` below (a
    * `$derived`), so they must be real `$state` for it to react when they
-   * change. `dark` is `$state` for the same reason `draw` below reads it
-   * synchronously inside the main `$effect` -- writing it must retrigger
-   * that effect, otherwise a theme flip while the loop is stopped (paused,
-   * or reduced motion, which paints exactly once) would leave the ink ramp
-   * on the wrong theme for as long as the orb stays still. `pointer` is a
-   * plain `let`, not `$state`: a still orb repaints explicitly on pointer
-   * events (see `repaintIfStill`), and a running orb's loop already reads
-   * the latest pointer every tick, so retriggering the whole effect on every
-   * pointer move would only tear down and restart the loop for nothing.
+   * change. `pointer` is a plain `let`, not `$state`: a still orb repaints
+   * explicitly on pointer events (see `repaintIfStill`), and a running orb's
+   * loop already reads the latest pointer every tick, so retriggering the
+   * whole effect on every pointer move would only tear down and restart the
+   * loop for nothing. A theme change works the same way: a still orb
+   * repaints explicitly (see `repaintIfColorChanged`) once its *resolved*
+   * colour actually moves, rather than through a theme-flavoured state write
+   * -- the paint never needs to know the theme itself, only the colour it
+   * comes out to.
    */
   let reducedMotion = $state(prefersReducedMotion());
   let onScreen = $state(true);
   let tabVisible = $state(true);
-  let dark = $state(false);
   let announcedFirstFrame = false;
   let resolvedColorInput = '';
   let resolvedTint: Rgb = FALLBACK_TINT;
@@ -150,6 +149,22 @@
     draw(heldInstant());
   };
 
+  /** A still orb repaints only when its resolved colour actually changed --
+   * whatever mechanism the host used to flip theme (an attribute on `<html>`
+   * or `<body>`, or a CSS transition landing). An explicit `color` prop
+   * never depends on the theme, and a running orb already re-reads the
+   * colour every frame via `draw`, so both bail out here. `readColorInput`'s
+   * cached key is what `resolveTint` itself compares against, so this check
+   * and the eventual repaint can never disagree about whether anything moved. */
+  const repaintIfColorChanged = (): void => {
+    if (shouldRun || color || canvas === null) {
+      return;
+    }
+    if (readColorInput(canvas).key !== resolvedColorInput) {
+      draw(heldInstant());
+    }
+  };
+
   const trackPointer = (event: PointerEvent): void => {
     if (canvas === null || !gravity) {
       return;
@@ -196,7 +211,7 @@
     const frame = MODES[safeState](instant, { size: safeSize, density, dotScale });
     const gOpts = gravityOptions;
     const painted = gOpts === null ? frame : attract(frame, pointer, gOpts);
-    paintFrame(context, painted, { dark, tint: resolveTint(context) });
+    paintFrame(context, painted, { tint: resolveTint(context) });
 
     if (!announcedFirstFrame) {
       announcedFirstFrame = true;
@@ -206,7 +221,7 @@
 
   /*
    * Re-runs whenever `shouldRun` or anything the leading `draw` reads changes
-   * (`safeState`, `safeSize`, `density`, `dotScale`, `gravityOptions`, `dark`,
+   * (`safeState`, `safeSize`, `density`, `dotScale`, `gravityOptions`,
    * `color`, `reducedMotion`, ...) -- Svelte tracks every reactive read inside
    * this body, including transitively through that synchronous `draw` call,
    * so a prop change tears down the previous rAF (the cleanup below) and
@@ -266,23 +281,18 @@
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     /*
-     * This repo's `ThemeSwitcher` stamps `data-theme="dark"` on
-     * `document.documentElement` -- one attribute on one element -- so a
-     * `MutationObserver` there alone catches every theme change. It exists
-     * only to keep `paintFrame`'s `dark` argument current: the tint colour
-     * itself comes from CSS, resolved in `resolveTint` above.
+     * The orb never asks how a host marks its theme -- `theme`, `data-theme`,
+     * a class, an inline `style`, `color-scheme`, on `<html>` or `<body>`, or
+     * anything else -- it only cares whether the colour it actually resolves
+     * to (see `resolveTint`) moved. So this observes every attribute change
+     * on both elements, unfiltered, and lets `repaintIfColorChanged` decide
+     * whether anything worth a repaint happened.
      */
-    const readTheme = (): void => {
-      dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    };
-    readTheme();
     let themeObserver: MutationObserver | null = null;
     if (typeof MutationObserver !== 'undefined') {
-      themeObserver = new MutationObserver(readTheme);
-      themeObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
-      });
+      themeObserver = new MutationObserver(repaintIfColorChanged);
+      themeObserver.observe(document.documentElement, { attributes: true });
+      themeObserver.observe(document.body, { attributes: true });
     }
 
     const onMotionChange = (event: MediaQueryListEvent): void => {
@@ -294,24 +304,26 @@
       motionQuery.addEventListener('change', onMotionChange);
     }
 
+    // A host that themes only through `@media (prefers-color-scheme)` changes
+    // the inherited colour when the OS flips theme, with no attribute change
+    // and no transition for the checks around it to catch.
+    let colorSchemeQuery: MediaQueryList | null = null;
+    if (typeof window.matchMedia === 'function') {
+      colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      colorSchemeQuery.addEventListener('change', repaintIfColorChanged);
+    }
+
     /*
-     * A still orb only repaints on its own when `dark` flips. A host that
-     * transitions its `color` (this repo's own layout fades `body` across a
-     * theme switch) leaves a just-frozen frame at the outgoing colour, with
-     * nothing else to redraw it. Re-read once the transition lands and
-     * repaint the same frozen instant if the resolved colour actually moved.
-     * A running orb re-reads every frame already and needs none of this.
+     * A host that transitions its `color` (this repo's own layout fades
+     * `body` across a theme switch) leaves a just-frozen frame at the
+     * outgoing colour, with nothing else to redraw it: no attribute changed,
+     * so the observer above never fires. Re-check once the transition lands.
      */
     const onColorTransitionEnd = (event: TransitionEvent): void => {
-      if (shouldRun || color || canvas === null) {
-        return;
-      }
       if (event.propertyName !== 'color' && event.propertyName !== '--sui-thinking-orb-color') {
         return;
       }
-      if (readColorInput(canvas).key !== resolvedColorInput) {
-        draw(heldInstant());
-      }
+      repaintIfColorChanged();
     };
     document.addEventListener('transitionend', onColorTransitionEnd);
 
@@ -321,6 +333,7 @@
       document.removeEventListener('transitionend', onColorTransitionEnd);
       themeObserver?.disconnect();
       motionQuery?.removeEventListener('change', onMotionChange);
+      colorSchemeQuery?.removeEventListener('change', repaintIfColorChanged);
     };
   });
 </script>

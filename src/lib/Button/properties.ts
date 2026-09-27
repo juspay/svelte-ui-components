@@ -70,6 +70,12 @@ export type OptionalButtonProperties = {
   ariaHaspopup?: 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | boolean;
   ariaSelected?: boolean;
   /**
+   * Native `aria-pressed`, for a toggle button (a chip that stays on once
+   * picked). `aria-selected` only means something on option/tab/row roles, so a
+   * plain button that toggles wants this instead.
+   */
+  ariaPressed?: boolean;
+  /**
    * Native `aria-busy`, for a control that stays usable while related data loads.
    * Deliberately separate from `loading`, which also renders the spinner and
    * disables the button — a trigger whose *contents* are still loading must stay
@@ -83,6 +89,17 @@ export type OptionalButtonProperties = {
    * affordance; an icon-only button generally wants both.
    */
   title?: string;
+  /**
+   * Opt-in sr-only status region (`role="status" aria-live="polite"`) rendered
+   * beside the button, never around it -- e.g. "Copied" after a copy button's
+   * click, announced without re-announcing the button itself. Rendered only
+   * when set (an empty string still renders an emptied region, which is how a
+   * caller keeps it mounted before the first announcement, as a live region
+   * must be). The sentence is the caller's; nothing is hardcoded here.
+   */
+  statusText?: string;
+  /** Test id on the status region (see `statusText`). */
+  statusTestId?: string;
   disabled?: boolean;
   classes?: string;
   /**

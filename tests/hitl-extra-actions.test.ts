@@ -52,4 +52,18 @@ test.describe('HITL — extra actions and children (#528)', () => {
     await expect(card.locator('.action-buttons > div')).toHaveCount(2);
     await expect(card.locator('.extra-content')).toHaveCount(0);
   });
+
+  // Passing `children` with no `sections`/`functionArguments` must not, by
+  // itself, suppress the "No parameters" placeholder -- only `questions`
+  // does that. `demo-extra` is exactly this shape (an extra action plus a
+  // conditionally-rendered children textarea, no sections/args/questions).
+  test('a card with only children (no sections/functionArguments/questions) still shows "No parameters"', async ({
+    page
+  }) => {
+    await gotoHydrated(page, '/components/hitl');
+
+    const card = page.getByTestId('demo-extra');
+    await expect(card.locator('.parameter-label')).toHaveText('PARAMETERS');
+    await expect(card.locator('.parameter-value')).toHaveText('No parameters');
+  });
 });

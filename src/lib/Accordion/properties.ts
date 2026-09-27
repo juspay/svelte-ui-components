@@ -24,6 +24,13 @@ export type OptionalAccordionProperties = {
    * something else needs to reference the panel by a known id.
    */
   panelId?: string;
+  /**
+   * Mounts `children` only once the panel is first expanded, then keeps them
+   * mounted. For long lists of mostly-closed panels, where rendering every
+   * closed body up front is the cost. Off by default: closed content is
+   * rendered (though `inert`) exactly as before.
+   */
+  lazy?: boolean;
 };
 
 export type AccordionEventProperties = {

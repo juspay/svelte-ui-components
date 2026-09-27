@@ -12,7 +12,8 @@
       classes: { type: 'String' },
       oncopy: { type: 'Object' },
       onerror: { type: 'Object' },
-      copyIcon: { type: 'Object' }
+      copyIcon: { type: 'Object' },
+      multiline: { type: 'Boolean', reflect: true }
     }
   }}
 />

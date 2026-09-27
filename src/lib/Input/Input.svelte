@@ -11,6 +11,8 @@
     placeholder = '',
     dataType = 'text',
     label = '',
+    labelSuffix,
+    autofocus = false,
     onErrorMessage = '',
     infoMessage = '',
     validators = [],
@@ -109,6 +111,19 @@
   }
 
   let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
+
+  // Guarded to once per mount: without hasAutoFocused, a later element swap
+  // (useTextArea toggling, or a left/right-icon layout change moving
+  // fieldElement's render site) replaces inputElement and this effect would
+  // refocus the field again, long after the user may have moved on.
+  let hasAutoFocused = false;
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (autofocus && inputElement && !hasAutoFocused) {
+      inputElement.focus();
+      hasAutoFocused = true;
+    }
+  });
 
   let validationState = $derived.by(() => {
     const valueValidation: ValidationState = validateInput(
@@ -313,7 +328,16 @@
 </script>
 
 <div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
-  {#if hasVisibleLabel}
+  <!-- One chain, so the label-only default is the same single block it always was. -->
+  {#if hasVisibleLabel && typeof labelSuffix === 'function'}
+    <div class="label-row">
+      <label class="label" for={effectiveId}>
+        {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span
+          >{/if}
+      </label>
+      <span>{@render labelSuffix()}</span>
+    </div>
+  {:else if hasVisibleLabel}
     <label class="label" for={effectiveId}>
       {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
     </label>
@@ -540,6 +564,26 @@
     margin: var(--input-container-margin, 0);
     padding: var(--input-container-padding, 0);
     width: var(--input-container-width, fit-content);
+  }
+
+  /* Only present when labelSuffix is supplied (and written as a direct child of the
+     container, so a `label-row` class a consumer passes through `classes`, which lands
+     on the container itself, cannot match): a flex item's own margin is
+     space around just that item, not something later content in the column
+     can rely on to open up room below the whole row, so the row itself
+     carries the margin a lone .label used to carry on its own below. */
+  .input-container > .label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--input-label-row-gap, 8px);
+    margin: var(--input-label-msg-margin, 0px 0px 6px 0px);
+  }
+
+  /* A row-wrapped label hands its margin to the row above, so it does not
+     take it twice. Only exists in the labelSuffix branch. */
+  .input-container > .label-row > .label {
+    margin: 0;
   }
 
   .label {

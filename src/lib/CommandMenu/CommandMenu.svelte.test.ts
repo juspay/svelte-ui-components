@@ -1,4 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
+import { createRawSnippet, tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import CommandMenu from './CommandMenu.svelte';
 import { dismissibleLayerCount, registerDismissible } from '../_interaction/dismissal';
@@ -234,5 +235,167 @@ describe('CommandMenu behaviour (regression)', () => {
     await waitFor(() => {
       expect((dialog as HTMLElement).inert).toBe(true);
     });
+  });
+});
+
+// A controlled parent can set `open = false` directly (bind:open), never
+// calling the component's own close() -- the overlay's scrollLockAction
+// still unmounts on that path too. clearStateOnClose decides whether that
+// unmount also clears the typed query/highlight; off by default so an
+// existing consumer's typed state keeps surviving exactly as before this
+// prop existed.
+describe('CommandMenu clearStateOnClose', () => {
+  const typeQuery = async (container: HTMLElement, text: string): Promise<void> => {
+    const input = container.querySelector('.command-menu-input');
+    if (input === null) {
+      throw new Error('search input missing');
+    }
+    await fireEvent.input(input, { target: { value: text } });
+  };
+
+  const closeExternallyAndReopen = async (
+    rerender: (props: Record<string, unknown>) => Promise<void>,
+    container: HTMLElement,
+    extraProps: Record<string, unknown>
+  ): Promise<void> => {
+    const sharedAnimate = Element.prototype.animate;
+    Element.prototype.animate = () => makeCompletingAnimation();
+    try {
+      await rerender({ items, open: false, ...extraProps });
+      await waitFor(() => {
+        expect(container.querySelector('.command-menu-overlay')).toBeNull();
+      });
+    } finally {
+      Element.prototype.animate = sharedAnimate;
+    }
+    await rerender({ items, open: true, ...extraProps });
+    await waitFor(() => {
+      expect(document.activeElement).toBe(container.querySelector('.command-menu-input'));
+    });
+  };
+
+  it('keeps the typed query across an externally-controlled close by default', async () => {
+    const { container, rerender } = await openAndSettle({});
+    await typeQuery(container, 'open');
+
+    await closeExternallyAndReopen(rerender, container, {});
+
+    const reopenedInput = container.querySelector('.command-menu-input');
+    expect((reopenedInput as HTMLInputElement).value).toBe('open');
+  });
+
+  it('clears the typed query across an externally-controlled close when set', async () => {
+    const { container, rerender } = await openAndSettle({ clearStateOnClose: true });
+    await typeQuery(container, 'open');
+
+    await closeExternallyAndReopen(rerender, container, { clearStateOnClose: true });
+
+    const reopenedInput = container.querySelector('.command-menu-input');
+    expect((reopenedInput as HTMLInputElement).value).toBe('');
+  });
+});
+
+const overlay = (container: HTMLElement): Element | null =>
+  container.querySelector('.command-menu-overlay');
+
+// The Cmd/Ctrl+K listener is a reactive window binding, so the prop is honoured
+// after mount in both directions -- not just read once when the menu mounted.
+describe('CommandMenu enableHotkey', () => {
+  it('ignores Ctrl+K when it is off from the start', async () => {
+    const { container } = render(CommandMenu, { items, enableHotkey: false });
+    pressCtrlK();
+    await tick();
+    expect(overlay(container)).toBeNull();
+  });
+
+  it('stops answering Ctrl+K once it is turned off after mount', async () => {
+    const { container, rerender } = render(CommandMenu, { items, enableHotkey: true });
+    await rerender({ items, enableHotkey: false });
+    await tick();
+    pressCtrlK();
+    await tick();
+    expect(overlay(container)).toBeNull();
+  });
+
+  it('starts answering Ctrl+K once it is turned on after mount', async () => {
+    const { container, rerender } = render(CommandMenu, { items, enableHotkey: false });
+    await rerender({ items, enableHotkey: true });
+    await tick();
+    pressCtrlK();
+    await waitFor(() => {
+      expect(overlay(container)).not.toBeNull();
+    });
+  });
+});
+
+describe('CommandMenu filterFn', () => {
+  const rows = (container: HTMLElement): string[] =>
+    Array.from(container.querySelectorAll('.command-menu-item-label')).map(
+      (node) => node.textContent?.trim() ?? ''
+    );
+  const type = async (container: HTMLElement, text: string): Promise<void> => {
+    const input = container.querySelector('.command-menu-input');
+    if (input === null) {
+      throw new Error('search input missing');
+    }
+    await fireEvent.input(input, { target: { value: text } });
+  };
+
+  it('matches on the label, case-insensitively, by default', async () => {
+    const { container } = await openAndSettle({});
+    await type(container, 'OPEN');
+    expect(rows(container)).toEqual(['Open file']);
+  });
+
+  it('uses the supplied predicate instead', async () => {
+    // Matches on `value`, which the default never looks at.
+    const filterFn = (item: CommandItem, query: string): boolean => item.value.includes(query);
+    const { container } = await openAndSettle({ filterFn });
+    await type(container, 'new-file');
+    expect(rows(container)).toEqual(['New file']);
+
+    const byDefault = await openAndSettle({});
+    await type(byDefault.container, 'new-file');
+    expect(rows(byDefault.container)).toEqual([]);
+  });
+});
+
+describe('CommandMenu itemSnippet', () => {
+  it('keeps the default icon/label/shortcut row when unset', async () => {
+    const { container } = await openAndSettle({
+      items: [{ label: 'Save', value: 'save', shortcut: 'Cmd+S' }]
+    });
+    expect(container.querySelector('.command-menu-item-label')?.textContent).toBe('Save');
+    expect(container.querySelectorAll('.command-menu-kbd')).toHaveLength(2);
+    expect(container.querySelector('.custom')).toBeNull();
+  });
+
+  it('replaces the row, handing it the item and whether it is the active one', async () => {
+    const itemSnippet = createRawSnippet((item: () => CommandItem, active: () => boolean) => ({
+      render: () =>
+        `<span class="custom" data-active="${String(active())}">${item().label.toUpperCase()}</span>`
+    }));
+    const { container } = await openAndSettle({ itemSnippet });
+    expect(container.querySelector('.command-menu-item-label')).toBeNull();
+    const rendered = Array.from(container.querySelectorAll('.custom')).map((node) => ({
+      text: node.textContent,
+      active: node.getAttribute('data-active')
+    }));
+    expect(rendered).toEqual([
+      { text: 'NEW FILE', active: 'true' },
+      { text: 'OPEN FILE', active: 'false' }
+    ]);
+  });
+});
+
+describe('CommandMenu ariaLabel', () => {
+  it('names the dialog "Command menu" by default', async () => {
+    const { container } = await openAndSettle({});
+    expect(overlay(container)?.getAttribute('aria-label')).toBe('Command menu');
+  });
+
+  it('uses the supplied name', async () => {
+    const { container } = await openAndSettle({ ariaLabel: 'command palette' });
+    expect(overlay(container)?.getAttribute('aria-label')).toBe('command palette');
   });
 });

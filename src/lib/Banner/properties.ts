@@ -4,11 +4,20 @@ export type BannerProperties = MandatoryBannerProperties &
   OptionalBannerProperties &
   BannerEventProperties;
 
+// `text` is optional now that a banner can say its message as `children`. It stays in
+// this type, as in 4.33.3, so values and imports typed with it keep compiling.
 export type MandatoryBannerProperties = {
-  text: string;
+  /** The message as plain text (with optional `linkText`). Defaults to ''. */
+  text?: string;
 };
 
 export type OptionalBannerProperties = {
+  /**
+   * The message as markup -- a sentence with a link, or a sentence and a
+   * Retry button -- rendered as the banner body in place of `text` and
+   * `linkText`. `title` still renders above it.
+   */
+  children?: Snippet;
   icon?: Snippet;
   title?: Snippet;
   linkText?: string;

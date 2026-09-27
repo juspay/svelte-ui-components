@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatComposer from './ChatComposer.svelte';
 
 describe('ChatComposer dictation contract', () => {
@@ -125,5 +125,106 @@ describe('ChatComposer dictation contract', () => {
 
     await rerender({ onaction, recording: 'busy' });
     expect(queryByRole('button', { name: 'Voice conversation' })).toBeNull();
+  });
+});
+
+describe('ChatComposer slash commands', () => {
+  // jsdom has no scrollIntoView, which the menu calls to keep the active row
+  // in view; unstubbed it rejects after the test. Same stub as
+  // CommandMenu.svelte.test.ts.
+  let originalScrollIntoView: typeof Element.prototype.scrollIntoView;
+  beforeEach(() => {
+    originalScrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = vi.fn((_options?: boolean | ScrollIntoViewOptions) => {});
+  });
+  afterEach(() => {
+    Element.prototype.scrollIntoView = originalScrollIntoView;
+  });
+
+  const commands = [
+    { name: '/compact', description: 'Clear history but keep a summary' },
+    { name: '/context', description: 'Show context usage' },
+    { name: '/model', choices: [{ value: 'sonnet' }, { value: 'opus' }] }
+  ];
+  const options = (container: HTMLElement) => [...container.querySelectorAll('[role="option"]')];
+
+  it('renders nothing when slashCommands is unset', () => {
+    const { container } = render(ChatComposer, { props: { value: '/c' } });
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it('lists matching commands, highlights the first, and arrows move the highlight', async () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '/co', slashCommands: commands }
+    });
+    expect(container.querySelector('[role="listbox"]')?.getAttribute('aria-label')).toBe(
+      'slash commands'
+    );
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '/compact',
+      '/context'
+    ]);
+    expect(options(container).map((o) => o.getAttribute('aria-selected'))).toEqual([
+      'true',
+      'false'
+    ]);
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    await fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(options(container).map((o) => o.getAttribute('aria-selected'))).toEqual([
+      'false',
+      'true'
+    ]);
+  });
+
+  it('Tab completes the highlighted command, and a command with choices opens stage two', async () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '/mo', slashCommands: commands }
+    });
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    await fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.value).toBe('/model ');
+    expect(options(container).map((o) => o.textContent?.trim())).toEqual(['sonnet', 'opus']);
+    await fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.value).toBe('/model sonnet');
+  });
+
+  it('Enter on a complete match submits it', async () => {
+    const onsubmit = vi.fn(() => true);
+    const { container } = render(ChatComposer, {
+      props: { value: '/compact', slashCommands: commands, onsubmit }
+    });
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    await fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onsubmit).toHaveBeenCalledWith('/compact', []);
+  });
+
+  // The <ul> must be out of the listbox's accessible ownership chain (role="presentation"), or
+  // its implicit role=list sits between the listbox and its role=option rows. The textarea's
+  // combobox wiring (aria-expanded/aria-controls/aria-activedescendant) only applies once
+  // slashCommands is set, so a consumer not using slash commands keeps a plain textarea role.
+  it('keeps the listbox-to-option ownership chain unbroken, and wires the textarea as its combobox', () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '/co', slashCommands: commands }
+    });
+    const listbox = container.querySelector('[role="listbox"]') as HTMLElement;
+    const list = container.querySelector('.slash-list') as HTMLElement;
+    expect(list.getAttribute('role')).toBe('presentation');
+    expect(list.parentElement).toBe(listbox);
+    expect(options(container).every((o) => o.parentElement === list)).toBe(true);
+
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    expect(input.getAttribute('role')).toBe('combobox');
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(input.getAttribute('aria-controls')).toBe(listbox.id);
+    expect(input.getAttribute('aria-activedescendant')).toBe(options(container)[0].id);
+  });
+
+  it('leaves the textarea a plain textbox when slashCommands is unset', () => {
+    const { container } = render(ChatComposer, { props: { value: 'hello' } });
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    expect(input.getAttribute('role')).toBeNull();
+    expect(input.getAttribute('aria-expanded')).toBeNull();
+    expect(input.getAttribute('aria-controls')).toBeNull();
+    expect(input.getAttribute('aria-activedescendant')).toBeNull();
   });
 });

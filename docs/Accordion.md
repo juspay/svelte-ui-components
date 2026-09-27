@@ -28,6 +28,7 @@ An expandable/collapsible container that uses CSS grid row animation for smooth 
 | testId         | `string`  | No       | `-`       | Value written to `data-pw` on the accordion content wrapper. Enables Playwright locators (`page.getByTestId(testId)`).                                                                                                                                                                                                                               |
 | disabled       | `boolean` | No       | `false`   | Disables the built-in trigger: clicks and Enter/Space no longer toggle, the trigger is removed from the tab order (`tabindex="-1"`), and `aria-disabled="true"` is emitted. The trigger also gets a `disabled` class for styling. `expand` is still honoured, so a disabled accordion can be shown open or closed under external (controlled) state. |
 | panelId        | `string`  | No       | generated | `id` for the collapsible panel, which the built-in trigger references via `aria-controls`. Defaults to a generated per-instance id, so the trigger and panel are linked without any caller involvement. Supply one only when something else needs to reference the panel by a known id.                                                              |
+| lazy           | `boolean` | No       | `false`   | Mounts `children` only when the panel is first expanded, then keeps them mounted (so closing still animates real content and keeps its state). For long lists of mostly-closed panels, where rendering every closed body up front is the cost.                                                                                                       |
 
 ## Events
 
@@ -49,6 +50,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 - The built-in trigger is `role="button"` with `tabindex="0"` and toggles on Enter or Space.
 - `aria-expanded` reflects the panel's real open state, and `aria-controls` references the panel's `id` — the two elements are siblings rather than nested, so without that reference assistive technology has no way to reach the region the trigger governs. The id is generated per instance, so two accordions on one page never collide.
 - The panel is `role="region"` with `aria-labelledby` pointing at the trigger, so screen readers announce the expanded content as a landmark named by its header. The trigger's `id` is generated per instance and never changes, even if `panelId` is assigned later.
+- With `lazy`, a collapsed panel is also `inert`: it is clipped to zero height, so its links, buttons and fields leave the tab order and the accessibility tree until it opens. Without `lazy` (the default), the panel is only clipped, matching the pre-`lazy` behaviour.
 - The trigger's accessible name is computed from its content. An icon-only `trigger` snippet therefore has no name: include text (visually hidden is fine) or put an `aria-label` on the icon element, which name-from-content picks up.
 
 ## CSS Variables
@@ -84,6 +86,7 @@ a second, synthetic one under it would double-deliver to any
 | `trigger-classes` | `triggerClasses` | String  | CSS classes for the trigger wrapper.                                 |
 | `test-id`         | `testId`         | String  | Sets `data-pw` on the content wrapper.                               |
 | `panel-id`        | `panelId`        | String  | Sets the panel's `id` (referenced by the trigger's `aria-controls`). |
+| `lazy`            | `lazy`           | Boolean | Renders the default slot only once the panel first opens.            |
 
 ### Slots
 

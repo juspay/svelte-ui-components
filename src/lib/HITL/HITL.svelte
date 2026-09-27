@@ -3,15 +3,23 @@
   import { get } from 'svelte/store';
   import Button from '../Button/Button.svelte';
   import Card from '../Card/Card.svelte';
+  import Input from '../Input/Input.svelte';
   import Progress from '../Progress/Progress.svelte';
   import { pauseAllConfirmationTimers } from './timers';
   import type {
     HITLAction,
+    HITLAskForTextExtraAction,
     HITLExtraAction,
     HITLProperties,
+    HITLQuestion,
+    HITLQuestionAnswer,
     HITLResponse,
     HITLSection
   } from './properties';
+
+  // What an extra action or an answer adds to the settled event;
+  // confirm/cancel add nothing.
+  type HITLSettleDetail = { value?: string; message?: string; answers?: HITLQuestionAnswer[] };
 
   /**
    * Human-in-the-loop approval card: the assistant wants to run an action and the
@@ -29,6 +37,9 @@
     onconfirm,
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
+    showCancel = true,
+    showConfirm = true,
+    showEmptyParameters = true,
     countdownSeconds = 10,
     autoCancelSeconds = 0,
     isMicMuted = false,
@@ -50,6 +61,12 @@
     completionTestId,
     completionTextTestId,
     actions,
+    questions,
+    answerOnSelect = false,
+    questionsSettleAs = 'approved',
+    sendAnswersLabel = 'Send answers',
+    optionClasses,
+    selectedOptionClasses,
     children,
     classes
   }: HITLProperties = $props();
@@ -134,7 +151,7 @@
   // updated in between.
   let decisionPending = false;
 
-  const settle = (action: HITLAction): void => {
+  const settle = (action: HITLAction, detail: HITLSettleDetail = {}): void => {
     if (isProcessing || isCompleted) {
       return;
     }
@@ -144,7 +161,12 @@
       onconfirm?.({
         confirmationId,
         action,
-        approved: action !== 'rejected'
+        approved: action !== 'rejected',
+        // Only the keys that were set, so a plain confirm/cancel event keeps
+        // exactly its old three-key shape.
+        ...(typeof detail.value === 'string' ? { value: detail.value } : {}),
+        ...(typeof detail.message === 'string' ? { message: detail.message } : {}),
+        ...(Array.isArray(detail.answers) ? { answers: detail.answers } : {})
       });
     } catch {
       // The decision failed to hand off; release the card for another attempt.
@@ -155,13 +177,13 @@
     }
   };
 
-  const decide = async (action: HITLAction): Promise<void> => {
+  const decide = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
     if (decisionPending || isCompleted) {
       return;
     }
     decisionPending = true;
     await restoreMicState();
-    settle(action);
+    settle(action, detail);
   };
 
   const startCountdown = (): void => {
@@ -181,25 +203,110 @@
     }, 100);
   };
 
-  const interact = async (action: HITLAction): Promise<void> => {
+  // Any interaction pauses this card's own countdown and every sibling's.
+  const pauseTimers = (): void => {
     pauseAllConfirmationTimers.set(true);
     stopCountdown();
     clearAutoCancel();
-    await decide(action);
   };
 
-  // An extra action (e.g. "Deny with instructions") is a side path, not a
-  // decision — it never settles the card, so `onconfirm` never fires for it.
-  // It still counts as interacting with the card: pause this card's own
-  // countdown and every sibling's, exactly like clicking confirm or cancel.
+  const interact = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
+    pauseTimers();
+    await decide(action, detail);
+  };
+
+  // The 'ask-for-text' action whose reply box is open, if any. While set, the
+  // box replaces the action row.
+  let replyAction = $state<HITLAskForTextExtraAction | null>(null);
+  let replyText = $state('');
+  const canSendReply = $derived(replyText.trim().length > 0 && !isProcessing);
+
+  // A side action never settles the card, so `onconfirm` never fires for it.
+  // 'decision' settles immediately; 'ask-for-text' settles once text is sent.
+  // All three count as interacting with the card.
   const selectExtraAction = (action: HITLExtraAction): void => {
     if (decisionPending || isProcessing || isCompleted) {
       return;
     }
-    pauseAllConfirmationTimers.set(true);
-    stopCountdown();
-    clearAutoCancel();
+    if (action.kind === 'decision') {
+      void interact(action.settleAs, { value: action.value });
+      return;
+    }
+    pauseTimers();
+    if (action.kind === 'ask-for-text') {
+      replyText = '';
+      replyAction = action;
+      return;
+    }
     action.onSelect();
+  };
+
+  const sendReply = (): void => {
+    const text = replyText.trim();
+    if (replyAction === null || text.length === 0) {
+      return;
+    }
+    void decide(replyAction.settleAs, { value: replyAction.value, message: text });
+  };
+
+  const closeReply = (): void => {
+    replyAction = null;
+    replyText = '';
+  };
+
+  // Picks per question, by index.
+  let picks = $state<string[][]>([]);
+  const questionList = $derived(questions ?? []);
+  // A single-select question needs no Send when answerOnSelect settles it on
+  // click, so Send exists only if something is left to collect.
+  const settlesOnClick = (question: HITLQuestion): boolean =>
+    answerOnSelect && question.multiSelect !== true;
+  const showSendAnswers = $derived(
+    questionList.length > 0 && questionList.some((question) => !settlesOnClick(question))
+  );
+  const canSendAnswers = $derived(
+    !isProcessing &&
+      questionList.every(
+        (question, index) => settlesOnClick(question) || (picks[index] ?? []).length > 0
+      )
+  );
+
+  const answerFor = (question: HITLQuestion, picked: string[]): HITLQuestionAnswer => ({
+    ...(typeof question.header === 'string' ? { header: question.header } : {}),
+    question: question.question,
+    picks: picked
+  });
+
+  const pickOption = (questionIndex: number, label: string): void => {
+    const question = questionList.at(questionIndex);
+    if (decisionPending || isProcessing || isCompleted || typeof question !== 'object') {
+      return;
+    }
+    if (settlesOnClick(question)) {
+      void interact(questionsSettleAs, { answers: [answerFor(question, [label])] });
+      return;
+    }
+    pauseTimers();
+    const current = picks[questionIndex] ?? [];
+    const has = current.includes(label);
+    const next =
+      question.multiSelect === true
+        ? has
+          ? current.filter((picked) => picked !== label)
+          : [...current, label]
+        : has
+          ? []
+          : [label];
+    picks = questionList.map((_, index) => (index === questionIndex ? next : (picks[index] ?? [])));
+  };
+
+  const sendAnswers = (): void => {
+    if (!canSendAnswers) {
+      return;
+    }
+    void interact(questionsSettleAs, {
+      answers: questionList.map((question, index) => answerFor(question, picks[index] ?? []))
+    });
   };
 
   onMount(() => {
@@ -309,17 +416,31 @@
         built.push({ label: key.replace(/([A-Z])/g, ' $1').trim(), value: formatted });
       }
     }
-    return built.length > 0 ? built : [{ label: 'PARAMETERS', value: 'No parameters' }];
+    return built;
   };
+
+  // What a card with nothing to list shows. A card that asks questions already
+  // has content of its own, and showEmptyParameters={false} opts a card out
+  // explicitly. `children` is deliberately NOT a reason to hide it: it is a
+  // pre-existing prop, so treating it as one would silently change the output
+  // of every existing children-only consumer -- including one whose children
+  // snippet renders nothing yet (e.g. gated on its own internal state), which
+  // is exactly the "No parameters" case this placeholder exists for.
+  const emptyParameters = $derived<HITLSection[]>(
+    questionList.length > 0 || !showEmptyParameters
+      ? []
+      : [{ label: 'PARAMETERS', value: 'No parameters' }]
+  );
 
   const parameterSections = $derived.by((): HITLSection[] => {
     if (sections && sections.length > 0) {
       return sections;
     }
     if (functionArguments && Object.keys(functionArguments).length > 0) {
-      return formatArguments(functionArguments);
+      const formatted = formatArguments(functionArguments);
+      return formatted.length > 0 ? formatted : emptyParameters;
     }
-    return [{ label: 'PARAMETERS', value: 'No parameters' }];
+    return emptyParameters;
   });
 </script>
 
@@ -402,43 +523,138 @@
             {@render children()}
           </div>
         {/if}
-        <div class="action-buttons">
-          <div class="cancel-button">
-            <Button
-              variant="secondary"
-              text={cancelLabel}
-              enable={!isProcessing}
-              testId={cancelTestId ?? (testId && `${testId}-cancel`)}
-              onclick={() => interact('rejected')}
-            />
+        {#if questionList.length > 0}
+          <div class="questions">
+            {#each questionList as question, questionIndex (questionIndex)}
+              <div
+                class="question"
+                role="group"
+                aria-label={question.header ?? question.question}
+                data-pw={testId && `${testId}-question-${questionIndex}`}
+              >
+                {#if typeof question.header === 'string'}
+                  <span class="question-header">{question.header}</span>
+                {/if}
+                <span class="question-text">{question.question}</span>
+                <div class="question-options">
+                  {#each question.options as option, optionIndex (option.label)}
+                    {@const picked = (picks[questionIndex] ?? []).includes(option.label)}
+                    <Button
+                      variant="secondary"
+                      text={option.label}
+                      title={option.description}
+                      {...settlesOnClick(question) ? {} : { ariaPressed: picked }}
+                      enable={!isProcessing}
+                      classes={[optionClasses, picked ? selectedOptionClasses : '']
+                        .filter((value) => typeof value === 'string' && value.length > 0)
+                        .join(' ')}
+                      testId={testId && `${testId}-question-${questionIndex}-option-${optionIndex}`}
+                      onclick={() => pickOption(questionIndex, option.label)}
+                    />
+                  {/each}
+                </div>
+              </div>
+            {/each}
           </div>
-          {#each actions ?? [] as action, index (action.testId ?? `${index}-${action.label}`)}
-            <div class="extra-action-button">
-              <Button
-                variant="secondary"
-                text={action.label}
-                enable={!isProcessing}
-                testId={action.testId ?? (testId && `${testId}-action-${index}`)}
-                classes={action.classes}
-                ariaLabel={action.ariaLabel}
-                onclick={() => selectExtraAction(action)}
-              />
+        {/if}
+        {#if replyAction !== null}
+          <div class="reply-box" data-pw={testId && `${testId}-reply`}>
+            <Input
+              bind:value={replyText}
+              placeholder={replyAction.placeholder ?? ''}
+              ariaLabel={replyAction.ariaLabel ?? replyAction.label}
+              autofocus
+              useTextArea={replyAction.multiline === true}
+              autoResize={replyAction.multiline === true}
+              rows={3}
+              minRows={3}
+              maxRows={10}
+              testId={testId && `${testId}-reply-input`}
+              onkeydown={(event) => {
+                // One line: Enter sends. Multiline: Enter is a newline and
+                // Ctrl/Cmd+Enter sends.
+                const sends =
+                  replyAction?.multiline === true ? event.metaKey || event.ctrlKey : true;
+                if (event.key === 'Enter' && sends) {
+                  event.preventDefault();
+                  sendReply();
+                }
+              }}
+            />
+            <div class="action-buttons">
+              <div class="cancel-button">
+                <Button
+                  variant="secondary"
+                  text={replyAction.backLabel ?? 'Back'}
+                  enable={!isProcessing}
+                  testId={testId && `${testId}-reply-back`}
+                  onclick={closeReply}
+                />
+              </div>
+              <div class="confirm-button">
+                <Button
+                  text={replyAction.submitLabel ?? 'Send'}
+                  classes={replyAction.submitClasses}
+                  enable={canSendReply}
+                  testId={testId && `${testId}-reply-send`}
+                  onclick={sendReply}
+                />
+              </div>
             </div>
-          {/each}
-          <div class="confirm-button">
-            {#if countdownActive}
-              <div class="progress-anchor">
-                <Progress value={elapsedTime} max={countdownSeconds} />
+          </div>
+        {:else}
+          <div class="action-buttons">
+            {#if showCancel}
+              <div class="cancel-button">
+                <Button
+                  variant="secondary"
+                  text={cancelLabel}
+                  enable={!isProcessing}
+                  testId={cancelTestId ?? (testId && `${testId}-cancel`)}
+                  onclick={() => interact('rejected')}
+                />
               </div>
             {/if}
-            <Button
-              text={confirmLabel}
-              enable={!isProcessing}
-              testId={confirmTestId ?? (testId && `${testId}-confirm`)}
-              onclick={() => interact('approved')}
-            />
+            {#each actions ?? [] as action, index (action.testId ?? `${index}-${action.label}`)}
+              <div class="extra-action-button">
+                <Button
+                  variant="secondary"
+                  text={action.label}
+                  enable={!isProcessing}
+                  testId={action.testId ?? (testId && `${testId}-action-${index}`)}
+                  classes={action.classes}
+                  ariaLabel={action.ariaLabel}
+                  onclick={() => selectExtraAction(action)}
+                />
+              </div>
+            {/each}
+            {#if showSendAnswers}
+              <div class="confirm-button">
+                <Button
+                  text={sendAnswersLabel}
+                  enable={canSendAnswers}
+                  testId={testId && `${testId}-send-answers`}
+                  onclick={sendAnswers}
+                />
+              </div>
+            {/if}
+            {#if showConfirm}
+              <div class="confirm-button">
+                {#if countdownActive}
+                  <div class="progress-anchor">
+                    <Progress value={elapsedTime} max={countdownSeconds} />
+                  </div>
+                {/if}
+                <Button
+                  text={confirmLabel}
+                  enable={!isProcessing}
+                  testId={confirmTestId ?? (testId && `${testId}-confirm`)}
+                  onclick={() => interact('approved')}
+                />
+              </div>
+            {/if}
           </div>
-        </div>
+        {/if}
       {/if}
     </div>
   </Card>
@@ -518,7 +734,9 @@
     line-height: var(--hitl-param-value-line-height, 1.4);
     color: var(--hitl-param-value-color, #1f1f23);
     word-spacing: var(--hitl-param-value-word-spacing, normal);
-    text-transform: capitalize;
+    /* Capitalize suits prose values; a command or a path has to read verbatim,
+       so the consumer can turn it off. */
+    text-transform: var(--hitl-param-value-text-transform, capitalize);
   }
 
   /* Rendered only when `children` is supplied; the flex gap on
@@ -528,10 +746,61 @@
     width: 100%;
   }
 
+  /* The question and reply rules are written down the structure they live in
+     (.confirmation-body > ...), so a class of the same name that a consumer passes through
+     `classes`, which lands on the root, cannot match them. */
+  .confirmation-body > .questions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--hitl-questions-gap, 0.75rem);
+  }
+
+  .questions > .question {
+    display: flex;
+    flex-direction: column;
+    gap: var(--hitl-question-gap, 0.375rem);
+  }
+
+  /* Same voice as the parameter blocks above: the header reads like a
+     parameter label, the question like its value. */
+  .question > .question-header {
+    font-size: var(--hitl-param-label-font-size, 0.6875rem);
+    font-weight: var(--hitl-param-label-font-weight, 600);
+    letter-spacing: var(--hitl-param-label-letter-spacing, 0.04em);
+    color: var(--hitl-param-label-color, #595959);
+    text-transform: uppercase;
+  }
+
+  .question > .question-text {
+    font-size: var(--hitl-param-value-font-size, 0.875rem);
+    line-height: var(--hitl-param-value-line-height, 1.4);
+    color: var(--hitl-param-value-color, #1f1f23);
+  }
+
+  .question > .question-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--hitl-question-options-gap, 0.5rem);
+  }
+
+  .confirmation-body > .reply-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--hitl-reply-gap, 0.5rem);
+    width: 100%;
+    --input-container-width: 100%;
+  }
+
   .action-buttons {
     display: flex;
     gap: var(--hitl-buttons-gap, 0.75rem);
     width: 100%;
+  }
+
+  /* Zero specificity, so a consumer's own flex-wrap rule for the row keeps winning, as it
+     did before this hook existed. */
+  :where(.action-buttons) {
+    flex-wrap: var(--hitl-buttons-wrap, nowrap);
   }
 
   .cancel-button,

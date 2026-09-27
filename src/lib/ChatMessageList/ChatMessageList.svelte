@@ -85,10 +85,30 @@
     reportScrollState(event.currentTarget);
   }
 
-  export function scrollToBottom(): void {
+  /**
+   * `behavior`, when supplied, sets the list's inline `scroll-behavior` for
+   * just this call (outranking, not changing, its custom-property default),
+   * then clears it on the next frame so it cannot linger onto a later scroll
+   * this function did not cause. The CSS property has no `instant` keyword --
+   * the browser silently drops it -- so `'instant'` is written as `auto`, and
+   * reduced-motion turns `'smooth'` into `auto` as well.
+   */
+  export function scrollToBottom(behavior?: 'smooth' | 'instant'): void {
     if (listEl !== null) {
+      const hasBehavior = typeof behavior === 'string';
+      if (hasBehavior) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        listEl.style.scrollBehavior =
+          behavior === 'smooth' && !prefersReducedMotion ? 'smooth' : 'auto';
+      }
       listEl.scrollTop = listEl.scrollHeight;
       reportScrollState(listEl);
+      if (hasBehavior) {
+        const node = listEl;
+        requestAnimationFrame(() => {
+          node.style.scrollBehavior = '';
+        });
+      }
     }
   }
 
@@ -316,7 +336,7 @@
 
     {#if showJump && jump}
       <div class="jump">
-        <Button onclick={scrollToBottom} ariaLabel={jumpLabel}>
+        <Button onclick={() => scrollToBottom()} ariaLabel={jumpLabel}>
           {#if typeof jumpIcon === 'function'}
             {@render jumpIcon()}
           {:else}

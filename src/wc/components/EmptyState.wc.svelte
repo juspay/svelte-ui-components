@@ -8,6 +8,7 @@
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       density: { type: 'String' },
+      headingLevel: { type: 'Number', attribute: 'heading-level' },
       icon: { type: 'Object' },
       titleSnippet: { type: 'Object' },
       descriptionSnippet: { type: 'Object' }

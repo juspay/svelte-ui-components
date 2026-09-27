@@ -9,6 +9,10 @@
   import Img from '$lib/Img/Img.svelte';
   import searchSvg from '$lib/assets/search.svg?raw';
 
+  function defaultFilter(item: CommandItem, needle: string): boolean {
+    return item.label.toLowerCase().includes(needle.toLowerCase());
+  }
+
   let {
     items,
     open = $bindable(false),
@@ -16,10 +20,15 @@
     emptyText = 'No results found.',
     testId,
     itemIcon,
+    itemSnippet,
     searchIcon,
+    enableHotkey = true,
+    filterFn = defaultFilter,
     onselect,
     onclose,
-    classes
+    classes,
+    ariaLabel = 'Command menu',
+    clearStateOnClose = false
   }: CommandMenuProperties = $props();
 
   // Stable per-instance ids keep ARIA references distinct across menus.
@@ -61,8 +70,7 @@
     if (query.trim() === '') {
       return items;
     }
-    const lower = query.toLowerCase();
-    return items.filter((item) => item.label.toLowerCase().includes(lower));
+    return items.filter((item) => filterFn(item, query));
   });
 
   let groupedItems = $derived.by(() => {
@@ -231,7 +239,17 @@
     }
   }
 
+  // No focus or typing guard: this listener fires from anywhere, including inside a text
+  // field or a terminal. A consumer whose hotkey character can legitimately be typed
+  // (Ctrl+K in a shell is kill-line) sets enableHotkey={false} and drives `open` itself from
+  // a listener that knows what is focused. The listener stays the plain window listener it
+  // always was, added in onMount and removed in onDestroy, so its timing and its order
+  // against other listeners are unchanged; the opt-out is read per event, which also makes
+  // toggling enableHotkey after mount take effect immediately.
   function handleGlobalKeyDown(event: KeyboardEvent) {
+    if (!enableHotkey) {
+      return;
+    }
     if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
       event.preventDefault();
       if (open) {
@@ -293,6 +311,17 @@
       destroy() {
         releaseDismissible();
         unlockBodyScroll();
+        // Opt-in only (clearStateOnClose): a controlled parent can set
+        // `open = false` without calling close(), and the overlay action still
+        // unmounts on every close path either way -- this is the lifecycle
+        // backstop that clears stale search state on reopen, for a consumer
+        // who asked for it. Off by default so an existing consumer's typed
+        // query/highlight keep surviving an externally-controlled close
+        // exactly as before this prop existed.
+        if (clearStateOnClose) {
+          query = '';
+          activeIndex = 0;
+        }
         if (openerElement !== null) {
           openerElement.focus();
           openerElement = null;
@@ -337,7 +366,7 @@
     onkeydown={handleKeyDown}
     role="dialog"
     aria-modal="true"
-    aria-label="Command menu"
+    aria-label={ariaLabel}
     tabindex="-1"
     inert={!open}
     data-pw={typeof testId === 'string' ? testId : null}
@@ -412,22 +441,26 @@
                 data-pw={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
                 testID={typeof testId === 'string' ? `${testId}-item-${item.value}` : null}
               >
-                {#if typeof itemIcon === 'function'}
-                  <span class="command-menu-item-icon">
-                    {@render itemIcon(item)}
-                  </span>
-                {:else if typeof item.icon === 'string' && item.icon.length > 0}
-                  <div class="command-menu-item-icon-img-wrapper">
-                    <Img inlineSvg src={item.icon} alt="" />
-                  </div>
-                {/if}
-                <span class="command-menu-item-label">{item.label}</span>
-                {#if typeof item.shortcut === 'string' && item.shortcut.length > 0}
-                  <span class="command-menu-item-shortcut">
-                    {#each item.shortcut.split('+') as key, i (i)}
-                      <kbd class="command-menu-kbd">{key.trim()}</kbd>
-                    {/each}
-                  </span>
+                {#if typeof itemSnippet === 'function'}
+                  {@render itemSnippet(item, index === activeIndex)}
+                {:else}
+                  {#if typeof itemIcon === 'function'}
+                    <span class="command-menu-item-icon">
+                      {@render itemIcon(item)}
+                    </span>
+                  {:else if typeof item.icon === 'string' && item.icon.length > 0}
+                    <div class="command-menu-item-icon-img-wrapper">
+                      <Img inlineSvg src={item.icon} alt="" />
+                    </div>
+                  {/if}
+                  <span class="command-menu-item-label">{item.label}</span>
+                  {#if typeof item.shortcut === 'string' && item.shortcut.length > 0}
+                    <span class="command-menu-item-shortcut">
+                      {#each item.shortcut.split('+') as key, i (i)}
+                        <kbd class="command-menu-kbd">{key.trim()}</kbd>
+                      {/each}
+                    </span>
+                  {/if}
                 {/if}
               </button>
             {/each}

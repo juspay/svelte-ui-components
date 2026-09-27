@@ -8,7 +8,11 @@
       showLabel: { type: 'Boolean', reflect: true, attribute: 'show-label' },
       animateValue: { type: 'Boolean', reflect: true, attribute: 'animate-value' },
       testId: { type: 'String', attribute: 'test-id' },
-      classes: { type: 'String' }
+      classes: { type: 'String' },
+      leadingLabel: { type: 'Object' },
+      headerStart: { type: 'Object' },
+      headerEnd: { type: 'Object' },
+      note: { type: 'Object' }
     }
   }}
 />

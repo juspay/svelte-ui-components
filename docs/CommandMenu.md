@@ -35,6 +35,10 @@ A full-screen action palette triggered by keyboard shortcut (Cmd+K / Ctrl+K). Di
 | placeholder | `string`        | No       | `'Search commands...'` | Placeholder text shown in the search input when no query is entered.                                                                                                                     |
 | emptyText   | `string`        | No       | `'No results found.'`  | Text displayed when the search query matches no items.                                                                                                                                   |
 | testId      | `string`        | No       | `-`                    | Value for `data-pw` on the overlay container for Playwright testing. Child elements get suffixed testIds (e.g., `{testId}-input`, `{testId}-item-{value}`).                              |
+| enableHotkey | `boolean`      | No       | `true`                 | Attaches the built-in Cmd/Ctrl+K window listener. It has no focus/typing guard, so it fires from inside a text field or terminal too. Set `false` when the hotkey character can legitimately be typed (e.g. Ctrl+K is kill-line in a shell) and drive `open` from the consumer's own guarded listener instead. |
+| filterFn    | `(item: CommandItem, query: string) => boolean` | No | matches `item.label` case-insensitively | Custom match predicate, for a consumer with more than a label to search on (a hint, a path). |
+| ariaLabel   | `string`        | No       | `'Command menu'`       | Accessible name of the dialog.                                                                                                                                                            |
+| clearStateOnClose | `boolean`  | No       | `false`                | A controlled parent can set `open = false` without calling the component's own `close()`. `true` clears the typed search query and highlighted index on that unmount too, not only on an internal close. Left off by default so an existing consumer's typed state keeps surviving an externally-controlled close exactly as before. |
 | classes     | `string`        | No       | `-`                    | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                   |
 
 ## Snippets
@@ -44,6 +48,7 @@ Svelte 5 Snippet props -- pass content blocks to the component.
 | Snippet    | Type                     | Description                                                                                                                                             |
 | ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | itemIcon   | `Snippet<[CommandItem]>` | Custom icon renderer for each command item. Receives the CommandItem as an argument. When provided, takes precedence over the item's `icon` URL string. |
+| itemSnippet | `Snippet<[CommandItem, boolean]>` | Replaces the default icon/label/shortcut row entirely. Receives the item and whether it is the active (arrow-key-highlighted) row. Set via JS property, not an HTML attribute — a parameterized snippet has no attribute form. |
 | searchIcon | `Snippet`                | Custom icon for the search input.                                                                                                                       |
 
 ## Events
@@ -219,7 +224,12 @@ Tag: `<sui-command-menu>`
 | ------------- | --------------- | --------------------------------------------------------------- |
 | `search-icon` | `searchIcon`    | Custom icon for the search input; defaults to the search glyph. |
 
-> **Note:** The `items` prop is an array and `itemIcon` is a parameterized Snippet — set them via JavaScript properties.
+> **Note:** The `items` prop is an array, `itemIcon`/`itemSnippet` are parameterized Snippets, and `filterFn` is a function — set them all via JavaScript properties.
+
+> **Note:** `ariaLabel` is exposed as `menuAriaLabel` (attribute `menu-aria-label`), not
+> `ariaLabel`/`aria-label` — every element already has a native `ariaLabel` accessor
+> (ARIAMixin), so a same-named property would collide with it instead of reaching this
+> component. Same pattern as `Modal`'s `modalAriaLabel`.
 
 > **Note:** `onselect` and `onclose` are JS-property callbacks only and dispatch no DOM
 > event: both are already `HTMLElement`'s own native events, so

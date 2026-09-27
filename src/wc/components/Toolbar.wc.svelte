@@ -8,6 +8,7 @@
       backIcon: { type: 'String', attribute: 'back-icon' },
       backLabel: { type: 'String', attribute: 'back-label' },
       backHref: { type: 'String', attribute: 'back-href' },
+      variant: { type: 'String', reflect: true },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       headingTestId: { type: 'String', attribute: 'heading-test-id' },
@@ -16,7 +17,17 @@
       centerContent: { type: 'Object' },
       rightContent: { type: 'Object' },
       additionalContent: { type: 'Object' },
-      onbackclick: { type: 'Object' }
+      onbackclick: { type: 'Object' },
+      headingLevel: { type: 'Number', attribute: 'heading-level' },
+      subtitle: { type: 'String' },
+      rootTag: { type: 'String', attribute: 'root-tag' },
+      // Named heading, not title: title is a host-reserved global HTML
+      // attribute (the native tooltip) on every element, so a same-named
+      // property/attribute here would collide with it instead of reaching
+      // Toolbar.svelte's title prop -- same reason Banner's WC never declares
+      // its own title snippet either. `heading` reads consistently with the
+      // sibling headingLevel/headingTestId props for this same feature.
+      heading: { type: 'String', attribute: 'heading' }
     }
   }}
 />
@@ -25,7 +36,16 @@
   import Toolbar from '$lib/Toolbar/Toolbar.svelte';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let { heading, ...props } = $props();
+
+  const headingTag = $derived(
+    typeof props.headingLevel === 'number' &&
+      Number.isInteger(props.headingLevel) &&
+      props.headingLevel >= 1 &&
+      props.headingLevel <= 6
+      ? `h${props.headingLevel}`
+      : null
+  );
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -64,7 +84,14 @@
   }
 </script>
 
-<Toolbar {...props} {...dispatchers}>
+<!--
+  title={heading} is passed through even though centerContent (always supplied
+  below) keeps Toolbar.svelte from ever reaching the branch that would render
+  it: it is still the real prop `heading` maps to, so the element genuinely
+  hands Toolbar a `title` -- the render path is what's overridden, not the
+  prop assignment itself.
+-->
+<Toolbar {...props} {...dispatchers} title={heading}>
   {#snippet leftContent()}
     <!-- Mirrors Toolbar.svelte's leftContent fallback: the back button/link shown
          when showBackControl is true (showBackButton !== false && backIcon !== null
@@ -103,11 +130,23 @@
     </slot>
   {/snippet}
   {#snippet centerContent()}
-    <!-- Mirrors Toolbar.svelte's centerContent fallback: <div class="text">{text}</div>,
-         shown when `text` is a non-empty string. The `.center-content` wrapper is
+    <!-- Mirrors Toolbar.svelte's own three-way branch (title -> text -> nothing),
+         since this snippet is always supplied and so always wins over that branch
+         running inside Toolbar.svelte itself. The `.center-content` wrapper is
          already supplied unconditionally by Toolbar.svelte's function branch. -->
     <slot name="center-content">
-      {#if typeof props.text === 'string' && props.text.length > 0}
+      {#if typeof heading === 'string' && heading.length > 0}
+        <div class="titles" data-pw={props.headingTestId} testID={props.headingTestId}>
+          {#if headingTag !== null}
+            <svelte:element this={headingTag}>{heading}</svelte:element>
+          {:else}
+            <span>{heading}</span>
+          {/if}
+          {#if typeof props.subtitle === 'string' && props.subtitle.length > 0}
+            <p class="subtitle">{props.subtitle}</p>
+          {/if}
+        </div>
+      {:else if typeof props.text === 'string' && props.text.length > 0}
         <div class="text" data-pw={props.headingTestId} testID={props.headingTestId}>
           {props.text}
         </div>

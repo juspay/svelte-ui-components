@@ -144,3 +144,52 @@ describe('Snippet clipboard error handling', () => {
     expect(copiedLabel(container)).not.toBeNull();
   });
 });
+
+// `multiline` is opt-in: unset, the markup is the one-line chip it always was,
+// including the prompt span when the prompt is empty.
+describe('Snippet multiline', () => {
+  it('keeps the chip markup by default', () => {
+    const { container } = render(Snippet, { text: 'a\nb', prompt: '' });
+    expect(container.querySelector('.snippet')?.hasAttribute('data-multiline')).toBe(false);
+    expect(container.querySelector('.snippet-prompt')).not.toBeNull();
+  });
+
+  it('renders every line and no empty prompt', () => {
+    const { container } = render(Snippet, { text: 'one\ntwo\nthree', prompt: '', multiline: true });
+    expect(container.querySelector('.snippet')?.hasAttribute('data-multiline')).toBe(true);
+    expect(container.querySelector('.snippet-prompt')).toBeNull();
+    expect(container.querySelector('.snippet-text')?.textContent).toBe('one\ntwo\nthree');
+  });
+
+  it('keeps a real prompt', () => {
+    const { container } = render(Snippet, { text: 'ls\nfile', prompt: '$', multiline: true });
+    expect(container.querySelector('.snippet-prompt')?.textContent).toBe('$');
+  });
+
+  // A class directive would strip these tokens from `classes` when multiline is off.
+  it('keeps a multiline or has-copy class the consumer passes, and does not style on it', () => {
+    const { container } = render(Snippet, { text: 'x', classes: 'multiline has-copy' });
+    const root = container.querySelector('.snippet');
+    expect(root?.classList.contains('multiline')).toBe(true);
+    expect(root?.classList.contains('has-copy')).toBe(true);
+    expect(root?.hasAttribute('data-multiline')).toBe(false);
+  });
+
+  // has-copy only matters to a multiline-scoped selector (padding for the
+  // floating copy button), so it must not appear outside multiline -- even
+  // with the copy button shown, which is the default.
+  it('does not add has-copy outside multiline, even with the copy button shown', () => {
+    const { container } = render(Snippet, { text: 'npm install' });
+    expect(container.querySelector('.snippet')?.hasAttribute('data-has-copy')).toBe(false);
+  });
+
+  it('adds has-copy in multiline when the copy button is shown', () => {
+    const { container } = render(Snippet, { text: 'a\nb', multiline: true });
+    expect(container.querySelector('.snippet')?.hasAttribute('data-has-copy')).toBe(true);
+  });
+
+  it('omits has-copy in multiline when the copy button is hidden', () => {
+    const { container } = render(Snippet, { text: 'a\nb', multiline: true, showCopyButton: false });
+    expect(container.querySelector('.snippet')?.hasAttribute('data-has-copy')).toBe(false);
+  });
+});

@@ -11,8 +11,11 @@
       loaderType: { type: 'String', reflect: true, attribute: 'loader-type' },
       type: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
+      statusText: { type: 'String', attribute: 'status-text' },
+      statusTestId: { type: 'String', attribute: 'status-test-id' },
       buttonAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       buttonAriaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
+      buttonAriaPressed: { type: 'Boolean', attribute: 'aria-pressed' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
@@ -45,7 +48,7 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import { dispatchEvents } from '../dispatch';
-  let { buttonAriaExpanded, buttonAriaLabel, ...props } = $props();
+  let { buttonAriaExpanded, buttonAriaLabel, buttonAriaPressed, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -72,7 +75,13 @@
 <!-- A property-assigned icon wins; the slot is the fallback. The branch stays
      inside the body snippet so `<slot>` keeps its `$$props` scope. `children` is
      no longer a declared prop, so the default slot is its only path. -->
-<Button {...props} {...dispatchers} ariaLabel={buttonAriaLabel} ariaExpanded={buttonAriaExpanded}>
+<Button
+  {...props}
+  {...dispatchers}
+  ariaLabel={buttonAriaLabel}
+  ariaExpanded={buttonAriaExpanded}
+  ariaPressed={buttonAriaPressed}
+>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}

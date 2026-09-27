@@ -30,6 +30,15 @@ export type OptionalEmptyStateProperties = {
    */
   density?: 'page' | 'panel';
   /**
+   * Renders the title as a real heading, `<h1>`-`<h6>`, for a page outline.
+   * Omitted -- or anything but an integer 1-6, e.g. from a web-component
+   * attribute -- keeps the plain `<div>` title every version before this
+   * rendered. The heading keeps the title's own size, weight, colour and
+   * (via `--empty-state-title-line-height`, default `inherit`) line height,
+   * so a global `h1..h6` rule doesn't restyle it.
+   */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
+  /**
    * Optional snippet that replaces the `title` string at render time.
    * When provided, the mandatory `title` prop is still required for backward-compatibility
    * but its value is not rendered — the snippet takes full priority.

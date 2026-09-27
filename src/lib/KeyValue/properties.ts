@@ -10,6 +10,8 @@ export type KeyValueItem = {
    * `hideEmpty` is `true` (the default), or rendered as `emptyText` otherwise.
    */
   value?: string | number | null;
+  /** Tooltip for the value cell, as its native `title` (e.g. the full path behind a shortened one). */
+  title?: string;
   /** Optional per-item test id, emitted as `data-pw` on the item wrapper. */
   testId?: string;
 };

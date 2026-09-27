@@ -40,7 +40,7 @@
           {item.label}
         {/if}
       </dt>
-      <dd class="key-value-value">
+      <dd class="key-value-value" title={item.title}>
         {#if valueSnippet}
           {@render valueSnippet(item, index)}
         {:else}
@@ -104,8 +104,12 @@
     line-height: var(--keyvalue-label-line-height, 1.4);
   }
 
+  /* The two cells' flex as variables, not just the label's basis: a label
+     that grows and truncates beside a content-sized value (a long name with a
+     short figure on the right) needs grow/shrink too, and a consumer's own
+     .key-value-label rule could only lose to this scoped one. */
   .key-value--horizontal .key-value-label {
-    flex: 0 0 var(--keyvalue-label-width, 140px);
+    flex: var(--keyvalue-label-flex, 0 0 var(--keyvalue-label-width, 140px));
   }
 
   .key-value-value {
@@ -117,8 +121,17 @@
     overflow-wrap: anywhere;
   }
 
+  /* Unset, each inherits -- exactly what the cell did before these hooks. Zero specificity,
+     so a consumer's own rule on the cell (`dd { text-align: right }`) keeps winning, as it
+     did before the hooks existed. */
+  :where(.key-value-value) {
+    font-family: var(--keyvalue-value-font-family, inherit);
+    text-align: var(--keyvalue-value-text-align, inherit);
+    font-variant-ligatures: var(--keyvalue-value-font-variant-ligatures, inherit);
+  }
+
   .key-value--horizontal .key-value-value {
-    flex: 1 1 auto;
+    flex: var(--keyvalue-value-flex, 1 1 auto);
     min-width: 0;
   }
 

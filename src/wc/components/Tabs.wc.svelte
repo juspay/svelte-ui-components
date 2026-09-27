@@ -7,6 +7,8 @@
       activeIndex: { type: 'Number', reflect: true, attribute: 'active-index' },
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
+      tabsAriaLabel: { type: 'String', attribute: 'tabs-aria-label' },
+      navigation: { type: 'Boolean' },
       scrollLeftIcon: { type: 'Object' },
       scrollRightIcon: { type: 'Object' },
       classes: { type: 'String' },
@@ -37,8 +39,17 @@
   // `dir` is an accessor on every HTMLElement, so declaring it as a prop would
   // replace the host's own. The ATTRIBUTE keeps its name, which is what a consumer
   // writes: `<sui-tabs dir="rtl">` still sets the host's direction and reaches this.
-  let { tabsDir, ...props }: Omit<TabsProperties, 'dir'> & { tabsDir?: TabsProperties['dir'] } =
-    $props();
+  // `ariaLabel` likewise: ARIAMixin puts it on every Element. The attribute is
+  // `tabs-aria-label`, not `aria-label`: observing the native attribute would start
+  // forwarding an `aria-label` a host already carries into the inner bar's name.
+  let {
+    tabsDir,
+    tabsAriaLabel,
+    ...props
+  }: Omit<TabsProperties, 'dir' | 'ariaLabel'> & {
+    tabsDir?: TabsProperties['dir'];
+    tabsAriaLabel?: TabsProperties['ariaLabel'];
+  } = $props();
 
   let isVertical = $derived(props.orientation === 'vertical');
 
@@ -63,7 +74,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Tabs {...props} {...dispatchers} dir={tabsDir}>
+<Tabs {...props} {...dispatchers} dir={tabsDir} ariaLabel={tabsAriaLabel}>
   {#snippet scrollLeftIcon()}
     <!--
       A snippet declared here is always a function, so Tabs.svelte's own

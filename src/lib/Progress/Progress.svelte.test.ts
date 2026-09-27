@@ -1,3 +1,4 @@
+import { createRawSnippet } from 'svelte';
 import { render } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import Progress from './Progress.svelte';
@@ -93,5 +94,67 @@ describe('Progress animateValue on', () => {
     });
     expect(label(container)).toBeNull();
     expect(container.querySelector('.animated-number')).toBeNull();
+  });
+});
+
+/**
+ * `headerStart`, `headerEnd` and `note` are additive (see properties.ts).
+ * With none of them passed, the component's root must still be the bare
+ * `.container` progressbar -- no `.progress-root`, `.progress-header` or `.progress-note` -- so every
+ * existing consumer renders the same DOM as before.
+ */
+const span = (cls: string, text: string) =>
+  createRawSnippet(() => ({ render: () => `<span class="${cls}">${text}</span>` }));
+
+describe('Progress header and note (unset)', () => {
+  it('renders the bare progressbar with no wrapper', () => {
+    const { container } = render(Progress, { value: 40 });
+    const first = container.firstElementChild;
+    expect(first?.classList.contains('container')).toBe(true);
+    expect(first?.getAttribute('role')).toBe('progressbar');
+    expect(container.querySelector('.progress-root, .progress-header, .progress-note')).toBeNull();
+  });
+});
+
+describe('Progress header and note (set)', () => {
+  it('puts headerStart and headerEnd in a header row before the track', () => {
+    const { container } = render(Progress, {
+      value: 40,
+      headerStart: span('name', 'Context'),
+      headerEnd: span('value', '40%')
+    });
+    const root = container.querySelector('.progress-root');
+    const header = root?.querySelector(':scope > .progress-header');
+    expect([...(header?.children ?? [])].map((e) => e.textContent)).toEqual(['Context', '40%']);
+    expect(root?.firstElementChild).toBe(header);
+    expect(header?.nextElementSibling?.getAttribute('role')).toBe('progressbar');
+    expect(root?.querySelector('.progress-note')).toBeNull();
+  });
+
+  it('puts note in a row after the progressbar', () => {
+    const { container } = render(Progress, { value: 40, note: span('n', 'resets in 2h') });
+    const root = container.querySelector('.progress-root');
+    expect(root?.querySelector('.progress-header')).toBeNull();
+    const noteRow = root?.querySelector(':scope > .progress-note');
+    expect(noteRow?.textContent).toBe('resets in 2h');
+    expect(noteRow?.previousElementSibling?.getAttribute('role')).toBe('progressbar');
+  });
+
+  it('keeps the progressbar name and value with all three set', () => {
+    const { container } = render(Progress, {
+      value: 40,
+      ariaLabel: 'Context',
+      headerStart: span('name', 'Context'),
+      headerEnd: span('value', '40%'),
+      note: span('n', 'resets in 2h')
+    });
+    const bar = container.querySelector('[role=progressbar]');
+    expect(bar?.getAttribute('aria-label')).toBe('Context');
+    expect(bar?.getAttribute('aria-valuenow')).toBe('40');
+    expect(
+      [...(container.querySelector('.progress-root')?.children ?? [])].map(
+        (e) => e.className.split(' ')[0]
+      )
+    ).toEqual(['progress-header', 'container', 'progress-note']);
   });
 });

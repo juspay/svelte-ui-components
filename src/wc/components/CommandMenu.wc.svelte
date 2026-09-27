@@ -12,7 +12,17 @@
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onclose: { type: 'Object' },
-      itemIcon: { type: 'Object' }
+      itemIcon: { type: 'Object' },
+      itemSnippet: { type: 'Object' },
+      enableHotkey: { type: 'Boolean', attribute: 'enable-hotkey' },
+      filterFn: { type: 'Object' },
+      // Named menuAriaLabel, not ariaLabel: ariaLabel is a real ARIAMixin
+      // accessor every Element already has (see Button's buttonAriaLabel and
+      // Modal's modalAriaLabel for the same reason), so declaring it here
+      // under its own name would collide with the native one instead of
+      // reaching this component's prop.
+      menuAriaLabel: { type: 'String', attribute: 'menu-aria-label' },
+      clearStateOnClose: { type: 'Boolean', attribute: 'clear-state-on-close' }
     }
   }}
 />
@@ -21,8 +31,14 @@
   import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
   import searchSvg from '$lib/assets/search.svg?raw';
   import { dispatchEvents } from '../dispatch';
+  import type { CommandMenuProperties } from '$lib/CommandMenu/properties';
 
-  let props = $props();
+  let {
+    menuAriaLabel,
+    ...props
+  }: Omit<CommandMenuProperties, 'ariaLabel'> & {
+    menuAriaLabel?: CommandMenuProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -44,7 +60,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<CommandMenu {...props} {...dispatchers}>
+<CommandMenu {...props} {...dispatchers} ariaLabel={menuAriaLabel}>
   {#snippet searchIcon()}
     <!-- Mirrors CommandMenu.svelte's searchIcon fallback:
          <span class="command-menu-search-icon">{@html searchSvg}</span> -->

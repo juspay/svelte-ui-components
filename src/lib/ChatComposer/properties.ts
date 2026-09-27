@@ -98,6 +98,31 @@ export type OptionalChatComposerProperties = {
   statusText?: string;
   /** Test id on the status region (see `statusText`). */
   statusTestId?: string;
+  /**
+   * Opt-in slash-command menu. With commands passed, typing "/" opens a
+   * listbox of the ones that match (name prefix, or the text after "/" found
+   * in a description); arrows move, Tab completes, Enter picks (Enter on a
+   * complete match submits), Escape dismisses -- through the shared
+   * dismissible stack, so an overlay above the composer closes first. A
+   * command with `choices` keeps the menu open past the space for a second
+   * stage listing them. `null` (the default) turns the whole feature off.
+   */
+  slashCommands?: ChatComposerSlashCommand[] | null;
+  /** Accessible name of the slash-command listbox. Defaults to 'slash commands'. */
+  slashMenuAriaLabel?: string;
+  /** Key-hint line under the slash-command list. */
+  slashMenuHint?: string;
+  /** Class(es) on the slash-command panel (e.g. the consumer's own panel look). */
+  slashMenuClasses?: string;
+  /** Class(es) on every slash-command row's Button. */
+  slashItemClasses?: string;
+  /** Class(es) added to the highlighted slash-command row's Button. */
+  slashSelectedItemClasses?: string;
+  /**
+   * Renders a slash-command row's content (the command, whether it is
+   * highlighted). Omitted: name, argument hint, description and badge.
+   */
+  slashItem?: Snippet<[ChatComposerSlashCommand, boolean]>;
   testId?: string;
   /** Test id emitted as `data-pw` on the textarea itself (none by default). */
   inputTestId?: string;
@@ -162,4 +187,23 @@ export type ChatComposerEventProperties = {
    * to an action button that fires this.
    */
   onaction?: () => void;
+};
+
+/** A value a slash command's argument can take (its second menu stage). */
+export type ChatComposerSlashCommandChoice = {
+  value: string;
+  description?: string;
+};
+
+/** One entry of ChatComposer's slash-command menu. */
+export type ChatComposerSlashCommand = {
+  /** Including the slash, e.g. "/model". */
+  name: string;
+  description?: string;
+  /** Shown after the name, e.g. "[model]". */
+  argumentHint?: string;
+  /** Enumerable argument values: picking the command lists these next. */
+  choices?: ChatComposerSlashCommandChoice[];
+  /** A short tag on the row, e.g. where the command comes from. */
+  badge?: string;
 };

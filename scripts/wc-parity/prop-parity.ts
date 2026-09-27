@@ -339,7 +339,12 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   'ariaValueMax',
   'ariaValueMin',
   'ariaValueText',
-  'ariaRoleDescription'
+  'ariaRoleDescription',
+  // Plain HTMLElement.prototype accessor, same class as `id`/`title`/`dir` above.
+  // Declaring it would replace the host's own `autofocus` (and its "focus this
+  // element once inserted" browser behaviour) with the component's own meaning
+  // of the name. Input.wc.svelte forwards it as `inputAutofocus` instead.
+  'autofocus'
 ]);
 
 // The authoritative collision set: every existing DOM event-handler IDL

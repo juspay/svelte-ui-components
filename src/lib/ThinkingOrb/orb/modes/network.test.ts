@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { connecting, weaving } from './network';
+import { connecting, weaving, weavingGhostCount } from './network';
 import { inkAlpha } from '../paint';
+import { modeSizing } from '../space';
 import type { Frame, ModeContext, ModeFn, ModeSize } from '../types';
 
 const SIZES: readonly ModeSize[] = [64, 32, 20];
@@ -128,19 +129,28 @@ describe('connecting', () => {
   });
 });
 
+// Ghost dots (the static backdrop sphere, BZ-6466 follow-up) are always appended after every
+// strand's dots (see weaving's own comment), so this reproduces that count and slices them off --
+// the tests below are about the three strands specifically, not the backdrop behind them.
+const strandDotsOf = (frame: Frame, size: ModeSize): Frame['dots'] => {
+  const ghostCount = weavingGhostCount(modeSizing(size, 1, 1));
+  return frame.dots.slice(0, frame.dots.length - ghostCount);
+};
+
 describe('weaving', () => {
   it('draws exactly 3 strands worth of beads, each one shorter by 1 in its stroke count', () => {
     for (const size of SIZES) {
       const frame = weaving(0.3, contextFor(size));
-      expect(frame.dots.length % 3).toBe(0);
-      expect(frame.strokes.length).toBe(frame.dots.length - 3);
+      const strandDots = strandDotsOf(frame, size);
+      expect(strandDots.length % 3).toBe(0);
+      expect(frame.strokes.length).toBe(strandDots.length - 3);
     }
   });
 
   it('starts each of the three strands in its own place instead of pinching them into one point', () => {
     for (const size of SIZES) {
       for (const t of [0, 1.7, 12.25]) {
-        const { dots } = weaving(t, contextFor(size));
+        const dots = strandDotsOf(weaving(t, contextFor(size)), size);
         const perStrand = dots.length / 3;
         for (const end of [0, perStrand - 1]) {
           const ends = [0, 1, 2].map((strand) => dots[strand * perStrand + end]);
@@ -182,7 +192,7 @@ describe('weaving', () => {
     };
     for (const size of SIZES) {
       for (let step = 0; step < 48; step += 1) {
-        const { dots } = weaving(step * 0.45, contextFor(size));
+        const dots = strandDotsOf(weaving(step * 0.45, contextFor(size)), size);
         const perStrand = dots.length / 3;
         for (const strand of [0, 1, 2]) {
           const points = dots.slice(strand * perStrand, (strand + 1) * perStrand);

@@ -153,22 +153,14 @@ describe('solving', () => {
     expect(wellPastAScramble).not.toEqual(start);
   });
 
-  it('joins its meridian lines unbroken when solved and breaks them when scrambled', () => {
-    // After the 3 seams x 12 segments come the meridians: 4 bands x 3 landmarks x 2 segments, so
-    // band b / landmark s owns segments (b * 3 + s) * 2 and + 1, top to bottom.
-    const meridianGaps = (t: number): number[] => {
-      const meridians = solving(t, contextFor(64)).strokes.slice(36);
-      return [0, 1, 2].flatMap((slot) =>
-        [0, 1, 2].map((band) => {
-          const bottom = meridians[(band * 3 + slot) * 2 + 1];
-          const nextTop = meridians[((band + 1) * 3 + slot) * 2];
-          return Math.hypot(bottom.x2 - nextTop.x1, bottom.y2 - nextTop.y1);
-        })
-      );
-    };
-    expect(Math.max(...meridianGaps(0))).toBeLessThan(0.01);
-    expect(Math.max(...meridianGaps(1.6))).toBeGreaterThan(3);
-  });
+  // A dedicated "reads as misaligned when scrambled" check used to live here, built on meridian
+  // line segments spanning each tier. Those meridians (and the fixed seam rings) are gone --
+  // reference parity (BZ-6466 follow-up): next to upstream thinking-orbs' `rubik`, which reads
+  // solved-vs-scrambled off its per-tier texture rotation alone, that wireframe looked like a busy
+  // skeleton the reference doesn't have. The texture rotation the wireframe was reading from is
+  // exactly what upstream relies on too, and the test above already exercises it (`solving(1.6)`
+  // must differ from `solving(0)`), so the removed test's coverage lives on there rather than in a
+  // geometry-specific replacement.
 });
 
 describe('searching', () => {

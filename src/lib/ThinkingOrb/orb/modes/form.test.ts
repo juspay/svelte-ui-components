@@ -92,7 +92,10 @@ const describeCommonModeBehaviour = (name: string, mode: ModeFn, maxCountAt64: n
   });
 };
 
-describeCommonModeBehaviour('composing', composing, 300);
+// 400, not 300: reference parity (BZ-6466 follow-up) added a ~110-dot static ghost sphere behind
+// the ribbon (see RIBBON_GHOST_BASE_COUNT in form.ts), matching upstream thinking-orbs' own
+// ribbon+ghost total of ~280 at 64px.
+describeCommonModeBehaviour('composing', composing, 400);
 describeCommonModeBehaviour('breathing', breathing, 300);
 describeCommonModeBehaviour('shaping', shaping, 300);
 

@@ -180,6 +180,22 @@ const STRAND_DOT_SIZE_FACTOR: Record<ModeSize, number> = { 64: 1, 32: 0.85, 20: 
 const STRAND_DEPTH_INK = 0.45;
 /** A slight per-strand shade; the paths and their over/under crossings are what separate them. */
 const STRAND_SHADE_STEP = 0.1;
+/** Reference parity (BZ-6466 follow-up): upstream's `braid` mode fills the sphere behind the
+ * strands with a faint, static-in-object-space "ghost" texture (150 dots at 64px) that shares the
+ * strands' own turn, so the strands read as plaiting round a solid ball rather than floating loops
+ * in empty space. Ours had no such backing layer. Always appended after every strand's dots, so
+ * code and tests that index `dots` by strand can slice it off by a known, reproducible count. */
+const STRAND_GHOST_BASE_COUNT = 110;
+const STRAND_GHOST_RADIUS_PX = 0.5;
+const STRAND_GHOST_INK = 0.3;
+/** With STRAND_GHOST_INK 0.3, `inkAlpha` = (1-ink)*alpha = 0.7*alpha, so this needs to clear
+ * 0.1/0.7 for the "nothing paints below 10% opacity" contract even on a ghost dot's far side. */
+const STRAND_GHOST_ALPHA_BASE = 0.16;
+const STRAND_GHOST_ALPHA_DEPTH = 0.22;
+/** Exported so tests that index `weaving`'s strand dots can reproduce and slice off this count,
+ * rather than duplicating the formula as a hardcoded literal. */
+export const weavingGhostCount = (sizing: ModeSizing): number =>
+  Math.max(20, sizing.count(STRAND_GHOST_BASE_COUNT));
 
 const strandBaseAngle = (strand: number): number => (strand / STRAND_COUNT) * Math.PI * 2;
 
@@ -257,5 +273,23 @@ export const weaving: ModeFn = (t, ctx): Frame => {
     })
   );
 
-  return { dots, strokes };
+  // Shares the strands' own spin+tilt (not their per-strand inclination/phase, which is strand
+  // geometry, not camera) so the backdrop turns together with what it is behind.
+  const ghostCount = weavingGhostCount(sizing);
+  const ghosts: Dot[] = Array.from({ length: ghostCount }, (_unused, i) => {
+    const point = sampleSphere(i, ghostCount, sphereRadius);
+    const spun = rotateY(point, t * STRAND_ROTATE_SPEED);
+    const tilted = rotateX(spun, STRAND_TILT);
+    const projected = project(tilted, originPx, sphereRadius);
+    return {
+      x: projected.x,
+      y: projected.y,
+      depth: projected.depth,
+      radius: sizing.radius(STRAND_GHOST_RADIUS_PX),
+      ink: STRAND_GHOST_INK,
+      alpha: clamp01(STRAND_GHOST_ALPHA_BASE + STRAND_GHOST_ALPHA_DEPTH * projected.depth)
+    };
+  });
+
+  return { dots: [...dots, ...ghosts], strokes };
 };

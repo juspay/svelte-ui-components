@@ -23,7 +23,8 @@ import {
   project,
   rotateX,
   rotateY,
-  rotateZ
+  rotateZ,
+  sampleSphere
 } from '../space';
 
 const TWO_PI = Math.PI * 2;
@@ -84,7 +85,11 @@ const EMPTY_STROKES: readonly [] = [];
 
 /** Dots along each thread at 64px; `countAlongPath` keeps their spacing as the canvas shrinks. */
 const RIBBON_PER_THREAD_BASE = 36;
-const RIBBON_BASE_DOT_RADIUS = 2.2;
+/** Reference parity (BZ-6466 follow-up): upstream thinking-orbs' `ribbon` mode resolves to a
+ * ~0.9-1.1px base dot radius at 64px (its BASE_PROFILES rBase 1.1, x0.85 for this preset's `size`
+ * multiplier). This used to carry 2.2px, exactly the radius that fused composing's dots into a
+ * solid corrugated band instead of the reference's fine, individually-visible beads. */
+const RIBBON_BASE_DOT_RADIUS = 1.2;
 /** Fewer, narrower threads than a full band: at 7 threads across 0.4 rad the 64px ribbon covered
  * most of the sphere and read as a filled ball rather than a strip of cloth. */
 const RIBBON_THREADS: Record<64 | 32 | 20, number> = { 64: 5, 32: 4, 20: 3 };
@@ -107,6 +112,16 @@ const RIBBON_CAMERA_TILT = 0.45;
  * combined ink/alpha/radius fade would collapse an edge row to a speck. */
 const RIBBON_EDGE_ALPHA_FLOOR = 0.5;
 const RIBBON_EDGE_INK_LIFT = 0.22;
+/** Reference parity (BZ-6466 follow-up): upstream's `ribbon` mode fills the sphere behind the band
+ * with a faint, fully static "ghost" texture (150 dots at 64px, this preset's `spin: 0` freezing
+ * even the shared camera precession that would otherwise turn it). Ours had no such backing layer,
+ * so the ribbon read as a thin strip floating in empty space rather than cloth wrapped on a solid
+ * form -- the ribbon's own turn was the only motion on screen, with nothing to anchor it against. */
+const RIBBON_GHOST_BASE_COUNT = 110;
+const RIBBON_GHOST_RADIUS_PX = 0.5;
+const RIBBON_GHOST_INK = 0.3;
+const RIBBON_GHOST_ALPHA_BASE = 0.16;
+const RIBBON_GHOST_ALPHA_DEPTH = 0.22;
 
 /**
  * A ribbon of dots looped once around the sphere on its own tilted great
@@ -121,7 +136,20 @@ export const composing: ModeFn = (t: number, ctx: ModeContext): Frame => {
   const perThread = sizing.countAlongPath(RIBBON_PER_THREAD_BASE);
   const total = threads * perThread;
 
-  const dots: Dot[] = [];
+  const ghostCount = Math.max(20, sizing.count(RIBBON_GHOST_BASE_COUNT));
+  const dots: Dot[] = Array.from({ length: ghostCount }, (_unused, i) => {
+    const point = sampleSphere(i, ghostCount, worldRadius);
+    const tilted = rotateX(point, RIBBON_CAMERA_TILT);
+    const projected = project(tilted, originPx, worldRadius);
+    return {
+      x: projected.x,
+      y: projected.y,
+      depth: projected.depth,
+      radius: sizing.radius(RIBBON_GHOST_RADIUS_PX),
+      ink: RIBBON_GHOST_INK,
+      alpha: clamp01(RIBBON_GHOST_ALPHA_BASE + RIBBON_GHOST_ALPHA_DEPTH * projected.depth)
+    };
+  });
   for (let index = 0; index < total; index += 1) {
     const thread = index % threads;
     const step = Math.floor(index / threads);

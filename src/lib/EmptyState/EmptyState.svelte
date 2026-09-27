@@ -10,8 +10,19 @@
     testId,
     titleSnippet,
     descriptionSnippet,
-    density
+    density,
+    headingLevel
   }: EmptyStateProperties = $props();
+
+  // Only a real level renders a heading; anything else keeps the plain div.
+  const headingTag = $derived(
+    typeof headingLevel === 'number' &&
+      Number.isInteger(headingLevel) &&
+      headingLevel >= 1 &&
+      headingLevel <= 6
+      ? `h${headingLevel}`
+      : 'div'
+  );
 </script>
 
 <div
@@ -25,7 +36,8 @@
       {@render icon()}
     </div>
   {/if}
-  <div
+  <svelte:element
+    this={headingTag}
     class="empty-state-title"
     data-pw={typeof testId === 'string' ? `${testId}-title` : null}
     testID={typeof testId === 'string' ? `${testId}-title` : null}
@@ -35,7 +47,7 @@
     {:else}
       {title}
     {/if}
-  </div>
+  </svelte:element>
   {#if typeof descriptionSnippet === 'function'}
     <div
       class="empty-state-description"
@@ -106,6 +118,13 @@
     font-size: var(--empty-state-title-font-size, 16px);
     font-weight: var(--empty-state-title-font-weight, 600);
     color: var(--empty-state-title-color, inherit);
+  }
+
+  /* A div inherited its line-height already; as a heading it must not take a global
+     h1..h6 line-height instead. Only a title that is not a div matches, so the default
+     title is not touched. */
+  .empty-state-title:not(div) {
+    line-height: var(--empty-state-title-line-height, inherit);
   }
 
   .empty-state-description {

@@ -24,15 +24,16 @@ A copyable command-line code snippet with a prompt prefix symbol and an inline c
 
 ## Props
 
-| Prop           | Type      | Required | Default   | Description                                                                                                                                                            |
-| -------------- | --------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| text           | `string`  | Yes      | `-`       | The code or command string displayed in the snippet. This is the value copied to the clipboard.                                                                        |
-| prompt         | `string`  | No       | `$`       | The prefix symbol shown before the text (e.g. '$', '>', '#'). Visually indicates a terminal prompt.                                                                    |
-| showCopyButton | `boolean` | No       | `true`    | Whether to show the copy-to-clipboard button on the right side. Set to false for display-only snippets.                                                                |
-| testId         | `string`  | No       | `-`       | Test identifier applied as `data-pw` attribute on the container for Playwright selectors.                                                                              |
-| copiedLabel    | `string`  | No       | `Copied!` | Text shown in place of the copy icon after a successful copy.                                                                                                          |
-| copyResetMs    | `number`  | No       | `2000`    | Milliseconds before the copied feedback reverts to the copy icon.                                                                                                      |
-| classes        | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
+| Prop           | Type      | Required | Default   | Description                                                                                                                                                                                                                                                                        |
+| -------------- | --------- | -------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| text           | `string`  | Yes      | `-`       | The code or command string displayed in the snippet. This is the value copied to the clipboard.                                                                                                                                                                                    |
+| prompt         | `string`  | No       | `$`       | The prefix symbol shown before the text (e.g. '$', '>', '#'). Visually indicates a terminal prompt.                                                                                                                                                                                |
+| showCopyButton | `boolean` | No       | `true`    | Whether to show the copy-to-clipboard button on the right side. Set to false for display-only snippets.                                                                                                                                                                            |
+| testId         | `string`  | No       | `-`       | Test identifier applied as `data-pw` attribute on the container for Playwright selectors.                                                                                                                                                                                          |
+| copiedLabel    | `string`  | No       | `Copied!` | Text shown in place of the copy icon after a successful copy.                                                                                                                                                                                                                      |
+| copyResetMs    | `number`  | No       | `2000`    | Milliseconds before the copied feedback reverts to the copy icon.                                                                                                                                                                                                                  |
+| multiline      | `boolean` | No       | `false`   | Lays the snippet out as a pre-formatted block for long output: every line shows, the code area scrolls (capped by `--snippet-code-max-height`), the copy button sits in the top-right corner, and an empty `prompt` renders nothing. The default is the one-line, ellipsised chip. |
+| classes        | `string`  | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                             |
 
 ## The copy affordance on its own — `createCopyState`
 
@@ -82,11 +83,11 @@ This is the exact state machine `Snippet` itself runs on, so the single-pending-
 | `copy(text)` | `(text: string) => Promise<boolean>` | Writes to the clipboard. Resolves `true` on success, `false` if the clipboard was unavailable or refused. **Never rejects**, so no `try`/`catch` is needed at the call site. |
 | `destroy()`  | `() => void`                         | Cancels a pending reset. Call from `onDestroy`.                                                                                                                              |
 
-| Option        | Type         | Default | Description                                                                                                                                                               |
-| ------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `copyResetMs` | `number`     | `2000`  | Milliseconds before `copied` reverts. A value that is not a finite number ≥ 0 — or a getter that throws — falls back to the default rather than arming an unusable timer. |
-| `oncopy`      | `() => void` | `-`     | Called once per **successful** copy. Never called when the write fails.                                                                                                   |
-| `onerror`     | `(reason: unknown) => void` | `-` | Called **instead of** `oncopy` when the write cannot complete — a rejection, or a Clipboard API that is absent entirely. Receives the rejection reason, or an `Error` when the API is missing. A throwing reporter is contained, exactly as `oncopy` is. |
+| Option        | Type                        | Default | Description                                                                                                                                                                                                                                              |
+| ------------- | --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `copyResetMs` | `number`                    | `2000`  | Milliseconds before `copied` reverts. A value that is not a finite number ≥ 0 — or a getter that throws — falls back to the default rather than arming an unusable timer.                                                                                |
+| `oncopy`      | `() => void`                | `-`     | Called once per **successful** copy. Never called when the write fails.                                                                                                                                                                                  |
+| `onerror`     | `(reason: unknown) => void` | `-`     | Called **instead of** `oncopy` when the write cannot complete — a rejection, or a Clipboard API that is absent entirely. Receives the rejection reason, or an `Error` when the API is missing. A throwing reporter is contained, exactly as `oncopy` is. |
 
 Options are read at copy time rather than captured at creation, so a caller with reactive values passes getters — which is how `Snippet` forwards its own props:
 
@@ -121,31 +122,35 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 Override these custom properties to theme the component.
 
-| Variable                          | Default          | CSS Property  | Description                                                           |
-| --------------------------------- | ---------------- | ------------- | --------------------------------------------------------------------- |
-| `--snippet-gap`                   | `8px`            | gap           | Gap between the code text and the copy button.                        |
-| `--snippet-background`            | `#1e1e1e`        | background    | Background color of the snippet container.                            |
-| `--snippet-border`                | `1px solid #333` | border        | Border of the snippet container.                                      |
-| `--snippet-border-radius`         | `6px`            | border-radius | Corner rounding of the snippet container.                             |
-| `--snippet-padding`               | `12px 16px`      | padding       | Inner padding of the snippet container.                               |
-| `--snippet-font-family`           | `monospace`      | font-family   | Font family for the overall snippet (prompt and text inherit this).   |
-| `--snippet-font-size`             | `14px`           | font-size     | Font size for the snippet text.                                       |
-| `--snippet-color`                 | `#e0e0e0`        | color         | Default text color for the snippet container.                         |
-| `--snippet-margin`                | `0`              | margin        | Outer margin of the snippet container.                                |
-| `--snippet-prompt-color`          | `#888`           | color         | Color of the prompt prefix symbol (e.g. '$').                         |
-| `--snippet-prompt-margin-right`   | `8px`            | margin-right  | Space between the prompt symbol and the command text.                 |
-| `--snippet-text-color`            | `#e0e0e0`        | color         | Color of the command/code text.                                       |
-| `--snippet-text-font-family`      | `inherit`        | font-family   | Font family of the command text (inherits from container by default). |
-| `--snippet-copy-background`       | `transparent`    | background    | Background color of the copy button.                                  |
-| `--snippet-copy-color`            | `#888`           | color         | Icon/text color of the copy button.                                   |
-| `--snippet-copy-border`           | `none`           | border        | Border of the copy button.                                            |
-| `--snippet-copy-padding`          | `4px`            | padding       | Inner padding of the copy button.                                     |
-| `--snippet-copy-border-radius`    | `4px`            | border-radius | Corner rounding of the copy button.                                   |
-| `--snippet-copy-cursor`           | `pointer`        | cursor        | Cursor style when hovering the copy button.                           |
-| `--snippet-copy-hover-background` | `#333`           | background    | Background color of the copy button on hover.                         |
-| `--snippet-copy-size`             | `16px`           | width, height | Width and height of the copy icon SVG.                                |
-| `--snippet-copied-color`          | `#4caf50`        | color         | Text color of the "Copied!" feedback message.                         |
-| `--snippet-copied-font-size`      | `12px`           | font-size     | Font size of the "Copied!" feedback message.                          |
+| Variable                          | Default            | CSS Property  | Description                                                                            |
+| --------------------------------- | ------------------ | ------------- | -------------------------------------------------------------------------------------- |
+| `--snippet-gap`                   | `8px`              | gap           | Gap between the code text and the copy button.                                         |
+| `--snippet-background`            | `#1e1e1e`          | background    | Background color of the snippet container.                                             |
+| `--snippet-border`                | `1px solid #333`   | border        | Border of the snippet container.                                                       |
+| `--snippet-border-top`            | `var(--snippet-border, 1px solid #333)` | border-top    | Top border on its own, e.g. a separator above a block that sits flush under a header.  |
+| `--snippet-code-max-height`       | `none`             | max-height    | `multiline` only: the code area's height cap; it scrolls past it.                      |
+| `--snippet-code-padding-right`    | `32px`             | padding-right | `multiline` only, with the copy button: room so the corner button does not cover text. |
+| `--snippet-copy-inset`            | `8px`              | top, right    | `multiline` only: the copy button's distance from the corner.                          |
+| `--snippet-border-radius`         | `6px`              | border-radius | Corner rounding of the snippet container.                                              |
+| `--snippet-padding`               | `12px 16px`        | padding       | Inner padding of the snippet container.                                                |
+| `--snippet-font-family`           | `monospace`        | font-family   | Font family for the overall snippet (prompt and text inherit this).                    |
+| `--snippet-font-size`             | `14px`             | font-size     | Font size for the snippet text.                                                        |
+| `--snippet-color`                 | `#e0e0e0`          | color         | Default text color for the snippet container.                                          |
+| `--snippet-margin`                | `0`                | margin        | Outer margin of the snippet container.                                                 |
+| `--snippet-prompt-color`          | `#888`             | color         | Color of the prompt prefix symbol (e.g. '$').                                          |
+| `--snippet-prompt-margin-right`   | `8px`              | margin-right  | Space between the prompt symbol and the command text.                                  |
+| `--snippet-text-color`            | `#e0e0e0`          | color         | Color of the command/code text.                                                        |
+| `--snippet-text-font-family`      | `inherit`          | font-family   | Font family of the command text (inherits from container by default).                  |
+| `--snippet-copy-background`       | `transparent`      | background    | Background color of the copy button.                                                   |
+| `--snippet-copy-color`            | `#888`             | color         | Icon/text color of the copy button.                                                    |
+| `--snippet-copy-border`           | `none`             | border        | Border of the copy button.                                                             |
+| `--snippet-copy-padding`          | `4px`              | padding       | Inner padding of the copy button.                                                      |
+| `--snippet-copy-border-radius`    | `4px`              | border-radius | Corner rounding of the copy button.                                                    |
+| `--snippet-copy-cursor`           | `pointer`          | cursor        | Cursor style when hovering the copy button.                                            |
+| `--snippet-copy-hover-background` | `#333`             | background    | Background color of the copy button on hover.                                          |
+| `--snippet-copy-size`             | `16px`             | width, height | Width and height of the copy icon SVG.                                                 |
+| `--snippet-copied-color`          | `#4caf50`          | color         | Text color of the "Copied!" feedback message.                                          |
+| `--snippet-copied-font-size`      | `12px`             | font-size     | Font size of the "Copied!" feedback message.                                           |
 
 ## Internal Dependencies
 

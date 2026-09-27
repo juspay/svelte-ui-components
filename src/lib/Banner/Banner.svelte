@@ -10,7 +10,8 @@
   import closeSvg from '$lib/assets/close.svg?raw';
 
   let {
-    text,
+    text = '',
+    children,
     icon,
     linkText,
     dismissible = false,
@@ -73,12 +74,16 @@
           {@render title()}
         </div>
       {/if}
-      <div class="banner-text">
-        {text}
-        {#if typeof linkText === 'string' && linkText.length > 0}
-          <span class="banner-link-text">{linkText}</span>
-        {/if}
-      </div>
+      {#if typeof children === 'function'}
+        {@render children()}
+      {:else}
+        <div class="banner-text">
+          {text}
+          {#if typeof linkText === 'string' && linkText.length > 0}
+            <span class="banner-link-text">{linkText}</span>
+          {/if}
+        </div>
+      {/if}
     </div>
     {#if typeof rightContent === 'function'}
       <div class="banner-right">
@@ -169,7 +174,7 @@
   .banner-right {
     display: flex;
     align-items: center;
-    flex-shrink: 0;
+    flex-shrink: var(--banner-right-flex-shrink, 0);
   }
 
   .banner-dismiss {

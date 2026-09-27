@@ -1,3 +1,5 @@
+import type { Snippet } from 'svelte';
+
 export type ProgressProperties = MandatoryProgressProperties & OptionalProgressProperties;
 
 export type MandatoryProgressProperties = {
@@ -13,6 +15,12 @@ export type OptionalProgressProperties = {
    * `aria-valuenow` and the percentage fallback text below.
    */
   max?: number;
+  /**
+   * Rendered in `.container` before the track, e.g. a fixed caption a
+   * percentage label shouldn't replace. Independent of `showLabel`, which
+   * renders after the track instead.
+   */
+  leadingLabel?: Snippet;
   showLabel?: boolean;
   /**
    * Routes the completion percentage through `AnimatedNumber` instead of
@@ -34,6 +42,18 @@ export type OptionalProgressProperties = {
    * fallback reads `"0%"`.
    */
   ariaLabel?: string;
+  /**
+   * Left end of a header row above the track, e.g. the bar's name. With
+   * `headerEnd` it makes the label/value line a metered bar usually carries
+   * ("Context  42%"). Layout only: the content's type and colour are the
+   * caller's. When none of `headerStart`, `headerEnd` and `note` is passed,
+   * the component renders exactly as before, with no extra wrapper.
+   */
+  headerStart?: Snippet;
+  /** Right end of the header row (see `headerStart`), e.g. the value text. */
+  headerEnd?: Snippet;
+  /** A line under the track, e.g. "resets in 2h" (see `headerStart`). */
+  note?: Snippet;
   testId?: string;
   classes?: string;
 };

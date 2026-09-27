@@ -15,7 +15,13 @@
       ondismiss: { type: 'Object' },
       icon: { type: 'Object' },
       rightContent: { type: 'Object' },
-      dismissIcon: { type: 'Object' }
+      dismissIcon: { type: 'Object' },
+      // Named bodySnippet, not children: children is a real, getter-only
+      // accessor every Element already has (HTMLCollection of child
+      // elements), so declaring a same-named property here would collide
+      // with the native one instead of reaching Banner.svelte's own
+      // `children` prop -- same reason `role`/`title` are renamed above.
+      bodySnippet: { type: 'Object' }
     }
   }}
 />
@@ -31,12 +37,15 @@
   // a destructured `$props()` no longer infers on its own.
   let {
     bannerRole,
+    bodySnippet,
     ...props
     // `title` is omitted as well as `role`: it is host-reserved, so the element never
     // declares it and the wrapper's own title snippet is unconditional. Including it
     // would advertise a prop nothing can set.
-  }: Omit<BannerProperties, 'role' | 'title'> & { bannerRole?: BannerProperties['role'] } =
-    $props();
+  }: Omit<BannerProperties, 'role' | 'title' | 'children'> & {
+    bannerRole?: BannerProperties['role'];
+    bodySnippet?: BannerProperties['children'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -58,15 +67,17 @@
 </script>
 
 <!--
-  A body snippet is passed after {...props} and therefore wins, so a consumer
-  assigning `element.icon` used to get nothing: the prop was declared but
-  unreachable, the exact defect this wrapper exists to fix. The branch has to
-  live *inside* the snippet rather than choosing between two snippets at the
-  call site — a `<slot>` hoisted out of the component body compiles against a
-  `$$props` binding that is not in scope there, and the element renders nothing
-  at all. `title` keeps no property branch: it is host-reserved, never declared.
+  children is only passed when a consumer actually supplies bodySnippet -- if
+  omitted it is undefined, so Banner.svelte's own {:else} branch (the
+  pre-existing text+linkText markup) runs exactly as it did before bodySnippet
+  existed. An earlier version of this wrapper always passed a children
+  snippet (falling back to a hand-rolled <slot> when bodySnippet was unset),
+  which permanently took the {:else} branch away from every existing
+  text/linkText consumer -- a real backward-compatibility break this file no
+  longer makes. Default-slot content with no bodySnippet is not rendered by
+  this wrapper; that was never supported before bodySnippet existed either.
 -->
-<Banner {...props} {...dispatchers} role={bannerRole}>
+<Banner {...props} {...dispatchers} role={bannerRole} children={bodySnippet}>
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}
   {/snippet}

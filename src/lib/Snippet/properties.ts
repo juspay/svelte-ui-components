@@ -17,6 +17,14 @@ export type OptionalSnippetProperties = {
   copiedLabel?: string;
   /** Milliseconds before the copied feedback reverts to the copy icon. Defaults to `2000`. */
   copyResetMs?: number;
+  /**
+   * Lays the snippet out as a pre-formatted block for long output (a command's
+   * stdout, a JSON dump) instead of the default one-line, ellipsised chip:
+   * every line shows, the code area scrolls (capped by
+   * `--snippet-code-max-height`), the copy button sits in the top-right corner,
+   * and an empty `prompt` renders nothing rather than an indent.
+   */
+  multiline?: boolean;
   classes?: string;
 };
 

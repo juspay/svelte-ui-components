@@ -110,7 +110,7 @@ Define a class that overrides the KeyValue CSS variables and pass it via `classe
 
 | Prop         | Type                              | Required | Default      | Description                                                                                                         |
 | ------------ | --------------------------------- | -------- | ------------ | ------------------------------------------------------------------------------------------------------------------- |
-| items        | `KeyValueItem[]`                  | Yes      | `-`          | The label/value pairs to render. Each item is `{ label, value?, testId? }`.                                         |
+| items        | `KeyValueItem[]`                  | Yes      | `-`          | The label/value pairs to render. Each item is `{ label, value?, testId?, title? }`.                                         |
 | columns      | `number`                          | No       | `2`          | Number of columns the pairs flow across (row-major). Collapses to one column on narrow screens.                     |
 | layout       | `'vertical' \| 'horizontal'`      | No       | `'vertical'` | `'vertical'` stacks the value under the label; `'horizontal'` places them side-by-side.                             |
 | size         | `'sm' \| 'md' \| 'lg'`            | No       | `'md'`       | Typography preset scaling label/value font sizes: `sm` 14/12px, `md` 16/14px, `lg` 18/16px (value 2px below label). |
@@ -127,6 +127,7 @@ Define a class that overrides the KeyValue CSS variables and pass it via `classe
 | ------ | -------------------------- | -------- | --------------------------------------------------------------------- |
 | label  | `string`                   | Yes      | The field label (the "key").                                          |
 | value  | `string \| number \| null` | No       | The field value. Empty values are skipped when `hideEmpty` is `true`. |
+| title  | `string`                   | No       | Tooltip on the value cell (native `title`).                           |
 | testId | `string`                   | No       | Per-item test id, emitted as `data-pw` on the item wrapper.           |
 
 ## Snippets
@@ -140,20 +141,25 @@ Define a class that overrides the KeyValue CSS variables and pass it via `classe
 
 Override these custom properties to theme the component.
 
-| Variable                       | Default    | CSS Property | Description                                                             |
-| ------------------------------ | ---------- | ------------ | ----------------------------------------------------------------------- |
-| `--keyvalue-column-gap`        | `32px`     | column-gap   | Horizontal gap between columns.                                         |
-| `--keyvalue-row-gap`           | `16px`     | row-gap      | Vertical gap between rows.                                              |
-| `--keyvalue-pair-gap`          | `4px`      | gap          | Gap between a label and its value within an item.                       |
-| `--keyvalue-label-color`       | `#1a1a1a`  | color        | Label text color.                                                       |
-| `--keyvalue-label-size`        | size-based | font-size    | Label font size. Defaults to the `size` preset (14/16/18px) unless set. |
-| `--keyvalue-label-weight`      | `600`      | font-weight  | Label font weight.                                                      |
-| `--keyvalue-label-line-height` | `1.4`      | line-height  | Label line height.                                                      |
-| `--keyvalue-label-width`       | `140px`    | flex-basis   | Label column width in `horizontal` layout.                              |
-| `--keyvalue-value-color`       | `#555`     | color        | Value text color.                                                       |
-| `--keyvalue-value-size`        | size-based | font-size    | Value font size. Defaults to the `size` preset (12/14/16px) unless set. |
-| `--keyvalue-value-weight`      | `400`      | font-weight  | Value font weight.                                                      |
-| `--keyvalue-value-line-height` | `1.4`      | line-height  | Value line height.                                                      |
+| Variable                                  | Default             | CSS Property | Description                                                                                                 |
+| ----------------------------------------- | ------------------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `--keyvalue-column-gap`                   | `32px`              | column-gap   | Horizontal gap between columns.                                                                             |
+| `--keyvalue-row-gap`                      | `16px`              | row-gap      | Vertical gap between rows.                                                                                  |
+| `--keyvalue-pair-gap`                     | `4px` (vertical layout), `12px` (horizontal layout) | gap          | Gap between a label and its value within an item.                                                           |
+| `--keyvalue-label-color`                  | `#1a1a1a`           | color        | Label text color.                                                                                           |
+| `--keyvalue-label-size`                   | size-based          | font-size    | Label font size. Defaults to the `size` preset (14/16/18px) unless set.                                     |
+| `--keyvalue-label-weight`                 | `600`               | font-weight  | Label font weight.                                                                                          |
+| `--keyvalue-label-line-height`            | `1.4`               | line-height  | Label line height.                                                                                          |
+| `--keyvalue-label-width`                  | `140px`             | flex-basis   | Label column width in `horizontal` layout.                                                                  |
+| `--keyvalue-label-flex`                   | `0 0 <label-width>` | flex         | Label cell's flex in `horizontal` layout. e.g. `1 1 0` for a label that takes the free space and truncates. |
+| `--keyvalue-value-flex`                   | `1 1 auto`          | flex         | Value cell's flex in `horizontal` layout. e.g. `0 0 auto` for a value sized to its content on the right.    |
+| `--keyvalue-value-color`                  | `#555`              | color        | Value text color.                                                                                           |
+| `--keyvalue-value-size`                   | size-based          | font-size    | Value font size. Defaults to the `size` preset (12/14/16px) unless set.                                     |
+| `--keyvalue-value-weight`                 | `400`               | font-weight  | Value font weight.                                                                                          |
+| `--keyvalue-value-line-height`            | `1.4`               | line-height  | Value line height.                                                                                          |
+| `--keyvalue-value-font-family`            | `inherit`           | font-family  | Value font family.                                                                                          |
+| `--keyvalue-value-text-align`             | `inherit`           | text-align   | Value alignment.                                                                                            |
+| `--keyvalue-value-font-variant-ligatures` | `inherit`           | font-variant | Value ligatures.                                                                                            |
 
 ## Web Component
 

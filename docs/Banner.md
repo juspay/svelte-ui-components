@@ -78,7 +78,8 @@ No tone enum is needed — define the variant in your app's CSS and pass it thro
 
 | Prop               | Type             | Required | Default | Description                                                                                                                                                                                                                    |
 | ------------------ | ---------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| text               | `string`         | Yes      | `-`     | The main banner message text.                                                                                                                                                                                                  |
+| text               | `string`         | No       | `''`    | The main banner message text (or pass `children` instead).                                                                                                                                                                     |
+| children           | `Snippet`        | No       | `-`     | The message as markup, rendered as the body in place of `text`/`linkText`. See the Snippets table below.                                                                                                                       |
 | icon               | `Snippet`        | No       | `-`     | Svelte 5 Snippet for a custom icon displayed to the left of the text.                                                                                                                                                          |
 | title              | `Snippet`        | No       | `-`     | Optional Snippet rendered above the main text inside a `banner-body` flex column. When omitted the layout is identical to today.                                                                                               |
 | linkText           | `string`         | No       | `-`     | Optional link text appended inline after the main text, styled in a different color (blue by default).                                                                                                                         |
@@ -97,6 +98,7 @@ Svelte 5 Snippet props — pass content blocks to the component.
 | ------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | icon         | `Snippet` | Custom icon content displayed to the left of the text. Rendered inside a flex container with configurable size via `--banner-icon-size`. |
 | title        | `Snippet` | Optional heading rendered above the main text. Controlled via `--banner-title-font-weight` and `--banner-body-gap`.                      |
+| children     | `Snippet` | The message as markup (a sentence with a link, or a sentence and a button), rendered as the body in place of `text`/`linkText`.          |
 | rightContent | `Snippet` | Custom content on the right side of the banner, before the dismiss button.                                                               |
 | dismissIcon  | `Snippet` | Custom icon for the dismiss button. Defaults to a built-in close (X) SVG.                                                                |
 
@@ -118,18 +120,19 @@ Override these custom properties to theme the component.
 | `--banner-text-overflow`            | `hidden`             | overflow         | Overflow behaviour of the banner text.                                                                                         |
 | `--banner-text-ellipsis`            | `ellipsis`           | text-overflow    | Text truncation style of the banner text.                                                                                      |
 | `--banner-white-space`              | `nowrap`             | white-space      | Whether the banner text wraps.                                                                                                 |
+| `--banner-right-flex-shrink`        | `0`                  | flex-shrink      | Whether the right-hand content may shrink (and wrap inside itself) when the row is narrow.                                     |
 | `--banner-padding`                  | `10px 12px`          | padding          | Inner padding of the banner.                                                                                                   |
 | `--banner-gap`                      | `8px`                | gap              | Gap between banner content elements (icon, text, right content, dismiss).                                                      |
 | `--banner-justify-content`          | `center`             | justify-content  | Horizontal alignment of banner content.                                                                                        |
 | `--banner-background`               | `#f0f4f8`            | background-color | Background color of the banner.                                                                                                |
 | `--banner-color`                    | `#4d6174`            | color            | Text color of the banner.                                                                                                      |
-| `--banner-font-family`              | `-`                  | font-family      | Font family of the banner text.                                                                                                |
+| `--banner-font-family`              | `inherit`            | font-family      | Font family of the banner text.                                                                                                |
 | `--banner-font-size`                | `14px`               | font-size        | Font size of the banner text.                                                                                                  |
 | `--banner-font-weight`              | `500`                | font-weight      | Font weight of the banner text.                                                                                                |
 | `--banner-line-height`              | `1.3`                | line-height      | Line height of the banner text.                                                                                                |
 | `--banner-border-bottom`            | `none`               | border-bottom    | Bottom border of the banner.                                                                                                   |
 | `--banner-border`                   | `-`                  | border           | Full border shorthand. Overrides `--banner-border-bottom` when set.                                                            |
-| `--banner-border-radius`            | `0`                  | border-radius    | Corner radius of the banner. Use with `--banner-border` for card-style notifications.                                          |
+| `--banner-border-radius`            | `var(--radius, 4px)` | border-radius    | Corner radius of the banner. Use with `--banner-border` for card-style notifications.                                          |
 | `--banner-cursor`                   | `pointer`            | cursor           | Cursor style when hovering the banner.                                                                                         |
 | `--banner-position`                 | `sticky`             | position         | CSS position of the banner (sticky sticks to viewport on scroll).                                                              |
 | `--banner-top`                      | `0`                  | top              | Top position of the banner.                                                                                                    |
@@ -138,7 +141,7 @@ Override these custom properties to theme the component.
 | `--banner-icon-size`                | `18px`               | width, height    | Width and height of SVGs inside the icon snippet.                                                                              |
 | `--banner-body-gap`                 | `0`                  | gap              | Vertical gap between the title and text inside `banner-body`. Set to e.g. `4px` to add spacing when using the `title` snippet. |
 | `--banner-title-font-weight`        | `inherit`            | font-weight      | Font weight of the title row. Inherits the banner's font-weight by default.                                                    |
-| `--banner-link-color`               | `#0099ff`            | color            | Color of the inline link text.                                                                                                 |
+| `--banner-link-color`               | `#1d4ed8`            | color            | Color of the inline link text.                                                                                                 |
 | `--banner-link-gap`                 | `4px`                | margin-left      | Space between the main text and the link text.                                                                                 |
 | `--banner-dismiss-border-radius`    | `4px`                | border-radius    | Border radius of the dismiss button.                                                                                           |
 | `--banner-dismiss-color`            | `currentColor`       | color            | Color of the dismiss button icon.                                                                                              |
@@ -169,6 +172,13 @@ Tag: `<sui-banner>`
   <a slot="right-content" href="/update">Update now</a>
 </sui-banner>
 ```
+
+> **Note:** `children` is exposed as `bodySnippet`, not `children` — every element already
+> has a native, getter-only `children` accessor (`HTMLCollection`), so a same-named property
+> here would collide with it instead of reaching this component. `bodySnippet` is the only
+> way to render body markup through this prop; the default (unnamed) slot is not wired to
+> it, so a host with no `bodySnippet` renders through `text`/`linkText` exactly as before
+> this prop existed.
 
 ### Web Component Events
 

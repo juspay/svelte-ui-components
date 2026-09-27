@@ -55,7 +55,15 @@ const declarations = (): Declaration[] =>
 const KNOWN_PLATFORM_SHADOWS: readonly string[] = [
   'sui-chat-bubble:draggable',
   'sui-input:inputMode',
-  'sui-input:spellcheck'
+  'sui-input:spellcheck',
+  // Unlike inputMode/spellcheck, nothing reads this accessor live after
+  // insertion -- native autofocus is a one-shot, insertion-time directive,
+  // not a mode other code consults continuously. Input.svelte's own effect
+  // (src/lib/Input/Input.svelte) reproduces the intended focus-on-mount
+  // behaviour itself, which the shadow DOM boundary would have blocked from
+  // the native algorithm anyway (no delegatesFocus on this element's shadow
+  // root). Renaming would be an unnecessary breaking change.
+  'sui-input:autofocus'
 ];
 
 test.describe('custom-element props do not shadow the platform', () => {

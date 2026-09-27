@@ -10,7 +10,8 @@
     classes,
     testId,
     disabled = false,
-    panelId
+    panelId,
+    lazy = false
   }: AccordionProperties = $props();
 
   /* The trigger and the panel are siblings, not ancestor/descendant, so nothing in the
@@ -24,6 +25,19 @@
      assigning `panelId` after mount must move the panel's id, not rename the trigger, so the
      control's id stays stable for assistive technology and anything else referencing it. */
   const triggerId = `accordion-trigger-${uid}`;
+
+  /* `lazy` mounts the panel's children the first time it opens and then keeps
+     them, so closing still animates real content and whatever state it holds
+     survives a close. The latch is a plain variable, not $state: it only ever
+     goes false -> true, and only while this derived recomputes because `expand`
+     or `lazy` changed, so it adds no dependency of its own. */
+  let hasOpened = false;
+  const mounted = $derived.by(() => {
+    if (!lazy || expand) {
+      hasOpened = true;
+    }
+    return hasOpened;
+  });
 
   function handleTriggerClick(): void {
     if (disabled) {
@@ -62,11 +76,21 @@
   aria-labelledby={trigger ? triggerId : null}
   class="accordion {classes ?? ''}"
   class:expanded={expand}
+  inert={lazy && !expand}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
+  <!-- `inert` while collapsed, lazy only: a lazy panel's content stays mounted
+       (not torn down) between opens, so without this its links/buttons would
+       stay in the tab order and the accessibility tree while clipped to 0px
+       and invisible. A non-lazy panel never reaches this state: `mounted` is
+       already unconditionally true for it, matching pre-`lazy` behaviour, so
+       marking it inert too would be a new, non-opt-in default-path change.
+       The children are chosen by a conditional snippet, not an {#if}: an {#if} would be a
+       new block around them, so a local transition inside would stop following the outer
+       block that adds or removes the Accordion. This stays the bare render tag it was. -->
   <div class="accordion-content">
-    {@render children?.()}
+    {@render (mounted ? children : null)?.()}
   </div>
 </div>
 

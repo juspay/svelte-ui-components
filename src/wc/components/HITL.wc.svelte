@@ -31,7 +31,16 @@
       actions: { type: 'Object' },
       classes: { type: 'String' },
       onconfirm: { type: 'Object' },
-      onmictoggle: { type: 'Object' }
+      onmictoggle: { type: 'Object' },
+      showCancel: { type: 'Boolean', attribute: 'show-cancel' },
+      showConfirm: { type: 'Boolean', attribute: 'show-confirm' },
+      showEmptyParameters: { type: 'Boolean', attribute: 'show-empty-parameters' },
+      questions: { type: 'Object' },
+      answerOnSelect: { type: 'Boolean', attribute: 'answer-on-select' },
+      questionsSettleAs: { type: 'String', attribute: 'questions-settle-as' },
+      sendAnswersLabel: { type: 'String', attribute: 'send-answers-label' },
+      optionClasses: { type: 'String', attribute: 'option-classes' },
+      selectedOptionClasses: { type: 'String', attribute: 'selected-option-classes' }
     }
   }}
 />

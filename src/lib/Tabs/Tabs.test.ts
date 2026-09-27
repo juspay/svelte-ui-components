@@ -425,3 +425,73 @@ it('exposes stable styling hooks without replacing existing classes', () => {
   expect(tab('Alpha').classList.contains('active')).toBe(true);
   expect(list.parentElement?.classList.contains('custom')).toBe(true);
 });
+
+describe('Tabs link mode', () => {
+  const links = [
+    { key: 'home', label: 'Home', href: '/' },
+    { key: 'board', label: 'Board', href: '/board' }
+  ];
+
+  it('renders a nav of links, the active one aria-current, with no tab roles', () => {
+    const { container } = render(Tabs, {
+      items: links,
+      activeKey: 'board',
+      ariaLabel: 'Main',
+      navigation: true
+    });
+    const nav = container.querySelector('nav.tabs-bar');
+    expect(nav?.getAttribute('aria-label')).toBe('Main');
+    expect(container.querySelector('[role="tablist"], [role="tab"]')).toBeNull();
+    const anchors = [...container.querySelectorAll('a.tabs-item')];
+    expect(anchors.map((a) => a.getAttribute('href'))).toEqual(['/', '/board']);
+    expect(anchors.map((a) => a.getAttribute('aria-current'))).toEqual([null, 'page']);
+    expect(anchors.every((a) => !a.hasAttribute('tabindex'))).toBe(true);
+    expect(container.querySelector('.tabs-indicator')).toBeNull();
+  });
+
+  it('stays a tablist when any item lacks an href', () => {
+    const { container } = render(Tabs, {
+      items: [links[0], { key: 'board', label: 'Board' }],
+      activeKey: 'home',
+      navigation: true
+    });
+    expect(container.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(container.querySelector('nav, a.tabs-item')).toBeNull();
+  });
+
+  it('ignores href unless navigation is set', () => {
+    const { container } = render(Tabs, { items: links, activeKey: 'board' });
+    expect(container.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(2);
+    expect(container.querySelector('nav, a.tabs-item')).toBeNull();
+  });
+
+  // A link-mode item's href still navigates natively on click/Enter -- aria-disabled alone
+  // does not stop that -- so a disabled item needs its own click/keydown guard to honour
+  // TabItem.disabled's "clicks skip past it" contract the same way tablist mode does.
+  it('blocks click and Enter/Space on a disabled item, but not an enabled one', () => {
+    const { container } = render(Tabs, {
+      items: [links[0], { ...links[1], disabled: true }],
+      activeKey: 'home',
+      navigation: true
+    });
+    const anchors = [...container.querySelectorAll('a.tabs-item')];
+    expect(anchors[1].getAttribute('aria-disabled')).toBe('true');
+
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    anchors[1].dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+    anchors[1].dispatchEvent(enter);
+    expect(enter.defaultPrevented).toBe(true);
+
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    anchors[1].dispatchEvent(space);
+    expect(space.defaultPrevented).toBe(true);
+
+    const enabledClick = new MouseEvent('click', { bubbles: true, cancelable: true });
+    anchors[0].dispatchEvent(enabledClick);
+    expect(enabledClick.defaultPrevented).toBe(false);
+  });
+});

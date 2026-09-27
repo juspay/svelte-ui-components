@@ -4,6 +4,11 @@
   let {
     showBackButton = true,
     text,
+    title,
+    headingLevel,
+    subtitle,
+    rootTag,
+    variant = 'chrome',
     backIcon,
     backLabel = 'Back',
     backHref,
@@ -17,6 +22,19 @@
     testId,
     headingTestId
   }: ToolbarProperties = $props();
+
+  // Same validation `Sheet`'s `headingLevel` already applies: through a web
+  // component, an untyped attribute reaches this as anything, and a getter
+  // can throw, so an unusable level degrades to the plain-tag fallback rather
+  // than emitting an invalid `<h7>`/`<h0>`/`<hNaN>`.
+  const headingTag = $derived(
+    typeof headingLevel === 'number' &&
+      Number.isInteger(headingLevel) &&
+      headingLevel >= 1 &&
+      headingLevel <= 6
+      ? `h${headingLevel}`
+      : null
+  );
 
   // `backIcon={null}` (or '') has always meant "render no back control at all", and consumers
   // rely on it; only the DEFAULT changes, from a CDN image to the inline icon.
@@ -42,7 +60,13 @@
   };
 </script>
 
-<div class="toolbar {classes ?? ''}" data-pw={testId} testID={testId}>
+<svelte:element
+  this={rootTag ?? 'div'}
+  class="toolbar {classes ?? ''}"
+  data-variant={variant === 'page-header' ? 'page-header' : null}
+  data-pw={testId}
+  testID={testId}
+>
   <div
     class="content"
     data-pw={typeof testId === 'string' ? `${testId}-content` : null}
@@ -82,6 +106,17 @@
       <div class="center-content">
         {@render centerContent()}
       </div>
+    {:else if typeof title === 'string' && title.length > 0}
+      <div class="titles" data-pw={headingTestId} testID={headingTestId}>
+        {#if headingTag !== null}
+          <svelte:element this={headingTag}>{title}</svelte:element>
+        {:else}
+          <span>{title}</span>
+        {/if}
+        {#if typeof subtitle === 'string' && subtitle.length > 0}
+          <p class="subtitle">{subtitle}</p>
+        {/if}
+      </div>
     {:else if typeof text === 'string' && text.length > 0}
       <div class="text" data-pw={headingTestId} testID={headingTestId}>
         {text}
@@ -98,7 +133,7 @@
       {@render additionalContent()}
     {/if}
   </div>
-</div>
+</svelte:element>
 
 <style>
   .toolbar {
@@ -115,6 +150,25 @@
     box-shadow: var(--toolbar-box-shadow, 0px 2px 12px #55687c1a);
     z-index: var(--toolbar-z-index, 10);
     border-radius: var(--toolbar-border-radius, 0px);
+  }
+
+  /* In the page's flow rather than pinned over it: only the fallbacks change,
+     so a consumer's own --toolbar-* values still win. */
+  /* Literal values, not the chrome's variables with other fallbacks: an app
+     that themes its bars at :root (--toolbar-background: white,
+     --toolbar-position: fixed) would otherwise paint and pin every page
+     header too. These six properties ARE the variant; everything else still
+     reads the shared variables. */
+  .toolbar[data-variant='page-header'] {
+    position: static;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    z-index: auto;
+  }
+
+  .toolbar[data-variant='page-header'] > .content {
+    flex-wrap: wrap;
   }
 
   .content {
@@ -160,7 +214,7 @@
     /* A native button so Enter/Space and the accessible name come for free; the reset keeps
        the box identical to the div it replaces. */
     appearance: none;
-    background: none;
+    background: var(--toolbar-back-button-background, none);
     border: 0;
     margin: 0;
     box-sizing: content-box;
@@ -213,5 +267,29 @@
     margin: var(--toolbar-text-margin, 0px);
     color: var(--toolbar-text-color, inherit);
     flex: var(--toolbar-text-flex, 1);
+  }
+
+  /* `title`/`subtitle`'s heading tag is deliberately unstyled here: a consumer's
+     own global heading rules (size, weight, tracking) already reach it the
+     same way they reach any other heading on the page, and a component-level
+     font-size/font-weight here — even with an `inherit` fallback — would
+     outrank a bare `h1`/`h2` element selector by specificity and silently
+     break that inheritance for every consumer that has one. Only layout and
+     the subtitle's own (independent) presentation get hooks. Both rules are written down the
+     structure they live in (.content > .titles > .subtitle), so a `titles` or `subtitle`
+     class a consumer passes through `classes`, which lands on the root, cannot match them,
+     and the variant is a data attribute rather than a class for the same reason: a class
+     directive would strip a consumer's own `page-header` class (the one the docs recipe
+     uses) from `classes`. */
+  .content > .titles {
+    display: grid;
+    gap: var(--toolbar-titles-gap, 2px);
+    min-width: var(--toolbar-titles-min-width, 0);
+    flex: var(--toolbar-titles-flex, 1);
+  }
+
+  .titles > .subtitle {
+    color: var(--toolbar-subtitle-color, inherit);
+    text-wrap: var(--toolbar-subtitle-text-wrap, pretty);
   }
 </style>

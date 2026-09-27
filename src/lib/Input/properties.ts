@@ -37,6 +37,21 @@ export type OptionalInputProperties = {
    */
   dataType?: InputDataType;
   label?: string | null;
+  /**
+   * Rendered beside the label, right-aligned (a status Pill, a character
+   * count, a short hint). It sits outside the `<label>`, so it never joins the
+   * field's accessible name, but it stays readable to assistive tech. Mark a
+   * purely decorative suffix `aria-hidden` yourself. Ignored without a
+   * visible `label` (there is no label row for it to sit in).
+   */
+  labelSuffix?: Snippet;
+  /**
+   * Focuses the field once it exists, via a plain native `.focus()` —
+   * deliberately not the exported `focus()` method, which also
+   * `scrollIntoView`s smoothly; a field that already exists to be typed
+   * into (a single-field dialog, say) does not need to scroll to itself.
+   */
+  autofocus?: boolean;
   onErrorMessage?: string | null;
   infoMessage?: string | null;
   validators?: CustomValidator[];

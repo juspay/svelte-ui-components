@@ -25,9 +25,12 @@
     ariaControls,
     ariaHaspopup,
     ariaSelected,
+    ariaPressed,
     ariaBusy,
     role,
     title,
+    statusText,
+    statusTestId,
     onclick,
     onkeydown = () => {},
     onkeyup = () => {},
@@ -95,6 +98,7 @@
     aria-controls={ariaControls ?? null}
     aria-haspopup={ariaHaspopup ?? null}
     aria-selected={ariaSelected ?? null}
+    aria-pressed={ariaPressed ?? null}
     aria-busy={isBusy || ariaBusy || null}
     title={title ?? null}
     type={href ? null : type}
@@ -123,12 +127,34 @@
       {@render children()}
     {/if}
   </svelte:element>
+  {#if typeof statusText === 'string'}
+    <div class="button-status" role="status" aria-live="polite" data-pw={statusTestId ?? null}>
+      {statusText}
+    </div>
+  {/if}
 </div>
 
 <style>
   .button-container {
     position: relative;
     width: var(--button-width, fit-content);
+  }
+
+  /* The statusText region: out of flow at 1x1px inside the positioned
+     container, so it never moves the button or its row (the visually-hidden
+     recipe ChatComposer and Label use). Not named .sr-only: `classes` lands on
+     this container, so a consumer's own `sr-only` class would match a rule of
+     that name here and hide the whole button. */
+  .button-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
   }
 
   /* ---- Variant defaults (set the internal --_btn-* layer; explicit --button-* always wins) ---- */

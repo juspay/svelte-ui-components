@@ -27,3 +27,6 @@ juspay-svelte-ui-components-*.tgz
 
 # compiled codemod, produced by build:codemod
 dist-codemod
+
+# Optional consumer path for testing a locally linked dist build
+.local-peer-consumer.json

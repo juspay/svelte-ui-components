@@ -12,6 +12,15 @@ A linear progress bar showing task completion or usage. The `value` prop control
 <Progress value={60} />
 ```
 
+Use `leadingLabel` for a fixed caption before the track. It is independent of
+`showLabel`, which renders the computed percentage after the track:
+
+```svelte
+<Progress value={level} max={1} ariaLabel="Microphone level">
+  {#snippet leadingLabel()}LVL{/snippet}
+</Progress>
+```
+
 Pass `animateValue` alongside `showLabel` to have the percentage count up to its new value with `AnimatedNumber` instead of jumping straight there, for a bar whose `value` updates in place rather than mounting fresh each time:
 
 ```svelte
@@ -31,9 +40,13 @@ Pass `animateValue` alongside `showLabel` to have the percentage count up to its
 | ------------ | --------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | value        | `number`  | Yes      | `-`     | Current progress value (0 to max). Values are clamped to the 0-max range. A negative value activates the indeterminate animation for unknown-duration tasks. A non-finite value (e.g. `NaN`) is treated as an invalid range -- see `max` below.                                 |
 | max          | `number`  | No       | `100`   | The maximum value representing 100% completion. The filled percentage is calculated as (value / max) \* 100. `max` must be finite and positive; a zero, negative, or non-finite `max` (or a non-finite `value`) is an invalid range and renders the bar at 0% instead of `NaN`. |
+| leadingLabel | `Snippet` | No       | `-`     | Content before the track inside the progress container (for example a fixed caption). Independent of `showLabel`, which renders after the track.                                                                                                                                |
 | showLabel    | `boolean` | No       | `false` | Whether to display the rounded percentage text next to the progress bar. Hidden during indeterminate mode.                                                                                                                                                                      |
 | animateValue | `boolean` | No       | `false` | Renders the `showLabel` percentage through `AnimatedNumber` so it counts to its new value instead of jumping. No effect unless `showLabel` is also true, and silently inert in indeterminate mode, since there is no percentage there to animate towards.                       |
 | ariaLabel    | `string`  | No       | `-`     | Accessible name for the progress bar. Falls back to the same percentage text as `showLabel` (e.g. `"75%"`) when determinate, or `"Loading"` when indeterminate.                                                                                                                 |
+| headerStart  | `Snippet` | No       | `-`     | Left end of a header row above the track (e.g. the name). Layout only; unset with `headerEnd` and `note`, nothing changes.                                                                                                                                                      |
+| headerEnd    | `Snippet` | No       | `-`     | Right end of that header row (e.g. the value text).                                                                                                                                                                                                                             |
+| note         | `Snippet` | No       | `-`     | A line under the track (e.g. "resets in 2h").                                                                                                                                                                                                                                   |
 | testId       | `string`  | No       | `-`     | Value for the data-pw attribute, used for end-to-end testing selectors.                                                                                                                                                                                                         |
 | classes      | `string`  | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                          |
 
@@ -54,6 +67,10 @@ Override these custom properties to theme the component.
 | `--progress-container-width`        | `100%`            | width              | Width of the outer container holding the track and label.     |
 | `--progress-container-padding`      | `0`               | padding            | Padding around the progress container.                        |
 | `--progress-container-gap`          | `8px`             | gap                | Gap between the track and the percentage label.               |
+| `--progress-root-gap`               | `5px`             | gap                | Gap between the header row and the track row. Only present when `headerStart`, `headerEnd` or `note` is passed. |
+| `--progress-header-gap`             | `8px`             | gap                | Gap between `headerStart` and `headerEnd` within the header row. |
+| `--progress-track-flex`             | `1`               | flex               | Flex grow/shrink/basis of the track. Set `0 0 auto` when using a fixed track width. |
+| `--progress-track-width`            | `auto`            | width              | Width of the track itself (separate from the outer container, which also holds labels). |
 | `--progress-track-height`           | `8px`             | height             | Height of the background track.                               |
 | `--progress-track-background`       | `#e0e0e0`         | background         | Background color of the unfilled track.                       |
 | `--progress-track-border-radius`    | `4px`             | border-radius      | Corner rounding of the track.                                 |
@@ -61,6 +78,7 @@ Override these custom properties to theme the component.
 | `--progress-bar-border-radius`      | `4px`             | border-radius      | Corner rounding of the filled bar.                            |
 | `--progress-bar-transition`         | `width 0.3s ease` | transition         | Transition applied when the bar width changes.                |
 | `--progress-indeterminate-duration` | `1.5s`            | animation-duration | Duration of one cycle of the indeterminate sliding animation. |
+| `--progress-indeterminate-reduced-motion-opacity` | `0.5` | opacity        | Static opacity shown instead of the sliding animation under `prefers-reduced-motion: reduce`. |
 | `--progress-label-font-size`        | `14px`            | font-size          | Font size of the percentage label.                            |
 | `--progress-label-font-weight`      | `500`             | font-weight        | Font weight of the percentage label.                          |
 | `--progress-label-color`            | `#333`            | color              | Text color of the percentage label.                           |

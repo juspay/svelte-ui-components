@@ -17,16 +17,30 @@
     activationMode = 'automatic',
     loop = true,
     dir,
+    navigation = false,
     testId,
     scrollLeftIcon,
     scrollRightIcon,
     tab,
     classes,
+    ariaLabel,
     onchange,
     onkeychange
   }: TabsProperties = $props();
 
   const isVertical = $derived(orientation === 'vertical');
+  // `navigation` is passed AND every item has an href: the bar is site navigation, not a
+  // tab set. An href alone changes nothing, so items that already carry one as routing data
+  // keep rendering and behaving as the tab set they always did.
+  const isLinkMode = $derived(
+    navigation &&
+      Array.isArray(items) &&
+      items.length > 0 &&
+      items.every(
+        (item: string | TabItem) =>
+          typeof item === 'object' && typeof item.href === 'string' && item.href.length > 0
+      )
+  );
 
   const isObjectMode = $derived(items.length > 0 && typeof items.at(0) === 'object');
 
@@ -158,7 +172,8 @@
   }
 
   function updateIndicator(): void {
-    if (scrollContainer === null) {
+    if (scrollContainer === null || isLinkMode) {
+      indicatorReady = false;
       return;
     }
     const activeEl = scrollContainer.querySelector<HTMLElement>('.tabs-item.active');
@@ -228,6 +243,22 @@
 
   function handleTabClick(index: number): void {
     activate(index);
+  }
+
+  // Link mode has no activate() of its own to consult -- the browser navigates on click, which
+  // is the point of a real <a href>. A disabled item's `aria-disabled` is cosmetic to a pointer
+  // or native Enter/Space activation, so this is the only place that actually honours
+  // TabItem.disabled's documented "clicks skip past it" for a link-mode item.
+  function blockIfDisabled(index: number, event: Event): void {
+    if (isItemDisabled(index)) {
+      event.preventDefault();
+    }
+  }
+
+  function handleLinkKeydown(index: number, event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      blockIfDisabled(index, event);
+    }
   }
 
   function focusTabAt(index: number): void {
@@ -433,19 +464,21 @@
       {/if}
     </button>
   {/if}
-  <div
+  <svelte:element
+    this={isLinkMode ? 'nav' : 'div'}
     class="tabs-bar"
     class:fade-left={canScrollLeft}
     class:fade-right={canScrollRight}
     class:fade-top={canScrollUp}
     class:fade-bottom={canScrollDown}
-    role="tablist"
-    aria-orientation={isVertical ? 'vertical' : null}
+    role={isLinkMode ? null : 'tablist'}
+    aria-orientation={isLinkMode || !isVertical ? null : 'vertical'}
+    aria-label={typeof ariaLabel === 'string' ? ariaLabel : null}
     data-orientation={orientation}
     {@attach initOverflow}
     onscroll={updateOverflow}
-    onfocusin={handleFocusIn}
-    onfocusout={handleFocusOut}
+    onfocusin={isLinkMode ? null : handleFocusIn}
+    onfocusout={isLinkMode ? null : handleFocusOut}
   >
     {#each items as item, index (isObjectMode ? (toTabItem(item)?.key ?? index) : index)}
       {@const tabItem = toTabItem(item)}
@@ -453,20 +486,27 @@
       {#if typeof tabItem?.sectionLabel === 'string' && tabItem.sectionLabel.length > 0}
         <div class="tabs-section-label" aria-hidden="true">{tabItem.sectionLabel}</div>
       {/if}
-      <div
+      <svelte:element
+        this={isLinkMode ? 'a' : 'div'}
+        href={isLinkMode ? tabItem?.href : null}
         class="tabs-item"
         class:active={isActiveItem(index)}
-        role="tab"
-        aria-selected={isActiveItem(index)}
+        role={isLinkMode ? null : 'tab'}
+        aria-selected={isLinkMode ? null : isActiveItem(index)}
+        aria-current={isLinkMode && isActiveItem(index) ? 'page' : null}
         aria-disabled={isItemDisabled(index) ? 'true' : null}
-        tabindex={index === tabStopIndex ? 0 : -1}
+        tabindex={isLinkMode ? null : index === tabStopIndex ? 0 : -1}
         data-state={isActiveItem(index) ? 'active' : 'inactive'}
         data-disabled={isItemDisabled(index) ? '' : null}
         data-orientation={orientation}
         data-pw={tabItem?.testId}
         testID={tabItem?.testId}
-        onclick={() => handleTabClick(index)}
-        onkeydown={(event) => handleKeydown(event, index)}
+        onclick={isLinkMode
+          ? (event: MouseEvent) => blockIfDisabled(index, event)
+          : () => handleTabClick(index)}
+        onkeydown={isLinkMode
+          ? (event: KeyboardEvent) => handleLinkKeydown(index, event)
+          : (event: KeyboardEvent) => handleKeydown(event, index)}
       >
         {#if typeof tab === 'function'}
           {@render tab({
@@ -486,9 +526,9 @@
             <span class="tabs-item-status status-{tabItem.status}" aria-hidden="true"></span>
           {/if}
         {/if}
-      </div>
+      </svelte:element>
     {/each}
-    {#if indicatorReady}
+    {#if indicatorReady && !isLinkMode}
       <span
         class="tabs-indicator"
         aria-hidden="true"
@@ -497,7 +537,7 @@
           : `left: ${indicatorLeft}px; width: ${indicatorWidth}px;`}
       ></span>
     {/if}
-  </div>
+  </svelte:element>
   {#if showEndArrow}
     <button
       class="tabs-arrow tabs-arrow-end"
@@ -638,7 +678,7 @@
     border-radius: var(--tabs-item-border-radius, 0);
     outline: none;
     white-space: nowrap;
-    flex-shrink: 0;
+    flex-shrink: var(--tabs-item-flex-shrink, 0);
     user-select: none;
     transition: var(
       --tabs-transition,
@@ -647,6 +687,19 @@
       background var(--tabs-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
         var(--tabs-transition-easing, var(--motion-easing, ease))
     );
+  }
+
+  /* The grow and basis hooks live in a zero-specificity rule, so a consumer's own rule for
+     either (`.tabs-item { flex: 1 }` to stretch the items) wins exactly as it did before the
+     hooks existed. The shrink hook above replaces the literal that was already there. */
+  :where(.tabs-item) {
+    flex-grow: var(--tabs-item-flex-grow, 0);
+    flex-basis: var(--tabs-item-flex-basis, auto);
+  }
+
+  /* A link-mode item is an <a>: no underline unless asked for. Only an anchor matches. */
+  a.tabs-item {
+    text-decoration: var(--tabs-item-text-decoration, none);
   }
 
   /* Roving focus really does move (see focusedKey/focusTabAt above) -- this
@@ -848,6 +901,12 @@
     color: var(--tabs-section-label-color, var(--tabs-item-color, #666666));
     white-space: nowrap;
     user-select: none;
+  }
+
+  /* Zero specificity, so a consumer's own font rule for the label still wins. */
+  :where(.tabs-section-label) {
+    font-family: var(--tabs-section-label-font-family, inherit);
+    font-variant-ligatures: var(--tabs-section-label-font-variant-ligatures, inherit);
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -13,6 +13,7 @@
     copyIcon,
     copiedLabel = 'Copied!',
     copyResetMs = 2000,
+    multiline = false,
     oncopy,
     onerror,
     classes
@@ -44,11 +45,15 @@
 
 <div
   class="snippet {classes ?? ''}"
+  data-multiline={multiline ? '' : null}
+  data-has-copy={multiline && showCopyButton ? '' : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
   <code class="snippet-code">
-    <span class="snippet-prompt">{prompt}</span>
+    {#if !multiline || prompt !== ''}
+      <span class="snippet-prompt">{prompt}</span>
+    {/if}
     <span class="snippet-text">{text}</span>
   </code>
   {#if showCopyButton}
@@ -90,6 +95,10 @@
     gap: var(--snippet-gap, 8px);
     background: var(--snippet-background, #1e1e1e);
     border: var(--snippet-border, 1px solid #333);
+    /* One side on its own, for a block that sits flush under a header and wants
+       only a separator above it. Defaults to the whole border, so unset it is
+       the shorthand above. */
+    border-top: var(--snippet-border-top, var(--snippet-border, 1px solid #333));
     border-radius: var(--snippet-border-radius, var(--radius, 4px));
     padding: var(--snippet-padding, 12px 16px);
     font-family: var(--snippet-font-family, monospace);
@@ -104,6 +113,41 @@
     overflow: hidden;
     flex: 1;
     min-width: 0;
+  }
+
+  /* multiline: every line of long output, not one ellipsised line. Declared
+     here rather than left to a consumer's own selectors, which can only TIE
+     these scoped rules on specificity -- and then stylesheet order, which
+     differs between dev and a production build, decides the layout. Marked by
+     data attributes, not classes: a class directive would strip a `multiline`
+     class a consumer already passes through `classes`, and these rules would
+     then style every snippet that carries one. */
+  .snippet[data-multiline] {
+    display: block;
+    position: relative;
+  }
+
+  .snippet[data-multiline] .snippet-code {
+    display: block;
+    overflow: auto;
+    max-height: var(--snippet-code-max-height, none);
+  }
+
+  .snippet[data-multiline][data-has-copy] .snippet-code {
+    padding-right: var(--snippet-code-padding-right, 32px);
+  }
+
+  .snippet[data-multiline] .snippet-text {
+    display: inline;
+    white-space: pre;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .snippet[data-multiline] .snippet-copy {
+    position: absolute;
+    top: var(--snippet-copy-inset, 8px);
+    right: var(--snippet-copy-inset, 8px);
   }
 
   .snippet-prompt {

@@ -5,9 +5,13 @@
   let {
     value,
     max = 100,
+    leadingLabel,
     showLabel = false,
     animateValue = false,
     ariaLabel,
+    headerStart,
+    headerEnd,
+    note,
     testId,
     classes
   }: ProgressProperties = $props();
@@ -40,49 +44,89 @@
   let labelText = $derived(isIndeterminate ? 'Loading' : `${Math.round(percentage)}%`);
 </script>
 
-<div
-  class="container {classes ?? ''}"
-  data-pw={typeof testId === 'string' ? testId : null}
-  testID={typeof testId === 'string' ? testId : null}
-  role="progressbar"
-  aria-valuenow={isIndeterminate ? null : preciseValueNow}
-  aria-valuemin={0}
-  aria-valuemax={100}
-  aria-valuetext={isIndeterminate ? 'indeterminate' : null}
-  aria-busy={isIndeterminate ? true : null}
-  aria-label={ariaLabel ?? labelText}
->
-  <div class="track">
-    <div
-      class="bar"
-      class:indeterminate={isIndeterminate}
-      style:width={isIndeterminate ? null : `${percentage}%`}
-    ></div>
-  </div>
-  {#if showLabel && !isIndeterminate}
-    <div class="label">
-      {#if animateValue}
-        <!-- The rounded percentage is already the display value labelText
-             computes, so it is passed as a plain number rather than through
-             `format`: `AnimatedNumber`'s Intl percent style expects a 0-1
-             fraction and would re-derive a different number from this
-             already-0-100 one. The % is a literal beside it instead, exactly
-             mirroring what labelText already spells out below. -->
-        <!-- The unit goes INSIDE AnimatedNumber, not beside it. The odometer
-             carries role="img" with its own aria-label, so a unit left outside is
-             invisible to anyone navigating by graphic -- the rotor reads "75" with
-             no sign of what it measures. Passing the formatted string keeps the
-             unit in the accessible name; only the digits move, since the string
-             path rolls the characters that changed and leaves the rest. -->
-        <AnimatedNumber value={`${Math.round(percentage)}%`} />
-      {:else}
-        {labelText}
-      {/if}
+<!-- The bar itself. Rendered bare, exactly as it always was, unless a header
+     or note is passed: only then does a `.progress-root` wrap it. -->
+{#snippet trackRow()}
+  <div
+    class="container {classes ?? ''}"
+    data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
+    role="progressbar"
+    aria-valuenow={isIndeterminate ? null : preciseValueNow}
+    aria-valuemin={0}
+    aria-valuemax={100}
+    aria-valuetext={isIndeterminate ? 'indeterminate' : null}
+    aria-busy={isIndeterminate ? true : null}
+    aria-label={ariaLabel ?? labelText}
+  >
+    {#if typeof leadingLabel === 'function'}
+      {@render leadingLabel()}
+    {/if}
+    <div class="track">
+      <div
+        class="bar"
+        class:indeterminate={isIndeterminate}
+        style:width={isIndeterminate ? null : `${percentage}%`}
+      ></div>
     </div>
-  {/if}
-</div>
+    {#if showLabel && !isIndeterminate}
+      <div class="label">
+        {#if animateValue}
+          <!-- The rounded percentage is already the display value labelText
+               computes, so it is passed as a plain number rather than through
+               `format`: `AnimatedNumber`'s Intl percent style expects a 0-1
+               fraction and would re-derive a different number from this
+               already-0-100 one. The % is a literal beside it instead, exactly
+               mirroring what labelText already spells out below. -->
+          <!-- The unit goes INSIDE AnimatedNumber, not beside it. The odometer
+               carries role="img" with its own aria-label, so a unit left outside is
+               invisible to anyone navigating by graphic -- the rotor reads "75" with
+               no sign of what it measures. Passing the formatted string keeps the
+               unit in the accessible name; only the digits move, since the string
+               path rolls the characters that changed and leaves the rest. -->
+          <AnimatedNumber value={`${Math.round(percentage)}%`} />
+        {:else}
+          {labelText}
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/snippet}
+
+{#if typeof headerStart === 'function' || typeof headerEnd === 'function' || typeof note === 'function'}
+  <div class="progress-root">
+    {#if typeof headerStart === 'function' || typeof headerEnd === 'function'}
+      <div class="progress-header">
+        {#if typeof headerStart === 'function'}{@render headerStart()}{/if}
+        {#if typeof headerEnd === 'function'}{@render headerEnd()}{/if}
+      </div>
+    {/if}
+    {@render trackRow()}
+    {#if typeof note === 'function'}
+      <div class="progress-note">{@render note()}</div>
+    {/if}
+  </div>
+{:else}
+  {@render trackRow()}
+{/if}
 
 <style>
+  /* Only present when a header or note is passed; layout only, no type or
+     colour -- the snippets' content is the caller's to style. The names are prefixed so that a
+     class like `header` or `root`, which a consumer passes through `classes` to the
+     progressbar itself, cannot match them. */
+  .progress-root {
+    display: grid;
+    gap: var(--progress-root-gap, 5px);
+  }
+
+  .progress-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--progress-header-gap, 8px);
+  }
+
   .container {
     display: flex;
     align-items: center;
@@ -92,11 +136,22 @@
   }
 
   .track {
-    flex: 1;
+    flex: var(--progress-track-flex, 1);
     height: var(--progress-track-height, 8px);
     background: var(--progress-track-background, #e0e0e0);
     border-radius: var(--progress-track-border-radius, var(--radius, 4px));
     overflow: hidden;
+  }
+
+  /* A track-scoped width is separate from --progress-container-width: the container also
+     holds leadingLabel/showLabel and their gaps, so sizing IT would size the whole row, not
+     the bar. Grow/shrink stay in the flex shorthand alongside the basis specifically so an
+     explicit width isn't silently stretched or shrunk away from by a consumer who set only
+     --progress-track-width and left --progress-track-flex at its default. Zero specificity,
+     so a consumer's own width rule for the track keeps winning, as it did before this hook
+     existed. */
+  :where(.track) {
+    width: var(--progress-track-width, auto);
   }
 
   .bar {

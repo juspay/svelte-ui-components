@@ -62,7 +62,9 @@
       onkeydown: { type: 'Object' },
       onstatechange: { type: 'Object' },
       onlefticonclick: { type: 'Object' },
-      onrighticonclick: { type: 'Object' }
+      onrighticonclick: { type: 'Object' },
+      labelSuffix: { type: 'Object' },
+      inputAutofocus: { type: 'Boolean', attribute: 'input-autofocus' }
     }
   }}
 />
@@ -73,15 +75,20 @@
   import type { InputProperties } from '$lib/Input/properties';
   import { dispatchEvents } from '../dispatch';
   // The element renames `ariaLabel` to `inputAriaLabel` and `id` to `inputId` because the platform already defines `ariaLabel` and `id` on every
-  // HTMLElement. The rest still carries the component's own props -- saying so is what
+  // HTMLElement. `autofocus` is renamed the same way, and for the same reason: declaring it
+  // would shadow the native HTMLElement.autofocus on every <sui-input>, and a host that
+  // already carries an `autofocus` attribute would start taking focus on mount.
+  // The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.
   let {
     inputAriaLabel,
     inputId,
+    inputAutofocus,
     ...props
-  }: Omit<InputProperties, 'ariaLabel' | 'id'> & {
+  }: Omit<InputProperties, 'ariaLabel' | 'id' | 'autofocus'> & {
     inputAriaLabel?: InputProperties['ariaLabel'];
     inputId?: InputProperties['id'];
+    inputAutofocus?: InputProperties['autofocus'];
   } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
@@ -168,6 +175,7 @@
     {...dispatchers}
     id={inputId}
     ariaLabel={inputAriaLabel}
+    autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
   >
     {#snippet leftIcon()}
@@ -183,6 +191,7 @@
     {...dispatchers}
     id={inputId}
     ariaLabel={inputAriaLabel}
+    autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
   >
     {#snippet leftIcon()}
@@ -195,6 +204,7 @@
     {...dispatchers}
     id={inputId}
     ariaLabel={inputAriaLabel}
+    autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
   >
     {#snippet rightIcon()}
@@ -207,6 +217,7 @@
     {...dispatchers}
     id={inputId}
     ariaLabel={inputAriaLabel}
+    autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
   />
 {/if}

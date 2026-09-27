@@ -102,10 +102,10 @@ const ANCESTOR_FOCUS_WITHIN_ALLOWLIST = new Map([
     }
   ],
   [
-    'src/lib/ChatComposer/ChatComposer.svelte:398',
+    'src/lib/ChatComposer/ChatComposer.svelte:623',
     {
       ancestorToken: '.chat-composer',
-      note: '.input has no focus rule of its own; compensated by the ancestor .chat-composer:focus-within (same file, ~line 363).'
+      note: '.input has no focus rule of its own; compensated by the ancestor .chat-composer:focus-within (same file, ~line 590). Line shifted +22 when the slash-menu combobox wiring (listbox id, presentational <ul>, option ids) was added above it.'
     }
   ],
   [

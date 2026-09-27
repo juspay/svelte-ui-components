@@ -131,6 +131,17 @@
   /* ChatComposer */
   --chat-composer-background: #1e1e2e;
   --chat-composer-border: 1px solid #2a2a3c;
+  --chat-composer-slash-menu-background: #1e1e2e;
+  --chat-composer-slash-menu-border: 1px solid #2a2a3c;
+  --chat-composer-slash-menu-box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+  --chat-composer-slash-foot-border: 1px solid #2a2a3c;
+  --chat-composer-slash-foot-color: #9ca3af;
+  --chat-composer-slash-name-color: #93c5fd;
+  --chat-composer-slash-hint-color: #9ca3af;
+  --chat-composer-slash-desc-color: #d1d5db;
+  --chat-composer-slash-badge-background: #1e3a5f;
+  --chat-composer-slash-badge-color: #93c5fd;
+  --chat-composer-slash-item-selected-background: #2a2a3c;
   --chat-composer-color: #e5e7eb;
   --chat-composer-placeholder-color: #9ca3af;
   --chat-composer-action-color: #9ca3af;
@@ -573,6 +584,20 @@
   --delta-indicator-neutral-color: #9ca3af;
   --delta-indicator-positive-color: #4ade80;
 
+  /* DiffViewer */
+  --diff-background: #1a1a26;
+  --diff-border: 1px solid #2a2a3c;
+  --diff-header-background: #1e1e2e;
+  --diff-color: #d1d5db;
+  --diff-filename-color: #f3f4f6;
+  --diff-gutter-color: #9ca3af;
+  --diff-add-background: #123222;
+  --diff-add-color: #86efac;
+  --diff-remove-background: #3a1f22;
+  --diff-remove-color: #fca5a5;
+  --diff-created-background: #14532d;
+  --diff-created-color: #bbf7d0;
+
   /* FileInput */
   --file-input-error-color: #f87171;
   --file-input-info-color: #9ca3af;
@@ -799,4 +824,21 @@
 [data-theme='dark'] {
   --doc-text: #d1d5db;
   --doc-text-secondary: #9ca3af;
+}
+
+/* ----------------------------------------------------------------------------
+   Fifth pass — ArmedButton.
+   ---------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  /* ArmedButton */
+  --armed-btn-bg: #2a2a3c;
+  --armed-btn-color: #9ca3af;
+  --armed-btn-hover-color: #e5e7eb;
+  --armed-btn-border: 1px solid #3f3f52;
+  /* The armed (confirm) state is a fixed danger red regardless of theme --
+     restated explicitly rather than left to fall through, so it reads as a
+     deliberate choice and not an omission the next sweep has to re-discover. */
+  --armed-btn-armed-bg: #dc2626;
+  --armed-btn-armed-color: #ffffff;
+  --armed-btn-armed-border: #dc2626;
 }

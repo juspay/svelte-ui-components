@@ -25,6 +25,12 @@ export type TabItem = {
    */
   sectionLabel?: string;
   /**
+   * The link target in navigation mode (see `navigation` on the bar). Ignored
+   * unless `navigation` is set, so an item that already carries an `href` as its
+   * own routing data renders and behaves exactly as before.
+   */
+  href?: string;
+  /**
    * Blocks selection of this item. It keeps its place and its `aria-disabled`
    * state, but arrow keys, `Home`/`End` and clicks skip past it, and it never
    * becomes the list's tab stop. An item selected from outside stays selected
@@ -40,6 +46,21 @@ export type MandatoryTabsProperties = {
 };
 
 export type OptionalTabsProperties = {
+  /**
+   * Turns the bar into site navigation instead of a tab set, when EVERY item also
+   * has an `href`: a `<nav>` of `<a href>` items, the active one marked
+   * `aria-current="page"`, reached with Tab like any links -- no tablist/tab
+   * roles, no roving tabindex, no arrow keys, no sliding indicator. Navigation is
+   * the browser's; `onchange` does not fire. Defaults to false, which keeps the
+   * tab set whatever the items contain.
+   */
+  navigation?: boolean;
+  /**
+   * Accessible name for the bar -- the tablist, or the `<nav>` in link mode
+   * (e.g. "Manual controls"; a `sectionLabel` is aria-hidden, so it does not
+   * name the bar).
+   */
+  ariaLabel?: string;
   activeIndex?: number;
   activeKey?: string;
   disabled?: boolean;

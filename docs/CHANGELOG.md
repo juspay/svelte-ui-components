@@ -2,7 +2,30 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.1)
+
+The 4.33.1 orb drew breathing and shaping as solid outlines, folded the
+composing ribbon over itself, collapsed weaving into a cage, blurred
+working at 20 px, and left solving's solved pose indistinguishable from a
+scrambled one.
+
+- modeSizing.countAlongPath: marks spaced along a ring, strand or thread
+scale with size, not area, so neighbours stay apart at every size
+- breathing, shaping: real dotted rings; the far side stays visible
+- composing: ripple kept inside the band, narrower ribbon
+- weaving: three closed strands wound round the sphere, camera angled so
+no strand turns edge-on at any instant
+- connecting: fewer nodes and smaller pulses
+- working: bolder dots; at 32/20 px faint orbit ellipses carry the trains
+- solving: shared landmark phase plus meridian strokes that join when
+solved and break when a band turns
+- listening: ring gaps kept open at 32/20 px
+
+Eleven geometry tests, each confirmed to fail on the code it replaces.
+
+Refs BZ-6466
+
+## [4.33.1](https://github.com/juspay/svelte-ui-components/compare/4.33.1..4.33.0) - 26 September 2026
 
 ThinkingOrb decided light or dark by reading data-theme="dark" on &lt;html&gt;
 and faded far dots toward white or black accordingly. Hosts that mark

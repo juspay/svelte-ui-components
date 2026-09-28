@@ -2,7 +2,35 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.2)
+
+Compared against the actual upstream thinking-orbs library (MIT-licensed,
+the source the clean-room port was based on) instead of just checking for
+broken shapes:
+
+- working, composing: dot radius retuned down to reference's scale (2.2px
+fused trains/ribbon dots into a blur; reference's ~1.2px stays crisp).
+- solving: removed the seam-ring and meridian strokes added in BZ-6466 --
+next to the reference's plain rotating dot-sphere they read as a busy
+wireframe skeleton it doesn't have; the same per-tier texture rotation
+the wireframe was reading from already carries solved-vs-scrambled alone.
+- working, composing, weaving: added the static "ghost sphere" backdrop
+each of these has upstream (480 static ring dots + 36 moving particles
+for working, ~110-150 static Fibonacci-sphere dots for composing/weaving)
+that ours was missing entirely. Live burst-capture playback showed our
+working reshaping its whole silhouette every second with nothing static
+to anchor it, versus the reference barely changing shape at all -- the
+actual motion-fluidity gap a frozen-frame comparison can't show.
+
+Verified against a debug grid matching the reference demo's own parity
+harness (same states/sizes/frozen timestamps), plus live burst-capture
+before/after for working's motion character. All 273 unit tests pass
+(3 updated for the removed meridian feature and the newly-appended ghost
+dots); prettier, eslint and svelte-check clean.
+
+Refs BZ-6478 (follow-up to BZ-6466).
+
+## [4.33.2](https://github.com/juspay/svelte-ui-components/compare/4.33.2..4.33.1) - 27 September 2026
 
 The 4.33.1 orb drew breathing and shaping as solid outlines, folded the
 composing ribbon over itself, collapsed weaving into a cage, blurred

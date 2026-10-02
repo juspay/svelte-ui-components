@@ -2,7 +2,432 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.3)
+
+Adds the component capabilities a consuming app (TARA) needed to delete its
+own rendering wrappers and use this library directly. Every change is
+additive or opt-in: existing props, defaults and markup are unchanged unless
+a consumer passes the new prop, snippet or variable.
+
+New components
+- ArmedButton: two-click confirmation. First click arms; the second disarms
+before awaiting onconfirm. Blur, a 3s timeout and unmount also disarm.
+Icon-at-rest mode; styled only through --armed-btn-* variables.
+- DiffViewer: unified diff rendering with gutters and a collapse threshold.
+- WindowedList: renders the newest part of a long list with a "show earlier"
+control that keeps the reader's place; anchored by item key so appends
+join at the bottom without shifting the window.
+
+Component additions
+- Toolbar: title / headingLevel (validated 1-6) / subtitle / rootTag, and a
+page-header variant (in flow, transparent, wrapping) whose values are set
+directly so :root chrome theming cannot leak into it. Variables for the
+back-button fill.
+- Input: labelSuffix snippet beside the visible label (outside its accessible
+name, still in the accessibility tree) and autofocus without scrolling.
+- Progress: leadingLabel, headerStart/headerEnd/note snippets, and a
+track-scoped width/flex separate from the container; the width slide stops
+under reduced motion.
+- KeyValue: value tooltip; value font-family/alignment/ligature hooks; label
+and value cell flex variables for the horizontal layout.
+- Banner: children as the body, so text becomes optional; a shrink variable
+for the right slot.
+- EmptyState: headingLevel renders the title as a real heading.
+- Tabs: link mode for site navigation (nav of real links, aria-current, no
+tablist roles), an accessible name, and item hooks.
+- HITL: showCancel / showConfirm, a wrapping action row, 'decision' and
+'ask-for-text' extra actions (multiline, styled Send), questions answered
+inside the card (single/multi select, answerOnSelect, questionsSettleAs),
+verbatim parameter values, no "No parameters" placeholder on a card that
+asks questions, and `showEmptyParameters` (default true) to hide it
+explicitly for a card whose body is its own `children`.
+- CommandMenu: enableHotkey, filterFn, itemSnippet, ariaLabel; search state
+optionally clears after a controlled close (clearStateOnClose, off by
+default); decorative search icon unchanged from before.
+- ChatComposer: opt-in slash-command menu.
+- ChatMessageList: scrollToBottom(behavior) with a real 'instant' that
+respects reduced motion.
+- Accordion: collapsed panels are inert only when lazy; opt-in lazy mount.
+- Snippet: multiline mode for long output and a top-border hook.
+- Button: ariaPressed for toggle buttons; statusText, an sr-only polite
+status region beside the button.
+- Web-component wrappers declare every prop added here.
+
+Docs
+- Reference pages updated for every changed component; new page for
+DiffViewer (the one component this initially shipped without any page or
+docs/_index.json entry — an adversarial pass against this library's own
+DESIGN_PRINCIPLES.md caught it), plus ArmedButton and WindowedList.
+Toolbar's page-header section now teaches the variant.
+
+Tooling
+- postpackage restores a linked local consumer's Svelte peer for local-link
+development; it is a no-op without local consumer config.
+- The generated legacy palette and focus-visible allowlist are refreshed for
+the new line positions.
+
+Adversarial review against this library's own DESIGN_PRINCIPLES.md and
+docs/*.md, run after the above (four independent passes: new-component
+contracts, app-usage/reach-in-selector audit, doc-vs-source accuracy,
+commit-message fact-check), found and fixed:
+- DiffViewer shipped with no docs/DiffViewer.md and no docs/_index.json
+entry -- the only one of 106 exported components missing both. Added the
+page and index entry, plus a testId prop matching every sibling.
+- Web-component wrapper gaps where a Svelte prop this change added never
+reached the custom element: Toolbar's new title (plus a stale centerContent
+mirror that would have shadowed it even once declared), Banner's new
+children (also renamed to bodySnippet at the WC boundary -- children is a
+real, getter-only accessor every Element already has), Button's ariaPressed,
+and CommandMenu's ariaLabel (renamed to menuAriaLabel for the same ARIAMixin
+collision reason as Button's existing buttonAriaLabel/buttonAriaExpanded).
+- Wrong CSS variable defaults documented for pre-existing variables the
+review happened to touch: Banner's --banner-link-color, --banner-border-
+radius, --banner-font-family; EmptyState's --empty-state-description-
+opacity; KeyValue's --keyvalue-pair-gap (a single default was documented
+where the real fallback differs by layout).
+- Undocumented CSS variables this change itself introduced: five on Toolbar,
+two on Progress, one on HITL, plus ChatComposer's ~22 slash-menu variable
+rows, which had "-" instead of the real CSS property in every row.
+- A structurally false claim in Tabs.md ("onkeychange fires alongside
+onchange") where the two are actually mutually exclusive per activation;
+a false "silently handled" claim on Snippet's clipboard errors, which are
+reported through onerror; incomplete type/default columns (missing `| null`
+and `null`) on several HITL and ChatComposer props.
+- ChatComposer's slash-menu had no default visual for the arrow-key-
+highlighted row when a consumer supplies no selected-item class -- added
+one, scoped to apply only when slashSelectedItemClasses is unset.
+- This message previously overclaimed its own validation: see Validation
+below for what actually changed.
+
+Not fixed, and staying that way for now: ArmedButton's --armed-btn-* and
+DiffViewer's --diff-* variable names don't match this library's
+--{component}-{element}-{property} convention (they read as --armed-button-*
+and --diff-viewer-* under it). Both are already read by name in TARA's
+committed packages/ui/src/styles/components.css (67 and 21 references
+respectively) for every themed variant these two brand-new components have.
+Renaming them here without a matching, coordinated rename on the consumer
+side would silently drop that theming -- every already-verified ArmedButton
+and DiffViewer visual state -- the moment this library is consumed. Left as
+a known deviation for a future major, not a silent gap: this paragraph is
+that record.
+
+CI-round fixes (CodeRabbit review + two CI failures on the first push):
+- ChatComposer: Tab no longer traps Shift+Tab out of an open slash menu.
+- CommandMenu: the enableHotkey window listener is a reactive svelte:window
+binding, so toggling the prop after mount attaches/detaches it instead of
+leaving mount-time state stuck.
+- DiffViewer: dropped the local {#if open} guard that reset the body's
+horizontal scroll on every re-expand; the body now mounts through
+Accordion's own `lazy` and stays mounted across collapses.
+- Input: autofocus fires once per mount (a `hasAutoFocused` latch), not on
+every later element swap.
+- Banner.wc: the default-slot fallback had silently dropped `linkText` for
+existing linkText consumers (superseded by the second round, which removes
+that fallback).
+- tests/wc-default-content.spec.ts: 'sui-input:autofocus' added to
+KNOWN_PLATFORM_SHADOWS (a one-shot insertion-time directive this
+component's own effect already reproduces; not renamed, since nothing
+reads a live value off that accessor the way children/ariaPressed/
+ariaLabel's consumers did).
+
+Second round -- a 15-way per-component audit asking one question of every
+touched component, "is this byte-identical for a consumer passing none of
+the new props?", found seven places where it was not:
+- Accordion: `inert` on a collapsed panel is gated behind `lazy`. A
+non-lazy accordion's content was always mounted and never inert before;
+with `lazy` the two are paired, without it nothing changes.
+- Banner.wc: `children` reaches the inner Banner only when `bodySnippet` is
+supplied. The earlier default-slot fallback made Banner's `{:else}`
+branch (the original text + linkText markup and its CSS-driven ellipsis)
+unreachable for every `&lt;sui-banner&gt;`, dropped the `.banner-text` wrapper
+and renamed the link class. Default-slot markup without `bodySnippet` was
+never supported before this PR, so nothing is lost relative to 4.33.3.
+- CommandMenu: the unmount-time reset of the query and highlighted index
+(for a parent that sets `open = false` without calling the component's own
+`close()`) is the opt-in `clearStateOnClose`, default `false`. The default
+search icon's `aria-hidden` is reverted: it had no opt-in surface and never
+reached web-component consumers (the wrapper supplies its own icon).
+- HITL: `children` no longer hides the "No parameters" placeholder by
+itself. It is a pre-existing prop, so doing so changed the output of every
+children-only consumer, including the shipped `demo-extra` fixture, which
+shrank by 52px. The behaviour is available as the explicit opt-in
+`showEmptyParameters={false}`, default `true`; a card that asks
+`questions` never shows the placeholder either way. The visual baseline is
+not part of this change: release 4.33.3's own hitl.png passes five
+consecutive runs against this tree.
+- Input: the label is wrapped in a `.label-row` flex container only when
+`labelSuffix` is supplied. Unconditionally wrapping it narrowed the native
+`&lt;label for&gt;` click target from the full row to the label text -- measured
+live in two real browser tabs, 253.48px vs 61.9px, with a synthetic click
+in the uncovered region focusing the input on 4.33.3 and missing it on the
+wrapped build.
+- Progress: removed an unconditional `.bar { transition: none; }` inside the
+existing `prefers-reduced-motion` block; it changed every determinate bar
+for viewers with that OS setting, with nothing to opt out of.
+- Snippet: `class:has-copy` is gated by `multiline && showCopyButton`; it was
+appearing on every default instance with the copy button shown.
+
+Third round -- a mechanical pass over every pre-existing source line this
+change removed or rewrote (211 lines in 26 files, listed by `git diff -U0`
+against 4.33.3), plus the CodeRabbit comments the first fix pass had missed:
+- HITL: the `prefers-reduced-motion` selector is restored to its 4.33.3 text
+(`.hitl-container, .hitl-completion`, which match nothing in the markup).
+Pointing it at the real `.hitl, .completion` is an accessibility fix, but
+it changes what every reduced-motion viewer sees, so it belongs in its own
+change rather than inside an opt-in-only one.
+- Input: the `.label` rule is byte-identical to 4.33.3 again. An earlier fix
+of mine had moved its margin onto `.input-container &gt; .label`, which has a
+higher specificity than the original rule and could beat a consumer's
+override that previously won or tied.
+- WindowedList: a reveal's anchor that was truncated away fell back to a stale
+"tail" anchor, restoring a window the reader had moved past, and the window
+then slid with appends. One anchor, replaced by either a reveal or a
+re-anchor, fixes both. Two regression tests; both fail on the old code.
+- ArmedButton: teardown is `onDestroy` (matching Snippet) instead of an effect
+that tracked nothing.
+- Docs: HITL.md type cells with unescaped pipes; KeyValue.md `items` omitted
+`title`; Toolbar.md's `center-content` default; Banner.md's
+`--banner-border-radius` fallback.
+- scripts/link-local-peers.mjs: falls back to a junction where Windows refuses
+a directory symlink.
+- ArmedButton and DiffViewer had no unit tests; they have them now (their
+disarm-before-confirm contract, timer teardown, and DiffViewer keeping its
+body node mounted across a collapse each fail under a deliberate mutation).
+- Tests for new capabilities that had none (76): Toolbar, KeyValue, Banner,
+Button and ChatMessageList (new files); CommandMenu, Input and HITL
+(extended). 29 deliberate mutations, each caught by the intended test.
+- Regression tests for every item above: Accordion, CommandMenu
+(`clearStateOnClose` both ways), Input (bare label vs. labelSuffix row),
+Snippet (`has-copy`), HITL (a new unit test file plus
+tests/hitl-extra-actions.test.ts), WindowedList, ArmedButton, DiffViewer.
+Banner.wc's fix (a shadow-root wrapper) and Progress's revert (a media
+query) are not reachable from jsdom; they rest on the before/after harness
+below: `sui-banner` shows 0 differences over 6 cases on this tree against
+102 on the audited build, and Progress under reduced motion 0 against 16.
+
+Superseded by the fourth round below: this paragraph originally recorded that a few
+always-present CSS hooks (KeyValue's value font-family/text-align/ligatures, Tabs'
+font-family/ligatures, EmptyState's title line-height) added a declaration at the
+component's own scoped specificity where there was none, so a consumer styling the same
+property from outside at a lower specificity could lose to it. The fourth round moved every
+one of these into a `:where(...)` sibling rule (zero specificity), so a consumer's own
+pre-existing rule now always wins, exactly as before these hooks existed -- this is no longer
+a live risk, and is kept here only as the record of what changed and why.
+
+Fourth round -- an interaction-level before/after pass (every demo route, on a paused clock:
+Tab order, a click on each label's far edge, then hover/click/Escape/role-appropriate keys on
+every interactive element, snapshotting DOM + ~75 computed styles + focus + scroll after each
+step) first had to be made trustworthy. Web Animations, image loads and ResizeObserver
+callbacks run on the real frame timeline, which the paused fake clock does not control, so a
+snapshot taken a fixed 100ms+20ms of fake time later could land mid-animation -- the harness
+disagreed with ITSELF (same build, two captures) on overlay routes including modal, sheet,
+menu, gallery, chat-composer and command-menu. Rebuilt the settle step to wait, in real time,
+for every finite Web Animation and pending image/media load to finish and one real animation
+frame to pass with no further DOM mutation (polled up to 8 rounds), and rebuilt the comparator
+to run two full captures per side and only compare a step once both captures of a side agree
+with themselves -- a step where a build disagrees with itself is reported "unstable", not
+silently folded into "same". With that fixed, the pass found (and this change closes) six
+default-path regressions that the earlier structural-diff passes had not reached because they
+compare rendered output, not interactive behaviour:
+
+- CommandMenu: the hotkey listener moved from a raw `window.addEventListener('keydown', ...)`
+added in `onMount`/removed in `onDestroy`, to a reactive `&lt;svelte:window onkeydown&gt;` binding.
+That changes its registration phase (component init, before the first effect flush, instead
+of the mount-effect phase) and changes what answers an event first: Svelte's generated
+window-listener wrapper only calls the handler `if (!event.cancelBubble)`, so an earlier
+window keydown listener that called `stopPropagation()` now silently defeats Ctrl+K, where
+the raw listener always ran regardless. Restored the plain `onMount`/`onDestroy` listener and
+moved the `enableHotkey` check inside the handler body, which keeps the opt-out live (it was
+the whole point of making it reactive) without moving registration or changing listener
+order. The interaction harness's command-menu route went from 184 raw differences between two
+captures of the SAME (after) build to 0.
+- Tabs: `isLinkMode` read only `item.href`, so a list where every item already happens to carry
+an `href` -- for its own routing data, never read by Tabs before -- silently became `&lt;nav&gt;`
+link-mode navigation with no new prop passed: tab roles, roving tabindex, arrow keys and the
+sliding indicator all drop, and `onchange`/`onkeychange` stop firing. Added `navigation`
+(boolean, default `false`); link mode now needs both it and every item's `href`. TARA's own
+two `href`-carrying `&lt;Tabs&gt;` lists (sidebar nav, phone dock) pass it explicitly.
+- Accordion: `{#if mounted}{@render children?.()}{/if}` wrapped the children in a NEW block for
+every accordion, lazy or not. Besides the extra comment anchor, a `{#if}` is a block boundary
+Svelte's pause/resume logic uses: a local `transition:`/`in:`/`out:` on a child stopped
+following an ancestor `{#if}`/`{#each}` that adds or removes the whole Accordion (it animated
+before; it would not now). Replaced with `{@render (mounted ? children : null)?.()}` -- the
+same bare render tag the component always had, now choosing its argument -- so a non-lazy
+accordion (`mounted` is unconditionally `true`) is byte-identical to 4.33.3's markup and
+transition behaviour, not merely visually similar.
+- A web-component attribute collision this PR's own fix for the OTHER one should have caught:
+`Input.wc.svelte` declared the new `autofocus` prop under its own name, shadowing the native
+`HTMLElement.autofocus` accessor and newly observing the attribute -- a host element that
+already carried an inert `autofocus` attribute (meaningless on a custom element before this)
+would now focus it on connect. Renamed to the wrapper-only `inputAutofocus` /
+`input-autofocus`, the same pattern `ariaLabel`/`dir` already use on this and other wrappers,
+and added `autofocus` to `HOST_RESERVED_PROPS` in `scripts/wc-parity/prop-parity.ts` so a
+future reoccurrence fails the parity test instead of shipping.
+- Twelve style/markup leaks of one shape, all through the pre-existing `classes` prop or a
+`class:` directive, found by an independent hunk-by-hunk audit (225 units across every hunk
+this PR touches, two-lens verified) and confirmed with the interaction harness: a new
+internal class name happened to collide with, or (for a false `class:` directive, which
+Svelte strips as a whole token) happened to strip, a token in a CONSUMER's own `classes`
+string, changing an existing component's cascade with no new prop passed. Button's status
+region (`.sr-only`, matched by a consumer's own `classes="sr-only"`, renamed `.button-status`);
+Toolbar's `page-header` class directive (stripped a consumer's own `page-header` token --
+this library's OWN docs recipe uses that name -- and the `.page-header`/`.titles`/`.subtitle`
+rules matched a same-named consumer class on the root) all moved to a `data-variant`
+attribute plus selectors written down the structure they live in (`.content &gt; .titles`); the
+same class-directive strip on Snippet's `multiline`/`has-copy` and ChatComposer's `has-slash`
+moved to `data-*` attributes; HITL's `.questions`/`.question`/`.reply-box` names (matched by a
+same-named consumer class) and Input's `.label-row` scoped to `.confirmation-body &gt; ...` /
+`.input-container &gt; ...`; Progress's generic `.root`/`.header`/`.note` renamed
+`.progress-root`/`.progress-header`/`.progress-note`; and seven specificity leaks -- a new
+always-on declaration at the component's own (0,2,0) scoped specificity beating a consumer's
+lower-or-equal-specificity override that used to win -- on KeyValue's value font-family/
+text-align/ligatures, Tabs' item flex-grow/flex-basis and section-label font hooks, Progress's
+track width, and HITL's action-row flex-wrap, each moved into a `:where(...)` (zero
+specificity) sibling rule so the hook still works for a consumer who reads it, and a
+consumer's own pre-existing rule still wins exactly as before.
+- TARA's own usage needed two matching changes: both `&lt;Tabs&gt;` call sites with `href` items in
+`apps/web/src/routes/+layout.svelte` gained `navigation`, and `packages/ui`'s
+`--tabs-item-flex: 1 1 auto` token (on `.tara-ui-tabs-dock`) split into
+`--tabs-item-flex-grow: 1` / `--tabs-item-flex-shrink: 1` to match the new grow/shrink-only
+hooks.
+
+Regenerating `scripts/codemod/assets/legacy-palette.css` after the `:where()` fixes above
+dropped 4 of its inheritance-restore pins (EmptyState's title line-height; KeyValue's value
+font-family and text-align; Tabs' section-label font-family). Not a behaviour change --
+documented in the generator's own source comment as a known limitation of its exact
+selector-text matching: moving a declaration from `.foo` to `:where(.foo)` is, to that script,
+indistinguishable from deleting it and adding unrelated new markup, so it stops pinning a
+property it still has every reason to pin. Recorded here because it is precisely the kind of
+drift `legacy-palette-drift.test.ts` exists to catch, not a reason to doubt the test.
+
+Residual, confirmed accepted: wrapping previously-unconditional markup in a new opt-in
+`{#if}`/`{:else}` (a new snippet prop, or a `rootTag`/`headingLevel`/dynamic-heading
+`&lt;svelte:element&gt;`) always adds one comment anchor per PR convention, whether or not the
+branch renders anything -- this is not fixable without removing the opt-in feature, and it has
+no visible, ARIA, layout or test-observable effect. This is the shape behind Button's status
+region, EmptyState's and Toolbar's dynamic tag, Banner's children branch, Snippet's prompt
+span, ChatComposer's slash menu, CommandMenu's itemSnippet branch and HITL's five optional
+rows; `Tabs.svelte#3.2`/`#4.2`'s attribute-order-only change (role/aria-selected now set by
+`svelte:element` in source order instead of baked into a static template) is the same kind of
+inherent cost of the `navigation` feature. Every one of these was independently confirmed to
+have zero rendered, behavioural or test effect: the interaction harness reports 0 real
+differences across all 101 demo routes (668 interactive elements probed, 10,158 of 10,393
+steps compared -- the other 235 are steps on routes whose OWN demo script is non-deterministic
+under a paused clock, such as voice-orb's live level readout, equally self-unstable on
+4.33.3), and the same harness still catches all six of a deliberately-injected mutant's
+regressions and every real difference in the previously-audited 00b4178 snapshot, so the 0 is
+not a blind spot.
+
+The Banner type break reported against this PR (a value typed with 4.33.3's
+`MandatoryBannerProperties`/`BannerProperties` exports no longer compiled, because `text`
+moved out of the three-part intersection into a single flat type) is fixed by restoring the
+3.33.3 three-part structure (`MandatoryBannerProperties & OptionalBannerProperties &
+BannerEventProperties`, `text` back in the mandatory part, still optional). Guarded by a
+mutation-tested compile-time check (`Banner.svelte.test.ts`): reverting the type to its
+pre-fix shape produces exactly one `svelte-check` error, the guard itself. Re-run across all
+508 exported types (the published 4.33.3 tarball vs. this tree): 0 forward-assignability
+errors after this fix (every value a consumer could type against the old exports still
+compiles against the new ones); the reverse direction lists only type widenings, none of
+which breaks a consumer's own code.
+
+Measured LOC (git diff --shortstat against release 4.33.3): 89 files changed, 4921
+insertions(+), 518 deletions(-).
+
+Validation, re-run on the final tree rather than carried from earlier states: npm run check
+clean (svelte-check over 1149 and 521 files, 0 errors; its 9 and 8 warnings are all in files
+this change does not touch); npm run lint clean (prettier, eslint, and the CSS / docs /
+web-component / focus-visible / test-focus contract checks, 0 violations); npx vitest run
+176 files, 2805 passed / 1 skipped / 0 failed; npm run package clean. Full functional
+Playwright suite (no Docker): 975 passed / 2 skipped / 0 failed (one retry of a flaky,
+unrelated animation-timing test that passes alone; 4.4 min). Full visual-regression suite
+(Docker, pinned mcr.microsoft.com/playwright:v1.60.0-noble, run with the local-peer-consumer
+link moved aside so the containerised install does not try to resolve a host-only path, dist
+rebuilt on the host afterward): 100 passed / 1 pre-existing unrelated skip / 0 failed, with no
+baseline file touched by this change.
+
+Before/after harness, run on this tree (the one later change, restoring a visual baseline to
+its 4.33.3 bytes, is a test asset that no compared output reads): it loads all 101 component
+demo routes on release 4.33.3 and on this tree under four conditions (default,
+prefers-reduced-motion, dark theme, a 390x844 phone viewport) and compares ~34,000 elements
+each time (tag, attributes, text, ~75 computed styles, pseudo-element content, geometry,
+inert/hidden), plus 58 web-component cases over the 12 touched wrappers using only
+4.33.3-era attributes: 0 differences in every pass. A difference only counts if it
+reproduces in two independent before/after pairings, and pointed at the earlier tree the
+audit examined it reports each of the seven audited regressions (and 0 for the components
+that were fine), so it is not blind. 25 labelled Input fields: a real click in the label row
+focuses the field 50/50 on 4.33.3 and on this tree (6/50 on the audited build).
+
+Interaction harness (the fourth round's rebuilt one, described above), final run: 101/101
+routes captured, 668 interactive elements probed, 10,393 steps per side, 28 label-edge
+probes. 10,158 steps compared, 0 real differences; the other 235 are self-unstable steps on
+routes whose own demo script is non-deterministic under a paused clock (voice-orb's live
+level readout), excluded rather than silently treated as "same". Positive controls on this
+exact build: a deliberate six-mutation tree (wrong arrow-key handling, a hover-colour
+regression, a dead toggle, a dead dismiss, a dead copy button, a different focus ring) is
+still caught in full (7,700 real differences across the five routes checked); the
+previously-audited 00b4178 snapshot still shows its known regressions (2,789 real
+differences) against the same release-4.33.3 baseline.
+
+Fifth round -- Yama's review of commit 086fa15 raised one MAJOR and one MINOR finding, each
+independently adversarially verified (two agents per finding, read-only, before any fix) rather
+than taken on trust:
+
+- MAJOR: a disabled item in Tabs' link mode (`navigation`) still navigated on click or
+Enter/Space. `aria-disabled` was set correctly, but `onclick`/`onkeydown` were unconditionally
+`null` in link mode regardless of `TabItem.disabled` -- `activate()`'s own disabled check,
+which tablist mode goes through, is never reached by a link-mode item at all, so a real
+`&lt;a href&gt;` with no handler navigates exactly like an enabled one; the properties.ts contract
+("clicks skip past it") was simply not honoured for link mode. Fixed with a link-mode-only
+click/keydown guard (`blockIfDisabled`/`handleLinkKeydown`) that calls `preventDefault()` for
+a disabled item and does nothing otherwise, leaving an enabled item's native navigation
+untouched. Mutation-tested: reverting the guard reproduces the exact failure (a dispatched
+click/Enter/Space on the disabled item is no longer prevented).
+- MINOR: ChatComposer's slash menu rendered `div[role=listbox] &gt; ul &gt; li[role=option]`; a
+listbox's accessible children must be its own `option`-rowed elements, and the un-annotated
+`&lt;ul&gt;` (implicit `role=list`) sits between them in the accessibility tree, breaking that
+ownership chain for assistive tech that computes it from the DOM. Separately, the textarea
+driving the menu had no combobox wiring at all. Fixed: the `&lt;ul&gt;` is now `role="presentation"`
+(pruned from the ownership path, mirroring CommandMenu's flatter listbox structure), and the
+textarea gains `role="combobox"` / `aria-expanded` / `aria-controls` / `aria-autocomplete` /
+`aria-activedescendant` -- every one of them gated behind `slashCommands !== null`, so a
+consumer not using slash commands keeps the plain `&lt;textarea&gt;` role it always had. Mutation-
+tested both ways: removing `role="presentation"` or the `slashCommands !== null` guard each
+reproduce the exact failure the corresponding new test catches.
+
+The remaining Yama item (a SUGGESTION, not a finding against the verdict) noted that
+ArmedButton/DiffViewer/WindowedList ship with no web-component wrapper, matching the library's
+own existing practice for several other components (Animations, SoundKit, Browser, Phone, Book,
+...) -- no change made.
+
+Both fixes are confirmed opt-in/scoped: the Tabs guard only ever executes in link mode (a
+tablist-mode item's `onclick`/`onkeydown` are unchanged), and the ChatComposer combobox
+attributes never appear unless `slashCommands` is set. Re-verified on the final tree: the
+interaction harness reports 0 real differences across all 101 routes once more (231 self-
+unstable steps, same shape and count as before this round -- unrelated pre-existing noise, not
+introduced by these fixes); `npm run check`/`lint`/`package` clean; `npx vitest run` 176 files,
+2805 passed, 1 pre-existing skip; full functional Playwright suite 975 passed, 2 skipped, 0
+failed; app (`/Users/sachinsharma/Developer/temp/feat/ui-map`) full workspace build clean.
+
+CI-round fix on this push: `build` and `checks` both failed on
+`lint:focus-visible` -- a stale allowlist entry in
+`scripts/check-focus-visible.js` still pointed at
+`ChatComposer.svelte:601` for the `.input` outline-suppression, which the
+fifth round's new lines (the combobox id/presentation/option-id wiring
+added above it) had shifted to line 623. Caught because CI ran the real
+`npm run lint` with its real exit code; my own pre-push check had grepped
+its output for the word "error", which this failure message does not
+contain ("1 stale allowlist entr(ies)"), so it read as clean when it was
+not -- a verification bug, not a lint bug. Fixed the one line number (601
+-&gt; 623) and re-verified every gate by its actual exit code this time:
+`npm run check` 0, `npm run lint` 0, `npx vitest run` 0 (2805 passed, 1
+skipped), `npm run package` 0. The interaction harness and functional
+Playwright suite, which do not run this lint rule, were unaffected by the
+bug and are re-confirmed clean below regardless.
+
+-
+feat(components): add the hooks and primitives apps were rebuilding locally ([fdee407](https://github.com/juspay/svelte-ui-components/commit/fdee4071fdfe50dfa9c5f68d6502b532d4c6ffb9))
+
+## [4.33.3](https://github.com/juspay/svelte-ui-components/compare/4.33.3..4.33.2) - 28 September 2026
 
 Compared against the actual upstream thinking-orbs library (MIT-licensed,
 the source the clean-room port was based on) instead of just checking for

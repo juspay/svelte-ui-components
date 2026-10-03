@@ -2,7 +2,64 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.33.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.34.0)
+
+scripts/check-docs-contract.js's rules 1 and 2 (an unregistered `&lt;sui-*&gt;`
+tag, an `addEventListener` example for an event nothing dispatches)
+validate a page's examples against ONE real component's own registered tag
+and dispatched events, by deriving that component's name from the doc
+file's own basename. That is meaningless for a reference page that
+documents no single component -- CHANGELOG.md, GUIDELINES.md,
+MIGRATION_4.0.md, MIGRATION_4.28.md, CHART_INPUT_POLICY.md and
+EVENT_CASING_MIGRATION.md all live under docs/ and end in .md, so the
+existing `walk(DOCS)` picked them up too.
+
+This surfaced for real, not hypothetically: publishing 4.34.0 regenerated
+docs/CHANGELOG.md with an entry whose prose quotes an earlier commit's own
+message, including the literal text `window.addEventListener('keydown',
+...)` -- a description of a bug fix, not a documentation example. The
+checker read it as a broken usage example for a `CHANGELOG.wc.svelte`
+wrapper that was never going to exist, failed `npm run lint`, and would
+fail it for the next change too, and the one after that: the entry is
+permanent, so this was not a one-time false positive to wait out.
+
+Fixed by skipping, in the rules-1-and-2 loop only, any doc file whose
+basename does not name a real library component --
+`src/lib/&lt;name&gt;/&lt;name&gt;.svelte` existing is the same signal the rest of the
+script already relies on to mean "a real component", including a
+Svelte-only one with no `.wc.svelte` wrapper (ArmedButton, DiffViewer,
+WindowedList), so no separate hardcoded list of reference pages is needed
+(one would risk silently missing a future addition). Rules 3 and 4 (in-page
+and cross-doc anchor links) are unaffected and keep scanning every file
+under docs/, since a broken anchor fails the build regardless of whether
+the page is about one component.
+
+Also gave the script an optional root argument (`process.argv[2]`,
+defaulting to its own repo-relative path exactly as before), the same
+pattern scripts/check-event-casing.js already uses, so a fixture tree can
+exercise it in isolation -- this script had no test at all before this
+change.
+
+Added scripts/check-docs-contract.test.ts: four cases against minimal
+fixture trees. Confirmed on the real repo tree, not just the fixture:
+before this fix, `node scripts/check-docs-contract.js` on this exact
+checkout (origin/release, nothing else changed) reproduces the original
+failure verbatim (docs/CHANGELOG.md:233, undispatched-event); after it, 0
+violations, and a mutation test against a real component page
+(docs/Button.md, a temporarily-added `&lt;sui-definitely-not-a-real-tag&gt;`)
+confirms rule 1 still fails loudly on an actual violation, restored
+afterward.
+
+Verified clean: npm run check; npm run lint (the full pipeline, every
+sub-check, no exclusions needed this time); npx vitest run, 177 files, 2809
+passed, 1 pre-existing skip.
+
+-
+fix(docs-contract): skip reference pages that document no single component ([1533adb](https://github.com/juspay/svelte-ui-components/commit/1533adbe42020ddd5fa77b217b3620f91fb3cee1))
+-
+fix(hitl): point the reduced-motion guard at the classes it actually renders ([e4b1635](https://github.com/juspay/svelte-ui-components/commit/e4b16358006c592fd5d7d8475a2f0666ced8c177))
+
+## [4.34.0](https://github.com/juspay/svelte-ui-components/compare/4.34.0..4.33.3) - 2 October 2026
 
 Adds the component capabilities a consuming app (TARA) needed to delete its
 own rendering wrappers and use this library directly. Every change is

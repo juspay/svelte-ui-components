@@ -2,7 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.34.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.34.1)
+
+Tracks BZ-6605. Integrates the audited r4 source contracts with release 4.34.1, preserving current slash commands, HITL actions and question flows. Adds controlled queries, scoped shortcuts, stacked and idle-action composers, rich HITL details, retryable asynchronous decisions and confirmDisabled in both Svelte and Web Components.
+
+## [4.34.1](https://github.com/juspay/svelte-ui-components/compare/4.34.1..4.34.0) - 3 October 2026
 
 scripts/check-docs-contract.js's rules 1 and 2 (an unregistered `&lt;sui-*&gt;`
 tag, an `addEventListener` example for an event nothing dispatches)

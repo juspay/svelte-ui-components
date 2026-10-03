@@ -913,8 +913,8 @@
      loaders in Button and ListItem, where the base rule is the FINISHED state and
      stopping the animation would claim completion that has not happened. */
   @media (prefers-reduced-motion: reduce) {
-    .hitl-container,
-    .hitl-completion {
+    .hitl,
+    .completion {
       animation: none;
     }
   }

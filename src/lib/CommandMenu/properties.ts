@@ -19,6 +19,10 @@ export type MandatoryCommandMenuProperties = {
 
 export type OptionalCommandMenuProperties = {
   open?: boolean;
+  /** Bindable search text. Omit to keep the built-in uncontrolled search. */
+  query?: string;
+  /** Disable the built-in global Cmd/Ctrl+K listener when the caller owns shortcuts. */
+  shortcutEnabled?: boolean;
   placeholder?: string;
   emptyText?: string;
   testId?: string;
@@ -52,6 +56,8 @@ export type OptionalCommandMenuProperties = {
 };
 
 export type CommandMenuEventProperties = {
+  /** Fires on user input and when closing resets a non-empty query. */
+  onquerychange?: (query: string) => void;
   onselect?: (item: CommandItem) => void;
   onclose?: () => void;
 };

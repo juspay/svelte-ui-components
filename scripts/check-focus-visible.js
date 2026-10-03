@@ -95,14 +95,14 @@ const isStyled = (f) => /\.(svelte|css)$/.test(f) && !/\.test\./.test(f);
  */
 const ANCESTOR_FOCUS_WITHIN_ALLOWLIST = new Map([
   [
-    'src/lib/Select/Select.svelte:1265',
+    'src/lib/Select/Select.svelte:1270',
     {
       ancestorToken: '.select-trigger',
       note: '.select-search has no focus rule of its own; compensated by the ancestor .select-trigger:focus-within (same file, ~line 1161). Pre-existing; line numbers shifted +15 when the motion-token migration tokenized .select-trigger.'
     }
   ],
   [
-    'src/lib/ChatComposer/ChatComposer.svelte:623',
+    'src/lib/ChatComposer/ChatComposer.svelte:677',
     {
       ancestorToken: '.chat-composer',
       note: '.input has no focus rule of its own; compensated by the ancestor .chat-composer:focus-within (same file, ~line 590). Line shifted +22 when the slash-menu combobox wiring (listbox id, presentational <ul>, option ids) was added above it.'

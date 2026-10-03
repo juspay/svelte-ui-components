@@ -50,7 +50,7 @@ function startedInside(event: Event, node: Node | null): boolean {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-  if (event.key !== 'Escape') {
+  if (event.key !== 'Escape' || event.isComposing || event.keyCode === 229) {
     return;
   }
   topmost()?.onEscape?.();

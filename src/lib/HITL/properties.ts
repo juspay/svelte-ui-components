@@ -125,12 +125,20 @@ export type OptionalHITLProperties = {
    * formatted generically instead.
    */
   sections?: HITLSection[];
+  /**
+   * Rich parameter detail replacing sections/arguments in pending and resolved
+   * cards, including history. Unlike children, this remains after a decision.
+   */
+  details?: Snippet;
   /** Raw arguments, formatted generically when no `sections` are given. */
   functionArguments?: Record<string, unknown>;
   /** Argument keys (case-insensitive) hidden from the generic formatting. */
   hiddenKeys?: string[];
-  onconfirm?: (event: HITLEvent) => void;
+  /** Awaited before completion; throwing/rejecting leaves the card pending for retry. */
+  onconfirm?: (event: HITLEvent) => void | Promise<void>;
   confirmLabel?: string;
+  /** Blocks manual and timed approval while leaving rejection available. Defaults to false. */
+  confirmDisabled?: boolean;
   cancelLabel?: string;
   /** Hides the cancel button entirely — for a card whose only real dispositions come through `actions`. Default `true`. */
   showCancel?: boolean;

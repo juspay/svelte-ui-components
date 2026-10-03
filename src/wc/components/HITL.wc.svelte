@@ -7,9 +7,11 @@
       hITLTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String' },
       sections: { type: 'Object' },
+      details: { type: 'Object' },
       functionArguments: { type: 'Object' },
       hiddenKeys: { type: 'Object' },
       confirmLabel: { type: 'String', attribute: 'confirm-label' },
+      confirmDisabled: { type: 'Boolean', attribute: 'confirm-disabled' },
       cancelLabel: { type: 'String', attribute: 'cancel-label' },
       countdownSeconds: { type: 'Number', attribute: 'countdown-seconds' },
       autoCancelSeconds: { type: 'Number', attribute: 'auto-cancel-seconds' },
@@ -63,6 +65,12 @@
   // as used before its declaration.
   const hostEl = $host();
 
+  // Claim the replacement only when light-DOM details existed at mount, like
+  // Card's fill-aware content slots. Otherwise keep sections/arguments intact.
+  const hasDetailsSlot = Array.from(hostEl.children).some(
+    (child) => child.getAttribute('slot') === 'details'
+  );
+
   // Neither onconfirm nor onmictoggle collides with a native HTMLElement
   // handler, so both dispatch -- 'confirm' (detail: the HITLEvent argument) and
   // 'mictoggle' (no detail, onmictoggle takes no argument) -- for a consumer who
@@ -115,12 +123,24 @@
     >{/if}
 {/snippet}
 
+<!-- Reading props keeps this slot-bearing snippet in component scope, following
+     Card.wc.svelte. JSON cannot represent a Snippet; only a function overrides
+     the named slot. Plain HTML consumers supply slot="details" before mount. -->
+{#snippet detailsImpl()}
+  {#if typeof props.details === 'function'}
+    {@render props.details()}
+  {:else}
+    <slot name="details"></slot>
+  {/if}
+{/snippet}
+
 <HITL
   {...props}
   {...dispatchers}
   title={hITLTitle}
   approvedIcon={approvedIconImpl}
   rejectedIcon={rejectedIconImpl}
+  details={hasDetailsSlot ? detailsImpl : props.details}
 />
 
 <style>

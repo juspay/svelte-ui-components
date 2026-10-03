@@ -20,6 +20,7 @@
 
   let {
     value = $bindable(''),
+    layout = 'row',
     placeholder = '',
     disabled = false,
     textDisabled = null,
@@ -57,6 +58,7 @@
     attachIcon,
     actionIcon,
     actionLabel = 'Voice conversation',
+    actionText,
     leading,
     statusText,
     statusTestId,
@@ -346,6 +348,140 @@
   };
 </script>
 
+{#snippet leadingControls()}
+  {#if showAttach}
+    <div class="control attach">
+      <Button
+        variant="ghost"
+        onclick={() => {
+          if (typeof onattachclick === 'function') {
+            onattachclick();
+            return;
+          }
+          fileInput?.click();
+        }}
+        {disabled}
+        ariaLabel={attachLabel}
+        testId={attachTestId}
+      >
+        {#if typeof attachIcon === 'function'}
+          {@render attachIcon()}
+        {:else}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html attachSvg}
+        {/if}
+      </Button>
+      <input
+        bind:this={fileInput}
+        type="file"
+        {accept}
+        {multiple}
+        class="file-input"
+        onchange={handleFiles}
+        hidden
+      />
+    </div>
+  {/if}
+
+  {#if typeof leading === 'function'}
+    <div class="leading">{@render leading()}</div>
+  {/if}
+{/snippet}
+
+{#snippet textInput()}
+  <textarea
+    class="input"
+    data-pw={inputTestId ?? null}
+    bind:value
+    {placeholder}
+    disabled={resolvedTextDisabled}
+    rows="1"
+    aria-label={inputAriaLabel ?? (placeholder.length > 0 ? placeholder : 'Message')}
+    role={slashCommands !== null ? 'combobox' : null}
+    aria-expanded={slashCommands !== null ? slashOpen : null}
+    aria-controls={slashOpen ? slashListboxId : null}
+    aria-autocomplete={slashCommands !== null ? 'list' : null}
+    aria-activedescendant={slashActiveId}
+    maxlength={maxLength > 0 ? maxLength : null}
+    oninput={handleInput}
+    onkeydown={handleKeydown}
+    onpaste={(event) => onpaste?.(event)}
+    use:autoGrow={value}
+  ></textarea>
+{/snippet}
+
+{#snippet trailingControls()}
+  {#if showVoice}
+    <div
+      class="control voice"
+      class:recording={dictationState === 'recording'}
+      class:busy={dictationState === 'busy'}
+    >
+      <Button
+        variant="ghost"
+        onclick={() => onvoice?.()}
+        disabled={resolvedVoiceDisabled}
+        ariaLabel={voiceLabel}
+        testId={voiceTestId}
+      >
+        {#if typeof voiceIcon === 'function'}
+          {@render voiceIcon()}
+        {:else}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html micSvg}
+        {/if}
+      </Button>
+    </div>
+  {/if}
+
+  {#if streaming}
+    <div class="control send stop" data-pw={sendSlotTestId ?? null}>
+      <Button onclick={() => onstop?.()} ariaLabel={stopLabel} testId={stopTestId}>
+        {#if typeof stopIcon === 'function'}
+          {@render stopIcon()}
+        {:else}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html stopSvg}
+        {/if}
+      </Button>
+    </div>
+  {:else if typeof onaction === 'function' && !canSend && dictationState === 'idle'}
+    <div
+      class="control send action"
+      class:action-with-text={typeof actionText === 'string' && actionText.length > 0}
+      data-pw={sendSlotTestId ?? null}
+    >
+      <Button
+        onclick={() => onaction()}
+        disabled={resolvedSendDisabled}
+        ariaLabel={actionLabel}
+        testId={actionTestId}
+      >
+        {#if typeof actionIcon === 'function'}
+          {@render actionIcon()}
+        {:else}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html micSvg}
+        {/if}
+        {#if typeof actionText === 'string' && actionText.length > 0}
+          <span>{actionText}</span>
+        {/if}
+      </Button>
+    </div>
+  {:else}
+    <div class="control send" data-pw={sendSlotTestId ?? null}>
+      <Button onclick={submit} disabled={!canSend} ariaLabel={sendLabel} testId={sendTestId}>
+        {#if typeof sendIcon === 'function'}
+          {@render sendIcon()}
+        {:else}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html sendSvg}
+        {/if}
+      </Button>
+    </div>
+  {/if}
+{/snippet}
+
 <div
   class="chat-composer {classes ?? ''}"
   class:disabled
@@ -441,126 +577,18 @@
     </div>
   {/if}
 
-  <div class="input-row">
-    {#if showAttach}
-      <div class="control attach">
-        <Button
-          variant="ghost"
-          onclick={() => {
-            if (typeof onattachclick === 'function') {
-              onattachclick();
-              return;
-            }
-            fileInput?.click();
-          }}
-          {disabled}
-          ariaLabel={attachLabel}
-          testId={attachTestId}
-        >
-          {#if typeof attachIcon === 'function'}
-            {@render attachIcon()}
-          {:else}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html attachSvg}
-          {/if}
-        </Button>
-        <input
-          bind:this={fileInput}
-          type="file"
-          {accept}
-          {multiple}
-          class="file-input"
-          onchange={handleFiles}
-          hidden
-        />
-      </div>
-    {/if}
-
-    {#if typeof leading === 'function'}
-      <div class="leading">{@render leading()}</div>
-    {/if}
-
-    <textarea
-      class="input"
-      data-pw={inputTestId ?? null}
-      bind:value
-      {placeholder}
-      disabled={resolvedTextDisabled}
-      rows="1"
-      aria-label={inputAriaLabel ?? (placeholder.length > 0 ? placeholder : 'Message')}
-      role={slashCommands !== null ? 'combobox' : null}
-      aria-expanded={slashCommands !== null ? slashOpen : null}
-      aria-controls={slashOpen ? slashListboxId : null}
-      aria-autocomplete={slashCommands !== null ? 'list' : null}
-      aria-activedescendant={slashActiveId}
-      maxlength={maxLength > 0 ? maxLength : null}
-      oninput={handleInput}
-      onkeydown={handleKeydown}
-      onpaste={(event) => onpaste?.(event)}
-      use:autoGrow={value}
-    ></textarea>
-
-    {#if showVoice}
-      <div
-        class="control voice"
-        class:recording={dictationState === 'recording'}
-        class:busy={dictationState === 'busy'}
-      >
-        <Button
-          variant="ghost"
-          onclick={() => onvoice?.()}
-          disabled={resolvedVoiceDisabled}
-          ariaLabel={voiceLabel}
-          testId={voiceTestId}
-        >
-          {#if typeof voiceIcon === 'function'}
-            {@render voiceIcon()}
-          {:else}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html micSvg}
-          {/if}
-        </Button>
-      </div>
-    {/if}
-
-    {#if streaming}
-      <div class="control send stop" data-pw={sendSlotTestId ?? null}>
-        <Button onclick={() => onstop?.()} ariaLabel={stopLabel} testId={stopTestId}>
-          {#if typeof stopIcon === 'function'}
-            {@render stopIcon()}
-          {:else}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html stopSvg}
-          {/if}
-        </Button>
-      </div>
-    {:else if typeof onaction === 'function' && !canSend && dictationState === 'idle'}
-      <div class="control send action" data-pw={sendSlotTestId ?? null}>
-        <Button
-          onclick={() => onaction()}
-          disabled={resolvedSendDisabled}
-          ariaLabel={actionLabel}
-          testId={actionTestId}
-        >
-          {#if typeof actionIcon === 'function'}
-            {@render actionIcon()}
-          {:else}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html micSvg}
-          {/if}
-        </Button>
+  <div class="input-row" class:stacked={layout === 'stacked'}>
+    {#if layout === 'stacked'}
+      <div class="text-row">{@render textInput()}</div>
+      <div class="control-row">
+        {@render leadingControls()}
+        <div class="control-spacer" aria-hidden="true"></div>
+        {@render trailingControls()}
       </div>
     {:else}
-      <div class="control send" data-pw={sendSlotTestId ?? null}>
-        <Button onclick={submit} disabled={!canSend} ariaLabel={sendLabel} testId={sendTestId}>
-          {#if typeof sendIcon === 'function'}
-            {@render sendIcon()}
-          {:else}
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html sendSvg}
-          {/if}
-        </Button>
-      </div>
+      {@render leadingControls()}
+      {@render textInput()}
+      {@render trailingControls()}
     {/if}
   </div>
 </div>
@@ -607,6 +635,32 @@
     display: flex;
     align-items: flex-end;
     gap: var(--chat-composer-gap, 8px);
+  }
+
+  .input-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--chat-composer-stack-gap, 8px);
+  }
+
+  .text-row {
+    display: flex;
+    min-width: 0;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--chat-composer-gap, 8px);
+  }
+
+  .control-spacer {
+    flex: 1;
+  }
+
+  .stacked .input {
+    min-width: 0;
+    width: 100%;
   }
 
   .leading {
@@ -774,6 +828,46 @@
     font-size: var(--chat-composer-slash-badge-font-size, 12px);
     background: var(--chat-composer-slash-badge-background, #eff6ff);
     color: var(--chat-composer-slash-badge-color, #2563eb);
+  }
+
+  .send.action {
+    --button-width: var(--chat-composer-idle-action-width, var(--chat-composer-send-size, 40px));
+    --button-padding: var(
+      --chat-composer-idle-action-padding,
+      var(--chat-composer-send-padding, 8px)
+    );
+    --button-border-radius: var(
+      --chat-composer-idle-action-border-radius,
+      var(--chat-composer-send-border-radius, 50%)
+    );
+    --button-color: var(
+      --chat-composer-idle-action-background-color,
+      var(--chat-composer-send-background-color, #18181b)
+    );
+    --button-text-color: var(
+      --chat-composer-idle-action-color,
+      var(--chat-composer-send-color, #ffffff)
+    );
+    --button-hover-color: var(
+      --chat-composer-idle-action-hover-background-color,
+      var(--chat-composer-send-hover-background-color, #27272a)
+    );
+    --button-hover-text-color: var(
+      --chat-composer-idle-action-hover-color,
+      var(--button-text-color)
+    );
+    --button-content-gap: var(--chat-composer-idle-action-gap, 0px);
+  }
+
+  .send.action.action-with-text {
+    --button-width: var(--chat-composer-idle-action-width, max-content);
+    --button-padding: var(--chat-composer-idle-action-padding, 8px 12px);
+    --button-content-gap: var(--chat-composer-idle-action-gap, 6px);
+  }
+
+  .action-with-text :global(svg) {
+    width: var(--chat-composer-idle-action-icon-size, 20px);
+    height: var(--chat-composer-idle-action-icon-size, 20px);
   }
 
   /* Visually hidden but still read by assistive technology -- same pattern

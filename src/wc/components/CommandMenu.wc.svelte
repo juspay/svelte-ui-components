@@ -5,6 +5,8 @@
     props: {
       items: { type: 'Object' },
       open: { type: 'Boolean', reflect: true },
+      query: { type: 'String' },
+      shortcutEnabled: { type: 'Boolean', attribute: 'shortcut-enabled' },
       placeholder: { type: 'String', reflect: true },
       emptyText: { type: 'String', reflect: true, attribute: 'empty-text' },
       testId: { type: 'String', attribute: 'test-id' },
@@ -12,6 +14,7 @@
       classes: { type: 'String' },
       onselect: { type: 'Object' },
       onclose: { type: 'Object' },
+      onquerychange: { type: 'Object' },
       itemIcon: { type: 'Object' },
       itemSnippet: { type: 'Object' },
       enableHotkey: { type: 'Boolean', attribute: 'enable-hotkey' },
@@ -45,13 +48,14 @@
   // as used before its declaration.
   const hostEl = $host();
 
-  // onselect and onclose are CommandMenu's only callback props, and both collide
+  // onselect and onclose both collide
   // with HTMLElement's own accessors with no exception recorded for
   // 'sui-command-menu:onselect' / 'sui-command-menu:onclose' in ../dispatch.ts's
   // DISPATCH_COLLISION_EXCEPTIONS -- so dispatchEvents intentionally returns nothing for
   // either. They stay callback-only. Called anyway, on every wrapper, rather than
   // special-cased away: proves the collision guard produces this no-op instead of
-  // assuming it.
+  // assuming it. onquerychange does not collide and dispatches 'querychange'
+  // with the raw query string, as well as calling a property-assigned callback.
   // `dispatchEvents` never reads a callback here -- each wrapper it returns reads
   // `props[name]` at CALL time (src/wc/dispatch.ts), through this same reactive
   // proxy, so a consumer assigning `el.onfoo = fn` after mount is seen. Reading

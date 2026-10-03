@@ -64,6 +64,8 @@ export type OptionalSelectProperties = {
    */
   searchPosition?: SelectSearchPosition;
   placeholder?: string;
+  /** Accessible name for the combobox trigger. Omitted to preserve the default unnamed behavior. */
+  ariaLabel?: string;
   disabled?: boolean;
   /**
    * Renders the error treatment on the trigger — a red border that outranks

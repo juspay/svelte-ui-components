@@ -17,6 +17,7 @@
     searchable = false,
     searchPosition = 'trigger',
     placeholder = '',
+    ariaLabel,
     disabled = false,
     error = false,
     errorMessage,
@@ -754,6 +755,7 @@
       onclick={handleTriggerClick}
       onkeydown={handleKeydown}
       role="combobox"
+      aria-label={ariaLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
       aria-controls={listboxId}
@@ -779,6 +781,7 @@
             <input
               class="select-search"
               type="text"
+              aria-label={ariaLabel}
               value={query}
               oninput={handleSearchInput}
               onfocus={handleSearchFocus}
@@ -807,6 +810,7 @@
             <input
               class="select-search"
               type="text"
+              aria-label={ariaLabel}
               value={query}
               oninput={handleSearchInput}
               onfocus={handleSearchFocus}
@@ -828,6 +832,7 @@
         <input
           class="select-search"
           type="text"
+          aria-label={ariaLabel}
           value={open ? query : displayText}
           oninput={handleSearchInput}
           onfocus={handleSearchFocus}

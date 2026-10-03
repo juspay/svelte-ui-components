@@ -60,6 +60,7 @@
     actionLabel = 'Voice conversation',
     actionText,
     leading,
+    trailing,
     statusText,
     statusTestId,
     slashCommands = null,
@@ -71,6 +72,7 @@
     slashItem,
     onsubmit,
     oninput,
+    oninputfocus,
     onkeydown,
     onpaste,
     onstop,
@@ -92,6 +94,11 @@
   }: ChatComposerProperties = $props();
 
   let fileInput: HTMLInputElement | null = $state(null);
+  let inputElement: HTMLTextAreaElement | null = $state(null);
+
+  export const focus = (options?: FocusOptions): void => {
+    inputElement?.focus(options);
+  };
 
   let showVoice = $derived(typeof onvoice === 'function');
   let showAttach = $derived(typeof onattach === 'function' || typeof onattachclick === 'function');
@@ -391,6 +398,7 @@
 {#snippet textInput()}
   <textarea
     class="input"
+    bind:this={inputElement}
     data-pw={inputTestId ?? null}
     bind:value
     {placeholder}
@@ -404,6 +412,7 @@
     aria-activedescendant={slashActiveId}
     maxlength={maxLength > 0 ? maxLength : null}
     oninput={handleInput}
+    onfocus={(event) => oninputfocus?.(event)}
     onkeydown={handleKeydown}
     onpaste={(event) => onpaste?.(event)}
     use:autoGrow={value}
@@ -479,6 +488,9 @@
         {/if}
       </Button>
     </div>
+  {/if}
+  {#if typeof trailing === 'function'}
+    {@render trailing()}
   {/if}
 {/snippet}
 

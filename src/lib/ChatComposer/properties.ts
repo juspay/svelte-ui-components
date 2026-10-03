@@ -91,6 +91,8 @@ export type OptionalChatComposerProperties = {
   /** Optional visible text beside the idle action icon; omitted keeps icon-only markup. */
   actionText?: string;
   leading?: Snippet;
+  /** Additional controls after the send/stop control. */
+  trailing?: Snippet;
   /**
    * Opt-in sr-only status region (`role="status" aria-live="polite"`) for
    * narrating composer state changes -- e.g. "Recording. Press Escape to stop
@@ -152,6 +154,8 @@ export type ChatComposerEventProperties = {
    */
   onsubmit?: (value: string, attachments: File[]) => boolean | void | Promise<boolean | void>;
   oninput?: (value: string, event: Event) => void;
+  /** Textarea focus, named separately from the native HTMLElement onfocus accessor. */
+  oninputfocus?: (event: FocusEvent) => void;
   onkeydown?: (event: KeyboardEvent) => void;
   onpaste?: (event: ClipboardEvent) => void;
   onstop?: () => void;

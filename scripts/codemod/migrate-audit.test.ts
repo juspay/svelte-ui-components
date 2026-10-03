@@ -352,7 +352,7 @@ describe('runMigrateAudit — usage and errors', () => {
 describe('runMigrateAudit — against the real generated dist-codemod/migration-assets', () => {
   const here = fileURLToPath(import.meta.url);
   const repoRoot = resolve(here, '..', '..', '..');
-  const realAssetsDir = join(repoRoot, 'dist-codemod', 'migration-assets');
+  const realAssetsDir = join(repoRoot, 'dist-codemod', 'codemod', 'migration-assets');
   const built = existsSync(join(realAssetsDir, 'wc-display.json'));
 
   if (!built) {

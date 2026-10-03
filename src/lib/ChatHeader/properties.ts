@@ -9,6 +9,10 @@ export type OptionalChatHeaderProperties = {
   imageAlt?: string;
   avatar?: Snippet;
   actions?: Snippet;
+  expanded?: boolean;
+  showExpand?: boolean;
+  expandLabel?: string;
+  collapseLabel?: string;
   closeIcon?: Snippet;
   closeLabel?: string;
   showClose?: boolean;
@@ -19,4 +23,5 @@ export type OptionalChatHeaderProperties = {
 
 export type ChatHeaderEventProperties = {
   onclose?: () => void;
+  onexpandchange?: (expanded: boolean) => void;
 };

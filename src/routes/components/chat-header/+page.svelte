@@ -1,6 +1,7 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
+  let expanded = $state(false);
 </script>
 
 <div class="page-header">
@@ -34,6 +35,12 @@
 <h2>No close button — omit onclose</h2>
 <div class="chat-theme chat-card header-frame">
   <ChatHeader title="Read-only transcript" subtitle="Archived" />
+</div>
+
+<h2>Expand and collapse beside header actions</h2>
+<div class="chat-theme chat-card header-frame">
+  <ChatHeader title="Assistant panel" bind:expanded showExpand testId="expand-header" />
+  <p data-pw="header-expanded-state">{expanded ? 'expanded' : 'docked'}</p>
 </div>
 
 <style>

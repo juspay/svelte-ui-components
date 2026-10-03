@@ -63,6 +63,10 @@ Each handle is a focusable splitter. Focus one and resize with the keyboard:
 
 All changes are clamped to `minWidth`/`maxWidth` and `minHeight`/`maxHeight`.
 
+Each pointer drag writes only the axes owned by its handle. A keyboard arrow writes
+only the axis it moves, including on corner handles. Leave `height` unset for a
+full-height horizontal dock: resizing its width never freezes its height in pixels.
+
 ## Accessibility
 
 Handles follow the WAI-ARIA **window splitter** pattern: each is `role="separator"`, focusable (`tabindex`), with `aria-orientation` and `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflecting the current/allowed size, and an `aria-label` (`handleLabel`, default `'Resize'`). Hidden entirely when `disabled`.

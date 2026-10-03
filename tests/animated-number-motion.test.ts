@@ -643,25 +643,59 @@ test('a space between literals keeps its width', async ({ page }) => {
  * is the failure this whole suite was built to catch.
  */
 test('animateOnMount rolls the columns up from zero as the number appears', async ({ page }) => {
-  await page.goto(ROUTE);
-
-  // Deliberately NOT gotoHydrated: the entry roll starts at hydration, and
-  // waiting for the hydration marker can land after a short roll has finished.
-  const column = page.getByTestId('entry').locator('.animated-number-digit').first();
-  await column.waitFor({ state: 'attached', timeout: 15_000 });
-
-  const positions = await column.evaluate(async (node: HTMLElement) => {
-    const seen: number[] = [];
-    const glyph = node.querySelector('.animated-number-glyph') ?? node.firstElementChild;
-    for (let frame = 0; frame < 45; frame += 1) {
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      if (glyph instanceof HTMLElement) {
-        seen.push(Math.round(glyph.getBoundingClientRect().top));
+  await page.addInitScript(() => {
+    let recording = false;
+    const record = (column: Element): void => {
+      if (recording) {
+        return;
       }
-    }
-    return seen;
+      recording = true;
+      void (async () => {
+        const seen: number[] = [];
+        for (let frame = 0; frame < 45; frame += 1) {
+          await new Promise(requestAnimationFrame);
+          const glyph = column.querySelector('.animated-number-glyph') ?? column.firstElementChild;
+          if (glyph instanceof HTMLElement) {
+            seen.push(Math.round(glyph.getBoundingClientRect().top));
+          }
+        }
+        Reflect.set(window, '__entryMotionSamples', seen);
+      })();
+    };
+    Element.prototype.animate = new Proxy(Element.prototype.animate, {
+      apply: (animate, element, argumentsList) => {
+        const animation = Reflect.apply(animate, element, argumentsList);
+        if (element instanceof Element && element.closest('[data-pw="entry"]') !== null) {
+          record(element);
+        }
+        return animation;
+      }
+    });
+    const observer = new MutationObserver(() => {
+      if (document.documentElement?.dataset.hydrated === 'true') {
+        const column = document.querySelector('[data-pw="entry"] .animated-number-digit');
+        if (column !== null) {
+          record(column);
+          observer.disconnect();
+        }
+      }
+    });
+    observer.observe(document, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-hydrated']
+    });
   });
-
+  await page.goto(ROUTE, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => Array.isArray(Reflect.get(window, '__entryMotionSamples')));
+  const positions = await page.evaluate(() => {
+    const samples: unknown = Reflect.get(window, '__entryMotionSamples');
+    if (!Array.isArray(samples) || !samples.every((value) => typeof value === 'number')) {
+      throw new Error('Entry-motion samples are not numeric');
+    }
+    return samples;
+  });
   const distinct = new Set(positions);
   expect(
     distinct.size,

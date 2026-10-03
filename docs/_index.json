@@ -434,5 +434,9 @@
   {
     "name": "WindowedList",
     "description": "Renders only the newest part of a long list (a chat log, a transcript), with a \"show earlier\" control that reveals more while keeping the reader's place. Anchored by item key, so appended items join at the bottom without shifting the window."
+  },
+  {
+    "name": "DockPanel",
+    "description": "A persistent non-modal complementary panel with bindable closed/docked/expanded state, clamped resizable width, published reserved width, header/body/footer snippets, token insets and expanded-only Escape dismissal. Never locks body scroll or traps focus."
   }
 ]

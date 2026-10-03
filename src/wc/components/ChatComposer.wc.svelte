@@ -5,6 +5,7 @@
     props: {
       value: { type: 'String' },
       layout: { type: 'String' },
+      variant: { type: 'String', reflect: true },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       textDisabled: { type: 'String', attribute: 'text-disabled' },

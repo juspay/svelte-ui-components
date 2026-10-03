@@ -11,6 +11,7 @@ import './components/ChipInput.wc.svelte';
 import './components/ColorPicker.wc.svelte';
 import './components/Combobox.wc.svelte';
 import './components/CommandMenu.wc.svelte';
+import './components/DockPanel.wc.svelte';
 import './components/Gauge.wc.svelte';
 import './components/GridItem.wc.svelte';
 import './components/Icon.wc.svelte';

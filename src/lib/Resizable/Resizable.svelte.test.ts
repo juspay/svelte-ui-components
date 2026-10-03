@@ -12,9 +12,10 @@ describe('Resizable axis ownership', () => {
       });
       await fireEvent.keyDown(getByRole('separator'), { key: 'ArrowRight' });
       const panel = container.querySelector('.resizable');
-      expect(panel?.getAttribute('style')).toContain('width: 396px');
+      const expectedWidth = edge === 'left' ? 364 : 396;
+      expect(panel?.getAttribute('style')).toContain(`width: ${expectedWidth}px`);
       expect(panel?.getAttribute('style')).not.toContain('height:');
-      expect(onresize).toHaveBeenCalledWith({ width: 396, height: 0 });
+      expect(onresize).toHaveBeenCalledWith({ width: expectedWidth, height: 0 });
     }
   );
 

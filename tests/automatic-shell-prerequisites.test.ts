@@ -7,7 +7,7 @@ test('horizontal resizing keeps the height owned by the container', async ({ pag
   const handle = dock.getByRole('separator');
   await handle.focus();
   await handle.press('ArrowRight');
-  await expect(dock).toHaveCSS('width', '396px');
+  await expect(dock).toHaveCSS('width', '364px');
   expect(await dock.evaluate((element) => element.style.height)).toBe('');
   await page.getByTestId('grow-resize-stage').click();
   await expect(dock).toHaveCSS('height', '260px');

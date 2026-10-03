@@ -1,5 +1,11 @@
 export { default as ArmedButton } from './ArmedButton/ArmedButton.svelte';
 export { default as Modal } from './Modal/Modal.svelte';
+export { default as DockPanel } from './DockPanel/DockPanel.svelte';
+export type {
+  DockPanelState,
+  DockPanelControls,
+  DockPanelProperties
+} from './DockPanel/properties';
 export { default as BrandLoader } from './BrandLoader/BrandLoader.svelte';
 export { default as Button } from './Button/Button.svelte';
 export { default as Input } from './Input/Input.svelte';

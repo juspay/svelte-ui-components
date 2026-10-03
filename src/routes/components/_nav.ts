@@ -19,6 +19,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Book', slug: 'book' },
       { name: 'Carousel', slug: 'carousel' },
       { name: 'Resizable', slug: 'resizable' },
+      { name: 'DockPanel', slug: 'dock-panel' },
       { name: 'Draggable', slug: 'draggable' },
       { name: 'Separator', slug: 'separator' },
       { name: 'AspectRatio', slug: 'aspect-ratio' }

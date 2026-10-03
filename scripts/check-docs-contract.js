@@ -21,11 +21,16 @@
  * FunnelChart, Select and ThemeSwitcher pages document the limitation today,
  * and this rule is what stops the next page from dropping the caveat.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, basename } from 'node:path';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+// The repo by default. An explicit root lets the gate be pointed at a fixture
+// tree, which is how check-docs-contract.test.ts checks that it still fails on
+// the things it is supposed to fail on -- a lint that quietly stopped finding
+// violations would read exactly like a clean repo.
+const ROOT = process.argv[2] ?? new URL('..', import.meta.url).pathname;
 const DOCS = join(ROOT, 'docs');
+const LIB_DIR = join(ROOT, 'src/lib');
 const WC_DIR = join(ROOT, 'src/wc/components');
 const WC_INDEX = join(ROOT, 'src/wc/index.ts');
 
@@ -130,6 +135,17 @@ let crossDocUses = 0;
 
 for (const file of walk(DOCS)) {
   const rel = relative(ROOT, file);
+  // Rules 1 and 2 below validate a page's markup/listener examples against ONE
+  // real component's own registered tag and dispatched events -- meaningless
+  // for a reference page that documents no single component (CHANGELOG.md,
+  // GUIDELINES.md, MIGRATION_4.0.md and friends). `src/lib/<name>/<name>.svelte`
+  // existing is the same signal the rest of this file already uses to mean
+  // "a real component", including a Svelte-only one with no `.wc.svelte`
+  // wrapper (ArmedButton, DiffViewer, WindowedList): checked here, not by a
+  // hardcoded list of reference pages that a new one could silently miss.
+  if (!existsSync(join(LIB_DIR, basename(file, '.md'), `${basename(file, '.md')}.svelte`))) {
+    continue;
+  }
   const lines = readFileSync(file, 'utf8').split('\n');
 
   lines.forEach((line, i) => {

@@ -142,11 +142,11 @@
     let handled = false;
 
     if (dir.x !== 0 && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
-      nextWidth = clampWidth(nextWidth + (event.key === 'ArrowRight' ? step : -step));
+      nextWidth = clampWidth(nextWidth + dir.x * (event.key === 'ArrowRight' ? step : -step));
       handled = true;
     }
     if (dir.y !== 0 && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
-      nextHeight = clampHeight(nextHeight + (event.key === 'ArrowDown' ? step : -step));
+      nextHeight = clampHeight(nextHeight + dir.y * (event.key === 'ArrowDown' ? step : -step));
       handled = true;
     }
 

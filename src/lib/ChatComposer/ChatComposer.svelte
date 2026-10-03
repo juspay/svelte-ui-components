@@ -21,6 +21,7 @@
   let {
     value = $bindable(''),
     layout = 'row',
+    variant = 'default',
     placeholder = '',
     disabled = false,
     textDisabled = null,
@@ -497,6 +498,7 @@
 <div
   class="chat-composer {classes ?? ''}"
   class:disabled
+  class:pill={variant === 'pill'}
   data-has-slash={slashCommands !== null ? '' : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
@@ -621,6 +623,10 @@
 
   .chat-composer.disabled {
     opacity: var(--chat-composer-disabled-opacity, 0.6);
+  }
+
+  .chat-composer.pill {
+    border-radius: var(--chat-composer-pill-border-radius, 999px);
   }
 
   /* .input below sets outline: none with nothing standing in for it, so the

@@ -11,6 +11,7 @@ export type OptionalChatComposerProperties = {
   value?: string;
   /** Text above a separate control row when stacked; row preserves the default. */
   layout?: 'row' | 'stacked';
+  variant?: 'default' | 'pill';
   placeholder?: string;
   disabled?: boolean;
   /**

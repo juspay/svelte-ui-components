@@ -67,6 +67,10 @@ Each pointer drag writes only the axes owned by its handle. A keyboard arrow wri
 only the axis it moves, including on corner handles. Leave `height` unset for a
 full-height horizontal dock: resizing its width never freezes its height in pixels.
 
+Keyboard arrows move the handle in the same direction as a pointer drag. Right on
+a left edge decreases width; Down on a top edge decreases height. Right and bottom
+edges increase their respective dimensions in those directions.
+
 ## Accessibility
 
 Handles follow the WAI-ARIA **window splitter** pattern: each is `role="separator"`, focusable (`tabindex`), with `aria-orientation` and `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflecting the current/allowed size, and an `aria-label` (`handleLabel`, default `'Resize'`). Hidden entirely when `disabled`.

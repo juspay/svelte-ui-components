@@ -169,6 +169,9 @@
   --chat-header-close-hover-background-color: #252535;
   --chat-header-expand-color: #9ca3af;
   --chat-header-expand-hover-background-color: #252535;
+  --dock-panel-background: #17171f;
+  --dock-panel-color: #e5e7eb;
+  --dock-panel-border: 1px solid #30303d;
 
   /* ChatMessageList */
   --chat-message-list-jump-background-color: #1e1e2e;

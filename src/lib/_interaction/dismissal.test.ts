@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dismissibleLayerCount, registerDismissible } from './dismissal';
 
-const press = (key: string): boolean =>
-  document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+const press = (
+  key: string,
+  init: KeyboardEventInit = {},
+  target: EventTarget = document
+): boolean =>
+  target.dispatchEvent(
+    new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, composed: true, ...init })
+  );
 
 function layerElement(): HTMLElement {
   const element = document.createElement('div');
@@ -43,6 +49,30 @@ describe('dismissal stack ownership', () => {
 
     expect(onEscape).not.toHaveBeenCalled();
     release();
+  });
+
+  it('does not dismiss for composing Escape from a shadow-root input', () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const releaseOuter = registerDismissible({ element: () => layerElement(), onEscape: outer });
+    const releaseInner = registerDismissible({ element: () => layerElement(), onEscape: inner });
+    const host = document.createElement('div');
+    const input = document.createElement('input');
+    host.attachShadow({ mode: 'open' }).append(input);
+    document.body.append(host);
+
+    press('Escape', { isComposing: true }, input);
+    press('Escape', { keyCode: 229 }, input);
+
+    expect(inner).not.toHaveBeenCalled();
+    expect(outer).not.toHaveBeenCalled();
+
+    press('Escape', {}, input);
+
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    releaseInner();
+    releaseOuter();
   });
 
   it('treats a press inside the topmost layer as inside, and outside as outside', () => {

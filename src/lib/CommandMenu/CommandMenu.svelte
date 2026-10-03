@@ -16,6 +16,8 @@
   let {
     items,
     open = $bindable(false),
+    query = $bindable(''),
+    shortcutEnabled = true,
     placeholder = 'Search commands...',
     emptyText = 'No results found.',
     testId,
@@ -28,7 +30,8 @@
     onclose,
     classes,
     ariaLabel = 'Command menu',
-    clearStateOnClose = false
+    clearStateOnClose = false,
+    onquerychange
   }: CommandMenuProperties = $props();
 
   // Stable per-instance ids keep ARIA references distinct across menus.
@@ -56,8 +59,6 @@
     easingTokens: ['--command-menu-panel-transition-easing', '--ease-smooth-out', '--motion-easing']
   };
 
-  let query = $state('');
-  let activeIndex = $state(0);
   let inputElement: HTMLInputElement | null = $state(null);
   let listElement: HTMLDivElement | null = $state(null);
   let dialogElement: HTMLDivElement | null = $state(null);
@@ -98,6 +99,10 @@
     return result;
   });
 
+  // A changed result list (including externally changed query/items) resets
+  // navigation. Keyboard/pointer navigation can override this until it changes.
+  let activeIndex = $derived(flatItems.length > 0 ? 0 : -1);
+
   let flatIndexLookup = $derived.by(() => {
     const map = new SvelteMap<string, number>();
     for (let i = 0; i < flatItems.length; i++) {
@@ -113,7 +118,7 @@
   // is keyed by its flat index (see the option's own id below) — null once the
   // list is empty, since there is then no option to describe.
   let activeDescendantId = $derived(
-    flatItems.length > 0 ? `command-menu-option-${uid}-${activeIndex}` : null
+    flatItems.at(activeIndex) ? `command-menu-option-${uid}-${activeIndex}` : null
   );
 
   // Guarded rather than assumed single-fire: out:tokenizedFly keeps the dialog
@@ -125,7 +130,10 @@
       return;
     }
     open = false;
-    query = '';
+    if (query !== '') {
+      query = '';
+      onquerychange?.('');
+    }
     activeIndex = 0;
     onclose?.();
   }
@@ -151,7 +159,7 @@
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (!open) {
+    if (!open || event.isComposing || event.keyCode === 229) {
       return;
     }
 
@@ -247,10 +255,31 @@
   // against other listeners are unchanged; the opt-out is read per event, which also makes
   // toggling enableHotkey after mount take effect immediately.
   function handleGlobalKeyDown(event: KeyboardEvent) {
-    if (!enableHotkey) {
+    if (
+      !shortcutEnabled ||
+      !enableHotkey ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.keyCode === 229 ||
+      event.repeat ||
+      event.altKey
+    ) {
       return;
     }
-    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      const dialog = event
+        .composedPath()
+        .find(
+          (node) =>
+            node instanceof Element &&
+            node.matches('[role="dialog"], [role="alertdialog"], [aria-modal="true"]')
+        );
+      if (
+        dialog instanceof Element &&
+        (dialogElement === null || !dialog.contains(dialogElement))
+      ) {
+        return;
+      }
       event.preventDefault();
       if (open) {
         close();
@@ -388,9 +417,11 @@
         {/if}
         <input
           bind:this={inputElement}
-          bind:value={query}
-          oninput={() => {
+          value={query}
+          oninput={(event) => {
+            query = event.currentTarget.value;
             activeIndex = 0;
+            onquerychange?.(query);
           }}
           type="text"
           class="command-menu-input"

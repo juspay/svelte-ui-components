@@ -9,6 +9,8 @@ export type ChatComposerProperties = OptionalChatComposerProperties & ChatCompos
 
 export type OptionalChatComposerProperties = {
   value?: string;
+  /** Text above a separate control row when stacked; row preserves the default. */
+  layout?: 'row' | 'stacked';
   placeholder?: string;
   disabled?: boolean;
   /**
@@ -86,6 +88,8 @@ export type OptionalChatComposerProperties = {
   /** Glyph for the idle action button (see `onaction`). */
   actionIcon?: Snippet;
   actionLabel?: string;
+  /** Optional visible text beside the idle action icon; omitted keeps icon-only markup. */
+  actionText?: string;
   leading?: Snippet;
   /**
    * Opt-in sr-only status region (`role="status" aria-live="polite"`) for

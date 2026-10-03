@@ -189,6 +189,7 @@ const GUARDED: ReadonlyArray<{ component: Component; slot: string }> = [
   { component: 'DateRangePicker', slot: 'compare-calendar' },
   { component: 'Input', slot: 'left-icon' },
   { component: 'Input', slot: 'right-icon' },
+  // HITL direct-child fill detection is verified with real custom elements in automatic-ui-contracts.test.ts.
   { component: 'Status', slot: 'icon' },
   { component: 'ThinkingIndicator', slot: 'avatar' },
   { component: 'ThinkingIndicator', slot: 'toggle-icon' }

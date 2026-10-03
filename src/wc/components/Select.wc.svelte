@@ -47,7 +47,8 @@
       onclose: { type: 'Object' },
       hierarchy: { type: 'String', attribute: 'hierarchy' },
       usePortal: { type: 'Boolean', attribute: 'use-portal' },
-      name: { type: 'String', reflect: true }
+      name: { type: 'String', reflect: true },
+      selectAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true }
     }
   }}
 />
@@ -55,8 +56,14 @@
 <script lang="ts">
   import { formAssociated } from '../form-associated';
   import Select from '$lib/Select/Select.svelte';
+  import type { SelectProperties } from '$lib/Select/properties';
   import { dispatchEvents } from '../dispatch';
-  let props = $props();
+  let {
+    selectAriaLabel,
+    ...props
+  }: Omit<SelectProperties, 'ariaLabel'> & {
+    selectAriaLabel?: SelectProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -76,7 +83,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Select {...props} {...dispatchers}>
+<Select {...props} {...dispatchers} ariaLabel={selectAriaLabel}>
   {#snippet bottomContent()}
     <slot name="bottom-content"></slot>
   {/snippet}

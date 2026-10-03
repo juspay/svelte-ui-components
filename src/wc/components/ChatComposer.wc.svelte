@@ -4,6 +4,7 @@
     shadow: 'open',
     props: {
       value: { type: 'String' },
+      layout: { type: 'String' },
       placeholder: { type: 'String', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
       textDisabled: { type: 'String', attribute: 'text-disabled' },
@@ -73,7 +74,8 @@
       onattachclick: { type: 'Object' },
       onaction: { type: 'Object' },
       actionIcon: { type: 'Object' },
-      actionLabel: { type: 'String', attribute: 'action-label' }
+      actionLabel: { type: 'String', attribute: 'action-label' },
+      actionText: { type: 'String', attribute: 'action-text' }
     }
   }}
 />

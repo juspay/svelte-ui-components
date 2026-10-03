@@ -26,37 +26,84 @@ A full-screen action palette triggered by keyboard shortcut (Cmd+K / Ctrl+K). Di
 />
 ```
 
+### Controlled query and a dynamic Ask action (Svelte)
+
+`query?: string` is bindable and defaults to `''`. Omit it to keep the existing
+uncontrolled search. `onquerychange?: (query: string) => void` fires with the raw
+input text after local query state updates, and with `''` when an internal close
+clears a non-empty query. External prop updates do not echo the callback. Close
+still resets search; `onselect` runs before that reset, so it can read the query.
+Changing query/results resets the highlighted option; arrows continue to skip
+disabled items. Enter and arrow handling yield to IME composition.
+
+The caller owns the Ask action and its wording. Built-in case-insensitive label
+filtering still applies, so include the raw query in the action's label:
+
+```svelte
+<script lang="ts">
+  import { CommandMenu } from '@juspay/svelte-ui-components';
+
+  let open = $state(false);
+  let query = $state('');
+  const commands = [{ label: 'Dashboard', value: 'dashboard', group: 'Navigation' }];
+  let items = $derived(
+    query.trim() ? [...commands, { label: `Ask Automatic: ${query}`, value: 'ask' }] : commands
+  );
+</script>
+
+<CommandMenu
+  bind:open
+  {query}
+  onquerychange={(next) => (query = next)}
+  {items}
+  onselect={(item) => {
+    if (item.value === 'ask') console.log('Ask Automatic:', query);
+    else console.log('Navigate:', item.value);
+  }}
+/>
+```
+
+Alternatively, use `bind:query` instead of `{query}`/`onquerychange` to let Svelte
+synchronize the caller's state. A callback can also observe query changes while
+leaving the query uncontrolled. There is no built-in Ask action or custom search
+provider. The Web Component also exposes `query` as an attribute/JS property and
+`onquerychange` as a JS callback; see the Web Component example below.
+
 ## Props
 
-| Prop        | Type            | Required | Default                | Description                                                                                                                                                                              |
-| ----------- | --------------- | -------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| items       | `CommandItem[]` | Yes      | -                      | Array of command items to display. Each item has a label, value, and optional group, icon, shortcut, and disabled fields. Items are filtered by search query matching against the label. |
-| open        | `boolean`       | No       | `false`                | Controls visibility of the command menu. Bindable. Set to true to show, false to hide. Automatically toggled by Cmd+K / Ctrl+K keyboard shortcut.                                        |
-| placeholder | `string`        | No       | `'Search commands...'` | Placeholder text shown in the search input when no query is entered.                                                                                                                     |
-| emptyText   | `string`        | No       | `'No results found.'`  | Text displayed when the search query matches no items.                                                                                                                                   |
-| testId      | `string`        | No       | `-`                    | Value for `data-pw` on the overlay container for Playwright testing. Child elements get suffixed testIds (e.g., `{testId}-input`, `{testId}-item-{value}`).                              |
-| enableHotkey | `boolean`      | No       | `true`                 | Attaches the built-in Cmd/Ctrl+K window listener. It has no focus/typing guard, so it fires from inside a text field or terminal too. Set `false` when the hotkey character can legitimately be typed (e.g. Ctrl+K is kill-line in a shell) and drive `open` from the consumer's own guarded listener instead. |
-| filterFn    | `(item: CommandItem, query: string) => boolean` | No | matches `item.label` case-insensitively | Custom match predicate, for a consumer with more than a label to search on (a hint, a path). |
-| ariaLabel   | `string`        | No       | `'Command menu'`       | Accessible name of the dialog.                                                                                                                                                            |
-| clearStateOnClose | `boolean`  | No       | `false`                | A controlled parent can set `open = false` without calling the component's own `close()`. `true` clears the typed search query and highlighted index on that unmount too, not only on an internal close. Left off by default so an existing consumer's typed state keeps surviving an externally-controlled close exactly as before. |
-| classes     | `string`        | No       | `-`                    | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                   |
+| Prop              | Type                                            | Required | Default                                 | Description                                                                                                                                                                                                                                                                                                                          |
+| ----------------- | ----------------------------------------------- | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| items             | `CommandItem[]`                                 | Yes      | -                                       | Array of command items to display. Each item has a label, value, and optional group, icon, shortcut, and disabled fields. Items are filtered by search query matching against the label.                                                                                                                                             |
+| open              | `boolean`                                       | No       | `false`                                 | Controls visibility of the command menu. Bindable. Set to true to show, false to hide. Automatically toggled by Cmd+K / Ctrl+K keyboard shortcut.                                                                                                                                                                                    |
+| placeholder       | `string`                                        | No       | `'Search commands...'`                  | Placeholder text shown in the search input when no query is entered.                                                                                                                                                                                                                                                                 |
+| emptyText         | `string`                                        | No       | `'No results found.'`                   | Text displayed when the search query matches no items.                                                                                                                                                                                                                                                                               |
+| testId            | `string`                                        | No       | `-`                                     | Value for `data-pw` on the overlay container for Playwright testing. Child elements get suffixed testIds (e.g., `{testId}-input`, `{testId}-item-{value}`).                                                                                                                                                                          |
+| enableHotkey      | `boolean`                                       | No       | `true`                                  | Attaches the built-in Cmd/Ctrl+K window listener. It has no focus/typing guard, so it fires from inside a text field or terminal too. Set `false` when the hotkey character can legitimately be typed (e.g. Ctrl+K is kill-line in a shell) and drive `open` from the consumer's own guarded listener instead.                       |
+| filterFn          | `(item: CommandItem, query: string) => boolean` | No       | matches `item.label` case-insensitively | Custom match predicate, for a consumer with more than a label to search on (a hint, a path).                                                                                                                                                                                                                                         |
+| ariaLabel         | `string`                                        | No       | `'Command menu'`                        | Accessible name of the dialog.                                                                                                                                                                                                                                                                                                       |
+| clearStateOnClose | `boolean`                                       | No       | `false`                                 | A controlled parent can set `open = false` without calling the component's own `close()`. `true` clears the typed search query and highlighted index on that unmount too, not only on an internal close. Left off by default so an existing consumer's typed state keeps surviving an externally-controlled close exactly as before. |
+| classes           | `string`                                        | No       | `-`                                     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                               |
+| ---------------   | ---------------                                 | -------- | ----------------------                  | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                                                                                                             |
+| query             | `string`                                        | No       | `''`                                    | Bindable search text; omit for uncontrolled search. Internal close resets it.                                                                                                                                                                                                                                                        |
+| shortcutEnabled   | `boolean`                                       | No       | `true`                                  | Enable the global Cmd/Ctrl+K listener. Disable when the caller owns a scoped shortcut.                                                                                                                                                                                                                                               |
 
 ## Snippets
 
 Svelte 5 Snippet props -- pass content blocks to the component.
 
-| Snippet    | Type                     | Description                                                                                                                                             |
-| ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| itemIcon   | `Snippet<[CommandItem]>` | Custom icon renderer for each command item. Receives the CommandItem as an argument. When provided, takes precedence over the item's `icon` URL string. |
+| Snippet     | Type                              | Description                                                                                                                                                                                                                    |
+| ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| itemIcon    | `Snippet<[CommandItem]>`          | Custom icon renderer for each command item. Receives the CommandItem as an argument. When provided, takes precedence over the item's `icon` URL string.                                                                        |
 | itemSnippet | `Snippet<[CommandItem, boolean]>` | Replaces the default icon/label/shortcut row entirely. Receives the item and whether it is the active (arrow-key-highlighted) row. Set via JS property, not an HTML attribute — a parameterized snippet has no attribute form. |
-| searchIcon | `Snippet`                | Custom icon for the search input.                                                                                                                       |
+| searchIcon  | `Snippet`                         | Custom icon for the search input.                                                                                                                                                                                              |
 
 ## Events
 
-| Event    | Type                          | Description                                                                                                                                             |
-| -------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| onselect | `(item: CommandItem) => void` | Fires when the user selects a command item via click or Enter key. Receives the full CommandItem object. The menu automatically closes after selection. |
-| onclose  | `() => void`                  | Fires when the menu closes for any reason: Escape key, overlay click, Cmd+K toggle, or after item selection.                                            |
+| Event         | Type                          | Description                                                                                                                                             |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| onquerychange | `(query: string) => void`     | Fires on user input and internal non-empty query reset; external prop updates do not echo.                                                              |
+| onselect      | `(item: CommandItem) => void` | Fires when the user selects a command item via click or Enter key. Receives the full CommandItem object. The menu automatically closes after selection. |
+| onclose       | `() => void`                  | Fires when the menu closes for any reason: Escape key, overlay click, Cmd+K toggle, or after item selection.                                            |
 
 ## Keyboard Interactions
 
@@ -98,11 +145,11 @@ Override these custom properties to theme the component.
 Tokens are read via `getComputedStyle` rather than CSS cascading, so each is checked in the
 order listed below rather than relying on `var()` fallback.
 
-| Variable                                    | Default   | CSS Property        | Description                                                                                                        |
-| -------------------------------------------- | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `--command-menu-panel-transition-duration`  | `200ms`   | transform, opacity | Duration of the dialog panel's entrance/exit transition. Checked in order: this token, then `--duration-base`, then `--motion-duration`, then `200ms`. |
-| `--command-menu-panel-transition-distance`  | `30px`    | transform            | Distance (px) the dialog panel travels on entrance/exit. Checked in order: this token, then `--distance-large`, then `30px`.                            |
-| `--command-menu-panel-transition-easing`    | `cubicOut`| transform, opacity | Easing curve of the transition, parsed from a CSS easing keyword or `cubic-bezier(...)`. Checked in order: this token, then `--ease-smooth-out`, then `--motion-easing`, then `cubicOut`. |
+| Variable                                   | Default    | CSS Property       | Description                                                                                                                                                                               |
+| ------------------------------------------ | ---------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--command-menu-panel-transition-duration` | `200ms`    | transform, opacity | Duration of the dialog panel's entrance/exit transition. Checked in order: this token, then `--duration-base`, then `--motion-duration`, then `200ms`.                                    |
+| `--command-menu-panel-transition-distance` | `30px`     | transform          | Distance (px) the dialog panel travels on entrance/exit. Checked in order: this token, then `--distance-large`, then `30px`.                                                              |
+| `--command-menu-panel-transition-easing`   | `cubicOut` | transform, opacity | Easing curve of the transition, parsed from a CSS easing keyword or `cubic-bezier(...)`. Checked in order: this token, then `--ease-smooth-out`, then `--motion-easing`, then `cubicOut`. |
 
 ### Search Input
 
@@ -217,6 +264,38 @@ Tag: `<sui-command-menu>`
 ```html
 <sui-command-menu open placeholder="Type a command..."></sui-command-menu>
 ```
+
+### Controlled query and querychange
+
+`query` is a string attribute or JS property. `onquerychange` is a JS callback and
+also dispatches `querychange` (bubbles, composed) with the raw string as `detail`,
+including `''` when an internal close clears a non-empty query. External query
+updates do not dispatch a change. The caller echoes query changes into its state
+and builds the Ask item; normal label filtering still applies:
+
+```html
+<sui-command-menu id="automatic-menu"></sui-command-menu>
+<script>
+  const menu = document.getElementById('automatic-menu');
+  let query = '';
+  const commands = [{ label: 'Dashboard', value: 'dashboard' }];
+  menu.items = commands;
+  menu.addEventListener('querychange', (event) => {
+    query = event.detail;
+    menu.query = query;
+    menu.items = query.trim()
+      ? [...commands, { label: `Ask Automatic: ${query}`, value: 'ask' }]
+      : commands;
+  });
+  menu.onselect = (item) => {
+    if (item.value === 'ask') console.log('Ask Automatic:', query);
+  };
+  // Use Cmd+K / Ctrl+K, or set menu.open = true, to open.
+</script>
+```
+
+Use either the `onquerychange` callback or the DOM listener for the same update,
+to avoid handling it twice. `onselect` still runs before the query reset.
 
 ### Slots
 

@@ -32,10 +32,12 @@
     title,
     description,
     sections,
+    details,
     functionArguments,
     hiddenKeys,
     onconfirm,
     confirmLabel = 'Confirm',
+    confirmDisabled = false,
     cancelLabel = 'Cancel',
     showCancel = true,
     showConfirm = true,
@@ -90,16 +92,17 @@
   let autoCancelTimeout: ReturnType<typeof setTimeout> | null = null;
   let originalMicState: boolean | null = null;
 
+  // Expiry from the caller takes precedence, including during a live request.
   // History mode renders the settled state from props; live mode from local state.
   // A history card with no initialState renders as expired rather than falling
   // through to the pending interactive card — a replayed card must never be able
   // to fire onconfirm.
   const userResponse = $derived.by((): HITLResponse | null => {
+    if (initialState?.status === 'EXPIRED') {
+      return 'expired';
+    }
     if (isHistoryMode) {
       if (initialState === null) {
-        return 'expired';
-      }
-      if (initialState.status === 'EXPIRED') {
         return 'expired';
       }
       return initialState.approved === true ? 'approved' : 'rejected';
@@ -109,6 +112,7 @@
   const isCompleted = $derived(userResponse !== null);
   const isApproved = $derived(userResponse === 'approved' || userResponse === 'auto-approved');
   const elapsedTime = $derived(countdownSeconds - timeRemaining);
+  const approvalBlocked = (action: HITLAction): boolean => action !== 'rejected' && confirmDisabled;
 
   const completionText = $derived(
     userResponse === 'auto-approved'
@@ -136,7 +140,11 @@
   };
 
   const restoreMicState = async (): Promise<void> => {
-    if (onmictoggle !== null && originalMicState !== null && isMicMuted !== originalMicState) {
+    // Consume restoration before awaiting: a failed decision may be retried
+    // before the caller has updated isMicMuted, but must not toggle twice.
+    const stateToRestore = originalMicState;
+    originalMicState = null;
+    if (onmictoggle !== null && stateToRestore !== null && isMicMuted !== stateToRestore) {
       try {
         await onmictoggle();
       } catch {
@@ -151,14 +159,16 @@
   // updated in between.
   let decisionPending = false;
 
-  const settle = (action: HITLAction, detail: HITLSettleDetail = {}): void => {
-    if (isProcessing || isCompleted) {
+  const settle = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
+    // The controlled state may have changed while mic restoration was pending.
+    if (isCompleted || approvalBlocked(action)) {
+      if (approvalBlocked(action)) {
+        decisionPending = false;
+      }
       return;
     }
-    localResponse = action;
-    isProcessing = true;
     try {
-      onconfirm?.({
+      await onconfirm?.({
         confirmationId,
         action,
         approved: action !== 'rejected',
@@ -168,30 +178,46 @@
         ...(typeof detail.message === 'string' ? { message: detail.message } : {}),
         ...(Array.isArray(detail.answers) ? { answers: detail.answers } : {})
       });
+      // Only publish success after the handoff succeeds. History/expiry updates
+      // received during the request remain authoritative.
+      if (!isCompleted && !approvalBlocked(action)) {
+        localResponse = action;
+      } else if (approvalBlocked(action)) {
+        decisionPending = false;
+      }
     } catch {
       // The decision failed to hand off; release the card for another attempt.
-      localResponse = null;
       decisionPending = false;
+    }
+  };
+
+  const decide = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
+    if (decisionPending || isCompleted || approvalBlocked(action)) {
+      return;
+    }
+    decisionPending = true;
+    isProcessing = true;
+    try {
+      await restoreMicState();
+      if (approvalBlocked(action)) {
+        decisionPending = false;
+        return;
+      }
+      await settle(action, detail);
     } finally {
       isProcessing = false;
     }
   };
 
-  const decide = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
-    if (decisionPending || isCompleted) {
+  const startCountdown = (): void => {
+    if (confirmDisabled) {
       return;
     }
-    decisionPending = true;
-    await restoreMicState();
-    settle(action, detail);
-  };
-
-  const startCountdown = (): void => {
     countdownActive = true;
     timeRemaining = countdownSeconds;
     countdownInterval = setInterval(() => {
       // A sibling card's interaction pauses this countdown on its next tick.
-      if (get(pauseAllConfirmationTimers)) {
+      if (confirmDisabled || get(pauseAllConfirmationTimers)) {
         stopCountdown();
         return;
       }
@@ -211,6 +237,9 @@
   };
 
   const interact = async (action: HITLAction, detail: HITLSettleDetail = {}): Promise<void> => {
+    if (approvalBlocked(action)) {
+      return;
+    }
     pauseTimers();
     await decide(action, detail);
   };
@@ -323,7 +352,9 @@
     }
     pauseAllConfirmationTimers.set(false);
     if (countdownSeconds > 0) {
-      startCountdown();
+      if (!confirmDisabled) {
+        startCountdown();
+      }
     } else if (autoCancelSeconds > 0) {
       autoCancelTimeout = setTimeout(() => {
         void decide('rejected');
@@ -472,12 +503,18 @@
     {/if}
 
     <div class="confirmation-body">
-      {#each parameterSections as section, sectionIndex (sectionIndex)}
-        <div class="params">
-          <span class="parameter-label">{section.label}</span>
-          <span class="parameter-value">{section.value}</span>
+      {#if typeof details === 'function'}
+        <div class="rich-details">
+          {@render details()}
         </div>
-      {/each}
+      {:else}
+        {#each parameterSections as section, sectionIndex (sectionIndex)}
+          <div class="params">
+            <span class="parameter-label">{section.label}</span>
+            <span class="parameter-value">{section.value}</span>
+          </div>
+        {/each}
+      {/if}
 
       {#if isCompleted && userResponse !== null}
         <div
@@ -640,14 +677,14 @@
             {/if}
             {#if showConfirm}
               <div class="confirm-button">
-                {#if countdownActive}
+                {#if countdownActive && !confirmDisabled}
                   <div class="progress-anchor">
                     <Progress value={elapsedTime} max={countdownSeconds} />
                   </div>
                 {/if}
                 <Button
                   text={confirmLabel}
-                  enable={!isProcessing}
+                  enable={!isProcessing && !confirmDisabled}
                   testId={confirmTestId ?? (testId && `${testId}-confirm`)}
                   onclick={() => interact('approved')}
                 />
@@ -716,6 +753,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--hitl-param-gap, 0.25rem);
+  }
+
+  .rich-details {
+    min-width: 0;
+    width: 100%;
   }
 
   .parameter-label {

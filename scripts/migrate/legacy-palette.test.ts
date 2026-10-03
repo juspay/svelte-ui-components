@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
@@ -429,16 +429,23 @@ function releaseRepo(files: Record<string, string>): { root: string; sha: string
     execFileSync('git', args, { cwd: root, encoding: 'utf8' });
 
   run(['init', '-q']);
-  run(['config', 'user.email', 'test@example.com']);
-  run(['config', 'user.name', 'Test']);
 
   for (const [relPath, contents] of Object.entries(files)) {
     const full = join(root, relPath);
-    execFileSync('mkdir', ['-p', join(full, '..')]);
+    mkdirSync(dirname(full), { recursive: true });
     writeFileSync(full, contents);
   }
   run(['add', '-A']);
-  run(['commit', '-q', '-m', 'release baseline']);
+  run([
+    '-c',
+    'user.email=test@example.com',
+    '-c',
+    'user.name=Test',
+    'commit',
+    '-q',
+    '-m',
+    'release baseline'
+  ]);
   const sha = run(['rev-parse', 'HEAD']).trim();
 
   return { root, sha };
@@ -508,6 +515,35 @@ describe('buildLegacyPalette (end to end against a real git history)', () => {
 
     expect(css).not.toContain('--card-description-opacity');
     expect(css).toContain('0 properties pinned below.');
+  });
+
+  it('preserves multibyte committed content and newline paths while skipping a newly added file', () => {
+    const path = 'src/lib/Weird/line\nfile.css';
+    const { root, sha } = releaseRepo({
+      [path]: '/* Ω */ .n { color: var(--multibyte-color, #112233); }\n',
+      'package.json': '{ "version": "4.27.6" }\n'
+    });
+    roots.push(root);
+    writeFileSync(join(root, path), '.n { color: var(--multibyte-color, #445566); }\n');
+    writeFileSync(
+      join(root, 'src/lib/Weird/added\nfile.css'),
+      '.new { color: var(--new-only-color, #778899); }\n'
+    );
+
+    const css = buildLegacyPalette(root, sha);
+    expect(css).toContain(':root { --multibyte-color: #112233; }');
+    expect(css).not.toContain('--new-only-color');
+    expect(css).toContain('was the 4.27.x default');
+  });
+
+  it('rejects an unavailable baseline instead of producing an empty palette', () => {
+    const { root } = releaseRepo({
+      'src/lib/Weird/current.css': '.n { color: var(--current-color, #112233); }\n'
+    });
+    roots.push(root);
+    expect(() => buildLegacyPalette(root, 'refs/heads/missing-baseline')).toThrow(
+      "cannot resolve --base 'refs/heads/missing-baseline'"
+    );
   });
 
   it('runs the BrandLoader shape end to end through the real git pipeline: pins the changed fallback, restores the newly-inherited one, and leaves an unrelated already-declared property alone', () => {

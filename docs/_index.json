@@ -81,11 +81,11 @@
   },
   {
     "name": "ChatComposer",
-    "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable. Also supports an opt-in `/`-command menu (`slashCommands`) with two-stage argument matching."
+    "description": "An auto-growing message input with a send button (the Button component). Enter submits, Shift+Enter inserts a newline (IME-safe); clears on submit. Opt-in controls light up when you wire a callback: `onattach` adds a file picker with removable attachment chips (bindable `attachments`), `onvoice` adds a mic button (with `recording` state), and `streaming` + `onstop` morph send into a stop button. Every icon is snippet-overridable. Also supports an opt-in `/`-command menu (`slashCommands`) with two-stage argument matching. Exports a focus(options?) handle, oninputfocus callback, and trailing snippet for composer handoff."
   },
   {
     "name": "ChatHeader",
-    "description": "A header bar for a chat surface: an optional brand image (via the Img component) or avatar snippet, title and subtitle, extra actions snippet, and a close button (the Button component) shown when `onclose` is provided. Close icon falls back to a built-in asset and is overridable via snippet."
+    "description": "A header bar for a chat surface: an optional brand image (via the Img component) or avatar snippet, title and subtitle, extra actions snippet, and a close button (the Button component) shown when `onclose` is provided. Close icon falls back to a built-in asset and is overridable via snippet. Optional bindable expanded state adds an expand/collapse action with onexpandchange."
   },
   {
     "name": "ChatMessage",

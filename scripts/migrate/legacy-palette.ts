@@ -630,52 +630,63 @@ function listLibraryFiles(root: string): readonly string[] {
   return found;
 }
 
-/**
- * `path` as it stood at `ref`, or null when it did not exist there (a file
- * added since `ref` has nothing to diff against).
- *
- * `execFileSync`'s `utf8` encoding decodes the raw stdout buffer directly --
- * unlike `grep`, which treats a NUL byte as a binary-file signal and refuses
- * to search the file at all. `origin/release`'s own `src/lib/_chart/geometry.ts`
- * carries one, which is why this reads through git and node rather than
- * shelling out to grep.
- */
-function readAtRef(root: string, ref: string, path: string): string | null {
-  try {
-    return execFileSync('git', ['show', `${ref}:${path}`], {
-      cwd: root,
-      encoding: 'utf8',
-      maxBuffer: 1024 * 1024 * 64,
-      // Pipe stderr rather than inheriting it. A file added since `ref` makes
-      // git print `fatal: path ... exists on disk, but not in <ref>`, which is
-      // the expected answer here (a new file has no previous fallback to pin),
-      // not a failure -- but inherited it reaches the terminal ahead of the
-      // generated stylesheet and reads as though the run died.
-      // `assertRefExists` is what keeps this from swallowing a real problem:
-      // a bad ref fails loudly there instead of silently emptying every file
-      // here and yielding a stylesheet that pins nothing.
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-  } catch {
-    return null;
+// Batch reads avoid one process launch per file. Blob lengths preserve UTF-8 and
+// embedded NUL bytes; NUL-delimited input also permits newlines in file names.
+const readSourcesAtRef = (
+  root: string,
+  ref: string,
+  paths: readonly string[]
+): ReadonlyMap<string, string | null> => {
+  const requests = paths.map((path) => `${ref}:${path}`);
+  const output = execFileSync('git', ['cat-file', '--batch', '-z'], {
+    cwd: root,
+    input: `${requests.join('\0')}\0`,
+    maxBuffer: 1024 * 1024 * 64,
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  const sources = new Map<string, string | null>();
+  let offset = 0;
+  for (const [index, path] of paths.entries()) {
+    const missing = Buffer.from(`${requests[index]} missing\n`);
+    if (output.subarray(offset, offset + missing.length).equals(missing)) {
+      sources.set(path, null);
+      offset += missing.length;
+      continue;
+    }
+    const headerEnd = output.indexOf(10, offset);
+    const header = output.subarray(offset, headerEnd).toString('utf8');
+    const match = /^[a-f0-9]+ blob (\d+)$/.exec(header);
+    if (headerEnd < offset || match === null) {
+      throw new Error(`Cannot read committed source '${path}' at '${ref}': ${header}`);
+    }
+    const contentStart = headerEnd + 1;
+    const contentEnd = contentStart + Number(match[1]);
+    if (contentEnd >= output.length || output[contentEnd] !== 10) {
+      throw new Error(`Incomplete committed source '${path}' at '${ref}'`);
+    }
+    sources.set(path, output.subarray(contentStart, contentEnd).toString('utf8'));
+    offset = contentEnd + 1;
   }
-}
+  if (offset !== output.length) {
+    throw new Error(`Unexpected content after committed sources at '${ref}'`);
+  }
+  return sources;
+};
 
-function previousVersionLabel(root: string, base: string): string | null {
-  const manifest = readAtRef(root, base, 'package.json');
+const previousVersionLabel = (manifest: string | null): string | null => {
   if (manifest === null) {
     return null;
   }
   const match = /"version"\s*:\s*"(\d+)\.(\d+)\.\d+"/.exec(manifest);
   return match === null ? null : `${match[1]}.${match[2]}.x`;
-}
+};
 
 /**
  * Fails loudly when `ref` is not a commit this repo can read.
  *
- * Every per-file read below treats a git failure as "this file did not exist
- * at `ref`", which is correct for a file added since. But an unresolvable ref
- * fails that way for EVERY file, and the run then reports zero changed
+ * A missing committed blob means the file was added since `ref`. An
+ * unresolvable ref also makes every blob look missing, so without this check
+ * the run would report zero changed
  * fallbacks -- a clean, plausible, entirely empty stylesheet that looks like
  * "nothing changed" rather than "nothing was compared". Checking the ref once,
  * here, is what separates those two answers.
@@ -706,12 +717,17 @@ export function buildLegacyPalette(root: string, base: string): string {
   const currentSites: FallbackSite[] = [];
   const inheritanceRestores: InheritanceRestore[] = [];
 
-  for (const file of listLibraryFiles(root)) {
+  const files = listLibraryFiles(root);
+  const committedSources = readSourcesAtRef(root, base, [
+    ...files.map((file) => relative(root, file)),
+    'package.json'
+  ]);
+  for (const file of files) {
     const relPath = relative(root, file);
     const currentSource = readFileSync(file, 'utf8');
     currentSites.push(...extractFallbackSites(currentSource, relPath));
 
-    const previousSource = readAtRef(root, base, relPath);
+    const previousSource = committedSources.get(relPath) ?? null;
     if (previousSource === null) {
       continue;
     }
@@ -726,7 +742,11 @@ export function buildLegacyPalette(root: string, base: string): string {
   );
 
   const diff = diffPalette(groupSites(previousSites), groupSites(currentSites));
-  return renderStylesheet(diff, previousVersionLabel(root, base), inheritanceRestores);
+  return renderStylesheet(
+    diff,
+    previousVersionLabel(committedSources.get('package.json') ?? null),
+    inheritanceRestores
+  );
 }
 
 const entrypoint = process.argv[1];

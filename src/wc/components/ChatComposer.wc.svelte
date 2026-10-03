@@ -44,6 +44,7 @@
       voiceIcon: { type: 'Object' },
       attachIcon: { type: 'Object' },
       leading: { type: 'Object' },
+      trailing: { type: 'Object' },
       statusText: { type: 'String', attribute: 'status-text' },
       slashCommands: { type: 'Object', attribute: 'slash-commands' },
       slashMenuAriaLabel: { type: 'String', attribute: 'slash-menu-aria-label' },
@@ -65,6 +66,7 @@
       classes: { type: 'String' },
       onsubmit: { type: 'Object' },
       oninput: { type: 'Object' },
+      oninputfocus: { type: 'Object' },
       onkeydown: { type: 'Object' },
       onstop: { type: 'Object' },
       onvoice: { type: 'Object' },
@@ -81,6 +83,7 @@
 />
 
 <script lang="ts">
+  import { createRawSnippet, onMount } from 'svelte';
   import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
   import type { ChatComposerDictationState } from '$lib/ChatComposer/dictationState';
   import { dispatchEvents } from '../dispatch';
@@ -153,6 +156,33 @@
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
   // as used before its declaration.
   const hostEl = $host();
+  let hasTrailingSlot = $state(false);
+  onMount(() => {
+    const updateTrailingSlot = (): void => {
+      hasTrailingSlot = Array.from(hostEl.children).some(
+        (child) => child.getAttribute('slot') === 'trailing'
+      );
+    };
+    updateTrailingSlot();
+    const observer = new MutationObserver(updateTrailingSlot);
+    observer.observe(hostEl, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['slot']
+    });
+    return () => observer.disconnect();
+  });
+  const nativeTrailingSlot = createRawSnippet(() => ({
+    render: () => '<slot name="trailing"></slot>'
+  }));
+  const trailingProps = $derived(
+    typeof props.trailing === 'function'
+      ? { trailing: props.trailing }
+      : hasTrailingSlot
+        ? { trailing: nativeTrailingSlot }
+        : {}
+  );
 
   /*
    * ChatComposer.svelte falls back to a built-in rich-attachments strip or a plain
@@ -198,6 +228,7 @@
   <ChatComposer
     {...props}
     {...dispatchers}
+    {...trailingProps}
     textDisabled={asBooleanOrNull(textDisabled)}
     voiceDisabled={asBooleanOrNull(voiceDisabled)}
     sendDisabled={asBooleanOrNull(sendDisabled)}
@@ -282,6 +313,7 @@
   <ChatComposer
     {...props}
     {...dispatchers}
+    {...trailingProps}
     textDisabled={asBooleanOrNull(textDisabled)}
     voiceDisabled={asBooleanOrNull(voiceDisabled)}
     sendDisabled={asBooleanOrNull(sendDisabled)}

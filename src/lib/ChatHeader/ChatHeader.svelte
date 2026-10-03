@@ -2,6 +2,8 @@
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
   import closeSvg from '$lib/assets/close.svg?raw';
+  import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
+  import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
   import type { ChatHeaderProperties } from './properties';
 
   let {
@@ -11,6 +13,11 @@
     imageAlt = '',
     avatar,
     actions,
+    expanded = $bindable(false),
+    showExpand,
+    expandLabel = 'Expand',
+    collapseLabel = 'Collapse',
+    onexpandchange,
     closeIcon,
     closeLabel = 'Close',
     showClose,
@@ -21,6 +28,12 @@
   }: ChatHeaderProperties = $props();
 
   let displayClose = $derived(showClose ?? typeof onclose === 'function');
+  let displayExpand = $derived(showExpand ?? typeof onexpandchange === 'function');
+
+  const toggleExpanded = (): void => {
+    expanded = !expanded;
+    onexpandchange?.(expanded);
+  };
 </script>
 
 <header
@@ -52,6 +65,18 @@
     <div class="trailing">
       {#if typeof actions === 'function'}
         {@render actions()}
+      {/if}
+      {#if displayExpand}
+        <div class="expand">
+          <Button
+            variant="ghost"
+            onclick={toggleExpanded}
+            ariaLabel={expanded ? collapseLabel : expandLabel}
+          >
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html expanded ? exitFullscreenSvg : fullscreenSvg}
+          </Button>
+        </div>
       {/if}
       {#if displayClose}
         <div class="close">
@@ -163,6 +188,23 @@
   }
 
   .close :global(svg) {
+    height: 100%;
+    width: 100%;
+  }
+
+  .expand {
+    --button-width: var(--chat-header-expand-size, var(--chat-header-close-size, 36px));
+    --button-height: var(--chat-header-expand-size, var(--chat-header-close-size, 36px));
+    --button-padding: var(--chat-header-expand-padding, var(--chat-header-close-padding, 8px));
+    --button-border-radius: var(--chat-header-expand-border-radius, 50%);
+    --button-color: var(--chat-header-expand-background-color, transparent);
+    --button-text-color: var(--chat-header-expand-color, #52525b);
+    --button-hover-text-color: var(--chat-header-expand-color, #52525b);
+    --button-content-gap: 0px;
+    --button-hover-color: var(--chat-header-expand-hover-background-color, #f4f4f5);
+  }
+
+  .expand :global(svg) {
     height: 100%;
     width: 100%;
   }

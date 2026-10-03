@@ -167,6 +167,8 @@
   --chat-header-subtitle-color: #9ca3af;
   --chat-header-close-color: #9ca3af;
   --chat-header-close-hover-background-color: #252535;
+  --chat-header-expand-color: #9ca3af;
+  --chat-header-expand-hover-background-color: #252535;
 
   /* ChatMessageList */
   --chat-message-list-jump-background-color: #1e1e2e;

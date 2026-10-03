@@ -44,6 +44,8 @@ export const PRESENCE_GATED_CALLBACKS: ReadonlySet<string> = new Set([
   'sui-chat-composer:onattach',
   'sui-chat-composer:onattachclick',
   'sui-chat-composer:onvoice',
+  // ChatHeader
+  'sui-chat-header:onexpandchange',
   // ChatMessage
   'sui-chat-message:onfeedback',
   'sui-chat-message:onretry',

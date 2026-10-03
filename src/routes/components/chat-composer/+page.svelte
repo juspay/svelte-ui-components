@@ -1,6 +1,10 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
+  import Button from '$lib/Button/Button.svelte';
+
+  let focusComposer: ChatComposer | null = $state(null);
+  let focusCount = $state(0);
 
   let value = $state('');
   let sent: string[] = $state([]);
@@ -267,6 +271,26 @@
 <p class="demo-note" data-pw="dictation-cancel-count">
   Cancelled via Escape: {dictationCancelCount}
 </p>
+
+<h2>Focus handle and trailing controls</h2>
+<div class="chat-theme composer-frame">
+  <ChatComposer
+    bind:this={focusComposer}
+    placeholder="Ask AI"
+    inputTestId="focus-composer-input"
+    oninputfocus={() => (focusCount += 1)}
+  >
+    {#snippet trailing()}
+      <Button text="Open panel" testId="composer-trailing" />
+    {/snippet}
+  </ChatComposer>
+  <Button
+    text="Focus composer"
+    testId="focus-composer"
+    onclick={() => focusComposer?.focus({ preventScroll: true })}
+  />
+  <p data-pw="composer-focus-count">{focusCount}</p>
+</div>
 
 {#if preview !== null}
   <div class="lightbox-backdrop" role="presentation" onclick={() => (preview = null)}>

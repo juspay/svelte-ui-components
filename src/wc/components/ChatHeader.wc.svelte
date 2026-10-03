@@ -9,6 +9,11 @@
       imageAlt: { type: 'String', attribute: 'image-alt' },
       avatar: { type: 'Object' },
       actions: { type: 'Object' },
+      expanded: { type: 'Boolean', reflect: true },
+      showExpand: { type: 'String', attribute: 'show-expand' },
+      expandLabel: { type: 'String', attribute: 'expand-label' },
+      collapseLabel: { type: 'String', attribute: 'collapse-label' },
+      onexpandchange: { type: 'Object' },
       closeIcon: { type: 'Object' },
       closeLabel: { type: 'String', attribute: 'close-label' },
       showClose: { type: 'Boolean', attribute: 'show-close' },
@@ -23,7 +28,16 @@
   import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
   import { dispatchEvents } from '../dispatch';
   import closeSvg from '$lib/assets/close.svg?raw';
-  let { chatHeaderTitle, ...props } = $props();
+  let { chatHeaderTitle, expanded = $bindable(false), showExpand, ...props } = $props();
+
+  const resolveShowExpand = (value: unknown): boolean | undefined => {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value !== 'false';
+    }
+  };
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -51,7 +65,7 @@
    */
   const hasAvatarSlot = $host().querySelector('[slot="avatar"]') !== null;
 
-  // onclose is this element's ONLY callback prop, and it collides with
+  // onclose collides with
   // HTMLElement's own onclose accessor with no exception recorded for
   // 'sui-chat-header:onclose' in ../dispatch.ts's DISPATCH_COLLISION_EXCEPTIONS -- so
   // dispatchEvents intentionally returns nothing for it. It stays callback-only:
@@ -68,7 +82,13 @@
 </script>
 
 {#if hasAvatarSlot}
-  <ChatHeader {...props} {...dispatchers} title={chatHeaderTitle}>
+  <ChatHeader
+    {...props}
+    {...dispatchers}
+    title={chatHeaderTitle}
+    bind:expanded
+    showExpand={resolveShowExpand(showExpand)}
+  >
     {#snippet avatar()}
       <slot name="avatar"></slot>
     {/snippet}
@@ -85,7 +105,13 @@
     <slot></slot>
   </ChatHeader>
 {:else}
-  <ChatHeader {...props} {...dispatchers} title={chatHeaderTitle}>
+  <ChatHeader
+    {...props}
+    {...dispatchers}
+    title={chatHeaderTitle}
+    bind:expanded
+    showExpand={resolveShowExpand(showExpand)}
+  >
     {#snippet actions()}
       <slot name="actions"></slot>
     {/snippet}

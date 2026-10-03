@@ -88,8 +88,13 @@
     event.preventDefault();
     const startW = clampWidth(measuredWidth());
     const startH = clampHeight(measuredHeight());
-    width = startW;
-    height = startH;
+    const direction = DIRS[edge];
+    if (direction.x !== 0) {
+      width = startW;
+    }
+    if (direction.y !== 0) {
+      height = startH;
+    }
     active = {
       edge,
       pointerId: event.pointerId,
@@ -147,8 +152,12 @@
 
     if (handled) {
       event.preventDefault();
-      width = nextWidth;
-      height = nextHeight;
+      if (dir.x !== 0 && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+        width = nextWidth;
+      }
+      if (dir.y !== 0 && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+        height = nextHeight;
+      }
       onresize?.({ width: nextWidth, height: nextHeight });
     }
   }

@@ -22,6 +22,8 @@ test('the default icon falls back to the built-in one when the file is absent', 
     '[data-pw="status-inline"] .status-image img, [data-pw="status-inline"] .status-image svg'
   );
   await expect(icon.first()).toBeVisible();
+  // Hydration can finish before the failed fetch and its inline fallback load.
+  await expect(page.locator('[data-pw="status-inline"] .status-image svg path')).toBeVisible();
 
   // Painted, not merely present: a broken image still occupies the DOM.
   const painted = await icon.first().evaluate((node) => {

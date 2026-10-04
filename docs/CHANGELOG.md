@@ -2,10 +2,41 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.35.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.35.1)
+
+-
+feat: add automatic assistant shell prerequisites ([5241b87](https://github.com/juspay/svelte-ui-components/commit/5241b87ecf8bd27c8ea9ec52719cdd56d5c09357))
+
+## [4.35.1](https://github.com/juspay/svelte-ui-components/compare/4.35.1..4.35.0) - 4 October 2026
+
+Bumps the npm_and_yarn group with 2 updates in the /mcp directory: [fast-uri](https://github.com/fastify/fast-uri) and [ip-address](https://github.com/beaugunderson/ip-address).
+
+Updates `fast-uri` from 3.1.7 to 3.1.8
+- [Release notes](https://github.com/fastify/fast-uri/releases)
+- [Commits](https://github.com/fastify/fast-uri/compare/v3.1.7...v3.1.8)
+
+Updates `ip-address` from 10.7.0 to 10.7.3
+- [Release notes](https://github.com/beaugunderson/ip-address/releases)
+- [Commits](https://github.com/beaugunderson/ip-address/compare/v10.7.0...v10.7.3)
+
+---
+updated-dependencies:
+- dependency-name: fast-uri
+dependency-version: 3.1.8
+dependency-type: indirect
+dependency-group: npm_and_yarn
+- dependency-name: ip-address
+dependency-version: 10.7.3
+dependency-type: indirect
+dependency-group: npm_and_yarn
+...
+
+Signed-off-by: dependabot[bot] &lt;support@github.com&gt;
 
 -
 test(forms): isolate form-association contracts from docs demos ([61b388d](https://github.com/juspay/svelte-ui-components/commit/61b388de49804e35161f6838ba71227e5e5fd974))
+-
+build(deps): bump the npm_and_yarn group across 1 directory with 2 updates ([6a78a19](https://github.com/juspay/svelte-ui-components/commit/6a78a19281bff96a3817a6c94c34d9121c1d91a9))
 
 ## [4.35.0](https://github.com/juspay/svelte-ui-components/compare/4.35.0..4.34.1) - 3 October 2026
 

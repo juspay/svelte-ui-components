@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.35.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.36.0)
+
+-
+feat: add DockPanel and pill composer variant ([2e08d6a](https://github.com/juspay/svelte-ui-components/commit/2e08d6a6898efbca3f09630e856c1ea98fa7fc23))
+
+## [4.36.0](https://github.com/juspay/svelte-ui-components/compare/4.36.0..4.35.1) - 4 October 2026
 
 -
 feat: add automatic assistant shell prerequisites ([5241b87](https://github.com/juspay/svelte-ui-components/commit/5241b87ecf8bd27c8ea9ec52719cdd56d5c09357))

@@ -269,13 +269,65 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 <DateRangePicker mode="range" {presets} placeholder="Select range" />
 ```
 
+### Presets above the calendars
+
+By default the presets sit in a column beside the calendars. `presetsPosition="top"` lays them out as a wrapping row above the calendars instead, which suits a picker that has to live in a narrow container. The panel stays anchored to the trigger. Group dividers and group labels are hidden while the presets are on top.
+
+```svelte
+<DateRangePicker mode="range" {presets} presetsPosition="top" dualMonth={false} />
+```
+
+### Responsive layout
+
+The panel is an absolutely positioned dropdown that can be up to `--drp-panel-max-width` wide, so on a phone it can run off the edge of the viewport and take Apply with it. Set `responsiveLayout` to make the picker follow the window:
+
+```svelte
+<DateRangePicker mode="range" {presets} showDateInputs responsiveLayout />
+```
+
+| Viewport             | What changes                                                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1023px and below     | Range mode only. The panel becomes a fixed sheet confined to the viewport, inset by the `--drp-sheet-*` tokens, and the presets move above the calendars. Two months stay side by side while `dualMonth` is on. |
+| 688px and below      | Both modes. A single-mode picker becomes the same sheet here. The calendar area shows one month (even with `dualMonth`), the date and time inputs stack, and the arrow between them is hidden.                  |
+| Wider than the above | Nothing. The panel is the dropdown it always was.                                                                                                                                                               |
+
+The breakpoints are fixed at `1023px` and `688px`, not themable custom properties: a media query cannot read a custom property, and the same two queries decide the layout classes and the number of months, so there is one place that says where the layout flips. The panel follows the window while it is open. Resizing keeps the draft selection, and Apply, Cancel and Escape behave as before. If a resize removes the element that has focus, such as a day in the second month when two months collapse to one, focus moves to the first control in the panel instead of being lost. Focus that is outside the panel, or on a control the resize keeps, is left where it is.
+
+The prop itself changes nothing unless it is set: a picker without `responsiveLayout` never reads the window's media queries and keeps the dropdown layout at every width. Separate from the prop, three behaviours are always on and are described under [Behaviour for every picker](#behaviour-for-every-picker).
+
+The sheet is a `position: fixed` element, and it is only confined to the viewport while no ancestor takes over as its containing block. These ancestor styles do: `transform`, `perspective`, `filter`, `backdrop-filter`, `will-change` naming any of those, `content-visibility: auto`, and any `contain` value that includes layout or paint (`layout`, `paint`, `content` and `strict`). Inside one, the sheet is positioned against that ancestor's box instead of the viewport, so it can be displaced and part of it, Apply included, can end up outside the viewport. `overflow: hidden`, `isolation` and `container-type` do not have this effect. This list was measured in Chromium. Check a picker that lives inside a modal, a drawer or an animated container, and give such a host a layout that does not set one of these styles on the picker's ancestors. The standalone compare panel (`compareTrigger`) is not turned into a sheet.
+
+The sheet is driven by the viewport width alone, not by the room around the trigger. A page with a sidebar puts the trigger away from the left edge, so just above `1023px` the dropdown can still run past the right edge. Pick `align` for the side the trigger is nearer to, or lower `--drp-panel-max-width`, if that range matters for your layout.
+
+The insets are tokens because the free area differs per host: a fixed sidebar, an embedding shell and safe-area insets all change it. The defaults suit a bare page.
+
+```css
+.my-picker {
+  --drp-sheet-left: calc(env(safe-area-inset-left, 0px) + 1rem);
+  --drp-sheet-right: calc(env(safe-area-inset-right, 0px) + 1rem);
+  --drp-sheet-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  --drp-sheet-z-index: 9999;
+}
+```
+
+The layout adds `drp-panel-sheet`, `drp-panel-narrow` and `drp-panel-presets-top` to `.drp-panel`. The `.drp-panel` and `.drp-compare-panel` class names are unchanged.
+
+### Behaviour for every picker
+
+These apply whether or not `responsiveLayout` is set.
+
+- **Open panel under a `pointer-events: none` ancestor.** The open panel and the standalone compare panel set `pointer-events: auto`, as Modal's content does. A host that disables pointer events on an ancestor, for example while a sidebar is open, would otherwise make a panel opened from the keyboard impossible to click. Anything inside a panel that used to inherit `none` from such an ancestor is now clickable.
+- **The single-month calendar opens on the selection.** With `dualMonth={false}` in range mode, and in every `mode="single"` picker, the calendar opens on the month of the committed `rangeStart`, or of `value` when there is no range, instead of the current month, and the picker follows the calendar's own previous and next buttons. A single-date picker whose value is not in the current month therefore opens on that value's month.
+- **Presets and typed dates move a single-month calendar in range mode only.** With `dualMonth={false}` in range mode the calendar also moves to the month of a clicked preset or of a date typed into the built-in date inputs. A `mode="single"` picker has no built-in date inputs, and clicking one of its presets sets the selection without changing the month on screen.
+- **`maxRangeDays` in the single-month grid.** With `dualMonth={false}` in range mode, days further than `maxRangeDays` from the picked start are now disabled in the grid, as the two-month layout already did. `mode="single"` still uses `disabledDates` alone.
+
 ## Props
 
 | Prop                | Type                                  | Required | Default         | Description                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------- | ------------------------------------- | -------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | rangeStart          | `Date \| null`                        | No       | `null`          | Bindable. Start of the selected range. Only used in range mode.                                                                                                                                                                                                                                                                                                    |
 | rangeEnd            | `Date \| null`                        | No       | `null`          | Bindable. End of the selected range. Only used in range mode.                                                                                                                                                                                                                                                                                                      |
-| value               | `Date \| null`                        | No       | `null`          | Bindable. Selected date in single mode.                                                                                                                                                                                                                                                                                                                            |
+| value               | `Date \| null`                        | No       | `null`          | Bindable. Selected date in single mode. The calendar opens on this date's month.                                                                                                                                                                                                                                                                                   |
 | mode                | `'range' \| 'single'`                 | No       | `'range'`       | Selection mode.                                                                                                                                                                                                                                                                                                                                                    |
 | minDate             | `Date \| null`                        | No       | `null`          | Earliest selectable date.                                                                                                                                                                                                                                                                                                                                          |
 | maxDate             | `Date \| null`                        | No       | `null`          | Latest selectable date.                                                                                                                                                                                                                                                                                                                                            |
@@ -288,8 +340,10 @@ Add a `group` key to any `DateRangePreset`. A thin divider (with an optional gro
 | presetCheckmark     | `boolean`                             | No       | `false`         | Show a trailing checkmark on the active preset in the sidebar. Opt-in; the active preset is always distinguished by its highlighted background regardless of this flag.                                                                                                                                                                                            |
 | presetToggle        | `boolean`                             | No       | `false`         | Make presets toggle instead of one-way: clicking the already-selected preset deselects it and reverts the draft to the committed selection (so a preset like "No Comparison" can be switched back off without picking a calendar date).                                                                                                                            |
 | placeholder         | `string`                              | No       | `'Select date'` | Text shown on the trigger when no date is selected.                                                                                                                                                                                                                                                                                                                |
-| dualMonth           | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override.                                                                                                                                                                                                                                             |
+| dualMonth           | `boolean`                             | No       | `undefined`     | Show two months side by side. Defaults to true for range mode, false for single. Pass an explicit boolean to override. With `false` in range mode the single calendar opens on the selected range's month, follows presets and typed dates, and enforces `maxRangeDays`.                                                                                           |
 | align               | `'left' \| 'right'`                   | No       | `'left'`        | Aligns the dropdown panel to the left or right edge of the trigger.                                                                                                                                                                                                                                                                                                |
+| presetsPosition     | `'side' \| 'top'`                     | No       | `'side'`        | Where the presets sit. `'top'` lays them out as a wrapping row above the calendars, at any width. Group dividers are hidden while they are on top.                                                                                                                                                                                                                 |
+| responsiveLayout    | `boolean`                             | No       | `false`         | Opt-in viewport awareness. At 1023px and below (range mode) or 688px and below (single mode) the panel becomes a fixed sheet confined to the viewport with the presets on top; at 688px and below it also shows one month and stacks the date and time inputs. See Responsive layout.                                                                              |
 | timePicker          | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.                                                                                                                                                                                                                                            |
 | compareStart        | `Date \| null`                        | No       | `null`          | Bindable. Start of the compare range. Meaningful when `compareCalendar` snippet is provided and `onapplycompare` commits it.                                                                                                                                                                                                                                       |
 | compareEnd          | `Date \| null`                        | No       | `null`          | Bindable. End of the compare range.                                                                                                                                                                                                                                                                                                                                |
@@ -350,6 +404,13 @@ Override these custom properties to theme the component.
 | `--drp-panel-max-height`                | `calc(100dvh - 80px)`         | Maximum height of the dropdown panel before its contents scroll.                               |
 | `--drp-panel-min-width`                 | `320px`                       | Minimum width of the panel.                                                                    |
 | `--drp-panel-max-width`                 | `760px`                       | Maximum width of the panel.                                                                    |
+| `--drp-sheet-top`                       | `auto`                        | Top inset of the sheet (`responsiveLayout`). `auto` anchors the sheet to the bottom.           |
+| `--drp-sheet-right`                     | `16px`                        | Right inset of the sheet (`responsiveLayout`).                                                 |
+| `--drp-sheet-bottom`                    | `16px`                        | Bottom inset of the sheet (`responsiveLayout`).                                                |
+| `--drp-sheet-left`                      | `16px`                        | Left inset of the sheet (`responsiveLayout`).                                                  |
+| `--drp-sheet-max-width`                 | `48rem`                       | Maximum width of the sheet; a narrower viewport makes it fill the insets instead.              |
+| `--drp-sheet-max-height`                | `calc(100dvh - 2rem)`         | Maximum height of the sheet; the calendar area scrolls above a pinned footer.                  |
+| `--drp-sheet-z-index`                   | `1000`                        | Stack order of the sheet. Falls back through `--drp-panel-z-index`.                            |
 | `--drp-sidebar-padding`                 | `12px 8px`                    | Padding inside the presets sidebar.                                                            |
 | `--drp-sidebar-border`                  | `1px solid #e8e8e8`           | Right border of the presets sidebar.                                                           |
 | `--drp-sidebar-min-width`               | `140px`                       | Minimum width of the presets sidebar.                                                          |
@@ -362,6 +423,7 @@ Override these custom properties to theme the component.
 | `--drp-preset-active-color`             | `#ffffff`                     | Text color of the active/selected preset button.                                               |
 | `--drp-preset-active-hover-background`  | `#333333`                     | Background of the active preset button on hover.                                               |
 | `--drp-calendars-padding`               | `16px`                        | Padding around the calendar area.                                                              |
+| `--drp-calendars-padding-narrow`        | `16px 8px`                    | Calendar-area padding in the narrow layout (`responsiveLayout`, 688px and below).              |
 | `--drp-calendars-gap`                   | `16px`                        | Gap between calendar area sections (header, calendars, footer slots).                          |
 | `--drp-month-label-color`               | `inherit`                     | Color of the dual-month header labels.                                                         |
 | `--drp-nav-btn-size`                    | `32px`                        | Size of the dual-month navigation buttons.                                                     |
@@ -495,6 +557,8 @@ String and boolean props map to kebab-case HTML attributes:
 | `mode`                 | `mode`               | `String`  |
 | `placeholder`          | `placeholder`        | `String`  |
 | `dual-month`           | `dualMonth`          | `Boolean` |
+| `presets-position`     | `presetsPosition`    | `String`  |
+| `responsive-layout`    | `responsiveLayout`   | `Boolean` |
 | `week-starts-on`       | `weekStartsOn`       | `Number`  |
 | `locale`               | `locale`             | `String`  |
 | `test-id`              | `testId`             | `String`  |

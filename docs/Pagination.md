@@ -163,7 +163,12 @@ Features like a page-size selector and an item-range summary ("Showing X–Y of 
 <div class="paginator-bar">
   <span class="paginator-summary">
     Showing
-    <Select items={pageSizeItems} value={[String(pageSize)]} onchange={handlePageSizeChange} />
+    <Select
+      items={pageSizeItems}
+      value={[String(pageSize)]}
+      ariaLabel="Rows per page"
+      onchange={handlePageSizeChange}
+    />
     of {totalItems}
   </span>
   <Pagination {totalPages} bind:currentPage />
@@ -175,6 +180,8 @@ Features like a page-size selector and an item-range summary ("Showing X–Y of 
   <Pagination {totalPages} bind:currentPage />
 </div>
 ```
+
+A standalone page-size `Select` needs its own `ariaLabel`: a combobox takes no name from the value it displays, so without one it is announced as an unnamed combobox. `<Table pagination>` names its built-in selector for you (`labels.rowsPerPage`).
 
 ## Web Component
 

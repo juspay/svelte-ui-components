@@ -1228,6 +1228,7 @@
                   value={[String(effectivePageSize)]}
                   disabled={pagination.isLoading ?? false}
                   usePortal
+                  ariaLabel={labels?.rowsPerPage ?? 'Rows per page'}
                   testId={pagination.testId && `${pagination.testId}-page-size`}
                   onchange={(selectedSizes) => {
                     if (selectedSizes.length > 0) {

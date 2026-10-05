@@ -561,8 +561,9 @@ export type TableProperties = OptionalTableProperties & TableEventProperties;
  * Accessible names Table generates for its own controls, for callers who do
  * not ship an English UI.
  *
- * Every member is optional and falls back to the English string Table has
- * always used, so adding this prop changes nothing for existing consumers.
+ * Every member is optional and falls back to an English default. All but
+ * `rowsPerPage` keep the string Table has always used; `rowsPerPage` adds a
+ * name to a control that previously had none.
  *
  * The two that depend on a column, and the one that depends on a row, are
  * functions rather than templates with a placeholder: a translator needs to
@@ -587,6 +588,8 @@ export type TableLabels = {
   clearSearch?: string;
   /** Button that dismisses the search box. Default: `Close search`. */
   closeSearch?: string;
+  /** Page-size selector in the built-in paginator footer. Default: `Rows per page`. */
+  rowsPerPage?: string;
 };
 
 export type OptionalTableProperties = {

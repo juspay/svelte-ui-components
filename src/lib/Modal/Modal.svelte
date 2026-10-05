@@ -465,8 +465,44 @@
        anything taller than the screen) grew past the viewport and pushed its
        footer and bottom rounding off-screen. dvh tracks the real visible
        viewport on mobile; the vh line is the fallback for engines without dvh. */
-    max-height: var(--modal-max-height, calc(100vh - 32px));
-    max-height: var(--modal-max-height, calc(100dvh - 32px));
+    max-height: var(--modal-max-height, calc(100vh - var(--modal-viewport-gutter, 32px)));
+    max-height: var(--modal-max-height, calc(100dvh - var(--modal-viewport-gutter, 32px)));
+  }
+
+  /* The width rules below are wrapped in :where() so they carry no specificity.
+     An app that already styles .modal-content or .footer-action-buttons wrote
+     that rule before these existed, and Svelte's scope class would otherwise
+     make these tie it or beat it whatever the load order. Svelte compiles
+     :where(.x) to :where(.x.svelte-hash), which stays at zero.
+
+     The ceiling is chosen per alignment on .modal (see .center/.top/.bottom) and
+     only read here. It caps whatever width a size token or a wide child asks for
+     instead of wrapping that token in min(): a keyword such as fit-content or
+     auto makes min() invalid and silently drops the width.
+     The "+ 0%" is load-bearing. A max-width that contains a percentage is
+     ignored while the shrink-to-fit transition wrapper works out its own width,
+     so the cap does not narrow the box a percentage size token resolves
+     against: calc(100% - 32px) stays 343px on a 375px phone instead of becoming
+     311px. Laid out, it is the same length. "none" makes the calc invalid, which
+     leaves max-width unset, i.e. no cap, as intended. */
+  :where(.modal-content) {
+    max-width: calc(var(--_modal-max-width, 100vw) + 0%);
+  }
+
+  /* The wrapper is sized from the uncapped width, so it can be wider than the
+     capped panel. It stays inside the overlay (or the ceiling, when an embedded
+     overlay is narrower) and lets clicks in the strip beside the panel reach the
+     overlay. The panel is inset by half of what the wrapper has beyond the
+     ceiling, which centres a panel that fills the ceiling; a narrower one is
+     offset by the same amount. Below the ceiling there is no inset and the panel
+     keeps its position at the start of the wrapper, as it always had. */
+  :where(.modal > :global(.modal-animation)) {
+    pointer-events: none;
+    max-width: max(100%, var(--_modal-max-width, 100vw));
+  }
+
+  :where(:global(.modal-animation) > .modal-content) {
+    margin-inline-start: max(0px, calc((100% - var(--_modal-max-width, 100vw)) / 2));
   }
 
   /* The comment this replaced claimed tabindex="-1" meant this never needed a
@@ -500,19 +536,28 @@
     display: none;
   }
 
+  /* A dialog keeps a gutter either side; a top or bottom sheet is edge to edge,
+     so only the centred ceiling subtracts one. Each alignment owns its token so
+     an app-wide default for dialogs never reshapes a bottom sheet. */
   .center {
     justify-content: var(--modal-center-justify-content, center);
     align-items: var(--modal-center-align-items, center);
+    --_modal-max-width: var(
+      --modal-center-max-width,
+      calc(100vw - var(--modal-viewport-gutter, 32px))
+    );
   }
 
   .bottom {
     justify-content: var(--modal-bottom-justify-content, flex-end);
     align-items: var(--modal-bottom-align-items);
+    --_modal-max-width: var(--modal-bottom-max-width, 100vw);
   }
 
   .top {
     justify-content: var(--modal-top-justify-content, flex-start);
     align-items: var(--modal-top-align-items);
+    --_modal-max-width: var(--modal-top-max-width, 100vw);
   }
 
   .small {
@@ -557,6 +602,13 @@
     display: flex;
     gap: var(--modal-footer-gap, 0px);
     width: var(--modal-footer-action-buttons-width, fit-content);
+  }
+
+  /* Zero specificity for the same reason as the width rules above: an app that
+     already wraps and aligns this row keeps doing so. */
+  :where(.footer-action-buttons) {
+    flex-wrap: wrap;
+    justify-content: var(--modal-footer-action-buttons-justify-content, flex-start);
   }
 
   .footer-secondary-button {

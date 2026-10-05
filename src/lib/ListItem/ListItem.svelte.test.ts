@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import ListItem from './ListItem.svelte';
@@ -224,5 +226,52 @@ describe('ListItem nested interactive semantics', () => {
     // synthesize a second click.
     expect(ontopsectionclick).toHaveBeenCalledTimes(1);
     expect(onkeydown).toHaveBeenCalledTimes(4);
+  });
+});
+
+// jsdom does no layout, so this proves structure and source only. The geometry the layout
+// tokens produce is proved in a real browser by tests/list-item-narrow-fit.spec.ts. The
+// DOM-order cases describe markup that predates the tokens; they exist so a reorder fails here
+// instead of silently changing the order a stacked row is read and focused in.
+describe('ListItem top-section layout tokens', () => {
+  const svgIcon =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="12" r="8" fill="currentColor"/%3E%3C/svg%3E';
+  const cellNames = ['left-content', 'center-content', 'right-content'];
+
+  it.each([
+    ['a label only', { label: 'John Doe' }],
+    ['a right image only', { rightImageUrl: svgIcon }],
+    ['a left image only', { leftImageUrl: svgIcon }]
+  ])(
+    'renders the left, center and right cells in that DOM order with %s',
+    (_description, props) => {
+      const { container } = render(ListItem, props);
+
+      const topSection = container.querySelector('.top-section');
+      const renderedCells = Array.from(topSection?.children ?? []).map((cell) =>
+        cellNames.find((name) => cell.classList.contains(name))
+      );
+
+      // Stacking with flex-direction: column follows the DOM, so this order is the
+      // reading and focus order a stacked row keeps.
+      expect(renderedCells).toEqual(cellNames);
+    }
+  );
+
+  // SOURCE-LEVEL CHECK: a text match on the raw .svelte source, so it cannot see a later rule
+  // overriding these. The computed values are asserted in the Playwright spec's "no tokens"
+  // test; this one only keeps the literal fallbacks from being edited out unnoticed.
+  it('declares each layout token with a fallback equal to the value it replaced (source-level check)', () => {
+    const source = readFileSync(join(import.meta.dirname, 'ListItem.svelte'), 'utf8');
+
+    expect(source).toMatch(
+      /\.top-section\s*{[^}]*flex-direction:\s*var\(--list-item-top-section-flex-direction,\s*row\)/
+    );
+    expect(source).toMatch(
+      /\.center-content\s*{[^}]*min-width:\s*var\(--list-item-center-content-min-width,\s*0\)/
+    );
+    expect(source).toMatch(
+      /\.right-content\s*{[^}]*min-width:\s*var\(--list-item-right-content-min-width,\s*auto\)/
+    );
   });
 });

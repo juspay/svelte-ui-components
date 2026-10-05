@@ -86,6 +86,7 @@ Override these custom properties to theme the component.
 | `--list-item-transition`                         | `-`                                       | transition               | Transition animation for the list item (e.g., on hover). |
 | `--list-item-hover-background-color`             | `var(--list-item-background-color)`       | background-color         | Background color on hover.                               |
 | `--list-item-hover-border`                       | `var(--list-item-border)`                 | border                   | Border on hover.                                         |
+| `--list-item-top-section-flex-direction`         | `row`                                     | flex-direction           | Direction of the top row; `column` stacks the cells.     |
 | `--list-item-top-section-align-items`            | `-`                                       | align-items              | Vertical alignment for the top content row.              |
 | `--list-item-top-section-gap`                    | `-`                                       | gap                      | Gap between top row content areas.                       |
 | `--list-item-left-content-display`               | `flex`                                    | display                  |                                                          |
@@ -100,6 +101,7 @@ Override these custom properties to theme the component.
 | `--list-item-left-image-hover-background`        | `var(--list-item-left-image-background)`  | background               | Background color of left image on hover.                 |
 | `--list-item-left-image-hover-border`            | `var(--list-item-left-image-border)`      | border                   | Border of left image on hover.                           |
 | `--list-item-left-image-object-fit`              | `-`                                       | --image-object-fit       | Object-fit of the left image.                            |
+| `--list-item-center-content-min-width`           | `0`                                       | min-width                | Minimum width of the center cell (a label floor).        |
 | `--list-item-center-text-justify-content`        | `flex-start`                              | justify-content          | Vertical alignment of center text.                       |
 | `--list-item-center-text-padding`                | `0px 20px`                                | padding                  | Padding around the center text.                          |
 | `--list-item-center-text-color`                  | `#2f3841`                                 | color                    | Color of the center text.                                |
@@ -112,6 +114,7 @@ Override these custom properties to theme the component.
 | `--list-item-center-text-font-family`            | `-`                                       | font-family              | Font family of the center text.                          |
 | `--list-item-right-content-display`              | `flex`                                    | display                  | Display mode of the right content area.                  |
 | `--list-item-right-content-flex`                 | `-`                                       | flex                     | Flex sizing for the right content area.                  |
+| `--list-item-right-content-min-width`            | `auto`                                    | min-width                | Minimum width of the right cell; `0` lets it shrink.     |
 | `--list-item-right-content-loader-margin`        | `-`                                       | margin                   |                                                          |
 | `--list-item-right-image-height`                 | `18px`                                    | --image-height           | Height of the right image.                               |
 | `--list-item-right-image-width`                  | `18px`                                    | --image-width            | Width of the right image.                                |
@@ -135,6 +138,56 @@ Override these custom properties to theme the component.
 | `--list-item-right-content-text-justify-content` | `-`                                       | justify-content          |                                                          |
 | `--list-item-loader-duration`                    | `8s`                                      | animation                | Duration of the loading progress bar animation.          |
 
+`.right-content` now declares `min-width` through `--list-item-right-content-min-width` (default `auto`, the value it computed to before), and Svelte scopes that rule to specificity (0,2,0). A consumer rule that sets `min-width` on `.right-content` therefore stops winning when its specificity is below (0,2,0), or is exactly (0,2,0) and its stylesheet loads before ListItem's. Raise the rule to (0,3,0) or set `--list-item-right-content-min-width` instead.
+
+## Fitting narrow screens and long values
+
+ListItem lays its left, center and right cells out as a row and cannot ship a breakpoint of its own: the width that matters is the width of the container it sits in, which ListItem cannot know. Three tokens let the consumer's own CSS decide, using the query that matches that container: `@media` when the list spans the page layout, `@container` when it sits in a column that can be narrower than the window.
+
+**Stack the cells.** Set `--list-item-top-section-flex-direction: column` on the consumer's own container, inside the consumer's own media or container query, and the left, center and right cells stack in DOM order, so reading and focus order are unchanged. Pair it with the existing align-items and gap tokens; `stretch` gives every cell the full width.
+
+```css
+@media (max-width: 767px) {
+  .order-list {
+    --list-item-top-section-flex-direction: column;
+    --list-item-top-section-align-items: stretch;
+    --list-item-top-section-gap: 1rem;
+  }
+}
+```
+
+For a list inside a column rather than the page, query the column. The styled element must sit inside the container, not be it:
+
+```css
+.order-column {
+  container-type: inline-size;
+}
+
+@container (max-width: 30rem) {
+  .order-list {
+    --list-item-top-section-flex-direction: column;
+  }
+}
+```
+
+Only `row` and `column` are supported: the `-reverse` values reorder the cells visually against the DOM. All three cells always render, so a cell with nothing in it is an empty flex child and still adds one gap to a stack. `--list-item-left-content-display: none` removes the left cell.
+
+Custom properties inherit, so a container that stacks its rows also stacks every ListItem inside it, including one rendered in `bottomContent`. To opt such an item out, set the token on that item's own wrapper to `row` or to `initial`. `unset` and `inherit` leave it stacked, because both take the container's value.
+
+**Keep a label and let a long value shrink.** The center cell is `flex: 1` with a minimum width of `0`, so a long right-hand value that cannot wrap squeezes the label to nothing, and the right cell cannot shrink below its content on its own. Set `--list-item-center-content-min-width` to reserve room for the label and `--list-item-right-content-min-width: 0` to let the right cell shrink. The floor applies to the whole center cell, so it includes the center text's padding (`0px 20px` by default): at a 16px root, `4.5rem` with the default padding leaves 32px for the text, which is why the example zeroes it. The content inside the right cell must itself be shrinkable (`min-width: 0` and `overflow: hidden`, plus `text-overflow: ellipsis` to truncate), otherwise it overflows the smaller cell.
+
+```css
+.contact-row {
+  --list-item-center-content-min-width: 4.5rem;
+  --list-item-center-text-padding: 0px;
+  --list-item-right-content-min-width: 0;
+}
+```
+
+- Set the center floor only on rows that always have a label: an empty center cell still reserves it.
+- An invalid value, such as a unitless `72`, is invalid at computed-value time and falls to the property's initial value (`auto` for `min-width`, `row` for `flex-direction`), not to the default in the table above.
+- The `rightContentText` span keeps its own minimum width and does not truncate. Use `rightContent` for a value that should.
+
 ## Internal Dependencies
 
 This component uses the following library components internally:
@@ -155,6 +208,8 @@ Tag: `<sui-list-item>`
   <div slot="bottom-content">Extra info</div>
 </sui-list-item>
 ```
+
+Like every `--list-item-*` token, the layout tokens can be set on the `<sui-list-item>` host or on any ancestor: custom properties cross the open shadow root.
 
 ### Slots
 

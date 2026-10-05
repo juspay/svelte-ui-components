@@ -25,3 +25,14 @@ Keep the docs demos: they remain consumer-facing examples with visual coverage.
 To add another contract fixture, add a directory with an HTML entry and a Svelte
 component, register its entry in the root `vite.config.fixtures.ts`, and navigate to it using
 `fixtureBaseURL` from `tests/support/fixture-server.ts`.
+
+`date-range-picker/` holds the DateRangePicker scenarios that exist to test it rather
+than to document it: the control picker without `responsiveLayout`, pickers under a
+`pointer-events: none` ancestor, seeded single-month calendars, a seeded picker with
+`responsiveLayout` on (the typed-date and focus-after-a-flip tests), and a trigger pinned to
+the bottom of the viewport. They stay out of the docs demo, which is a public page and a
+full-page visual baseline. Run them with:
+
+```sh
+pnpm exec playwright test tests/date-range-picker-responsive.test.ts
+```

@@ -45,6 +45,8 @@
     dualMonth,
     timePicker,
     align = 'left',
+    presetsPosition = 'side',
+    responsiveLayout = false,
     compareStart = $bindable(null),
     compareEnd = $bindable(null),
     compareCalendar,
@@ -69,6 +71,24 @@
   const isDualMonth: boolean = $derived(
     typeof dualMonth === 'boolean' ? dualMonth : mode === 'range'
   );
+
+  // A media query cannot read a custom property, so the breakpoints are literals. The
+  // layout classes and the month count both follow these two queries, which keeps the
+  // JS-driven layout and the CSS that styles it from disagreeing about where it flips.
+  const SHEET_QUERY = '(max-width: 1023px)';
+  const NARROW_QUERY = '(max-width: 688px)';
+
+  let isWithinSheetWidth: boolean = $state(false);
+  let isWithinNarrowWidth: boolean = $state(false);
+
+  const isNarrow: boolean = $derived(responsiveLayout && isWithinNarrowWidth);
+  // A single-month picker is already compact, so it only needs the sheet once it is
+  // narrow; a range picker needs it as soon as two months no longer fit beside presets.
+  const isSheet: boolean = $derived(
+    responsiveLayout && (mode === 'range' ? isWithinSheetWidth : isWithinNarrowWidth)
+  );
+  const showDualMonth: boolean = $derived(isDualMonth && !isNarrow);
+  const isPresetsTop: boolean = $derived(presetsPosition === 'top' || isSheet);
 
   // Draft state — only committed on Apply
   let draftStart: Date | null = $state(null);
@@ -380,6 +400,12 @@
     if (panelNode === null || triggerRef === null || typeof window === 'undefined') {
       return;
     }
+    // A sheet is pinned to the viewport rather than to the trigger, so there is no
+    // side of the trigger to flip to.
+    if (isSheet) {
+      opensUpward = false;
+      return;
+    }
     const trigger = triggerRef.getBoundingClientRect();
     const panelHeight = panelNode.offsetHeight;
     const offset = 6;
@@ -402,6 +428,70 @@
         window.removeEventListener('scroll', updatePanelPosition, true);
       }
     };
+  }
+
+  // Reads and subscribes only while responsiveLayout is on, so a picker that never asks
+  // for the layout never touches matchMedia. Every access is guarded: matchMedia is
+  // absent during SSR and in jsdom, and a partial stand-in can lack addEventListener;
+  // in both cases the unconfined layout is the right answer.
+  function trackViewportQuery(query: string, apply: (matches: boolean) => void): () => void {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return () => {};
+    }
+    const mediaQueryList: MediaQueryList | null = window.matchMedia(query) ?? null;
+    if (mediaQueryList === null) {
+      return () => {};
+    }
+    apply(mediaQueryList.matches === true);
+    if (typeof mediaQueryList.addEventListener !== 'function') {
+      return () => {};
+    }
+    const handleChange = (event: MediaQueryListEvent): void => {
+      // A flip can destroy the focused calendar day (two months become one), which
+      // drops focus to the body and leaves the panel's Tab trap with nothing to catch.
+      const hadFocusInPanel = panelRef !== null && panelRef.contains(getActiveElement(panelRef));
+      apply(event.matches);
+      tick().then(() => {
+        // The panel changes between anchored and fixed with the layout, so the
+        // above/below decision made for the old layout no longer holds.
+        positionPanel();
+        if (
+          hadFocusInPanel &&
+          panelRef !== null &&
+          !panelRef.contains(getActiveElement(panelRef))
+        ) {
+          focusFirstElement(panelRef);
+        }
+      });
+    };
+    mediaQueryList.addEventListener('change', handleChange);
+    return () => mediaQueryList.removeEventListener('change', handleChange);
+  }
+
+  function followViewportWhileEnabled(
+    _node: HTMLElement,
+    enabled: boolean
+  ): { update: (nextEnabled: boolean) => void; destroy: () => void } {
+    let stopTracking: () => void = () => {};
+    const sync = (shouldFollow: boolean): void => {
+      stopTracking();
+      stopTracking = () => {};
+      if (!shouldFollow) {
+        return;
+      }
+      const stopSheetQuery = trackViewportQuery(SHEET_QUERY, (matches) => {
+        isWithinSheetWidth = matches;
+      });
+      const stopNarrowQuery = trackViewportQuery(NARROW_QUERY, (matches) => {
+        isWithinNarrowWidth = matches;
+      });
+      stopTracking = () => {
+        stopSheetQuery();
+        stopNarrowQuery();
+      };
+    };
+    sync(enabled);
+    return { update: sync, destroy: () => sync(false) };
   }
 
   // The trigger toggles: clicking it while the panel is already open dismisses
@@ -700,13 +790,20 @@
   // re-navigation/remount when a typed date is already on screen.
   function isMonthVisible(date: Date): boolean {
     const isLeftMonthVisible = date.getFullYear() === leftYear && date.getMonth() === leftMonth;
-    if (!isDualMonth) {
+    if (!showDualMonth) {
       return isLeftMonthVisible;
     }
     const rightMonth = new SvelteDate(leftYear, leftMonth + 1, 1);
     const isRightMonthVisible =
       date.getFullYear() === rightMonth.getFullYear() && date.getMonth() === rightMonth.getMonth();
     return isLeftMonthVisible || isRightMonthVisible;
+  }
+
+  // The single-month Calendar navigates itself, so its month is mirrored back here:
+  // isMonthVisible and every later remount seed from leftYear/leftMonth.
+  function handleSingleMonthChange(event: { year: number; month: number }): void {
+    leftYear = event.year;
+    leftMonth = event.month;
   }
 
   function navigateCalendarTo(date: Date): void {
@@ -899,7 +996,13 @@
   {/if}
 {/snippet}
 
-<div class="drp-root {classes ?? ''}" bind:this={drpRootEl} data-pw={testId} testID={testId}>
+<div
+  class="drp-root {classes ?? ''}"
+  bind:this={drpRootEl}
+  use:followViewportWhileEnabled={responsiveLayout}
+  data-pw={testId}
+  testID={testId}
+>
   <!-- Trigger wrapper — bind:this here for panel positioning and focus-return -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
     <Button
@@ -980,6 +1083,9 @@
       class:drp-panel-above={opensUpward}
       class:drp-panel-align-left={align === 'left'}
       class:drp-panel-align-right={align === 'right'}
+      class:drp-panel-presets-top={isPresetsTop}
+      class:drp-panel-sheet={isSheet}
+      class:drp-panel-narrow={isNarrow}
       role="dialog"
       aria-label="Date range picker"
       aria-modal="true"
@@ -1244,7 +1350,7 @@
               {/if}
             </div>
           {/if}
-          {#if isDualMonth}
+          {#if showDualMonth}
             <!-- Dual-month layout with shared nav -->
             <div class="drp-dual-header">
               <button
@@ -1303,20 +1409,24 @@
             </div>
           {:else}
             <!-- Single month -->
-            <Calendar
-              mode={mode === 'range' ? 'range' : 'single'}
-              bind:rangeStart={draftStart}
-              bind:rangeEnd={draftEnd}
-              bind:value={draftValue}
-              {weekStartsOn}
-              {locale}
-              {minDate}
-              {maxDate}
-              {disabledDates}
-              onrangeselect={handleRangeSelect}
-              onselect={handleSingleSelect}
-              classes="drp-calendar-embedded"
-            />
+            {#key calendarKey}
+              <Calendar
+                mode={mode === 'range' ? 'range' : 'single'}
+                bind:rangeStart={draftStart}
+                bind:rangeEnd={draftEnd}
+                bind:value={draftValue}
+                {weekStartsOn}
+                {locale}
+                {minDate}
+                {maxDate}
+                disabledDates={mode === 'range' ? rangeConstrainedDisabledDates : disabledDates}
+                initialMonth={leftInitialMonth}
+                onrangeselect={handleRangeSelect}
+                onselect={handleSingleSelect}
+                onmonthchange={handleSingleMonthChange}
+                classes="drp-calendar-embedded"
+              />
+            {/key}
           {/if}
 
           <!-- Time picker slot: consumer controls all time UI -->
@@ -1435,6 +1545,9 @@
     max-width: var(--drp-panel-max-width, 760px);
     max-height: var(--drp-panel-max-height, calc(100dvh - 80px));
     overflow: hidden;
+    /* A host may disable pointer events on an ancestor (a collapsing sidebar, say) and
+       an open aria-modal panel must stay usable, as Modal's content does. */
+    pointer-events: auto;
   }
 
   /* Set only when the panel would not fit below the trigger — see positionPanel(). */
@@ -1453,12 +1566,80 @@
     left: auto;
   }
 
+  /* Opt-in sheet (responsiveLayout): confine the panel to the viewport instead of the
+     trigger. The insets are tokens because the free area differs per host (a fixed
+     sidebar, an embedding shell, safe-area insets); the defaults suit a bare page. */
+  .drp-panel.drp-panel-sheet {
+    position: fixed;
+    top: var(--drp-sheet-top, auto);
+    right: var(--drp-sheet-right, 16px);
+    bottom: var(--drp-sheet-bottom, 16px);
+    left: var(--drp-sheet-left, 16px);
+    z-index: var(--drp-sheet-z-index, var(--drp-panel-z-index, 1000));
+    width: auto;
+    min-width: 0;
+    max-width: var(--drp-sheet-max-width, 48rem);
+    max-height: var(--drp-sheet-max-height, calc(100dvh - 2rem));
+    margin-inline: auto;
+  }
+
   .drp-panel-inner {
     display: flex;
     flex-direction: row;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+  }
+
+  /* ── Presets above the calendars (presetsPosition="top", and every sheet) ── */
+  .drp-panel-presets-top .drp-panel-inner {
+    flex-direction: column;
+  }
+
+  .drp-panel-presets-top .drp-sidebar {
+    flex: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-height: none;
+    overflow-y: visible;
+    border-right: 0;
+    border-bottom: var(--drp-sidebar-border, 1px solid #e8e8e8);
+  }
+
+  .drp-panel-presets-top .drp-preset-item {
+    width: auto;
+  }
+
+  .drp-panel-presets-top .drp-preset-divider {
+    display: none;
+  }
+
+  .drp-panel-presets-top .drp-calendars {
+    flex: none;
+  }
+
+  .drp-panel-presets-top .drp-months-row {
+    justify-content: center;
+  }
+
+  /* ── Narrow layout (responsiveLayout, <= 688px): one month, stacked inputs ── */
+  .drp-panel-narrow .drp-calendars {
+    padding: var(--drp-calendars-padding-narrow, 16px 8px);
+  }
+
+  .drp-panel-narrow :global(.drp-calendar-embedded) {
+    max-width: 100%;
+  }
+
+  .drp-panel-narrow .drp-date-input-row,
+  .drp-panel-narrow .drp-time-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .drp-panel-narrow .drp-datetime-arrow {
+    display: none;
   }
 
   /* ── Sidebar ── */
@@ -1914,6 +2095,7 @@
     flex-direction: column;
     min-width: var(--drp-compare-panel-min-width, 280px);
     overflow: hidden;
+    pointer-events: auto;
   }
 
   .drp-compare-panel-body {

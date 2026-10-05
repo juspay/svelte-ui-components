@@ -19,6 +19,8 @@
       placeholder: { type: 'String' },
       dualMonth: { type: 'Boolean', reflect: true, attribute: 'dual-month' },
       align: { type: 'String', reflect: true },
+      presetsPosition: { type: 'String', reflect: true, attribute: 'presets-position' },
+      responsiveLayout: { type: 'Boolean', reflect: true, attribute: 'responsive-layout' },
       compareStart: { type: 'Object' },
       compareEnd: { type: 'Object' },
       weekStartsOn: { type: 'Number', reflect: true, attribute: 'week-starts-on' },

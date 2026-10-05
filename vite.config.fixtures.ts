@@ -15,7 +15,10 @@ export default defineConfig({
     outDir: resolve(import.meta.dirname, '.playwright-fixtures'),
     emptyOutDir: true,
     rolldownOptions: {
-      input: resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html')
+      input: [
+        resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/date-range-picker/index.html')
+      ]
     }
   }
 });

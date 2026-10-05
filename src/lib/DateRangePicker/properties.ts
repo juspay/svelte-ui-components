@@ -14,6 +14,7 @@ export type DateRangePreset = {
 
 export type DateRangePickerMode = 'range' | 'single';
 export type DateRangePickerAlign = 'left' | 'right';
+export type DateRangePickerPresetsPosition = 'side' | 'top';
 export type DateRangePickerTimeLayout = 'toggle' | 'inline';
 export type TimeDisplayBoundary = 'start' | 'end';
 
@@ -80,6 +81,21 @@ export type OptionalDateRangePickerProperties = {
   dualMonth?: boolean;
   /** Align the dropdown panel to the left or right edge of the trigger. Default: 'left'. */
   align?: DateRangePickerAlign;
+  /**
+   * Where the presets sit. 'side' (default) puts them in a column beside the calendars;
+   * 'top' lays them out as a wrapping row above the calendars, which suits a panel that
+   * cannot be wide. Group dividers are hidden while the presets are on top.
+   */
+  presetsPosition?: DateRangePickerPresetsPosition;
+  /**
+   * Opt-in viewport awareness. At or below 1023px in range mode, or 688px in single
+   * mode, the panel becomes a fixed sheet confined to the viewport (inset by the
+   * --drp-sheet-* tokens) with the presets on top. At or below 688px it also shows one
+   * month and stacks the date and time inputs. The breakpoints are fixed because a media
+   * query cannot read a custom property. Default: false, which leaves the panel exactly
+   * as it was.
+   */
+  responsiveLayout?: boolean;
   /** Snippet rendered in the time-picker slot. Consumer controls all time UI. */
   timePicker?: Snippet;
   /** Start of compare range (bindable). Used when compareCalendar snippet is provided. */

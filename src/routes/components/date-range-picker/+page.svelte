@@ -297,6 +297,10 @@
 
   let clearableDate = $state<Date | null>(null);
 
+  // --- Responsive layout demo ---
+  let responsiveStart = $state<Date | null>(null);
+  let responsiveEnd = $state<Date | null>(null);
+
   const today = new SvelteDate();
   const maxDate = new SvelteDate(today.getFullYear(), today.getMonth(), today.getDate());
   const typeableMinDate = new SvelteDate(
@@ -338,6 +342,31 @@
   </div>
   <p class="result-label">Applied range: <strong>{rangeLabel}</strong></p>
   <p class="result-label">Preset: <strong>{lastAppliedPreset ?? 'custom'}</strong></p>
+</section>
+
+<!-- ── 1b. Responsive layout (opt-in via responsiveLayout) ── -->
+<section class="demo-section">
+  <h2>Range mode — responsive layout (responsiveLayout)</h2>
+  <p class="section-note">
+    With <code>responsiveLayout</code>, the panel becomes a viewport-confined sheet with the presets
+    above the calendars at 1023px and below, and shows one month with stacked inputs at 688px and
+    below. Resize the window while it is open to see it switch.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      responsiveLayout
+      presets={commonPresets}
+      showDateInputs
+      bind:rangeStart={responsiveStart}
+      bind:rangeEnd={responsiveEnd}
+      placeholder="Responsive range"
+      testId="drp-responsive-demo"
+    />
+  </div>
+  <p class="result-label">
+    Applied range: <strong>{formatDate(responsiveStart)} – {formatDate(responsiveEnd)}</strong>
+  </p>
 </section>
 
 <!-- ── 2. Single-month range (dualMonth=false) ── -->
@@ -598,6 +627,24 @@
       presets={groupedPresets}
       placeholder="Select range (grouped)"
       testId="drp-groups-demo"
+    />
+  </div>
+</section>
+
+<!-- ── 9b. Presets above the calendars (presetsPosition) ── -->
+<section class="demo-section">
+  <h2>Range mode — presets above the calendars (presetsPosition="top")</h2>
+  <p class="section-note">
+    <code>presetsPosition="top"</code> lays the presets out as a wrapping row above the calendars at any
+    width. The panel stays anchored to the trigger.
+  </p>
+  <div class="demo-row">
+    <DateRangePicker
+      mode="range"
+      presets={commonPresets}
+      presetsPosition="top"
+      placeholder="Presets on top"
+      testId="drp-presets-top-demo"
     />
   </div>
 </section>

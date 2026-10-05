@@ -314,7 +314,7 @@
 
   .top-section {
     display: flex;
-    flex-direction: row;
+    flex-direction: var(--list-item-top-section-flex-direction, row);
     align-items: var(--list-item-top-section-align-items);
     gap: var(--list-item-top-section-gap);
     margin-bottom: 0;
@@ -360,12 +360,13 @@
   .center-content {
     display: flex;
     flex: 1;
-    min-width: 0;
+    min-width: var(--list-item-center-content-min-width, 0);
   }
 
   .right-content {
     display: var(--list-item-right-content-display, flex);
     flex: var(--list-item-right-content-flex);
+    min-width: var(--list-item-right-content-min-width, auto);
   }
 
   .right-content-loader {

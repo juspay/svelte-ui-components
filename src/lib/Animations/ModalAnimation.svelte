@@ -133,6 +133,7 @@
 {#if enable}
   {#if useFlyAnimation && useOutTransition}
     <div
+      class="modal-animation"
       in:tokenizedFly|global={flyInParams}
       out:tokenizedFly|global={flyOutParams}
       data-pw={typeof testId === 'string' ? testId : null}
@@ -142,6 +143,7 @@
     </div>
   {:else if useFlyAnimation}
     <div
+      class="modal-animation"
       in:tokenizedFly|global={flyInParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}
@@ -150,6 +152,7 @@
     </div>
   {:else if useOutTransition}
     <div
+      class="modal-animation"
       in:tokenizedFly|global={fadeInParams}
       out:tokenizedFly|global={fadeOutParams}
       data-pw={typeof testId === 'string' ? testId : null}
@@ -159,6 +162,7 @@
     </div>
   {:else}
     <div
+      class="modal-animation"
       in:tokenizedFly|global={fadeInParams}
       data-pw={typeof testId === 'string' ? testId : null}
       testID={typeof testId === 'string' ? testId : null}

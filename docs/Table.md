@@ -165,6 +165,8 @@ The standalone `sortTableRows(rows, columnIndex, direction, options?)` export so
 
 `pagination` renders a footer paginator (range label, optional page-size selector, page controls). `'client'` mode slices the rows internally — search and page-size changes snap back to page 1; `'server'` mode leaves the supplied rows untouched (they are the current page) and drives the chrome from `page`/`totalItems`/`hasMore`, with `isLoading` disabling the controls during fetches. A consumer `paginatorSlot` takes precedence.
 
+The page-size selector is a combobox, which takes no name from its displayed value, so Table names it `Rows per page`. Translate it, or tell two tables on one page apart, with `labels.rowsPerPage`; a `paginatorSlot` replaces the whole footer and so brings its own names. `labels.rowsPerPage` applies only to the Svelte `Table`: `<sui-table>` never renders the built-in paginator (see Web Component).
+
 `page` is 1-indexed in both modes. An adapter over a zero-based engine (TanStack's `pageIndex`) converts once, here — not again inside its own `onPageChange`.
 
 **Who owns the page.** In client mode Table does: it renders the last page that actually has rows, so a dataset that shrinks from outside — rows deleted, replaced, or refetched shorter while the reader is on page 5 — resolves to a real page with a truthful range instead of a blank page past the end. That resolution is display-side and fires no `onPageChange`, because nobody asked for a page change — and it does not overwrite the page the reader chose, so a dataset that shrinks and comes back (a refetch, a filter widening again) returns them to where they were rather than to page 1. In server mode the consumer does: `page` is authoritative and `onPageChange` is a request it may honour, delay, or refuse by simply not changing the prop.
@@ -626,7 +628,7 @@ directly inside the `cell` snippet, which runs in consumer scope.
 | headerTooltipIcon     | `Snippet`                                                           | No       | `-`                   | Icon snippet shown after each header label that has a `tooltip`. When set, the default underline affordance on those labels is dropped.                                                                                                                                                                                               |
 | headerTooltipPosition | `TooltipPosition`                                                   | No       | `'top'`               | Placement of every header tooltip bubble.                                                                                                                                                                                                                                                                                             |
 | usePortal             | `boolean`                                                           | No       | `false`               | When true, in-cell `Select` dropdowns and `Menu` popovers (`action-group`/`popup-menu` columns) are portaled to `document.body` and positioned `fixed`, so the table's own scroll/overflow container cannot clip them. Set on tables whose rows can sit near a scroll edge.                                                           |
-| labels                | `TableLabels`                                                       | No       | `-`                   | Overrides for the accessible names Table generates itself (sort, filter, row/select-all checkboxes, search clear/close). Every member is optional and falls back to the English default, so omitting the prop changes nothing. See `TableLabels` below.                                                                               |
+| labels                | `TableLabels`                                                       | No       | `-`                   | Overrides for the accessible names Table generates itself (sort, filter, row/select-all checkboxes, search clear/close, rows-per-page selector). Every member is optional and falls back to an English default; `rowsPerPage` is the one that adds a name where there was none. See `TableLabels` below.                              |
 | mobileCardLayout      | `boolean`                                                           | No       | `false`               | Opt-in stacked "record card" layout below a 640px viewport, in place of the default horizontal scroll. See "Mobile Record Cards" above.                                                                                                                                                                                               |
 
 ## Snippets
@@ -921,6 +923,7 @@ type TableLabels = {
   selectAllRows?: string; // default: 'Select all rows'
   clearSearch?: string; // default: 'Clear search'
   closeSearch?: string; // default: 'Close search'
+  rowsPerPage?: string; // default: 'Rows per page'
 };
 ```
 
@@ -1111,6 +1114,8 @@ type TablePaginationConfig = {
 > icons, that default is a whole `Pagination` subtree built from internal state, so it
 > cannot be reproduced as slot fallback content. Pass your own paginator through
 > `slot="paginator-slot"`, or use the Svelte component directly.
+>
+> `labels.rowsPerPage` therefore has no effect through `<sui-table>`.
 
 Tag: `<sui-table>`
 

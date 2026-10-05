@@ -1779,10 +1779,21 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* The outer row wraps, so the controls row has to as well: in a container
+     narrower than the select and stepper need (a Modal at phone width) the
+     footer would clip Next under .table-container's overflow. The stepper
+     wraps too, because moving the select to its own line is not enough when
+     the stepper alone is wider than the host. Wrapped lines start-align, like
+     the outer row's. Nothing changes while the controls fit on one line. */
   .table-paginator-controls {
     display: flex;
     align-items: center;
     gap: var(--table-paginator-gap, 12px);
+    flex-wrap: wrap;
+  }
+
+  .table-paginator-controls :global(.pagination) {
+    flex-wrap: wrap;
   }
 
   .table-paginator-size {

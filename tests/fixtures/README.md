@@ -10,6 +10,11 @@ tokens a host uses to make them fill its container. Its `fill-*` test ids belong
 `tests/date-range-picker-embedded-fill.test.ts`, whose control hosts are kept out of the docs demo so
 the visual baseline of that route does not move.
 
+`table-paginator/` mounts one Table with the built-in paginator inside a plain host whose width
+comes from the query string (`?width=288&variant=no-size&page=4`), so the width the paginator has
+to live inside is the input rather than the docs layout's. It belongs to
+`tests/table-paginator-narrow-host.spec.ts`.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

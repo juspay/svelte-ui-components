@@ -464,10 +464,15 @@
      columns the fixed-width cells sat centred inside wider tracks, leaving
      horizontal gaps between days — which broke the range highlight into
      disconnected boxes instead of one continuous pill. The day-name header must
-     use the same track sizing so it stays aligned with the day grid below. */
+     use the same track sizing so it stays aligned with the day grid below.
+
+     A host that wants the grid to fill a container sets both
+     --calendar-grid-columns and --calendar-cell-width: fluid columns with the
+     default fixed-width cells bring those gaps back, so the cells must be told
+     to fill their tracks too. */
   .day-names {
     display: grid;
-    grid-template-columns: repeat(7, var(--calendar-cell-size, 36px));
+    grid-template-columns: var(--calendar-grid-columns, repeat(7, var(--calendar-cell-size, 36px)));
     justify-content: center;
     text-align: center;
   }
@@ -481,7 +486,7 @@
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(7, var(--calendar-cell-size, 36px));
+    grid-template-columns: var(--calendar-grid-columns, repeat(7, var(--calendar-cell-size, 36px)));
     justify-content: center;
     row-gap: 2px;
   }
@@ -490,7 +495,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--calendar-cell-size, 36px);
+    width: var(--calendar-cell-width, var(--calendar-cell-size, 36px));
     height: var(--calendar-cell-size, 36px);
     font-family: inherit;
     font-size: var(--calendar-cell-font-size, 14px);

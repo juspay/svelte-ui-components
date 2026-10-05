@@ -124,6 +124,25 @@ Override these custom properties to theme the component.
 | `--calendar-disabled-cursor`             | `not-allowed`       | cursor           | Cursor shown when hovering over disabled day cells.                                     |
 | `--calendar-outside-month-color`         | `#949494`           | color            | Text color of day numbers that belong to the previous or next month.                    |
 
+### Fluid grid
+
+By default the grid is a fixed 7 × `--calendar-cell-size` block, centred inside `--calendar-width`. To make it fill a container, such as a calendar embedded in a narrow modal, set these two tokens together with `--calendar-width`:
+
+| Variable                  | Default                                      | Description                                                          |
+| ------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
+| `--calendar-grid-columns` | `repeat(7, var(--calendar-cell-size, 36px))` | Column tracks of the day-name row and the day grid.                  |
+| `--calendar-cell-width`   | `var(--calendar-cell-size, 36px)`            | Width of each day cell. Height still follows `--calendar-cell-size`. |
+
+```css
+.fluid-calendar {
+  --calendar-width: 100%;
+  --calendar-grid-columns: repeat(7, minmax(0, 1fr));
+  --calendar-cell-width: 100%;
+}
+```
+
+Set both grid tokens. Fluid columns with the default fixed-width cells leave gaps between the days, which breaks the range highlight into separate boxes.
+
 ## Internal Dependencies
 
 This component uses the following library components internally:

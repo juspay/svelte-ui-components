@@ -26,6 +26,20 @@ export type OptionalButtonProperties = {
   /** Stretch the button to the full width of its container. */
   fullWidth?: boolean;
   /**
+   * Let the button be narrower than its label. By default a button is as wide as its label
+   * (which does not wrap), so inside a parent narrower than the label (a flex row, a grid cell or
+   * a plain block) it can never give width back and a long label overflows its parent. With
+   * `shrinkable` the button still hugs a label that fits, but a label that does not is truncated
+   * with an ellipsis inside whatever width the parent offers. The button is capped at
+   * `var(--button-max-width, 100%)` of that width.
+   *
+   * Only the `text` label is truncated: custom `children` content has to manage its own overflow.
+   * Wrapping with `--button-white-space: normal` works without this prop; with it, a single word
+   * wider than the parent is clipped instead of overflowing. On an `iconOnly` button it changes
+   * nothing while the square fits; in a narrower parent the padding gives way before the glyph does.
+   */
+  shrinkable?: boolean;
+  /**
    * Render the button as an `<a>` styled identically. Use for button-styled links/navigation.
    * When set, `type` is ignored; a disabled link is rendered inert via `aria-disabled`.
    */

@@ -8,6 +8,9 @@
     loadingDemo = true;
     setTimeout(() => (loadingDemo = false), 1600);
   };
+
+  const longLabel =
+    'A very long button label that is far wider than the 240px column it is placed in';
 </script>
 
 <div class="page-header">
@@ -178,9 +181,48 @@
       {/snippet}
     </Menu>
   </div>
+
+  <h3>Shrinkable</h3>
+  <p>
+    A button is as wide as its label and the label does not wrap, so in a parent narrower than its
+    label a long label overflows it. <code>shrinkable</code> lets the button be narrower than its label:
+    a label that fits keeps its natural width, and a longer one is truncated with an ellipsis inside the
+    width the parent offers. Each dashed outline is a parent at most 240px wide.
+  </p>
+  <div class="demo-row">
+    <div class="shrink-parent">
+      <Button text={longLabel} shrinkable />
+    </div>
+    <div class="shrink-parent">
+      <Button text={longLabel} shrinkable variant="secondary">
+        {#snippet icon()}
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <line x1="8" y1="3" x2="8" y2="13" />
+            <line x1="3" y1="8" x2="13" y2="8" />
+          </svg>
+        {/snippet}
+      </Button>
+    </div>
+  </div>
 </div>
 
 <style>
+  .shrink-parent {
+    display: flex;
+    width: 240px;
+    max-width: 100%;
+    outline: 1px dashed var(--doc-border);
+  }
+
   :global(.btn-gradient) {
     --button-background: linear-gradient(135deg, #8f41fc, #59299c);
     --button-hover-transform: translateY(-2px);

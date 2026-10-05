@@ -56,3 +56,66 @@ describe('Button statusText', () => {
     expect(container.querySelector('.button-status')).toBeNull();
   });
 });
+
+describe('Button shrinkable', () => {
+  const root = (container: HTMLElement): HTMLElement => {
+    const node = container.querySelector('.button-container');
+    if (!(node instanceof HTMLElement)) {
+      throw new Error('Button container is missing');
+    }
+    return node;
+  };
+
+  // Svelte adds its own scoping token (`svelte-<hash>`) to every class attribute.
+  const classTokens = (node: HTMLElement): string[] =>
+    Array.from(node.classList)
+      .filter((token) => !token.startsWith('svelte-'))
+      .sort();
+
+  it('adds the opt-in class when the prop is true', () => {
+    const { container } = render(Button, { text: 'Save', shrinkable: true });
+    expect(root(container).classList.contains('button-shrinkable')).toBe(true);
+  });
+
+  it('adds no class when the prop is omitted or false', () => {
+    const omitted = render(Button, { text: 'Save' });
+    expect(root(omitted.container).classList.contains('button-shrinkable')).toBe(false);
+    const explicit = render(Button, { text: 'Save', shrinkable: false });
+    expect(root(explicit.container).classList.contains('button-shrinkable')).toBe(false);
+  });
+
+  it('leaves the container class list untouched for every variant, size and modifier', () => {
+    const variants = ['primary', 'secondary', 'ghost', 'destructive', 'brand'] as const;
+    const sizes = ['sm', 'md', 'lg'] as const;
+    for (const variant of variants) {
+      for (const size of sizes) {
+        for (const iconOnly of [false, true]) {
+          for (const fullWidth of [false, true]) {
+            const { container } = render(Button, {
+              text: 'Save',
+              variant,
+              size,
+              iconOnly,
+              fullWidth,
+              classes: 'consumer-class'
+            });
+            const expected = [
+              'button-container',
+              `variant-${variant}`,
+              `size-${size}`,
+              'consumer-class',
+              ...(iconOnly ? ['icon-only'] : []),
+              ...(fullWidth ? ['full-width'] : [])
+            ].sort();
+            expect(classTokens(root(container))).toEqual(expected);
+          }
+        }
+      }
+    }
+  });
+
+  it('does not treat a consumer class named shrinkable as an opt-in', () => {
+    const { container } = render(Button, { text: 'Save', classes: 'shrinkable' });
+    expect(root(container).classList.contains('button-shrinkable')).toBe(false);
+  });
+});

@@ -1,6 +1,6 @@
 # Button
 
-An action button with a built-in variant and size system: five visual styles (`primary`, `secondary`, `ghost`, `destructive`, `brand`), three sizes (`sm`/`md`/`lg`), plus `iconOnly` and `fullWidth` affordances. It can render as a styled link via `href`, exposes a `loading` state (spinner + `aria-busy`), and supports icon/children snippets. Every visual property remains overridable through `--button-*` CSS variables, so an explicit override or a `classes` recipe always wins over the variant default.
+An action button with a built-in variant and size system: five visual styles (`primary`, `secondary`, `ghost`, `destructive`, `brand`), three sizes (`sm`/`md`/`lg`), plus `iconOnly`, `fullWidth` and `shrinkable` affordances. It can render as a styled link via `href`, exposes a `loading` state (spinner + `aria-busy`), and supports icon/children snippets. Every visual property remains overridable through `--button-*` CSS variables, so an explicit override or a `classes` recipe always wins over the variant default.
 
 ## Usage
 
@@ -83,6 +83,66 @@ Pair `iconOnly` with `ariaLabel` so the button has an accessible name.
 <Button text="Continue" fullWidth />
 ```
 
+### Fitting a constrained container
+
+A button is as wide as its label, and the label does not wrap. Inside a parent narrower than the label (a flex row, a grid cell or a plain block) it therefore cannot give width back: a long label overflows the parent instead of shrinking. `shrinkable` opts in to a button that can be narrower than its label: a label that does not fit is truncated with an ellipsis inside the width the parent offers.
+
+```svelte
+<div class="cell">
+  <Button text={account.email} shrinkable />
+</div>
+```
+
+A label that fits keeps its natural width and its place in the parent. A short label looks exactly as it does without the prop in a flex, grid, block or stretch parent, whatever `justify-items`, `justify-self` or auto margins the parent and the root use. A grid cell can be a `1fr`, `auto`, `minmax(0, 1fr)` or fixed-width track.
+
+In a flex row shared with other buttons, each shrinkable button starts from an equal share of the row. A short label narrower than that share keeps its natural width and the long label gives up the rest ("Save" beside a long label). A label wider than the share is cut to it: "Save changes" beside a long label in a 240px row with an 8px gap is cut to 116px with an ellipsis, and so is the long label. When the row is too narrow for every label, each shrinkable button gives up width, short ones included. Give a button that must stay readable `flex-shrink: 0` through `classes`:
+
+```svelte
+<div class="toolbar">
+  <Button text="Save" shrinkable classes="keep-size" />
+  <Button text="Cancel" shrinkable />
+</div>
+
+<style>
+  .toolbar {
+    display: flex;
+    gap: 8px;
+  }
+
+  :global(.keep-size) {
+    flex-shrink: 0;
+  }
+</style>
+```
+
+Wrapping does not need `shrinkable`. A label with break opportunities wraps to the width of its parent on any button once `--button-white-space: normal` is set through `classes`:
+
+```svelte
+<Button text={product.name} classes="wrapping-button" />
+
+<style>
+  :global(.wrapping-button) {
+    --button-white-space: normal;
+  }
+</style>
+```
+
+What `shrinkable` changes there is a single word wider than the parent. Without the prop the button is as wide as that word and overflows; with it the button stays inside the parent and the word is clipped with an ellipsis. An ancestor `overflow-wrap: anywhere` (the property is inherited and the button never resets it) breaks the word onto further lines instead.
+
+What `shrinkable` sets, and what it leaves alone:
+
+- The outer container gets `min-width: 0`, `width: 100%` and `max-width: var(--button-width, max-content)`: as wide as the label and never wider than the parent. The inner button gets `max-width: var(--button-max-width, 100%)`, and an `icon` snippet gets `flex-shrink: 0`. No new CSS variable is added: `--button-max-width` keeps its meaning, so `--button-max-width: 120px` still caps the button at 120px.
+- Without `shrinkable`, `--button-max-width` and `--button-min-width` reach only the inner button, and a percentage resolves against the container, which is as wide as the label unless `fullWidth` or `--button-width` sizes it. That is why `--button-max-width: 100%` alone does not make a content-sized button fit a flex, grid or block parent.
+- With `shrinkable` the container's `width` and `max-width` come from those rules, so a `max-width` set on the root through `classes` no longer applies. Use `--button-max-width` for that, or `--button-width` for a fixed width, which is capped at the parent. For the same reason `flex-grow` or `flex: 1` on the root does not widen it past its label; `fullWidth` makes the button fill its flex cell.
+- A horizontal margin on the root is added to the container's `width: 100%`. In a block or grid parent the margin box therefore runs past the parent by the margin: with `margin: 0 8px` in a 240px parent the container is 240px wide and starts 8px in, so its right edge is at 248px. A flex row is not affected, because margins take part in flex shrinking. Put the spacing on the parent (`gap` or `padding`) instead.
+- Firefox only: inside a parent with a vertical `writing-mode` (measured with `vertical-rl`) the transparent container spans the parent's width, because `width` and `max-width` are physical properties, while the visible button keeps its own size. The container can take pointer events beside the button. Chromium and WebKit are unaffected.
+- `shrinkable` lets the button give up width; it cannot make its ancestors do the same. Every flex or grid item between the button and the box it has to fit must also be able to shrink (`min-width: 0`).
+- It has no effect on the buttons a [Modal](./Modal.md) renders from `footer.primaryButton` and `footer.secondaryButton`. They sit in a footer row sized to its labels (`width: fit-content`), inside wrappers that are `flex: none` by default, so the labels keep their natural width and run past the panel's edge. Render the button in `footerSnippet` instead, in a Modal whose width is bounded (for example a `size` with its `--modal-*-width` token set). The default `fit-content` panel grows to its content, so there is nothing for the label to give back.
+- Only the `text` label is truncated. The element in the `icon` snippet keeps its size, an `img` under an `img { max-width: 100% }` reset included. Custom content passed as `children` is left as it is: the button box fits the parent and wider content spills out of it, so give that content its own `min-width: 0; overflow: hidden; text-overflow: ellipsis`.
+- With `iconOnly` it changes nothing while the square fits. In a narrower parent the padding gives way first and the icon keeps its size, so the button stops being square. The button never gets narrower than its own padding, so an icon wider than that spills out of a parent narrower than the icon. Leave `shrinkable` off an icon-only button that has to stay square.
+- A root a consumer has reset to `display: inline` (for example with `all: unset`) ignores the container's `min-width`, `width` and `max-width`, and a percentage on the inner button resolves against the parent. In a block parent `--button-max-width: 100%` alone then caps the button, and `shrinkable` does the same. In a flex parent the root is blockified, so the rules above apply.
+- A button that does not set `shrinkable` is unchanged: the prop adds a class and three rules that apply only to that class.
+
 ### Loading
 
 `loading` shows the spinner, sets `aria-busy`, and disables the button (preferred over the legacy `showLoader`/`loaderType` pair).
@@ -128,6 +188,7 @@ With `href` the button renders as a styled `<a>`. A disabled link is rendered in
 | size            | `'sm' \| 'md' \| 'lg'`                                            | No       | `'md'`      | Size preset controlling padding, height, and font size.                                                                                                                                                                                                    |
 | iconOnly        | `boolean`                                                         | No       | `false`     | Square padding for an icon-only button. Pair with `ariaLabel`.                                                                                                                                                                                             |
 | fullWidth       | `boolean`                                                         | No       | `false`     | Stretch the button to the full width of its container.                                                                                                                                                                                                     |
+| shrinkable      | `boolean`                                                         | No       | `false`     | Let the button be narrower than its label: it hugs a label that fits and truncates one that does not, instead of overflowing its parent. See [Fitting a constrained container](#fitting-a-constrained-container).                                          |
 | href            | `string`                                                          | No       | `-`         | Render the button as a styled `<a>`. `type` is ignored; a disabled link is made inert via `aria-disabled`/`tabindex="-1"`.                                                                                                                                 |
 | target          | `string`                                                          | No       | `-`         | Anchor target (only with `href`), e.g. `_blank`.                                                                                                                                                                                                           |
 | rel             | `string`                                                          | No       | `-`         | Anchor rel (only with `href`). Defaults to `noopener noreferrer` when `target="_blank"`.                                                                                                                                                                   |
@@ -188,8 +249,8 @@ Override these custom properties to theme the component.
 | `--button-disabled-text-decoration`         | `var(--button-text-decoration, none)`             | text-decoration    | Text decoration when the button is disabled. Falls back to `--button-text-decoration`.                                                                                                                                                                                                                                                                                                                               |
 | `--button-line-height`                      | `normal`                                          | line-height        | Line height of the button's text.                                                                                                                                                                                                                                                                                                                                                                                    |
 | `--button-white-space`                      | `nowrap`                                          | white-space        | Whether the button's text wraps. Set to `normal` to opt into multi-line buttons.                                                                                                                                                                                                                                                                                                                                     |
-| `--button-max-width`                        | `-`                                               | max-width          | Maximum width of the button.                                                                                                                                                                                                                                                                                                                                                                                         |
-| `--button-min-width`                        | `-`                                               | min-width          | Minimum width of the button.                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--button-max-width`                        | `-`                                               | max-width          | Maximum width of the inner button, not of the outer container. A percentage resolves against the container, which is as wide as the label unless `fullWidth` or `--button-width` sizes it. With `shrinkable` the default is `100%`.                                                                                                                                                                                  |
+| `--button-min-width`                        | `-`                                               | min-width          | Minimum width of the inner button, not of the outer container.                                                                                                                                                                                                                                                                                                                                                       |
 | `--button-font-family`                      | `-`                                               | font-family        | Font family for the button text.                                                                                                                                                                                                                                                                                                                                                                                     |
 | `--button-font-weight`                      | `500`                                             | font-weight        | Font weight of the button text.                                                                                                                                                                                                                                                                                                                                                                                      |
 | `--button-font-size`                        | `14px`                                            | font-size          | Font size of the button text.                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -281,7 +342,12 @@ Tag: `<sui-button>`
 <sui-button>
   <span>Custom <strong>content</strong></span>
 </sui-button>
+
+<!-- A long label that truncates inside a constrained parent -->
+<sui-button text="A very long button label" shrinkable></sui-button>
 ```
+
+`shrinkable` is a boolean attribute, and assigning `el.shrinkable = true` works too (the element keeps the `shrinkable` attribute in step with the property). In a custom-element consumer the `<sui-button>` host, not the inner container, is the flex or grid item, so the host also gets `min-width: 0` and `max-width: 100%` while `shrinkable` is set. As with the Svelte component, only the `text` label is truncated; slotted content has to manage its own overflow.
 
 ### Slots
 

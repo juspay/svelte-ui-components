@@ -30,6 +30,7 @@
       size: { type: 'String', attribute: 'size' },
       iconOnly: { type: 'Boolean', attribute: 'icon-only' },
       fullWidth: { type: 'Boolean', attribute: 'full-width' },
+      shrinkable: { type: 'Boolean', attribute: 'shrinkable' },
       href: { type: 'String', attribute: 'href' },
       target: { type: 'String', attribute: 'target' },
       rel: { type: 'String', attribute: 'rel' },
@@ -70,6 +71,15 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+
+  // The :host([shrinkable]) rule below keys on the attribute, so a consumer who
+  // assigns `el.shrinkable = true` has to end up with it too. `reflect: true` on
+  // the declaration would not do that: Svelte reflects only the props the
+  // component exposes by name, and everything here reaches Button through the
+  // `...props` rest.
+  $effect(() => {
+    hostEl.toggleAttribute('shrinkable', props.shrinkable === true);
+  });
 </script>
 
 <!-- A property-assigned icon wins; the slot is the fallback. The branch stays
@@ -100,5 +110,13 @@
      could not do, since a stylesheet cannot add a rule there. */
   :host {
     display: var(--sui-button-display, block);
+  }
+
+  /* In a custom-element consumer the host, not the inner container, is the flex
+     or grid item, so it is the box that has to be allowed to shrink. The inner
+     container's own rule only caps it at the host's width. */
+  :host([shrinkable]) {
+    min-width: 0;
+    max-width: 100%;
   }
 </style>

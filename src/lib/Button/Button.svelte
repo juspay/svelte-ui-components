@@ -8,6 +8,7 @@
     size = 'md',
     iconOnly = false,
     fullWidth = false,
+    shrinkable = false,
     href,
     target,
     rel,
@@ -73,6 +74,7 @@
   class="button-container variant-{variant} size-{size} {classes ?? ''}"
   class:icon-only={iconOnly}
   class:full-width={fullWidth}
+  class:button-shrinkable={shrinkable}
   style={style ?? null}
 >
   {#if showProgressBar}
@@ -236,6 +238,47 @@
 
   .full-width {
     --button-width: 100%;
+  }
+
+  /* Opt-in only. With the default nowrap label, fit-content never drops below the
+     label's full width, so a percentage cap on the inner button resolves against
+     an already label-wide container and a Button in a parent narrower than its
+     label (a flex row, a grid cell or a plain block) cannot shrink. Capping the
+     container itself gives that percentage something real to resolve against.
+
+     The box is `width: 100%` bounded by `max-width: max-content` rather than
+     `fit-content`: as wide as the label and never wider than the parent, with no
+     intrinsic keyword as its width. Firefox and WebKit size a `1fr` or `auto`
+     grid track to at least the content width of an item whose width is such a
+     keyword, so the track grew to the label and the Button never shrank in a grid
+     cell (Chromium shrinks the track). A percentage is not counted that way.
+     `width: auto` would shrink the track too, but it stretches the box across a
+     block, stretch or `justify-items: normal` parent, and `margin: auto` on the
+     root would stop centring it. As a flex item the box is clamped to the
+     label's width, so `flex-grow` on the root does not widen it. A custom
+     `--button-width` replaces the max-content bound, and `fullWidth` sets it
+     to 100%.
+
+     Deliberately class-gated rather than a pair of tokens on every container: an
+     unconditional declaration here would outrank a consumer's own max-width class
+     on the root (the scoped selector is more specific). The class carries the
+     component prefix because `classes` lands on this same element, and a
+     consumer's own `shrinkable` class must not opt a Button in. */
+  .button-container.button-shrinkable {
+    min-width: 0;
+    width: 100%;
+    max-width: var(--button-width, max-content);
+  }
+
+  .button-container.button-shrinkable > .button-el {
+    max-width: var(--button-max-width, 100%);
+  }
+
+  /* An icon with a percentage max-width (the common `img { max-width: 100% }`
+     reset) has a min-content width of zero, so the shrinking button would
+     squeeze it along with the label. */
+  .button-container.button-shrinkable > .button-el > .button-icon {
+    flex-shrink: 0;
   }
 
   .button-el {

@@ -17,6 +17,7 @@ export default defineConfig({
     rolldownOptions: {
       input: [
         resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/button-shrinkable/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/date-range-picker/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/embedded-fill/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/table-paginator/index.html')

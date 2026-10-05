@@ -20,6 +20,16 @@ preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an
 existing server. Tests wait for `data-fixture-ready` before interacting.
 
+`button-shrinkable/` mounts the real Button in parents of a fixed width, and
+`tests/button-shrinkable.spec.ts` injects `dist-wc/index.js` into the same page to
+mount `<sui-button>` too. It holds the scenario matrix, including default-button
+twins that overflow on purpose and the `all: unset` and `img { max-width: 100% }`
+setups, so none of it has to sit in the public `/components/button` demo, whose
+full-page visual baseline would move with every scenario added there. Its `shrink-*`
+test ids belong to that spec. The Playwright project runs Chromium only, so CI never
+runs that spec in Firefox or WebKit, where a grid track sizes differently; the header
+of the spec says how those two engines were measured.
+
 Run the contract suite with:
 
 ```sh

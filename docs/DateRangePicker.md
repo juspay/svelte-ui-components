@@ -384,6 +384,7 @@ Override these custom properties to theme the component.
 
 | Variable                                | Default                       | Description                                                                                    |
 | --------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `--drp-root-display`                    | `inline-block`                | Root `display`. Set `block` so the root, panel and calendar can fill a container.              |
 | `--drp-trigger-background`              | `inherit`                     | Trigger button background color.                                                               |
 | `--drp-trigger-border`                  | `1px solid currentColor`      | Trigger button border.                                                                         |
 | `--drp-trigger-border-radius`           | `6px`                         | Trigger button corner rounding.                                                                |
@@ -510,6 +511,26 @@ Override these custom properties to theme the component.
 ### Selector specificity note
 
 The `.drp-trigger` global class selector was tightened to `.drp-trigger-wrapper .drp-trigger` in this version. If you were overriding `.drp-trigger` styles from an outer stylesheet, update your selector to `.drp-trigger-wrapper .drp-trigger` (or add the wrapper class to your existing rule) to maintain the same specificity.
+
+### Filling a container
+
+To embed a single-month picker (`mode="single"`) without presets in a fixed-width host, make the root block-level and let the panel and the calendar follow it:
+
+```css
+.host {
+  --drp-root-display: block;
+  --drp-panel-min-width: 100%;
+  --calendar-width: 100%;
+  --calendar-grid-columns: repeat(7, minmax(0, 1fr));
+  --calendar-cell-width: 100%;
+}
+```
+
+`--drp-panel-min-width: 100%` is what makes the panel as wide as the root; with `0` it shrinks to its content. The trigger button keeps its own width, which `--drp-trigger-min-width` sets. The panel is `content-box`, so on a page without a `box-sizing: border-box` reset its 1px border is drawn outside the host. In the web component also set `--sui-date-range-picker-display: block` on `<sui-date-range-picker>`: `--drp-root-display` crosses the shadow boundary, but the element is its own box. A page-level `box-sizing` reset does not reach the shadow root either, so inside the web component the 2px of border is always outside the host: leave 2px of room, or set `--drp-panel-border: none` to drop the border.
+
+This recipe was verified for a single-month picker without presets. In range mode (the default) the panel holds two months side by side, so a narrow host leaves them very small: the day names run together and the month title wraps. A presets sidebar is at least 140px wide (`--drp-sidebar-min-width`) plus its padding, so a single-month picker with presets needs a host of about 316px or more. Measured with four presets, the panel is about 316px wide in a 300px host and still overhangs hosts from 305px to 314px. A range-mode picker with presets needs about 393px.
+
+The recipe does not combine with `responsiveLayout` (see [Responsive layout](#responsive-layout)) at narrow widths. At and below the sheet's breakpoints, 688px for a single-month picker and 1023px in range mode, the panel becomes a fixed sheet with `min-width: 0`, so `--drp-panel-min-width: 100%` no longer applies: the panel is sized and placed by the viewport instead of the host (343px wide at a 375px viewport, in a 300px host). Use the recipe for a picker that lives in a fixed-width host, and `responsiveLayout` for one that should follow the window.
 
 ## Web Component
 

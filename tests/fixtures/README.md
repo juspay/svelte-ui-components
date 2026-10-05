@@ -5,6 +5,11 @@ a native form. Its `fa-*` test ids belong to the tests, independently of the doc
 demos. The change counter observes native events on the form, and submission
 serializes the form's real `FormData`.
 
+`embedded-fill/` mounts DateRangePicker and Calendar in 300px hosts that set, or leave unset, the
+tokens a host uses to make them fill its container. Its `fill-*` test ids belong to
+`tests/date-range-picker-embedded-fill.test.ts`, whose control hosts are kept out of the docs demo so
+the visual baseline of that route does not move.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

@@ -1482,7 +1482,7 @@
 
   .drp-root {
     position: relative;
-    display: inline-block;
+    display: var(--drp-root-display, inline-block);
   }
 
   /* ── Trigger wrapper ── */

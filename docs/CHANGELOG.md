@@ -2,7 +2,57 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.37.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.37.1)
+
+ListItem laid its left, center and right cells out as a flex row with the direction written as
+a literal, and the center and right cells exposed no minimum-width hook. A consumer that needed
+to stack the cells on a narrow screen, or to keep a label readable beside a long right-hand
+value, had to reach into the component with unscoped descendant rules on .top-section,
+.center-content and .right-content, which ties every consumer to ListItem's internal class
+names. A long unbreakable value could also squeeze the label to nothing, because the right cell
+cannot shrink below its content and the existing --list-item-right-content-flex does not change
+that minimum.
+
+Three CSS custom properties are added and no props. --list-item-top-section-flex-direction
+(default row) sets the direction of the top row, so column stacks the cells in DOM order.
+--list-item-center-content-min-width (default 0) reserves room for the label while the center
+cell keeps flex: 1; the floor applies to the whole center cell, so it includes the center text's
+padding. --list-item-right-content-min-width (default auto) lets the right cell shrink when set
+to 0. Each declaration carries a literal fallback equal to the value it replaced.
+docs/ListItem.md gains the three table rows, a note under the table on the cascade change
+described below, a section on fitting narrow screens and long values with media and container
+query examples, the resets that opt a nested item out of an inherited stack, and a note that the
+tokens cross the sui-list-item shadow root. The demo route gains a Narrow fit section covering
+the defect, the shrink recipe, stacking, an expanded accordion, loading, left and right only,
+and nested items.
+
+Verified in Chromium by tests/list-item-narrow-fit.spec.ts (14 tests): defaults unchanged, the
+defect reproduced without tokens, label floor and truncation at 320 and 375 wide, a short value
+still flush right, stacking at 320, 375 and 767 wide, accordion, loading, empty center cell,
+nested inheritance with a per-instance reset, and the tokens reaching the cells inside
+sui-list-item. Reverting each declaration, and corrupting one expected value, makes the intended
+assertions fail; restoring the files makes them pass. A vitest case checks the DOM order of the
+cells for three prop shapes, and a source-level check pins the three fallbacks. A before and
+after measurement of every ListItem on a probe route (80 items at two viewports, covering
+accordion, loading, and with and without left, center, right and right-content-text) plus the
+original demo rows found identical bounding boxes and computed styles, with the before side
+taken from the 4.37.0 tree.
+
+Default-behaviour note: with the new tokens unset every computed value and box is unchanged.
+The one thing a consumer could see is that .right-content now declares min-width, and Svelte
+scopes ListItem's rule to a specificity of (0,2,0). A consumer rule that sets min-width on
+.right-content therefore stops winning when its specificity is below (0,2,0), or is exactly
+(0,2,0) and its stylesheet loads before ListItem's; before this change such a rule won whatever
+the order, because ListItem declared nothing there. Raise the rule to (0,3,0), or set
+--list-item-right-content-min-width instead. The same note sits under the token table in
+docs/ListItem.md, because the changelog renders only the commit subject.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+-
+feat(list-item): add tokens to stack the top row and let its cells shrink ([d686839](https://github.com/juspay/svelte-ui-components/commit/d686839d8053543ac656ebbbf2db5af4a6f87280))
+
+## [4.37.1](https://github.com/juspay/svelte-ui-components/compare/4.37.1..4.37.0) - 5 October 2026
 
 The built-in rows-per-page selector in Table's paginator footer is a Select, and
 its trigger is an ARIA combobox. A combobox takes no accessible name from the

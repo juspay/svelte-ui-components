@@ -2,7 +2,65 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.36.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.37.0)
+
+The built-in rows-per-page selector in Table's paginator footer is a Select, and
+its trigger is an ARIA combobox. A combobox takes no accessible name from the
+value it displays, so the selector was announced as an unnamed combobox.
+Select.ariaLabel has existed since 4.35.0, but Table never passed one and
+TableLabels had no member for it, so a consumer could not name the selector
+through documented API: paginatorSlot replaces the whole footer, and
+TablePaginationConfig has no label field that names the selector (rangeLabel
+only formats the range text). Lighthouse papered over it with a document-wide
+MutationObserver that stamped an aria-label on every such trigger.
+
+Table now forwards labels?.rowsPerPage ?? 'Rows per page' as the Select's
+ariaLabel, the same per-member English fallback the other six generated names
+use. API added: TableLabels.rowsPerPage, an optional string defaulting to
+'Rows per page'. No tokens were added and no CSS or event changed; the only
+markup change is the aria-label attribute on the page-size combobox. sui-table
+already declares labels as an Object prop so it needs no wrapper change, but
+through sui-table the built-in paginator never renders (the wrapper always
+supplies a paginatorSlot snippet), so the label has no effect there; that is the
+documented limitation, not a regression. docs/Table.md documents the member and
+says it applies only to the Svelte Table. The TableLabels description there and
+in properties.ts no longer says omitting the prop changes nothing, because
+rowsPerPage adds a name where there was none. docs/Pagination.md gives the
+consumer-recipe page-size Select its own ariaLabel and says why a standalone one
+needs it.
+
+Verified with a new vitest, src/lib/Table/Table.accessible-name.test.ts, of eight
+cases: default name, override, per-member fallback, reactive set and clear,
+loading state, two suppressed-selector cases, and the sibling paginator controls
+staying named. Negative controls: deleting only the forwarded line fails six of
+the eight cases on the combobox role with the names 'Rows per page' and 'Lignes
+par page'; a variant that hardcodes the string fails the override and reactivity
+cases. A suppressed selector renders nothing for the fix to name, so the two
+suppression cases pass with or without the fix and are not counted as coverage
+of it. They guard the other direction: each asserts that the paginator still
+renders its Next page button and that no element carries the name. They fail
+when the name is stamped on the controls wrapper, and the hidden-selector case
+fails when that wrapper stops rendering. In Chromium on the docs
+/components/table route all six built-in page-size comboboxes report the
+accessible name 'Rows per page'. pnpm lint, pnpm check, the whole unit suite (190
+files, 2960 tests) and 122 Playwright tests across the table, pagination and
+web-component specs pass. The visual suite was not run.
+
+Default-behaviour changes a consumer could see: the page-size combobox now
+carries aria-label 'Rows per page' where it carried none, so every paginated
+Table gains an accessible name, and two tables on one page share that name
+unless labels.rowsPerPage tells them apart. A consumer that already stamps an
+aria-label onto the trigger, as Lighthouse does, writes the same string, so the
+two do not conflict. The new optional TableLabels member is a compile-time break
+only for code that builds Required&lt;TableLabels&gt; or an exhaustive record over its
+keys. The change is an attribute only, so no pixel change is expected; the visual
+suite was not run, so that is a prediction rather than a measurement.
+
+Tracked as BZ-6632.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+## [4.37.0](https://github.com/juspay/svelte-ui-components/compare/4.37.0..4.36.0) - 4 October 2026
 
 -
 feat: add DockPanel and pill composer variant ([2e08d6a](https://github.com/juspay/svelte-ui-components/commit/2e08d6a6898efbca3f09630e856c1ea98fa7fc23))

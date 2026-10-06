@@ -20,6 +20,7 @@
     autoscroll = true,
     scrollPolicy = 'near-bottom',
     pinHold = false,
+    hideScrollbar = false,
     jump = true,
     jumpLabel = 'Jump to latest',
     jumpIcon,
@@ -100,6 +101,7 @@
     {autoscroll}
     {scrollPolicy}
     {pinHold}
+    {hideScrollbar}
     {jump}
     {jumpLabel}
     {jumpIcon}

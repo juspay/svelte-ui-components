@@ -61,10 +61,11 @@ carry what an app might: an inherited `scrollbar-color`, a `::-webkit-scrollbar`
 `*` reset, a reset inside a cascade layer ahead of the library's, or the two `--scroller-scrollbar-*`
 tokens. Every Scroller sits beside a hand-written `-ref` twin that computes what the base
 `.scroll-container` did, so each "unset" test compares against a twin rather than a remembered value.
-The app stylesheet is imported ahead of the component on purpose, as an app's is. Its `sb-*` test ids
-belong to `tests/scroller-scrollbar.spec.ts`; the scenario matrix stays out of the docs demo, whose
-full-page visual baseline would move with it. That spec runs Chromium only in CI; its header says how
-Firefox and WebKit were measured, and which assertions those two engines cannot make.
+`main.ts` puts the app stylesheet at the head of the page, ahead of every sheet the build links, on purpose,
+as an app's is: an import would leave that order to the build. Its `sb-*` test ids belong to
+`tests/scroller-scrollbar.spec.ts`; the scenario matrix stays out of the docs demo, whose full-page visual
+baseline would move with it. That spec runs Chromium only in CI; its header says how Firefox and WebKit were
+measured, and which assertions those two engines cannot make.
 
 `img-max-size/` mounts the real Img, as an `<img>` and as an inlined `<svg>`, in 200x100 hosts that set,
 or leave unset, `--image-max-width` and `--image-max-height`, beside a bare `<img>` and `<svg>` for the
@@ -92,6 +93,12 @@ names, and the same message inside a ChatMessageList, which reads `--chat-messag
 padding too. Its `cbl-*` test ids belong to `tests/chat-message-body-list-tokens.spec.ts`, which also injects
 `dist-wc/index.js` to mount `<sui-chat-message>` (run `pnpm run build:wc` first), so the matrix stays out of
 the docs demo and that route's visual baseline does not move.
+
+`chat-hide-scrollbar/` mounts two Chat components with twelve messages each, one default and one with
+`hideScrollbar`, so `tests/chat-hide-scrollbar.spec.ts` can read the class and the scrollbar width of the
+message list each one renders. The spec also injects `dist-wc/index.js` to mount `<sui-chat>` (run
+`pnpm run build:wc` first), so the pair stays out of the docs demo and that route's visual baseline does
+not move.
 
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and

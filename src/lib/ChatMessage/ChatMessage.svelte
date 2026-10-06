@@ -323,6 +323,18 @@
     margin: var(--chat-message-margin, 0);
   }
 
+  /* The root had no min-width, so its initial value, auto, is what every parent saw: a
+     content-based minimum in a flex row or a grid track, and 0 in a block. Falling back to
+     0 would change the first two, so an unset token must leave the property alone. It does
+     that with revert-layer, which gives this declaration up and lets any lower layer, such
+     as an app rule inside @layer, decide; where nothing else sets min-width the value is
+     still auto. A plain auto here would beat a layered rule, because unlayered rules win.
+     :where() keeps the rule at no specificity, so an app rule on .chat-message that
+     already sets min-width is not tied by Svelte's scope class. */
+  :where(.chat-message) {
+    min-width: var(--chat-message-min-width, revert-layer);
+  }
+
   .chat-message.party-sender {
     align-self: flex-end;
     align-items: flex-end;

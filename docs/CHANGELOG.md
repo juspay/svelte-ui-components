@@ -2,7 +2,42 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.46.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.47.0)
+
+ChatMessageList lays its messages out in an inner column that only had a gap token, so an app that
+reserves room below the last message for a floating composer, or centres the column at a maximum
+width on a wide screen, had to reach into the component with :global() rules on .inner.
+
+Add --chat-message-list-inner-padding-bottom, -padding-inline, -width, -max-width and
+-margin-inline. The declarations sit in :where() and fall back to revert-layer, as the list's
+overflow tokens do. Unset, the column has no padding, margin, width of its own or maximum width, as
+before. A rule of an app's own that reaches .inner wins over a set token wherever its stylesheet
+loads; inside a cascade layer it wins only while the token is unset, because a set token is an
+unlayered declaration and beats the layer.
+
+An auto inline margin turns the column's stretch off, so centring it takes width 100% beside a
+maximum width and auto margins; without the width the column shrinks to its content. The docs say
+so, and that padding counts in the width only under box-sizing: border-box, which the shadow root of
+&lt;sui-chat-message-list&gt; does not set.
+
+How it was verified. tests/chat-message-list-inner-tokens.spec.ts has 14 browser tests on a new
+fixture app, run through a scratch config in Chromium, Firefox and WebKit: 14 of 14 in each. With
+only ChatMessageList.svelte put back to the base (0 added, 17 removed), 9 of the 14 fail in
+Chromium and the 5 that do not need a token still pass: the unset column, a rule of an app's own
+with the tokens unset and set, a layered rule while unset, and an unset element. The repository's
+Playwright project runs Chromium only, so CI cannot see Firefox and WebKit. pnpm lint exits 0.
+
+Default behaviour: unchanged for a list that sets no token. One edge, the same as the list's
+overflow tokens and not measured here: a rule with no specificity (only * and :where()) that sets
+one of these properties on .inner and loads before the library stylesheet sits at the same
+unlayered level as the declaration, so an unset token rolls it back. RTL, forced-colors and zoom
+were not measured. The /components/chat-message-list demo and its visual baseline are unchanged.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.47.0](https://github.com/juspay/svelte-ui-components/compare/4.47.0..4.46.0) - 6 October 2026
 
 Img sized itself with --image-width and --image-height and had no way to cap that size. An image
 sized with auto, so that it keeps its own dimensions, could not be held inside its container

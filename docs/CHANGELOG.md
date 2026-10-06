@@ -2,7 +2,78 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.43.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.44.0)
+
+Visible default change: in the default theme the open picker's footer was unreadable. Cancel and
+Clear were white text on the white panel (contrast 1.00:1, 1.09:1 on hover) and an enabled Apply
+was white text on a white background with no border (1.00:1 until hover). Only the disabled Apply
+was legible. They now read as follows, all measured in the rendered footer:
+
+- Cancel and Clear: #3a4550 text on the white panel, 9.78:1 (8.97:1 on the #f5f5f5 hover fill)
+- Apply: white text on Button's own primary fill #3a4550, 9.78:1 (hover #333333 unchanged, 12.63:1)
+- the disabled Apply keeps #cccccc / #888888 at 0.4 opacity, unchanged: 2.21:1 as stated and 1.30:1
+once the dimming blends it into the panel; disabled controls are exempt from 4.5:1, and the
+spec pins both ratios as unchanged rather than asserting that they pass
+
+Cause: the footer set --button-text-color to var(--drp-cancel-color, inherit). A custom property
+whose fallback is inherit takes the ancestor's --button-text-color, which is usually unset, so
+Button fell through to its white primary label. The Apply background was var(--drp-apply-background,
+currentColor), and currentColor on Button's inner element is its own white label.
+
+The three default chains now end in a literal that suits the light panel. Cancel and Clear read
+--drp-*-color, then an ancestor's --button-text-color (resolved once on the footer, inside :where()
+so it carries no specificity), then --button-secondary-text-color, then #3a4550. Apply reads
+--drp-apply-background, then #3a4550. No token is renamed or removed; a consumer value still wins.
+The label chain restates --button-secondary-text-color after the footer's resolved colour, so its
+last literal sits beside a token the dark layer already overrides and scripts/check-css-contract.js
+needs no change. Inside the footer the first link always resolves, so that restated link is never
+reached there.
+
+Apply does not follow an ancestor's --button-color, before or after. Its fill and white label are
+a fixed pair: measured, an ancestor fill of #e0e0e0 would leave the white label at 1.32:1 and a
+transparent one at 1.00:1, the defect again. A themed app sets --drp-apply-background instead.
+
+Compiled stylesheet against the base: one rule added (the :where() footer rule), three fallbacks
+changed (inherit and currentColor became the literals above), nothing removed or reordered.
+
+Before and after, same fixture, Chromium 148, Firefox 150 and WebKit 26.4, 193 button states in 44
+scenarios per engine: no box, border, opacity or shadow moves (0 non-colour differences), and only
+colour fields change. 48 of those states (15 scenarios, rest and hover) are byte-identical in every
+engine: each state a --drp-* token decides, each Cancel and Clear state an ancestor
+--button-text-color decides (Apply never read that token, so with only that token set Apply's
+background does change, from white to #3a4550), and the untouched disabled Apply. The
+&lt;sui-date-range-picker&gt; bundle shows the same result, 36 states in 8 configurations per engine.
+
+Where defaults now differ for apps that theme through ancestors: an ancestor --button-text-color
+still reaches Cancel and Clear exactly as before, so an app that sets a light one for all buttons
+keeps a light Cancel label until it sets --drp-cancel-color, and Cancel and Clear hover text still
+follows an ancestor --button-hover-text-color (no token for it here; deferred). The library dark
+theme now gives Cancel #d1d5db (11.13:1, was white 16.4:1) and Apply a 9.78:1 label (was 1.00:1);
+its #3a4550 fill sits 1.68:1 from the dark panel. A token set by hand to the old documented
+default differs: --drp-cancel-color and --drp-clear-color set to inherit now render like unset,
+while --drp-apply-background set to currentColor still renders the old white fill.
+
+docs/DateRangePicker.md: the three default rows now show #3a4550, and a short section says what
+the old defaults rendered, that Apply ignores an ancestor --button-color, and the two hand-set
+cases above.
+
+Tests: tests/date-range-picker-footer-contrast.spec.ts on a new fixture, tests/fixtures/
+drp-footer-contrast (one paragraph in its README), so the docs demo and its visual baseline are
+untouched: the demo route renders no open picker (19 closed triggers, 0 footers) and the docs
+text sits in the section the visual suite hides. 17 tests cover contrast at rest, hover and
+disabled, range, single with Clear, the standalone compare panel, consumer tokens winning exactly,
+ancestor tokens, a dark ancestor, an ancestor --button-color, and the hand-set old defaults.
+The repo project runs Chromium only, so the same spec was also run on Firefox and WebKit through a
+scratch Playwright configuration outside the repo: 51 of 51 passed. Fourteen of fifteen mutations
+of the component each fail at least one test, including a full revert to the base declarations;
+the survivor is the restated link above, unreachable in the footer. Four corrupted expectations
+each fail the intended test.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.44.0](https://github.com/juspay/svelte-ui-components/compare/4.44.0..4.43.0) - 6 October 2026
 
 Banner's rightContent slot had no hook for its left margin, so an app that wants the slot and
 the dismiss button at the end of the row reaches into .banner-right from outside with

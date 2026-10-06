@@ -39,6 +39,13 @@ comes from the query string (`?css=.banner-right{margin-left:24px}&order=first`)
 belong to that spec, so the matrix stays out of the public `/components/banner` demo and its full-page
 visual baseline.
 
+`drp-footer-contrast/` opens one DateRangePicker (`?scenario=range|range-empty|single|compare|compare-empty`,
+`&tokens=--drp-cancel-color:red`, `&theme=dark`) with the footer buttons enabled or disabled, in single
+mode with Clear, or in the standalone compare panel. Ancestor custom properties come from the query
+string, as an app sets them, and `theme=dark` turns the library's own dark theme on.
+`tests/date-range-picker-footer-contrast.spec.ts` reads the rendered label and background colours
+from it, so the scenario matrix stays off the public docs demo, whose visual baseline would move.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

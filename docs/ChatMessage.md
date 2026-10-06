@@ -179,6 +179,8 @@ pinning to the left. `--chat-message-marker-offset` is the one to reach for: it 
 | `--chat-message-code-background`               | `rgba(0,0,0,0.05)`        | background         | Inline code background.                                 |
 | `--chat-message-pre-background`                | `rgba(0,0,0,0.05)`        | background         | Code-block background.                                  |
 | `--chat-message-paragraph-margin`              | `0 0 0.5em 0`             | margin             | Paragraph spacing inside rendered HTML.                 |
+| `--chat-message-body-list-margin`              | `0.4em 0`                 | margin             | Margin of a rendered `<ul>`/`<ol>`; read first.         |
+| `--chat-message-body-list-padding`             | `1.4em`                   | padding-left       | Indent of a rendered `<ul>`/`<ol>`; read first.         |
 | `--chat-message-list-margin`                   | `0.4em 0`                 | margin             | Margin around a rendered `<ul>`/`<ol>` list.            |
 | `--chat-message-list-padding`                  | `1.4em`                   | padding-left       | Indent of a rendered `<ul>`/`<ol>` list.                |
 | `--chat-message-heading-margin`                | `0.8em 0 0.4em 0`         | margin             | Margin around a rendered heading.                       |
@@ -217,6 +219,12 @@ rule that already sets `min-width` on `.chat-message` keeps winning, including o
 `@layer`. The exception is a `*` rule that comes before the library's stylesheet: it ties with the
 declaration and loses, so set the token to the value you want. A token that is set wins over a layered
 rule and over such a `*` rule, and loses to an unlayered rule on `.chat-message`.
+
+`--chat-message-list-margin` and `--chat-message-list-padding` also share a name with ChatMessageList's own
+padding token: a page that sets `--chat-message-list-padding: 0` for the list removes the indent of every
+list inside a message as well. `--chat-message-body-list-margin` and `--chat-message-body-list-padding` are
+read first and fall back to the older names, so a message that sets neither is unchanged, and a page can now
+give the list and the lists inside its messages different padding.
 
 ## Web Component
 

@@ -554,10 +554,14 @@
     padding: 0;
   }
 
+  /* --chat-message-list-padding is also what ChatMessageList reads for its own padding, so an
+     app that sets it to 0 for the list loses the indent of every list inside a message. The
+     body-list tokens are read first so the two can differ; the older names stay as the
+     fallback, which leaves a message that sets neither as it was. */
   .body :global(ul),
   .body :global(ol) {
-    margin: var(--chat-message-list-margin, 0.4em 0);
-    padding-left: var(--chat-message-list-padding, 1.4em);
+    margin: var(--chat-message-body-list-margin, var(--chat-message-list-margin, 0.4em 0));
+    padding-left: var(--chat-message-body-list-padding, var(--chat-message-list-padding, 1.4em));
   }
 
   .body :global(li) {

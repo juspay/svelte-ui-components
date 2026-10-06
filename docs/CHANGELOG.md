@@ -2,7 +2,76 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.39.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.40.0)
+
+Table's built-in paginator puts the page-size select and the Pagination stepper in one
+flex row that could not wrap. That row is 320px wide on page 1 and 440px on the page with
+the widest stepper (page 4 of 8). The outer footer row already wrapped, but this one did
+not, so inside a host narrower than the row the Table clipped its own footer under the
+container's overflow. This is a limit of Table in any narrow container; a Modal at phone
+width is where a visual review of the Modal viewport cap exposed it.
+
+Measured with a plain host element around a Table, in Chromium, Firefox and WebKit at
+host widths 400, 340, 320, 288, 260 and 240, on page 1 and on page 4. Before, Next page was
+19 of 36px visible in a 320px host and 0px visible at 288, 260 and 240; on page 4 it was
+0px visible at every width, 400 included. A control sat outside the host in 30 of those 36
+engine/width/page cells and a real click on Next failed in 27. After, no control is
+outside the host in any of them and Next changes the range text in all 36.
+
+What changed in the library is layout only, two declarations in Table.svelte and no markup
+(plus a paragraph in docs/Table.md, a fixture page and the spec below):
+
+- .table-paginator-controls gets flex-wrap: wrap, so the select moves onto its own line
+above the stepper once both no longer fit.
+- The Pagination nav inside it gets flex-wrap: wrap as well. Wrapping the controls alone
+is not enough: the widest stepper is 356px and stays wider than a 340px host (Next at
+337-373px), and a 6-item stepper is still wider than the 208px a 240px host leaves.
+Wrapping only the stepper keeps everything inside but splits it beside the select
+already at 400px on page 4; wrapping the controls row keeps it whole there.
+- No max-width is needed: the row shrinks to its container once both can wrap, and the
+Table container's scrollWidth equals its clientWidth at every width measured.
+- Wrapped lines start-align, which is where the outer row already puts a wrapped line;
+no justify-content was added.
+
+Defaults are unchanged while the row fits. "Fits" means within the footer's padded content
+box: where the row ran past that 16px padding but stayed inside the host (Next ending at 337px
+against a content edge near 325px in a 340px host on page 1), it now wraps, by design.
+
+- The compiled Table stylesheet gains exactly one declaration (flex-wrap: wrap on the
+controls) and one rule (flex-wrap: wrap on the nested .pagination); the scoped class
+hash is unchanged.
+- The docs route /components/table, docs section hidden as the visual suite does, is
+byte-identical before and after at 1280px in Chromium, Firefox and WebKit (0 differing
+pixels; two captures of the same unchanged build also differ by 0).
+- A sweep of that route across 11 viewport widths from 1280 to 375 in the three engines
+(330 paginators): all 234 that fit before are geometry-identical after, none changed;
+the 96 that overflowed before changed (93) or had nothing left to wrap (3).
+Chromium is also pixel-identical at 1280, 1180, 1100, 1000, 900 and 800.
+- At 375px the docs shell leaves a 35px content column (260px sidebar, 80px padding), so
+every paginator with controls overflows there and changes by design.
+- A Table with paginatorSlot is identical in all 30 engine/width cases; one with the
+page-size selector suppressed, and the loading state, are identical wherever the row
+fit before, and the loading controls stay disabled.
+- One consequence, only where the row already overflowed: the footer's minimum width
+drops, so a width: fit-content host in a 375px viewport goes from 474px to 359px and
+the page stops scrolling sideways. At 600px and 1280px it is unchanged at 546.67px.
+
+Verified: a Playwright spec on a fixture page (tests/table-paginator-narrow-host.spec.ts,
+15 tests) asserts every control is inside the host, hit-testable at its centre, nothing
+clipped, that wrapped lines start-align, and that a real pointer click on Next changes the
+range. Reverting the fix fails 12 of the 15; removing only the stepper rule fails 7; removing
+only the controls rule fails the stepper-stays-whole test and nothing else; a justify-content
+of flex-end fails the alignment assertion and nothing else; and the click step alone, run with
+the fix reverted, fails in 8 of 10 clipped cases. The tree was restored to its passing sha256
+after each control. Chromium is the only functional project, so CI covers Chromium; Firefox
+and WebKit were checked by rig only.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+-
+fix(table): let the built-in paginator controls wrap in a narrow container ([5e76791](https://github.com/juspay/svelte-ui-components/commit/5e76791e9c74a5f3df8bab6fdcdb224d07072b3e))
+
+## [4.40.0](https://github.com/juspay/svelte-ui-components/compare/4.40.0..4.39.0) - 6 October 2026
 
 DateRangePicker and Calendar had no token for filling a container. The picker root was hard-coded
 to display inline-block, and Calendar sized its day-name row, its grid columns and its day cells

@@ -399,6 +399,23 @@
     flex: 1 0 auto;
   }
 
+  /* Hooks for an app that lays the message column out itself: the clearance below the last
+     message, the width it centres at on a wide screen, and the space beside it. An auto margin
+     turns the column's stretch off (it shrinks to its content), so centring it takes a width as
+     well: width 100% beside a maximum width and auto inline margins. They sit in
+     :where() for the reason the list's overflow tokens do, so a rule of the app's own that
+     wrote these properties before the tokens existed keeps winning over Svelte's scope class,
+     and they fall back to revert-layer, not to a value, so a rule of the app's inside a
+     cascade @layer still wins while a token is unset. Unset, the column has no padding, no
+     margin and no maximum width, as before. */
+  :where(.inner) {
+    padding-bottom: var(--chat-message-list-inner-padding-bottom, revert-layer);
+    padding-inline: var(--chat-message-list-inner-padding-inline, revert-layer);
+    width: var(--chat-message-list-inner-width, revert-layer);
+    max-width: var(--chat-message-list-inner-max-width, revert-layer);
+    margin-inline: var(--chat-message-list-inner-margin-inline, revert-layer);
+  }
+
   .jump {
     position: sticky;
     bottom: var(--chat-message-list-jump-bottom, 8px);

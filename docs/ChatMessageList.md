@@ -58,6 +58,22 @@ no specificity at all (`*` or `:where(...)`) that loads before this library's st
 declaration comes later at equal specificity and wins, so load that rule after the library's CSS, or set the
 token.
 
+### The message column
+
+Messages sit in an inner column that fills the list. Five tokens lay it out without a rule that reaches
+into the component: `--chat-message-list-inner-padding-bottom` (clearance below the last message, for a
+floating composer or suggestion chips), `--chat-message-list-inner-padding-inline` (space beside the
+column), `--chat-message-list-inner-width`, `--chat-message-list-inner-max-width` and
+`--chat-message-list-inner-margin-inline`. To centre the column on a wide screen set all three of those:
+`100%`, a maximum width and `auto`. An auto margin turns the column's stretch off, so without the width it
+shrinks to its content. Padding is counted in the width only under `box-sizing: border-box`, which most
+resets set; inside the web component's shadow root nothing sets it, so there padding adds to the width. Set the tokens on the list or on any ancestor of it; for the web component, on the element,
+since custom properties cross the shadow root. Unset, the column has no padding, no margin, no width of its
+own and no maximum width, as before. They follow the cascade rules
+of the previous section: a rule of your own wins over them wherever it is written, except inside a cascade
+`@layer`, where it wins only while the token is unset, and except a rule with no specificity at all (`*` or
+`:where(...)`) that loads before this library's stylesheet, which the library's later declaration beats.
+
 ## Events
 
 | Event         | Type                                                          | Description                                                  |
@@ -112,6 +128,11 @@ to inspect. That is a gap in coverage, not in behaviour.
 | `--chat-message-list-scroll-behavior`             | `smooth`                      | scroll-behavior     | Scroll behavior (auto when reduced motion). |
 | `--chat-message-list-overflow-x`                  | `visible`                     | overflow-x          | Horizontal overflow of the list.            |
 | `--chat-message-list-overscroll-behavior`         | `auto`                        | overscroll-behavior | Whether a scroll at the end chains outward. |
+| `--chat-message-list-inner-padding-bottom`        | `0`                           | padding-bottom      | Clearance below the last message.           |
+| `--chat-message-list-inner-padding-inline`        | `0`                           | padding-inline      | Space beside the message column.            |
+| `--chat-message-list-inner-width`                 | `auto`                        | width               | Width of the message column.                |
+| `--chat-message-list-inner-max-width`             | `none`                        | max-width           | Maximum width of the message column.        |
+| `--chat-message-list-inner-margin-inline`         | `0`                           | margin-inline       | Margin beside the column.                   |
 | `--chat-message-list-jump-size`                   | `36px`                        | height/width        | Size of the jump-to-latest button.          |
 | `--chat-message-list-jump-bottom`                 | `8px`                         | bottom              | Sticky offset of the jump button.           |
 | `--chat-message-list-jump-background-color`       | `#ffffff`                     | background          | Jump button background.                     |

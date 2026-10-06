@@ -2,7 +2,65 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.41.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.42.0)
+
+ChatMessageList could not hide its own scrollbar, which Scroller can, and had no hook for
+overscroll-behavior or overflow-x, so an app reached into the list with :global() rules.
+
+Add hideScrollbar (default false, so the list keeps the scrollbar it always showed), which applies
+Scroller's hide-scrollbar class and rules, and two tokens: --chat-message-list-overflow-x and
+--chat-message-list-overscroll-behavior. The web component maps hideScrollbar to the
+hide-scrollbar attribute. docs/ChatMessageList.md gains the prop row, two token rows and a note.
+
+Both declarations sit inside :where(), so they add no specificity, and an unset token falls back
+to revert-layer rather than to a value. The declarations are unlayered, and an unlayered
+declaration beats any rule inside a cascade @layer whatever its specificity (a Tailwind v4
+utility, say), so a fixed fallback of visible or auto would have overridden a layered rule that
+wins on the old list. revert-layer hands the property back to the cascade below it: that layered
+rule if there is one, otherwise the initial value, which is what the list had (overflow-x
+visible, computing to auto beside overflow-y auto; overscroll-behavior auto). An engine without
+revert-layer falls to the same initial value.
+
+Unset is the old list. The compiled stylesheet differs from the base by one added hunk and no
+removed or changed declaration. Before and after, in Chromium, Firefox and WebKit, every scenario
+that uses none of the hooks, or sets a token to what the list already computed, differs in no
+computed style, box, scroll size or attribute: lists under fourteen kinds of parent, with a rule
+of an app's own, with the same rule inside a cascade layer, and the &lt;sui-chat-message-list&gt;
+shadow tree with and without a layered rule adopted into it. The scenarios that use the hooks
+all moved, and a build with the fixed fallbacks makes the layered-rule scenarios differ, so the
+comparison can see the difference it is looking for.
+
+The docs routes that render the list (chat-message-list, chat, chat-compositions) show the same
+demo in all three engines, compared over repeated captures because chat has a timer-driven demo;
+the docs text the layout appends below chat-message-list is new, and the visual suite hides it.
+
+A rule of an app's own keeps winning when its selector has element, class or attribute
+specificity, wherever its stylesheet loads. Inside a cascade layer it wins only while the token is
+unset (revert-layer); a set token is an unlayered declaration and beats a layered rule. A rule with
+no specificity at all (* or :where()) that loads before the library stylesheet does not win: the
+library's declaration comes later at equal specificity. The docs say so, and that the class
+hide-scrollbar is the library's own name, as in Scroller.
+
+The scenario matrix lives in tests/fixtures/chat-message-list-scroll, driven by
+tests/chat-message-list-scroll-tokens.spec.ts, so the docs demo and its visual baseline do not
+move. The repo's Playwright project is Chromium only; the same file also ran in Firefox and WebKit
+through a scratch Playwright config: Chromium 29 passed, Firefox 21 passed and 8 skipped, WebKit
+25 passed and 4 skipped. Each skip is an assertion that engine cannot make (overlay scrollbars
+take no layout space; Playwright's Firefox hides every scrollbar and chains a wheel scroll
+whatever overscroll-behavior says) and the spec header names it. Two vitest cases cover the class
+binding.
+
+Negative controls, each run in all three engines: both fallbacks back to the fixed visible and
+auto, each one alone, an overflow-x fallback of auto or hidden, an overscroll fallback of none,
+the declarations ignoring their tokens, and the :where() wrapper dropped each failed the intended
+tests. After each, the file sha256 and a hash of the whole tree matched the passing state and the
+spec passed again.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.42.0](https://github.com/juspay/svelte-ui-components/compare/4.42.0..4.41.0) - 6 October 2026
 
 The Modal sized its content panel by height only. The three size classes read a width token with
 no ceiling and the footer action row could not wrap, so any consumer width token wider than the

@@ -121,3 +121,34 @@ describe('ChatMessageList scrollToBottom', () => {
     expect(frames).toHaveLength(0);
   });
 });
+
+describe('ChatMessageList hideScrollbar', () => {
+  const rootOf = (container: HTMLElement): HTMLElement => {
+    const list = container.querySelector('.chat-message-list');
+    if (!(list instanceof HTMLElement)) {
+      throw new Error('ChatMessageList root is missing');
+    }
+    return list;
+  };
+
+  it('leaves the root class list alone unless asked', () => {
+    const unset = rootOf(render(ChatMessageList, { messages }).container);
+    expect(unset.classList.contains('hide-scrollbar')).toBe(false);
+    const explicit = rootOf(render(ChatMessageList, { messages, hideScrollbar: false }).container);
+    expect(explicit.classList.contains('hide-scrollbar')).toBe(false);
+  });
+
+  it('adds the hide-scrollbar class beside a caller class, and drops it again', async () => {
+    const { container, rerender } = render(ChatMessageList, {
+      messages,
+      hideScrollbar: true,
+      classes: 'host-list'
+    });
+    const list = rootOf(container);
+    expect(list.classList.contains('hide-scrollbar')).toBe(true);
+    expect(list.classList.contains('host-list')).toBe(true);
+    await rerender({ messages, hideScrollbar: false, classes: 'host-list' });
+    expect(list.classList.contains('hide-scrollbar')).toBe(false);
+    expect(list.classList.contains('host-list')).toBe(true);
+  });
+});

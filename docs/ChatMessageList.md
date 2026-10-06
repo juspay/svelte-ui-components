@@ -28,6 +28,7 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 | scrollPolicy       | `'near-bottom' \| 'pin-sender-turn'` | No       | `'near-bottom'`    | `pin-sender-turn` pins each new sender message to the top and reserves headroom so the reply streams beneath it.   |
 | pinHold            | `boolean`                            | No       | `false`            | pin-sender-turn only: hold the reserved headroom while the host's turn is still busy; flipping false collapses it. |
 | jump               | `boolean`                            | No       | `true`             | Render the built-in jump-to-latest button. Hosts with their own affordance pass false.                             |
+| hideScrollbar      | `boolean`                            | No       | `false`            | Hide the list's own scrollbar while it stays scrollable, like Scroller's `hideScrollbar`.                          |
 | messageAttachments | `Snippet<[ChatMessageData]>`         | No       | `-`                | Own UI below each bubble; keeps the default bubble and actions.                                                    |
 | empty              | `Snippet`                            | No       | `-`                | Shown when there are no messages.                                                                                  |
 | jumpLabel          | `string`                             | No       | `'Jump to latest'` | Aria-label for the jump-to-latest button.                                                                          |
@@ -35,6 +36,27 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 | allowCopy          | `boolean`                            | No       | `false`            | Show copy buttons on assistant messages (default rendering).                                                       |
 | testId             | `string`                             | No       | `-`                | `data-pw` on the root element.                                                                                     |
 | classes            | `string`                             | No       | `-`                | Class string on the root element.                                                                                  |
+
+### Scrollbar, overflow and overscroll
+
+The list scrolls vertically (`overflow-y: auto`) and, by default, leaves everything else to the browser.
+Pass `hideScrollbar` to hide its scrollbar without losing scrolling (web component: the `hide-scrollbar`
+attribute). It adds the class `hide-scrollbar`, the library's own name (Scroller's, too), so a class of that
+name that you pass through `classes` with another meaning is affected as well. Set
+`--chat-message-list-overflow-x: hidden` to clip wide content instead of scrolling it sideways, and
+`--chat-message-list-overscroll-behavior: none` (or `contain`) to stop a scroll that reaches the end of the
+list from moving the page behind it. `overflow-x` and `overflow-y` are not independent: with the token set
+to `hidden` beside an `overflow-y: visible` rule of your own, the browser computes `overflow-y` to `auto`.
+
+Unset, each token hands the property back to the cascade, so the list is what it was before the tokens:
+`overflow-x: visible`, which the browser computes to `auto` beside `overflow-y: auto`, and
+`overscroll-behavior: auto`. A rule of your own wins over the tokens' declarations, which carry no
+specificity: a selector with at least element, class or attribute weight wins wherever its stylesheet loads.
+A rule inside a cascade `@layer` wins only while the token is unset (the unset token reverts to the layer
+below it); a set token is an unlayered declaration and beats every layered rule. The exception is a rule with
+no specificity at all (`*` or `:where(...)`) that loads before this library's stylesheet: the library's
+declaration comes later at equal specificity and wins, so load that rule after the library's CSS, or set the
+token.
 
 ## Events
 
@@ -83,21 +105,23 @@ to inspect. That is a gap in coverage, not in behaviour.
 
 ## CSS Variables
 
-| Variable                                          | Default                       | CSS Property    | Description                                 |
-| ------------------------------------------------- | ----------------------------- | --------------- | ------------------------------------------- |
-| `--chat-message-list-gap`                         | `1rem`                        | gap             | Gap between messages.                       |
-| `--chat-message-list-padding`                     | `0.75rem 1.5rem`              | padding         | Padding of the list.                        |
-| `--chat-message-list-scroll-behavior`             | `smooth`                      | scroll-behavior | Scroll behavior (auto when reduced motion). |
-| `--chat-message-list-jump-size`                   | `36px`                        | height/width    | Size of the jump-to-latest button.          |
-| `--chat-message-list-jump-bottom`                 | `8px`                         | bottom          | Sticky offset of the jump button.           |
-| `--chat-message-list-jump-background-color`       | `#ffffff`                     | background      | Jump button background.                     |
-| `--chat-message-list-jump-hover-background-color` | `#f4f4f5`                     | background      | Jump button hover background.               |
-| `--chat-message-list-jump-color`                  | `#52525b`                     | color           | Jump button icon color.                     |
-| `--chat-message-list-jump-border`                 | `1px solid #e4e4e7`           | border          | Jump button border.                         |
-| `--chat-message-list-jump-border-radius`          | `50%`                         | border-radius   | Corner rounding of the jump button.         |
-| `--chat-message-list-jump-box-shadow`             | `0 4px 12px rgba(0,0,0,0.12)` | box-shadow      | Jump button shadow.                         |
-| `--chat-message-list-jump-padding`                | `8px`                         | padding         | Padding inside the jump button.             |
-| `--chat-message-list-jump-margin-top`             | `4px`                         | margin-top      | Space above the jump button.                |
+| Variable                                          | Default                       | CSS Property        | Description                                 |
+| ------------------------------------------------- | ----------------------------- | ------------------- | ------------------------------------------- |
+| `--chat-message-list-gap`                         | `1rem`                        | gap                 | Gap between messages.                       |
+| `--chat-message-list-padding`                     | `0.75rem 1.5rem`              | padding             | Padding of the list.                        |
+| `--chat-message-list-scroll-behavior`             | `smooth`                      | scroll-behavior     | Scroll behavior (auto when reduced motion). |
+| `--chat-message-list-overflow-x`                  | `visible`                     | overflow-x          | Horizontal overflow of the list.            |
+| `--chat-message-list-overscroll-behavior`         | `auto`                        | overscroll-behavior | Whether a scroll at the end chains outward. |
+| `--chat-message-list-jump-size`                   | `36px`                        | height/width        | Size of the jump-to-latest button.          |
+| `--chat-message-list-jump-bottom`                 | `8px`                         | bottom              | Sticky offset of the jump button.           |
+| `--chat-message-list-jump-background-color`       | `#ffffff`                     | background          | Jump button background.                     |
+| `--chat-message-list-jump-hover-background-color` | `#f4f4f5`                     | background          | Jump button hover background.               |
+| `--chat-message-list-jump-color`                  | `#52525b`                     | color               | Jump button icon color.                     |
+| `--chat-message-list-jump-border`                 | `1px solid #e4e4e7`           | border              | Jump button border.                         |
+| `--chat-message-list-jump-border-radius`          | `50%`                         | border-radius       | Corner rounding of the jump button.         |
+| `--chat-message-list-jump-box-shadow`             | `0 4px 12px rgba(0,0,0,0.12)` | box-shadow          | Jump button shadow.                         |
+| `--chat-message-list-jump-padding`                | `8px`                         | padding             | Padding inside the jump button.             |
+| `--chat-message-list-jump-margin-top`             | `4px`                         | margin-top          | Space above the jump button.                |
 
 ## Web Component
 

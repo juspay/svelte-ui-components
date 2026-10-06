@@ -21,6 +21,16 @@ app's is) come from the query string (`?align=top&tokens=--modal-medium-width:90
 `tests/modal-viewport-width.spec.ts` drives it, so its scenario matrix is not a docs demo that the
 visual suite would have to baseline. It reports a count of overlay clicks in `fixture-overlay-clicks`.
 
+`chat-message-list-scroll/` mounts eighteen ChatMessageList scenarios, each in its own 280px by 140px
+host with rows wider and taller than the list: nothing set, `hideScrollbar` off and on, the overflow-x
+and overscroll-behavior tokens, a one-class rule of the app's own that must keep winning over them, the
+same rule inside a cascade layer (which an unlayered declaration beats unless the tokens hand the
+property back), the rules an app wrote before the tokens beside the same list written with them, and
+lists inside a scrolling container, to see whether a wheel scroll at the end chains outward. Its `cml-*`
+test ids belong to `tests/chat-message-list-scroll-tokens.spec.ts`, which also injects `dist-wc/index.js`
+to mount `<sui-chat-message-list>` (run `pnpm run build:wc` first), so the matrix stays out of the docs
+demo and that route's visual baseline does not move.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

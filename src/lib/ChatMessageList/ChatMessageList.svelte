@@ -16,6 +16,7 @@
     scrollPolicy = 'near-bottom',
     pinHold = false,
     jump = true,
+    hideScrollbar = false,
     message,
     messageBody,
     messageAttachments,
@@ -296,6 +297,7 @@
   aria-live="polite"
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
+  class:hide-scrollbar={hideScrollbar}
   bind:this={listEl}
   onscroll={handleScroll}
   use:pinToBottom={scrollKey}
@@ -359,6 +361,33 @@
     overflow-y: auto;
     padding: var(--chat-message-list-padding, 0.75rem 1.5rem);
     scroll-behavior: var(--chat-message-list-scroll-behavior, smooth);
+  }
+
+  /* Both properties sit inside :where() so they carry no specificity. A host that
+     already sets overflow-x or overscroll-behavior on the list wrote that rule
+     before these tokens existed, and Svelte's scope class would otherwise make
+     this tie it or beat it.
+     An unset token falls back to revert-layer, not to a value: this rule is
+     unlayered, and an unlayered declaration beats any rule inside a cascade
+     @layer whatever its specificity, so a fixed fallback would override a layered
+     rule of the host's that used to win. revert-layer hands the property back to
+     what the cascade held below this rule, which is that layered rule if there is
+     one and the property's initial value if not: overflow-x `visible` (computing
+     to `auto` beside overflow-y `auto`) and overscroll-behavior `auto`, the list
+     as it was before the tokens. An engine without revert-layer drops the
+     declaration to that same initial value. */
+  :where(.chat-message-list) {
+    overflow-x: var(--chat-message-list-overflow-x, revert-layer);
+    overscroll-behavior: var(--chat-message-list-overscroll-behavior, revert-layer);
+  }
+
+  .chat-message-list.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .chat-message-list.hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
   /* The inner wrapper is what the pin-sender-turn policy reserves height on; it

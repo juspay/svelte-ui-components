@@ -2,7 +2,99 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.45.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.46.0)
+
+Img sized itself with --image-width and --image-height and had no way to cap that size. An image
+sized with auto, so that it keeps its own dimensions, could not be held inside its container
+without a class on the image that set max-width and max-height from outside the component. An app
+that previews photos of any size wrote exactly that rule next to its own markup.
+
+The &lt;img&gt; and the &lt;svg&gt; host that inlineSvg renders now read --image-max-width and
+--image-max-height. Both take a length, a percentage or none, resolve like any max-width, and apply
+on top of the size tokens: a cap wins over --image-width on the same axis, and beside the 24px
+default a cap changes only the axis it names. Both cross the &lt;sui-img&gt; shadow root like the other
+variables. No prop was added, so the web-component wrapper is unchanged.
+
+An Img that sets neither token must compute what it did before, beside whatever max-width rule the
+app already has, so the rule is written in a cascade layer: @layer svelte-ui-img { :where(img, svg)
+{ max-width: var(--image-max-width, revert-layer); ... } }. A layer loses to every rule outside a
+layer, whatever its selector and whichever stylesheet loads first, and revert-layer hands the
+property back to any earlier layer, and to none when there is none, so an unset token declares
+nothing. The first version used revert-layer without the layer and a before/after diff caught it:
+beside an app rule of * { max-width: 100% } placed ahead of the library stylesheet, an unset image
+went from 100% to none in all three engines, because the library's rule ties that one at zero
+specificity, wins on order, and revert-layer then discards the app's rule too. A none fallback
+outside a layer does the same in all three engines, and inside one outranks a reset the app keeps
+in an earlier layer. :where() is kept as a second line behind the layer and keeps the rule at zero
+specificity should it ever leave it.
+
+Unset equals the base release (db47d8f, 4.42.0), measured two ways in Chromium 148.0.7778.96,
+Firefox 150.0.2 and WebKit 26.4:
+- The compiled Img stylesheet differs from the base by added lines only: one @layer block, with
+nothing removed or reordered.
+- A before/after run over a fixture built once against each tree compared every computed property
+and the box of 22 elements (7 unset images, their 7 hosts, a bare img and svg, and 3 sui-img with
+their inner image) under 9 placements of an app reset: none, img and svg rules ahead of and
+behind the library stylesheet, * and :where() rules ahead of and behind it, and a cascade layer
+named ahead of and behind the library's. 594 element measurements, 249840 computed properties,
+0 differences.
+- The same comparison over the 103 pages of the docs site, built from each tree, covers 70 Img
+elements on 14 routes: 0 differences in computed style and box. The one page whose size changes
+is /components/img, because its docs text grows; the visual suite hides that text. One WebKit
+page, thinking-indicator, measured 50px shorter once and 9918px in six reruns on both trees.
+
+Default behaviour a consumer can see: none with both tokens unset. With a token set:
+- A rule outside a layer for the same property decides over the token, whatever its selector and
+whichever stylesheet loads first: img { max-width: 100% }, * { ... } and :where(img) { ... }. The
+token is then ignored, as the rule an app wrote before the tokens existed keeps winning.
+- A reset in a cascade layer gives way to a token when its layer is first named before the
+library's, and none opts out of it; one first named after the library's decides in every case.
+The library's layer is named where its stylesheet first loads, so an app that needs the order
+fixed lists svelte-ui-img in a @layer statement ahead of that stylesheet.
+- svelte-ui-img is the library's first cascade layer, so a page's layer list gains one name. A build
+step that lowers cascade layers to plain CSS was not tried against it.
+
+Verified with tests/img-max-size.spec.ts on a new fixture app, tests/fixtures/img-max-size, so the
+scenario matrix stays off the docs demo, whose baseline does not move: the demo markup is untouched
+and the docs text is hidden by the visual suite. The 229 tests cover the unset twins on the img and
+the svg path, every cap, the interaction with the size tokens and object-fit, nine reset placements
+and sui-img. 108 of them (?hosts=1) lay an unset Img out beside a bare element of the same size in
+a flex row, a flex column, a grid track, a table cell, a float and an absolutely positioned box, on
+the img and the svg path, at the 24px default, at auto and at 100%, under each of the nine reset
+placements. They compare computed max-width, max-height, min-width and min-height, the box, its
+offset and the host's box. They compare with a bare element rather than a number because the engines
+disagree on some of these boxes: a table-cell host is 28px tall in Chromium and 29.6px in Firefox,
+and a 100% image in a table cell is 100px tall in Chromium and Firefox and 200px in WebKit. The
+fixture now says so when a page never settles, as a broken image measures 0x0 on both sides of a
+comparison. The file was run in Chromium, Firefox and WebKit through a scratch Playwright config,
+since the repo project runs Chromium only: 687 passed, 0 failed.
+
+Negative controls, in Chromium over all 229 tests, each restored to a byte-identical tree (sha256
+over every tracked and untracked file). Each count is the number of tests that fail, with the
+host-kind tests among them in brackets:
+- Img.svelte reverted to the base: 24 (0), since an unset Img equals the base.
+- A none fallback in the layer: 23 (12). A none fallback outside a layer: 92 (48).
+- No layer, :where() kept: 49 (24). No layer and no :where(): 142 (72).
+- No max-width declaration: 18 (0). No max-height declaration: 12 (0). An img-only selector: 6 (0).
+- A 100% fallback on both declarations: 37 (12).
+- A 0 fallback on the max-width declaration alone: 48 (24). On both declarations: 60 (24).
+- min-width: 0 and min-height: 0 added to the layer: 54 (54), all in the flex and grid boxes.
+- The layer without :where(): 0, since the layer already decides every case.
+Each of the 108 host-kind tests fails under at least one of these. Controls on the test side:
+- A fixture whose image does not decode fails all 11 tests that were run, at the readiness check.
+The old check, which reported ready after its timeout, let two older tests pass over the broken
+image, and the host-kind tests failed on "the bare element has its image".
+- A bare element given min-width: 0 fails 54 (54).
+- A * reset emptied of its rules fails 22 (12), on the check that the reset is as placed.
+
+docs/Img.md gains the two token rows and a note on capping an image to its container, and
+tests/fixtures/README.md a paragraph on the new fixture.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.46.0](https://github.com/juspay/svelte-ui-components/compare/4.46.0..4.45.0) - 6 October 2026
 
 A Scroller with hideScrollbar={false} showed the browser scrollbar and gave an app
 no hook to theme it, so apps reached into .scroll-container with :global() rules.

@@ -368,4 +368,28 @@
     background: var(--image-hover-background, var(--image-background));
     border: var(--image-hover-border, var(--image-border));
   }
+
+  /* The ceilings sit in a cascade layer and read through :where(), for one reason:
+     an Img that sets neither token must compute exactly what it computed before
+     they existed, beside whatever max-width rule the app already has.
+
+     A layer loses to every rule outside a layer, whatever its selector and
+     whichever stylesheet loads first, so an app's `img { max-width: 100% }`, its
+     `* { max-width: 100% }` and a zero-specificity `:where(img)` reset all keep
+     winning. A zero-specificity rule outside a layer would not do that: it ties
+     with the app's `*` and `:where()` rules, and the later stylesheet takes it.
+     :where() keeps the rule at zero specificity should it ever leave the layer;
+     Svelte compiles :where(img) to :where(img.svelte-hash).
+
+     The fallback is `revert-layer`, not `none`. `none` is the initial value, but
+     as a declaration it would outrank a reset an app keeps in an earlier layer
+     (Tailwind 4's preflight does). `revert-layer` hands the property back to the
+     layers below this one, and to `none` when there are none, so an unset token
+     declares nothing. */
+  @layer svelte-ui-img {
+    :where(img, svg) {
+      max-width: var(--image-max-width, revert-layer);
+      max-height: var(--image-max-height, revert-layer);
+    }
+  }
 </style>

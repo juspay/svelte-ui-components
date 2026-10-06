@@ -66,6 +66,16 @@ belong to `tests/scroller-scrollbar.spec.ts`; the scenario matrix stays out of t
 full-page visual baseline would move with it. That spec runs Chromium only in CI; its header says how
 Firefox and WebKit were measured, and which assertions those two engines cannot make.
 
+`img-max-size/` mounts the real Img, as an `<img>` and as an inlined `<svg>`, in 200x100 hosts that set,
+or leave unset, `--image-max-width` and `--image-max-height`, beside a bare `<img>` and `<svg>` for the
+page's own rules to act on. The app's reset is the input (`?reset=before`, `after`, `star-before`,
+`where-before`, `layer`, `layer-after`, and so on): a stylesheet placed ahead of or behind the library's,
+or in a cascade layer. `?hosts=1` adds a second grid: an Img and a bare element of the same size in each
+of six kinds of box (a flex row and column, a grid track, a table cell, a float, an absolutely positioned
+box), on the `<img>` and the `<svg>` path. `tests/img-max-size.spec.ts` drives it and injects
+`dist-wc/index.js` to mount `<sui-img>` too, so its scenario matrix is not a docs demo that the visual
+suite would have to baseline.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

@@ -59,6 +59,8 @@ Override these custom properties to theme the component.
 | `--image-object-fit`       | `-`                       | object-fit    | Object-fit of the image (contain, cover, etc.).                |
 | `--image-height`           | `24px`                    | height        | Height of the image.                                           |
 | `--image-width`            | `24px`                    | width         | Width of the image.                                            |
+| `--image-max-width`        | `-`                       | max-width     | Maximum width: a length, a percentage, or `none`.              |
+| `--image-max-height`       | `-`                       | max-height    | Maximum height: a length, a percentage, or `none`.             |
 | `--image-padding`          | `0px`                     | padding       | Padding around the image.                                      |
 | `--image-border-radius`    | `0px`                     | border-radius | Corner rounding of the image.                                  |
 | `--image-margin`           | `0px`                     | margin        | Margin around the image.                                       |
@@ -68,6 +70,28 @@ Override these custom properties to theme the component.
 | `--image-transition`       | `-`                       | transition    | Transition animation for hover effects.                        |
 | `--image-hover-background` | `var(--image-background)` | background    | Background on hover.                                           |
 | `--image-hover-border`     | `var(--image-border)`     | border        | Border on hover.                                               |
+
+## Capping an image to its container
+
+`--image-width` and `--image-height` size the image; `--image-max-width` and `--image-max-height` cap it. To show an image at its own size but never larger than the box it sits in, size it with `auto` and cap it with `100%`:
+
+```svelte
+<Img src={photo} alt="Photo" classes="preview" />
+
+<style>
+  :global(.preview) {
+    --image-width: auto;
+    --image-height: auto;
+    --image-max-width: 100%;
+    --image-max-height: 100%;
+    --image-object-fit: contain;
+  }
+</style>
+```
+
+- A cap wins over the size token on the same axis, and with the 24px default a cap changes only the axis it names (`--image-max-width: 12px` renders 12px by 24px). Size with `auto`, as above, to keep the ratio.
+- A percentage resolves against the container as for any `max-width`; a percentage `max-height` needs a container with a definite height. Both apply to the `<img>` and to the inlined `<svg>`, and cross the `<sui-img>` shadow root like the other variables.
+- With neither variable set nothing changes: the image computes what it did before, beside any `max-width` or `max-height` rule of your own. The caps sit in a cascade layer, `svelte-ui-img`, the first the library adds to a page's layer list, so a rule outside a layer decides over them whatever its selector and whichever stylesheet loads first, `img { max-width: 100% }`, `* { … }` and `:where(img) { … }` included, and the variable is then ignored. A reset in a cascade layer, as Tailwind 4's preflight is, gives way to a variable you set when its layer is first named before the library's (`none` opts out of it) and decides when neither is set; one first named after the library's decides in every case.
 
 ## Events
 

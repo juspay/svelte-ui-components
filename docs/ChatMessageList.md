@@ -121,6 +121,8 @@ to inspect. That is a gap in coverage, not in behaviour.
 
 ## CSS Variables
 
+`--chat-message-list-padding` is also read by ChatMessage as the fallback indent for the lists inside a message body, so setting it to `0` for the list removes that indent too. Set `--chat-message-body-list-padding` to give those lists their own value (see `docs/ChatMessage.md`).
+
 | Variable                                          | Default                       | CSS Property        | Description                                 |
 | ------------------------------------------------- | ----------------------------- | ------------------- | ------------------------------------------- |
 | `--chat-message-list-gap`                         | `1rem`                        | gap                 | Gap between messages.                       |

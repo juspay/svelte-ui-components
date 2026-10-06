@@ -85,6 +85,14 @@ hand the properties back). Its `cmi-*` test ids belong to
 `<sui-chat-message-list>` (run `pnpm run build:wc` first), so the matrix stays out of the docs demo and
 that route's visual baseline does not move.
 
+`chat-message-body-list/` mounts the real ChatMessage with a bulleted and a numbered list in its body and
+reads their margin and indent: nothing set, the older `--chat-message-list-margin` and
+`--chat-message-list-padding` alone, the `--chat-message-body-list-*` tokens alone and beside the older
+names, and the same message inside a ChatMessageList, which reads `--chat-message-list-padding` for its own
+padding too. Its `cbl-*` test ids belong to `tests/chat-message-body-list-tokens.spec.ts`, which also injects
+`dist-wc/index.js` to mount `<sui-chat-message>` (run `pnpm run build:wc` first), so the matrix stays out of
+the docs demo and that route's visual baseline does not move.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

@@ -76,6 +76,15 @@ box), on the `<img>` and the `<svg>` path. `tests/img-max-size.spec.ts` drives i
 `dist-wc/index.js` to mount `<sui-img>` too, so its scenario matrix is not a docs demo that the visual
 suite would have to baseline.
 
+`chat-message-list-inner/` mounts eleven ChatMessageList scenarios in 400px by 200px hosts, each with eight
+rows and a hidden scrollbar so the numbers do not depend on scrollbar width: nothing set, each of the five
+inner-column tokens alone and together, a rule of the app's own that reaches `.inner` with the tokens unset
+and set, and the same rule inside a cascade layer (which an unlayered declaration beats unless the tokens
+hand the properties back). Its `cmi-*` test ids belong to
+`tests/chat-message-list-inner-tokens.spec.ts`, which also injects `dist-wc/index.js` to mount
+`<sui-chat-message-list>` (run `pnpm run build:wc` first), so the matrix stays out of the docs demo and
+that route's visual baseline does not move.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

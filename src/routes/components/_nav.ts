@@ -133,6 +133,7 @@ export const componentNav: NavGroup[] = [
       { name: 'Icon', slug: 'icon' },
       { name: 'Img', slug: 'img' },
       { name: 'MediaPlayer', slug: 'media-player' },
+      { name: 'LottiePlayer', slug: 'lottie-player' },
       { name: 'MediaUpload', slug: 'media-upload' },
       { name: 'Gallery', slug: 'gallery' }
     ]
@@ -145,6 +146,8 @@ export const componentNav: NavGroup[] = [
       { name: 'ChatMessageList', slug: 'chat-message-list' },
       { name: 'ChatComposer', slug: 'chat-composer' },
       { name: 'SpeechToText', slug: 'speech-to-text' },
+      { name: 'SpeechSynthesis', slug: 'speech-synthesis' },
+      { name: 'AttachmentChipRow', slug: 'attachment-chip-row' },
       { name: 'VoiceOrb', slug: 'voice-orb' },
       { name: 'ChatHeader', slug: 'chat-header' },
       { name: 'ChatToolStatus', slug: 'chat-tool-status' },

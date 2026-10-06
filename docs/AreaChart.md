@@ -184,6 +184,41 @@ not on which series' actual value is closest to the pointer. The tooltip's
 displayed value is unaffected either way; only which series' marker "wins" a
 close-proximity hover can differ from a purely pixel-distance comparison.
 
+### Accessible name and description
+
+Every chart drawing needs a name of its own. `ariaLabel` names the chart (it lands on the
+`<svg>`), and the optional `ariaDescription` adds the takeaway — trend, range, outliers —
+which is announced after the name:
+
+```svelte
+<AreaChart
+  {series}
+  ariaLabel="Revenue by month, January to June"
+  ariaDescription="Revenue rises from 30 in January to 90 in December, dipping in March."
+/>
+```
+
+Omit `ariaLabel` and a name is derived from the chart itself — `"{yAxisLabel} area chart"`, else the series names (`"Area chart: Direct, Organic"`), else `"Area chart"` — so an unlabelled chart is
+still identifiable, but a name written for the page is almost always better. A blank string
+counts as omitted.
+
+How the drawing is exposed depends on whether it holds controls:
+
+- A chart that draws data points is **interactive**: those marks are focusable `role="button"`
+  elements, so the `<svg>` is exposed as a named `role="group"` rather than `role="img"`. An image's
+  children are presentational (ARIA), so marks left under one are dropped or announced
+  inconsistently between browsers, and axe reports `nested-interactive`.
+- A chart with nothing to operate (every series hidden through the legend) is a static, named
+  `role="img"`.
+- The `<svg>` itself carries the name. A name on some wrapper elsewhere does not name the
+  image inside it.
+- Tick labels and the value labels drawn on the chart are `aria-hidden`: each mark's own accessible
+  name already says its category and value, so exposing them too would announce everything twice. The
+  axis *titles* (`xAxisLabel`, `yAxisLabel`) stay exposed — they are where a unit or dimension is stated.
+- The description is an SVG `<desc>` with an instance-scoped id referenced by `aria-describedby`; every
+  gradient and pattern id is instance-scoped too, so two charts on one page (or in two shadow roots)
+  never resolve each other's references.
+
 ### Keyboard access
 
 Every rendered data point is a focusable `role="button"` element (`tabindex="0"`),
@@ -275,6 +310,8 @@ than `NaN` or a fabricated `0`, `sum` included. `aggregateFormat` defaults to `y
 | aspectRatio    | `number`                                                    | No       | `16/9`       | Width-to-height ratio.                                                                                                                                                                                                                                                                                                                                   |
 | tooltipSnippet | `Snippet<[AreaChartTooltipContext]>`                        | No       | `-`          | Custom tooltip. Receives `{x, points: [{name, y, color, label?}]}` with values for all series at the hovered X.                                                                                                                                                                                                                                          |
 | empty          | `Snippet`                                                   | No       | `-`          | Content rendered when all series are empty.                                                                                                                                                                                                                                                                                                              |
+| ariaLabel      | `string`                                                    | No       | derived      | Accessible name of the chart (`aria-label` on its `<svg>`). Say what the chart shows. When omitted a name is derived from `yAxisLabel` / the series names, else `"Area chart"`. See [Accessible name and description](#accessible-name-and-description). |
+| ariaDescription | `string`                                                   | No       | `-`          | Optional longer description announced after the name (an SVG `<desc>` referenced by `aria-describedby`). |
 | testId         | `string`                                                    | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                                                                                                                  |
 | classes        | `string`                                                    | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                                                                                                                                       |
 | minHeight      | `number`                                                    | No       | `0`          | Lower bound (px) on the rendered chart height.                                                                                                                                                                                                                                                                                                           |
@@ -370,6 +407,16 @@ portal destination from the node's own root instead of hardcoding
     }
   };
 </script>
+```
+
+Name and describe the chart with `chart-aria-label` / `chart-aria-description` (properties
+`chartAriaLabel` / `chartAriaDescription`). They are not `aria-label` / `aria-description`, which on a
+custom element name the *host* (a role-less element) rather than the drawing inside its shadow
+root; the host's own ARIA attributes are left alone. See
+[Accessible name and description](#accessible-name-and-description).
+
+```html
+<sui-area-chart chart-aria-label="Traffic by source" chart-aria-description="Direct leads."></sui-area-chart>
 ```
 
 Arrays, objects and functions — `series`, `xDomain`, `yDomain`, `xTickFormat`,

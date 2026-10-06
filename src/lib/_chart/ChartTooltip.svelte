@@ -64,10 +64,24 @@
 
   const pos = $derived.by(() => {
     const tooltip = { width: tooltipWidth, height: tooltipHeight };
+    const rect = originEl?.getBoundingClientRect();
+    // Native rendered bounds include the label's loaded font and transforms.
+    // Only our opaque label plates participate; caller tooltip content stays
+    // intact and ordinary charts retain their existing placement.
+    const avoidRects = Array.from(
+      originEl?.querySelectorAll<SVGRectElement>('.chart-label-backdrop') ?? []
+    ).map((plate) => {
+      const bounds = plate.getBoundingClientRect();
+      return {
+        left: bounds.left - (portal ? 0 : (rect?.left ?? 0)),
+        top: bounds.top - (portal ? 0 : (rect?.top ?? 0)),
+        width: bounds.width,
+        height: bounds.height
+      };
+    });
     if (portal) {
       void portalTick;
       // Convert container coords to viewport coords and clamp to the viewport.
-      const rect = originEl?.getBoundingClientRect();
       const dx = rect?.left ?? 0;
       const dy = rect?.top ?? 0;
       const container =
@@ -79,14 +93,15 @@
         mouseY: mouseY + dy,
         anchor: anchor === null ? null : { ...anchor, x: anchor.x + dx, y: anchor.y + dy },
         tooltip,
-        container
+        container,
+        avoidRects
       });
     }
     const container = {
       width: tooltipEl?.offsetParent?.clientWidth ?? Number.POSITIVE_INFINITY,
       height: tooltipEl?.offsetParent?.clientHeight ?? Number.POSITIVE_INFINITY
     };
-    return computeTooltipPosition({ mouseX, mouseY, anchor, tooltip, container });
+    return computeTooltipPosition({ mouseX, mouseY, anchor, tooltip, container, avoidRects });
   });
 </script>
 

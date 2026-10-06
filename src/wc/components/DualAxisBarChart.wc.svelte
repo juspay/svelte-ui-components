@@ -22,6 +22,9 @@
       tooltipPortal: { type: 'Boolean', attribute: 'tooltip-portal' },
       interactiveLegend: { type: 'Boolean', attribute: 'interactive-legend' },
       hideLegendBelow: { type: 'Number', attribute: 'hide-legend-below' },
+      // Chart-specific aliases preserve the host's native ARIAMixin accessors.
+      chartAriaLabel: { type: 'String', attribute: 'chart-aria-label' },
+      chartAriaDescription: { type: 'String', attribute: 'chart-aria-description' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       tooltipSnippet: { type: 'Object' },
@@ -32,9 +35,17 @@
 
 <script lang="ts">
   import DualAxisBarChart from '$lib/DualAxisBarChart/DualAxisBarChart.svelte';
+  import type { DualAxisBarChartProperties } from '$lib/DualAxisBarChart/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let {
+    chartAriaLabel,
+    chartAriaDescription,
+    ...props
+  }: Omit<DualAxisBarChartProperties, 'ariaLabel' | 'ariaDescription'> & {
+    chartAriaLabel?: DualAxisBarChartProperties['ariaLabel'];
+    chartAriaDescription?: DualAxisBarChartProperties['ariaDescription'];
+  } = $props();
 
   /*
    * DualAxisBarChart has exactly one snippet prop, `tooltipSnippet`, and it is
@@ -77,7 +88,12 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<DualAxisBarChart {...props} {...dispatchers} />
+<DualAxisBarChart
+  {...props}
+  {...dispatchers}
+  ariaLabel={chartAriaLabel}
+  ariaDescription={chartAriaDescription}
+/>
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

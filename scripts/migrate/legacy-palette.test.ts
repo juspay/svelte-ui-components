@@ -436,11 +436,18 @@ function releaseRepo(files: Record<string, string>): { root: string; sha: string
     writeFileSync(full, contents);
   }
   run(['add', '-A']);
+  // Fixture identity belongs to this commit, not the developer's Git config.
+  // Avoid extra config/mkdir processes: this is a real history test, and process
+  // startup alone can exhaust its timeout on a busy machine.
   run([
     '-c',
     'user.email=test@example.com',
     '-c',
     'user.name=Test',
+    '-c',
+    'commit.gpgsign=false',
+    '-c',
+    'core.hooksPath=/dev/null',
     'commit',
     '-q',
     '-m',

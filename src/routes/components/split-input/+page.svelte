@@ -17,7 +17,7 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>OTP / PIN (auto-advance)</h3>
-  <SplitInput bind:values={otpValues} autoAdvance testId="split-input-default" />
+  <SplitInput bind:values={otpValues} autoAdvance ariaLabel="PIN" testId="split-input-default" />
   <p>Value: {otpValues.join('')}</p>
 </div>
 
@@ -26,6 +26,7 @@
   <SplitInput
     bind:values={smsOtpValues}
     autoAdvance
+    ariaLabel="SMS one-time code"
     testId="split-input-sms-otp"
     fields={[
       { dataType: 'tel', maxLength: 1, autoComplete: 'one-time-code', inputMode: 'numeric' },
@@ -40,10 +41,11 @@
   <h3>RGB color channels</h3>
   <SplitInput
     bind:values={rgbValues}
+    ariaLabel="RGB color"
     fields={[
-      { label: 'R', dataType: 'number', min: 0, max: 255 },
-      { label: 'G', dataType: 'number', min: 0, max: 255 },
-      { label: 'B', dataType: 'number', min: 0, max: 255 }
+      { label: 'R', ariaLabel: 'Red', dataType: 'number', min: 0, max: 255 },
+      { label: 'G', ariaLabel: 'Green', dataType: 'number', min: 0, max: 255 },
+      { label: 'B', ariaLabel: 'Blue', dataType: 'number', min: 0, max: 255 }
     ]}
   />
 </div>
@@ -53,6 +55,8 @@
   <SplitInput
     bind:values={ipValues}
     separator="."
+    ariaLabel="IP address"
+    positionLabel={(position, total) => `octet ${position} of ${total}`}
     fields={[
       { dataType: 'number', min: 0, max: 255, maxLength: 3 },
       { dataType: 'number', min: 0, max: 255, maxLength: 3 },
@@ -64,12 +68,17 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>6-digit code (auto-advance)</h3>
-  <SplitInput values={['', '', '', '', '', '']} length={6} autoAdvance />
+  <SplitInput
+    values={['', '', '', '', '', '']}
+    length={6}
+    autoAdvance
+    ariaLabel="Verification code"
+  />
 </div>
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>Disabled</h3>
-  <SplitInput values={['1', '2', '3', '4']} disabled />
+  <SplitInput values={['1', '2', '3', '4']} disabled ariaLabel="Locked PIN" />
 </div>
 
 <h2>Validity messaging</h2>
@@ -94,9 +103,14 @@
   <SplitInput
     values={infoOnlyCode}
     length={4}
-    ariaLabel="One-time code"
+    ariaLabel="One-time code with a hint"
     infoMessage="Check your messages."
     testId="splitinput-info-only"
   />
-  <SplitInput values={plainCode} length={4} testId="splitinput-undescribed" />
+  <SplitInput
+    values={plainCode}
+    length={4}
+    ariaLabel="Plain one-time code"
+    testId="splitinput-undescribed"
+  />
 </div>

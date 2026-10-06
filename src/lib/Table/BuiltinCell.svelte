@@ -36,14 +36,19 @@
     value,
     rowIndex,
     originalIndex,
+    ariaLabel,
     usePortal = false
   }: {
     column: TableColumn;
     value: TableCellValue;
     rowIndex: number;
     originalIndex: number;
+    ariaLabel?: string;
     usePortal?: boolean;
   } = $props();
+  const fieldLabel = $derived(
+    ariaLabel?.trim() || `${column.label || column.id} for row ${originalIndex + 1}`
+  );
 
   // The td applies column.align as text-align, which flex containers ignore:
   // column-flex builtins stretch their children and row-flex builtins pack to
@@ -301,20 +306,22 @@
 {:else if column.type === 'toggle'}
   {@const data = asJsonObject(value) ?? {}}
   {@const isChecked = data.checked === true}
+  <!-- This is only an event boundary; the native Toggle input owns interaction. -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <span
     class="builtin-toggle"
-    role="switch"
-    aria-checked={isChecked ? 'true' : 'false'}
-    aria-label={typeof data.ariaLabel === 'string' ? data.ariaLabel : null}
     data-pw={typeof data.testId === 'string' ? data.testId : null}
     testID={typeof data.testId === 'string' ? data.testId : null}
     onclick={stopClickPropagation}
     onkeydown={stopKeydownPropagation}
-    tabindex={-1}
   >
     <Toggle
       checked={isChecked}
       text=""
+      inputRole="switch"
+      ariaLabel={typeof data.ariaLabel === 'string' && data.ariaLabel.trim()
+        ? data.ariaLabel
+        : fieldLabel}
       onclick={(newChecked) => column.onToggle?.(rowIndex, newChecked, originalIndex)}
     />
   </span>
@@ -328,6 +335,7 @@
       onkeydown={stopKeydownPropagation}
     >
       <Select
+        ariaLabel={selectData.ariaLabel?.trim() || fieldLabel}
         items={selectData.options}
         value={selectData.selectedId ? [selectData.selectedId] : []}
         placeholder={selectData.placeholder ?? ''}
@@ -360,7 +368,7 @@
       <Input
         value={inputData.value ?? ''}
         placeholder={inputData.placeholder ?? ''}
-        ariaLabel={inputData.ariaLabel ?? null}
+        ariaLabel={inputData.ariaLabel?.trim() || fieldLabel}
         disable={inputData.disabled ?? false}
         testId={inputData.testId ?? ''}
         dataType={asInputDataType(inputData.dataType ?? null)}

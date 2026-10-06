@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
+import {
+  distance,
+  expectMs,
+  expectSheetIntroProgress,
+  observeSheetEntrance,
+  parseTranslate,
+  summarizeFrames
+} from '../support/motion-observers.js';
 import { beat, caption, highlight, step } from './support/narrate.js';
 
 /**
@@ -22,12 +30,12 @@ import { beat, caption, highlight, step } from './support/narrate.js';
  *  - Focus restore on Sheet close: "focus returned to the trigger" and "focus
  *    fell to <body>" render identically in a screenshot. Only watching the
  *    ring travel back onto the button proves which one happened.
- *  - Sheet's reduced-motion fallback: a single frame cannot show the absence
- *    of 400px of travel -- that requires two passes, in motion, contrasted.
- *    Filmed as two separate tests rather than one test with two passes: the
- *    guard only takes effect on a fresh mount (see the comment on the second
- *    of the two below), so each pass needs its own navigation, not a reused
- *    page with the preference flipped mid-test.
+ *  - Sheet's tokenized slide and its reduced-motion fallback: a single frame
+ *    cannot show that the panel travels the documented 60px (not the retired
+ *    400px) or that reduced motion removes the travel -- that takes the
+ *    transition's own keyframes, read from the panel's first frame, in motion
+ *    and then with the preference on. Filmed as separate tests, including one
+ *    that flips the preference on a Sheet that is already mounted.
  *  - A portalled panel landing inside a shadow root instead of `document.body`:
  *    the defect was "renders as unstyled text at the bottom of the page", so
  *    the fix is a panel that looks and sits like every other dropdown in the
@@ -38,99 +46,19 @@ import { beat, caption, highlight, step } from './support/narrate.js';
  * thing the assertions check.
  */
 
-/** One frame's reading, timestamped on the page's own animation clock. */
-type TranslateXSample = { readonly tMs: number; readonly translateX: number };
+const DEFAULT_SHEET_TRAVEL_PX = 60;
+const DEFAULT_SHEET_DURATION_MS = 300;
+// Sheet clamps its transition to 0.001ms under reduced motion: instant, but still a
+// real transition so Svelte raises its intro/outro events.
+const REDUCED_SHEET_CLAMP_MS = 0.001;
 
-/** A |translateX| this small is noise (sub-pixel rounding), not travel. */
-const MOTION_NOISE_FLOOR_PX = 5;
-
-/**
- * `.sheet-panel`'s rendered `transform` on every animation frame, while
- * Sheet's `fly` transition plays.
- *
- * A single peak number cannot tell a real slide from a one-frame flash:
- * `fly` writes its fully-offset start state as the FIRST keyframe the
- * instant the transition is created, so even a transition that is
- * immediately overridden back to rest would still read as one brief
- * nonzero sample. Those two cases look identical as a scalar and completely
- * different as a series -- one decays across dozens of frames over the
- * transition's duration, the other is gone by the very next frame. Keeping
- * the series (rather than reducing to a peak in-page) lets the caller tell
- * them apart after the fact.
- *
- * Two earlier instruments both read zero motion here, and the common cause
- * was timing, not technique. Sheet's panel is rendered with `{#if open}`
- * (`Sheet.svelte`), so `transition:fly|global` starts driving it the instant
- * the click handler mounts the node -- not when Playwright's own
- * `toBeVisible()` settles, well after the click's microtask queue (and a
- * chunk of the 300ms transition itself) has already run. This is therefore
- * called (and its returned promise held, NOT awaited) before the trigger is
- * clicked at all, so the very first animation frame it schedules is already
- * polling for `.sheet-panel` to exist. Once found, it samples every frame
- * for a window comfortably longer than the 300ms transition; the wait for
- * the node itself is capped separately so a sheet that never opens resolves
- * with an empty series instead of hanging.
- */
-const sampleTranslateXSeries = (page: Page): Promise<readonly TranslateXSample[]> =>
-  page.evaluate(
-    () =>
-      new Promise<{ tMs: number; translateX: number }[]>((resolve) => {
-        const giveUpWaitingForPanelAt = performance.now() + 3_000;
-        const samples: { tMs: number; translateX: number }[] = [];
-        let sampleUntil: number | null = null;
-        const sample = () => {
-          const node = document.querySelector('.sheet-panel');
-          const now = performance.now();
-          if (node !== null) {
-            if (sampleUntil === null) {
-              sampleUntil = now + 600;
-            }
-            const computed = getComputedStyle(node).transform;
-            const match = computed.match(/matrix\(([^)]+)\)/);
-            const values =
-              match !== null ? match[1].split(',').map((part) => Number(part.trim())) : [];
-            const translateX = values.length === 6 ? Math.abs(values[4]) : 0;
-            samples.push({ tMs: now, translateX });
-          } else if (now > giveUpWaitingForPanelAt) {
-            resolve(samples);
-            return;
-          }
-          if (sampleUntil !== null && now >= sampleUntil) {
-            resolve(samples);
-          } else {
-            requestAnimationFrame(sample);
-          }
-        };
-        requestAnimationFrame(sample);
-      })
-  );
-
-/** Reduces a sampled series to the numbers a real-slide-vs-flash call needs. */
-type MotionReading = {
-  readonly peak: number;
-  readonly finalX: number;
-  readonly sampleCount: number;
-  readonly samplesAboveFloor: number;
-  readonly msAboveFloor: number;
-};
-
-const summarizeMotion = (samples: readonly TranslateXSample[]): MotionReading => {
-  if (samples.length === 0) {
-    return { peak: 0, finalX: 0, sampleCount: 0, samplesAboveFloor: 0, msAboveFloor: 0 };
-  }
-  const peak = samples.reduce((max, sample) => Math.max(max, sample.translateX), 0);
-  const aboveFloor = samples.filter((sample) => sample.translateX >= MOTION_NOISE_FLOOR_PX);
-  // A duration, not a timestamp -- the difference cancels out that these are
-  // wall-clock `performance.now()` values, not series-relative ones.
-  const msAboveFloor =
-    aboveFloor.length === 0 ? 0 : aboveFloor[aboveFloor.length - 1].tMs - aboveFloor[0].tMs;
-  return {
-    peak,
-    finalX: samples[samples.length - 1].translateX,
-    sampleCount: samples.length,
-    samplesAboveFloor: aboveFloor.length,
-    msAboveFloor
-  };
+/** Sets prefers-reduced-motion and proves the emulation actually reached the page. */
+const setReducedMotion = async (page: Page, reduced: boolean): Promise<void> => {
+  await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+  expect(
+    await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
+    'the reduced-motion emulation must actually reach the page'
+  ).toBe(reduced);
 };
 
 test('Escape belongs to the surface that opened last: the menu goes first, the modal stays', async ({
@@ -263,40 +191,91 @@ test('Sheet gives focus back to the exact element that opened it', async ({ page
   await beat(page, 1_000);
 });
 
-test('Sheet without a reduced-motion preference slides the panel in 400px from the right', async ({
+test('Sheet without a reduced-motion preference slides the panel in 60px from the right', async ({
   page
 }) => {
   await gotoHydrated(page, '/components/sheet');
+  await setReducedMotion(page, false);
 
   const trigger = page.getByTestId('sheet-right-trigger');
   const panel = page.getByRole('dialog');
 
-  // Installed and held, not awaited, before the click that mounts the panel --
-  // see the comment atop sampleTranslateXSeries for why sampling has to start
-  // this early to see the transition at all.
-  const samplesPromise = sampleTranslateXSeries(page);
+  // Installed and held, not awaited, before the click that mounts the panel: the
+  // transition starts the instant the node exists, so the observer has to already
+  // be waiting for it to read the entrance from its real first frame.
+  const entranceWatch = observeSheetEntrance(page);
   await step(
     page,
-    'With no motion preference, opening slides the panel in 400px from the right.',
+    'With no motion preference, opening slides the panel in from the right by the 60px token distance.',
     async () => {
       await trigger.click();
     }
   );
   await expect(panel).toBeVisible();
-  const reading = summarizeMotion(await samplesPromise);
+  const entrance = await entranceWatch;
+
+  // The documented default: --sheet-panel-transition-distance -> --distance-overlay
+  // -> 60px, over --motion-duration -> 300ms. The retired entry was a literal 400px.
   expect(
-    reading.peak,
-    `the unguarded transition should travel through at least 100px on its way in from 400px ` +
-      `(measured: ${JSON.stringify(reading)})`
-  ).toBeGreaterThan(100);
-  // A real slide holds above the noise floor for a meaningful slice of the
-  // 300ms transition, not one incidental frame -- this is the known-real-
-  // travel case the reduced-motion test below is screened against.
+    parseTranslate(entrance.startTransform),
+    `the panel must start ${DEFAULT_SHEET_TRAVEL_PX}px from its edge (measured: ${JSON.stringify(entrance.startTransform)})`
+  ).toEqual({ x: DEFAULT_SHEET_TRAVEL_PX, y: 0 });
+  expect(entrance.run, 'the intro transition was never seen running').not.toBeNull();
+  expect(parseTranslate(entrance.run?.firstTransform ?? null)).toEqual({
+    x: DEFAULT_SHEET_TRAVEL_PX,
+    y: 0
+  });
+  expect(distance(parseTranslate(entrance.run?.lastTransform ?? null))).toBe(0);
+  expectMs(entrance.run?.durationMs ?? Number.NaN, DEFAULT_SHEET_DURATION_MS);
+
+  // And what the eye sees: the eased animation ran to its end, never rendered
+  // beyond the token distance, and landed on zero -- not a flash. No frame count or
+  // time-in-motion is asserted: the engine drops frames on a loaded machine.
+  expectSheetIntroProgress(entrance);
+  expect(entrance.run?.keyframeCount ?? 0).toBeGreaterThan(2);
+  const frames = summarizeFrames(entrance.frames);
   expect(
-    reading.msAboveFloor,
-    `the unguarded transition should stay in motion for a real slice of its 300ms duration ` +
-      `(measured: ${JSON.stringify(reading)})`
-  ).toBeGreaterThan(100);
+    frames.peak,
+    `never beyond the token distance (measured: ${JSON.stringify(frames)})`
+  ).toBeLessThanOrEqual(DEFAULT_SHEET_TRAVEL_PX + 0.5);
+  expect(frames.final, 'it must settle at zero').toBeLessThan(0.5);
+  await highlight(panel);
+  await beat(page, 700);
+});
+
+test('Sheet takes --sheet-panel-transition-distance and -duration from the theme', async ({
+  page
+}) => {
+  await gotoHydrated(page, '/components/sheet');
+  await setReducedMotion(page, false);
+  await page.addStyleTag({
+    content:
+      ':root { --sheet-panel-transition-distance: 200px; --sheet-panel-transition-duration: 900ms; }'
+  });
+
+  const trigger = page.getByTestId('sheet-right-trigger');
+  const panel = page.getByRole('dialog');
+
+  const entranceWatch = observeSheetEntrance(page, { windowMs: 1_300 });
+  await step(
+    page,
+    'Themed to travel 200px over 900ms: the same Sheet, a much longer slide.',
+    async () => {
+      await trigger.click();
+    }
+  );
+  await expect(panel).toBeVisible();
+  const entrance = await entranceWatch;
+
+  expect(parseTranslate(entrance.startTransform)).toEqual({ x: 200, y: 0 });
+  expectMs(entrance.run?.durationMs ?? Number.NaN, 900);
+  expect(distance(parseTranslate(entrance.run?.lastTransform ?? null))).toBe(0);
+  // The themed distance and duration are the animation's own keyframes and timing
+  // (above); a sampled frame can only add a ceiling.
+  expectSheetIntroProgress(entrance);
+  const frames = summarizeFrames(entrance.frames);
+  expect(frames.peak).toBeLessThanOrEqual(200.5);
+  expect(frames.final).toBeLessThan(0.5);
   await highlight(panel);
   await beat(page, 700);
 });
@@ -304,33 +283,22 @@ test('Sheet without a reduced-motion preference slides the panel in 400px from t
 test('Sheet with prefers-reduced-motion already set before it mounts only fades in place', async ({
   page
 }) => {
-  // emulateMedia BEFORE navigation -- the house pattern `reduced-motion-
-  // indefinite.spec.ts` uses, and load-bearing here specifically: Sheet's
-  // `flyParams` is a `$derived.by` that branches on `prefersReducedMotion()`,
-  // a plain `window.matchMedia(...).matches` read with no Svelte reactive
-  // source behind it. `$derived` only recomputes when a TRACKED dependency
-  // changes, and the only one this closure ever reads is `side` (in the
-  // switch after the guard) -- so setting the preference on an
-  // already-mounted Sheet cannot invalidate an already-computed `flyParams`;
-  // an earlier version of this test did exactly that (emulate, then reuse
-  // the still-open-from-before component) and it is a different, narrower
-  // question from the one this test asks. Only a fresh mount is guaranteed
-  // to observe the preference, so the preference has to be set before
-  // `gotoHydrated` creates the page Sheet mounts into.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await gotoHydrated(page, '/components/sheet');
-
-  // The `reducedMotion` fixture option has silently failed to reach the page
-  // in this repo before (see the comment atop reduced-motion-indefinite.spec.ts) --
+  // The `reducedMotion` fixture option has silently failed to reach the page in
+  // this repo before (see the comment atop reduced-motion-indefinite.spec.ts) --
   // probe the real media query before trusting anything downstream of it.
-  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
-    true
-  );
+  await setReducedMotion(page, true);
+  // A theme asking for 300px / 1.5s must not be able to revive the travel.
+  await page.addStyleTag({
+    content:
+      ':root { --sheet-panel-transition-distance: 300px; --sheet-panel-transition-duration: 1500ms; }'
+  });
 
   const trigger = page.getByTestId('sheet-right-trigger');
   const panel = page.getByRole('dialog');
 
-  const samplesPromise = sampleTranslateXSeries(page);
+  const entranceWatch = observeSheetEntrance(page, { windowMs: 900 });
   await step(
     page,
     'With the preference already set, the same open now only fades in place.',
@@ -339,14 +307,70 @@ test('Sheet with prefers-reduced-motion already set before it mounts only fades 
     }
   );
   await expect(panel).toBeVisible();
-  const reading = summarizeMotion(await samplesPromise);
+  const entrance = await entranceWatch;
+
+  expect(entrance.startTransform, 'the engine exposed the reduced-motion intro').not.toBeNull();
   expect(
-    reading.peak,
-    `reduced motion should never travel -- it only fades in place ` +
-      `(measured: ${JSON.stringify(reading)})`
-  ).toBeLessThan(MOTION_NOISE_FLOOR_PX);
+    distance(parseTranslate(entrance.startTransform)),
+    `reduced motion should never travel -- it only fades in place (measured: ${JSON.stringify(entrance.startTransform)})`
+  ).toBe(0);
+  if (entrance.run !== null) {
+    expect(entrance.run.durationMs).toBeLessThanOrEqual(REDUCED_SHEET_CLAMP_MS + 0.0005);
+  }
+  expect(summarizeFrames(entrance.frames).peak).toBeLessThan(0.5);
   await highlight(panel);
   await beat(page, 700);
+});
+
+test('A Sheet that is already mounted picks up a change in the motion preference', async ({
+  page
+}) => {
+  await gotoHydrated(page, '/components/sheet');
+  const trigger = page.getByTestId('sheet-right-trigger');
+  const panel = page.getByRole('dialog');
+
+  // One page load, one mounted Sheet, three opens: only the preference changes.
+  await setReducedMotion(page, false);
+  const normalWatch = observeSheetEntrance(page);
+  // Opened from the keyboard with the trigger focused: Safari does not focus a
+  // button on a pointer click, so a click would leave nothing for the Sheet to give
+  // focus back to, and the focus-return assertion below would test the browser
+  // rather than the component.
+  await trigger.focus();
+  await step(page, 'Motion allowed: it slides 60px.', async () => {
+    await trigger.press('Enter');
+  });
+  await expect(panel).toBeVisible();
+  const normal = await normalWatch;
+  expect(parseTranslate(normal.startTransform)).toEqual({ x: DEFAULT_SHEET_TRAVEL_PX, y: 0 });
+  await highlight(panel, 500);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.sheet-panel')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
+  await caption(page, 'Reduced motion is switched on while the Sheet stays mounted.');
+  await setReducedMotion(page, true);
+  const reducedWatch = observeSheetEntrance(page);
+  await trigger.click();
+  await expect(panel).toBeVisible();
+  const reduced = await reducedWatch;
+  expect(reduced.startTransform, 'the engine exposed the reduced-motion intro').not.toBeNull();
+  expect(distance(parseTranslate(reduced.startTransform)), 'no travel once reduced').toBe(0);
+  expect(summarizeFrames(reduced.frames).peak).toBeLessThan(0.5);
+  await highlight(panel, 500);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.sheet-panel')).toHaveCount(0);
+
+  await caption(page, 'And switched back off: the travel returns without a reload.');
+  await setReducedMotion(page, false);
+  const restoredWatch = observeSheetEntrance(page);
+  await trigger.click();
+  await expect(panel).toBeVisible();
+  const restored = await restoredWatch;
+  expect(parseTranslate(restored.startTransform)).toEqual({ x: DEFAULT_SHEET_TRAVEL_PX, y: 0 });
+  expect(summarizeFrames(restored.frames).final).toBeLessThan(0.5);
+  await highlight(panel, 500);
+  await beat(page, 500);
 });
 
 test('A portalled dropdown inside a <sui-*> element lands in its shadow root, not document.body', async ({

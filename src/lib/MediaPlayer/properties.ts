@@ -31,6 +31,31 @@ export type OptionalMediaPlayerProperties = {
   /** BCP 47 language tag for the captions track, e.g. "en". Only meaningful with captionsSrc. */
   captionsSrcLang?: string;
   /**
+   * Render a captions toggle in the bottom controls: a real `<button>` named "Captions"
+   * whose `aria-pressed` carries the on/off state. Video only, and only when `captionsSrc`
+   * is supplied -- a toggle with no track behind it would be a dead control. Off by
+   * default, so a player that showed only play and mute keeps showing only play and mute.
+   *
+   * It exists because the custom overlay replaces the browser's own controls, and with
+   * them the browser's captions menu: without it, a track the page supplied had no
+   * viewer-operable way to be shown. With native `controls` the browser's menu does that
+   * job and this toggle is not drawn.
+   */
+  captionsButton?: boolean;
+  /**
+   * Whether the captions track is showing. Bindable, both directions: the toggle, and the
+   * browser's own captions menu under native `controls`, report outward, and a host
+   * writing it shows or hides the track -- which is how a host builds its own control.
+   * `false` hides the track while leaving it loaded; it does not remove the `<track>`.
+   * A browser or OS preference for captions can turn it on at load, in which case the
+   * bound value follows. Only meaningful with `captionsSrc`.
+   */
+  captionsVisible?: boolean;
+  /** Replaces the default icon on the captions toggle while captions are hidden. */
+  captionsIcon?: Snippet;
+  /** Replaces the default icon on the captions toggle while captions are showing. */
+  captionsOnIcon?: Snippet;
+  /**
    * Render a seek bar in the bottom controls. Video only. The bar is a library
    * `Slider` bound to the media's position, so dragging it scrubs and playback
    * moves the handle. Off by default: a player that was showing only play and mute
@@ -74,6 +99,12 @@ export type MediaPlayerEventProperties = {
   onplay?: (event: Event) => void;
   onpause?: (event: Event) => void;
   onvolumechange?: (muted: boolean) => void;
+  /**
+   * The viewer showed or hid the captions, through the toggle or the browser's own menu.
+   * Carries the state it is now in. Does not fire for a host's own `captionsVisible`
+   * write, the same split `onseek` keeps between a scrub and a restored position.
+   */
+  oncaptionschange?: (visible: boolean) => void;
   /**
    * The viewer moved the seek bar. Carries the position seeked to, in seconds.
    * Fires only for a deliberate scrub, not for playback advancing on its own —

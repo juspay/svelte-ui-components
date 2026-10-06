@@ -144,6 +144,46 @@ Render axes, gridlines, and legend without drawing any bar rectangles — useful
 <BarChart {data} hideBarGraphics showXAxis showYAxis />
 ```
 
+### Accessible name and description
+
+Every chart drawing needs a name of its own. `ariaLabel` names the chart (it lands on the
+`<svg>`), and the optional `ariaDescription` adds the takeaway — trend, range, outliers —
+which is announced after the name:
+
+```svelte
+<BarChart
+  {series}
+  ariaLabel="Revenue by month, January to June"
+  ariaDescription="Revenue rises from 30 in January to 90 in December, dipping in March."
+/>
+```
+
+Omit `ariaLabel` and a name is derived from the chart itself — `"{yAxisLabel} bar chart"` (the wording the old wrapping region used), else the series names, else `"Bar chart"` — so an unlabelled chart is
+still identifiable, but a name written for the page is almost always better. A blank string
+counts as omitted.
+
+How the drawing is exposed depends on whether it holds controls:
+
+- A chart that draws bars is **interactive**: those marks are focusable `role="button"`
+  elements, so the `<svg>` is exposed as a named `role="group"` rather than `role="img"`. An image's
+  children are presentational (ARIA), so marks left under one are dropped or announced
+  inconsistently between browsers, and axe reports `nested-interactive`.
+- A chart with nothing to operate (every series hidden through the legend, or `hideBarGraphics`) is a static, named
+  `role="img"`.
+- The `<svg>` itself carries the name. A name on some wrapper elsewhere does not name the
+  image inside it.
+- BarChart no longer wraps every chart in a `role="region"`. That wrapper put one identically named
+  landmark per chart on a page (axe: `landmark-unique`) and named the wrapper while the image inside
+  stayed unnamed. A region exists only when `scrollable` is set — the wrapper is then a focusable
+  scroll container, named `"{chart name}, scrollable"` so tabbing from the scroller into the chart
+  does not announce the same words twice.
+- Tick labels and the value labels drawn on the chart are `aria-hidden`: each mark's own accessible
+  name already says its category and value, so exposing them too would announce everything twice. The
+  axis *titles* (`xAxisLabel`, `yAxisLabel`) stay exposed — they are where a unit or dimension is stated.
+- The description is an SVG `<desc>` with an instance-scoped id referenced by `aria-describedby`; every
+  gradient and pattern id is instance-scoped too, so two charts on one page (or in two shadow roots)
+  never resolve each other's references.
+
 ### Keyboard access
 
 Every bar is a focusable `role="button"` element that mirrors pointer hover on focus and
@@ -236,6 +276,8 @@ bars that were not being drawn at all. See
 | tooltipSnippet        | `Snippet<[BarChartDataPoint, number]>` | No       | `-`          | Custom tooltip content. Receives the hovered data point and its index. Replaces the default tooltip.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | empty                 | `Snippet`                              | No       | `-`          | Content rendered when `data` is empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | renderOverlay         | `Snippet<[BarChartRenderContext]>`     | No       | `-`          | Escape-hatch snippet rendered inside the SVG transform group after all bars. Receives `{ innerWidth, innerHeight, margin }`.                                                                                                                                                                                                                                                                                                                                                                                              |
+| ariaLabel             | `string`                               | No       | derived      | Accessible name of the chart (`aria-label` on its `<svg>`). Say what the chart shows. When omitted a name is derived from `yAxisLabel` / the series names, else `"Bar chart"`. See [Accessible name and description](#accessible-name-and-description). |
+| ariaDescription       | `string`                               | No       | `-`          | Optional longer description announced after the name (an SVG `<desc>` referenced by `aria-describedby`). |
 | testId                | `string`                               | No       | `-`          | Value for the `data-pw` attribute on the chart container.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | classes               | `string`                               | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | interactiveLegend     | `boolean`                              | No       | `false`      | Legend items become click/keyboard toggles for series visibility; hidden series are removed from the plot and the scales rescale to the remaining data.                                                                                                                                                                                                                                                                                                                                                                   |
@@ -360,6 +402,16 @@ stays styled inside the shadow root and the element is safe to register.
   chart.valueFormat = (value) => `₹${value.toLocaleString()}`;
   chart.onbarclick = ({ index, dataPoint }) => console.log(index, dataPoint.label);
 </script>
+```
+
+Name and describe the chart with `chart-aria-label` / `chart-aria-description` (properties
+`chartAriaLabel` / `chartAriaDescription`). They are not `aria-label` / `aria-description`, which on a
+custom element name the *host* (a role-less element) rather than the drawing inside its shadow
+root; the host's own ARIA attributes are left alone. See
+[Accessible name and description](#accessible-name-and-description).
+
+```html
+<sui-bar-chart chart-aria-label="Monthly revenue" chart-aria-description="Revenue peaks in June."></sui-bar-chart>
 ```
 
 ### Web Component Events

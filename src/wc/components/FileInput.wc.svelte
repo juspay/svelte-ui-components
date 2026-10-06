@@ -6,6 +6,7 @@
       errorMessage: { type: 'String', attribute: 'error-message' },
       infoMessage: { type: 'String', attribute: 'info-message' },
       invalid: { type: 'Boolean', reflect: true },
+      activation: { type: 'String', reflect: true },
       accept: { type: 'String', reflect: true },
       multiple: { type: 'Boolean', reflect: true },
       maxSizeBytes: { type: 'Number', attribute: 'max-size-bytes' },
@@ -46,9 +47,16 @@
 <FileInput {...props} {...dispatchers}>
   {#snippet trigger({ openFilePicker, dragOver, disabled })}
     <slot name="trigger">
-      <button onclick={openFilePicker} {disabled} style="cursor: pointer;">
-        {dragOver ? 'Drop files here' : 'Choose file'}
-      </button>
+      <!-- The region is the one control, so its default content is not a button; only when the
+           consumer hands ownership to the trigger (activation="trigger") is there nothing else to
+           be the control, and the default has to be one. -->
+      {#if props.activation === 'trigger'}
+        <button class="default-trigger" onclick={openFilePicker} {disabled}>
+          {dragOver ? 'Drop files here' : 'Choose file'}
+        </button>
+      {:else}
+        <span class="default-trigger">{dragOver ? 'Drop files here' : 'Choose file'}</span>
+      {/if}
     </slot>
   {/snippet}
 </FileInput>
@@ -63,5 +71,24 @@
      could not do, since a stylesheet cannot add a rule there. */
   :host {
     display: var(--sui-file-input-display, block);
+  }
+
+  /* The fallback used to be a bare native button. It is now plain content inside the
+     drop region, so it is dressed like one with system colours -- a stylesheet outside
+     this shadow root cannot reach it, and a fallback nobody can see is no fallback. */
+  .default-trigger {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid ButtonBorder;
+    border-radius: 3px;
+    background: ButtonFace;
+    color: ButtonText;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .default-trigger:disabled {
+    cursor: not-allowed;
   }
 </style>

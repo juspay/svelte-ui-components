@@ -14,6 +14,7 @@
       smoothScroll: { type: 'Boolean', reflect: true, attribute: 'smooth-scroll' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      scrollerAriaLabel: { type: 'String', attribute: 'aria-label' },
       onscrollposition: { type: 'Object' },
       arrowPrevious: { type: 'Object' },
       arrowNext: { type: 'Object' }
@@ -23,6 +24,7 @@
 
 <script lang="ts">
   import Scroller from '$lib/Scroller/Scroller.svelte';
+  import type { ScrollerProperties } from '$lib/Scroller/properties';
   import { dispatchEvents } from '../dispatch';
   // Mirrors Scroller.svelte's own arrowPrevious/arrowNext defaults, which pick their
   // glyph from `direction` the same way.
@@ -30,7 +32,14 @@
   import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
   import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
-  let props = $props();
+  // The element renames `ariaLabel` to `scrollerAriaLabel` because the platform already defines `ariaLabel` on every
+  // HTMLElement. The rest still carries the component's own props.
+  let {
+    scrollerAriaLabel,
+    ...props
+  }: Omit<ScrollerProperties, 'ariaLabel' | 'children'> & {
+    scrollerAriaLabel?: ScrollerProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -48,7 +57,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Scroller {...props} {...dispatchers}>
+<Scroller {...props} {...dispatchers} ariaLabel={scrollerAriaLabel}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

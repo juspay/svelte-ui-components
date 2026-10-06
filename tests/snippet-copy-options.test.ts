@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { installCopyResetClock, advanceCopyResetClock } from './support/copy-clock';
+import { prepareNativeClipboard, readNativeClipboard } from './support/native-browser';
 
 // Covers Snippet's `copiedLabel` and `copyResetMs` (#530). Before this change the
 // copied-feedback text and its 2000ms reset were hardcoded, so a consumer wanting
@@ -8,11 +10,14 @@ import { gotoHydrated } from './support/hydrated';
 // CopyButton.svelte did. Both props are additive and optional; the assertions
 // below only pass once the component actually reads them.
 test.describe('Snippet copiedLabel / copyResetMs', () => {
+  test.beforeEach(async ({ page }) => {
+    await installCopyResetClock(page);
+  });
   test('default instance keeps the unchanged "Copied!" text and does not revert early', async ({
     page,
     context
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/snippet');
 
     const snippet = page.getByTestId('snippet-default');
@@ -22,7 +27,7 @@ test.describe('Snippet copiedLabel / copyResetMs', () => {
 
     // copyResetMs was not set, so this must NOT have reverted to the icon after
     // 300ms -- the interval the sibling instance below uses as its full reset.
-    await page.waitForTimeout(300);
+    await advanceCopyResetClock(page, 300);
     await expect(snippet.locator('.snippet-copied')).toHaveText('Copied!');
   });
 
@@ -30,7 +35,7 @@ test.describe('Snippet copiedLabel / copyResetMs', () => {
     page,
     context
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/snippet');
 
     const snippet = page.getByTestId('snippet-copy-options');
@@ -39,11 +44,14 @@ test.describe('Snippet copiedLabel / copyResetMs', () => {
     // The custom label, not the hardcoded 'Copied!'.
     await expect(snippet.locator('.snippet-copied')).toHaveText('Link copied!');
 
-    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    const clipboardText = await readNativeClipboard(page);
     expect(clipboardText).toBe('echo custom');
 
     // copyResetMs={300}: back to the copy icon well before the library's own
     // 2000ms default would have fired.
+    await advanceCopyResetClock(page, 299);
+    await expect(snippet.locator('.snippet-copied')).toHaveText('Link copied!');
+    await advanceCopyResetClock(page, 1);
     await expect(snippet.locator('.snippet-copied')).toHaveCount(0, { timeout: 1000 });
   });
 });

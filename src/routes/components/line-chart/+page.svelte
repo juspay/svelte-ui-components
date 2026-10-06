@@ -289,22 +289,38 @@
 
 <h3>Single Series</h3>
 <div class="demo-row">
-  <LineChart series={singleSeries} />
+  <LineChart
+    series={singleSeries}
+    ariaLabel="Revenue across twelve periods"
+    ariaDescription="Revenue climbs unevenly from 30 in the first period to 90 in the twelfth, with small dips in the third, fifth, seventh, ninth and eleventh periods."
+  />
 </div>
 
 <h3>Multi-Series with Legend</h3>
 <div class="demo-row">
-  <LineChart series={multiSeries} showLegend />
+  <LineChart
+    series={multiSeries}
+    showLegend
+    ariaLabel="Product A, Product B and Product C compared over six periods"
+  />
 </div>
 
 <h3>Linear Curve (no smoothing)</h3>
 <div class="demo-row">
-  <LineChart series={singleSeries} curve="linear" />
+  <LineChart
+    series={singleSeries}
+    curve="linear"
+    ariaLabel="Revenue across twelve periods, drawn with straight segments between points"
+  />
 </div>
 
 <h3>Step Curve</h3>
 <div class="demo-row">
-  <LineChart series={singleSeries} curve="step" />
+  <LineChart
+    series={singleSeries}
+    curve="step"
+    ariaLabel="Revenue across twelve periods, drawn as a step line"
+  />
 </div>
 
 <h3>xAxisCategories — month labels</h3>
@@ -313,12 +329,21 @@
   the numeric x values used in the data (x=1 → index 0, x=2 → index 1, …).
 </p>
 <div class="demo-row">
-  <LineChart series={singleSeries} xAxisCategories={monthLabels} />
+  <LineChart
+    series={singleSeries}
+    xAxisCategories={monthLabels}
+    ariaLabel="Revenue by month, January to December"
+  />
 </div>
 
 <h3>xAxisCategories — weekday labels</h3>
 <div class="demo-row">
-  <LineChart series={weekSeries} xAxisCategories={dayLabels} showDots />
+  <LineChart
+    series={weekSeries}
+    xAxisCategories={dayLabels}
+    showDots
+    ariaLabel="Website sessions by weekday, Monday to Sunday"
+  />
 </div>
 
 <h3>showArea — default gradient (series colour)</h3>
@@ -327,7 +352,11 @@
   series colour.
 </p>
 <div class="demo-row">
-  <LineChart series={areaSeries} showArea />
+  <LineChart
+    series={areaSeries}
+    showArea
+    ariaLabel="Conversions over six periods, with the area under the line shaded"
+  />
 </div>
 
 <h3>showArea + areaGradient — custom colours</h3>
@@ -340,6 +369,7 @@
     series={areaSeries}
     showArea
     areaGradient={{ from: 'rgba(99,102,241,0.5)', to: 'rgba(99,102,241,0)' }}
+    ariaLabel="Conversions over six periods, with a custom colour gradient under the line"
   />
 </div>
 
@@ -350,6 +380,7 @@
     showArea
     areaGradient={{ from: 'rgba(99,102,241,0.4)', to: 'rgba(99,102,241,0)' }}
     xAxisCategories={['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6']}
+    ariaLabel="Conversions by quarter, Q1 to Q6, with the area under the line shaded"
   />
 </div>
 
@@ -383,6 +414,7 @@
     xAxisCategories={monthLabels}
     onchartready={onChartReady}
     showDots
+    ariaLabel="Revenue by month, with highlighting driven by the month buttons below"
     testId="line-highlight-hook-chart"
   />
 </div>
@@ -405,12 +437,22 @@
   The chart dims all other points and draws the crosshair at the highlighted index.
 </p>
 <div class="demo-row">
-  <LineChart series={singleSeries} xAxisCategories={monthLabels} highlightedIndex={5} showDots />
+  <LineChart
+    series={singleSeries}
+    xAxisCategories={monthLabels}
+    highlightedIndex={5}
+    showDots
+    ariaLabel="Revenue by month, with June highlighted"
+  />
 </div>
 
 <h3>Legacy gradientFill (backward-compatible)</h3>
 <div class="demo-row">
-  <LineChart series={singleSeries} gradientFill />
+  <LineChart
+    series={singleSeries}
+    gradientFill
+    ariaLabel="Revenue across twelve periods, with the legacy gradient fill under the line"
+  />
 </div>
 
 <h3>Shared Tooltip + Interactive Legend (3 series × 8 points)</h3>
@@ -423,6 +465,7 @@
     series={sharedTooltipSeries}
     showLegend
     interactiveLegend
+    ariaLabel="Desktop, Mobile and Tablet over eight periods, with legend toggles to show or hide each series"
     testId="line-shared-tooltip-chart"
   />
 </div>
@@ -437,6 +480,7 @@
     series={denseValuesSeries}
     showValues
     showDots={false}
+    ariaLabel="Signal sampled at forty points, with a value label on every point"
     testId="line-dense-values-chart"
   />
 </div>
@@ -449,7 +493,13 @@
   index. See <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
 </p>
 <div class="demo-row">
-  <LineChart series={misalignedSeries} showLegend showDots testId="line-alignment-chart" />
+  <LineChart
+    series={misalignedSeries}
+    showLegend
+    showDots
+    ariaLabel="This week versus last week, where this week has no sample at x=3 and last week has none at x=6"
+    testId="line-alignment-chart"
+  />
 </div>
 
 <h3>Sparse Series — Gap Points</h3>
@@ -458,7 +508,12 @@
   resumes at the next finite point, instead of one poisoned path or a misleading value drawn at 0.
 </p>
 <div class="demo-row">
-  <LineChart series={gapSeries} showDots testId="line-gap-chart" />
+  <LineChart
+    series={gapSeries}
+    showDots
+    ariaLabel="Sales with gaps at x=4 and x=8, where no reading was taken"
+    testId="line-gap-chart"
+  />
 </div>
 
 <h3>minHeight / maxHeight bounds</h3>
@@ -473,6 +528,7 @@
     aspectRatio={16 / 3}
     minHeight={260}
     maxHeight={260}
+    ariaLabel="Revenue across twelve periods in a chart held to exactly 260 pixels tall"
     testId="line-height-bounds-chart"
   />
 </div>
@@ -508,6 +564,7 @@
       }
     ]}
     showLegend
+    ariaLabel="Product A and Product B over six periods, with a total and an average in the legend"
     testId="line-legend-aggregate-chart"
   />
 </div>

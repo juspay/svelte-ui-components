@@ -18,6 +18,7 @@ import {
   renderWcDisplayJson,
   run
 } from './generate-migration-assets.ts';
+import { MIGRATION_ASSET_FILENAMES, builtMigrationAssetsDir } from './migration-assets-layout.ts';
 
 function entry(
   tag: string,
@@ -314,6 +315,32 @@ describe('run (CLI)', () => {
       'wc-display.json'
     ]);
     expect(lines.some((l) => l.includes('wrote 3 file(s), 1 wc-display entrie(s)'))).toBe(true);
+  });
+
+  it('writes into the shared built location when --out is omitted — the directory the reader and the real-artifact tests look in', () => {
+    // No git fixture: the generator needs only the wrappers and the committed palette asset, and a
+    // repository would add nothing but subprocess time to a test about where files land.
+    const root = mkdtempSync(join(tmpdir(), 'sui-generate-migration-assets-default-out-'));
+    roots.push(root);
+    mkdirSync(join(root, 'src/wc/components'), { recursive: true });
+    mkdirSync(join(root, 'scripts/codemod/assets'), { recursive: true });
+    writeFileSync(
+      join(root, 'src/wc/components/Badge.wc.svelte'),
+      wrapper('sui-badge', '--sui-badge-display', 'block')
+    );
+    writeFileSync(
+      join(root, 'scripts/codemod/assets/legacy-palette.css'),
+      ':root { --a: #fff; }\n'
+    );
+
+    const code = run(['--root', root], () => {});
+
+    expect(code).toBe(0);
+    const outDir = builtMigrationAssetsDir(root);
+    expect(outDir).toBe(join(root, 'dist-codemod', 'codemod', 'migration-assets'));
+    expect(readdirSync(outDir).sort()).toEqual([...MIGRATION_ASSET_FILENAMES].sort());
+    // Not the old dist-codemod/migration-assets, which nothing reads.
+    expect(existsSync(join(root, 'dist-codemod', 'migration-assets'))).toBe(false);
   });
 
   it('needs no repository history at all -- the reason the --base flag is gone', () => {

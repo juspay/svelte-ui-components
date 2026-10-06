@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { prepareNativeClipboard } from './support/native-browser';
 
 test.describe('Table follow-up API', () => {
   test('forwards explicit pagination button ids while keeping default generated ids unchanged', async ({
     page,
     context
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/table');
 
     const defaults = page.getByTestId('table-builtin-cells');
@@ -26,7 +27,7 @@ test.describe('Table follow-up API', () => {
     page,
     context
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/table');
 
     const table = page.getByTestId('table-followups');

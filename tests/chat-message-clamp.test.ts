@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { chatMessageBodyPoint } from './support/chat-message-pointer';
 
 // `clampLines` collapses the rendered body and makes the bubble its own control. The
 // behaviour was being rebuilt by consumers around the `body` snippet, which meant each
@@ -130,7 +131,7 @@ test.describe('ChatMessage — clampLines', () => {
     await expect(bubble).toHaveAttribute('data-expanded', 'false');
 
     // Clicking the message body is inert; the control is the Button.
-    await bubble.click({ position: { x: 5, y: 5 } });
+    await bubble.click({ position: await chatMessageBodyPoint(bubble) });
     await expect(bubble).toHaveAttribute('data-expanded', 'false');
     await page.locator('[data-pw="clamp-demo-link-clamp-toggle"]').click();
     await expect(bubble).toHaveAttribute('data-expanded', 'true');
@@ -140,5 +141,88 @@ test.describe('ChatMessage — clampLines', () => {
     await gotoHydrated(page, '/components/chat-message');
     const plain = page.locator('.chat-message .bubble').first();
     await expect(plain).not.toHaveAttribute('role', 'button');
+  });
+
+  test('a native body hit avoids nested controls and sends a trusted pointer', async ({ page }) => {
+    await page.setContent(`
+      <style>
+        #native-bubble { width: 320px; padding: 13px; border-radius: 16px; background: #eee; }
+        .body { position: relative; height: 64px; }
+        #native-link { position: absolute; inset: 0 35%; background: #ccc; }
+      </style>
+      <div id="native-bubble" data-expanded="false">
+        <div class="body" id="native-body">Native body <a id="native-link" href="#native-link-target">link</a></div>
+      </div>
+      <button id="native-toggle" type="button">Expand</button>
+    `);
+    await page.evaluate(() => {
+      const bubble = document.querySelector<HTMLElement>('#native-bubble');
+      const toggle = document.querySelector('#native-toggle');
+      if (bubble === null || toggle === null) {
+        throw new Error('native controls missing');
+      }
+      bubble.addEventListener('click', (event) => {
+        bubble.dataset.pointerTarget = event.target instanceof Element ? event.target.id : '';
+        bubble.dataset.trusted = String(event.isTrusted);
+      });
+      toggle.addEventListener('click', () => {
+        bubble.dataset.expanded = 'true';
+      });
+    });
+    const bubble = page.locator('#native-bubble');
+    await bubble.click({ position: await chatMessageBodyPoint(bubble) });
+    await expect(bubble).toHaveAttribute('data-pointer-target', 'native-body');
+    await expect(bubble).toHaveAttribute('data-trusted', 'true');
+    await expect(bubble).toHaveAttribute('data-expanded', 'false');
+    await page.locator('#native-toggle').click();
+    await expect(bubble).toHaveAttribute('data-expanded', 'true');
+
+    // A body entirely occupied by a link has no inert surface to claim.
+    await page.addStyleTag({ content: '#native-link { inset: 0; }' });
+    await expect(chatMessageBodyPoint(bubble)).rejects.toThrow(
+      'no noninteractive painted hit target'
+    );
+  });
+
+  test('a fractional bordered body hits the verified pixel beside a link', async ({ page }) => {
+    await page.setContent(`
+      <style>
+        #native-bubble { position: absolute; left: 13.4px; top: 11.6px; width: 320px;
+          padding: 13px; border: 3px solid #777; border-radius: 16px; background: #eee; }
+        .body { position: relative; height: 64px; }
+        #native-link { position: absolute; left: 0; right: 0; top: 0; height: 32px; background: #ccc; }
+      </style>
+      <div id="native-bubble"><div class="body" id="native-body">Body
+        <a id="native-link" href="#native-link-target">link</a>
+      </div></div>
+    `);
+    await page.evaluate(() => {
+      const bubble = document.querySelector<HTMLElement>('#native-bubble');
+      if (bubble === null) {
+        throw new Error('native bubble missing');
+      }
+      bubble.addEventListener('click', (event) => {
+        bubble.dataset.pointerTarget = event.target instanceof Element ? event.target.id : '';
+        bubble.dataset.trusted = String(event.isTrusted);
+        bubble.dataset.clientX = String(event.clientX);
+        bubble.dataset.clientY = String(event.clientY);
+      });
+    });
+    const bubble = page.locator('#native-bubble');
+    const point = await chatMessageBodyPoint(bubble);
+    const verified = await bubble.evaluate((element, offset) => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const x = Math.round(rect.left + Number.parseFloat(style.borderLeftWidth) + offset.x);
+      const y = Math.round(rect.top + Number.parseFloat(style.borderTopWidth) + offset.y);
+      return { x, y, hit: document.elementFromPoint(x, y)?.id };
+    }, point);
+    await expect(verified.hit).toBe('native-body');
+    await bubble.click({ position: point });
+    await expect(bubble).toHaveAttribute('data-pointer-target', 'native-body');
+    await expect(bubble).toHaveAttribute('data-trusted', 'true');
+    await expect(bubble).toHaveAttribute('data-client-x', String(verified.x));
+    await expect(bubble).toHaveAttribute('data-client-y', String(verified.y));
+    await expect(page).not.toHaveURL(/#native-link-target$/);
   });
 });

@@ -22,18 +22,20 @@ const measureGrid = (calendar: Locator): Promise<GridMeasurement> =>
   calendar.evaluate((calendarNode) => {
     const grid = calendarNode.querySelector('.grid');
     const dayNames = calendarNode.querySelector('.day-names');
-    if (grid === null || dayNames === null) {
-      throw new Error('calendar is missing its grid or day-name row');
+    const weekRow = calendarNode.querySelector('.week');
+    if (grid === null || dayNames === null || weekRow === null) {
+      throw new Error('calendar is missing its grid, day-name row or first week row');
     }
     const trackWidths = (node: Element): number[] =>
       getComputedStyle(node)
         .gridTemplateColumns.split(' ')
         .map((track) => Number.parseFloat(track));
-    const firstWeek = Array.from(grid.children).slice(0, 7);
+    // .grid stacks one grid row per week; each date button sits in a gridcell slot in its row.
+    const firstWeek = Array.from(weekRow.children).map((slot) => slot.firstElementChild ?? slot);
     return {
       calendarWidth: calendarNode.getBoundingClientRect().width,
       gridWidth: grid.getBoundingClientRect().width,
-      gridTracks: trackWidths(grid),
+      gridTracks: trackWidths(weekRow),
       dayNameTracks: trackWidths(dayNames),
       weekCellLefts: firstWeek.map((cell) => cell.getBoundingClientRect().left),
       weekCellWidths: firstWeek.map((cell) => cell.getBoundingClientRect().width),
@@ -77,21 +79,21 @@ const openPicker = async (page: Page, testId: string) => {
 const expectFluidGrid = (measurement: GridMeasurement): void => {
   // The columns share the whole grid instead of sitting in a fixed 7 x 36px block.
   expectWithin(
-    '.grid tracks (sum) vs .grid width',
+    '.week tracks (sum) vs .grid width',
     sum(measurement.gridTracks),
     measurement.gridWidth,
     TRACK_TOLERANCE
   );
-  expect(measurement.gridTracks, '.grid track count').toHaveLength(7);
+  expect(measurement.gridTracks, '.week track count').toHaveLength(7);
   for (const track of measurement.gridTracks) {
-    expect(track, `.grid track ${track}px should be wider than the default cell`).toBeGreaterThan(
+    expect(track, `.week track ${track}px should be wider than the default cell`).toBeGreaterThan(
       DEFAULT_CELL_SIZE
     );
   }
   // The cells then fill those columns, so no gaps open between the days.
   measurement.weekCellWidths.forEach((cellWidth, column) => {
     expectWithin(
-      `.cell width in column ${column} vs its .grid track`,
+      `.cell width in column ${column} vs its .week track`,
       cellWidth,
       measurement.gridTracks[column],
       TRACK_TOLERANCE
@@ -114,7 +116,7 @@ const expectFluidGrid = (measurement: GridMeasurement): void => {
 // The columns, the day-name row and the cells all follow --calendar-cell-size
 // until a host sets --calendar-grid-columns or --calendar-cell-width.
 const expectSquareGrid = (measurement: GridMeasurement, cellSize: number): void => {
-  expect(measurement.gridTracks, '.grid tracks').toEqual(Array(7).fill(cellSize));
+  expect(measurement.gridTracks, '.week tracks').toEqual(Array(7).fill(cellSize));
   expect(measurement.dayNameTracks, '.day-names tracks').toEqual(Array(7).fill(cellSize));
   expect(measurement.weekCellWidths, '.cell widths').toEqual(Array(7).fill(cellSize));
   expect(measurement.weekCellHeights, '.cell heights').toEqual(Array(7).fill(cellSize));

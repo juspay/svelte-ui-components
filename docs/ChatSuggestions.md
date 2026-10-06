@@ -1,5 +1,7 @@
 # ChatSuggestions
 
+In the `scroll` layout, the region is named **Chat suggestions**. If every chip is disabled and the content overflows, Tab reaches the region and arrow keys scroll it; enabled chips provide their own keyboard route.
+
 A row of tappable prompt chips (the `Pill` component) — typically shown on an empty conversation to seed the first message. Each item can be a plain string or an object with a display `label` and an underlying `value`; selecting a chip fires `onselect` with the value and index.
 
 `label` and `value` are separate because a short call-to-action ("Refund trends") usually stands in for a much longer query, and sending the label would send the wrong thing. When they differ, the value doubles as the chip's hover text unless `hint` overrides it.

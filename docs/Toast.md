@@ -44,9 +44,9 @@ Svelte 5 Snippet props — pass content blocks to the component.
 
 ## Events
 
-| Event       | Type         | Description                                                                                                                                   |
-| ----------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| ontoasthide | `() => void` | Fires after the toast has fully transitioned out (its closing CSS transition has ended). Use this to clean up or remove the toast from state. |
+| Event       | Type         | Description                                                                                                                                                                                                                                                                                                                                                          |
+| ----------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ontoasthide | `() => void` | Fires once per hide, after the toast has fully transitioned out (its closing CSS transition has ended). In an engine that applies `display: none` without running an exit transition (engines without discrete `display` transitions) there is no exit to wait for, so it fires as soon as the toast is hidden. Use this to clean up or remove the toast from state. |
 
 ## CSS Variables
 

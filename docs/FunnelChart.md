@@ -110,6 +110,36 @@ accessible name reading literally `"Product View: NaN  |  NaN%"`. See
 > renders all bars at the minimum height instead of the `empty` snippet. This
 > is pinned by a test as current behaviour, not endorsed as correct.
 
+### Chart name and description
+
+Pass `ariaLabel` to identify the chart's purpose and `ariaDescription` for its takeaway,
+units or reading instructions. Both belong to the drawing itself, so its points are
+reached in a named group. Without an explicit name the chart derives one from its data.
+A drawing with no marks is a named image with no point Tab stops.
+
+```svelte
+<FunnelChart
+  {...chartProps}
+  ariaLabel="Checkout conversion"
+  ariaDescription="Values are available on each data control."
+/>
+```
+
+The web component uses `chart-aria-label` and `chart-aria-description`, or JS properties
+`chartAriaLabel` / `chartAriaDescription`. These aliases preserve the host's native
+`ariaLabel` / `ariaDescription` accessors. The description resolves in the same shadow
+root as the drawing, with an instance-scoped ID.
+
+```html
+<sui-funnel-chart
+  chart-aria-label="Checkout conversion"
+  chart-aria-description="Values are available on each data control."
+></sui-funnel-chart>
+```
+
+A supplied `empty` snippet replaces the drawing and keeps its own semantics, including
+any actions the consumer puts in it.
+
 ## Props
 
 | Prop            | Type                                     | Required | Default                        | Description                                                                                                                                                                 |
@@ -125,6 +155,8 @@ accessible name reading literally `"Product View: NaN  |  NaN%"`. See
 | showValueLabels | `boolean`                                | No       | `true`                         | Whether to render the value and percentage label centred inside each stage bar.                                                                                             |
 | valueFormat     | `(value: number, max: number) => string` | No       | `"<value>  \|  <pct>%"`        | Custom formatter for in-bar labels. Receives the stage value and the maximum value across all stages.                                                                       |
 | aspectRatio     | `number`                                 | No       | `16 / 9`                       | Width-to-height ratio passed to `ChartContainer`. Controls the chart's height relative to its container width.                                                              |
+| ariaLabel       | `string`                                 | No       | Derived from data              | Accessible name of the drawing.                                                                                                                                             |
+| ariaDescription | `string`                                 | No       | —                              | Longer description scoped to this drawing instance.                                                                                                                         |
 | testId          | `string`                                 | No       | –                              | Value for the `data-pw` attribute on the chart root element.                                                                                                                |
 | classes         | `string`                                 | No       | –                              | CSS class string applied to the chart root element. Useful for scoping CSS-variable overrides.                                                                              |
 | empty           | `Snippet`                                | No       | –                              | Content rendered when `data` is empty or all values are zero.                                                                                                               |

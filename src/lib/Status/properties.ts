@@ -2,6 +2,17 @@ import type { Snippet } from 'svelte';
 import type { ButtonProperties } from '$lib/Button/properties';
 
 export type StatusProperties = StatusEventProperties & {
+  /**
+   * URL of the icon shown above the title. Omit it to get the built-in
+   * checkmark, which is inlined and costs no request.
+   *
+   * A URL you pass is used as given and never replaced when it fails to load:
+   * answering a failed failure-icon with a success checkmark would be worse
+   * than showing nothing. The one exception is the literal
+   * `'icons/order-success-icon.svg'` (the former default), which still falls
+   * back to the built-in checkmark so existing callers that spell it out are
+   * unchanged.
+   */
   statusIcon?: string;
   /**
    * Accessible name for the `statusIcon` image. Defaults to `'status'`, which

@@ -84,6 +84,16 @@
   }
 
   function resolveDocHref(href: string): string {
+    // Public demo URLs stay portable in Markdown. In this app they point at
+    // this build, including new examples that have not been published yet.
+    const demoPrefix = 'https://juspay.github.io/svelte-ui-components/components/';
+    if (href.startsWith(demoPrefix)) {
+      const url = new URL(href);
+      const slug = url.pathname.slice('/svelte-ui-components/components/'.length);
+      if (Object.hasOwn(slugToName, slug)) {
+        return `${base}/components/${slug}${url.search}${url.hash}`;
+      }
+    }
     const match = /^\.\/([A-Za-z0-9_.-]+)\.md(#.*)?$/.exec(href);
     if (match === null) {
       return href;
@@ -110,6 +120,13 @@
     renderer.heading = function heading(token) {
       const id = slugify(this.parser.parseInline(token.tokens));
       return renderHeading(token).replace(/^<h([1-6])>/, `<h$1 id="${id}">`);
+    };
+    // A bare <table> cannot be the keyboard-focusable scroll region: giving it a
+    // role would replace its table semantics. The wrapper scrolls and is named
+    // (see _scroll-regions.ts, attached to <main> in the root layout); the table keeps its own role.
+    const renderTable = renderer.table.bind(renderer);
+    renderer.table = function table(token) {
+      return `<div class="docs-table-scroll">${renderTable(token)}</div>`;
     };
     const result = marked.parse(md, { renderer });
     if (typeof result === 'string') {
@@ -179,18 +196,22 @@
     margin: 8px 0;
   }
 
-  .markdown-body :global(table) {
-    /* A prop table's last column holds unbreakable strings -- type unions, URLs --
-       whose min-content width can exceed the column. Without a scroll container
-       the table widens the page instead, so the whole document scrolls sideways
-       to reveal a few pixels of one cell. */
-    display: block;
+  /* A prop table's last column holds unbreakable strings -- type unions, URLs --
+     whose min-content width can exceed the column. Without a scroll container the
+     table widens the page instead, so the whole document scrolls sideways to
+     reveal a few pixels of one cell.
+
+     The container is a wrapper div rather than the table itself so that it can be
+     a keyboard-focusable named region while the table keeps its table role. */
+  .markdown-body :global(.docs-table-scroll) {
     overflow-x: auto;
-    width: 100%;
     max-width: 100%;
+    margin: 12px 0;
+  }
+
+  .markdown-body :global(table) {
     border-collapse: collapse;
     font-size: 13px;
-    margin: 12px 0;
   }
 
   .markdown-body :global(th) {
@@ -236,6 +257,23 @@
     padding: 0;
     font-size: 13px;
     line-height: 1.5;
+    /* As wide as its text (never narrower than the block), so the code's own box
+       resizes when the font size or content changes -- an inline box never
+       reports a size, and then nothing could tell that the block now overflows.
+       Measured identical to the inline default in height and scrollWidth in
+       Chromium, Firefox and WebKit. */
+    display: block;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* A block that overflows is focusable (see _scroll-regions.ts, attached to <main> in the root layout), so it needs a
+     visible indicator. The offset keeps the ring on the page background, where
+     the accent token has contrast in both themes, not on the dark code surface. */
+  .markdown-body :global(pre:focus-visible),
+  .markdown-body :global(.docs-table-scroll:focus-visible) {
+    outline: 2px solid var(--doc-accent);
+    outline-offset: 2px;
   }
 
   .markdown-body :global(ul),

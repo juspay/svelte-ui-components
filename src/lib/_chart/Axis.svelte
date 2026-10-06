@@ -42,6 +42,13 @@
   }
 
   const TICK_SIZE = 6;
+
+  // Tick labels are `aria-hidden`: they repeat what the chart's marks already
+  // say through their own accessible names ("Jan: 4.2K"), and a drawing that
+  // exposes interactive marks as a `group` (rather than the image it used to
+  // be, whose children were presentational) would otherwise read "0 2K 4K 6K
+  // Jan Feb Mar ..." ahead of the first mark. The axis *title* stays exposed:
+  // it is the one place a unit or dimension is stated.
 </script>
 
 <g
@@ -59,6 +66,7 @@
           {#if rotateTicks && orientation === 'bottom'}
             <text
               class="tick-label"
+              aria-hidden="true"
               transform="translate(0, {TICK_SIZE + 4}) rotate(-45)"
               text-anchor="end"
               dominant-baseline="auto"
@@ -70,6 +78,7 @@
           {:else}
             <text
               class="tick-label"
+              aria-hidden="true"
               y={orientation === 'bottom' ? TICK_SIZE + 4 : -(TICK_SIZE + 4)}
               text-anchor="middle"
               dominant-baseline={orientation === 'bottom' ? 'hanging' : 'auto'}
@@ -107,6 +116,7 @@
         <line class="tick-mark" x2={orientation === 'left' ? -TICK_SIZE : TICK_SIZE} />
         <text
           class="tick-label"
+          aria-hidden="true"
           x={orientation === 'left' ? -(TICK_SIZE + 4) : TICK_SIZE + 4}
           text-anchor={orientation === 'left' ? 'end' : 'start'}
           dominant-baseline="middle"

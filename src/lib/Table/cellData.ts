@@ -184,6 +184,9 @@ export const asSelectCellData = (value: TableCellValue): TableSelectCellData | n
     options.push({ id: optionRecord.id, label: optionRecord.label });
   }
   const selectData: TableSelectCellData = { options };
+  if (typeof record.ariaLabel === 'string') {
+    selectData.ariaLabel = record.ariaLabel;
+  }
   if (typeof record.selectedId === 'string') {
     selectData.selectedId = record.selectedId;
   }

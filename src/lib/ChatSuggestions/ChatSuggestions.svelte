@@ -83,6 +83,7 @@
     {#if layout === 'scroll'}
       <Scroller
         {direction}
+        ariaLabel="Chat suggestions"
         showArrows={false}
         showGradient={false}
         hideScrollbar={true}

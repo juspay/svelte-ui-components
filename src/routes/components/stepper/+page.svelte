@@ -31,7 +31,7 @@
   />
 </div>
 
-<div class="demo-row" style="max-width: 600px; margin-top: 32px;">
+<div class="demo-row" style="max-width: 760px; margin-top: 32px;">
   <h2 class="txt-heading-md">Per-step explicit status</h2>
   <Stepper
     steps={[
@@ -129,7 +129,7 @@
 
 <div
   class="demo-row"
-  style="max-width: 600px; margin-top: 32px; --step-container-flex: 1 1 0%; --step-flex-grow: 1; --stepper-separator-flex-grow: 1;"
+  style="max-width: 640px; margin-top: 32px; --step-container-flex: 1 1 0%; --step-flex-grow: 1; --stepper-separator-flex-grow: 1;"
 >
   <h2 class="txt-heading-md">Separator growth — on (hairlines stretch to fill the card)</h2>
   <Stepper

@@ -177,6 +177,28 @@ export type ChartContainerProperties = {
   maxHeight?: number;
   testId?: string;
   classes?: string;
+  /**
+   * Accessible name of the chart drawing (`aria-label` on the `<svg>`). Without
+   * one the drawing is exposed with no name at all, which axe reports as
+   * `svg-img-alt` and which leaves a screen-reader user unable to tell which
+   * chart a data point belongs to.
+   */
+  ariaLabel?: string;
+  /**
+   * Optional longer description of the chart. Rendered as an SVG `<desc>` whose
+   * instance-scoped id is referenced by `aria-describedby`, so it is announced
+   * after the name wherever `aria-describedby` is honoured.
+   */
+  ariaDescription?: string;
+  /**
+   * True when the drawing contains focusable or clickable marks (bars, points,
+   * slices). An interactive drawing is exposed as `role="group"`, not
+   * `role="img"`: ARIA makes an image's children presentational, so marks left
+   * under an image either vanish from assistive technology or are announced
+   * inconsistently between browsers. A static drawing stays a named image.
+   * Defaults to false, which keeps every existing caller's `role="img"`.
+   */
+  interactive?: boolean;
   children: Snippet;
 };
 

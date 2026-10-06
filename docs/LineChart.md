@@ -323,6 +323,41 @@ AreaChart) and how each one renders, plus the calendar-axis limitation and why
 The x-axis renders at most **6 ticks** (per the design-system line-chart spec), thinning further
 on narrow charts. Y-axis ticks were already capped at 6.
 
+### Accessible name and description
+
+Every chart drawing needs a name of its own. `ariaLabel` names the chart (it lands on the
+`<svg>`), and the optional `ariaDescription` adds the takeaway — trend, range, outliers —
+which is announced after the name:
+
+```svelte
+<LineChart
+  {series}
+  ariaLabel="Revenue by month, January to June"
+  ariaDescription="Revenue rises from 30 in January to 90 in December, dipping in March."
+/>
+```
+
+Omit `ariaLabel` and a name is derived from the chart itself — `"{yAxisLabel} line chart"`, else the series names (`"Line chart: Revenue, Cost"`), else `"Line chart"` — so an unlabelled chart is
+still identifiable, but a name written for the page is almost always better. A blank string
+counts as omitted.
+
+How the drawing is exposed depends on whether it holds controls:
+
+- A chart that draws data points is **interactive**: those marks are focusable `role="button"`
+  elements, so the `<svg>` is exposed as a named `role="group"` rather than `role="img"`. An image's
+  children are presentational (ARIA), so marks left under one are dropped or announced
+  inconsistently between browsers, and axe reports `nested-interactive`.
+- A chart with nothing to operate (every series hidden through the legend) is a static, named
+  `role="img"`.
+- The `<svg>` itself carries the name. A name on some wrapper elsewhere does not name the
+  image inside it.
+- Tick labels and the value labels drawn on the chart are `aria-hidden`: each mark's own accessible
+  name already says its category and value, so exposing them too would announce everything twice. The
+  axis _titles_ (`xAxisLabel`, `yAxisLabel`) stay exposed — they are where a unit or dimension is stated.
+- The description is an SVG `<desc>` with an instance-scoped id referenced by `aria-describedby`; every
+  gradient and pattern id is instance-scoped too, so two charts on one page (or in two shadow roots)
+  never resolve each other's references.
+
 ### Keyboard access
 
 Every rendered data point is a focusable `role="button"` element (`tabindex="0"`),
@@ -358,6 +393,16 @@ prop, so its every state change already goes through a focus event and it relies
 `aria-label` alone — this is not the two new charts disagreeing with each other, it is
 the same underlying rule (announce what a focus event cannot) applied to two different
 prop surfaces.
+
+A focused point is spoken **once**: as its own accessible name (`"2 — Product A: 35"`).
+The status region adds only what that name lacks, so it stays empty when it would merely
+repeat the name (a single series, or `sharedTooltip: false`), and it carries the other
+series at that x when the tooltip is shared (`"2 — Product A: 35, Product B: 25, Product C: 15"`).
+It always speaks for the paths that have no focus announcement of their own: pointer
+hover, `highlightedIndex` and the `ChartHighlightAPI`. The point buttons are deliberately
+**not** `aria-describedby` the region: that spoke the summary a second time as each point's
+description, and because one region is shared by every point it described each unfocused
+point by whichever point was announced last.
 
 ### Legend Aggregates
 
@@ -422,6 +467,8 @@ than `NaN` or a fabricated `0`, `sum` included. `aggregateFormat` defaults to `y
 | highlightedIndex  | `number \| null`                                            | No       | `null`       | Zero-based point index to highlight declaratively. Enlarges the dot at that index, draws the crosshair, and dims all other dots. Set `null` to clear.                                                                                                                                                               |
 | tooltipSnippet    | `Snippet<[LineChartTooltipContext]>`                        | No       | `-`          | Custom tooltip. Receives `{x, points: [{name, y, color, label?}]}` with values for all series at the hovered X.                                                                                                                                                                                                     |
 | empty             | `Snippet`                                                   | No       | `-`          | Content rendered when all series are empty.                                                                                                                                                                                                                                                                         |
+| ariaLabel         | `string`                                                    | No       | derived      | Accessible name of the chart (`aria-label` on its `<svg>`). Say what the chart shows. When omitted a name is derived from `yAxisLabel` / the series names, else `"Line chart"`. See [Accessible name and description](#accessible-name-and-description).                                                            |
+| ariaDescription   | `string`                                                    | No       | `-`          | Optional longer description announced after the name (an SVG `<desc>` referenced by `aria-describedby`).                                                                                                                                                                                                            |
 | testId            | `string`                                                    | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                                                                             |
 | classes           | `string`                                                    | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                                                                                                  |
 | sharedTooltip     | `boolean`                                                   | No       | auto         | One anchored tooltip listing every visible series at the hovered x position. Defaults to `true` for multi-series charts, `false` for single-series.                                                                                                                                                                 |
@@ -436,6 +483,15 @@ than `NaN` or a fabricated `0`, `sum` included. `aggregateFormat` defaults to `y
 | onpointclick | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint }) => void`         | Fires when the plot area is clicked with a hovered point.                                                              |
 | onpointhover | `(event: { seriesIndex: number; pointIndex: number; point: LineChartDataPoint } \| null) => void` | Fires when hover moves to a new point or leaves the chart. `null` on leave.                                            |
 | onchartready | `(api: ChartHighlightAPI) => void`                                                                | Called once after mount. Provides a `ChartHighlightAPI` for imperative `highlight(index\|null)` and `getCategories()`. |
+
+### Labels over plotted colors
+
+Printed labels have an opaque backplate measured from their actual SVG glyph bounds,
+including loaded-font changes. This keeps text readable when it crosses slices, lines,
+markers or hover guides. The data palette and labels are unchanged. Override the shared
+`--chart-label-background` to match a custom chart surface, and pair it with the existing
+label foreground token (`--piechart-label-color` or `--linechart-value-color`). Keep that pair
+at 4.5:1 for normal-size text; a transparent plate again exposes the plotted colors.
 
 ## CSS Variables
 
@@ -539,6 +595,19 @@ ships fully styled whether or not `tooltipPortal` is set.
     api.highlight(2);
   };
 </script>
+```
+
+Name and describe the chart with `chart-aria-label` / `chart-aria-description` (properties
+`chartAriaLabel` / `chartAriaDescription`). They are not `aria-label` / `aria-description`, which on a
+custom element name the _host_ (a role-less element) rather than the drawing inside its shadow
+root; the host's own ARIA attributes are left alone. See
+[Accessible name and description](#accessible-name-and-description).
+
+```html
+<sui-line-chart
+  chart-aria-label="Revenue by month"
+  chart-aria-description="Revenue grows all year."
+></sui-line-chart>
 ```
 
 Arrays, objects and functions — `series`, `areaGradient`, `xDomain`, `yDomain`,

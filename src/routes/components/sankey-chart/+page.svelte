@@ -130,26 +130,45 @@
 </div>
 
 <h3>
-  Simple Flow — keyboard access (Tab through nodes then links; Enter/Space activates the focused one
+  Simple Flow — keyboard access (Tab through links then nodes; Enter/Space activates the focused one
   exactly like a click)
 </h3>
 <div class="demo-row">
-  <SankeyChart nodes={simpleNodes} links={simpleLinks} />
+  <SankeyChart
+    ariaDescription="Flows from two sources through two processes to one output; node and link values are available as buttons."
+    ariaLabel="Simple source-to-destination flow"
+    nodes={simpleNodes}
+    links={simpleLinks}
+  />
 </div>
 
 <h3>With Values</h3>
 <div class="demo-row">
-  <SankeyChart nodes={simpleNodes} links={simpleLinks} showValues />
+  <SankeyChart
+    ariaLabel="Simple flow with displayed values"
+    nodes={simpleNodes}
+    links={simpleLinks}
+    showValues
+  />
 </div>
 
 <h3>Website Traffic Flow</h3>
 <div class="demo-row">
-  <SankeyChart nodes={trafficNodes} links={trafficLinks} />
+  <SankeyChart
+    ariaLabel="Website traffic and conversion flow"
+    nodes={trafficNodes}
+    links={trafficLinks}
+  />
 </div>
 
 <h3>dataLabelOffsetX — Extra breathing room between nodes and labels (offset: 30px)</h3>
 <div class="demo-row">
-  <SankeyChart nodes={simpleNodes} links={simpleLinks} dataLabelOffsetX={30} />
+  <SankeyChart
+    ariaLabel="Simple flow with extra label spacing"
+    nodes={simpleNodes}
+    links={simpleLinks}
+    dataLabelOffsetX={30}
+  />
 </div>
 
 <h3>
@@ -157,20 +176,32 @@
   rates)
 </h3>
 <div class="demo-row">
-  <SankeyChart nodes={paymentNodes} links={paymentLinks} minLinkWidth={3} showValues />
+  <SankeyChart
+    ariaLabel="Payment outcomes with minimum link thickness"
+    nodes={paymentNodes}
+    links={paymentLinks}
+    minLinkWidth={3}
+    showValues
+  />
 </div>
 
 <h3>disableDimOnHover — All nodes stay at full opacity when hovering</h3>
 <div class="demo-row">
-  <SankeyChart nodes={trafficNodes} links={trafficLinks} disableDimOnHover />
+  <SankeyChart
+    ariaLabel="Website flow without hover dimming"
+    nodes={trafficNodes}
+    links={trafficLinks}
+    disableDimOnHover
+  />
 </div>
 
 <h3>
-  Crowded funnel — width-aware truncation + per-column label de-collision (labels never overlap each
-  other or slide under a neighbouring column's bar; hidden labels stay on the hover tooltip)
+  Crowded funnel — loaded-font spacing + width-aware truncation (all node labels stay visible; full
+  labels remain available in accessible names and keyboard/pointer tooltips)
 </h3>
 <div class="demo-row">
   <SankeyChart
+    ariaLabel="Crowded checkout and payment outcomes"
     nodes={crowdedNodes}
     links={crowdedLinks}
     showValues
@@ -183,6 +214,7 @@
 <h3>Combined — minLinkWidth + dataLabelOffsetX + disableDimOnHover</h3>
 <div class="demo-row">
   <SankeyChart
+    ariaLabel="Payment outcomes with spaced labels and persistent colors"
     nodes={paymentNodes}
     links={paymentLinks}
     minLinkWidth={3}
@@ -200,6 +232,7 @@
 </p>
 <div class="demo-row">
   <SankeyChart
+    ariaLabel="Simple flow with square nodes and capped height"
     nodes={simpleNodes}
     links={simpleLinks}
     radius={0}
@@ -220,6 +253,7 @@
     style="box-sizing: border-box; width: 100%; overflow: hidden; max-height: 160px; border: 1px dashed #d1d5db; padding: 8px;"
   >
     <SankeyChart
+      ariaLabel="Simple flow with portal tooltip"
       nodes={simpleNodes}
       links={simpleLinks}
       tooltipPortal
@@ -239,6 +273,7 @@
 </p>
 <div class="demo-row">
   <SankeyChart
+    ariaLabel="Flow with a missing link value"
     nodes={nonFiniteNodes}
     links={nonFiniteLinks}
     showValues

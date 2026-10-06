@@ -44,6 +44,13 @@ export type OptionalModalProperties = {
     primaryButton?: ButtonProperties;
     secondaryButton?: ButtonProperties;
   };
+  /**
+   * Milliseconds during which a repeat dismissal (overlay click, Escape, hardware
+   * back-press) is dropped after one has fired. One window is shared by all three
+   * paths. Read when each dismissal arrives, so a value changed while the modal
+   * is open applies to the next one, without forgetting when the last fired.
+   * Default: 700.
+   */
   debounceTime?: number;
   leftImageTestId?: string;
   /** Accessible name for the left header image's role="button" wrapper (e.g. a back control). Rendered as aria-label. */
@@ -79,6 +86,21 @@ export type OptionalModalProperties = {
    * accessible name at all.
    */
   ariaLabel?: string;
+  /**
+   * `id` of the element that describes the modal, rendered as `aria-describedby`
+   * on the modal content panel (the element carrying `role`/`aria-modal` when
+   * `role` is set). An `alertdialog`'s message belongs here: without it a screen
+   * reader announces the name and role but not what the dialog is asking.
+   * Default: unset -- no `aria-describedby` is rendered, so an existing consumer
+   * sees no DOM/ARIA change.
+   *
+   * The browser resolves the id inside the panel's own root, so the described
+   * element must live in the same tree as the panel. In the web-component build
+   * that means content supplied through the `content` snippet property, not
+   * light-DOM content passed through the default `<slot>`, which sits outside
+   * the shadow root and cannot be reached by id.
+   */
+  ariaDescribedby?: string;
   /**
    * ARIA role for the modal content panel. Default: unset -- the panel
    * renders no `role` and no `aria-modal` at all, byte-for-byte matching

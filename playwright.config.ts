@@ -9,21 +9,34 @@ import { fixtureBaseURL, fixturePort } from './tests/support/fixture-server';
 // PW_PORT still overrides.
 const port = playwrightPort(FUNCTIONAL);
 
+if (process.env.SUI_USE_EXISTING_SERVER === '1' && !process.env.PW_PORT) {
+  throw new Error(
+    'SUI_USE_EXISTING_SERVER requires an explicit PW_PORT and a verified existing build.'
+  );
+}
+
 const config: PlaywrightTestConfig = {
   webServer: [
+    // Verification of an immutable build must never start a fallback build of the app.
+    ...(process.env.SUI_USE_EXISTING_SERVER === '1'
+      ? []
+      : [
+          {
+            command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
+            port,
+            // Only reuse a server on a port someone named deliberately; see
+            // scripts/pw-port.ts. On a derived port, `--strictPort` failing loudly beats
+            // silently testing another checkout's build.
+            reuseExistingServer: reuseExistingServer(),
+            timeout: 120_000
+          }
+        ]),
     {
-      command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
-      port,
-      // Only reuse a server on a port someone named deliberately; see
-      // scripts/pw-port.ts. On a derived port, `--strictPort` failing loudly beats
-      // silently testing another checkout's build.
-      reuseExistingServer: reuseExistingServer(),
-      timeout: 120_000
-    },
-    {
+      // Builds into its own .playwright-fixtures directory, never the app's build, so it is safe
+      // beside a frozen app build. Against an existing build a server already running is reused.
       command: `pnpm exec vite build --config vite.config.fixtures.ts && pnpm exec vite preview --config vite.config.fixtures.ts --port ${fixturePort} --strictPort`,
       url: `${fixtureBaseURL}/form-association/`,
-      reuseExistingServer: false,
+      reuseExistingServer: process.env.SUI_USE_EXISTING_SERVER === '1',
       timeout: 120_000
     }
   ],
@@ -44,7 +57,7 @@ const config: PlaywrightTestConfig = {
   // openable artifact.
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: `http://localhost:${port}`,
+    baseURL: `http://${process.env.SUI_USE_EXISTING_SERVER === '1' ? '127.0.0.1' : 'localhost'}:${port}`,
     // This repo's demo pages expose data-pw hooks; getByTestId must target them.
     testIdAttribute: 'data-pw',
     // Real proof, not just a pass/fail assertion: a playable recording of every

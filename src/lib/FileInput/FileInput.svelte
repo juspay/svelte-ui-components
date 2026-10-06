@@ -1,9 +1,11 @@
 <script lang="ts">
   import { describeField } from '../_field/description';
+  import { provideFileInputOwner } from './context';
   import type { FileInputProperties } from './properties';
 
   let {
     trigger,
+    activation = 'region',
     accept,
     multiple = false,
     maxSizeBytes,
@@ -27,6 +29,18 @@
   const field = $derived(
     describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
   );
+
+  /* One upload action, one interactive owner. Left alone, the region is that
+     owner and `trigger` content is plain content inside it. A consumer who wants
+     a real control inside (a Button with its own loading state, say) hands
+     ownership to it instead, and the region stops being a second control: no
+     role, no tab stop, no click or key handling -- only drag and drop. */
+  const regionOwnsActivation = $derived(activation !== 'trigger');
+  provideFileInputOwner({
+    get regionOwnsActivation() {
+      return regionOwnsActivation;
+    }
+  });
 
   let dragOver = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);
@@ -149,21 +163,25 @@
   }
 </script>
 
+<!-- The role is a ternary Svelte cannot resolve, so it reads the element as a plain div. Whenever
+     the tabindex renders, the role is "button" on the very same expression. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="file-input {classes ?? ''}"
   class:file-input-dragover={dragOver}
   class:file-input-disabled={disabled}
+  class:file-input-passive={!regionOwnsActivation}
   data-pw={testId}
   testID={testId}
-  role="button"
-  tabindex={disabled ? -1 : 0}
-  aria-disabled={disabled}
-  aria-describedby={field.describedBy}
+  role={regionOwnsActivation ? 'button' : null}
+  tabindex={regionOwnsActivation ? (disabled ? -1 : 0) : null}
+  aria-disabled={regionOwnsActivation ? disabled : null}
+  aria-describedby={regionOwnsActivation ? field.describedBy : null}
   ondragover={handleDragOver}
   ondragleave={handleDragLeave}
   ondrop={handleDrop}
-  onkeydown={handleKeyDown}
-  onclick={handleClick}
+  onkeydown={regionOwnsActivation ? handleKeyDown : null}
+  onclick={regionOwnsActivation ? handleClick : null}
 >
   <input
     bind:this={inputEl}
@@ -179,7 +197,7 @@
     aria-hidden="true"
   />
 
-  {@render trigger({ openFilePicker, dragOver, disabled })}
+  {@render trigger({ openFilePicker, dragOver, disabled, describedBy: field.describedBy })}
 </div>
 
 {#if field.showsError}
@@ -231,9 +249,20 @@
     cursor: pointer;
   }
 
+  /* The region is not the control here, so it must not look like one. */
+  .file-input-passive {
+    cursor: auto;
+  }
+
+  /* The region is the one Tab stop of its upload action, so it is also the only thing that can
+     show where focus is. With no fallback this resolved to `outline: none` -- invisible to a
+     keyboard user, and only masked while a nested button supplied its own ring. `currentColor`
+     is the library's convention for a ring that needs no colour literal (Card, Pill, StatCard):
+     it follows the surrounding text colour, so it clears 3:1 on the light and the dark ground
+     alike and stays visible in forced-colors mode. :focus-visible keeps it off pointer clicks. */
   .file-input:focus-visible {
-    outline: var(--file-input-focus-outline);
-    outline-offset: var(--file-input-focus-outline-offset);
+    outline: var(--file-input-focus-outline, 2px solid currentColor);
+    outline-offset: var(--file-input-focus-outline-offset, 2px);
   }
 
   .file-input-dragover {

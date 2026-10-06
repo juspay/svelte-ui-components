@@ -21,6 +21,7 @@
   let {
     value = $bindable('#000000'),
     label,
+    ariaLabel,
     disabled = false,
     showValue = false,
     testId,
@@ -49,6 +50,25 @@
     describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
   );
   const describedGroup = $derived(field.describedBy !== null || field.ariaInvalid !== null);
+
+  /* What this picker is called: its visible `label`, else the `ariaLabel` a caller
+     gives a swatch-only picker that has no caption. Every control in it is named
+     from this, because a page with three pickers otherwise offers three identical
+     "Pick a color" buttons and three nameless hex fields -- indistinguishable in a
+     screen reader's list of controls. `null` rather than a made-up default: with
+     no name supplied the controls keep the plain purpose names below, which is
+     the most that can honestly be said. */
+  const pickerName = $derived(
+    typeof label === 'string' && label.trim() !== ''
+      ? label.trim()
+      : typeof ariaLabel === 'string' && ariaLabel.trim() !== ''
+        ? ariaLabel.trim()
+        : null
+  );
+  const triggerName = $derived(
+    pickerName === null ? 'Pick a color' : `Pick a color: ${pickerName}`
+  );
+  const dialogName = $derived(pickerName === null ? 'Color picker' : `${pickerName} picker`);
 
   // ── Internal state ──────────────────────────────────────────────
 
@@ -293,7 +313,7 @@
   class="color-picker-container {classes ?? ''}"
   class:disabled
   role={describedGroup ? 'group' : null}
-  aria-label={describedGroup && typeof label === 'string' ? label : null}
+  aria-label={describedGroup ? pickerName : null}
   aria-describedby={field.describedBy}
   aria-invalid={field.ariaInvalid}
   data-pw={testId}
@@ -312,7 +332,7 @@
       class:standalone={showValue === false}
       bind:this={triggerWrapEl}
     >
-      <Button onclick={togglePicker} {disabled} ariaLabel="Pick a color" ariaExpanded={open}>
+      <Button onclick={togglePicker} {disabled} ariaLabel={triggerName} ariaExpanded={open}>
         <span class="color-picker-checkerboard">
           <span class="color-picker-swatch" style="background-color: {value};"></span>
         </span>
@@ -322,6 +342,7 @@
       <div class="color-picker-input-wrap">
         <Input
           bind:value
+          ariaLabel={`${pickerName ?? 'Color'} hex value`}
           disable={disabled}
           maxLength={7}
           classes="color-picker-text-input"
@@ -333,7 +354,7 @@
 
   <!-- Popover panel -->
   {#if open}
-    <div class="color-picker-popover" role="dialog" aria-label="Color picker" use:dismissalAction>
+    <div class="color-picker-popover" role="dialog" aria-label={dialogName} use:dismissalAction>
       <div
         class="cp-sat-panel"
         style="background-color: {hsvToHex(hue, 1, 1)};"
@@ -361,6 +382,7 @@
           min={0}
           max={360}
           step={1}
+          ariaLabel="Hue"
           {disabled}
           classes="cp-hue-track"
           oninput={handleHueInput}
@@ -375,6 +397,7 @@
           <div class="cp-field-hex">
             <Input
               value={hexInputValue}
+              ariaLabel="Hex value"
               maxLength={7}
               classes="cp-field-input"
               oninput={handleHexFieldInput}
@@ -384,10 +407,11 @@
         {:else if mode === 'RGB'}
           <SplitInput
             values={[String(currentRgb.r), String(currentRgb.g), String(currentRgb.b)]}
+            ariaLabel="RGB channels"
             fields={[
-              { label: 'R', dataType: 'number', min: 0, max: 255 },
-              { label: 'G', dataType: 'number', min: 0, max: 255 },
-              { label: 'B', dataType: 'number', min: 0, max: 255 }
+              { label: 'R', ariaLabel: 'Red', dataType: 'number', min: 0, max: 255 },
+              { label: 'G', ariaLabel: 'Green', dataType: 'number', min: 0, max: 255 },
+              { label: 'B', ariaLabel: 'Blue', dataType: 'number', min: 0, max: 255 }
             ]}
             {disabled}
             classes="cp-split-input"
@@ -396,10 +420,17 @@
         {:else}
           <SplitInput
             values={[String(currentHsl.h), String(currentHsl.s), String(currentHsl.l)]}
+            ariaLabel="HSL channels"
             fields={[
-              { label: 'H', dataType: 'number', min: 0, max: 360 },
-              { label: 'S', dataType: 'number', min: 0, max: 100 },
-              { label: 'L', dataType: 'number', min: 0, max: 100 }
+              { label: 'H', ariaLabel: 'Hue (degrees)', dataType: 'number', min: 0, max: 360 },
+              {
+                label: 'S',
+                ariaLabel: 'Saturation (percent)',
+                dataType: 'number',
+                min: 0,
+                max: 100
+              },
+              { label: 'L', ariaLabel: 'Lightness (percent)', dataType: 'number', min: 0, max: 100 }
             ]}
             {disabled}
             classes="cp-split-input"

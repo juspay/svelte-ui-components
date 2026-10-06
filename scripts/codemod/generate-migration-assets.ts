@@ -7,6 +7,15 @@ import {
   generateStylesheet,
   type HostDisplayEntry
 } from '../migrate/host-display-compat.ts';
+import {
+  COMPILED_CODEMOD_DIRNAME,
+  DIST_CODEMOD_DIRNAME,
+  LEGACY_DISPLAY_CSS_FILENAME,
+  LEGACY_PALETTE_CSS_FILENAME,
+  MIGRATION_ASSETS_DIRNAME,
+  WC_DISPLAY_FILENAME,
+  builtMigrationAssetsDir
+} from './migration-assets-layout.ts';
 
 /**
  * Runs during `build:codemod`, after the tsc step, and writes the three data
@@ -128,15 +137,15 @@ export function generateMigrationAssets(
 
   mkdirSync(paths.outDir, { recursive: true });
 
-  const wcDisplayJsonPath = join(paths.outDir, 'wc-display.json');
+  const wcDisplayJsonPath = join(paths.outDir, WC_DISPLAY_FILENAME);
   writeFileSync(wcDisplayJsonPath, wcDisplayJson);
   log(`wrote ${entries.length} entrie(s) to ${wcDisplayJsonPath}`);
 
-  const legacyDisplayCssPath = join(paths.outDir, 'legacy-display.css');
+  const legacyDisplayCssPath = join(paths.outDir, LEGACY_DISPLAY_CSS_FILENAME);
   writeFileSync(legacyDisplayCssPath, legacyDisplayCss);
   log(`wrote ${legacyDisplayCssPath}`);
 
-  const legacyPaletteCssPath = join(paths.outDir, 'legacy-palette.css');
+  const legacyPaletteCssPath = join(paths.outDir, LEGACY_PALETTE_CSS_FILENAME);
   writeFileSync(legacyPaletteCssPath, legacyPaletteCss);
   log(`wrote ${legacyPaletteCssPath} (from the committed asset)`);
 
@@ -158,7 +167,7 @@ const USAGE = [
   '                                        because deriving it needs repository history a build lacks)',
   '',
   '  --root <repo>  repo to read src/wc/components from (default: this file’s own repo)',
-  '  --out <dir>    directory to write into (default: <root>/dist-codemod/codemod/migration-assets)',
+  `  --out <dir>    directory to write into (default: <root>/${DIST_CODEMOD_DIRNAME}/${COMPILED_CODEMOD_DIRNAME}/${MIGRATION_ASSETS_DIRNAME})`,
   '  --help         show this help'
 ].join('\n');
 
@@ -205,12 +214,10 @@ export function run(argv: readonly string[], log: (line: string) => void): numbe
   // `migrate-audit.js` lands in dist-codemod/codemod/ and resolves these
   // assets off its own `import.meta.url`. Writing them one level up would put
   // them somewhere nothing looks, and the reader's "assets missing" path would
-  // report it as an unmigrated consumer rather than a broken build.
-  const outDir = resolve(
-    typeof outFlag === 'string'
-      ? outFlag
-      : join(root, 'dist-codemod', 'codemod', 'migration-assets')
-  );
+  // report it as an unmigrated consumer rather than a broken build. The path
+  // itself comes from migration-assets-layout.ts, shared with that reader and
+  // with the real-artifact tests, so none of the three can drift alone.
+  const outDir = resolve(typeof outFlag === 'string' ? outFlag : builtMigrationAssetsDir(root));
 
   const summary = generateMigrationAssets({ root, outDir }, log);
   log(

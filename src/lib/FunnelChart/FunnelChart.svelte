@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { FunnelChartProperties, FunnelStage } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { getColor, getContrastColor } from '$lib/_chart/colors';
   import { formatNumber, formatPercent } from '$lib/_chart/format';
@@ -25,6 +26,8 @@
     minHeight = 0,
     radius = DEFAULT_CHART_CORNER_RADIUS,
     tooltipPortal = false,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes,
     empty,
@@ -92,6 +95,16 @@
   // The documented contract treats an all-zero dataset as empty (it would otherwise
   // render meaningless min-height bars), so fold that into the empty check.
   let isEmpty = $derived(data.length === 0 || data.every((stage) => stage.value === 0));
+  const chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('funnel', {
+        seriesNames: data.map((stage) => stage.category)
+      })
+    )
+  );
+  // Zero-valued stages still paint structural bars and retain their callbacks.
+  const hasMarks = $derived(data.length > 0);
 
   /**
    * Computes the total horizontal space consumed by slope connectors.
@@ -330,6 +343,9 @@
         {aspectRatio}
         {maxHeight}
         {minHeight}
+        ariaLabel={chartName}
+        {ariaDescription}
+        interactive={hasMarks}
       >
         <g transform="translate({MARGIN_LEFT}, {MARGIN_TOP})">
           <!-- Stage bars and category labels -->
@@ -344,6 +360,7 @@
             <!-- Category label above the bar -->
             <text
               class="funnel-category-label"
+              aria-hidden="true"
               x={labelX}
               y={labelAreaHeight - 6}
               text-anchor="middle"
@@ -371,8 +388,9 @@
               onblur={handleLeave}
               onkeydown={(e) => handleKeydown(e, index)}
               onclick={() => handleClick(index)}
-              tabindex="0"
+              tabindex={hasMarks ? 0 : null}
               role="button"
+              aria-hidden={hasMarks ? null : 'true'}
             />
 
             <!-- Value label centred inside the bar -->
@@ -381,6 +399,7 @@
               {#if vl !== ''}
                 <text
                   class="funnel-value-label"
+                  aria-hidden="true"
                   x={labelX}
                   y={by + bh / 2}
                   text-anchor="middle"

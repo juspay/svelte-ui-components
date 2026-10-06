@@ -34,6 +34,14 @@
       tooltipPortal: { type: 'Boolean', attribute: 'tooltip-portal' },
       onpointhover: { type: 'Object' },
       onpointclick: { type: 'Object' },
+      // `ariaLabel`/`ariaDescription` are the chart's accessible name and description, but
+      // `ariaLabel` is an ARIAMixin accessor on every Element and `aria-label` on the host would
+      // name the (role-less) host rather than the drawing inside the shadow root. They are
+      // exposed under chart-prefixed names, so the host's own `aria-label` keeps its native meaning
+      // and the name reaches the <svg> -- the same prefixed-alias pattern as
+      // `sui-modal`'s `modal-aria-label` and `sui-toggle`'s `input-aria-label`.
+      chartAriaLabel: { type: 'String', attribute: 'chart-aria-label' },
+      chartAriaDescription: { type: 'String', attribute: 'chart-aria-description' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' }
     }
@@ -42,9 +50,20 @@
 
 <script lang="ts">
   import AreaChart from '$lib/AreaChart/AreaChart.svelte';
+  import type { AreaChartProperties } from '$lib/AreaChart/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  // The rest still carries every other prop of the component; the two chart-prefixed
+  // names are forwarded below as `ariaLabel`/`ariaDescription` (see the props map above).
+  // Saying so is what a destructured `$props()` no longer infers on its own.
+  let {
+    chartAriaLabel,
+    chartAriaDescription,
+    ...props
+  }: Omit<AreaChartProperties, 'ariaLabel' | 'ariaDescription'> & {
+    chartAriaLabel?: AreaChartProperties['ariaLabel'];
+    chartAriaDescription?: AreaChartProperties['ariaDescription'];
+  } = $props();
 
   /*
    * AreaChart renders its empty state only when `isEmpty && typeof empty ===
@@ -90,13 +109,23 @@
   silently empty shadow root rather than as a build error.
 -->
 {#if hasEmptySlot}
-  <AreaChart {...props} {...dispatchers}>
+  <AreaChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet empty()}
       <slot name="empty"></slot>
     {/snippet}
   </AreaChart>
 {:else}
-  <AreaChart {...props} {...dispatchers} />
+  <AreaChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  />
 {/if}
 
 <style>

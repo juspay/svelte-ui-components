@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import type { ToastDirection, ToastProperties } from './properties';
   import Img from '../Img/Img.svelte';
 
@@ -26,6 +26,11 @@
   }: ToastProperties = $props();
 
   let showToast = $state(true);
+  let rootEl: HTMLDivElement | null = $state(null);
+  // One `ontoasthide` per hide, however it is reached (the exit's transitionend,
+  // or the no-exit path in hideToast) and however many times hideToast runs
+  // (the close button after the auto-hide timer already fired).
+  let hideNotified = false;
 
   const rootClass = $derived(
     ['toast', type ?? '', classes ?? ''].filter((cls) => cls.length > 0).join(' ')
@@ -61,6 +66,13 @@
     return distance == null ? {} : directionalOffset(resolvedDirection, distance);
   });
 
+  // The offsets feed `translate(var(--toast-enter-x, 0px), var(--toast-enter-y, 0px))`
+  // in the stylesheet, where a unitless non-zero number is invalid at
+  // computed-value time: the whole `transform` then computes to `none` and the
+  // toast stops travelling at all. Inline custom properties carry no unit of
+  // their own, so the px has to be written here.
+  const toPx = (value?: number): string | null => (typeof value === 'number' ? `${value}px` : null);
+
   // A `0`/`0s` CSS transition-duration never starts a transition, so it never
   // fires `transitionend`, so `ontoasthide` (below) would never fire -- floor
   // at 50ms so the transition always runs. Same reasoning as the reduced-motion
@@ -76,8 +88,30 @@
   const openDurationStyle = $derived(toDurationStyle(inAnimationDuration));
   const closeDurationStyle = $derived(toDurationStyle(outAnimationDuration));
 
+  function notifyHidden() {
+    if (!hideNotified) {
+      hideNotified = true;
+      ontoasthide?.();
+    }
+  }
+
   function hideToast() {
     showToast = false;
+    // The closed rule's `display: none` only keeps the toast on screen for its
+    // exit through a discrete `display` transition (`allow-discrete`). An engine
+    // without one -- Firefox 150, as shipped in Playwright 1.60 -- applies
+    // `display: none` at once, which cancels the exit before it starts, so no
+    // `transitionend` is ever dispatched and the consumer's `ontoasthide` cleanup
+    // would never run.
+    // If the toast is already not displayed once the closed state has applied,
+    // there is no exit left to wait for: report the hide now. Where the
+    // transition does run the toast is still displayed here, and the
+    // `transitionend` below remains the only path.
+    void tick().then(() => {
+      if (!showToast && rootEl !== null && getComputedStyle(rootEl).display === 'none') {
+        notifyHidden();
+      }
+    });
   }
 
   function handleTransitionEnd(event: TransitionEvent) {
@@ -96,7 +130,7 @@
     // correct under any reversal ordering, not just the common single-close
     // case this guard was originally written for.
     if (event.target === event.currentTarget && event.propertyName === 'opacity' && !showToast) {
-      ontoasthide?.();
+      notifyHidden();
     }
   }
 
@@ -111,6 +145,7 @@
 
     untrack(() => {
       showToast = true;
+      hideNotified = false;
     });
 
     const id = setTimeout(hideToast, duration);
@@ -133,6 +168,7 @@
      aria-live off and back on around the reshow to force a re-announce,
      not a change to the CSS transition mechanics above. -->
 <div
+  bind:this={rootEl}
   class={rootClass}
   class:is-visible={showToast}
   class:no-page-overlap={!overlapPage}
@@ -141,8 +177,8 @@
   aria-live="assertive"
   style:--toast-open-duration={openDurationStyle}
   style:--toast-close-duration={closeDurationStyle}
-  style:--toast-enter-x={enterOffset.x}
-  style:--toast-enter-y={enterOffset.y}
+  style:--toast-enter-x={toPx(enterOffset.x)}
+  style:--toast-enter-y={toPx(enterOffset.y)}
   ontransitionend={handleTransitionEnd}
   data-pw={testId}
   testID={testId}

@@ -19,7 +19,7 @@
 
 <div class="demo-row" style="max-width: 400px;">
   <h3>Swatch only</h3>
-  <ColorPicker bind:value={color} />
+  <ColorPicker bind:value={color} ariaLabel="Highlight color" />
 </div>
 
 <div class="demo-row" style="max-width: 400px;">

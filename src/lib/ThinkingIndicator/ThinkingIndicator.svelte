@@ -550,6 +550,21 @@
     min-width: 0;
   }
 
+  /* Contrast contract (WCAG 1.4.3, 4.5:1 for this normal-size text): every colour the
+     live label can paint -- the resting ink AND the shimmer's highlight -- clears 4.5:1
+     on the surfaces it is documented for (white, #fafafa, #f4f4f5 and the library's
+     tinted greys in light; #0f0f17..#2f2f45 in the dark layer). The sweep therefore
+     travels from the resting ink toward a STRONGER ink (#6b6b6b -> #2b2b2b in light,
+     #9ca3af -> #e5e7eb in dark) rather than washing out toward the page, which is what
+     the previous #858585 -> #bebebe sweep did (1.8:1 at its peak on #fafafa). The swing
+     between the two stops is as large or larger (2.7:1 light, 2.1:1 dark, against the old
+     2.0:1), so the motion reads the same. Pinned in two places:
+     src/lib/ThinkingIndicator/thinking-indicator-contrast.test.ts (the token defaults)
+     and tests/thinking-indicator-contrast.spec.ts (rendered pixels, every shimmer phase).
+
+     The gradient is built from the same `--thinking-indicator-label-color` token the
+     static label uses, so overriding the colour retunes the shimmer's resting stops too;
+     `--thinking-indicator-shimmer-gradient` still replaces the whole thing. */
   .status-label {
     flex: 0 1 auto;
     min-width: 0;
@@ -559,10 +574,15 @@
     text-align: left;
     font-size: var(--thinking-indicator-font-size, 0.75rem);
     line-height: var(--thinking-indicator-line-height, 1.25rem);
-    color: var(--thinking-indicator-label-color, #858585);
+    color: var(--thinking-indicator-label-color, #6b6b6b);
     background: var(
       --thinking-indicator-shimmer-gradient,
-      linear-gradient(90deg, #858585 0%, #bebebe 50%, #858585 100%)
+      linear-gradient(
+        90deg,
+        var(--thinking-indicator-label-color, #6b6b6b) 0%,
+        var(--thinking-indicator-shimmer-highlight, #2b2b2b) 50%,
+        var(--thinking-indicator-label-color, #6b6b6b) 100%
+      )
     );
     background-size: 200% 100%;
     background-clip: text;
@@ -571,10 +591,14 @@
       infinite;
   }
 
-  /* A settled label (no live busy phase) holds still instead of shimmering. */
+  /* A settled label (no live busy phase) holds still instead of shimmering. It also drops
+     the gradient layer rather than just covering it: under an opaque text fill the layer
+     still shows at antialiased glyph edges, and now that its highlight is a dark ink, light
+     text on a dark recipe (the Chat tool-status example) would grow a dark fringe. */
   .static-label {
     animation: none;
-    -webkit-text-fill-color: var(--thinking-indicator-label-color, #858585);
+    background-image: none;
+    -webkit-text-fill-color: var(--thinking-indicator-label-color, #6b6b6b);
   }
 
   /* ---- chip variant: a self-contained floating pill (no ancestor supplies
@@ -619,9 +643,17 @@
     font-size: var(--thinking-indicator-chip-font-size, 0.85rem);
     font-weight: var(--thinking-indicator-chip-font-weight, 500);
     color: var(--thinking-indicator-chip-color, #52525b);
+    /* Same contract as .status-label: resting ink and highlight both clear 4.5:1 on the
+       chip's own surface (#52525b / #18181b on #ffffff in light; #9ca3af / #f3f4f6 on
+       #1e1e2e in dark), and the resting stop follows the chip colour token. */
     background: var(
       --thinking-indicator-chip-shimmer-gradient,
-      linear-gradient(90deg, #52525b 0%, #a0a0a0 50%, #52525b 100%)
+      linear-gradient(
+        90deg,
+        var(--thinking-indicator-chip-color, #52525b) 0%,
+        var(--thinking-indicator-chip-shimmer-highlight, #18181b) 50%,
+        var(--thinking-indicator-chip-color, #52525b) 100%
+      )
     );
     background-size: 200% 100%;
     background-clip: text;
@@ -637,6 +669,7 @@
      variant's. */
   .chip-label.static-label {
     animation: none;
+    background-image: none;
     -webkit-text-fill-color: var(--thinking-indicator-chip-color, #52525b);
   }
 
@@ -857,17 +890,21 @@
     gap: 5px;
   }
 
+  /* The +N / -N stats also sit on a selectable row's hover (#f4f4f4) and selected (#ececec)
+     backgrounds. #1f7a5f / #c93f38 were 4.4:1 / 4.2:1 on the selected one; these clear
+     4.5:1 on it and on white (thinking-indicator-contrast.test.ts pins both). */
   .row-diffstat .added {
-    color: var(--thinking-indicator-trace-added-color, #1f7a5f);
+    color: var(--thinking-indicator-trace-added-color, #1b7358);
   }
 
   .row-diffstat .removed {
-    color: var(--thinking-indicator-trace-removed-color, #c93f38);
+    color: var(--thinking-indicator-trace-removed-color, #c2382f);
   }
 
   .trace-more {
     font-size: var(--thinking-indicator-trace-more-font-size, 0.75rem);
-    color: var(--thinking-indicator-trace-more-color, #9a9a9a);
+    /* Settled caption text at 0.75rem: #9a9a9a was 2.8:1 on white. */
+    color: var(--thinking-indicator-trace-more-color, #6b6b6b);
     padding: 6px 0 0 22px;
     animation: thinking-indicator-fade-in
       var(--thinking-indicator-trace-more-animation-duration, var(--motion-duration, 300ms))
@@ -890,11 +927,13 @@
 
     .status-label {
       animation: none;
-      -webkit-text-fill-color: var(--thinking-indicator-label-color, #858585);
+      background-image: none;
+      -webkit-text-fill-color: var(--thinking-indicator-label-color, #6b6b6b);
     }
 
     .chip-label {
       animation: none;
+      background-image: none;
       -webkit-text-fill-color: var(--thinking-indicator-chip-color, #52525b);
     }
   }

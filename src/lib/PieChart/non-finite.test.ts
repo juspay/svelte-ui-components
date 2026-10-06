@@ -102,13 +102,17 @@ describe('PieChart component non-finite guard', () => {
     }
   });
 
-  it('does not announce "NaN" through the aria-live status region for the poisoned slice', async () => {
+  it('names the poisoned slice without NaN and uses the live region only without slice focus', async () => {
     const { container } = render(PieChart, { data });
     const status = container.querySelector('[data-pw="pie-status"]');
     const badSlice = container.querySelectorAll('path.slice')[1];
 
     await fireEvent.focus(badSlice);
+    expect(badSlice.getAttribute('aria-label')).toBe('Beta: 0 (0%)');
+    expect(status?.textContent?.trim()).toBe('');
+    await fireEvent.blur(badSlice);
+    await fireEvent.mouseEnter(badSlice);
     expect(status?.textContent).not.toContain('NaN');
-    expect(status?.textContent).toContain('Beta');
+    expect(status?.textContent).toContain('Beta: 0 (0%)');
   });
 });

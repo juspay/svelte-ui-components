@@ -341,7 +341,7 @@
   />
 </div>
 
-<div class="chat-stage">
+<div class="chat-stage demo-scroll">
   <Resizable
     bind:width={() => liveWidth, setLiveWidth}
     bind:height={() => liveHeight, setLiveHeight}
@@ -630,6 +630,7 @@
 
   .scroll-policy-controls {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     padding: 10px 16px;

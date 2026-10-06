@@ -403,17 +403,33 @@ test.describe('Modal viewport width: overlay hit area', () => {
     });
   }
 
-  test('a drag that starts in the panel and is released beside it counts as an overlay click', async ({
-    page
+  test('a drag that starts in the panel and is released beside it ends on the overlay', async ({
+    page,
+    browserName
   }) => {
     const { panel, point } = await beside(page, 375, { tokens: mediumWidth('90%') });
+
+    // Every engine must resolve the release point to the overlay: that is what the rule under
+    // test controls.
+    const hitClass = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.className ?? null,
+      point
+    );
+    expect(hitClass).toMatch(/(^|\s)modal(\s|$)/);
 
     await page.mouse.move(panel.x + panel.width / 2, point.y);
     await page.mouse.down();
     await page.mouse.move(point.x, point.y, { steps: 5 });
     await page.mouse.up();
 
-    await expect(page.getByTestId('fixture-overlay-clicks')).toHaveText('1');
+    // Whether the browser then raises a click on the overlay is the engine's call, not the
+    // library's. Chromium and WebKit report the release on the element under the pointer, so the
+    // click lands on the overlay. Firefox keeps reporting it on the panel (`.modal-content` is a
+    // scroll container, and Gecko captures the mouse to one for the whole press), so no overlay
+    // click is raised and a text selection dragged out of the dialog does not dismiss it.
+    await expect(page.getByTestId('fixture-overlay-clicks')).toHaveText(
+      browserName === 'firefox' ? '0' : '1'
+    );
   });
 
   test('a consumer pointer-events rule on the transition wrapper wins', async ({ page }) => {

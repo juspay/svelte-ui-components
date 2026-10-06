@@ -52,10 +52,49 @@ A generic segmented input component for capturing structured multi-field values 
 | separator    | `string`         | No       | `-`         | A string rendered between each pair of adjacent fields as a visual separator (e.g., `"."` for IP addresses, `","` for RGB, `"-"` for formatted codes).                                                                                                                                                              |
 | testId       | `string`         | No       | `-`         | Value for the `data-pw` attribute on the top-level container element, used for end-to-end testing selectors.                                                                                                                                                                                                        |
 | classes      | `string`         | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming -- define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                             |
-| ariaLabel    | `string`         | No       | `undefined` | Names the whole group ("One-time code"). The boxes are individually meaningless, so without this a screen-reader user reaches four unlabelled fields.                                                                                                                                                               |
+| ariaLabel    | `string`         | No       | `undefined` | Names the whole group ("One-time code") and leads the accessible name of every box in it ("One-time code, digit 2 of 6"), so each box is identifiable on its own -- a screen reader's form-field list shows controls without their group. Without it each box is named by position alone ("Digit 2 of 6"), which says where it is but not what it is for. See [Accessible names](#accessible-names). |
+| positionLabel | `(position: number, total: number) => string` | No | `-` | Builds the position part of a box's accessible name from its 1-based position and the number of boxes, replacing the English default ("digit 2 of 6" for one-digit boxes, "character 2 of 6" for one-character boxes, "field 2 of 4" for wider ones). Use it for another language or a better noun (return `octet 2 of 4` for position 2 of 4). A box with its own `ariaLabel` or `label` never asks for a position. |
 | errorMessage | `string \| null` | No       | `undefined` | Text shown, and announced, when the control is in error. Referenced by `aria-describedby` on the group wrapping the control, and sets `aria-invalid` while present.                                                                                                                                                 |
 | infoMessage  | `string \| null` | No       | `undefined` | Persistent helper text describing the control. Referenced the same way, so it is read before the user trips an error rather than only after.                                                                                                                                                                        |
 | invalid      | `boolean`        | No       | `false`     | Marks the control invalid without supplying a message, for a consumer driving validity from a server or its own rules.                                                                                                                                                                                              |
+
+## Accessible names
+
+The boxes are individually meaningless -- "edit text, blank", six times over -- so every box carries
+a name that says which field it is and, where that helps, where it is. A box is named by the first
+of these that is set:
+
+| Source                                       | Name of the box                                           | Example                          |
+| -------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
+| `fields[i].ariaLabel`                        | Exactly as given -- it already says which field it is.    | `Red`                            |
+| `fields[i].label` (the visible caption)      | The caption, behind the group name when there is one.     | `RGB color, R`                   |
+| `positionLabel(position, total)`             | The position text it returns, behind the group name.      | `IP address, octet 2 of 4`       |
+| (none of the above)                          | The default position text, behind the group name.         | `One-time code, digit 2 of 6`    |
+
+The default position text names what the box holds: **digit** for a one-character `tel`/`number`
+box, **character** for any other one-character box, **field** for anything wider (a three-digit
+octet is not a digit). With no group `ariaLabel` the position stands alone and is capitalised
+(`Digit 2 of 6`) -- name the group, because two unrelated OTP groups on one page would otherwise
+share their names.
+
+```svelte
+<!-- "One-time code, digit 1 of 6" ... "One-time code, digit 6 of 6" -->
+<SplitInput bind:values={otp} length={6} autoAdvance ariaLabel="One-time code" />
+
+<!-- "Red", "Green", "Blue": each box named by purpose -->
+<SplitInput
+  bind:values={rgb}
+  ariaLabel="RGB color"
+  fields={[
+    { label: 'R', ariaLabel: 'Red', dataType: 'number', min: 0, max: 255 },
+    { label: 'G', ariaLabel: 'Green', dataType: 'number', min: 0, max: 255 },
+    { label: 'B', ariaLabel: 'Blue', dataType: 'number', min: 0, max: 255 }
+  ]}
+/>
+```
+
+The group gets `role="group"` whenever it has an `ariaLabel`, an `errorMessage`/`infoMessage` or is
+`invalid`; a bare SplitInput with none of those is not announced as a group.
 
 ## Methods
 
@@ -117,8 +156,10 @@ type FieldConfig = {
   validationPattern?: RegExp | null;
   validators?: CustomValidator[];
   label?: string | null;
+  ariaLabel?: string | null;
   autoComplete?: HTMLInputAttributes['autocomplete'];
   inputMode?: HTMLInputAttributes['inputmode'];
+  testId?: string;
 };
 ```
 
@@ -129,7 +170,9 @@ type FieldConfig = {
 - `placeholder` -- Placeholder text shown when the field is empty.
 - `validationPattern` -- A `RegExp` used by the underlying Input to validate the field value. Defaults to `null` (no pattern validation).
 - `validators` -- Array of `CustomValidator` functions for custom validation logic. Each receives the input value and current validation state and returns a new `ValidationState`.
-- `label` -- Text label displayed below the field (e.g., `'R'`, `'G'`, `'B'` for color channels).
+- `label` -- Text label displayed below the field (e.g., `'R'`, `'G'`, `'B'` for color channels). Also names the box when it has no `ariaLabel` (see [Accessible names](#accessible-names)).
+- `ariaLabel` -- The accessible name of this one box (e.g., `'Red'`, `'Area code'`), used exactly as given. Set it when each box is a different field; for a code whose boxes are positions of one value, name the group instead.
+- `testId` -- `data-pw` hook on this box's input.
 - `autoComplete` -- Native `autocomplete` hint for the field. Set to `'one-time-code'` on OTP segments to enable WebOTP / SMS autofill. Defaults to `'on'`.
 - `inputMode` -- Native `inputmode` hint controlling the mobile virtual keyboard (e.g., `'numeric'` for a numeric keypad). Left off by default.
 
@@ -160,8 +203,25 @@ Available as `<sui-split-input>`.
 document.querySelector('sui-split-input').values = ['1', '2', '3', '4', '5', '6'];
 ```
 
-Attributes are kebab-case: `auto-advance`, `test-id`. `values`, `fields` and the `on*` handlers
-are set as properties.
+Attributes are kebab-case: `auto-advance`, `test-id`. `values`, `fields`, `positionLabel` and the
+`on*` handlers are set as properties.
+
+`aria-label` on the element names the group and leads each box's name, exactly as `ariaLabel` does
+in Svelte (the wrapper renames it internally because `ariaLabel` is already an `HTMLElement`
+property). A box is named per `fields[i].ariaLabel` -- set the property as an array of objects:
+
+```html
+<sui-split-input aria-label="One-time code" length="6" auto-advance></sui-split-input>
+```
+
+```js
+const rgb = document.querySelector('sui-split-input#rgb');
+rgb.fields = [
+  { label: 'R', ariaLabel: 'Red', dataType: 'number' },
+  { label: 'G', ariaLabel: 'Green', dataType: 'number' },
+  { label: 'B', ariaLabel: 'Blue', dataType: 'number' }
+];
+```
 
 `oncomplete` also dispatches a `complete` DOM custom event (bubbles, composed) with `detail`
 set to the assembled `values` array, for a consumer who only calls `addEventListener`:

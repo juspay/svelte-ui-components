@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { prepareNativeClipboard, readNativeClipboard } from './support/native-browser';
 
 test.describe('Table — built-in cell renderers', () => {
   test('tag and tag-array cells render Pills with consumer classes', async ({ page }) => {
@@ -52,14 +53,19 @@ test.describe('Table — built-in cell renderers', () => {
   }) => {
     await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
+    const firstSwitch = table.getByTestId('builtin-toggle-0').getByRole('switch');
+    await expect(firstSwitch).toHaveAccessibleName('Toggle Growth Monthly');
+    await expect(firstSwitch).toBeChecked();
     // Row 0 starts checked: true — flipping off must report the new state (false).
     // Click the switch wrapper, not the checkbox role: the native input is
     // visually hidden (width/height: 0) for the styled-slider pattern, so it
     // has a zero-size bounding box and fails Playwright's actionability check.
     await table.getByTestId('builtin-toggle-0').click();
+    await expect(firstSwitch).not.toBeChecked();
     await expect(page.getByTestId('builtin-toggle-result')).toContainText('row 0 → false');
     // Row 1 starts checked: false — flipping on must report the new state (true).
     await table.getByTestId('builtin-toggle-1').click();
+    await expect(table.getByTestId('builtin-toggle-1').getByRole('switch')).toBeChecked();
     await expect(page.getByTestId('builtin-toggle-result')).toContainText('row 1 → true');
   });
 
@@ -89,12 +95,12 @@ test.describe('Table — built-in cell renderers', () => {
     page,
     context
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/table');
     const table = page.getByTestId('table-builtin-cells');
     await table.getByTestId('builtin-docs-copy-0').click();
     await expect(table.getByTestId('builtin-docs-link-copied')).toContainText('Copied');
-    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    const clipboardText = await readNativeClipboard(page);
     expect(clipboardText).toBe('https://example.com/plans/42');
   });
 

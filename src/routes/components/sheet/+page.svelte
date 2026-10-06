@@ -119,7 +119,9 @@
 {/if}
 
 <h3>Anchored corner panel (dismissible, no dimming backdrop)</h3>
-<div class="demo-row" style="position: relative; height: 160px;">
+<!-- `.demo-row` is border-box; content-box keeps `height: 160px` as the room the anchored panel has,
+     instead of 126px after the row's own padding and border. -->
+<div class="demo-row" style="position: relative; height: 160px; box-sizing: content-box;">
   <Button
     text="Open account menu"
     onclick={() => (showAnchored = true)}

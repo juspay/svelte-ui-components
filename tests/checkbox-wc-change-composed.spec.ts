@@ -4,29 +4,12 @@ import { gotoHydrated } from './support/hydrated';
 /**
  * `<sui-checkbox>` renders with `shadow: 'open'` (Checkbox.wc.svelte). Checkbox.svelte
  * restores the native `change`/`input` events that the role="checkbox" box's synthetic
- * click suppresses (see form-association.test.ts), and now dispatches them with
- * `composed: true` so they reach a light-DOM ancestor such as a consumer's own <form> --
- * see `src/lib/Checkbox/Checkbox.composed-event.test.ts` for that fix verified against
- * the real component (mounted into a real open shadow root; RED confirmed with
- * `composed` reverted to absent, GREEN restored).
- *
- * These two tests, which exercise the actual `<sui-checkbox>` custom element rather than
- * a shadow-root stand-in, are `test.fixme` because `<sui-checkbox>` cannot connect to the
- * DOM at all today, for a reason unrelated to `composed`: Checkbox.wc.svelte declares an
- * `attributes` prop, and Svelte's customElement runtime defines that prop as
- * `sui-checkbox`'s own `.attributes` accessor -- permanently shadowing the native
- * `Element.prototype.attributes` (a NamedNodeMap) that the SAME generated
- * `connectedCallback` iterates over (`for (const attr of this.attributes)` in
- * dist-wc/index.js). Every `<sui-checkbox>` instance throws
- * `TypeError: this.attributes is not iterable` on connect -- reproduced with a minimal
- * `document.createElement('sui-checkbox')` and no attributes at all. This predates this
- * PR (`attributes: { type: 'Object' }` was already on Checkbox.wc.svelte before it) and
- * is independent of both reviewed findings, so it is reported rather than fixed here.
- * This file is left in place, unskipped-in-spirit, so it starts enforcing itself the
- * moment that separate bug is fixed (the fix precedent already exists in this same
- * file: `checkboxAriaLabel` is renamed for exactly this class of collision with
- * `HTMLElement.ariaLabel`; `attributes` needs the same treatment against
- * `Element.attributes`).
+ * click suppresses (see form-association.test.ts), and dispatches them with
+ * `composed: true` so they reach a light-DOM ancestor such as a consumer's own <form>.
+ * `src/lib/Checkbox/Checkbox.composed-event.test.ts` covers that against the component
+ * mounted into a real open shadow root; these two tests exercise the actual
+ * `<sui-checkbox>` custom element from the built `dist-wc` bundle, the same vantage
+ * point a consumer has.
  */
 const loadCheckboxTag = async (page: import('@playwright/test').Page): Promise<void> => {
   await gotoHydrated(page, '/');
@@ -35,9 +18,7 @@ const loadCheckboxTag = async (page: import('@playwright/test').Page): Promise<v
 };
 
 test.describe('sui-checkbox — change event crosses the shadow boundary', () => {
-  test.fixme('a light-DOM form outside the shadow root observes the change event', async ({
-    page
-  }) => {
+  test('a light-DOM form outside the shadow root observes the change event', async ({ page }) => {
     await loadCheckboxTag(page);
 
     await page.evaluate(() => {
@@ -72,7 +53,7 @@ test.describe('sui-checkbox — change event crosses the shadow boundary', () =>
       .toBe(1);
   });
 
-  test.fixme('the native input itself also observes a composed input event', async ({ page }) => {
+  test('the native input itself also observes a composed input event', async ({ page }) => {
     await loadCheckboxTag(page);
 
     await page.evaluate(() => {

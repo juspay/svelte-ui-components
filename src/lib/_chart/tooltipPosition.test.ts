@@ -74,3 +74,35 @@ describe('anchor mode', () => {
     expect(p.left).toBe(0);
   });
 });
+
+describe('painted label avoidance', () => {
+  it('moves a tooltip above the actual label instead of covering its glyphs', () => {
+    const p = computeTooltipPosition({
+      anchor: { x: 250, y: 100, side: 'top' },
+      tooltip,
+      container,
+      avoidRects: [{ left: 230, top: 78, width: 40, height: 18 }]
+    });
+    expect(p).toEqual({ left: 200, top: 26 });
+  });
+
+  it('finds space below a label when the above-label position would clip', () => {
+    const p = computeTooltipPosition({
+      anchor: { x: 250, y: 20, side: 'top' },
+      tooltip,
+      container,
+      avoidRects: [{ left: 230, top: 30, width: 40, height: 18 }]
+    });
+    expect(p).toEqual({ left: 200, top: 60 });
+  });
+
+  it('leaves an unobscured custom tooltip placement unchanged', () => {
+    const p = computeTooltipPosition({
+      anchor: { x: 250, y: 100, side: 'top' },
+      tooltip,
+      container,
+      avoidRects: [{ left: 400, top: 30, width: 50, height: 18 }]
+    });
+    expect(p).toEqual({ left: 200, top: 48 });
+  });
+});

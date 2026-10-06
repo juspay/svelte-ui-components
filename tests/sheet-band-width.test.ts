@@ -18,10 +18,20 @@ import { gotoHydrated } from './support/hydrated';
 const openAndSettle = async (
   page: import('@playwright/test').Page,
   triggerId: string,
-  panelId: string
+  panelId: string,
+  // A pointer click does not focus a button in Safari, so a test that asserts focus
+  // returns to the opener has to give the opener focus first and activate it from the
+  // keyboard -- otherwise it measures the browser's click-focus policy, not the Sheet.
+  activate: 'click' | 'keyboard' = 'click'
 ) => {
   const panel = page.getByTestId(panelId);
-  await page.getByTestId(triggerId).click();
+  const trigger = page.getByTestId(triggerId);
+  if (activate === 'keyboard') {
+    await trigger.focus();
+    await trigger.press('Enter');
+  } else {
+    await trigger.click();
+  }
   await expect(panel).toBeVisible();
   // Svelte's fly transition uses the Web Animations API. Already-finished
   // animations resolve immediately, unlike a late transitionend listener.
@@ -185,7 +195,8 @@ test.describe('Sheet — width-capped top/bottom (#572)', () => {
     const panel = await openAndSettle(
       page,
       'sheet-capped-bottom-trigger',
-      'sheet-capped-bottom-panel'
+      'sheet-capped-bottom-panel',
+      'keyboard'
     );
     await expect(panel).toBeFocused();
     await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');

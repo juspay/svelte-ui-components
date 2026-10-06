@@ -4,7 +4,6 @@
     AreaChartProperties,
     AreaChartTooltipContext
   } from './properties';
-  import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
@@ -18,16 +17,11 @@
   import { resolvePointLabels } from '$lib/_chart/labels';
   import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { formatSeriesAggregate } from '$lib/_chart/aggregate';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import type { LegendItem, Point, TooltipAnchor } from '$lib/_chart/types';
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
 
   // ── Props ──────────────────────────────────────────────────────
-
-  // Per-instance ID for SVG gradient <linearGradient id> references. Initialised
-  // inside onMount so the value is only ever generated on the client — avoids an
-  // SSR hydration mismatch that would occur if Math.random() ran on both server
-  // and client and produced different strings.
-  let uid = $state('');
 
   let {
     series,
@@ -58,9 +52,19 @@
     tooltipPortal = false,
     onpointhover,
     onpointclick,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes
   }: AreaChartProperties = $props();
+
+  // Per-instance id for the SVG <linearGradient id> references. `$props.id()` is
+  // unique per component instance and identical on server and client, so two
+  // charts on one page never resolve each other's `url(#gradient)` and hydration
+  // never sees a different id than the server wrote. It replaces a Math.random()
+  // prefix that was only filled in at mount (until then every chart's gradient id
+  // collapsed to the same `area-grad--0`) and was collision-prone by construction.
+  const instanceId = $props.id();
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -83,10 +87,6 @@
   let focused = $state<{ x: number; si: number } | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
-
-  onMount(() => {
-    uid = Math.random().toString(36).slice(2, 9);
-  });
 
   // ── Layout ─────────────────────────────────────────────────────
 
@@ -244,6 +244,27 @@
         s.aggregateFormat ?? yTickFormat ?? formatNumber
       )
     }))
+  );
+
+  // ── Chart-level accessible name ────────────────────────────────
+
+  // The drawing's own name: the consumer's `ariaLabel`, else one derived from
+  // what the chart plots (see `defaultChartName`).
+  let chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('area', { yAxisLabel, seriesNames: series.map((s) => s.name) })
+    )
+  );
+
+  // Every finite point is a focusable role="button" mark (the `.focus-target`
+  // circles below), so a drawing with any is interactive and must not be exposed
+  // as an image. With no finite point there is nothing to operate and it is a
+  // plain named image.
+  let hasMarks = $derived(
+    areas.some((area) =>
+      area.points.some((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+    )
   );
 
   // ── Tooltip ────────────────────────────────────────────────────
@@ -594,6 +615,9 @@
         {aspectRatio}
         {minHeight}
         {maxHeight}
+        ariaLabel={chartName}
+        {ariaDescription}
+        interactive={hasMarks}
       >
         {#if gradientFill}
           <!-- <defs> must be a direct child of <svg> (SVG root), not inside a transformed <g>.
@@ -602,7 +626,7 @@
           <defs>
             {#each areas as area, si (si)}
               <linearGradient
-                id="area-grad-{uid}-{si}"
+                id="area-grad-{instanceId}-{si}"
                 x1="0"
                 y1="0"
                 x2="0"
@@ -658,7 +682,7 @@
               class="area-fill"
               class:dimmed={pointerOrFocused !== null && pointerOrFocused.si !== si}
               d={area.areaD}
-              fill={gradientFill ? `url(#area-grad-${uid}-${si})` : area.color}
+              fill={gradientFill ? `url(#area-grad-${instanceId}-${si})` : area.color}
               fill-opacity={gradientFill
                 ? 1
                 : pointerOrFocused?.si === si
@@ -708,8 +732,12 @@
               {#each area.points as _point, pi (pi)}
                 {@const pl = pointLabelPlacements[si][pi]}
                 {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
+                  <!-- Repeats the point's own accessible name, which is what
+                       assistive technology reads; exposing it again would announce
+                       every value twice. -->
                   <text
                     class="point-value"
+                    aria-hidden="true"
                     x={pl.x}
                     y={pl.y}
                     text-anchor="middle"

@@ -11,6 +11,7 @@
   import { focusTrapTabTarget, getFocusTrapBoundary } from '../_interaction/focus';
   import { getActiveElement } from '../_interaction/focus';
   import { registerDismissible } from '../_interaction/dismissal';
+  import { findInteractive } from '../_interaction/focusable';
   import { describeField } from '../_field/description';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
@@ -339,9 +340,9 @@
   }
 
   function openPicker(): void {
-    // Save whatever had focus (the trigger button) so it can be restored on close.
-    const panelOpener = getActiveElement(triggerRef);
-    panelFocusReturnEl = panelOpener instanceof HTMLElement ? panelOpener : null;
+    // Pointer activation need not focus a button in WebKit. Return to the
+    // invoking control, not an unrelated previously focused field or body.
+    panelFocusReturnEl = triggerRef ? findInteractive(triggerRef) : null;
     // Seed draft from current committed values
     draftStart = rangeStart;
     draftEnd = rangeEnd;
@@ -506,8 +507,7 @@
   }
 
   function openComparePicker(): void {
-    const compareOpener = getActiveElement(compareTriggerRef);
-    compareFocusReturnEl = compareOpener instanceof HTMLElement ? compareOpener : null;
+    compareFocusReturnEl = compareTriggerRef ? findInteractive(compareTriggerRef) : null;
     draftCompareStart = compareStart ?? null;
     draftCompareEnd = compareEnd ?? null;
     openCompare = true;

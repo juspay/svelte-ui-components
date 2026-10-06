@@ -424,7 +424,7 @@ test('PieChart legend rows and slices share one synchronized highlight when a le
   const chart = page.getByTestId('pie-legend-sync-demo');
   await chart.scrollIntoViewIfNeeded();
   const rentLegend = chart.getByTestId('pie-legend-sync-0');
-  const rentSlice = chart.locator('path.slice[aria-label="Rent: 1.2K"]');
+  const rentSlice = chart.locator('path.slice[aria-label="Rent: 1.2K (49%)"]');
   const status = chart.getByTestId('pie-status');
 
   await caption(
@@ -505,7 +505,7 @@ test("PieChart slice focus overrides a legend row's stale hover instead of being
   await rentLegend.hover();
   await beat(page);
 
-  const foodSlice = chart.locator('path.slice[aria-label="Food: 600"]');
+  const foodSlice = chart.locator('path.slice[aria-label="Food: 600 (24%)"]');
   const foodLegend = chart.getByTestId('pie-legend-sync-1');
 
   // Seeds the tab position on the already-hovered Rent row via .focus() --
@@ -530,7 +530,8 @@ test("PieChart slice focus overrides a legend row's stale hover instead of being
   // Single shared highlight, not an accumulating one: the previous row
   // loses its active state when the slice takes over.
   await expect(rentLegend).not.toHaveClass(/legend-sync-active/);
-  await expect(status).toHaveText('Food: 600 (24%)');
+  await expect(foodSlice).toHaveAttribute('aria-label', 'Food: 600 (24%)');
+  await expect(status).toHaveText('');
 });
 
 /**

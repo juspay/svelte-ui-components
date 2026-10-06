@@ -19,8 +19,11 @@ It also supports **multi-select** (`multiple`): picks become removable pills ins
   let selected = $state('');
 </script>
 
-<Combobox items={fruits} bind:value={selected} placeholder="Search fruits..." />
+<Combobox items={fruits} bind:value={selected} ariaLabel="Fruit" placeholder="Search fruits..." />
 ```
+
+Always give the combobox a name -- `ariaLabel` here -- rather than relying on the placeholder: a placeholder is a hint, not a name, and
+a multi-select empties it as soon as the first pill is picked. See [Accessible name](#accessible-name).
 
 ### Multi-select (pills)
 
@@ -262,7 +265,7 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | testId               | `string`                                         | No       | `-`                           | Value for the `data-pw` attribute on the container. The input gets `{testId}-input` and each option gets `{testId}-option-{id}`.                                                                                                                                                                                                                |
 | classes              | `string`                                         | No       | `-`                           | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                          |
 | noResultsText        | `string`                                         | No       | `'No results'`                | Text shown in the dropdown when no items match the current input value. Ignored when `emptySnippet` is provided.                                                                                                                                                                                                                                |
-| ariaLabel            | `string`                                         | No       | `-`                           | Sets `aria-label` on the listbox dropdown. Provides an accessible name for screen readers (e.g., `"Search results"`).                                                                                                                                                                                                                           |
+| ariaLabel            | `string`                                         | No       | `-`                           | Accessible name of the combobox: names the text input and the dropdown listbox (e.g. `"Country"`). It used to name only the listbox, leaving the input blank. `inputProperties.ariaLabel` wins for the input. See [Accessible name](#accessible-name).                                                                                          |
 | inputProperties      | `OptionalInputProperties`                        | No       | `-`                           | Pass-through props for the internal Input component. Use for validation (`validators`, `validationPattern`, `inProgressPattern`), text formatting (`textTransformers`, `textViewPresentation`), `dataType`, `maxLength`, `minLength`, `useTextArea`, `label`, `onErrorMessage`, `infoMessage`, etc. See Input component docs for the full list. |
 | inputEventProperties | `InputEventProperties`                           | No       | `-`                           | Pass-through event handlers for the internal Input component. Use for `onpaste`, `onstatechange`, `onclick`, etc. Note: `oninput`, `onfocus`, `onblur`, and `onkeydown` are managed by Combobox and forwarded — use Combobox's own events for these.                                                                                            |
 | filterFn             | `(item: ComboboxItem, query: string) => boolean` | No       | case-insensitive `includes`   | Custom filter function called for each item when `inputValue` is non-empty. Return `true` to include the item. Use for startsWith, fuzzy matching, or server-side filtering (always return `true` and update `items` externally).                                                                                                               |
@@ -276,6 +279,31 @@ Pass Input props via `inputProperties` to enable validation, text formatting, an
 | errorMessage         | `string \| null`                                 | No       | `undefined`                   | Text shown, and announced, when the control is in error. Referenced by `aria-describedby` on the group wrapping the control, and sets `aria-invalid` while present.                                                                                                                                                                             |
 | infoMessage          | `string \| null`                                 | No       | `undefined`                   | Persistent helper text describing the control. Referenced the same way, so it is read before the user trips an error rather than only after.                                                                                                                                                                                                    |
 | invalid              | `boolean`                                        | No       | `false`                       | Marks the control invalid without supplying a message, for a consumer driving validity from a server or its own rules.                                                                                                                                                                                                                          |
+
+## Accessible name
+
+The text input is where a screen reader lands, so it must have a name. It is the first of these that
+is set:
+
+| Source                      | Names the input   | Names the listbox           |
+| --------------------------- | ----------------- | --------------------------- |
+| `inputProperties.ariaLabel` | yes (wins)        | no                          |
+| `ariaLabel`                 | yes               | yes                         |
+| `inputProperties.label`     | yes               | only if nothing else is set |
+| `placeholder`               | yes (last resort) | only if nothing else is set |
+
+`inputProperties.label` names the input but is **not rendered** -- Combobox draws no `<label>` of its
+own (`Input`'s is suppressed here), so the visible caption is yours to place. The placeholder is only a
+fallback so a combobox nobody named is not blank; it keeps the name after a multi-select empties the
+placeholder, but say what the field is with `ariaLabel`. With none of these set, the input has no
+name -- the component does not invent one.
+
+Two comboboxes on a page should not share a name: `ariaLabel="Fruit"` twice reads as the same field.
+
+When validity or helper text creates a wrapping group, that group uses the resolved input name and
+keeps its description. Default multi-select pill removal buttons identify the option and field, for
+example `Remove Apple from Fruits`. A custom `pillSnippet` owns its removal button's name and can use
+`Pill.dismissLabel` for translated wording.
 
 ## Methods
 
@@ -416,13 +444,18 @@ Available as `<sui-combobox>`.
 document.querySelector('sui-combobox').items = [{ id: 'in', label: 'India' }];
 ```
 
-`aria-label` names the dropdown listbox (the `role="listbox"` element), not the text input, so
-the example above leaves the input without an accessible name of its own. Name the input through
-`inputProperties`, whose `label` renders the visible label the field is named by:
+`aria-label` on the element names the text input and the dropdown listbox, exactly as `ariaLabel`
+does in Svelte (the wrapper renames it internally because `ariaLabel` is already an `HTMLElement`
+property). The name travels as a string, so it works across the shadow root where an
+`aria-labelledby` reference to a light-DOM element could not. To name the input and the listbox
+differently, or to name only the input, use `inputProperties`:
 
 ```js
-document.querySelector('sui-combobox').inputProperties = { label: 'Country' };
+document.querySelector('sui-combobox').inputProperties = { ariaLabel: 'Country' };
 ```
+
+`inputProperties.label` also names the input, but renders no visible `<label>` -- see
+[Accessible name](#accessible-name).
 
 Attributes are kebab-case: `aria-label`, `test-id`, `input-value`, `highlighted-index`,
 `no-results-text`, `max-selected`, `max-selected-text`, `allow-create`. `items`, `selected`, `filterFn`, the

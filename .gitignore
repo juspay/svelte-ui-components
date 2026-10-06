@@ -16,10 +16,14 @@ vite.config.ts.timestamp-*
 # Playwright artifacts
 test-results
 test-results-walkthrough/
+test-results-engines/
+playwright-report-engines/
 playwright-report/
 playwright-report-visual/
 playwright-report-walkthrough/
 .playwright-fixtures/
+test-results-walkthrough-engines/
+playwright-report-walkthrough-engines/
 
 # scripts/check-contrast.mjs output
 contrast-report/

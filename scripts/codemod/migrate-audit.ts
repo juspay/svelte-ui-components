@@ -12,6 +12,14 @@ import {
 } from '../migrate/analyze.ts';
 import { planSelectorRewrites, type FileRewrite } from '../migrate/chart-tooltip-selector.ts';
 import { SKIPPED_DIRECTORIES } from './cli.ts';
+import {
+  LEGACY_DISPLAY_CSS_FILENAME,
+  LEGACY_PALETTE_CSS_FILENAME,
+  WC_DISPLAY_FILENAME,
+  migrationAssetsDirBeside
+} from './migration-assets-layout.ts';
+
+export { LEGACY_DISPLAY_CSS_FILENAME, LEGACY_PALETTE_CSS_FILENAME };
 
 /**
  * Runs the 4.28.0 breaking-change audit `npm run migrate` runs, from the
@@ -38,16 +46,15 @@ import { SKIPPED_DIRECTORIES } from './cli.ts';
 
 // ------------------------------------------------------------- wc-display.json
 
-const MIGRATION_ASSETS_DIRNAME = 'migration-assets';
-const WC_DISPLAY_FILENAME = 'wc-display.json';
-export const LEGACY_DISPLAY_CSS_FILENAME = 'legacy-display.css';
-export const LEGACY_PALETTE_CSS_FILENAME = 'legacy-palette.css';
-
 /**
  * The directory `generate-migration-assets.ts` writes into, resolved off
  * THIS module's own compiled location rather than `process.cwd()` -- so it
- * still finds `dist-codemod/migration-assets` when this module has been
- * compiled to `dist-codemod/migrate-audit.js` and invoked from anywhere.
+ * still finds `dist-codemod/codemod/migration-assets` when this module has
+ * been compiled to `dist-codemod/codemod/migrate-audit.js` and invoked from
+ * anywhere. The directory name and the "beside the compiled module" rule come
+ * from `migration-assets-layout.ts`, the one place the generator, this lookup
+ * and the real-artifact tests all read it from.
+ *
  * Run against the uncompiled `.ts` source (as the tests below do without an
  * explicit `assetsDir` override) it resolves to a sibling directory that
  * does not exist -- which is the correct answer, not a bug: this module
@@ -56,7 +63,7 @@ export const LEGACY_PALETTE_CSS_FILENAME = 'legacy-palette.css';
  * than a guess.
  */
 function defaultAssetsDir(): string {
-  return join(dirname(fileURLToPath(import.meta.url)), MIGRATION_ASSETS_DIRNAME);
+  return migrationAssetsDirBeside(dirname(fileURLToPath(import.meta.url)));
 }
 
 /**

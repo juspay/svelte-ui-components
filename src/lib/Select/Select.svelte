@@ -18,6 +18,7 @@
     searchPosition = 'trigger',
     placeholder = '',
     ariaLabel,
+    ariaLabelledby,
     disabled = false,
     error = false,
     errorMessage,
@@ -159,6 +160,22 @@
           : null,
       invalid: error
     })
+  );
+
+  /* The field's name, applied to every element a user can land on: the combobox
+     trigger, the text input that replaces its label when the filter lives in the
+     trigger (which is the control that actually takes focus there, and would
+     otherwise be named only by its placeholder), and the listbox they open.
+     Blank strings are dropped rather than emitted, so `aria-label=""` can never
+     erase the name an element would otherwise get. The component API gives
+     `ariaLabel` priority over `ariaLabelledby`, following Slider's contract. */
+  const accessibleName = $derived(
+    typeof ariaLabel === 'string' && ariaLabel.trim() !== '' ? ariaLabel : null
+  );
+  const accessibleLabelledby = $derived(
+    accessibleName === null && typeof ariaLabelledby === 'string' && ariaLabelledby.trim() !== ''
+      ? ariaLabelledby.trim()
+      : null
   );
 
   /* Nothing selected means nothing to clear, so the control is not rendered at
@@ -680,7 +697,19 @@
       return;
     }
     query = event.target.value;
-    if (!open) {
+    /* An input event is only a request to open when the field it came from can be
+       typed into while the panel is closed -- the in-trigger input, whose typing
+       is how a closed Select opens. The in-menu search box exists only while the
+       panel is open, so an event arriving from it with `open` already false is
+       not the user typing: it is the browser clearing the field as Escape
+       dismisses the panel. Firefox does that for an <input type="search"> and
+       dispatches the input event synchronously inside the same keydown, before
+       Svelte has flushed the close to the DOM -- so honouring it re-opened the
+       panel that Escape had just closed (and fired onopen straight after
+       onclose), leaving aria-expanded true and the next trigger click toggling
+       it shut. Chromium clears after the flush and WebKit does not clear at all,
+       which is why only Firefox showed it. */
+    if (!open && !searchInMenu) {
       openDropdown();
     }
     highlightedIndex = -1;
@@ -755,10 +784,12 @@
       onclick={handleTriggerClick}
       onkeydown={handleKeydown}
       role="combobox"
-      aria-label={ariaLabel}
       aria-expanded={open}
       aria-haspopup="listbox"
       aria-controls={listboxId}
+      aria-label={accessibleName}
+      aria-labelledby={accessibleLabelledby}
+      aria-disabled={disabled ? 'true' : null}
       aria-invalid={field.ariaInvalid}
       aria-describedby={field.describedBy}
       {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
@@ -781,13 +812,14 @@
             <input
               class="select-search"
               type="text"
-              aria-label={ariaLabel}
               value={query}
               oninput={handleSearchInput}
               onfocus={handleSearchFocus}
               bind:this={searchInputEl}
               placeholder={value.length === 0 ? placeholder : ''}
               {disabled}
+              aria-label={accessibleName}
+              aria-labelledby={accessibleLabelledby}
               aria-invalid={field.ariaInvalid}
               aria-describedby={field.describedBy}
               autocomplete="off"
@@ -810,13 +842,14 @@
             <input
               class="select-search"
               type="text"
-              aria-label={ariaLabel}
               value={query}
               oninput={handleSearchInput}
               onfocus={handleSearchFocus}
               bind:this={searchInputEl}
               placeholder={value.length === 0 ? placeholder : ''}
               {disabled}
+              aria-label={accessibleName}
+              aria-labelledby={accessibleLabelledby}
               aria-invalid={field.ariaInvalid}
               aria-describedby={field.describedBy}
               autocomplete="off"
@@ -832,13 +865,14 @@
         <input
           class="select-search"
           type="text"
-          aria-label={ariaLabel}
           value={open ? query : displayText}
           oninput={handleSearchInput}
           onfocus={handleSearchFocus}
           bind:this={searchInputEl}
           placeholder={searchPlaceholder}
           {disabled}
+          aria-label={accessibleName}
+          aria-labelledby={accessibleLabelledby}
           aria-invalid={field.ariaInvalid}
           aria-describedby={field.describedBy}
           autocomplete="off"
@@ -1059,6 +1093,8 @@
           class="select-menu-list"
           role="listbox"
           id={listboxId}
+          aria-label={accessibleName}
+          aria-labelledby={accessibleLabelledby}
           aria-multiselectable={multiple}
           tabindex="-1"
         >
@@ -1088,6 +1124,8 @@
         bind:clientHeight={dropdownHeight}
         role="listbox"
         id={listboxId}
+        aria-label={accessibleName}
+        aria-labelledby={accessibleLabelledby}
         aria-multiselectable={multiple}
         style={portalStyle}
         use:portalToRoot

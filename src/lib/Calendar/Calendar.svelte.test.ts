@@ -355,3 +355,229 @@ describe('Calendar month navigation is bounded by minDate/maxDate', () => {
     expect(nextMonthButton(container).disabled).toBe(false);
   });
 });
+
+// jsdom has no accessibility engine, so these assert the ARIA contract on the rendered
+// markup (the hierarchy and the attributes a browser maps into its accessibility tree).
+// tests/a11y-calendar.spec.ts proves the same contract through real browsers' trees.
+describe('Calendar renders a valid ARIA grid > row > gridcell hierarchy', () => {
+  function childrenOf(el: Element): Element[] {
+    return Array.from(el.children);
+  }
+
+  function weekRows(container: HTMLElement): Element[] {
+    return childrenOf(grid(container)).slice(1);
+  }
+
+  function cellOf(container: HTMLElement, day: number): HTMLElement {
+    const el = dayButton(container, day).closest('[role="gridcell"]');
+    if (!(el instanceof HTMLElement)) {
+      throw new Error(`day ${day} is not inside a gridcell`);
+    }
+    return el;
+  }
+
+  it('owns only rows: one header row of seven columnheaders, then the week rows', () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1), locale: 'en-US' });
+
+    const rows = childrenOf(grid(container));
+    expect(rows.length).toBe(7); // 1 header row + 6 weeks
+    expect(rows.every((row) => row.getAttribute('role') === 'row')).toBe(true);
+
+    const headers = childrenOf(rows[0]);
+    expect(headers.map((h) => h.getAttribute('role'))).toEqual(Array(7).fill('columnheader'));
+    expect(headers.map((h) => h.textContent?.trim())).toEqual([
+      'Sun',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat'
+    ]);
+    expect(headers.map((h) => h.getAttribute('aria-label'))).toEqual([
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ]);
+  });
+
+  it('puts exactly seven gridcells in every week row and no button outside a gridcell', () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1) });
+
+    for (const row of weekRows(container)) {
+      const cells = childrenOf(row);
+      expect(cells.length).toBe(7);
+      expect(cells.every((c) => c.getAttribute('role') === 'gridcell')).toBe(true);
+    }
+
+    expect(container.querySelectorAll('[role="grid"] > button').length).toBe(0);
+    for (const button of container.querySelectorAll('[data-day]')) {
+      expect(button.parentElement?.getAttribute('role')).toBe('gridcell');
+      expect(button.parentElement?.parentElement?.getAttribute('role')).toBe('row');
+      expect(button.parentElement?.parentElement?.parentElement).toBe(grid(container));
+    }
+    // 30 enabled-or-not June days are real date controls; the 12 filler days are not.
+    expect(container.querySelectorAll('[data-day]').length).toBe(30);
+  });
+
+  it('sizes the week rows to the month: five rows when the month fits, six when it spills', () => {
+    const five = render(Calendar, { initialMonth: new Date(2024, 1, 1) }); // Feb 2024 Thu-start, 29d
+    expect(weekRows(five.container).length).toBe(5);
+    const six = render(Calendar, { initialMonth: new Date(2024, 5, 1) }); // Jun 2024 Sat-start, 30d
+    expect(weekRows(six.container).length).toBe(6);
+  });
+
+  it('names the grid by the visible month heading, which announces month changes', async () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1), locale: 'en-US' });
+
+    const labelledby = grid(container).getAttribute('aria-labelledby');
+    expect(labelledby).toBeTruthy();
+    const heading = container.querySelector(`[id="${labelledby}"]`);
+    expect(heading?.textContent?.trim()).toBe('June 2024');
+    expect(heading?.getAttribute('aria-live')).toBe('polite');
+
+    await fireEvent.click(nextMonthButton(container));
+    await settle();
+    expect(container.querySelector(`[id="${labelledby}"]`)?.textContent?.trim()).toBe('July 2024');
+  });
+
+  it('gives every calendar instance its own heading id, so two grids are never named alike', () => {
+    const a = render(Calendar, { initialMonth: new Date(2024, 5, 1) });
+    const b = render(Calendar, { initialMonth: new Date(2024, 6, 1) });
+
+    const idA = grid(a.container).getAttribute('aria-labelledby');
+    const idB = grid(b.container).getAttribute('aria-labelledby');
+    expect(idA).not.toBe(idB);
+  });
+
+  it('names each date control with its weekday, month, day and year in the requested locale', () => {
+    const en = render(Calendar, { initialMonth: new Date(2024, 5, 1), locale: 'en-US' });
+    expect(dayButton(en.container, 15).getAttribute('aria-label')).toBe('Saturday, June 15, 2024');
+
+    const de = render(Calendar, { initialMonth: new Date(2024, 5, 1), locale: 'de-DE' });
+    expect(dayButton(de.container, 15).getAttribute('aria-label')).toBe('Samstag, 15. Juni 2024');
+    const headers = de.container.querySelectorAll('[role="columnheader"]');
+    expect(headers[0].getAttribute('aria-label')).toBe('Sonntag');
+  });
+
+  it('keeps the visible day number and class hooks on the date button', () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1) });
+    const button = dayButton(container, 7);
+    expect(button.tagName).toBe('BUTTON');
+    expect(button.textContent?.trim()).toBe('7');
+    expect(button.classList.contains('cell')).toBe(true);
+  });
+
+  it('reflects the selected day as aria-selected on its gridcell, and only that one', async () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1) });
+
+    for (let day = 1; day <= 30; day++) {
+      expect(cellOf(container, day).getAttribute('aria-selected')).toBe('false');
+    }
+
+    await fireEvent.click(dayButton(container, 12));
+    await settle();
+
+    expect(cellOf(container, 12).getAttribute('aria-selected')).toBe('true');
+    expect(cellOf(container, 11).getAttribute('aria-selected')).toBe('false');
+    expect(container.querySelectorAll('[role="gridcell"][aria-selected="true"]').length).toBe(1);
+    expect(grid(container).hasAttribute('aria-multiselectable')).toBe(false);
+  });
+
+  it('marks today with aria-current="date" on its date control and nothing else', () => {
+    // SvelteDate extends the Date captured when svelte/reactivity loaded, so a fake
+    // clock cannot move the component's "today"; bracket the render with real reads so
+    // a run that straddles midnight cannot flake.
+    const before = new Date();
+    const { container } = render(Calendar, { locale: 'en-US' });
+    const after = new Date();
+
+    const current = container.querySelectorAll('[aria-current]');
+    expect(current.length).toBe(1);
+    expect(current[0].getAttribute('aria-current')).toBe('date');
+    expect(current[0].tagName).toBe('BUTTON');
+    expect([String(before.getDate()), String(after.getDate())]).toContain(
+      current[0].getAttribute('data-day')
+    );
+  });
+
+  it('exposes disabled days on both the gridcell and the native button', () => {
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 5, 1),
+      disabledDates: [new Date(2024, 5, 12)],
+      minDate: new Date(2024, 5, 3)
+    });
+
+    for (const day of [1, 2, 12]) {
+      expect(cellOf(container, day).getAttribute('aria-disabled')).toBe('true');
+      expect((dayButton(container, day) as HTMLButtonElement).disabled).toBe(true);
+    }
+    expect(cellOf(container, 13).hasAttribute('aria-disabled')).toBe(false);
+    expect((dayButton(container, 13) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('renders the other-month filler days as disabled, dated gridcells that complete each row', () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1), locale: 'en-US' });
+
+    // June 2024 starts on Saturday: Sun 26 May .. Fri 31 May fill the first row.
+    const firstWeek = childrenOf(weekRows(container)[0]);
+    const filler = firstWeek.slice(0, 6);
+    expect(filler.map((c) => c.textContent?.trim())).toEqual(['26', '27', '28', '29', '30', '31']);
+    for (const cell of filler) {
+      expect(cell.getAttribute('aria-disabled')).toBe('true');
+      expect(cell.querySelector('button')).toBeNull();
+    }
+    expect(filler[0].getAttribute('aria-label')).toBe('Sunday, May 26, 2024');
+    expect(filler[5].getAttribute('aria-label')).toBe('Friday, May 31, 2024');
+  });
+
+  it('in range mode, marks start, end and the days between as selected on a multiselectable grid', async () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1), mode: 'range' });
+
+    expect(grid(container).getAttribute('aria-multiselectable')).toBe('true');
+
+    await fireEvent.click(dayButton(container, 8));
+    await fireEvent.click(dayButton(container, 11));
+    await settle();
+
+    const selected = Array.from(
+      container.querySelectorAll('[role="gridcell"][aria-selected="true"] [data-day]')
+    ).map((el) => el.getAttribute('data-day'));
+    expect(selected).toEqual(['8', '9', '10', '11']);
+    expect(cellOf(container, 7).getAttribute('aria-selected')).toBe('false');
+    expect(cellOf(container, 12).getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('orders the columnheaders from weekStartsOn and still fills seven cells per row', () => {
+    const { container } = render(Calendar, {
+      initialMonth: new Date(2024, 5, 1),
+      weekStartsOn: 1,
+      locale: 'en-US'
+    });
+
+    const headers = container.querySelectorAll('[role="columnheader"]');
+    expect(headers[0].getAttribute('aria-label')).toBe('Monday');
+    expect(headers[6].getAttribute('aria-label')).toBe('Sunday');
+    for (const row of weekRows(container)) {
+      expect(childrenOf(row).length).toBe(7);
+    }
+    // June 1st is a Saturday: with a Monday start it sits in column six of the first row.
+    expect(childrenOf(weekRows(container)[0])[5].querySelector('[data-day="1"]')).not.toBeNull();
+  });
+
+  it('re-keys the rows across a month change without leaving a stray cell or row', async () => {
+    const { container } = render(Calendar, { initialMonth: new Date(2024, 5, 1) });
+
+    await fireEvent.click(nextMonthButton(container)); // July 2024 starts on a Monday: 31 days => 5 rows
+    await settle();
+
+    const rows = childrenOf(grid(container));
+    expect(rows.every((row) => row.getAttribute('role') === 'row')).toBe(true);
+    expect(rows.slice(1).every((row) => childrenOf(row).length === 7)).toBe(true);
+    expect(container.querySelectorAll('[data-day]').length).toBe(31);
+  });
+});

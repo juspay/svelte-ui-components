@@ -2,6 +2,14 @@
 
 The pending-attachment strip above a chat composer: image thumbnails and file tiles, each with a floating remove button, scrolling horizontally through the library `Scroller` when they overflow. Renders nothing while there are no attachments.
 
+The scroll region is named **Pending attachments**. In a read-only row with overflowing content, Tab reaches the region and the arrow keys scroll the chips. When chips have open or remove actions, those controls provide the keyboard route instead.
+
+Try the [interactive example](https://juspay.github.io/svelte-ui-components/components/attachment-chip-row).
+
+Remove buttons identify their attachment by filename. Images and videos without a filename
+use their kind and position, such as “Remove image 2 of 3”. Open and remove callbacks retain
+their original attachment and ID payloads.
+
 ## Usage
 
 ```svelte

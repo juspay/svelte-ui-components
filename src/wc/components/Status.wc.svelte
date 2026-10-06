@@ -29,8 +29,9 @@
   const hostEl = $host();
 
   // `icon`'s own default is an `Img` resolved from `statusIcon`/`statusIconAlt`
-  // with a derived legacy-path fallback -- reproducing that here would mean
-  // re-deriving Status.svelte's own `statusIconFallback` check, so the snippet is
+  // (the built-in inline checkmark when `statusIcon` is omitted, plus a derived
+  // fallback for the spelled-out legacy path) -- reproducing that here would mean
+  // re-deriving Status.svelte's own `resolvedStatusIcon` and `statusIconFallback`, so the snippet is
   // claimed only when the consumer actually slotted something, which leaves
   // Status's own `Img` default in place otherwise (same tradeoff PieChart.wc.svelte
   // makes for `center`/`empty`).

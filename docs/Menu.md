@@ -4,12 +4,17 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 
 ## Usage
 
+A trigger is exactly one interactive element. Which one depends on what the `trigger` snippet renders.
+
+**The snippet renders a real control (a `Button`, a native `<button>`)** — set `interactiveTrigger` and spread the wiring Menu hands the snippet onto that control. The control is the single Tab stop; it carries `aria-haspopup` and `aria-expanded`, and Menu returns focus to it when the menu closes.
+
 ```svelte
 <script>
-  import { Menu } from '@juspay/svelte-ui-components';
+  import { Menu, Button } from '@juspay/svelte-ui-components';
 </script>
 
 <Menu
+  interactiveTrigger
   items={[
     { label: 'Edit', value: 'edit' },
     { label: 'Duplicate', value: 'duplicate' },
@@ -17,11 +22,23 @@ A dropdown action menu that opens from a trigger element and displays a list of 
   ]}
   onselect={(item) => console.log(item.value)}
 >
-  {#snippet trigger()}
-    <button>Actions</button>
+  {#snippet trigger(props)}
+    <Button {...props} text="Actions" />
   {/snippet}
 </Menu>
 ```
+
+**The snippet renders content that is not interactive (an icon, a glyph, text)** — leave `interactiveTrigger` off. Menu wraps the content in one `role="button" tabindex="0"` element that owns Enter, Space, the arrow keys and the click. Name it with `triggerAriaLabel` when it has no visible text.
+
+```svelte
+<Menu {items} triggerAriaLabel="More options">
+  {#snippet trigger()}
+    <span aria-hidden="true">&#8943;</span>
+  {/snippet}
+</Menu>
+```
+
+Putting a real control inside the default wrapper (`<button>` without `interactiveTrigger`) gives one action two Tab stops — the wrapper, then the control — and nests a button inside a button in the accessibility tree.
 
 ## Props
 
@@ -37,7 +54,7 @@ A dropdown action menu that opens from a trigger element and displays a list of 
 | triggerAriaLabel   | `string`                                                                 | No       | `-`             | Accessible name for the focusable trigger element itself (the control the user tabs to). `ariaLabel` names the portaled dropdown, which can't name the trigger — use this instead when the trigger has no visible text. Only applies when `interactiveTrigger` is false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | id                 | `string`                                                                 | No       | `-`             | Sets the `id` attribute on the dropdown container. Needed for `aria-controls` references from a parent combobox input.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | placement          | `'bottom-left' \| 'bottom-right' \| 'top-left' \| 'top-right' \| 'auto'` | No       | `'bottom-left'` | Corner of the trigger the dropdown anchors to. The default preserves the long-standing behavior (including the `--menu-dropdown-top`/`--menu-dropdown-left` tokens). Fixed corners anchor statically — use `'bottom-right'` for row-action menus in a table's trailing column so the panel expands leftwards. `'auto'` measures the panel on every open and picks the corner that keeps it fully inside the viewport: it right-anchors when the panel would overflow the right edge and flips above the trigger when there is not enough room below but enough above.                                                                                                                                                                                          |
-| interactiveTrigger | `boolean`                                                                | No       | `false`         | Set when the `trigger` snippet renders its own focusable control (a `Button`, say) and spreads the wiring Menu hands it. Left false, Menu wraps the snippet in its own focusable `role="button"`, which gives one control two tab stops and leaves the outer one unnamed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| interactiveTrigger | `boolean`                                                                | No       | `false`         | Set when the `trigger` snippet renders its own focusable control (a `Button`, say) and spreads the wiring Menu hands it. Menu then adds no focusable wrapper of its own: the control is the one Tab stop and carries `aria-haspopup`/`aria-expanded`. Left false, Menu wraps the snippet in its own focusable `role="button"`, which suits non-interactive content but gives a real control two tab stops and leaves the outer one unnamed. Through `<sui-menu>` the attribute is `interactive-trigger` and the control is the element in the `trigger` slot (see Web Component).                                                                                                                                                                                  |
 | usePortal          | `boolean`                                                                | No       | `false`         | Renders the dropdown into the root of the tree it lives in — `document.body` normally, or the shadow root inside `<sui-menu>` — so a clipping ancestor cannot cut it off, with placement following the trigger on scroll and resize. The root is chosen rather than always `document.body` because Svelte scopes a custom element's CSS to its shadow root: a panel moved into the light DOM keeps its markup and loses every rule scoped to that root, so through `<sui-menu>` it would render unstyled. Defaults to false, which keeps the in-flow `position: absolute` behaviour and any consumer CSS reaching `.menu-dropdown` through an ancestor selector. Portaled panels default to `z-index: 1000`; raise `--menu-z-index` to clear a higher overlay. |
 | selectedValue      | `string \| null`                                                         | No       | `null`          | `value` of the currently selected item. When set, opening the menu focuses that item instead of the first one, the matching item gets the `menu-item-selected` class (themeable via the `--menu-item-selected-*` variables), and — in `role="listbox"` mode — `aria-selected` reflects the real selection rather than mere focus.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
@@ -136,16 +153,18 @@ This component uses the following library components internally:
 Tag: `<sui-menu>`
 
 ```html
-<sui-menu>
+<sui-menu interactive-trigger>
   <button slot="trigger">Open Menu</button>
 </sui-menu>
 ```
+
+A native control in the `trigger` slot needs the `interactive-trigger` attribute. Without it the shadow-root wrapper is also a focusable `role="button"`, so the slotted button is a second Tab stop inside it. With it the slotted element is the one Tab stop: Menu sets `aria-haspopup="menu"` and `aria-expanded` on the control, opens from its click and the ArrowDown/ArrowUp keys, and returns focus to it when the menu closes. The slotted element must itself be a native control or contain one -- in its light DOM, or in an open shadow root as `<sui-button slot="trigger">` does -- and Menu puts the ARIA state on that native control, the element assistive technology exposes, not on the host; a `<div role="button">` does not turn Enter and Space into a click. Leave the attribute off for slotted content that is not interactive, such as a glyph.
 
 ### Slots
 
 | Slot Name | Maps to Snippet | Description                               |
 | --------- | --------------- | ----------------------------------------- |
-| `trigger` | `trigger`       | The element that opens the menu on click. |
+| `trigger` | `trigger`       | The element that opens the menu on click. With `interactive-trigger`, a native control that is itself the single Tab stop. |
 
 > **Note:** The `items` prop is an array — set it via JavaScript property.
 
@@ -154,7 +173,8 @@ Tag: `<sui-menu>`
 > assigning the property (`el.trigger = mySnippet`) DOES receive `MenuTriggerProps`,
 > while the `trigger` slot projects static markup and receives nothing. Use the slot for
 > a fixed trigger; use the property when the trigger needs the open state or the props
-> the menu supplies.
+> the menu supplies. With `interactive-trigger` the slot still works for a native control:
+> Menu applies the ARIA state to it and listens for its events instead of handing it props.
 
 > **Note:** `onopen` also dispatches a same-named DOM custom event (bubbles, composed) for a
 > consumer who only calls `addEventListener` — `menu.addEventListener('open', ...)`. `onselect`

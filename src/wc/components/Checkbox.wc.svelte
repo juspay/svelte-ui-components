@@ -2,7 +2,7 @@
   customElement={{
     tag: 'sui-checkbox',
     shadow: 'open',
-    extend: formAssociated({ checked: 'checked' }),
+    extend: formAssociated({ checked: 'checked', indeterminate: 'indeterminate' }),
     props: {
       errorMessage: { type: 'String', attribute: 'error-message' },
       infoMessage: { type: 'String', attribute: 'info-message' },
@@ -45,6 +45,8 @@
   // The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.
   let {
+    checked = $bindable(false),
+    indeterminate = $bindable(false),
     checkboxAriaLabel,
     checkboxAttributes,
     ...props
@@ -76,7 +78,14 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Checkbox {...props} {...dispatchers} ariaLabel={checkboxAriaLabel} attributes={checkboxAttributes}>
+<Checkbox
+  {...props}
+  {...dispatchers}
+  bind:checked
+  bind:indeterminate
+  ariaLabel={checkboxAriaLabel}
+  attributes={checkboxAttributes}
+>
   {#snippet checkedIcon()}
     <!-- Mirrors Checkbox.svelte's checkedIcon fallback:
          <span class="icon">{@html checkmarkSvg}</span> -->

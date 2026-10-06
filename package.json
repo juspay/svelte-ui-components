@@ -38,6 +38,7 @@
     "lint:event-casing": "node scripts/check-event-casing.js",
     "format": "prettier --write src scripts tests",
     "test:integration": "playwright test",
+    "test:integration:engines": "playwright test --config playwright.engines.config.ts",
     "test:unit": "vitest",
     "test:visual": "scripts/visual-test.sh",
     "test:visual:update": "scripts/visual-test.sh --update-snapshots",
@@ -54,7 +55,8 @@
     "lint:wc-unused": "eslint --config eslint.wc.config.js src/wc",
     "lint:test-focus": "node scripts/check-test-focus.js",
     "lint:focus-visible": "node scripts/check-focus-visible.js",
-    "test:walkthrough": "playwright test --config playwright.walkthrough.config.ts"
+    "test:walkthrough": "playwright test --config playwright.walkthrough.config.ts",
+    "test:walkthrough:engines": "playwright test --config playwright.walkthrough.engines.config.ts"
   },
   "exports": {
     ".": {

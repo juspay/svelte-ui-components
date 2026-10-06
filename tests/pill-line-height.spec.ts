@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { nativeLineHeight } from './support/native-browser';
 
 // Regression test: --pill-line-height is documented and implemented in Pill.svelte (it shipped in
 // 5b7dc9d, before this spec). This spec guards against the hook being removed or falling out of
@@ -22,6 +23,8 @@ test.describe('Pill line-height hook', () => {
     await expect(pill).toBeVisible();
 
     // --pill-line-height: 1.4 at the default 13px font-size resolves to 18.2px.
-    await expect(pill).toHaveCSS('line-height', '18.2px');
+    const lineHeight = await nativeLineHeight(pill, '1.4');
+    expect(lineHeight.actual).toBe(lineHeight.expected);
+    await expect(pill).toHaveCSS('font-size', '13px');
   });
 });

@@ -33,6 +33,10 @@
     onchange
   }: ThemeSwitcherProperties = $props();
 
+  // `value` is the INITIAL selection, not a controlled binding (docs/ThemeSwitcher.md): once
+  // mounted the switcher owns the selection -- clicks, the stored preference and onMount below
+  // move it -- so a later change to the prop is deliberately not followed.
+  // svelte-ignore state_referenced_locally
   let currentValue: string = $state(value ?? 'system');
   let systemPreference: string = $state('light');
 

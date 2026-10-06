@@ -19,6 +19,10 @@
       captionsSrc: { type: 'String', attribute: 'captions-src' },
       captionsLabel: { type: 'String', attribute: 'captions-label' },
       captionsSrcLang: { type: 'String', attribute: 'captions-src-lang' },
+      captionsButton: { type: 'Boolean', attribute: 'captions-button' },
+      captionsVisible: { type: 'Boolean', reflect: true, attribute: 'captions-visible' },
+      captionsIcon: { type: 'Object' },
+      captionsOnIcon: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       seekBar: { type: 'Boolean', attribute: 'seek-bar' },
@@ -31,6 +35,7 @@
       onplay: { type: 'Object' },
       onpause: { type: 'Object' },
       onvolumechange: { type: 'Object' },
+      oncaptionschange: { type: 'Object' },
       onseek: { type: 'Object' },
       ontimeupdate: { type: 'Object' },
       onfullscreenchange: { type: 'Object' }
@@ -40,15 +45,23 @@
 
 <script lang="ts">
   import MediaPlayer from '$lib/MediaPlayer/MediaPlayer.svelte';
+  import type { MediaPlayerProperties } from '$lib/MediaPlayer/properties';
   import playSvg from '$lib/assets/play.svg?raw';
   import pauseSvg from '$lib/assets/pause.svg?raw';
   import volumeSvg from '$lib/assets/volume.svg?raw';
   import muteSvg from '$lib/assets/mute.svg?raw';
   import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
   import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
+  import captionsSvg from '$lib/assets/captions.svg?raw';
+  import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  // Destructured, unlike the rest of the props, because the element can only reflect and read
+  // back a prop it has an accessor for: `$props()` bound whole exposes none, which is why
+  // `muted` stays unset on the element after the viewer's own mute click. `captionsVisible` is
+  // bound so that `captions-visible` and `el.captionsVisible` follow the viewer's choice, and so a
+  // later host write is never swallowed by a stale copy that still reads the old value.
+  let { captionsVisible = $bindable(false), ...props }: MediaPlayerProperties = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -60,7 +73,8 @@
   // returns nothing for them -- they stay callback-only. onseek does not collide
   // (the platform only has onseeking/onseeked, never a bare onseek), so it
   // dispatches 'seek' with detail: currentTime for a consumer who only calls
-  // addEventListener. The capture is safe and the warning does not apply to this shape.
+  // addEventListener; oncaptionschange is the same shape (no native `oncaptionschange`),
+  // so it dispatches 'captionschange' with detail: the new visibility. The capture is safe and the warning does not apply to this shape.
   // `dispatchEvents` never reads a callback here -- each wrapper it returns reads
   // `props[name]` at CALL time (src/wc/dispatch.ts), through this same reactive
   // proxy, so a consumer assigning `el.onfoo = fn` after mount is seen. Reading
@@ -82,7 +96,7 @@
   the component renders repeatedly would leave every site after the first empty --
   not defaulted, empty.
 -->
-<MediaPlayer {...props} {...dispatchers}>
+<MediaPlayer {...props} {...dispatchers} bind:captionsVisible>
   {#snippet playIcon()}
     {#if props.playIcon}{@render props.playIcon()}{:else}<slot name="play-icon">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -105,6 +119,18 @@
     {#if props.unmuteIcon}{@render props.unmuteIcon()}{:else}<slot name="unmute-icon">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         {@html volumeSvg}
+      </slot>{/if}
+  {/snippet}
+  {#snippet captionsIcon()}
+    {#if props.captionsIcon}{@render props.captionsIcon()}{:else}<slot name="captions-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html captionsSvg}
+      </slot>{/if}
+  {/snippet}
+  {#snippet captionsOnIcon()}
+    {#if props.captionsOnIcon}{@render props.captionsOnIcon()}{:else}<slot name="captions-on-icon">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+        {@html captionsOnSvg}
       </slot>{/if}
   {/snippet}
   {#snippet fullscreenIcon()}

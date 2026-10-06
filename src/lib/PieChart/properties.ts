@@ -47,6 +47,10 @@ export type OptionalPieChartProperties = {
   tooltipPortal?: boolean;
   center?: Snippet;
   empty?: Snippet;
+  /** Accessible name of the drawing; omit to derive one from the plotted data. */
+  ariaLabel?: string;
+  /** Longer chart description, resolved inside the drawing's own DOM/shadow root. */
+  ariaDescription?: string;
   testId?: string;
   classes?: string;
   semiCircle?: boolean;

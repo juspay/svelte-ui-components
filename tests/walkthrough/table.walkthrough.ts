@@ -365,36 +365,6 @@ test.describe('Table walkthrough — custom cells and operational data states', 
   });
 });
 
-/**
- * The demo shell's own sidebar nav (src/routes/+layout.svelte) is a fixed
- * 260px CSS Grid column -- `grid-template-columns: 260px minmax(0, 1fr)` --
- * with no narrow-viewport collapse of its own. At a 375px viewport that
- * leaves only ~115px (minus the content area's own 40px side padding) for
- * everything else, nowhere near enough to read a label/value card legibly.
- * That crowding is the docs shell's gap, not the table's, and this
- * walkthrough is about `mobileCardLayout` -- so it hides the shell chrome
- * that would otherwise crowd the frame rather than film illegible cards.
- * `!important` on both declarations because the injected tag lands after
- * Svelte's own scoped stylesheet, whose selectors carry an extra scoping
- * class and would otherwise still win on specificity.
- *
- * The replacement column keeps `minmax(0, ...)`, not bare `1fr`: an `fr`
- * track's default minimum is `auto` (its content's min-content size), not
- * zero, so a bare `1fr` lets the grid stretch to fit whatever unbreakable
- * content lives elsewhere on the page -- on this route, a code sample in the
- * "Usage" docs section rendered below the demo. That measured 900px wide
- * against a 375px viewport and dragged the row along with it. `minmax(0, ...)`
- * is what the original rule relied on to keep overflowing content scrolling
- * instead of stretching the layout, and dropping it while "fixing" the
- * sidebar reintroduced the same class of bug one line over.
- */
-const collapseDemoSidebar = (page: Page) =>
-  page.addStyleTag({
-    content:
-      '.sidebar { display: none !important; } ' +
-      '.app-layout { grid-template-columns: minmax(0, 1fr) !important; }'
-  });
-
 test('mobileCardLayout reflows rows into label/value cards below 640px, and back', async ({
   page
 }) => {
@@ -421,11 +391,6 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
   });
   await beat(page, 800);
 
-  // See collapseDemoSidebar's own doc comment: without this, the sidebar's
-  // fixed 260px column leaves the card too narrow to read at 375px. Restored
-  // once back at desktop width below.
-  const sidebarOverride = await collapseDemoSidebar(page);
-
   await caption(
     page,
     'Every row is now a bordered card: the column header text reappears as a label directly beside its value.'
@@ -449,21 +414,6 @@ test('mobileCardLayout reflows rows into label/value cards below 640px, and back
   // The layout changed; the accessible structure did not.
   await expect(tableElement).toHaveAttribute('role', 'table');
   await expect(firstCell).toHaveAttribute('role', 'cell');
-
-  // Restore the real shell before widening back, so the desktop half below
-  // shows the genuine page rather than a still-modified one.
-  // `addStyleTag` is typed as returning `ElementHandle<Node>`, and `remove()`
-  // lives on `ChildNode`, not `Node`. Narrowed rather than asserted: this file
-  // is not a `.test.ts`/`.spec.ts`, so it does not get the type-assertion
-  // exemption those have. The throw is deliberate -- a silent skip here would
-  // leave the sidebar collapsed for the rest of the walkthrough and the desktop
-  // half below would quietly measure a still-modified page.
-  await sidebarOverride.evaluate((node) => {
-    if (!(node instanceof Element)) {
-      throw new Error('expected addStyleTag to hand back the <style> element it injected');
-    }
-    node.remove();
-  });
 
   await step(
     page,

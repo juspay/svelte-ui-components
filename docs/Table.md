@@ -77,7 +77,7 @@ Beyond `'text'` and `'custom'`, `column.type` selects a built-in renderer compos
 | `compare`             | `TableCompareCellData` `{ primary?, comparison?, trendPercent?, trendLabel?, animateTrend? }`                                             | value over comparison with a colored trend row (↑ green / ↓ red / label)                                                                                                                         |
 | `toggle`              | `TableToggleCellData` `{ checked?, ariaLabel?, testId? }`                                                                                 | a Toggle; `column.onToggle(rowIndex, checked)` receives the **new** state after the flip                                                                                                         |
 | `link`                | `TableLinkCellData` `{ url, label?, copyable? }` (or a bare url string)                                                                   | external link with an optional copy-to-clipboard affordance                                                                                                                                      |
-| `select`              | `TableSelectCellData` `{ options, selectedId?, placeholder?, disabled?, testId?, itemTestId? }`                                           | a Select; `column.onSelect(rowIndex, selectedId, originalIndex)`                                                                                                                                 |
+| `select`              | `TableSelectCellData` `{ options, selectedId?, placeholder?, disabled?, ariaLabel?, testId?, itemTestId? }`                               | a named Select; `column.onSelect(rowIndex, selectedId, originalIndex)`                                                                                                                           |
 | `input`               | `TableInputCellData` `{ value?, placeholder?, disabled?, testId?, ariaLabel?, iconUrl?, dataType?, validationPattern?, onErrorMessage? }` | an Input; `column.oninput(rowIndex, value, originalIndex)`. `ariaLabel` names the field for screen readers (recommended — cells have no visible label); `iconUrl` renders a passive leading icon |
 | `button`              | `TableButtonCellData` — union: `{ text, iconUrl?, ariaLabel?, … }` (text button) or `{ iconUrl, ariaLabel, … }` (icon-only)               | a Button; `column.onButtonClick(rowIndex, originalIndex)`. Icon-only buttons render as a bare ghost control and **require** `ariaLabel` (enforced by the type and the runtime narrowing)         |
 | `action-group`        | `TableActionGroupCellData` `{ primaryButton?, menuItems? }`                                                                               | a primary Button plus a kebab overflow Menu; `column.onPrimaryAction` / `column.onMenuAction`                                                                                                    |
@@ -422,7 +422,7 @@ Fetching, retrying and deciding what a partial page means are caller-owned; Tabl
 
 ### Mobile Record Cards
 
-Below a 640px viewport, `mobileCardLayout` stacks each row into a bordered card of label/value pairs instead of scrolling the table sideways:
+Below a 640px viewport, `mobileCardLayout` stacks each row into a bordered card of label/value pairs instead of scrolling the table sideways. Headers with sort or select-all controls remain visible and operative above the cards; passive headers retain their screen-reader-only relationships:
 
 ```svelte
 <Table {columns} {rows} mobileCardLayout />
@@ -563,12 +563,12 @@ The visible TERM is separately controllable: set `searchConfig.searchTerm` and t
 
 ### Editable Cells
 
-Table has no cell-change prop. 3.x accepted `oncellchange` so a call site could
-type-check a handler, but never called it; 4.0.0 removes it rather than keep a
-prop that reads like wiring and does nothing.
+Table accepts `oncellchange` for call-site compatibility but does not call it internally.
 
-The pattern was always this, and is unchanged: close over your own handler
-directly inside the `cell` snippet, which runs in consumer scope.
+Close over your own handler inside the `cell` snippet. Its fourth argument,
+`originalIndex`, identifies the source row after sorting, filtering and client pagination.
+Existing three-argument snippets continue working. Name custom inputs and textareas from
+their column and a stable row identity; the selected/edited value is not the field name.
 
 ```svelte
 <script>
@@ -576,22 +576,48 @@ directly inside the `cell` snippet, which runs in consumer scope.
   import { Input } from '@juspay/svelte-ui-components';
 
   let rows = $state(myData);
-  const handleCellChange = (rowIndex, colIndex, newValue) => {
-    const updated = rows[rowIndex].slice();
+  const handleCellChange = (originalIndex, colIndex, newValue) => {
+    const updated = rows[originalIndex].slice();
     updated[colIndex] = newValue;
-    rows = rows.map((row, idx) => (idx === rowIndex ? updated : row));
+    rows = rows.map((row, idx) => (idx === originalIndex ? updated : row));
   };
 </script>
 
 <Table tableData={rows} tableHeaders={['Name', 'Score']}>
-  {#snippet cell(value, rowIndex, colIndex)}
+  {#snippet cell(value, _rowIndex, colIndex, originalIndex)}
     <Input
       value={String(value ?? '')}
-      oninput={(newValue) => handleCellChange(rowIndex, colIndex, newValue)}
+      ariaLabel="{colIndex === 0 ? 'Name' : 'Score'} for record {originalIndex + 1}"
+      oninput={(newValue) => handleCellChange(originalIndex, colIndex, newValue)}
     />
   {/snippet}
 </Table>
 ```
+
+For multiline custom cells, use the same contextual name on the real textarea:
+
+```svelte
+<Table tableData={rows} tableHeaders={['Title', 'Notes']}>
+  {#snippet cell(value, _rowIndex, colIndex, originalIndex)}
+    <Input
+      useTextArea
+      value={String(value ?? '')}
+      ariaLabel="{colIndex === 0 ? 'Title' : 'Notes'} for record {originalIndex + 1}"
+      oninput={(newValue) => handleCellChange(originalIndex, colIndex, newValue)}
+    />
+  {/snippet}
+</Table>
+```
+
+### Names and selection references
+
+Built-in input, select and toggle cells default to a name such as **Tier for Growth Monthly**, derived from the column and the first readable non-control cell in that row. Duplicate row captions receive a stable source-record suffix. A cell's `ariaLabel` overrides this default; `labels.cellEditor(columnLabel, rowLabel)` customizes generated names and `labels.pageSize` names the page-size combobox. Defaults use the table title, caption or column labels to identify the page-size field.
+
+Toggle cells expose one native input with switch semantics. They retain the Toggle's native keyboard activation, checked state and form behavior; the surrounding event boundary has no second control role.
+
+Selection keys returned by `checkboxSelection.getRowId` are separate from generated DOM control IDs. Generated IDs are whitespace-free and scoped to the table instance, including for spaced/Unicode keys. Select-all references only actual selectable controls in the current rendered page. Valid custom IDs from `getRowAttributes` are retained and used in that reference list; supply stable IDs unique within the DOM scope. Blank, whitespace-bearing or conflicting IDs fall back to the managed ID.
+
+With no `getRowId`, selection uses the original source index through client-side sorting, filtering and pagination. Supply unique stable record keys for server pages or source arrays whose identities/order change.
 
 ## Props
 
@@ -610,7 +636,7 @@ directly inside the `cell` snippet, which runs in consumer scope.
 | sortAscIcon           | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.                                                                                                                                                  |
 | sortDescIcon          | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.                                                                                                                                                 |
 | sortDefaultIcon       | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                                                                                                                                                                         |
-| cell                  | `Snippet<[JSONValue, number, number]>`                              | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex)`. When not provided, cells render the raw value as text.                                                                                                                                                                                                                  |
+| cell                  | `Snippet<[JSONValue, number, number, number]>`                      | No       | `-`                   | Custom cell renderer. Receives `(value, rowIndex, colIndex, originalIndex)`. The added source index stays stable through client transforms; existing three-parameter snippets keep working. When not provided, cells render the raw value as text.                                                                                    |
 | empty                 | `Snippet<[TableEmptyContext]>`                                      | No       | `-`                   | Content to show when the view has no rows, inside a full-width table row so the header stays. Receives `{ reason, searchTerm }` — `'no-rows'` vs `'no-matches'`; declaring it without parameters stays valid.                                                                                                                         |
 | classes               | `string`                                                            | No       | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                                                                                |
 | paginatorSlot         | `Snippet`                                                           | No       | `-`                   | Snippet rendered in a footer region below the table. Use for pagination controls, row count info, or any per-page UI.                                                                                                                                                                                                                 |
@@ -923,6 +949,7 @@ type TableLabels = {
   filterBy?: (header: string) => string; // default: `Filter by ${header}`
   selectRow?: (rowId: string) => string; // default: `Select row ${rowId || 'non-selectable'}`
   selectAllRows?: string; // default: 'Select all rows'
+  cellEditor?: (columnLabel: string, rowLabel: string) => string;
   clearSearch?: string; // default: 'Clear search'
   closeSearch?: string; // default: 'Close search'
   rowsPerPage?: string; // default: 'Rows per page'
@@ -963,8 +990,8 @@ type TableCheckboxSelectionConfig = {
   selectionMode?: 'single' | 'multiple';
   /** Called whenever the selection set changes, receives the new set of selected row IDs. */
   onSelectionChange?: (selectedIds: Set<string>) => void;
-  /** Derives a stable string ID from a row and its pre-sort index. Defaults to String(rowIndex). */
-  getRowId?: (row: JSONValue[], rowIndex: number) => string;
+  /** Stable record key; default is the original source index as a string. */
+  getRowId?: (row: JSONValue[], rowIndex: number, originalIndex: number) => string;
   /** Rows whose IDs appear here render a disabled, non-interactive checkbox. */
   disabledRowIds?: Set<string>;
 };

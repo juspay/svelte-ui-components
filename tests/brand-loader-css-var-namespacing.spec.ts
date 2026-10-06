@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { nativeBoxDimensions } from './support/native-browser';
 
 // BrandLoader's .loader element used to read --loader-width/--loader-height
 // directly. Loader.svelte independently reads the exact same two variable
@@ -43,7 +44,12 @@ test.describe('BrandLoader CSS variable namespacing', () => {
     const loaderBox = page.getByTestId('brand-loader-precedence-demo').locator('.loader');
     const box = await loaderBox.boundingBox();
     expect(box).not.toBeNull();
-    expect(box?.width).toBe(240);
-    expect(box?.height).toBe(140);
+    // Compare the same requested dimensions through the engine's native box
+    // representation: Firefox rounds fractional top/bottom coordinates.
+    const dimensions = await nativeBoxDimensions(loaderBox, { width: 240, height: 140 });
+    expect(dimensions.actual.width).toBe(dimensions.expected.width);
+    expect(dimensions.actual.height).toBe(dimensions.expected.height);
+    await expect(loaderBox).toHaveCSS('width', '240px');
+    await expect(loaderBox).toHaveCSS('height', '140px');
   });
 });

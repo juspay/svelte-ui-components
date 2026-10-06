@@ -53,6 +53,23 @@ Override these custom properties to theme the component.
 | `--check-list-item-checked-text-color`  | `-`      | color        | Color of the label text when checked.          |
 | `--check-list-item-checked-font-weight` | `-`      | font-weight  | Font weight of the label text when checked.    |
 
+## Accessibility
+
+The checkbox is named by the label the row shows, so what a screen reader announces and what a
+speech-input user can see are the same words: `text` by default, or everything a `checkboxLabel`
+snippet renders (a label of `Required business details <strong>Required</strong>` is announced as
+"Required business details Required", not just `text`). The checkbox references that label with
+`aria-labelledby`; `text` is kept as `aria-label`, used only if the label renders nothing.
+
+Each item exposes exactly one selection control. The native `<input type="checkbox">` behind it is a
+form mirror: `aria-hidden`, `tabindex="-1"` and not reachable by pointer. A disabled item stays named and
+reports `aria-disabled="true"`, drops out of the Tab order and ignores pointer and keyboard activation.
+Space and Enter toggle the focused box. `CheckListItem` has no `name`/`value`, so it contributes no
+field to a surrounding `<form>` and does not submit it — use [`Checkbox`](./Checkbox.md) for that.
+
+The wrapper element that carries the label's id is `display: contents`, so it adds no box: the text or
+snippet remains a direct flex item of the row and every `--check-list-item-*` variable behaves as before.
+
 ## Internal Dependencies
 
 This component uses the following library components internally:

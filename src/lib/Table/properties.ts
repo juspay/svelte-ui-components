@@ -154,6 +154,8 @@ export type TableSelectCellData = {
   selectedId?: string;
   placeholder?: string;
   disabled?: boolean;
+  /** Overrides the generated column/row field name on the real combobox. */
+  ariaLabel?: string;
   testId?: string;
   /** Per-option test id prefix — each option emits `data-pw="{itemTestId}-{id}"`. */
   itemTestId?: string;
@@ -385,7 +387,7 @@ export type TableColumn = {
  * - `onSelectionChange` — called whenever the selection set changes, receives
  *   the new set of selected row IDs.
  * - `getRowId` — derives a stable string ID from a row + its index. Defaults
- *   to `String(rowIndex)` when omitted.
+ *   to the original source index when omitted.
  * - `disabledRowIds` — rows whose IDs appear in this set render a disabled,
  *   unchecked checkbox and cannot be selected.
  */
@@ -412,7 +414,9 @@ export type TableCheckboxSelectionConfig = {
   /**
    * Generic DOM-attribute spread onto each row checkbox (`rowIndex` is `-1`
    * for the header select-all). An escape hatch for consumer-specific
-   * attributes (e.g. native test IDs) without the library learning them.
+   * attributes (e.g. native test IDs) without the library learning them. A custom
+   * `id` must be stable and unique within its DOM scope; blank, whitespace-bearing
+   * or conflicting IDs use the generated per-instance control ID instead.
    */
   getRowAttributes?: (rowId: string, rowIndex: number) => Record<string, string>;
 };
@@ -562,8 +566,8 @@ export type TableProperties = OptionalTableProperties & TableEventProperties;
  * not ship an English UI.
  *
  * Every member is optional and falls back to an English default. All but
- * `rowsPerPage` keep the string Table has always used; `rowsPerPage` adds a
- * name to a control that previously had none.
+ * `rowsPerPage` and `cellEditor` keep the string Table has always used; those
+ * two add a name to a control that previously had none.
  *
  * The two that depend on a column, and the one that depends on a row, are
  * functions rather than templates with a placeholder: a translator needs to
@@ -588,6 +592,8 @@ export type TableLabels = {
   clearSearch?: string;
   /** Button that dismisses the search box. Default: `Close search`. */
   closeSearch?: string;
+  /** Built-in editor name. Default: `${columnLabel} for ${rowLabel}`. */
+  cellEditor?: (columnLabel: string, rowLabel: string) => string;
   /** Page-size selector in the built-in paginator footer. Default: `Rows per page`. */
   rowsPerPage?: string;
 };
@@ -707,7 +713,9 @@ export type OptionalTableProperties = {
   sortAscIcon?: Snippet;
   sortDescIcon?: Snippet;
   sortDefaultIcon?: Snippet;
-  cell?: Snippet<[JSONValue, number, number]>;
+  /** Value, current row index, column index and stable original source index.
+   * Existing three-parameter snippets keep working and may ignore the added index. */
+  cell?: Snippet<[JSONValue, number, number, number]>;
   /**
    * Rendered in place of the rows when the view has none. Receives why
    * (`TableEmptyContext`) so one snippet can serve both "no records yet" and

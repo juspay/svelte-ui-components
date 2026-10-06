@@ -39,6 +39,11 @@
    * once per mounted instance is what a consumer needs to act on, and it costs
    * nothing on subsequent updates.
    */
+  // Reading `attrs` once is the point of this block: it is a dev notice about what the consumer
+  // passed at mount, not state. Rendering reads `attrs` live in the spread on the root element
+  // below, so an `attrs` that changes afterwards is still applied; only the notice is not
+  // repeated. The ignore is on this one block, whose only reference is that read.
+  // svelte-ignore state_referenced_locally
   if (import.meta.env?.DEV === true) {
     for (const message of discardedAttrWarnings('Pill', PILL_MANAGED_ATTRS, attrs)) {
       console.warn(message);

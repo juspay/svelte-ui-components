@@ -29,7 +29,8 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
     await gotoHydrated(page, '/components/command-menu');
 
     const openButton = page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' });
-    await openButton.click();
+    await openButton.focus();
+    await openButton.press('Enter');
     await expect(page.getByTestId('command-menu-demo-input')).toBeFocused();
 
     await page.keyboard.press('Escape');
@@ -76,8 +77,10 @@ test.describe('CommandMenu keyboard interaction (WAI-ARIA combobox pattern)', ()
     await gotoHydrated(page, '/components/command-menu');
 
     const openButton = page.getByRole('button', { name: 'Open Command Menu (Ctrl+K)' });
-    await openButton.click();
+    await openButton.focus();
+    await openButton.press('Enter');
 
+    await expect(page.getByTestId('command-menu-demo-input')).toBeFocused();
     const activations: string[] = [];
     page.on('dialog', async (dialog) => {
       activations.push(dialog.message());

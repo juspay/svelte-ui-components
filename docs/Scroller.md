@@ -1,6 +1,6 @@
 # Scroller
 
-Overflowing horizontal or vertical item list with scroll controls. Shows navigation arrows when content overflows, with gradient fade edges to hint at more content. Supports drag-to-scroll, snap-to-item, and scroll position tracking.
+Overflowing horizontal or vertical item list with scroll controls. Shows navigation arrows when content overflows, with gradient fade edges to hint at more content. Supports drag-to-scroll, snap-to-item, and scroll position tracking. When no arrow buttons are rendered and nothing inside the content is focusable, the scroll region itself becomes a named Tab stop while it overflows, so keyboard users can still scroll it (see Keyboard access).
 
 ## Import
 
@@ -33,6 +33,7 @@ import {Scroller} from '@juspay/svelte-ui-components';
 | `arrowPrevious`     | `Snippet`                    | Built-in chevron SVG  | Custom snippet to render inside the previous/back arrow button, replacing the default chevron icon.                                                                     |
 | `arrowNext`         | `Snippet`                    | Built-in chevron SVG  | Custom snippet to render inside the next/forward arrow button, replacing the default chevron icon.                                                                      |
 | `classes`           | `string`                     | `-`                   | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.  |
+| `ariaLabel`         | `string`                     | `-`                   | Accessible name for the scroll region. While the region is the keyboard route (see Keyboard access) it is named `Scrollable content` unless this is set; a region given a name keeps it whether or not it is currently a Tab stop. Prefer a name that says what scrolls, such as `Release timeline`. Through `<sui-scroller>` the attribute is `aria-label`. |
 
 ### Event Properties
 
@@ -89,6 +90,25 @@ import {Scroller} from '@juspay/svelte-ui-components';
   {/each}
 </Scroller>
 ```
+
+### Keyboard access
+
+Where arrow buttons are rendered they are the keyboard route: Tab reaches them and Enter or Space scrolls by one page. Arrows are not rendered when `showArrows` is `false`, or on a touch-capable device while `hideArrowsOnTouch` is on. If the content then holds nothing focusable, there would be no way to scroll it from a keyboard, so the scroll region becomes one:
+
+- it joins the Tab order (`tabindex="0"`) **only while** the content overflows, no arrows are rendered and nothing inside is focusable. It follows the content as it changes: items added, removed or swapped, content that resizes or the region being resized, a control hidden or shown through `hidden`, `disabled`, `inert`, `class` or `style` (`display: none` and `visibility: hidden` both count as hidden), and a stylesheet rule or media query that hides or shows a control, including a class toggled on an ancestor outside the Scroller. (The one change that cannot be seen is a stylesheet toggling only `visibility` on a control from outside the content: no box changes and nothing in the content is written. Hide with `display`, or write the attribute or class on the control itself.) It leaves the Tab order again when the content fits or a control becomes reachable;
+- it is a `role="region"` named by `ariaLabel`, or `Scrollable content` when none is given;
+- it shows a focus ring (`--scroller-focus-outline`);
+- while it holds focus, the arrow keys on its own axis scroll it: Left/Right when horizontal, Up/Down when vertical, 40px per press (one `scrollAmount`, or one page, when `snapToItem` is on). Tab and Shift+Tab move on as usual.
+
+Content that already holds a focusable control gets no extra Tab stop: moving focus to a control scrolls it into view by itself, and keys pressed inside the content stay with the content.
+
+```svelte
+<Scroller showArrows={false} ariaLabel="Release timeline">
+  <div style="width: 1600px; flex-shrink: 0;">…</div>
+</Scroller>
+```
+
+Give the content `flex-shrink: 0` (or a fixed-width child) so it keeps its size: the scroll container is a flex row, and a flex child that is allowed to shrink fits instead of overflowing.
 
 ### Tracking Scroll Position
 
@@ -186,6 +206,13 @@ Leave it unset and nothing changes, including any `justify-content` rule you alr
 | `--scroller-gradient-start` | White-to-transparent gradient | Custom gradient for the start (left/top) fade edge.                   |
 | `--scroller-gradient-end`   | White-to-transparent gradient | Custom gradient for the end (right/bottom) fade edge.                 |
 
+### Focus
+
+| Variable                         | Default           | Description                                                                                                                                                                      |
+| -------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--scroller-focus-outline`       | `2px solid #2563eb` | Focus ring drawn on the scroll region while it holds keyboard focus (`:focus-visible`). Set to `none` only if the host supplies an equally visible indicator of its own.        |
+| `--scroller-focus-outline-offset` | `-2px`           | Offset of that ring. Negative keeps it inside the region so an `overflow: hidden` ancestor cannot clip it.                                                                      |
+
 ### Snap
 
 | Variable               | Default                       | Description                                                                          |
@@ -237,6 +264,8 @@ Tag: `<sui-scroller>`
   <div>Scrollable content</div>
 </sui-scroller>
 ```
+
+The keyboard route works through the slot: slotted content, including a control inside a nested custom element's shadow root, counts as focusable content, and slotted content that changes after mount updates the route. Name the region with the `aria-label` attribute (`<sui-scroller aria-label="Release timeline">`). To hide the arrows, assign the property: `el.showArrows = false`. The `show-arrows` attribute is a presence flag, so a missing attribute leaves the default (arrows on) and `show-arrows="false"` still means on.
 
 ### Web Component Tokens
 

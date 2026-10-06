@@ -183,13 +183,13 @@ value via `aria-label`. `Tab`/`Shift+Tab` moves between slices in data order; `E
 Focusing a slice also highlights it, mirroring pointer hover — this is the same
 family-wide contract used by BarChart, DualAxisBarChart and FunnelChart.
 
-A single `role="status" aria-live="polite"` region (visually hidden, `aria-describedby`
-on every slice) announces the focused or highlighted slice's label, value and
-percentage, so a screen-reader user gets the exact figures a pointer-hover tooltip
-shows without needing to see the tooltip. It updates for every highlight path — pointer
-hover, keyboard focus, declarative `highlightedIndex`, and imperative
-`ChartHighlightAPI.highlight()` — so it is never the one path pointer-only hover leaves
-uncovered.
+A focused slice announces its complete name: label, formatted value and percentage.
+It is not described by the shared live region; that would repeat the summary and leave
+unfocused slices described by whichever one was last highlighted. The live
+`role="status"` region stays empty while a slice is focused and speaks pointer hover,
+legend focus, `highlightedIndex` and `ChartHighlightAPI` changes that have no slice-focus
+announcement. Printed slice labels remain visible but duplicate the control name, so
+they are hidden from the accessibility tree.
 
 ### Synchronized legend recipe
 
@@ -271,37 +271,70 @@ so a single `NaN` made **every** slice's percentage render as literal `NaN%`
 — while the slices themselves became invalid SVG paths and vanished. See
 [Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
 
+### Chart name and description
+
+Pass `ariaLabel` to identify the chart's purpose and `ariaDescription` for its takeaway,
+units or reading instructions. Both belong to the drawing itself, so its points are
+reached in a named group. Without an explicit name the chart derives one from its data.
+A drawing with no marks is a named image with no point Tab stops. A supplied center
+snippet keeps its drawing a group so any center actions remain exposed.
+
+```svelte
+<PieChart
+  {...chartProps}
+  ariaLabel="Payments by method"
+  ariaDescription="Values are available on each data control."
+/>
+```
+
+The web component uses `chart-aria-label` and `chart-aria-description`, or JS properties
+`chartAriaLabel` / `chartAriaDescription`. These aliases preserve the host's native
+`ariaLabel` / `ariaDescription` accessors. The description resolves in the same shadow
+root as the drawing, with an instance-scoped ID.
+
+```html
+<sui-pie-chart
+  chart-aria-label="Payments by method"
+  chart-aria-description="Values are available on each data control."
+></sui-pie-chart>
+```
+
+A supplied `empty` snippet replaces the drawing and keeps its own semantics, including
+any actions the consumer puts in it.
+
 ## Props
 
-| Prop                | Type                               | Required | Default      | Description                                                                                                                                                                                                                                                           |
-| ------------------- | ---------------------------------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| data                | `PieChartSlice[]`                  | Yes      | `-`          | Array of `{label, value, color?}`. Each item becomes one slice. Slice angle is proportional to value.                                                                                                                                                                 |
-| innerRadius         | `number`                           | No       | `0`          | Inner radius as a fraction of outer radius (0-1). `0` renders a pie; `>0` renders a donut.                                                                                                                                                                            |
-| padAngle            | `number`                           | No       | `0.02`       | Angular gap between slices in radians.                                                                                                                                                                                                                                |
-| showLabels          | `boolean`                          | No       | `false`      | Whether to render slice labels (either inside or outside depending on `labelPosition`).                                                                                                                                                                               |
-| showValues          | `boolean`                          | No       | `false`      | Whether to render the slice percentage as a label.                                                                                                                                                                                                                    |
-| labelPosition       | `'inside' \| 'outside'`            | No       | `'outside'`  | Where to render slice labels.                                                                                                                                                                                                                                         |
-| showLegend          | `boolean`                          | No       | `false`      | Whether to render a legend above the chart.                                                                                                                                                                                                                           |
-| startAngle          | `number`                           | No       | `-Math.PI/2` | Starting angle in radians. Default starts at 12 o'clock position.                                                                                                                                                                                                     |
-| aspectRatio         | `number`                           | No       | `1`          | Width-to-height ratio. `1` produces a circular container.                                                                                                                                                                                                             |
-| valueFormat         | `(value: number) => string`        | No       | abbreviated  | Formatter for slice values in the default tooltip.                                                                                                                                                                                                                    |
-| tooltipSnippet      | `Snippet<[PieChartSlice, number]>` | No       | `-`          | Custom tooltip content. Receives the hovered slice and its index.                                                                                                                                                                                                     |
-| tooltipPortal       | `boolean`                          | No       | `false`      | Render the tooltip into the chart's own root (shadow root, or `document.body`) with `position: fixed`, clamped to the viewport, instead of positioned inside the chart. Use inside an `overflow: hidden`/`scroll` container. No effect on `tooltipSnippet`'s content. |
-| center              | `Snippet`                          | No       | `-`          | Content rendered inside the donut hole (only when `innerRadius > 0`). Rendered via SVG `foreignObject`.                                                                                                                                                               |
-| empty               | `Snippet`                          | No       | `-`          | Content rendered when `data` is empty or all values are zero.                                                                                                                                                                                                         |
-| semiCircle          | `boolean`                          | No       | `false`      | Render as a semi-circle (half-pie/donut). Arc spans the top 180°. Aspect ratio defaults to 2:1.                                                                                                                                                                       |
-| legendShowValues    | `boolean`                          | No       | `false`      | When `showLegend` is also true, renders a tabular legend with formatted values and percentages per slice.                                                                                                                                                             |
-| legendPosition      | `'bottom' \| 'right'`              | No       | `'bottom'`   | Where the `legendShowValues` list sits. `'bottom'` keeps today's below-chart placement; `'right'` renders it as a column beside the chart. Only affects the values legend — `showLegend` without `legendShowValues` still renders the plain top legend.               |
-| legendMaxItems      | `number`                           | No       | `-`          | Show at most this many legend rows, followed by a `+N more` control. Omitted (the default) shows every row with no control. A cap that is not exceeded renders no control either.                                                                                     |
-| onlegendmore        | `() => void`                       | No       | `-`          | Called when `+N more` is activated. Providing it **suppresses** the built-in in-place expansion, so a consumer opening their own modal does not also get the list expanding underneath it.                                                                            |
-| animateLegendValues | `boolean`                          | No       | `false`      | Roll `.pie-legend-value` through `AnimatedNumber` on change, instead of a static text node. Passes the same string the static legend already prints (`valueFormat`/default plus percentage). No effect on the on-arc `<text>` labels.                                 |
-| percentDecimals     | `number`                           | No       | `0`          | Decimal places used for percentage formatting in on-arc labels (`showValues`) and the legend value column.                                                                                                                                                            |
-| onchartready        | `(api: ChartHighlightAPI) => void` | No       | `-`          | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.                                                                                     |
-| highlightedIndex    | `number \| null`                   | No       | `null`       | Declarative highlight: the index of the slice to highlight. The highlighted slice scales out and all others dim. Pass `null` or omit to clear. Mouse hover takes priority when active.                                                                                |
-| changePercentage    | `number`                           | No       | `-`          | When provided, renders a `DeltaIndicator` badge at the top-right of the chart container showing the percentage change. Positive values appear green ↑, negative appear red ↓ by default.                                                                              |
-| changeInvertColors  | `boolean`                          | No       | `false`      | Swap the up/down colors on the delta badge for lower-is-better metrics (e.g. RTO rate, bounce rate).                                                                                                                                                                  |
-| testId              | `string`                           | No       | `-`          | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                               |
-| classes             | `string`                           | No       | `-`          | CSS class string applied to the top-level element.                                                                                                                                                                                                                    |
+| Prop                | Type                               | Required | Default           | Description                                                                                                                                                                                                                                                           |
+| ------------------- | ---------------------------------- | -------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data                | `PieChartSlice[]`                  | Yes      | `-`               | Array of `{label, value, color?}`. Each item becomes one slice. Slice angle is proportional to value.                                                                                                                                                                 |
+| innerRadius         | `number`                           | No       | `0`               | Inner radius as a fraction of outer radius (0-1). `0` renders a pie; `>0` renders a donut.                                                                                                                                                                            |
+| padAngle            | `number`                           | No       | `0.02`            | Angular gap between slices in radians.                                                                                                                                                                                                                                |
+| showLabels          | `boolean`                          | No       | `false`           | Whether to render slice labels (either inside or outside depending on `labelPosition`).                                                                                                                                                                               |
+| showValues          | `boolean`                          | No       | `false`           | Whether to render the slice percentage as a label.                                                                                                                                                                                                                    |
+| labelPosition       | `'inside' \| 'outside'`            | No       | `'outside'`       | Where to render slice labels.                                                                                                                                                                                                                                         |
+| showLegend          | `boolean`                          | No       | `false`           | Whether to render a legend above the chart.                                                                                                                                                                                                                           |
+| startAngle          | `number`                           | No       | `-Math.PI/2`      | Starting angle in radians. Default starts at 12 o'clock position.                                                                                                                                                                                                     |
+| aspectRatio         | `number`                           | No       | `1`               | Width-to-height ratio. `1` produces a circular container.                                                                                                                                                                                                             |
+| valueFormat         | `(value: number) => string`        | No       | abbreviated       | Formatter for slice values in the default tooltip.                                                                                                                                                                                                                    |
+| tooltipSnippet      | `Snippet<[PieChartSlice, number]>` | No       | `-`               | Custom tooltip content. Receives the hovered slice and its index.                                                                                                                                                                                                     |
+| tooltipPortal       | `boolean`                          | No       | `false`           | Render the tooltip into the chart's own root (shadow root, or `document.body`) with `position: fixed`, clamped to the viewport, instead of positioned inside the chart. Use inside an `overflow: hidden`/`scroll` container. No effect on `tooltipSnippet`'s content. |
+| center              | `Snippet`                          | No       | `-`               | Content rendered inside the donut hole (only when `innerRadius > 0`). Rendered via SVG `foreignObject`.                                                                                                                                                               |
+| empty               | `Snippet`                          | No       | `-`               | Content rendered when `data` is empty or all values are zero.                                                                                                                                                                                                         |
+| semiCircle          | `boolean`                          | No       | `false`           | Render as a semi-circle (half-pie/donut). Arc spans the top 180°. Aspect ratio defaults to 2:1.                                                                                                                                                                       |
+| legendShowValues    | `boolean`                          | No       | `false`           | When `showLegend` is also true, renders a tabular legend with formatted values and percentages per slice.                                                                                                                                                             |
+| legendPosition      | `'bottom' \| 'right'`              | No       | `'bottom'`        | Where the `legendShowValues` list sits. `'bottom'` keeps today's below-chart placement; `'right'` renders it as a column beside the chart. Only affects the values legend — `showLegend` without `legendShowValues` still renders the plain top legend.               |
+| legendMaxItems      | `number`                           | No       | `-`               | Show at most this many legend rows, followed by a `+N more` control. Omitted (the default) shows every row with no control. A cap that is not exceeded renders no control either.                                                                                     |
+| onlegendmore        | `() => void`                       | No       | `-`               | Called when `+N more` is activated. Providing it **suppresses** the built-in in-place expansion, so a consumer opening their own modal does not also get the list expanding underneath it.                                                                            |
+| animateLegendValues | `boolean`                          | No       | `false`           | Roll `.pie-legend-value` through `AnimatedNumber` on change, instead of a static text node. Passes the same string the static legend already prints (`valueFormat`/default plus percentage). No effect on the on-arc `<text>` labels.                                 |
+| percentDecimals     | `number`                           | No       | `0`               | Decimal places used for percentage formatting in on-arc labels (`showValues`) and the legend value column.                                                                                                                                                            |
+| onchartready        | `(api: ChartHighlightAPI) => void` | No       | `-`               | Called once on mount with the imperative highlight API. Use `api.highlight(index)` to highlight a slice and `api.highlight(null)` to clear. `api.type` is always `'donut-chart'`.                                                                                     |
+| highlightedIndex    | `number \| null`                   | No       | `null`            | Declarative highlight: the index of the slice to highlight. The highlighted slice scales out and all others dim. Pass `null` or omit to clear. Mouse hover takes priority when active.                                                                                |
+| changePercentage    | `number`                           | No       | `-`               | When provided, renders a `DeltaIndicator` badge at the top-right of the chart container showing the percentage change. Positive values appear green ↑, negative appear red ↓ by default.                                                                              |
+| changeInvertColors  | `boolean`                          | No       | `false`           | Swap the up/down colors on the delta badge for lower-is-better metrics (e.g. RTO rate, bounce rate).                                                                                                                                                                  |
+| ariaLabel           | `string`                           | No       | Derived from data | Accessible name of the drawing.                                                                                                                                                                                                                                       |
+| ariaDescription     | `string`                           | No       | —                 | Longer description scoped to this drawing instance.                                                                                                                                                                                                                   |
+| testId              | `string`                           | No       | `-`               | Value for the data-pw attribute on the chart container.                                                                                                                                                                                                               |
+| classes             | `string`                           | No       | `-`               | CSS class string applied to the top-level element.                                                                                                                                                                                                                    |
 
 ## Events
 
@@ -309,6 +342,15 @@ so a single `NaN` made **every** slice's percentage render as literal `NaN%`
 | ------------ | ------------------------------------------------------------------ | ----------------------------------------------------- |
 | onsliceclick | `(event: { index: number; slice: PieChartSlice }) => void`         | Fires when a slice is clicked.                        |
 | onslicehover | `(event: { index: number; slice: PieChartSlice } \| null) => void` | Fires on slice hover enter or leave. `null` on leave. |
+
+### Labels over plotted colors
+
+Printed labels have an opaque backplate measured from their actual SVG glyph bounds,
+including loaded-font changes. This keeps text readable when it crosses slices, lines,
+markers or hover guides. The data palette and labels are unchanged. Override the shared
+`--chart-label-background` to match a custom chart surface, and pair it with the existing
+label foreground token (`--piechart-label-color` or `--chart-text-color`). Keep that pair
+at 4.5:1 for normal-size text; a transparent plate again exposes the plotted colors.
 
 ## CSS Variables
 

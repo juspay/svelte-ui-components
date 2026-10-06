@@ -154,22 +154,38 @@
 
 <h3>Basic</h3>
 <div class="demo-row">
-  <BarChart data={monthlyRevenue} />
+  <BarChart
+    data={monthlyRevenue}
+    ariaLabel="Monthly revenue, January to June"
+    ariaDescription="Revenue ranges from 3,800 in February to 6,200 in June, with dips in February and April."
+  />
 </div>
 
 <h3>With Values</h3>
 <div class="demo-row">
-  <BarChart data={monthlyRevenue} showValues />
+  <BarChart
+    data={monthlyRevenue}
+    showValues
+    ariaLabel="Monthly revenue, January to June, with a value on every bar"
+  />
 </div>
 
 <h3>Custom Colors</h3>
 <div class="demo-row">
-  <BarChart data={coloredData} showValues />
+  <BarChart
+    data={coloredData}
+    showValues
+    ariaLabel="Product A to Product D compared, each bar in its own colour"
+  />
 </div>
 
 <h3>Horizontal</h3>
 <div class="demo-row">
-  <BarChart data={horizontalData} orientation="horizontal" />
+  <BarChart
+    data={horizontalData}
+    orientation="horizontal"
+    ariaLabel="Engineering, Design, Marketing, Sales and Support compared, as horizontal bars"
+  />
 </div>
 
 <h3>Highlight — Declarative (<code>highlightedIndex</code>)</h3>
@@ -199,7 +215,12 @@
       Clear
     </button>
   </div>
-  <BarChart data={monthlyRevenue} showValues highlightedIndex={declarativeHighlight} />
+  <BarChart
+    data={monthlyRevenue}
+    showValues
+    highlightedIndex={declarativeHighlight}
+    ariaLabel="Monthly revenue with a month highlighted by the buttons above"
+  />
 </div>
 
 <h3>Highlight — Imperative (<code>onChartReady</code>)</h3>
@@ -213,7 +234,11 @@
       Cycle highlight (step {apiHighlightStep})
     </button>
   </div>
-  <BarChart data={monthlyRevenue} onchartready={handleChartReady} />
+  <BarChart
+    data={monthlyRevenue}
+    onchartready={handleChartReady}
+    ariaLabel="Monthly revenue with highlighting driven through the imperative API"
+  />
 </div>
 
 <h3>Normalise to First Point (<code>normaliseToFirstPoint</code>)</h3>
@@ -222,7 +247,14 @@
   makes relative growth comparable across series with very different starting magnitudes.
 </p>
 <div class="demo-row">
-  <BarChart series={growthSeries} groupMode="grouped" showLegend showValues normaliseToFirstPoint />
+  <BarChart
+    series={growthSeries}
+    groupMode="grouped"
+    showLegend
+    showValues
+    normaliseToFirstPoint
+    ariaLabel="Revenue and users by quarter, each as a percentage of its first quarter"
+  />
 </div>
 
 <h3>Top-N Clipping (<code>topN</code> + <code>overflowLabel</code>)</h3>
@@ -231,7 +263,13 @@
   single bar labelled "Other".
 </p>
 <div class="demo-row">
-  <BarChart data={manyCategories} topN={4} overflowLabel="Other" showValues />
+  <BarChart
+    data={manyCategories}
+    topN={4}
+    overflowLabel="Other"
+    showValues
+    ariaLabel="Sales by category: the four largest categories and one bar combining the other six"
+  />
 </div>
 
 <h3>Hide Bar Graphics (<code>hideBarGraphics</code>)</h3>
@@ -240,7 +278,14 @@
   legend-only or label-only companion views.
 </p>
 <div class="demo-row">
-  <BarChart data={labelOnlyData} hideBarGraphics showXAxis showYAxis showGridlines />
+  <BarChart
+    data={labelOnlyData}
+    hideBarGraphics
+    showXAxis
+    showYAxis
+    showGridlines
+    ariaLabel="Scores for Alpha, Beta and Gamma, axes only (bars hidden)"
+  />
 </div>
 
 <h3>Per-bar value label override (<code>valueLabel</code>)</h3>
@@ -252,7 +297,12 @@
   <code>valueLabel</code> is an empty string — keep going through the normal formatter.
 </p>
 <div class="demo-row">
-  <BarChart data={funnelWithValueLabel} showValues testId="bar-value-label-chart" />
+  <BarChart
+    data={funnelWithValueLabel}
+    showValues
+    ariaLabel="Customer funnel from visit to refund, with a custom label on the first bar"
+    testId="bar-value-label-chart"
+  />
 </div>
 
 <h3>Labels near the axis max (outside → inside flip)</h3>
@@ -266,6 +316,7 @@
     ]}
     yDomain={[0, 10000]}
     showValues={true}
+    ariaLabel="Sales by region against a fixed 10,000 maximum"
     testId="bar-inside-flip-chart"
   />
 </div>
@@ -277,6 +328,7 @@
       label: `Category name ${i + 1}`,
       value: 100 + ((i * 37) % 400)
     }))}
+    ariaLabel="Eighteen categories on one axis, with labels rotated and thinned to fit"
     testId="bar-crowded-chart"
   />
 </div>
@@ -315,6 +367,7 @@
     ]}
     showLegend={true}
     interactiveLegend={true}
+    ariaLabel="Alpha, Beta and Gamma by quarter, with legend toggles to show or hide each series"
     testId="bar-legend-toggle-chart"
   />
 </div>
@@ -348,6 +401,7 @@
     ]}
     showLegend={true}
     interactiveLegend
+    ariaLabel="Revenue and conversion rate by quarter, with totals in the legend"
     testId="bar-legend-aggregate-chart"
   />
 </div>
@@ -368,6 +422,7 @@
     groupMode="stacked"
     showLegend
     showValues
+    ariaLabel="Traffic by source stacked by quarter, with no Organic reading in Q2"
     testId="bar-stacked-gap-chart"
   />
 </div>

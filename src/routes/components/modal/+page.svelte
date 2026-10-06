@@ -4,6 +4,13 @@
   import Menu from '$lib/Menu/Menu.svelte';
   import Select from '$lib/Select/Select.svelte';
 
+  // One string for the heading and the dialog's accessible name, so the name a screen reader
+  // announces can never drift from the title on screen.
+  const confirmTitle = 'Confirm Action';
+  // The message the dialog asks about, wired to the panel as its accessible description so an
+  // alertdialog announces what it is asking and not only its name.
+  const confirmMessageId = 'confirm-modal-message';
+
   let showModal = $state(false);
   let showModalTop = $state(false);
   let showTallModal = $state(false);
@@ -30,6 +37,12 @@
   let showDisabledFooterModal = $state(false);
   let showNestedMenuModal = $state(false);
   let showNestedSelectModal = $state(false);
+
+  // Reactive-debounceTime demo: the same open Modal instance has its delay changed by the
+  // buttons inside it, so the new value has to reach a debouncer that already has history.
+  let showDebounceModal = $state(false);
+  let debounceModalTime = $state(700);
+  let debounceOverlayCallbacks = $state(0);
 </script>
 
 <div class="page-header">
@@ -44,8 +57,11 @@
       size="medium"
       align="center"
       showOverlay
+      role="alertdialog"
+      ariaLabel={confirmTitle}
+      ariaDescribedby={confirmMessageId}
       header={{
-        text: 'Confirm Action',
+        text: confirmTitle,
         rightImage: closeIconSrc,
         buttonTestId: 'confirm-modal-close',
         buttonAriaLabel: 'Close dialog'
@@ -65,7 +81,7 @@
     >
       {#snippet content()}
         <div style="padding: 16px;">
-          <p>Are you sure you want to proceed with this action?</p>
+          <p id={confirmMessageId}>Are you sure you want to proceed with this action?</p>
         </div>
       {/snippet}
     </Modal>
@@ -438,10 +454,71 @@
       {#snippet content()}
         <div style="padding: 16px;">
           <Select
+            ariaLabel="Fruit"
             items={['Apple', 'Banana', 'Cherry']}
             placeholder="Choose a fruit"
             testId="nested-select"
           />
+        </div>
+      {/snippet}
+    </Modal>
+  {/if}
+</div>
+
+<h2>Changing debounceTime while a modal is open</h2>
+<p class="demo-caption">
+  <code>debounceTime</code> is read each time a dismissal arrives, so a new value applies to the modal
+  that is already open without resetting when it last fired. Overlay clicks and Escape are counted here
+  instead of closing the modal; use the Close button to leave.
+</p>
+<div class="demo-row">
+  <Button
+    text="Open modal with an adjustable debounceTime"
+    onclick={() => {
+      debounceOverlayCallbacks = 0;
+      showDebounceModal = true;
+    }}
+    testId="open-debounce-modal"
+  />
+  {#if showDebounceModal}
+    <Modal
+      size="medium"
+      align="center"
+      showOverlay
+      role="dialog"
+      ariaLabel="Adjustable debounceTime"
+      header={{ text: 'Adjustable debounceTime' }}
+      testId="debounce-modal"
+      debounceTime={debounceModalTime}
+      onclose={() => (showDebounceModal = false)}
+      onoverlayclick={() => (debounceOverlayCallbacks += 1)}
+    >
+      {#snippet content()}
+        <div style="padding: 16px;">
+          <p data-pw="debounce-current">debounceTime: {debounceModalTime}ms</p>
+          <p data-pw="debounce-count">overlay callbacks: {debounceOverlayCallbacks}</p>
+          <div class="demo-row">
+            <Button
+              text="20 ms"
+              testId="debounce-set-20"
+              onclick={() => (debounceModalTime = 20)}
+            />
+            <Button
+              text="700 ms"
+              testId="debounce-set-700"
+              onclick={() => (debounceModalTime = 700)}
+            />
+            <Button
+              text="5000 ms"
+              testId="debounce-set-5000"
+              onclick={() => (debounceModalTime = 5000)}
+            />
+            <Button
+              text="Close"
+              testId="debounce-close"
+              onclick={() => (showDebounceModal = false)}
+            />
+          </div>
         </div>
       {/snippet}
     </Modal>

@@ -23,6 +23,8 @@
       searchable: { type: 'Boolean', reflect: true },
       searchPosition: { type: 'String', attribute: 'search-position' },
       placeholder: { type: 'String', reflect: true },
+      selectAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true },
+      selectAriaLabelledby: { type: 'String', attribute: 'aria-labelledby' },
       disabled: { type: 'Boolean', reflect: true },
       error: { type: 'Boolean', reflect: true },
       errorMessage: { type: 'String', attribute: 'error-message' },
@@ -47,8 +49,7 @@
       onclose: { type: 'Object' },
       hierarchy: { type: 'String', attribute: 'hierarchy' },
       usePortal: { type: 'Boolean', attribute: 'use-portal' },
-      name: { type: 'String', reflect: true },
-      selectAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true }
+      name: { type: 'String', reflect: true }
     }
   }}
 />
@@ -58,11 +59,20 @@
   import Select from '$lib/Select/Select.svelte';
   import type { SelectProperties } from '$lib/Select/properties';
   import { dispatchEvents } from '../dispatch';
+  import { labelRootOf, watchReferencedText } from '../label-reference';
+
+  // The element renames `ariaLabel`/`ariaLabelledby` because ARIAMixin already
+  // defines `ariaLabel` on every HTMLElement and a same-named prop would replace the
+  // platform's accessor -- the collision `190800b` renamed 24 other props to avoid.
+  // The attributes are unchanged: `<sui-select aria-label="Country">` works, and only
+  // the JavaScript property name differs.
   let {
     selectAriaLabel,
+    selectAriaLabelledby,
     ...props
-  }: Omit<SelectProperties, 'ariaLabel'> & {
+  }: Omit<SelectProperties, 'ariaLabel' | 'ariaLabelledby'> & {
     selectAriaLabel?: SelectProperties['ariaLabel'];
+    selectAriaLabelledby?: SelectProperties['ariaLabelledby'];
   } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
@@ -81,9 +91,47 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+
+  // `aria-labelledby` cannot be forwarded to the combobox the way `aria-label` can.
+  // The trigger lives in this element's shadow root and ARIA id references do not
+  // cross a shadow boundary, so an id naming a label in the consumer's page would
+  // resolve to nothing and leave the control unnamed -- a prop that looks wired and
+  // does nothing. The ids are resolved on the HOST's root instead and the text is
+  // forwarded as `aria-label`, a string, which crosses fine. It is watched, so a
+  // label rendered after the element, edited, or replaced keeps the name current.
+  // The explicit label still wins when both are set, following Select's API contract.
+  let referencedLabel: SelectProperties['ariaLabel'] = $state();
+
+  // An effect rather than $derived: the label is looked up in the consumer's DOM,
+  // which is not reactive state, and there is no root to search until the element is
+  // connected to a document.
+  $effect(() => {
+    const root = labelRootOf(hostEl);
+    if (root === null) {
+      referencedLabel = undefined;
+      return;
+    }
+    return watchReferencedText(
+      root,
+      selectAriaLabelledby,
+      (text) => {
+        referencedLabel = text;
+      },
+      () => labelRootOf(hostEl)
+    );
+  });
 </script>
 
-<Select {...props} {...dispatchers} ariaLabel={selectAriaLabel}>
+<!-- `ariaLabelledby` is still forwarded so the prop stays reachable, but it is the
+     fallback rather than the mechanism: Select.svelte drops aria-labelledby whenever
+     aria-label is a string, so the resolved name above wins and the raw id is only
+     emitted when the reference resolved to nothing, where it is inert either way. -->
+<Select
+  {...props}
+  {...dispatchers}
+  ariaLabel={selectAriaLabel?.trim() ? selectAriaLabel : referencedLabel}
+  ariaLabelledby={selectAriaLabelledby}
+>
   {#snippet bottomContent()}
     <slot name="bottom-content"></slot>
   {/snippet}

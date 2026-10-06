@@ -10,7 +10,10 @@ export type MandatoryRadioProperties = {
 export type OptionalRadioProperties = {
   /**
    * Text shown, and announced, when the control is in error. Linked to the
-   * control through `aria-describedby`, and sets `aria-invalid` while present.
+   * control through `aria-describedby` and announced through `role="alert"`;
+   * the input carries `data-invalid` while present. It does not set
+   * `aria-invalid`, which WAI-ARIA 1.2 does not support on `role="radio"` --
+   * put that on the `role="radiogroup"` that wraps the group.
    */
   errorMessage?: string | null;
   /**
@@ -21,7 +24,9 @@ export type OptionalRadioProperties = {
   infoMessage?: string | null;
   /**
    * Marks the control invalid without supplying a message, for a consumer
-   * driving validity from a server or its own rules.
+   * driving validity from a server or its own rules. Sets `data-invalid` on
+   * the input; the announced group state is the wrapping `role="radiogroup"`'s
+   * `aria-invalid`.
    */
   invalid?: boolean;
   selectedValue?: string;

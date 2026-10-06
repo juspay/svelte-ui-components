@@ -24,19 +24,21 @@ An action button with a built-in variant and size system: five visual styles (`p
 
 ### Brand variant (gradient CTAs)
 
-`brand` is a transparent chassis — white text, no border, no background of its own — designed to be paired with a `--button-background` gradient via `classes`. Used alone (no `--button-background` set) it renders fully transparent, so always pair it with a background recipe:
+`brand` is a transparent chassis — white text, no border, no background of its own — designed to be paired with a `--button-background` gradient via `classes`. Used alone (no `--button-background` set) it renders fully transparent, so always pair it with a background recipe.
+
+The label is white, so every colour the gradient passes through needs at least 4.5:1 against white — not just the part under today's label, which moves when the text or size changes. The recipe below starts at a burnt orange (`#c2410c`, 5.18:1) for that reason; a brighter one such as `#ff7a45` is only 2.59:1 and fails across most of the gradient. Check your own stops before shipping a variation:
 
 ```svelte
 <Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
 
 <style>
   :global(.btn-brand-gradient) {
-    --button-background: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-background: linear-gradient(135deg, #c2410c, #8f41fc);
     /* Also set --button-hover-color: the brand variant's internal hover default is
        `transparent`, and it sits before --button-background in the hover fallback
        chain — without an explicit --button-hover-color the gradient would flatten
        to transparent on hover. */
-    --button-hover-color: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-hover-color: linear-gradient(135deg, #c2410c, #8f41fc);
     --button-transition: background 0.2s ease, transform 0.15s ease;
     --button-hover-transform: translateY(-2px);
   }

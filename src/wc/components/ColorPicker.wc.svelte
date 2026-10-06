@@ -5,6 +5,7 @@
     props: {
       value: { type: 'String', reflect: true },
       label: { type: 'String', reflect: true },
+      colorPickerAriaLabel: { type: 'String', attribute: 'aria-label' },
       disabled: { type: 'Boolean', reflect: true },
       showValue: { type: 'Boolean', reflect: true, attribute: 'show-value' },
       testId: { type: 'String', attribute: 'test-id' },
@@ -24,7 +25,9 @@
 
   // `value` is $bindable on ColorPicker; see ChipInput.wc.svelte for why a one-way spread
   // leaves the host element's property stale.
-  let { value = $bindable('#000000'), ...rest } = $props();
+  // `ariaLabel` is renamed because the platform already defines it on every
+  // HTMLElement, the same reason SplitInput.wc.svelte renames its own.
+  let { value = $bindable('#000000'), colorPickerAriaLabel, ...rest } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -47,7 +50,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, rest));
 </script>
 
-<ColorPicker {...rest} {...dispatchers} bind:value />
+<ColorPicker {...rest} {...dispatchers} ariaLabel={colorPickerAriaLabel} bind:value />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

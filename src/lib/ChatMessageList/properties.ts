@@ -29,6 +29,12 @@ export type OptionalChatMessageListProperties = {
   pinHold?: boolean;
   /** Render the built-in jump-to-latest button (default true). Hosts with their own affordance pass false. */
   jump?: boolean;
+  /**
+   * Hide the list's own scrollbar while it stays scrollable (default false). Mirrors
+   * Scroller's `hideScrollbar`, which defaults to true; here the default keeps the
+   * scrollbar the list has always shown.
+   */
+  hideScrollbar?: boolean;
   message?: Snippet<[ChatMessageData]>;
   /**
    * Renders inside each message's bubble in place of its text/html, keeping the

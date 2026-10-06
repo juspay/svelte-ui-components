@@ -10,6 +10,7 @@
       scrollPolicy: { attribute: 'scroll-policy', type: 'String' },
       pinHold: { attribute: 'pin-hold', type: 'Boolean' },
       jump: { type: 'Boolean' },
+      hideScrollbar: { type: 'Boolean', attribute: 'hide-scrollbar' },
       onscrollstate: { type: 'Object' },
       messageAttachments: { type: 'Object' },
       empty: { type: 'Object' },

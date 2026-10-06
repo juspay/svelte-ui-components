@@ -2,7 +2,75 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.44.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.44.1)
+
+The ChatMessage root exposed a max-width token and no min-width one, so an app that needed a
+message to shrink below its content, or short messages to keep a floor, reached into the
+component with a :global() rule on .chat-message. The root now reads --chat-message-min-width.
+
+With the token unset the declaration gives itself up (revert-layer), so the root keeps the value
+it always had. A fallback of 0 would have changed a flex row and a grid track, where auto is a
+content-based minimum. A plain auto would have beaten a rule an app keeps inside an @layer, since
+an unlayered declaration wins over a layered one whatever its specificity. Where nothing else sets
+min-width the computed value is still auto, which resolves to 0 in a block parent.
+
+Setting the token to 0, or to a length, replaces the content-based minimum: a message in a flex
+row or a grid track can then shrink below its content and a long code line scrolls inside the
+bubble. The shrink shows once --chat-message-max-width is lifted. With the default 82% a flex row
+already holds the message at the cap, so 0 changes only its computed min-width there, while in a
+grid track Chromium and Firefox still size the track from the content and 0 brings the message
+back to the cap. In a column flex parent and a block parent 0 changes nothing. A length is also a
+floor for short messages, and lets a message wider than its parent shrink to it.
+
+On &lt;sui-chat-message&gt; the token reaches the message inside the shadow root, not the element. The
+element is the flex or grid item and keeps its own content-based minimum, so a floor works but 0
+on a parent does not shrink it; min-width: 0 on the element does. docs/ChatMessage.md says so in
+its Web Component section. A host-level token is not added here.
+
+The declaration sits in a :where() rule, so it has no specificity. An app rule such as
+.chat-message { min-width: 0 }, in or out of an @layer, keeps winning over an unset token. The
+one rule that does not is a universal * rule placed before the library stylesheet: it ties with
+the declaration, which comes later, and loses. The docs state that and name the token as the way
+out.
+
+Measured against 4.42.0 with the token unset:
+- The compiled component stylesheet gains one rule (53 to 54 blocks) and loses or reorders no
+line; the built stylesheet gains one block and loses none.
+- Every element's computed styles and box match in 282 cases per engine (14 parent kinds, 2
+max-width settings and 10 contents, plus the real ChatMessageList at two widths), for an unset,
+an auto, an initial and an invalid token: 0 of 282 differ in Chromium 148.0.7778.96, Firefox
+150.0.2 and WebKit 26.4. A token of 0 differs in 222 of 282 and a 120px floor in all 282.
+- With an @layer rule of min-width 0 or 77px on the root, unset still matches 4.42.0 in 0 of 282.
+The earlier fallback of auto differed in 222 and 282 of them.
+- Of 22 app-rule scenarios per engine, 17 match, 9 of them with the rule inside an @layer, and
+the earlier fallback of auto differed in 7 of those. The other 5 are the universal rule placed
+before the library and 4 where the app sets the token itself.
+- A browser without revert-layer, emulated by an unknown keyword in its place, matches in the same
+282 cases.
+- The seven docs routes that render ChatMessage (chat, chat-bubble, chat-compositions,
+chat-message, chat-message-list, chat-suggestions, markdown-text) at 1280 and 390px: boxes,
+min-width and max-width match. Only /components/chat-message differs, in the heights of 3
+container elements, from the longer docs text, which the visual suite hides. In Firefox at
+390px the timer-driven /components/chat moved 5 elements in one change run, and 2 of 8 base
+runs move 5 against the first base run as well.
+
+Verified with tests/chat-message-min-width.spec.ts on the new tests/fixtures/chat-message-min-width
+app, so the scenario matrix is not a docs demo. Its 54 tests cover unset beside a twin element,
+auto, 0, a length floor, the default cap, app rules in and out of an @layer, and
+&lt;sui-chat-message&gt; in a flex row and a grid track. The Playwright project runs Chromium only, so
+the same file also ran through a scratch Playwright config in Chromium, Firefox and WebKit: 162 of
+162 passed. Seven reverts were each restored to a byte-identical tree before the passing run. A
+fallback of auto fails the 3 layer tests, 0 fails 22, deleting the rule fails 22 (20 in WebKit),
+dropping :where() fails the 3 app-rule tests, max-content fails 27, an always-on 300px floor
+fails 45 (43 in WebKit), and a host-level token in the wrapper fails the 2 wc tests. 160 of the
+162 test and engine pairs fail under at least one revert; the two that cannot are WebKit grid-cap
+tests, as WebKit holds the cap in a grid either way.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.44.1](https://github.com/juspay/svelte-ui-components/compare/4.44.1..4.44.0) - 6 October 2026
 
 Visible default change: in the default theme the open picker's footer was unreadable. Cancel and
 Clear were white text on the white panel (contrast 1.00:1, 1.09:1 on hover) and an enabled Apply

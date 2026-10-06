@@ -93,6 +93,7 @@
 }
 
 .demo-row {
+  box-sizing: border-box;
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
@@ -158,4 +159,37 @@
   cursor: pointer;
   font-weight: 600;
   color: var(--doc-accent-text);
+}
+
+/*
+ * Compact layout (the shell's breakpoint; keep 1023.98px equal to
+ * COMPACT_QUERY in src/routes/+layout.svelte).
+ */
+@media (max-width: 1023.98px) {
+  /* Prose that quotes a long markup string or an unbroken prop name would
+     otherwise run past the column. `break-word` rather than `anywhere`: it only
+     breaks a line that cannot fit, and does not shrink an element's min-content
+     width. */
+  main :not(pre) > code,
+  main :is(h1, h2, h3, h4, h5, h6, p, li) {
+    overflow-wrap: break-word;
+  }
+}
+
+/*
+ * A demo row whose contents are wider than the column scrolls inside itself, as
+ * does any other example container that carries the `demo-scroll` class. Set only
+ * on rows that overflow (src/routes/components/_scroll-regions.ts), never on
+ * every row: `overflow` would also clip the popovers of the examples that fit.
+ */
+.demo-row[data-scroll-region],
+.demo-scroll[data-scroll-region] {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.demo-row[data-scroll-region]:focus-visible,
+.demo-scroll[data-scroll-region]:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
 }

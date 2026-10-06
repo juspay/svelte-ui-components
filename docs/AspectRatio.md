@@ -14,6 +14,21 @@ Constrains its content to a fixed width-to-height ratio, using the CSS `aspect-r
 </AspectRatio>
 ```
 
+## Padded flex containers
+
+Use `box-sizing: border-box` on a padded column-flex parent with a percentage-width
+child. WebKit can otherwise reserve the wrong height even while its computed
+`aspect-ratio` is correct. This applies to every nested padded flex parent too;
+it is the supported example recipe, without changing the component's ratio API.
+
+```svelte
+<div
+  style="display: flex; flex-direction: column; padding: 16px; width: 480px; box-sizing: border-box;"
+>
+  <AspectRatio ratio={16 / 9} />
+</div>
+```
+
 ## Props
 
 | Prop     | Type      | Required | Default | Description                                                                                                                                                                                                                                                     |

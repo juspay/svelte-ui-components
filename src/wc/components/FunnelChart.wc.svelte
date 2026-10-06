@@ -18,6 +18,9 @@
       minHeight: { type: 'Number', attribute: 'min-height' },
       radius: { type: 'Number' },
       tooltipPortal: { type: 'Boolean', attribute: 'tooltip-portal' },
+      // Chart-specific aliases preserve the host's native ARIAMixin accessors.
+      chartAriaLabel: { type: 'String', attribute: 'chart-aria-label' },
+      chartAriaDescription: { type: 'String', attribute: 'chart-aria-description' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       empty: { type: 'Object' },
@@ -29,9 +32,17 @@
 
 <script lang="ts">
   import FunnelChart from '$lib/FunnelChart/FunnelChart.svelte';
+  import type { FunnelChartProperties } from '$lib/FunnelChart/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let {
+    chartAriaLabel,
+    chartAriaDescription,
+    ...props
+  }: Omit<FunnelChartProperties, 'ariaLabel' | 'ariaDescription'> & {
+    chartAriaLabel?: FunnelChartProperties['ariaLabel'];
+    chartAriaDescription?: FunnelChartProperties['ariaDescription'];
+  } = $props();
 
   /*
    * FunnelChart renders its own chart frame unless `isEmpty && typeof empty ===
@@ -87,13 +98,23 @@
   silently empty shadow root rather than as a build error.
 -->
 {#if hasEmptySlot}
-  <FunnelChart {...props} {...dispatchers}>
+  <FunnelChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet empty()}
       <slot name="empty"></slot>
     {/snippet}
   </FunnelChart>
 {:else}
-  <FunnelChart {...props} {...dispatchers} />
+  <FunnelChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  />
 {/if}
 
 <style>

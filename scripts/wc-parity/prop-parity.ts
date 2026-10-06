@@ -344,7 +344,11 @@ export const HOST_RESERVED_PROPS: ReadonlySet<string> = new Set([
   // Declaring it would replace the host's own `autofocus` (and its "focus this
   // element once inserted" browser behaviour) with the component's own meaning
   // of the name. Input.wc.svelte forwards it as `inputAutofocus` instead.
-  'autofocus'
+  'autofocus',
+  // Measured, not assumed: `'ariaDescription' in Element.prototype` is true in Chromium
+  // 148, Firefox 150 and WebKit 26.4. The charts' accessible-description prop is
+  // therefore exposed on the elements as `chartAriaDescription`.
+  'ariaDescription'
 ]);
 
 // The authoritative collision set: every existing DOM event-handler IDL

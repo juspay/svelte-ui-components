@@ -3,6 +3,8 @@
   import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { PieChartProperties } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
@@ -38,6 +40,8 @@
     empty,
     onsliceclick,
     onslicehover,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes,
     tooltipPortal = false,
@@ -62,6 +66,7 @@
   let chartHeight = $state(0);
   let hoveredIndex = $state<number | null>(null);
   let focusedIndex = $state<number | null>(null);
+  let focusedSlice = $state(false);
   let programmaticIndex = $state<number | null>(null);
   let mouseX = $state(0);
   let mouseY = $state(0);
@@ -135,6 +140,13 @@
         `${format(v)}\u00A0${pctFormat(v)}`
   );
   let isEmpty = $derived(data.length === 0 || total === 0);
+  let chartName = $derived(
+    resolveChartName(ariaLabel, defaultChartName('pie', { seriesNames: data.map((d) => d.label) }))
+  );
+  let hasMarks = $derived.by(() => !isEmpty && slices.length > 0);
+  // A center snippet can contain a real action even when the data is empty.
+  // Keep that child exposed; the empty slice geometry itself stays out of Tab.
+  let interactiveDrawing = $derived(hasMarks || typeof center === 'function');
 
   // When semiCircle is true the effective aspect ratio is driven by:
   // 1. The explicit `aspectRatio` prop (highest priority — always wins).
@@ -386,21 +398,20 @@
     };
   });
 
-  // ── Assistive-tech status region ───────────────────────────────
-  // Mirrors the tooltip's exact text (value AND percentage) into a live region
-  // every slice is described-by, so a screen reader user gets the same detail a
-  // pointer hover shows without needing pointer hover -- and, because it reads
-  // activeIndex rather than hoveredIndex, it also announces the declarative
-  // highlightedIndex prop and the imperative ChartHighlightAPI, neither of
-  // which fires a focus event of its own.
+  // A focused slice is spoken once, by its complete name. The shared status
+  // region is not a point description: that gave every unfocused slice the
+  // last-announced slice's text, and echoed it on focus. Keep the live region
+  // for pointer/legend and programmatic highlights, which lack that name.
   const statusId = `pie-status-${instanceId}`;
-  let statusText = $derived.by(() => {
-    if (activeIndex === null) {
-      return '';
-    }
-    const s = sliceAt(activeIndex);
-    return s === null ? '' : `${s.label}: ${format(s.value)} (${pctFormat(s.value)})`;
-  });
+  function sliceAriaLabel(index: number): string {
+    const slice = sliceAt(index);
+    return slice === null
+      ? ''
+      : `${slice.label}: ${format(slice.value)} (${pctFormat(slice.value)})`;
+  }
+  let statusText = $derived(
+    activeIndex === null || focusedSlice ? '' : sliceAriaLabel(activeIndex)
+  );
 
   // ── Interactions ───────────────────────────────────────────────
   // Family-wide contract shared with BarChart/FunnelChart/DualAxisBarChart:
@@ -457,8 +468,9 @@
   }
 
   // Wired to focus on both slices and legend rows.
-  function handleFocus(i: number) {
+  function handleFocus(i: number, slice = false) {
     focusedIndex = i;
+    focusedSlice = slice;
     notifyHoverChange();
   }
 
@@ -467,6 +479,7 @@
   // hovered.
   function handleBlur() {
     focusedIndex = null;
+    focusedSlice = false;
     notifyHoverChange();
   }
 
@@ -539,6 +552,9 @@
       aspectRatio={effectiveAspectRatio}
       {maxHeight}
       {minHeight}
+      ariaLabel={chartName}
+      {ariaDescription}
+      interactive={interactiveDrawing}
     >
       <g transform="translate({cx}, {cy})">
         {#each slices as slice (slice.index)}
@@ -548,28 +564,18 @@
             class:dimmed={activeIndex !== null && activeIndex !== slice.index}
             d={slice.path}
             fill={slice.color}
-            tabindex="0"
+            tabindex={hasMarks ? 0 : null}
             role="button"
-            aria-label="{slice.label}: {format(slice.value)}"
-            aria-describedby={statusId}
+            aria-hidden={hasMarks ? null : 'true'}
+            aria-label={sliceAriaLabel(slice.index)}
             onmouseenter={(e) => handlePointerEnter(e, slice.index)}
             onmousemove={trackMouse}
             onmouseleave={handlePointerLeave}
-            onfocus={() => handleFocus(slice.index)}
+            onfocus={() => handleFocus(slice.index, true)}
             onblur={handleBlur}
             onkeydown={(e) => handleKeydown(e, slice.index)}
             onclick={() => onsliceclick?.({ index: slice.index, slice: data[slice.index] })}
           />
-          {#if visibleSliceLabels.has(slice.index)}
-            <text
-              class="slice-label"
-              class:label-outside={labelPosition === 'outside'}
-              x={slice.labelX}
-              y={slice.labelY}
-              text-anchor="middle"
-              dominant-baseline="middle">{visibleSliceLabels.get(slice.index)}</text
-            >
-          {/if}
         {/each}
 
         {#if innerR > 0 && typeof center === 'function' && centerBoxSize > 0}
@@ -584,6 +590,22 @@
             </div>
           </foreignObject>
         {/if}
+        <!-- Labels and their plates paint after every slice and center surface. -->
+        {#each slices as slice (slice.index)}
+          {#if visibleSliceLabels.has(slice.index)}
+            <LabelPlate>
+              <text
+                class="slice-label"
+                aria-hidden="true"
+                class:label-outside={labelPosition === 'outside'}
+                x={slice.labelX}
+                y={slice.labelY}
+                text-anchor="middle"
+                dominant-baseline="middle">{visibleSliceLabels.get(slice.index)}</text
+              >
+            </LabelPlate>
+          {/if}
+        {/each}
       </g>
     </ChartContainer>
 

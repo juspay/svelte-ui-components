@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { installCopyResetClock, advanceCopyResetClock } from './support/copy-clock';
+import { prepareNativeClipboard, readNativeClipboard } from './support/native-browser';
 
 // Coverage for #574: the copy affordance was only reachable by also taking
 // Snippet's `<code>` box and `$` prompt, so consumers who wanted a bare copy
@@ -11,7 +13,8 @@ import { gotoHydrated } from './support/hydrated';
 // arrangement the issue says is impossible today.
 test.describe('createCopyState — copy affordance without the presentation', () => {
   test.beforeEach(async ({ page, context }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await installCopyResetClock(page);
+    await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/snippet');
   });
 
@@ -22,7 +25,7 @@ test.describe('createCopyState — copy affordance without the presentation', ()
     // Read the actual clipboard rather than trusting the label: the label is
     // what a hand-rolled duplicate also gets right, while a copy that never
     // reached the clipboard is the failure worth catching.
-    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    const clipboard = await readNativeClipboard(page);
     expect(clipboard).toBe('ssh://runner-04.internal.example.com:2222');
   });
 
@@ -41,6 +44,9 @@ test.describe('createCopyState — copy affordance without the presentation', ()
 
     // The demo passes copyResetMs=300, so this reverts well inside the
     // default 2000ms -- proving the option is read, not ignored.
+    await advanceCopyResetClock(page, 299);
+    await expect(button).toHaveText('Copied!');
+    await advanceCopyResetClock(page, 1);
     await expect(button).toHaveText('Copy', { timeout: 2000 });
   });
 

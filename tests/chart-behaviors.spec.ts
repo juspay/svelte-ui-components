@@ -65,18 +65,10 @@ test.describe('axis crowding', () => {
   test('crowded category labels rotate and thin instead of overlapping', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 720 });
     await gotoHydrated(page, '/components/bar-chart');
-    // The docs layout has no mobile breakpoint: wide <pre> blocks pin the
-    // content column near 800px, so the chart never actually narrows. Collapse
-    // the chrome (same override as the visual mobile project) so the chart
-    // genuinely renders at viewport width, where thinning must engage.
-    await page.addStyleTag({
-      content: [
-        '.app-layout { grid-template-columns: 1fr !important; }',
-        '.sidebar { display: none !important; }',
-        'main, .content { min-width: 0 !important; max-width: 100vw !important; }',
-        'pre, table { max-width: 100% !important; overflow-x: auto !important; }'
-      ].join(' ')
-    });
+    // The shell's own phone layout is what narrows the chart here: its sidebar
+    // collapses into a drawer below 768px and the content column takes the
+    // viewport. This used to inject CSS hiding the sidebar, because the shell had
+    // no mobile layout; that proved nothing about the shell and is gone.
     const chart = page.getByTestId('bar-crowded-chart');
     // 18 bars always render; the axis rotates labels and shows a thinned subset.
     await expect(chart.getByTestId(/^bar-\d+$/)).toHaveCount(18);

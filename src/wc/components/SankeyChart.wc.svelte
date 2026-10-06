@@ -23,6 +23,9 @@
       firstColumnLabelSide: { type: 'String', attribute: 'first-column-label-side' },
       lastColumnLabelSide: { type: 'String', attribute: 'last-column-label-side' },
       marginX: { type: 'Number', attribute: 'margin-x' },
+      // Chart-specific aliases preserve the host's native ARIAMixin accessors.
+      chartAriaLabel: { type: 'String', attribute: 'chart-aria-label' },
+      chartAriaDescription: { type: 'String', attribute: 'chart-aria-description' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       valueFormat: { type: 'Object' },
@@ -40,9 +43,17 @@
 
 <script lang="ts">
   import SankeyChart from '$lib/SankeyChart/SankeyChart.svelte';
+  import type { SankeyChartProperties } from '$lib/SankeyChart/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let {
+    chartAriaLabel,
+    chartAriaDescription,
+    ...props
+  }: Omit<SankeyChartProperties, 'ariaLabel' | 'ariaDescription'> & {
+    chartAriaLabel?: SankeyChartProperties['ariaLabel'];
+    chartAriaDescription?: SankeyChartProperties['ariaDescription'];
+  } = $props();
 
   /*
    * SankeyChart renders its empty state only when `typeof empty === 'function'`,
@@ -83,13 +94,23 @@
   silently empty shadow root rather than as a build error.
 -->
 {#if hasEmptySlot}
-  <SankeyChart {...props} {...dispatchers}>
+  <SankeyChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet empty()}
       <slot name="empty"></slot>
     {/snippet}
   </SankeyChart>
 {:else}
-  <SankeyChart {...props} {...dispatchers} />
+  <SankeyChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  />
 {/if}
 
 <style>

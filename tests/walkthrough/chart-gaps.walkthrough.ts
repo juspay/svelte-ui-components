@@ -110,7 +110,7 @@ test('PieChart treats a non-finite slice value as a zero contribution instead of
 
   const safariSlice = slices.nth(1);
   await highlight(safariSlice);
-  await expect(safariSlice).toHaveAttribute('aria-label', 'Safari: 0');
+  await expect(safariSlice).toHaveAttribute('aria-label', 'Safari: 0 (0%)');
 
   const sliceDs = await slices.evaluateAll((nodes) => nodes.map((n) => n.getAttribute('d') ?? ''));
   for (const d of sliceDs) {
@@ -123,7 +123,7 @@ test('PieChart treats a non-finite slice value as a zero contribution instead of
   );
   const chromeSlice = slices.nth(0);
   await highlight(chromeSlice);
-  await expect(chromeSlice).toHaveAttribute('aria-label', 'Chrome: 65');
+  await expect(chromeSlice).toHaveAttribute('aria-label', 'Chrome: 65 (80%)');
 
   const safariLegendValue = chart.locator('.pie-legend-row').nth(1).locator('.pie-legend-value');
   await expect(safariLegendValue).toContainText('0%');

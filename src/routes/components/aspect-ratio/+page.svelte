@@ -17,6 +17,11 @@
   </AspectRatio>
 </div>
 
+<p>
+  In padded flex containers, use <code>box-sizing: border-box</code> on the container so percentage widths
+  reserve the configured ratio consistently across browsers.
+</p>
+
 <h2>Square (default ratio)</h2>
 <div class="demo-row" style="max-width: 240px;">
   <AspectRatio testId="aspect-ratio-square-demo">

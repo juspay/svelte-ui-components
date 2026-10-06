@@ -195,7 +195,7 @@ caller owns semantic markup, accessible names and diff rendering. For HTML consu
 | `--hitl-param-value-line-height`       | `1.4`               | Parameter value line height.                                                                      |
 | `--hitl-param-value-word-spacing`      | `normal`            | Parameter value word spacing.                                                                     |
 | `--hitl-param-value-text-transform`    | `capitalize`        | Parameter value text transform; `none` shows commands and paths verbatim.                         |
-| `--hitl-buttons-gap`                   | `0.75rem`           | Gap between the confirm/cancel buttons.                                                           |
+| `--hitl-buttons-gap`                   | `0.75rem`           | Gap between the action buttons, and between rows when they wrap on a narrow card.                 |
 | `--hitl-reply-gap`                     | `0.5rem`            | Gap between the reply input and its Back/Send row (ask-for-text actions).                         |
 | `--hitl-questions-gap`                 | `0.75rem`           | Gap between questions.                                                                            |
 | `--hitl-question-gap`                  | `0.375rem`          | Gap between a question's header, text and options.                                                |
@@ -213,7 +213,7 @@ caller owns semantic markup, accessible names and diff rendering. For HTML consu
 | `--hitl-slide-in-animation-easing`     | `ease-out`          | Easing curve of the card's entrance slide-in animation. Falls back through `--motion-easing`.     |
 | `--hitl-completion-animation-duration` | `0.3s`              | Duration of the completion banner's fade-in animation. Falls back through `--motion-duration`.    |
 | `--hitl-completion-animation-easing`   | `ease-in-out`       | Easing curve of the completion banner's fade-in animation. Falls back through `--motion-easing`.  |
-| `--hitl-buttons-wrap`                  | `nowrap`            | Whether the action button row (`actions`, cancel, confirm) wraps onto a new line on narrow cards. |
+| `--hitl-buttons-wrap`                  | `wrap`              | Wraps the action button row onto a new line on narrow cards; `nowrap` keeps one line.             |
 
 ## Notes
 

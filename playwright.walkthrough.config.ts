@@ -21,13 +21,22 @@ import { FUNCTIONAL, playwrightPort, reuseExistingServer } from './scripts/pw-po
 // output, and the two commands are run one after the other rather than together.
 const port = playwrightPort(FUNCTIONAL);
 
+if (process.env.SUI_USE_EXISTING_SERVER === '1' && !process.env.PW_PORT) {
+  throw new Error(
+    'SUI_USE_EXISTING_SERVER requires an explicit PW_PORT and a verified existing build.'
+  );
+}
+
 const config: PlaywrightTestConfig = {
-  webServer: {
-    command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
-    port,
-    reuseExistingServer: reuseExistingServer(),
-    timeout: 180_000
-  },
+  webServer:
+    process.env.SUI_USE_EXISTING_SERVER === '1'
+      ? []
+      : {
+          command: `pnpm run build && pnpm run preview --port ${port} --strictPort`,
+          port,
+          reuseExistingServer: reuseExistingServer(),
+          timeout: 180_000
+        },
   testDir: 'tests/walkthrough',
   testMatch: /.*\.walkthrough\.ts/,
   // A walkthrough spends most of its time deliberately waiting, so the functional
@@ -42,7 +51,7 @@ const config: PlaywrightTestConfig = {
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-walkthrough' }]],
   outputDir: 'test-results-walkthrough',
   use: {
-    baseURL: `http://localhost:${port}`,
+    baseURL: `http://${process.env.SUI_USE_EXISTING_SERVER === '1' ? '127.0.0.1' : 'localhost'}:${port}`,
     testIdAttribute: 'data-pw',
     // 1280x720 rather than the 800x450 default: these are watched full-size in a
     // PR comment, where 800x450 renders component text too small to read.

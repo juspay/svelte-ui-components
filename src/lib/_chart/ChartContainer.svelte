@@ -10,8 +10,24 @@
     maxHeight = Infinity,
     testId,
     classes,
+    ariaLabel,
+    ariaDescription,
+    interactive = false,
     children
   }: ChartContainerProperties = $props();
+
+  // Instance-scoped, hydration-safe id for the <desc> element that
+  // `aria-describedby` points at. Two charts on one page (or in two shadow
+  // roots) must never resolve each other's description.
+  const instanceId = $props.id();
+  const descriptionId = `chart-desc-${instanceId}`;
+
+  // Whitespace-only strings are treated as absent so an empty prop never
+  // produces `aria-label=""`, which is a name of nothing rather than no name.
+  let name = $derived(typeof ariaLabel === 'string' && ariaLabel.trim() !== '' ? ariaLabel : null);
+  let description = $derived(
+    typeof ariaDescription === 'string' && ariaDescription.trim() !== '' ? ariaDescription : null
+  );
 
   let containerEl: HTMLDivElement | null = $state(null);
   let isMounted = false;
@@ -35,6 +51,7 @@
     // changes, so the computed height stays current without waiting for a resize.
     void aspectRatio;
     void maxHeight;
+    void minHeight;
     if (isMounted) {
       measure();
     }
@@ -72,13 +89,27 @@
   testID={typeof testId === 'string' ? testId : null}
 >
   {#if width > 0 && height > 0}
+    <!--
+      `role="img"` makes its descendants presentational, so a drawing that holds
+      focusable marks must not use it: the marks are either dropped from the
+      accessibility tree or announced differently per browser, and axe reports
+      the nesting as `nested-interactive`. An interactive drawing is therefore a
+      named `group` whose children stay real controls; a static one stays a
+      named image. Either way the name sits on the <svg> itself -- a named
+      wrapper elsewhere does not name the image inside it.
+    -->
     <svg
       viewBox="0 0 {width} {height}"
       preserveAspectRatio="xMidYMid meet"
-      role="img"
+      role={interactive ? 'group' : 'img'}
+      aria-label={name}
+      aria-describedby={description === null ? null : descriptionId}
       {width}
       {height}
     >
+      {#if description !== null}
+        <desc id={descriptionId}>{description}</desc>
+      {/if}
       {@render children()}
     </svg>
   {/if}

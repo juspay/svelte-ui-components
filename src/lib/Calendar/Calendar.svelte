@@ -26,6 +26,25 @@
     initialMonth = null
   }: CalendarProperties = $props();
 
+  type DayInfo = {
+    date: Date;
+    day: number;
+    isCurrentMonth: boolean;
+    isToday: boolean;
+    isDisabled: boolean;
+    isSelected: boolean;
+    isRangeStart: boolean;
+    isRangeEnd: boolean;
+    isInRange: boolean;
+  };
+
+  // The grid is named by the visible month heading (aria-labelledby), and the heading
+  // announces month changes. Per-instance, because two calendars on one page (the
+  // DateRangePicker mounts two) would otherwise resolve to whichever matching id
+  // comes first in the root.
+  const uid = $props.id();
+  const headerId = `calendar-heading-${uid}`;
+
   const now = new SvelteDate();
   // Intentionally read initialMonth once (untracked) — it seeds the display month at mount
   // and subsequent prop changes should not navigate the calendar (user navigates via the buttons).
@@ -48,15 +67,28 @@
   }
 
   const dayNameFormatter = $derived(new Intl.DateTimeFormat(locale, { weekday: 'short' }));
+  const fullDayNameFormatter = $derived(new Intl.DateTimeFormat(locale, { weekday: 'long' }));
+
+  // `toLocaleDateString()` alone gives "6/15/2024" -- ambiguous between day-first and
+  // month-first locales and with no weekday or month name for a screen reader to
+  // anchor on. The long form names the weekday, month, day and year.
+  const dateLabelFormatter = $derived(
+    new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  );
 
   const monthYearFormatter = $derived(
     new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
   );
 
-  let dayNames: string[] = $derived(
+  let dayNames: { short: string; full: string }[] = $derived(
     Array.from({ length: 7 }, (_, i) => {
       const d = new SvelteDate(2024, 0, 7 + weekStartsOn + i);
-      return dayNameFormatter.format(d);
+      return { short: dayNameFormatter.format(d), full: fullDayNameFormatter.format(d) };
     })
   );
 
@@ -79,18 +111,6 @@
 
     const normStart = rangeStart !== null ? normalizeDate(rangeStart) : null;
     const normEnd = rangeEnd !== null ? normalizeDate(rangeEnd) : null;
-
-    type DayInfo = {
-      date: Date;
-      day: number;
-      isCurrentMonth: boolean;
-      isToday: boolean;
-      isDisabled: boolean;
-      isSelected: boolean;
-      isRangeStart: boolean;
-      isRangeEnd: boolean;
-      isInRange: boolean;
-    };
 
     function fillerDay(year: number, month: number, day: number): DayInfo {
       const date = new SvelteDate(year, month, day);
@@ -147,6 +167,15 @@
 
     return days;
   });
+
+  // ARIA requires gridcells to sit in rows. Chunking the flat day list keeps the
+  // arithmetic above untouched; the leading and trailing filler days already pad the
+  // list to a multiple of seven, so every row is full.
+  const weeks: DayInfo[][] = $derived(
+    Array.from({ length: calendarDays.length / 7 }, (_, row) =>
+      calendarDays.slice(row * 7, row * 7 + 7)
+    )
+  );
 
   // A calendar grid is one tab stop, the same roving-tabindex pattern Tabs uses: the
   // day being actively navigated while inside the grid, else the selected day, else
@@ -362,7 +391,7 @@
         {/if}
       </Button>
     </div>
-    <span class="header-label">{headerLabel}</span>
+    <span class="header-label" id={headerId} aria-live="polite">{headerLabel}</span>
     <div class="nav-button nav-next">
       <Button
         onclick={() => navigateMonth(1)}
@@ -379,41 +408,75 @@
     </div>
   </div>
 
-  <div class="day-names">
-    {#each dayNames as name (name)}
-      <div class="day-name">{name}</div>
-    {/each}
-  </div>
-
+  <!--
+    A valid ARIA grid is grid > row > (columnheader | gridcell). The weekday names live
+    inside the grid as the first row, and every date sits in a gridcell inside a week row.
+    The rows are real boxes (display: grid), never display: contents, which browsers have
+    dropped from the accessibility tree before. Each gridcell wraps the date button
+    rather than replacing it: a native <button> keeps its disabled and click behaviour,
+    and aria-selected / aria-disabled belong on the cell because a button supports
+    neither aria-selected nor a cell-level disabled state.
+  -->
   <div
     class="grid"
     bind:this={gridRef}
     tabindex={tabStopDay === null ? 0 : -1}
     role="grid"
+    aria-labelledby={headerId}
+    aria-multiselectable={mode === 'range' ? 'true' : null}
     onkeydown={handleKeyDown}
   >
-    {#each calendarDays as dayInfo (dayInfo.date.getTime())}
-      {#if dayInfo.isCurrentMonth}
-        <button
-          type="button"
-          class="cell"
-          class:today={dayInfo.isToday}
-          class:selected={dayInfo.isSelected}
-          class:range-start={dayInfo.isRangeStart}
-          class:range-end={dayInfo.isRangeEnd}
-          class:in-range={dayInfo.isInRange}
-          class:disabled={dayInfo.isDisabled}
-          data-day={dayInfo.day}
-          disabled={dayInfo.isDisabled}
-          tabindex={tabStopDay === dayInfo.day ? 0 : -1}
-          aria-label={dayInfo.date.toLocaleDateString(locale)}
-          onclick={() => selectDate(dayInfo.date)}
-        >
-          {dayInfo.day}
-        </button>
-      {:else}
-        <span class="cell outside-month">{dayInfo.day}</span>
-      {/if}
+    <div class="row day-names" role="row">
+      {#each dayNames as name, i (i)}
+        <div class="day-name" role="columnheader" aria-label={name.full}>{name.short}</div>
+      {/each}
+    </div>
+    {#each weeks as week (week[0].date.getTime())}
+      <div class="row week" role="row">
+        {#each week as dayInfo (dayInfo.date.getTime())}
+          {#if dayInfo.isCurrentMonth}
+            <div
+              class="cell-slot"
+              role="gridcell"
+              aria-selected={dayInfo.isSelected ||
+              dayInfo.isRangeStart ||
+              dayInfo.isRangeEnd ||
+              dayInfo.isInRange
+                ? 'true'
+                : 'false'}
+              aria-disabled={dayInfo.isDisabled ? 'true' : null}
+            >
+              <button
+                type="button"
+                class="cell"
+                class:today={dayInfo.isToday}
+                class:selected={dayInfo.isSelected}
+                class:range-start={dayInfo.isRangeStart}
+                class:range-end={dayInfo.isRangeEnd}
+                class:in-range={dayInfo.isInRange}
+                class:disabled={dayInfo.isDisabled}
+                data-day={dayInfo.day}
+                disabled={dayInfo.isDisabled}
+                tabindex={tabStopDay === dayInfo.day ? 0 : -1}
+                aria-label={dateLabelFormatter.format(dayInfo.date)}
+                aria-current={dayInfo.isToday ? 'date' : null}
+                onclick={() => selectDate(dayInfo.date)}
+              >
+                {dayInfo.day}
+              </button>
+            </div>
+          {:else}
+            <div
+              class="cell-slot"
+              role="gridcell"
+              aria-disabled="true"
+              aria-label={dateLabelFormatter.format(dayInfo.date)}
+            >
+              <span class="cell outside-month">{dayInfo.day}</span>
+            </div>
+          {/if}
+        {/each}
+      </div>
     {/each}
   </div>
 </div>
@@ -463,17 +526,27 @@
   /* Size the columns to the cell, not 1fr, and centre the whole grid. With 1fr
      columns the fixed-width cells sat centred inside wider tracks, leaving
      horizontal gaps between days — which broke the range highlight into
-     disconnected boxes instead of one continuous pill. The day-name header must
-     use the same track sizing so it stays aligned with the day grid below.
+     disconnected boxes instead of one continuous pill. The weekday-name row uses
+     the same track sizing as the week rows so it stays aligned with the days below.
+     Each row is its own grid (a real box, so the role="row" semantics survive); the
+     .grid wrapper just stacks them.
 
      A host that wants the grid to fill a container sets both
      --calendar-grid-columns and --calendar-cell-width: fluid columns with the
      default fixed-width cells bring those gaps back, so the cells must be told
      to fill their tracks too. */
-  .day-names {
+  .grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .row {
     display: grid;
     grid-template-columns: var(--calendar-grid-columns, repeat(7, var(--calendar-cell-size, 36px)));
     justify-content: center;
+  }
+
+  .day-names {
     text-align: center;
   }
 
@@ -484,11 +557,11 @@
     padding: var(--calendar-day-name-padding, 4px 0);
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: var(--calendar-grid-columns, repeat(7, var(--calendar-cell-size, 36px)));
-    justify-content: center;
-    row-gap: 2px;
+  /* The gap between week rows. It was `row-gap: 2px` on the single day grid; with one
+     element per row it is a margin between consecutive weeks, which leaves the
+     weekday-name row flush against the first week exactly as before. */
+  .week + .week {
+    margin-top: 2px;
   }
 
   .cell {

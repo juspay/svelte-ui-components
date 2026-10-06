@@ -61,7 +61,7 @@ describe('PieChart keyboard access', () => {
     expect(onsliceclick).toHaveBeenCalledTimes(2);
   });
 
-  it('publishes the focused datum through a live status region for assistive tech', async () => {
+  it('announces a focused slice once by its complete name without a live-region echo', async () => {
     const { container } = render(PieChart, { data });
     const status = container.querySelector('[data-pw="pie-status"]');
     expect(status).not.toBeNull();
@@ -70,11 +70,34 @@ describe('PieChart keyboard access', () => {
     expect(status?.textContent?.trim()).toBe('');
 
     const first = container.querySelectorAll('path.slice')[0];
-    expect(first.getAttribute('aria-describedby')).toBe(status?.id);
+    expect(first.hasAttribute('aria-describedby')).toBe(false);
+    expect(first.getAttribute('aria-label')).toBe('Alpha: 10 (17%)');
     await fireEvent.focus(first);
-    expect(status?.textContent).toContain('Alpha');
+    expect(status?.textContent?.trim()).toBe('');
 
     await fireEvent.blur(first);
+    await fireEvent.mouseEnter(first);
+    expect(status?.textContent?.trim()).toBe('Alpha: 10 (17%)');
+    await fireEvent.mouseLeave(first);
     expect(status?.textContent?.trim()).toBe('');
+  });
+  it('keeps declarative and imperative highlights available through the one live region', async () => {
+    let highlight: ((index: number | null) => void) | null = null;
+    const { container, rerender } = render(PieChart, {
+      data,
+      highlightedIndex: 1,
+      onchartready: (api) => {
+        highlight = api.highlight;
+      }
+    });
+    const status = container.querySelector('[data-pw="pie-status"]');
+    expect(status?.textContent?.trim()).toBe('Beta: 20 (33%)');
+    await rerender({ highlightedIndex: null });
+    if (highlight === null) {
+      throw new Error('chartready was not called');
+    }
+    (highlight as (index: number | null) => void)(2);
+    await rerender({ highlightedIndex: null });
+    expect(status?.textContent?.trim()).toBe('Gamma: 30 (50%)');
   });
 });

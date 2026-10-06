@@ -19,5 +19,10 @@
     "sourceMap": false
   },
   "include": ["./*.ts"],
-  "exclude": ["./*.test.ts", "./generate-maps.ts", "./generate-migration-assets.ts"]
+  "exclude": [
+    "./*.test.ts",
+    "./*.test-support.ts",
+    "./generate-maps.ts",
+    "./generate-migration-assets.ts"
+  ]
 }

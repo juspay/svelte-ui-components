@@ -40,6 +40,10 @@
   <Checkbox text="Indeterminate" bind:indeterminate={checkboxIndeterminate} checked={false} />
   <Checkbox text="Checked disabled" checked disabled />
 </div>
+<p data-pw="checkbox-bound-state">Bound checked: {checkboxChecked}</p>
+<button type="button" data-pw="checkbox-bound-reset" onclick={() => (checkboxChecked = false)}>
+  Reset bound checkbox
+</button>
 
 <h3>Controlled</h3>
 <div class="demo-row">

@@ -422,14 +422,21 @@ export function prefersReducedMotion(): boolean {
  * dismissal must be acted on at once, and the repeats it guards against are the
  * ones to discard.
  *
+ * `delay` may be a function, read on every call, for a caller whose delay can
+ * change after the debouncer exists. The window is then measured against the
+ * delay in force now, while `lastCallTime` stays the one debouncer's own: a
+ * caller rebuilding the debouncer to pick up a new delay would also forget when
+ * it last fired, and let through the very repeat it exists to drop.
+ *
  * Not exported from the package; renaming it is a free change whenever the
  * mismatch stops being worth the note.
  */
-export function createDebouncer(delay: number) {
+export function createDebouncer(delay: number | (() => number)) {
   let lastCallTime = 0;
   return function <T extends unknown[]>(callback: (...args: T) => void, ...args: T) {
     const now = Date.now();
-    if (now - lastCallTime > delay) {
+    const currentDelay = typeof delay === 'function' ? delay() : delay;
+    if (now - lastCallTime > currentDelay) {
       lastCallTime = now;
       callback(...args);
     }

@@ -12,6 +12,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       splitInputAriaLabel: { type: 'String', attribute: 'aria-label' },
+      positionLabel: { type: 'Object' },
       errorMessage: { type: 'String', attribute: 'error-message' },
       infoMessage: { type: 'String', attribute: 'info-message' },
       invalid: { type: 'Boolean', reflect: true },

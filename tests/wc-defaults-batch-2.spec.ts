@@ -465,8 +465,8 @@ test.describe('sui-scroller restores its own defaults', () => {
 
       const container = q('.scroll-container');
       if (container instanceof HTMLElement) {
-        container.scrollLeft = container.scrollWidth;
-        container.dispatchEvent(new Event('scroll'));
+        container.scrollTo({ left: container.scrollWidth, behavior: 'instant' });
+        await waitUntil(() => container.scrollLeft > 0);
       }
       await waitUntil(() => q('.arrow-prev .arrow-icon svg') !== null);
       const prevSvg = q('.arrow-prev .arrow-icon svg') !== null;
@@ -531,8 +531,8 @@ test.describe('sui-scroller restores its own defaults', () => {
 
       const container = q('.scroll-container');
       if (container instanceof HTMLElement) {
-        container.scrollLeft = container.scrollWidth;
-        container.dispatchEvent(new Event('scroll'));
+        container.scrollTo({ left: container.scrollWidth, behavior: 'instant' });
+        await waitUntil(() => container.scrollLeft > 0);
       }
       await waitUntil(() => q('slot[name="arrow-previous"]') !== null);
       const prevSlot = q('slot[name="arrow-previous"]');

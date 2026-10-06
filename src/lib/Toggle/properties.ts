@@ -31,6 +31,8 @@ export type OptionalToggleProperties = {
   id?: string;
   /** Names the switch for assistive technology when it has no visible text. */
   ariaLabel?: string;
+  /** Optional semantics on the native checkbox; default keeps its checkbox role. */
+  inputRole?: 'checkbox' | 'switch';
   /**
    * References a label in the same DOM root as the checkbox. `<sui-toggle>` exposes this as
    * `inputAriaLabelledby` (`input-aria-labelledby`); it cannot reach the host document, so use

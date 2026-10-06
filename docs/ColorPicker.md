@@ -18,6 +18,7 @@ A color picker component that lets the user select a color using a saturation/br
 | ------------ | ---------------- | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | value        | `string`         | Yes      | `'#000000'` | Bindable. The current color as a 7-character HEX string (e.g. `#3b82f6`). Two-way bound so parent components can read and write the selected color — assigning a new value from outside moves the saturation panel and hue slider to match, the same as a user's own drag would. |
 | label        | `string`         | No       | `-`         | Optional text label rendered above the trigger row. When provided, a `<span>` with the label text appears above the swatch button.                                                                                                                                               |
+| ariaLabel    | `string`         | No       | `-`         | Names the picker when it has no visible `label` -- a swatch-only picker, say. Every control inside is named from `label` if there is one, else this, so several pickers on a page can be told apart. See [Accessible names](#accessible-names).                                  |
 | disabled     | `boolean`        | No       | `false`     | Whether the color picker is disabled. When true, the trigger button cannot be clicked, the popover cannot open, and the component is visually dimmed.                                                                                                                            |
 | showValue    | `boolean`        | No       | `false`     | Whether to display a text input beside the swatch showing the current HEX value. When true, the user can type a HEX value directly into the inline input.                                                                                                                        |
 | testId       | `string`         | No       | `-`         | Value for the `data-pw` attribute on the container element, used for end-to-end testing selectors.                                                                                                                                                                               |
@@ -72,6 +73,27 @@ Override these custom properties to theme the component.
 | `--color-picker-field-focus-border`          | `#3b82f6`                                                          | border-color   | Border color of the popover input fields when focused.                                         |
 | `--color-picker-field-label-color`           | `#9ca3af`                                                          | color          | Text color of the field labels (HEX, R, G, B, H, S, L) and the mode toggle button icon.        |
 
+## Accessible names
+
+Each control is named by its purpose, and by the picker's name when it has one (`label`, else
+`ariaLabel`):
+
+| Control                                    | With a name (`label="Brand color"`)                            | With no name      |
+| ------------------------------------------ | -------------------------------------------------------------- | ----------------- |
+| Swatch trigger button                      | `Pick a color: Brand color`                                    | `Pick a color`    |
+| Inline hex input (`showValue`)             | `Brand color hex value`                                        | `Color hex value` |
+| Popover dialog                             | `Brand color picker`                                           | `Color picker`    |
+| Saturation and brightness panel (`slider`) | `Saturation and brightness`                                    | same              |
+| Hue slider                                 | `Hue`                                                          | same              |
+| HEX field in the popover                   | `Hex value`                                                    | same              |
+| RGB boxes (group `RGB channels`)           | `Red`, `Green`, `Blue`                                         | same              |
+| HSL boxes (group `HSL channels`)           | `Hue (degrees)`, `Saturation (percent)`, `Lightness (percent)` | same              |
+| Mode toggle button                         | `Switch color mode`                                            | same              |
+
+The popover controls sit inside the named dialog, so they do not repeat the picker's name. Give
+every picker on a page its own `label` or `ariaLabel`: with none, two pickers expose identical
+`Pick a color` buttons and `Color hex value` fields.
+
 ## Keyboard Interactions (saturation/brightness panel)
 
 The panel is `role="slider"` and focusable (`tabindex="0"`). While it has focus:
@@ -116,4 +138,4 @@ Available as `<sui-color-picker>`.
 ></sui-color-picker>
 ```
 
-Attributes are kebab-case: `show-value`, `test-id`. `onchange` / `oninput` are set as properties, and neither dispatches a DOM event: both are already `HTMLElement`'s own native events, so `colorPicker.addEventListener('change', ...)` registers without error but is never called by this component -- assign the property instead.
+Attributes are kebab-case: `show-value`, `test-id`. `aria-label` names a picker that has no `label`, exactly as `ariaLabel` does in Svelte (the wrapper renames it internally because `ariaLabel` is already an `HTMLElement` property). `onchange` / `oninput` are set as properties, and neither dispatches a DOM event: both are already `HTMLElement`'s own native events, so `colorPicker.addEventListener('change', ...)` registers without error but is never called by this component -- assign the property instead.

@@ -45,6 +45,18 @@ disabled by `minDate`, `maxDate`, or `disabledDates`. The search for the next en
 is capped (not open-ended), so a `disabledDates` predicate that disables every reachable
 day makes the arrow keys a no-op instead of hanging.
 
+## Accessibility
+
+The day matrix is a valid ARIA grid, `grid` > `row` > `columnheader` / `gridcell`, so assistive technology can navigate and announce it as a table of dates:
+
+- The weekday names are the grid's first `row` of `columnheader`s. The visible text is the short name (`Sun`), the accessible name is the full one (`Sunday`). Every following `row` holds exactly seven `gridcell`s — the leading and trailing days of the neighbouring months fill the partial first and last weeks, so no row is ever short.
+- The grid is named by the visible month heading (`aria-labelledby`), for example "June 2024". The heading is an `aria-live="polite"` region, so a screen reader announces the new month after Previous/Next or after an arrow key crosses a month boundary. The heading id is generated per instance, so two calendars on one page — a `DateRangePicker` mounts two — never name each other's grid. The name survives a consumer hiding the heading with `--calendar-header-display: none`.
+- Each date is a native `<button>` inside its `gridcell`, named with the full date in the `locale` you pass, such as "Saturday, June 15, 2024" (`Samstag, 15. Juni 2024` for `de-DE`). It replaces the old numeric `6/15/2024` form, which was ambiguous between day-first and month-first locales and gave a screen reader no weekday or month name to anchor on. The day number stays the visible text.
+- **Selected** is `aria-selected="true"` on the `gridcell` (`"false"` on every other date, as the grid pattern asks). In `mode="range"` the start, the end and every day between them are selected, and the grid is `aria-multiselectable="true"`.
+- **Today** is `aria-current="date"` on its date button.
+- **Disabled** days (`minDate`, `maxDate`, `disabledDates`) keep the native `disabled` attribute on the button — unreachable by Tab and not clickable — and add `aria-disabled="true"` on the `gridcell`, which is where a grid reports a cell's state. The other-month filler days are disabled `gridcell`s too, named with their own full date, with no button to focus or click.
+- The rows are real boxes, not `display: contents`, so the row and cell semantics stay in the browser's accessibility tree. The layout, the keyboard behaviour above and the CSS variables below are unchanged.
+
 ## Props
 
 | Prop          | Type                                  | Required | Default       | Description                                                                                                                                                                                                                |
@@ -103,7 +115,7 @@ Override these custom properties to theme the component.
 | `--calendar-nav-button-hover-background` | `#f0f0f0`           | background-color | Background color of the navigation arrows on hover.                                     |
 | `--calendar-day-name-font-size`          | `12px`              | font-size        | Font size of the day-of-week header labels (Sun, Mon, etc.).                            |
 | `--calendar-day-name-font-weight`        | `600`               | font-weight      | Font weight of the day-of-week header labels.                                           |
-| `--calendar-day-name-color`              | `#999999`           | color            | Text color of the day-of-week header labels.                                            |
+| `--calendar-day-name-color`              | `#595959`           | color            | Text color of the day-of-week header labels.                                            |
 | `--calendar-day-name-padding`            | `4px 0`             | padding          | Padding of each day-of-week header cell.                                                |
 | `--calendar-cell-size`                   | `36px`              | width, height    | Size of each day number cell in the grid.                                               |
 | `--calendar-cell-font-size`              | `14px`              | font-size        | Font size of the day numbers.                                                           |
@@ -122,7 +134,7 @@ Override these custom properties to theme the component.
 | `--calendar-range-end-color`             | `#ffffff`           | color            | Text color of the range end date cell.                                                  |
 | `--calendar-disabled-color`              | `#949494`           | color            | Text color of disabled and out-of-range day numbers.                                    |
 | `--calendar-disabled-cursor`             | `not-allowed`       | cursor           | Cursor shown when hovering over disabled day cells.                                     |
-| `--calendar-outside-month-color`         | `#949494`           | color            | Text color of day numbers that belong to the previous or next month.                    |
+| `--calendar-outside-month-color`         | `#6b7280`           | color            | Text color of day numbers that belong to the previous or next month.                    |
 
 ### Fluid grid
 

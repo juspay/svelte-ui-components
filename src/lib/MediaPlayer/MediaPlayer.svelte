@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
   import playSvg from '$lib/assets/play.svg?raw';
@@ -7,6 +8,8 @@
   import muteSvg from '$lib/assets/mute.svg?raw';
   import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
   import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
+  import captionsSvg from '$lib/assets/captions.svg?raw';
+  import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
   import Slider from '../Slider/Slider.svelte';
   import type { MediaPlayerProperties } from './properties';
 
@@ -27,6 +30,10 @@
     captionsSrc,
     captionsLabel,
     captionsSrcLang,
+    captionsButton = false,
+    captionsVisible = $bindable(false),
+    captionsIcon,
+    captionsOnIcon,
     seekBar = false,
     timeDisplay = false,
     fullscreenButton = false,
@@ -37,6 +44,7 @@
     onplay,
     onpause,
     onvolumechange,
+    oncaptionschange,
     onseek,
     ontimeupdate,
     onfullscreenchange,
@@ -117,6 +125,82 @@
     muted = !muted;
     onvolumechange?.(muted);
   }
+
+  // The `<track>` is optional, so the element that owns the TextTrack is bound rather than
+  // looked up: it is null exactly when no captions were supplied.
+  let captionTrack: HTMLTrackElement | null = $state(null);
+  const hasCaptions = $derived(typeof captionsSrc === 'string' && captionsSrc.length > 0);
+
+  function toggleCaptions(): void {
+    captionsVisible = !captionsVisible;
+    oncaptionschange?.(captionsVisible);
+  }
+
+  /**
+   * The track -> `captionsVisible`. Under native `controls` the browser's own menu changes
+   * `mode` without going through this component, and a browser or OS preference for
+   * captions can turn a track on by itself; the list's `change` event is how either reaches
+   * the bound value (it fires for programmatic writes too, which land on the early return).
+   * `oncaptionschange` fires from here only for a change the component did not just make
+   * itself, so a host's own write is never echoed back as a viewer's choice.
+   *
+   * The one-time read at the top covers a track already `showing` before this listener is
+   * attached -- the event does not replay. It runs untracked: reading `captionsVisible`
+   * here would re-run this effect on every host write and flip a pending hide back to
+   * `true` before the effect below has applied it.
+   */
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    const textTrack = captionTrack?.track;
+    const trackList = videoPlayer?.textTracks;
+    if (!textTrack || !trackList) {
+      return;
+    }
+    // An arrow, not a declaration: only a `const` keeps the narrowing of `textTrack` above.
+    const mirrorTrackMode = (): void => {
+      const showing = textTrack.mode === 'showing';
+      if (showing === captionsVisible) {
+        return;
+      }
+      captionsVisible = showing;
+      oncaptionschange?.(showing);
+    };
+    untrack(() => {
+      if (textTrack.mode === 'showing') {
+        mirrorTrackMode();
+      }
+    });
+    trackList.addEventListener('change', mirrorTrackMode);
+    return () => trackList.removeEventListener('change', mirrorTrackMode);
+  });
+
+  /**
+   * `captionsVisible` -> the track. A `<track>` without `default` starts `disabled`, which
+   * is why the shipped example had captions that nothing could turn on. Writing `showing`
+   * is what makes the browser fetch the VTT and paint cues; `hidden` keeps the cues loaded
+   * but unpainted, so showing them again is instant.
+   *
+   * Declared AFTER the effect that mirrors the track into `captionsVisible`, deliberately:
+   * effects run in declaration order, and a track the browser already chose to show (an
+   * accessibility preference for captions) has to be adopted by that one first, or this one would
+   * read the default `false` and hide it.
+   *
+   * Skipped while the two already agree. That is what leaves a `disabled` track alone for
+   * a player nobody asked to show captions on, rather than rewriting it to `hidden` for no
+   * reader's benefit, and it stops this from fighting the `change` listener above.
+   */
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    const textTrack = captionTrack?.track;
+    if (!textTrack) {
+      return;
+    }
+    const wanted = captionsVisible;
+    if (wanted === (textTrack.mode === 'showing')) {
+      return;
+    }
+    textTrack.mode = wanted ? 'showing' : 'hidden';
+  });
 
   function handlePlay(event: Event): void {
     playing = true;
@@ -291,6 +375,16 @@
       <Img {src} {alt} {fallback} />
     </span>
   {:else}
+    <!--
+      The caption track is caller-supplied (`captionsSrc`) and rendered only when it is. The
+      compiler only counts a `<track>` that is a static, unconditional child of the
+      `<video>`, so this warning is a false positive for the conditional one below. The
+      alternative it pushes toward -- an always-present `<track>` with no `src` -- would put
+      an empty, non-functional entry in every player's native captions menu, which is
+      exactly what the optional contract exists to avoid. Scoped to this one element and
+      this one rule; nothing else in the file is silenced.
+    -->
+    <!-- svelte-ignore a11y_media_has_caption -->
     <video
       bind:this={videoPlayer}
       bind:muted
@@ -311,8 +405,9 @@
       tabindex={controls ? null : 0}
       aria-label={controls ? null : playing ? 'Pause video' : 'Play video'}
     >
-      {#if typeof captionsSrc === 'string' && captionsSrc.length > 0}
+      {#if hasCaptions}
         <track
+          bind:this={captionTrack}
           kind="captions"
           src={captionsSrc}
           label={typeof captionsLabel === 'string' ? captionsLabel : null}
@@ -379,6 +474,38 @@
               {/if}
             </Button>
           </div>
+          {#if captionsButton && hasCaptions}
+            <div
+              class="control bottom-control"
+              data-pw={typeof testId === 'string' ? `${testId}-captions` : null}
+            >
+              <!-- A native button rather than `Button`: the pressed state is the whole
+                   point of this control and `Button` has no `aria-pressed`. The name stays
+                   "Captions" and `aria-pressed` carries on/off, so a screen reader hears
+                   "Captions, toggle button, pressed" rather than a name that flips under it. -->
+              <button
+                type="button"
+                class="captions-toggle"
+                aria-label="Captions"
+                aria-pressed={captionsVisible}
+                onclick={toggleCaptions}
+              >
+                {#if captionsVisible}
+                  {#if typeof captionsOnIcon === 'function'}
+                    {@render captionsOnIcon()}
+                  {:else}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html captionsOnSvg}
+                  {/if}
+                {:else if typeof captionsIcon === 'function'}
+                  {@render captionsIcon()}
+                {:else}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html captionsSvg}
+                {/if}
+              </button>
+            </div>
+          {/if}
           {#if fullscreenButton}
             <div
               class="control bottom-control"
@@ -445,6 +572,8 @@
   }
 
   .overlay {
+    /* Decorative overlay space leaves the native video pointer route operative. */
+    pointer-events: none;
     position: absolute;
     inset: 0;
     display: flex;
@@ -471,11 +600,15 @@
   /* :focus-within alongside :hover so the overlay controls (play/pause, mute) are
      reachable for keyboard users too -- :hover alone left them visibility:hidden (and
      so out of the tab order) for anyone not using a mouse. */
-  .overlay:hover,
+  .media-player:hover .overlay,
   .overlay:focus-within {
     background-color: var(--media-player-overlay-hover-color, #0000004d);
     --center-controls-visibility: visible;
     --bottom-controls-visibility: visible;
+  }
+
+  .control {
+    pointer-events: auto;
   }
 
   .center-controls {
@@ -491,6 +624,9 @@
     width: 100%;
     height: fit-content;
     justify-content: var(--media-player-bottom-controls-justify, flex-end);
+    /* Only visible once a second control joins mute (captions); a lone control has no
+       neighbour to be spaced from, so a player without one renders exactly as before. */
+    gap: var(--media-player-bottom-controls-gap, 12px);
     box-sizing: border-box;
     padding: var(--media-player-bottom-controls-padding, 12px);
     visibility: var(--bottom-controls-visibility);
@@ -559,6 +695,40 @@
   .bottom-control {
     --button-width: var(--media-player-bottom-control-size, 24px);
     --button-height: var(--media-player-bottom-control-size, 24px);
+  }
+
+  /* The captions toggle is a native button, so it reads the same --media-player-control-*
+     hooks `Button` is handed above and sits in the same wrapper as its neighbours. */
+  .captions-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--media-player-bottom-control-size, 24px);
+    height: var(--media-player-bottom-control-size, 24px);
+    margin: 0;
+    padding: var(--media-player-control-padding, 0px);
+    border: var(--media-player-control-border, none);
+    border-radius: var(--media-player-control-border-radius, 50%);
+    background-color: var(--media-player-control-background-color, transparent);
+    color: var(--media-player-control-color, #ffffff);
+    cursor: pointer;
+    /* Resolves exactly as the sibling `Button`s do (their `.button-el` sets the same
+       fallback), so the toggle is revealed and focusable together with them. */
+    visibility: var(--button-visibility, visible);
+  }
+
+  .captions-toggle:hover {
+    background-color: var(
+      --media-player-control-hover-background-color,
+      var(--media-player-control-background-color, transparent)
+    );
+    color: var(--media-player-control-hover-color, var(--media-player-control-color, #ffffff));
+  }
+
+  .captions-toggle:focus-visible {
+    outline: var(--media-player-control-focus-outline, 2px solid currentColor);
+    outline-offset: var(--media-player-control-focus-outline-offset, 2px);
   }
 
   .control :global(svg),

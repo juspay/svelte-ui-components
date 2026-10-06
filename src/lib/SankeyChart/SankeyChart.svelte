@@ -1,11 +1,19 @@
 <script lang="ts">
   import type { SankeyChartProperties, SankeyTooltipContext } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
+  import { onMount } from 'svelte';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import { computeSankeyLayout } from '$lib/_chart/geometry';
   import { getColor } from '$lib/_chart/colors';
   import { formatNumber } from '$lib/_chart/format';
-  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  import {
+    measureText,
+    readCssVarPx,
+    invalidateTextMeasurements,
+    type FontSpec
+  } from '$lib/_chart/measure';
   import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { truncateToWidth } from '$lib/_chart/labels';
   import {
@@ -35,6 +43,8 @@
     onlinkclick,
     onnodehover,
     onlinkhover,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes,
     columnLabels,
@@ -81,45 +91,161 @@
 
   let format = $derived(valueFormat ?? formatNumber);
   let isEmpty = $derived(nodes.length === 0);
-  const MARGIN = 40;
-
-  // Real text measurement via the shared canvas-backed helper (exact on the
-  // client, 0.6em/char heuristic under SSR/tests). Character estimates used
-  // to both over-reserve the right label gutter (dead canvas) and under-budget
-  // uppercase-heavy labels (text sliding under the next column's bars).
-  // Weight and family are part of the spec: a 700-weight label is measurably
-  // wider than a 400 one, and the app's rendered font rarely matches the
-  // measurement default — budgets must be computed at the rendered style or
-  // borderline labels truncate (or overflow) for no visible reason.
-  // Family only enters the spec once the document's fonts have loaded: measuring
-  // a not-yet-loaded webfont silently measures its fallback (usually wider) and
-  // the width cache would pin that stale value under the loaded font's key.
-  // Until then the measurement default applies — same behaviour as before.
-  // One-shot promise subscription at init (browser only) — nothing to tear
-  // down, and the $state write re-derives every measurement consumer.
-  let fontsLoaded = $state(typeof document !== 'undefined' && document.fonts?.status === 'loaded');
-  if (typeof document !== 'undefined' && document.fonts?.status !== 'loaded') {
-    document.fonts?.ready.then(() => {
-      fontsLoaded = true;
-    });
-  }
-  let chartFontFamily = $derived(
-    fontsLoaded && containerEl ? getComputedStyle(containerEl).fontFamily : null
+  let chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('sankey', {
+        seriesNames: nodes.map((node) => node.label ?? node.id)
+      })
+    )
   );
-  let labelFont = $derived({
-    size: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-size', 12) : 12,
-    weight: containerEl ? readCssVarPx(containerEl, '--sankey-label-font-weight', 400) : 400,
-    family: chartFontFamily
+  let hasMarks = $derived.by(() => layout.nodes.length > 0 || layout.links.length > 0);
+  const MARGIN = 40;
+  const LABEL_NODE_GAP = 10;
+
+  // The SVG's loaded font is the source of truth. Canvas widths are useful
+  // for truncation, but a cached fallback font and an estimated line height
+  // cannot decide whether two Firefox labels collide.
+  let fontMetrics: {
+    label: FontSpec;
+    column: FontSpec;
+    height: number;
+    columnWidths: number[];
+  } | null = $state(null);
+  let fontRevision = $state(0);
+  let labelFont = $derived.by(() => {
+    void fontRevision;
+    return fontMetrics === null ? { size: 12, weight: 400 } : { ...fontMetrics.label };
   });
-  let colLabelFont = $derived({
-    size: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-size', 11) : 11,
-    weight: containerEl ? readCssVarPx(containerEl, '--sankey-col-label-font-weight', 400) : 400,
-    family: chartFontFamily
+  let colLabelFont = $derived.by(() => {
+    void fontRevision;
+    return fontMetrics === null ? { size: 11, weight: 400 } : { ...fontMetrics.column };
   });
-  // A label's rendered line box measures ≈1.33em across common font stacks;
-  // two label centres closer than this overlap visibly. Derived from the
-  // tokened size so consumers that scale labels keep honest de-collision.
-  let labelLinePx = $derived(Math.ceil(labelFont.size * 1.33));
+  // Include both plate padding and a clear gap between adjacent label plates.
+  let labelLinePx = $derived.by(() => (fontMetrics?.height ?? 16) + 8);
+  let effectiveNodePadding = $derived(
+    showLabels ? Math.max(nodePadding, labelLinePx) : nodePadding
+  );
+
+  onMount(() => {
+    if (containerEl === null) {
+      return;
+    }
+    const root = containerEl;
+    let mounted = true;
+    let frame = 0;
+    const observed = new SvelteSet<SVGTextElement>();
+    const resize = new ResizeObserver(schedule);
+    const mutation = new MutationObserver(schedule);
+    const fontOf = (text: SVGTextElement): FontSpec => {
+      const style = getComputedStyle(text);
+      return {
+        size: parseFloat(style.fontSize),
+        weight: style.fontWeight,
+        family: style.fontFamily
+      };
+    };
+    function measure(): void {
+      if (!mounted) {
+        return;
+      }
+      const labels = Array.from(root.querySelectorAll<SVGTextElement>('.sankey-label'));
+      const columns = Array.from(root.querySelectorAll<SVGTextElement>('.sankey-col-label'));
+      const texts = new Set([...labels, ...columns]);
+      for (const text of observed) {
+        if (!texts.has(text)) {
+          resize.unobserve(text);
+          observed.delete(text);
+        }
+      }
+      for (const text of texts) {
+        if (!observed.has(text)) {
+          resize.observe(text);
+          observed.add(text);
+        }
+      }
+      const first = labels[0] ?? columns[0];
+      if (!first || typeof first.getBBox !== 'function') {
+        return;
+      }
+      const label = labels[0]
+        ? fontOf(labels[0])
+        : {
+            size: readCssVarPx(root, '--sankey-label-font-size', 12),
+            weight: readCssVarPx(root, '--sankey-label-font-weight', 400),
+            family: fontOf(first).family
+          };
+      const column = columns[0]
+        ? fontOf(columns[0])
+        : {
+            size: readCssVarPx(root, '--sankey-col-label-font-size', 11),
+            weight: readCssVarPx(root, '--sankey-col-label-font-weight', 400),
+            family: label.family
+          };
+      const rawHeight =
+        labels.length > 0
+          ? Math.max(
+              ...labels.map((text) => {
+                const box = text.getBBox();
+                const rect = text.getBoundingClientRect();
+                const scaleY = Math.abs(text.getScreenCTM()?.d ?? 1) || 1;
+                // Gecko's native painted rectangle can exceed getBBox's font box.
+                // Convert it back to SVG units and keep the larger real measurement.
+                return Math.max(box.height, rect.height / scaleY);
+              })
+            )
+          : (fontMetrics?.height ?? 16);
+      // Round upward to a subpixel grid so viewport-coordinate rounding never
+      // feeds tiny height oscillations back into the responsive layout.
+      const height = Math.ceil(rawHeight * 64) / 64;
+      // Native painted bounds can exceed the canvas advance width in Gecko.
+      // Keep those real widths for edge clamps as well as the loaded font spec.
+      const columnWidths = columns.map((text) => {
+        const scaleX = Math.abs(text.getScreenCTM()?.a ?? 1) || 1;
+        const width = Math.max(text.getBBox().width, text.getBoundingClientRect().width / scaleX);
+        return Math.ceil(width * 64) / 64;
+      });
+      const next = { label, column, height, columnWidths };
+      if (JSON.stringify(next) !== JSON.stringify(fontMetrics)) {
+        invalidateTextMeasurements();
+        fontMetrics = next;
+      }
+    }
+    function schedule(): void {
+      if (typeof requestAnimationFrame === 'function') {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(measure);
+      } else {
+        measure();
+      }
+    }
+    function fontsChanged(): void {
+      if (mounted) {
+        invalidateTextMeasurements();
+        fontRevision += 1;
+        schedule();
+      }
+    }
+    mutation.observe(root, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
+    measure();
+    document.fonts?.ready.then(fontsChanged);
+    document.fonts?.addEventListener('loadingdone', fontsChanged);
+    return () => {
+      mounted = false;
+      if (typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(frame);
+      }
+      resize.disconnect();
+      mutation.disconnect();
+      document.fonts?.removeEventListener('loadingdone', fontsChanged);
+    };
+  });
 
   // Final-column labels render to the RIGHT of their node; the bare 40px margin is
   // nowhere near enough for real funnel labels ("PARTIALLY_FAILED (1,234)"), so they
@@ -143,7 +269,7 @@
     const longestPx =
       Math.max(...sinkLabels.map((label) => measureText(label, labelFont).width)) +
       (showValues ? measureText(' (999,999)', labelFont).width : 0);
-    const wanted = longestPx + 10 + dataLabelOffsetX;
+    const wanted = longestPx + LABEL_NODE_GAP + 4 + dataLabelOffsetX;
     // Cap the reservation so labels can never squeeze the diagram below 3/4 width,
     // and floor at 0 — a negative dataLabelOffsetX must not inflate the plot
     // past the right margin.
@@ -173,7 +299,7 @@
     const longestPx =
       Math.max(...sourceLabels.map((label) => measureText(label, labelFont).width)) +
       (showValues ? measureText(' (999,999)', labelFont).width : 0);
-    const wanted = longestPx + 10 + dataLabelOffsetX;
+    const wanted = longestPx + LABEL_NODE_GAP + 4 + dataLabelOffsetX;
     // Same 25% cap and 0 floor as the sink gutter so the two together can never
     // starve the diagram, and a negative dataLabelOffsetX can't push past the margin.
     return Math.max(0, Math.min(chartWidth * 0.25, wanted));
@@ -190,7 +316,7 @@
       plotWidth,
       plotHeight,
       nodeWidth,
-      nodePadding,
+      effectiveNodePadding,
       iterations,
       minLinkWidth
     )
@@ -239,7 +365,10 @@
   // canvas — a no-op at the default margins.
   const columnLabelX = (columnIndex: number, label: string): number => {
     const center = columnIndex * colWidth + nodeWidth / 2;
-    const textWidth = measureText(truncateColumnLabel(label), colLabelFont).width;
+    const textWidth = Math.max(
+      measureText(truncateColumnLabel(label), colLabelFont).width,
+      fontMetrics?.columnWidths[columnIndex] ?? 0
+    );
     const canvasLeft = -(marginX + firstColumnLabelGutter) + 2;
     const canvasRight = plotWidth + lastColumnLabelGutter + marginX - 2;
     const min = canvasLeft + textWidth / 2;
@@ -258,66 +387,43 @@
 
   const truncateLabel = (text: string, column: number): string => {
     // Middle columns must budget for dataLabelOffsetX too: the label starts at
-    // node.x + nodeWidth + 6 + dataLabelOffsetX, so the room before the next
+    // node.x + nodeWidth + LABEL_NODE_GAP + dataLabelOffsetX, so the room before the next
     // column's bar shrinks by the same offset. Omitting it let "fitting"
     // labels run under the neighbouring column's node rect.
-    // First-column labels anchor `end` at node.x - 6 - offset with node.x = 0.
+    // First-column labels anchor `end` at node.x - LABEL_NODE_GAP - offset with node.x = 0.
     // The diagram is shifted right by firstColumnLabelGutter, so the room to the
     // SVG's left edge is that gutter plus the base margin, minus the inset —
     // symmetric with the last column's sink-gutter budget below.
     const available =
       column === 0 && firstColumnLabelSide === 'left'
-        ? Math.max(0, firstColumnLabelGutter + marginX - 6 - dataLabelOffsetX)
+        ? Math.max(0, firstColumnLabelGutter + marginX - LABEL_NODE_GAP - dataLabelOffsetX)
         : column === columnCount - 1 && lastColumnLabelSide === 'right'
-          ? Math.max(0, lastColumnLabelGutter + marginX - 6 - dataLabelOffsetX)
-          : Math.max(0, colWidth - nodeWidth - 12 - dataLabelOffsetX);
+          ? Math.max(0, lastColumnLabelGutter + marginX - LABEL_NODE_GAP - dataLabelOffsetX)
+          : Math.max(0, colWidth - nodeWidth - LABEL_NODE_GAP * 2 - dataLabelOffsetX);
     // No usable room — hide the label rather than force text that would overflow;
     // the full text is still reachable via the node's <title> on hover.
     return truncateToWidth(text, available, labelFont);
   };
 
-  // Vertical label de-collision: labels sit at each node's centre-y, so two
-  // small stacked nodes in a crowded column render their 12px labels on top of
-  // each other. Per column, walk labels top-to-bottom and drop the label of
-  // the smaller-value node whenever two centres come closer than one label
-  // line — the hidden label's text stays reachable via the node's <title>.
-  let collidingLabels = $derived.by(() => {
-    const hidden = new SvelteSet<string>();
-    if (!showLabels) {
-      return hidden;
-    }
-    const byColumn = new SvelteMap<number, typeof layout.nodes>();
+  // At narrow widths the aspect-ratio height may not fit all label rows.
+  // Reserve a font-sized minimum, while honoring the caller's maximum height.
+  let maxColumnNodes = $derived.by(() => {
+    const counts = new SvelteMap<number, number>();
     for (const node of layout.nodes) {
-      const bucket = byColumn.get(node.column);
-      if (bucket) {
-        bucket.push(node);
-      } else {
-        byColumn.set(node.column, [node]);
-      }
+      counts.set(node.column, (counts.get(node.column) ?? 0) + 1);
     }
-    for (const columnNodes of byColumn.values()) {
-      const sorted = [...columnNodes].sort((a, b) => a.y + a.height / 2 - (b.y + b.height / 2));
-      let lastKept: (typeof sorted)[number] | null = null;
-      for (const node of sorted) {
-        if (lastKept === null) {
-          lastKept = node;
-          continue;
-        }
-        const centerGap = node.y + node.height / 2 - (lastKept.y + lastKept.height / 2);
-        if (centerGap < labelLinePx) {
-          if (node.value > lastKept.value) {
-            hidden.add(lastKept.id);
-            lastKept = node;
-          } else {
-            hidden.add(node.id);
-          }
-        } else {
-          lastKept = node;
-        }
-      }
-    }
-    return hidden;
+    return Math.max(0, ...counts.values());
   });
+  let minimumLabelHeight = $derived(
+    showLabels ? Math.min(maxHeight, MARGIN * 2 + maxColumnNodes * (labelLinePx + 4)) : 0
+  );
+
+  // Keep a usable label slot in every column when the viewport narrows. The
+  // outer chart scrolls horizontally instead of rendering empty label text.
+  // Explicit --chart-min-width overrides retain their existing precedence.
+  let minimumDiagramWidth = $derived(
+    showLabels ? Math.max(160, columnCount * Math.max(140, labelFont.size * 12) + marginX * 2) : 160
+  );
 
   // ── Helpers ────────────────────────────────────────────────────
 
@@ -659,146 +765,168 @@
 
 <div
   class="sankey-chart {classes ?? ''}"
-  bind:this={containerEl}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
-  {#if isEmpty && typeof empty === 'function'}
-    <div class="chart-empty">{@render empty()}</div>
-  {:else}
-    <ChartContainer bind:width={chartWidth} bind:height={chartHeight} {aspectRatio} {maxHeight}>
-      <g transform="translate({marginX + firstColumnLabelGutter}, {MARGIN})">
-        <!-- Optional backdrop panel behind the diagram (--sankey-plot-background,
+  <div
+    class="sankey-layout"
+    bind:this={containerEl}
+    style:min-width={`var(--chart-min-width, ${minimumDiagramWidth}px)`}
+  >
+    {#if isEmpty && typeof empty === 'function'}
+      <div class="chart-empty">{@render empty()}</div>
+    {:else}
+      <ChartContainer
+        bind:width={chartWidth}
+        bind:height={chartHeight}
+        {aspectRatio}
+        {maxHeight}
+        minHeight={minimumLabelHeight}
+        ariaLabel={chartName}
+        {ariaDescription}
+        interactive={hasMarks}
+      >
+        <g transform="translate({marginX + firstColumnLabelGutter}, {MARGIN})">
+          <!-- Optional backdrop panel behind the diagram (--sankey-plot-background,
              transparent by default). Spans exactly the plot: first column's bars
              to last column's bars, header row excluded. -->
-        <rect class="sankey-plot-bg" x={0} y={0} width={plotWidth} height={plotHeight} />
-        {#if columnLabels != null && columnLabels.length > 0}
-          {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
-            <text
-              class="sankey-col-label"
-              x={columnLabelX(ci, label)}
-              y={-8}
-              text-anchor="middle"
-              dominant-baseline="auto">{truncateColumnLabel(label)}<title>{label}</title></text
-            >
+          <rect class="sankey-plot-bg" x={0} y={0} width={plotWidth} height={plotHeight} />
+          {#if columnLabels != null && columnLabels.length > 0}
+            {#each columnLabels.slice(0, columnCount) as label, ci (ci)}
+              <LabelPlate>
+                <text
+                  class="sankey-col-label"
+                  x={columnLabelX(ci, label)}
+                  y={-8}
+                  text-anchor="middle"
+                  dominant-baseline="auto">{truncateColumnLabel(label)}<title>{label}</title></text
+                >
+              </LabelPlate>
+            {/each}
+          {/if}
+
+          {#each layout.links as link, i (i)}
+            {@const highlighted = isLinkHighlighted(link.source, link.target)}
+            {@const dimmed =
+              !disableDimOnHover && (activeNode !== null || activeLink !== null) && !highlighted}
+            <path
+              class="sankey-link"
+              data-link-source={link.source}
+              data-link-target={link.target}
+              d={link.path}
+              fill="none"
+              stroke={link.color ?? nodeColorMap.get(link.source) ?? getColor(0)}
+              stroke-width={Math.max(minLinkWidth, link.width)}
+              stroke-opacity={highlighted ? 0.7 : dimmed ? 0.08 : 0.4}
+              tabindex="0"
+              role="button"
+              aria-label="{resolveNodeLabel(link.source)} to {resolveNodeLabel(
+                link.target
+              )}: {format(link.value)}"
+              onmouseenter={(e) => handleLinkEnter(e, link.source, link.target)}
+              onmousemove={trackMouse}
+              onmouseleave={handleLinkLeave}
+              onfocus={() => handleLinkFocus(link.source, link.target)}
+              onblur={handleLinkBlur}
+              onkeydown={(e) => handleLinkKeydown(e, link.source, link.target)}
+              onclick={() => handleLinkClick(link.source, link.target)}
+            />
           {/each}
-        {/if}
 
-        {#each layout.links as link, i (i)}
-          {@const highlighted = isLinkHighlighted(link.source, link.target)}
-          {@const dimmed =
-            !disableDimOnHover && (activeNode !== null || activeLink !== null) && !highlighted}
-          <path
-            class="sankey-link"
-            data-link-source={link.source}
-            data-link-target={link.target}
-            d={link.path}
-            fill="none"
-            stroke={link.color ?? nodeColorMap.get(link.source) ?? getColor(0)}
-            stroke-width={Math.max(minLinkWidth, link.width)}
-            stroke-opacity={highlighted ? 0.7 : dimmed ? 0.08 : 0.4}
-            tabindex="0"
-            role="button"
-            aria-label="{resolveNodeLabel(link.source)} to {resolveNodeLabel(link.target)}: {format(
-              link.value
-            )}"
-            onmouseenter={(e) => handleLinkEnter(e, link.source, link.target)}
-            onmousemove={trackMouse}
-            onmouseleave={handleLinkLeave}
-            onfocus={() => handleLinkFocus(link.source, link.target)}
-            onblur={handleLinkBlur}
-            onkeydown={(e) => handleLinkKeydown(e, link.source, link.target)}
-            onclick={() => handleLinkClick(link.source, link.target)}
-          />
-        {/each}
+          {#each layout.nodes as node, ni (ni)}
+            {@const color = nodeColorMap.get(node.id) ?? getColor(ni)}
+            {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
+            <rect
+              class="sankey-node"
+              class:node-dimmed={dimmed}
+              data-node-id={node.id}
+              x={node.x}
+              y={node.y}
+              width={node.width}
+              height={node.height}
+              rx={radius}
+              ry={radius}
+              fill={color}
+              tabindex="0"
+              role="button"
+              aria-label="{node.label}: {format(node.value)}"
+              onmouseenter={(e) => handleNodeEnter(e, node.id)}
+              onmousemove={trackMouse}
+              onmouseleave={handleNodeLeave}
+              onfocus={() => handleNodeFocus(node.id)}
+              onblur={handleNodeBlur}
+              onkeydown={(e) => handleNodeKeydown(e, node.id)}
+              onclick={() => handleNodeClick(node.id)}
+            />
+          {/each}
 
-        {#each layout.nodes as node, ni (ni)}
-          {@const color = nodeColorMap.get(node.id) ?? getColor(ni)}
-          {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
-          <rect
-            class="sankey-node"
-            class:node-dimmed={dimmed}
-            data-node-id={node.id}
-            x={node.x}
-            y={node.y}
-            width={node.width}
-            height={node.height}
-            rx={radius}
-            ry={radius}
-            fill={color}
-            tabindex="0"
-            role="button"
-            aria-label="{node.label}: {format(node.value)}"
-            onmouseenter={(e) => handleNodeEnter(e, node.id)}
-            onmousemove={trackMouse}
-            onmouseleave={handleNodeLeave}
-            onfocus={() => handleNodeFocus(node.id)}
-            onblur={handleNodeBlur}
-            onkeydown={(e) => handleNodeKeydown(e, node.id)}
-            onclick={() => handleNodeClick(node.id)}
-          />
-        {/each}
-
-        <!-- Labels render in a second pass, after every node rect: within one
+          <!-- Labels render in a second pass, after every node rect: within one
              interleaved loop a label could be over-painted by a later column's
              bar whenever the width estimate ran short. -->
-        {#if showLabels}
-          {#each layout.nodes as node, ni (ni)}
-            {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
-            {#if !collidingLabels.has(node.id)}
-              <text
-                class="sankey-label"
-                class:node-dimmed={dimmed}
-                x={labelOnLeft(node.column)
-                  ? node.x - 6 - dataLabelOffsetX
-                  : node.x + node.width + 6 + dataLabelOffsetX}
-                y={node.y + node.height / 2}
-                text-anchor={labelOnLeft(node.column) ? 'end' : 'start'}
-                dominant-baseline="middle"
-                >{truncateLabel(
-                  showValues ? `${node.label} (${format(node.value)})` : node.label,
-                  node.column
-                )}<title>{showValues ? `${node.label} (${format(node.value)})` : node.label}</title
-                ></text
-              >
-            {/if}
-          {/each}
-        {/if}
-      </g>
-    </ChartContainer>
-
-    {#if typeof tooltipSnippet === 'function'}
-      <ChartTooltip
-        data={tooltipData}
-        {mouseX}
-        {mouseY}
-        {anchor}
-        portal={tooltipPortal}
-        originEl={containerEl}
-        unstyled
-      >
-        {#snippet content()}
-          {#if tooltipContext !== null}
-            {@render tooltipSnippet(tooltipContext)}
+          {#if showLabels}
+            {#each layout.nodes as node, ni (ni)}
+              {@const dimmed = connectedNodes !== null && !connectedNodes.has(node.id)}
+              <LabelPlate>
+                <text
+                  class="sankey-label"
+                  aria-hidden="true"
+                  class:node-dimmed={dimmed}
+                  x={labelOnLeft(node.column)
+                    ? node.x - LABEL_NODE_GAP - dataLabelOffsetX
+                    : node.x + node.width + LABEL_NODE_GAP + dataLabelOffsetX}
+                  y={node.y + node.height / 2}
+                  text-anchor={labelOnLeft(node.column) ? 'end' : 'start'}
+                  dominant-baseline="middle"
+                  >{truncateLabel(
+                    showValues ? `${node.label} (${format(node.value)})` : node.label,
+                    node.column
+                  )}<title
+                    >{showValues ? `${node.label} (${format(node.value)})` : node.label}</title
+                  ></text
+                >
+              </LabelPlate>
+            {/each}
           {/if}
-        {/snippet}
-      </ChartTooltip>
-    {:else}
-      <ChartTooltip
-        data={tooltipData}
-        {mouseX}
-        {mouseY}
-        {anchor}
-        portal={tooltipPortal}
-        originEl={containerEl}
-      />
+        </g>
+      </ChartContainer>
+
+      {#if typeof tooltipSnippet === 'function'}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={containerEl}
+          unstyled
+        >
+          {#snippet content()}
+            {#if tooltipContext !== null}
+              {@render tooltipSnippet(tooltipContext)}
+            {/if}
+          {/snippet}
+        </ChartTooltip>
+      {:else}
+        <ChartTooltip
+          data={tooltipData}
+          {mouseX}
+          {mouseY}
+          {anchor}
+          portal={tooltipPortal}
+          originEl={containerEl}
+        />
+      {/if}
     {/if}
-  {/if}
+  </div>
 </div>
 
 <style>
   .sankey-chart {
     width: 100%;
+    position: relative;
+    overflow-x: auto;
+  }
+  .sankey-layout {
     position: relative;
   }
   .sankey-plot-bg {
@@ -829,7 +957,7 @@
     opacity: var(--sankey-dimmed-opacity, 0.15);
   }
   .sankey-label {
-    fill: var(--sankey-label-color, #333);
+    fill: var(--sankey-label-color, light-dark(#333, #e5e7eb));
     font-size: var(--sankey-label-font-size, 12px);
     font-weight: var(--sankey-label-font-weight, 400);
     font-family: var(--chart-font-family, inherit);
@@ -846,14 +974,14 @@
       var(--chart-transition-easing, var(--motion-easing, ease));
   }
   .sankey-col-label {
-    fill: var(--sankey-col-label-color, #666);
+    fill: var(--sankey-col-label-color, light-dark(#666, #9ca3af));
     font-size: var(--sankey-col-label-font-size, 11px);
     font-weight: var(--sankey-col-label-font-weight, 400);
     font-family: var(--chart-font-family, inherit);
     pointer-events: none;
   }
   .sankey-label.node-dimmed {
-    opacity: var(--sankey-dimmed-opacity, 0.15);
+    opacity: var(--sankey-label-dimmed-opacity, 1);
   }
   .chart-empty {
     padding: var(--chart-empty-padding, 32px 24px);

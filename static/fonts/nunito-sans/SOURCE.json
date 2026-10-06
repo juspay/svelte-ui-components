@@ -1,0 +1,71 @@
+{
+  "family": "Nunito Sans",
+  "license": "SIL Open Font License 1.1",
+  "license_source": "https://raw.githubusercontent.com/google/fonts/main/ofl/nunitosans/OFL.txt",
+  "stylesheet_source": "https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap",
+  "original_stylesheet_sha256": "8edff24bd5083f482480f70dbfe469ebcb5dc466502a75ac83bdb96f8011fd33",
+  "downloaded": "2026-10-04T17:32:43.212325+00:00",
+  "modification": "URL remapping only; all source subsets, styles, weights and font-display retained; binaries unchanged.",
+  "files": [
+    {
+      "file": "nunito-sans-01.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBw3uBdlEl2qOL.woff2",
+      "sha256": "9baf4eaa16dbc11c90f3af322be22b9a2bad1fc07f173997e4fe610538b2904b",
+      "bytes": 33808
+    },
+    {
+      "file": "nunito-sans-02.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBynuBdlEl2qOL.woff2",
+      "sha256": "d7595e9904e3bc44a5dd8fcd92292d40d429bd4eadd4470bd786737897d47203",
+      "bytes": 25080
+    },
+    {
+      "file": "nunito-sans-03.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBwXuBdlEl2qOL.woff2",
+      "sha256": "b00d9e4417ab1f292504791ae8b761339e875736123726d746fc81df24795a88",
+      "bytes": 16180
+    },
+    {
+      "file": "nunito-sans-04.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBwHuBdlEl2qOL.woff2",
+      "sha256": "50ed73011e1cd3f87a1ffe7fa5131d33a329ef2de13256ef6235159145d97b07",
+      "bytes": 42628
+    },
+    {
+      "file": "nunito-sans-05.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBznuBdlEl2g.woff2",
+      "sha256": "ae6a0302ea2507a27ffa7d142a128defd9d91922ad39df511dc3972056dbb9b7",
+      "bytes": 47344
+    },
+    {
+      "file": "nunito-sans-06.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJDxzHGGVFMV2w.woff2",
+      "sha256": "a4eaa87a0752107e9a418f2ad140c5ba6b85bb7ed3852fc68ef5fb3383151734",
+      "bytes": 36048
+    },
+    {
+      "file": "nunito-sans-07.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJnxzHGGVFMV2w.woff2",
+      "sha256": "46778c74de4b4231de57303c4a3eb28f6104b4dc62f7807f723e96f5fd66b2e9",
+      "bytes": 26412
+    },
+    {
+      "file": "nunito-sans-08.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJLxzHGGVFMV2w.woff2",
+      "sha256": "0233999ae176724994b3ea3aac27d5f843d83dd48cade825655f26b375e9ae38",
+      "bytes": 15812
+    },
+    {
+      "file": "nunito-sans-09.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJPxzHGGVFMV2w.woff2",
+      "sha256": "b2b531a4ce0f6007e5c53c59e9863b92069f9b8fdc2e4ea629993d91221e7fd8",
+      "bytes": 43784
+    },
+    {
+      "file": "nunito-sans-10.woff2",
+      "source": "https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJ3xzHGGVFM.woff2",
+      "sha256": "ba40dacf915737fd00d9b346a34ba0f4d9047df10aaddee79d7a5f41bb13683d",
+      "bytes": 49612
+    }
+  ]
+}

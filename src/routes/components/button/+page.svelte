@@ -140,8 +140,19 @@
     recipe above, the variant's internal hover default is also transparent, so set
     <code>--button-hover-color</code> too or the gradient will flatten to transparent on hover.
   </p>
+  <p>
+    The variant's label is white, so the gradient must stay dark enough for it everywhere, not just
+    where the label happens to sit: every colour it passes through needs at least 4.5:1 against
+    white. This recipe starts at a burnt orange (<code>#c2410c</code>, 5.2:1) rather than a bright
+    one — <code>#ff7a45</code> measures only 2.6:1 with white.
+  </p>
   <div class="demo-row">
-    <Button text="Get Started" variant="brand" classes="btn-brand-gradient" />
+    <Button
+      text="Get Started"
+      variant="brand"
+      classes="btn-brand-gradient"
+      testId="button-brand-gradient"
+    />
   </div>
 
   <h3>title and ariaBusy</h3>
@@ -229,9 +240,14 @@
     --button-transition: background 0.2s ease, transform 0.15s ease;
   }
 
+  /* The brand variant's label is white. Both stops keep at least 4.5:1 against it
+     (#c2410c 5.18:1, #8f41fc 4.85:1) and no colour between them is lighter than
+     the lighter stop, so the whole gradient passes, not only the part under
+     today's label. A brighter orange such as #ff7a45 (2.59:1) fails across the
+     first ~78% of the gradient, which is where the label sits. */
   :global(.btn-brand-gradient) {
-    --button-background: linear-gradient(135deg, #ff7a45, #8f41fc);
-    --button-hover-color: linear-gradient(135deg, #ff7a45, #8f41fc);
+    --button-background: linear-gradient(135deg, #c2410c, #8f41fc);
+    --button-hover-color: linear-gradient(135deg, #c2410c, #8f41fc);
     --button-transition: background 0.2s ease, transform 0.15s ease;
     --button-hover-transform: translateY(-2px);
   }

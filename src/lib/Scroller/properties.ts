@@ -31,6 +31,14 @@ export type OptionalScrollerProperties = {
   arrowPrevious?: Snippet;
   arrowNext?: Snippet;
   classes?: string;
+  /**
+   * Accessible name for the scroll region. While the region is the only keyboard route to
+   * overflowing content (no arrows, nothing focusable inside) it is a Tab stop and is named
+   * `Scrollable content` unless this says otherwise; a region given a name keeps it whether
+   * or not it is currently a Tab stop. Prefer a name that says what scrolls, e.g.
+   * `Release timeline`.
+   */
+  ariaLabel?: string;
 };
 
 export type ScrollerEventProperties = {

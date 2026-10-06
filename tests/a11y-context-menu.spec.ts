@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { nativeButtonPointerFocus } from './support/native-browser';
 
 // WAI-ARIA APG menu pattern. ContextMenu previously never returned focus to whatever
 // opened it (see the openerElement fix alongside this spec) — every one of these tests
@@ -119,6 +120,7 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
 
     const target = page.getByTestId('context-menu-target');
     const outside = page.getByTestId('context-menu-outside-button');
+    const pointerFocusesNativeButton = await nativeButtonPointerFocus(page);
 
     await target.focus();
     await target.click({ button: 'right' });
@@ -126,8 +128,25 @@ test.describe('ContextMenu keyboard interaction (WAI-ARIA menu pattern)', () => 
 
     await outside.click();
 
-    // The browser focuses the clicked button; restoring focus to the opener
-    // unconditionally would yank it straight back and lose the user's place.
+    // Pointer focus follows the native button convention. Restoring focus must
+    // preserve it in engines that focus the outside button on a pointer click.
+    await expect(page.getByRole('menu')).toBeHidden();
+    expect(await outside.evaluate((element) => document.activeElement === element)).toBe(
+      pointerFocusesNativeButton
+    );
+    if (pointerFocusesNativeButton) {
+      await expect(outside).toBeFocused();
+    }
+    // A real Tab gesture must still reach the outside button and leave focus there.
+    await target.focus();
+    await page.keyboard.press('Tab');
+    await expect(outside).toBeFocused();
+    // Also prove the dismissal contract when focus has really moved outside,
+    // independent of the browser's pointer convention.
+    await target.click({ button: 'right' });
+    await expect(page.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
+    await outside.focus();
+    await outside.press('Escape');
     await expect(page.getByRole('menu')).toBeHidden();
     await expect(outside).toBeFocused();
   });

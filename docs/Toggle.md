@@ -26,20 +26,21 @@ does not depend on class names.
 
 ## Props
 
-| Prop           | Type      | Required | Default     | Description                                                                                                                                                            |
-| -------------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| checked        | `boolean` | No       | `false`     | The current on/off state of the toggle switch. Bindable, like `Checkbox.checked`.                                                                                      |
-| text           | `string`  | No       | `''`        | Label text displayed next to the toggle switch.                                                                                                                        |
-| disabled       | `boolean` | No       | `false`     | When true, prevents interaction and applies reduced opacity to indicate the disabled state.                                                                            |
-| testId         | `string`  | No       | `-`         | Value for the `data-pw` attribute on the container element, used for Playwright test targeting.                                                                        |
-| classes        | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| id             | `string`  | No       | generated   | Native `id` of the checkbox input. Point your own `<label for>` at it; when omitted an id is generated so the built-in `text` is a real label.                         |
-| ariaLabel      | `string`  | No       | `-`         | Names the switch for assistive technology when it has no visible text.                                                                                                 |
-| ariaLabelledby | `string`  | No       | `-`         | References a label in the same DOM root as the checkbox.                                                                                                               |
-| name           | `string`  | No       | `undefined` | Sets the underlying native input's `name`, so the toggle participates in a surrounding `<form>`'s submission (`FormData`) like any native checkbox: absent when off or disabled, present with its value when on. Omitting it leaves the DOM byte-identical to before. |
-| value          | `string`  | No       | `undefined` | Sets the underlying native input's `value`. Only meaningful once `name` is set. Left unset, the attribute is omitted and an unstyled native checkbox defaults its submitted value to `"on"` — this component relies on that same native default rather than hardcoding it. |
-| required       | `boolean` | No       | `false`     | Blocks submission while the switch is off.                                                                                                                             |
-| form           | `string`  | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-toggle>`, whose input sits in a shadow root.                                                  |
+| Prop           | Type                     | Required | Default     | Description                                                                                                                                                                                                                                                                |
+| -------------- | ------------------------ | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| checked        | `boolean`                | No       | `false`     | The current on/off state of the toggle switch. Bindable, like `Checkbox.checked`.                                                                                                                                                                                          |
+| text           | `string`                 | No       | `''`        | Label text displayed next to the toggle switch.                                                                                                                                                                                                                            |
+| disabled       | `boolean`                | No       | `false`     | When true, prevents interaction and applies reduced opacity to indicate the disabled state.                                                                                                                                                                                |
+| testId         | `string`                 | No       | `-`         | Value for the `data-pw` attribute on the container element, used for Playwright test targeting.                                                                                                                                                                            |
+| classes        | `string`                 | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                                                                     |
+| id             | `string`                 | No       | generated   | Native `id` of the checkbox input. Point your own `<label for>` at it; when omitted an id is generated so the built-in `text` is a real label.                                                                                                                             |
+| ariaLabel      | `string`                 | No       | `-`         | Names the switch for assistive technology when it has no visible text.                                                                                                                                                                                                     |
+| inputRole      | `'checkbox' \| 'switch'` | No       | `-`         | Optional role on the native checkbox. Omitted, it retains its native checkbox semantics. Use `switch` for an on/off setting; the same input keeps keyboard activation, checked state and form submission.                                                                  |
+| ariaLabelledby | `string`                 | No       | `-`         | References a label in the same DOM root as the checkbox.                                                                                                                                                                                                                   |
+| name           | `string`                 | No       | `undefined` | Sets the underlying native input's `name`, so the toggle participates in a surrounding `<form>`'s submission (`FormData`) like any native checkbox: absent when off or disabled, present with its value when on. Omitting it leaves the DOM byte-identical to before.      |
+| value          | `string`                 | No       | `undefined` | Sets the underlying native input's `value`. Only meaningful once `name` is set. Left unset, the attribute is omitted and an unstyled native checkbox defaults its submitted value to `"on"` — this component relies on that same native default rather than hardcoding it. |
+| required       | `boolean`                | No       | `false`     | Blocks submission while the switch is off.                                                                                                                                                                                                                                 |
+| form           | `string`                 | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-toggle>`, whose input sits in a shadow root.                                                                                                                                                      |
 
 ## Events
 
@@ -57,7 +58,7 @@ Override these custom properties to theme the component.
 | `--toggle-container-align-items`          | `center`                            | align-items        | Vertical alignment of switch and label.                                                                                                               |
 | `--toggle-container-gap`                  | `8px`                               | gap                | Gap between the switch and label text.                                                                                                                |
 | `--toggle-disabled-opacity`               | `0.4`                               | opacity            | Opacity of the toggle when in the disabled state.                                                                                                     |
-| `--toggle-focus-ring`                     | `0 0 0 3px rgba(33, 150, 243, 0.3)` | box-shadow         | Focus ring shown on the slider when the switch receives keyboard focus.                                                                                |
+| `--toggle-focus-ring`                     | `0 0 0 3px rgba(33, 150, 243, 0.3)` | box-shadow         | Focus ring shown on the slider when the switch receives keyboard focus.                                                                               |
 | `--toggle-text-font-size`                 | `14px`                              | font-size          | Font size of the label text.                                                                                                                          |
 | `--toggle-text-font-weight`               | `400`                               | font-weight        | Font weight of the label text.                                                                                                                        |
 | `--toggle-text-color`                     | `#4a4a4a`                           | color              | Color of the label text.                                                                                                                              |
@@ -113,6 +114,8 @@ The web component exposes `inputId` (`input-id`), `inputAriaLabel`
 internal checkbox. Its native `id`, `aria-label` and `aria-labelledby` keep their
 host-element meaning; they do not name or identify the shadow input. The Svelte
 component continues to use `id`, `ariaLabel` and `ariaLabelledby`.
+
+`inputRole` is forwarded as `input-role` in the web component. The native input remains the interaction owner, following the [WAI checkbox switch pattern](https://www.w3.org/WAI/ARIA/apg/patterns/switch/examples/switch-checkbox/).
 Blank or whitespace-only input ids fall back to an instance-unique generated id.
 Empty or whitespace-only ARIA names/references are omitted so the built-in text
 remains the fallback accessible name.
@@ -124,16 +127,22 @@ remains the fallback accessible name.
 
 ### Form participation in a shadow root
 
-The "Native form submission" example above is the Svelte `<Toggle>` component, whose
-`<input>` sits in the same document as the surrounding `<form>`. `<sui-toggle>` wraps
-that same input inside its own open shadow root (`shadow: 'open'`), and `<sui-toggle>`
-itself does not opt into the form-associated custom elements API (`static
-formAssociated` + [`ElementInternals`](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals))
-that would let the host itself carry a form value across that boundary. Browser and
-form-library support for reading a shadow-nested `name`/`value` pair back out through
-the host element varies, so a `<sui-toggle name="...">` may need additional handling
-(e.g. reading its state directly, or listening for its `change` event) to reach a
-light-DOM `<form>`'s `FormData` reliably.
+`<sui-toggle>` is form-associated through `ElementInternals`. Set an explicit
+`name` and `value` to collect its checked value in the surrounding form's
+`FormData`; unchecked or disabled controls contribute no entry. `required`
+participates in native validation.
+
+The public `checked` property and reflected boolean `checked` attribute track
+uncontrolled user activation. After native Space or pointer activation,
+`host.checked` reads the new value; assigning `host.checked = false` updates
+the operative control and removes its form entry even when it was initially
+false. Programmatic assignments do not emit user input/change callbacks.
+`form.reset()` restores the initial authored state captured after upgrade.
+
+Toggle supports bindable `checked` and a callback after native activation.
+It has no separate `controlled` prop. A parent can bind the state or write the
+property after a callback. Its native input event crosses the shadow boundary;
+the native change event remains inside the shadow root.
 
 ### Prop names across the two distributions
 

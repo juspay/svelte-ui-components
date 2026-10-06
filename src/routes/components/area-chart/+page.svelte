@@ -141,17 +141,30 @@
 
 <h3>Basic Area</h3>
 <div class="demo-row">
-  <AreaChart series={singleSeries} />
+  <AreaChart
+    series={singleSeries}
+    ariaLabel="Website traffic over eight periods"
+    ariaDescription="Traffic rises unevenly from 120 in the first period to 310 in the eighth, dipping in the third, fifth and seventh periods."
+  />
 </div>
 
 <h3>With Dots</h3>
 <div class="demo-row">
-  <AreaChart series={singleSeries} showDots />
+  <AreaChart
+    series={singleSeries}
+    showDots
+    ariaLabel="Website traffic over eight periods, with a marker on every period"
+  />
 </div>
 
 <h3>Stacked Area</h3>
 <div class="demo-row">
-  <AreaChart series={stackedSeries} stacked showLegend />
+  <AreaChart
+    series={stackedSeries}
+    stacked
+    showLegend
+    ariaLabel="Website traffic by source (Direct, Organic, Referral), stacked over six periods"
+  />
 </div>
 
 <h3>Stacked Area — negative value clamps to zero</h3>
@@ -167,13 +180,18 @@
     stacked
     showLegend
     showDots
+    ariaLabel="Revenue and returns stacked over six periods, with returns clamped to zero at the third and sixth"
     testId="area-stacked-negative-chart"
   />
 </div>
 
 <h3>Higher Fill Opacity</h3>
 <div class="demo-row">
-  <AreaChart series={singleSeries} fillOpacity={0.6} />
+  <AreaChart
+    series={singleSeries}
+    fillOpacity={0.6}
+    ariaLabel="Website traffic over eight periods, drawn with a higher fill opacity"
+  />
 </div>
 
 <h3>Cross-Series Alignment — mismatched x coverage</h3>
@@ -184,7 +202,13 @@
   index. See <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
 </p>
 <div class="demo-row">
-  <AreaChart series={misalignedSeries} showLegend showDots testId="area-alignment-chart" />
+  <AreaChart
+    series={misalignedSeries}
+    showLegend
+    showDots
+    ariaLabel="This week versus last week, where this week has no sample at x=3 and last week has none at x=6"
+    testId="area-alignment-chart"
+  />
 </div>
 
 <h3>Sparse Series — Gap Points</h3>
@@ -193,7 +217,12 @@
   resumes at the next finite point, instead of one poisoned path or a fabricated 0.
 </p>
 <div class="demo-row">
-  <AreaChart series={gapSeries} showDots testId="area-gap-chart" />
+  <AreaChart
+    series={gapSeries}
+    showDots
+    ariaLabel="Sales with gaps at x=4 and x=8, where no reading was taken"
+    testId="area-gap-chart"
+  />
 </div>
 
 <h3>Legend aggregates (<code>aggregate</code> + <code>aggregateFormat</code>)</h3>
@@ -210,6 +239,7 @@
     ]}
     stacked
     showLegend
+    ariaLabel="Website traffic by source with per-series totals in the legend, stacked over six periods"
     testId="area-legend-aggregate-chart"
   />
 </div>

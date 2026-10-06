@@ -26,6 +26,9 @@
       highlightedIndex: { type: 'Number', attribute: 'highlighted-index' },
       changePercentage: { type: 'Number', attribute: 'change-percentage' },
       changeInvertColors: { type: 'Boolean', attribute: 'change-invert-colors' },
+      // Chart-specific aliases preserve the host's native ARIAMixin accessors.
+      chartAriaLabel: { type: 'String', attribute: 'chart-aria-label' },
+      chartAriaDescription: { type: 'String', attribute: 'chart-aria-description' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       valueFormat: { type: 'Object' },
@@ -43,9 +46,17 @@
 
 <script lang="ts">
   import PieChart from '$lib/PieChart/PieChart.svelte';
+  import type { PieChartProperties } from '$lib/PieChart/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let {
+    chartAriaLabel,
+    chartAriaDescription,
+    ...props
+  }: Omit<PieChartProperties, 'ariaLabel' | 'ariaDescription'> & {
+    chartAriaLabel?: PieChartProperties['ariaLabel'];
+    chartAriaDescription?: PieChartProperties['ariaDescription'];
+  } = $props();
 
   /*
    * PieChart gates its own defaults on `typeof snippet === 'function'`, so a
@@ -100,7 +111,12 @@
   conditional without a top-level declaration.
 -->
 {#if hasCenterSlot && hasEmptySlot}
-  <PieChart {...props} {...dispatchers}>
+  <PieChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet center()}
       <slot name="center"></slot>
     {/snippet}
@@ -109,19 +125,34 @@
     {/snippet}
   </PieChart>
 {:else if hasCenterSlot}
-  <PieChart {...props} {...dispatchers}>
+  <PieChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet center()}
       <slot name="center"></slot>
     {/snippet}
   </PieChart>
 {:else if hasEmptySlot}
-  <PieChart {...props} {...dispatchers}>
+  <PieChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  >
     {#snippet empty()}
       <slot name="empty"></slot>
     {/snippet}
   </PieChart>
 {:else}
-  <PieChart {...props} {...dispatchers} />
+  <PieChart
+    {...props}
+    {...dispatchers}
+    ariaLabel={chartAriaLabel}
+    ariaDescription={chartAriaDescription}
+  />
 {/if}
 
 <style>

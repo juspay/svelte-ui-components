@@ -64,8 +64,24 @@ export type OptionalSelectProperties = {
    */
   searchPosition?: SelectSearchPosition;
   placeholder?: string;
-  /** Accessible name for the combobox trigger. Omitted to preserve the default unnamed behavior. */
+  /**
+   * Names the field for assistive tech, as `aria-label` on the combobox trigger
+   * (and on the text input inside it for `searchable` with the input in the
+   * trigger, which is the control that actually takes focus there, and on the
+   * open listbox). The placeholder and the selected option are the value, not
+   * the field's identity, so a Select with neither visible label text nor this
+   * announces only "Choose a fruit, combobox" or "Apple, combobox".
+   * The name does not change with the selection, so it stays meaningful when
+   * the Select is empty, selected, invalid or disabled.
+   */
   ariaLabel?: string;
+  /**
+   * Ids of the elements that name the field (`aria-labelledby`), for a label that is
+   * already on screen. `ariaLabel` wins if both are given. Ids resolve in the same
+   * DOM root as the Select; for `<sui-select>` the wrapper resolves them from the
+   * host's root, because an id reference does not cross a shadow boundary.
+   */
+  ariaLabelledby?: string;
   disabled?: boolean;
   /**
    * Renders the error treatment on the trigger — a red border that outranks

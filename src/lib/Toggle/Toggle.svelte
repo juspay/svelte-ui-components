@@ -10,6 +10,7 @@
     classes,
     id,
     ariaLabel,
+    inputRole,
     ariaLabelledby,
     onclick,
     name,
@@ -54,6 +55,7 @@
   <label class="switch">
     <input
       id={inputId}
+      role={inputRole === 'switch' ? 'switch' : inputRole === 'checkbox' ? 'checkbox' : null}
       class="input-checkbox"
       type="checkbox"
       aria-describedby={field.describedBy}

@@ -22,12 +22,17 @@ const installTimingObserver = async (
     ({ testId, windowKey }: { testId: string; windowKey: string }) => {
       const timing: TypewriterTiming = { firstAt: null, lastAt: null };
       (window as unknown as Record<string, TypewriterTiming>)[windowKey] = timing;
+      let attached = false;
       const attach = () => {
-        const element = document.querySelector(`[data-pw="${testId}"]`);
-        if (!element) {
-          requestAnimationFrame(attach);
+        if (attached) {
           return;
         }
+        const element = document.querySelector(`[data-pw="${testId}"]`);
+        if (!element) {
+          return;
+        }
+        attached = true;
+        mountObserver.disconnect();
         new MutationObserver(() => {
           if ((element.textContent || '').length === 0) {
             return;
@@ -38,7 +43,9 @@ const installTimingObserver = async (
           timing.lastAt = performance.now();
         }).observe(element, { childList: true, subtree: true, characterData: true });
       };
-      requestAnimationFrame(attach);
+      const mountObserver = new MutationObserver(attach);
+      mountObserver.observe(document, { childList: true, subtree: true });
+      attach();
     },
     { testId, windowKey }
   );
@@ -54,10 +61,17 @@ const readElapsedMs = async (page: Page, windowKey: string): Promise<number> => 
 };
 
 test.describe('TypewriterText — resolveDelay', () => {
+  test.beforeEach(async ({ page }) => {
+    // Virtual timer/performance time measures the component scheduler, not CPU
+    // contention. Native component DOM mutations and all original bounds remain.
+    await page.clock.install({ time: new Date('2026-10-04T00:00:00Z') });
+    await page.clock.pauseAt(new Date('2026-10-04T00:01:00Z'));
+  });
   test('resolveDelay receives character, index and wordCount in the guaranteed order', async ({
     page
   }) => {
     await gotoHydrated(page, '/components/typewriter-text');
+    await page.clock.runFor(6000);
 
     const host = page.getByTestId('typewriter-resolve-delay-cyclical');
     await expect(host).toBeVisible();
@@ -95,6 +109,7 @@ test.describe('TypewriterText — resolveDelay', () => {
   }) => {
     await installTimingObserver(page, 'typewriter-resolve-delay-cyclical', '__cyclicalTiming');
     await gotoHydrated(page, '/components/typewriter-text');
+    await page.clock.runFor(1400);
 
     const host = page.getByTestId('typewriter-resolve-delay-cyclical');
     await expect(host).toBeVisible();
@@ -117,6 +132,7 @@ test.describe('TypewriterText — resolveDelay', () => {
   test('resolveDelay takes priority over variableDelay when both are set', async ({ page }) => {
     await installTimingObserver(page, 'typewriter-resolve-delay-priority', '__priorityTiming');
     await gotoHydrated(page, '/components/typewriter-text');
+    await page.clock.runFor(300);
 
     const host = page.getByTestId('typewriter-resolve-delay-priority');
     await expect(host).toBeVisible();
@@ -137,6 +153,7 @@ test.describe('TypewriterText — resolveDelay', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/typewriter-text');
+    await page.clock.runFor(6000);
 
     // Neither of these pre-existing demos ever sets resolveDelay — proving that adding
     // the prop, and the new branch it takes in `resolveTypingDelay`, left the

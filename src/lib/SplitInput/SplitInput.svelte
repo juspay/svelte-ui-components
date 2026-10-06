@@ -2,6 +2,7 @@
   import { tick } from 'svelte';
   import { describeField } from '../_field/description';
   import Input from '$lib/Input/Input.svelte';
+  import { resolveFieldName } from './field-name';
   import type { FieldConfig, SplitInputProperties } from './properties';
 
   let {
@@ -14,6 +15,7 @@
     testId,
     classes,
     ariaLabel,
+    positionLabel,
     errorMessage,
     infoMessage,
     invalid = false,
@@ -42,6 +44,20 @@
   );
 
   let fieldCount = $derived(typeof fields !== 'undefined' ? fields.length : length);
+
+  /* A box is named by what it is, not left to the group's name alone: see
+     `resolveFieldName` for the precedence. Each box is an `Input` with
+     `actionInput`, which never renders Input's own <label>, so `ariaLabel` on the
+     inner Input is the only way its name can be set. */
+  function fieldName(index: number, config: FieldConfig): string {
+    return resolveFieldName({
+      index,
+      total: fieldCount,
+      config,
+      groupLabel: ariaLabel,
+      positionLabel
+    });
+  }
 
   let fieldConfigs: FieldConfig[] = $derived(
     typeof fields !== 'undefined'
@@ -273,6 +289,7 @@
         validators={config.validators ?? []}
         autoComplete={config.autoComplete ?? 'on'}
         inputMode={config.inputMode}
+        ariaLabel={fieldName(index, config)}
         disable={disabled}
         actionInput={true}
         classes="field-group-input"

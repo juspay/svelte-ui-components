@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, onTestFinished } from 'vitest';
+import { builtCodemodState, requiresBuiltCodemod } from './built-codemod.test-support.ts';
 import {
   LEGACY_DISPLAY_CSS_FILENAME,
   LEGACY_PALETTE_CSS_FILENAME,
@@ -10,6 +11,7 @@ import {
   runMigrateAudit,
   wcComponentsFrom
 } from './migrate-audit.ts';
+import { builtMigrationAssetsDir } from './migration-assets-layout.ts';
 
 const LIB = '@juspay/svelte-ui-components';
 const silent = (): void => {};
@@ -345,18 +347,29 @@ describe('runMigrateAudit — usage and errors', () => {
 // Proves the wiring against the REAL artifact `generate-migration-assets.ts`
 // writes during `build:codemod` — not just a synthetic fixture — the same
 // way scripts/migrate/cli.test.ts proves readWcComponents against this
-// library's own real src/wc/components rather than only a fixture. Skips
-// (loudly, not silently) rather than fails when dist-codemod has not been
-// built in this checkout yet, since that directory is gitignored build
-// output, not something a fresh clone has.
-describe('runMigrateAudit — against the real generated dist-codemod/migration-assets', () => {
+// library's own real src/wc/components rather than only a fixture.
+//
+// The directory comes from migration-assets-layout.ts, the same module the
+// generator and the compiled reader take it from. It used to be a hand-written
+// `dist-codemod/migration-assets` here, which stopped existing when the build
+// gained a second source tree (the assets moved to
+// `dist-codemod/codemod/migration-assets`); this block then skipped with
+// "run build:codemod first" after a complete build and nothing noticed.
+//
+// It still skips (loudly, not silently) when `dist-codemod` has never been built
+// in this checkout, since that directory is gitignored build output a fresh
+// clone does not have -- but ONLY then. A `dist-codemod` that exists without
+// the assets is a broken build, so it runs the cases below and fails on the
+// missing file (migration-assets-layout.test.ts names what is absent). Set
+// SUI_REQUIRE_BUILT_CODEMOD=1 to make "never built" a failure too, for a gate
+// that has just run the build.
+describe('runMigrateAudit — against the real generated dist-codemod/codemod/migration-assets', () => {
   const here = fileURLToPath(import.meta.url);
   const repoRoot = resolve(here, '..', '..', '..');
-  const realAssetsDir = join(repoRoot, 'dist-codemod', 'codemod', 'migration-assets');
-  const built = existsSync(join(realAssetsDir, 'wc-display.json'));
+  const realAssetsDir = builtMigrationAssetsDir(repoRoot);
 
-  if (!built) {
-    it.skip(`skipped: run "npm run build:codemod" first (${realAssetsDir} not built)`, () => {});
+  if (builtCodemodState(repoRoot).kind === 'not-built' && !requiresBuiltCodemod()) {
+    it.skip(`skipped: run "pnpm run build:codemod" first (${realAssetsDir} not built)`, () => {});
     return;
   }
 

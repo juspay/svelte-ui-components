@@ -64,42 +64,73 @@
 
 <h3>Basic — E-commerce Checkout Funnel</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} />
+  <FunnelChart
+    ariaDescription="Conversion decreases through the checkout stages. Each stage names its total and percentage of visits."
+    ariaLabel="E-commerce checkout conversion"
+    data={checkoutFunnel}
+  />
 </div>
 
 <h3>Custom Stage Colors</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} stageColors={tealColors} connectorColor="#BDFFFB" />
+  <FunnelChart
+    ariaLabel="Checkout conversion in teal"
+    data={checkoutFunnel}
+    stageColors={tealColors}
+    connectorColor="#BDFFFB"
+  />
 </div>
 
 <h3>Warm Palette</h3>
 <div class="demo-row">
-  <FunnelChart data={conversionFunnel} stageColors={warmColors} connectorColor="#f5cba7" />
+  <FunnelChart
+    ariaLabel="Marketing conversion in a warm palette"
+    data={conversionFunnel}
+    stageColors={warmColors}
+    connectorColor="#f5cba7"
+  />
 </div>
 
 <h3>Custom Value Format (show only value)</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} valueFormat={(value) => formatNumber(value)} />
+  <FunnelChart
+    ariaLabel="Checkout conversion with absolute values"
+    data={checkoutFunnel}
+    valueFormat={(value) => formatNumber(value)}
+  />
 </div>
 
 <h3>Without Value Labels</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} showValueLabels={false} />
+  <FunnelChart
+    ariaLabel="Checkout conversion without printed values"
+    data={checkoutFunnel}
+    showValueLabels={false}
+  />
 </div>
 
 <h3>Wider Slope Connectors</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} slopeWidth={24} />
+  <FunnelChart
+    ariaLabel="Checkout conversion with wider connectors"
+    data={checkoutFunnel}
+    slopeWidth={24}
+  />
 </div>
 
 <h3>No Hover Expansion</h3>
 <div class="demo-row">
-  <FunnelChart data={checkoutFunnel} onHoverExpand={0} />
+  <FunnelChart
+    ariaLabel="Checkout conversion without hover expansion"
+    data={checkoutFunnel}
+    onHoverExpand={0}
+  />
 </div>
 
 <h3>Events</h3>
 <div class="demo-row">
   <FunnelChart
+    ariaLabel="Checkout conversion with stage callbacks"
     data={checkoutFunnel}
     onstageclick={({ stage }) => {
       lastClickedStage = stage.category;
@@ -118,7 +149,7 @@
 
 <h3>Empty State</h3>
 <div class="demo-row">
-  <FunnelChart data={[]}>
+  <FunnelChart ariaLabel="Empty conversion funnel" data={[]}>
     {#snippet empty()}
       <p>No funnel data available.</p>
     {/snippet}
@@ -127,12 +158,20 @@
 
 <h3>Custom Aspect Ratio (4:3)</h3>
 <div class="demo-row">
-  <FunnelChart data={conversionFunnel} aspectRatio={4 / 3} />
+  <FunnelChart
+    ariaLabel="Marketing conversion with four-to-three aspect ratio"
+    data={conversionFunnel}
+    aspectRatio={4 / 3}
+  />
 </div>
 
 <h3>Many Stages with Long Names</h3>
 <div class="demo-row">
-  <FunnelChart data={manyStagesFunnel} testId="funnel-many-stages-chart" />
+  <FunnelChart
+    ariaLabel="Long conversion process with many stages"
+    data={manyStagesFunnel}
+    testId="funnel-many-stages-chart"
+  />
 </div>
 
 <h3>Non-finite stage value — degrades to a zero-height bar, not NaN</h3>
@@ -144,7 +183,11 @@
   <code>docs/CHART_INPUT_POLICY.md</code> for the full input-shape table.
 </p>
 <div class="demo-row">
-  <FunnelChart data={funnelWithGap} testId="funnel-nonfinite-chart" />
+  <FunnelChart
+    ariaLabel="Checkout conversion with a missing value"
+    data={funnelWithGap}
+    testId="funnel-nonfinite-chart"
+  />
 </div>
 
 <style>

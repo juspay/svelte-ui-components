@@ -41,7 +41,9 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
     expect(await wrapper.evaluate((el) => document.activeElement === el)).toBe(true);
 
     expect(await wrapper.evaluate((el) => el.scrollLeft)).toBe(0);
-    await page.keyboard.press('ArrowRight');
+    // A native WebKit overflow element also requires a key held through a frame;
+    // the paired native-control regression below retains that platform oracle.
+    await page.keyboard.press('ArrowRight', { delay: 50 });
     await expect
       .poll(async () => wrapper.evaluate((el) => el.scrollLeft), { timeout: 2000 })
       .toBeGreaterThan(0);
@@ -105,3 +107,32 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
     expect(await unlabelled.getAttribute('role')).toBeNull();
   });
 });
+
+// Trusted keyboard input, same browser and native overflow primitive. Separate
+// fresh controls preserve the zero-duration observation rather than resetting
+// scrollLeft in script and pretending that was a user action.
+for (const delay of [0, 50]) {
+  test(`native overflow ArrowRight timing oracle (${delay}ms)`, async ({ page }, testInfo) => {
+    await page.setContent(
+      '<button id="before">Before</button><div id="native" tabindex="0" style="width:300px;overflow:auto"><div style="width:1600px">Native wide content</div></div>'
+    );
+    await page.locator('#before').focus();
+    await page.keyboard.press('Tab');
+    const native = page.locator('#native');
+    await expect(native).toBeFocused();
+    expect(await native.evaluate((el) => el.scrollLeft)).toBe(0);
+    await page.keyboard.press('ArrowRight', { delay });
+    if (delay === 50) {
+      await expect.poll(() => native.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    }
+    await page.waitForTimeout(250);
+    await testInfo.attach('native-key-timing.json', {
+      body: JSON.stringify({
+        engine: testInfo.project.name,
+        delay,
+        scrollLeft: await native.evaluate((el) => el.scrollLeft)
+      }),
+      contentType: 'application/json'
+    });
+  });
+}

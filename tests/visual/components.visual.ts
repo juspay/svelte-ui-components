@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { waitForIntendedFonts } from '../support/hydrated';
 
 declare global {
   interface Window {
@@ -54,15 +55,32 @@ const MASKS: Readonly<Record<string, readonly string[]>> = {
  * excluded route is a known coverage hole, and the next person deserves to
  * find it here instead of discovering it when a regression ships.
  *
- * One route remains. Everything that worked for the rest of the suite was
- * tried on it -- manual clock, longer settles, per-route viewport fitting,
- * stripped animations, stubbed network -- and its height still moves between
- * capture attempts. Shipping it flaky would block unrelated PRs at random,
- * which is worse than admitting the gap.
+ * Nothing is excluded at present. `thinking-indicator` was the last entry and
+ * `task-list` the one before it; both were removed once the cause that earned
+ * the entry had been fixed upstream of this list, so re-check an entry's reason
+ * before assuming it still holds -- and before adding one.
  *
- * `task-list` used to sit here too. Its instability was the viewport-fitting
- * problem, fixed since, and it is baselined now: re-check an entry here before
- * assuming the reason still holds.
+ * `thinking-indicator`'s reason was that its per-second elapsed counter "changes
+ * the text on a real timer that the manual clock does not drive", so the page
+ * height walked 2029 -> 2150px between attempts. The entry (2026-09-02) predates
+ * `clock.pauseAt` (2026-09-17, see `prepare`), and until then an `install`ed clock
+ * kept ticking, so the counter's `setInterval` still ran on wall-clock time. With
+ * the clock paused the counter is a function of the fake clock alone; lifting the
+ * entry and capturing repeatedly gave identical bytes, with the counter still on
+ * screen. The coverage this entry was standing in for is now in two places, and
+ * neither hides a counter or erases a row:
+ *
+ *   - the whole-route `thinking-indicator` baseline below, taken like every other
+ *     route, with the elapsed counter showing whatever the paused clock
+ *     advanced it to; and
+ *   - tests/visual/thinking-indicator-states.visual.ts, which baselines the
+ *     states the whole-route frame cannot reach (counter at 0s and 3s, frozen at
+ *     settlement, reset on a new turn, disclosure open and collapsed) in both
+ *     themes through a host-driven fixture, controlling ONLY the counter's
+ *     one-second interval so native requestAnimationFrame and CSS keep running.
+ *
+ * To add an entry, give the measured symptom (heights, pixel counts) and what was
+ * already tried, as the removed ones did.
  */
 /**
  * Per-route pixel allowances, for a route whose baseline is stable everywhere
@@ -127,15 +145,7 @@ const TOLERANCES: Readonly<Record<string, number>> = {
  * until someone has re-run the six-capture comparison that produced it.
  */
 
-const EXCLUDED: Readonly<Record<string, string>> = {
-  // Measured across full-suite runs rather than assumed: the captured height
-  // walks 2029 -> 2035 -> 2121 -> 2150 -> 2059px within a single test's own
-  // retries, so no baseline is stable. The animated dots are pinned by the
-  // stylesheet, but the per-second elapsed counter changes the text on a real
-  // timer that the manual clock does not drive.
-  'thinking-indicator':
-    'elapsed counter retimes the layout mid-capture; height varies 2029-2150px between attempts'
-};
+const EXCLUDED: Readonly<Record<string, string>> = {};
 
 const FIXED_TIME = new Date('2026-01-15T09:30:00.000Z');
 
@@ -602,7 +612,7 @@ async function prepare(page: Page, slug: string): Promise<void> {
     `
   });
 
-  await page.evaluate(() => document.fonts.ready);
+  await waitForIntendedFonts(page);
   await waitForImages(page);
 
   // Advance the manual clock BEFORE anything measures the page.
@@ -665,7 +675,7 @@ async function prepare(page: Page, slug: string): Promise<void> {
    * layout, or re-establish the fit the way the pin does.
    */
   const viewportFit = await fitViewportToContent(page);
-  await page.evaluate(() => document.fonts.ready);
+  await waitForIntendedFonts(page);
   await waitForImages(page);
 
   // Remove every CSS animation via a stylesheet, not per element.

@@ -19,7 +19,12 @@
 
 <h3 class="demo-heading">Vertical</h3>
 <p class="demo-caption">Divides items placed side by side, e.g. an inline action row.</p>
-<div class="demo-row" style="align-items: center; gap: 12px; height: 24px;">
+<!-- `.demo-row` is border-box, so a fixed `height` here would be eaten by the row's own padding and border
+     (34px) and leave the dividers 0px tall. content-box keeps `height: 24px` as the dividers' height. -->
+<div
+  class="demo-row"
+  style="align-items: center; gap: 12px; height: 24px; box-sizing: content-box;"
+>
   <span>Edit</span>
   <Separator orientation="vertical" testId="separator-vertical-demo" />
   <span>Duplicate</span>

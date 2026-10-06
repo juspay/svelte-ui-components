@@ -174,8 +174,16 @@ export function tokenizedFly(node: Element, params: TokenizedFlyParams): Resolve
   // above resolved to. 0.001 rather than a hard 0: still visually instant, but
   // keeps this a real (non-zero-duration) transition for Svelte's own
   // lifecycle/event handling instead of a degenerate edge case.
-  if (reducedMotion.current) {
+  // MediaQueryList change events are asynchronous. A freshly opened transition
+  // must use the actual preference now, including a mounted preference flip.
+  const reduce =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : reducedMotion.current;
+  if (reduce) {
     duration = 0.001;
+    x = 0;
+    y = 0;
   }
 
   const targetOpacity = +styles.opacity;
@@ -186,7 +194,7 @@ export function tokenizedFly(node: Element, params: TokenizedFlyParams): Resolve
     easing,
     css: (t: number) => `
       transform: ${transform} translate(${(1 - t) * x}px, ${(1 - t) * y}px);
-      opacity: ${targetOpacity * t};
+      opacity: ${reduce ? targetOpacity : targetOpacity * t};
     `
   };
 }

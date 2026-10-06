@@ -157,10 +157,16 @@
 <h3>Revenue (columns, left axis) + CTR (line, right axis)</h3>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaDescription="Revenue uses the left currency axis and click-through rate uses the right percentage axis. Each period names all visible series."
+    ariaLabel="Monthly revenue and click-through rate"
     categories={monthlyCategories}
     series={revenueCtrSeries}
-    leftAxis={{ title: 'Revenue ($)', color: '#4e79a7' }}
-    rightAxis={{ title: 'CTR (%)', color: '#f28e2b', valueFormat: (v) => `${v.toFixed(1)}%` }}
+    leftAxis={{ title: 'Revenue ($)', color: 'light-dark(#315c85, #a4c6ec)' }}
+    rightAxis={{
+      title: 'CTR (%)',
+      color: 'light-dark(#8a4400, #f7b96f)',
+      valueFormat: (v) => `${v.toFixed(1)}%`
+    }}
     testId="demo-revenue-ctr"
   />
 </div>
@@ -169,6 +175,7 @@
 <h3>Orders (left) + Avg Order Value (right) — two column series</h3>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Monthly orders and average order value"
     categories={monthlyCategories}
     series={ordersSeries}
     leftAxis={{ title: 'Orders' }}
@@ -182,6 +189,7 @@
 <h3>Three series — Gross Sales + Returns (columns, left) + Return Rate (line, right)</h3>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Gross sales, returns and return rate"
     categories={multiSeriesCategories}
     series={threeSeriesData}
     leftAxis={{ title: 'Amount ($)' }}
@@ -198,6 +206,7 @@
 {/if}
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Weekday sessions and bounce rate with custom tooltip and selection"
     categories={customTooltipCategories}
     series={customTooltipSeries}
     leftAxis={{ title: 'Sessions' }}
@@ -226,6 +235,7 @@
 <h3>No gridlines, no legend</h3>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Revenue and click-through rate without legend or gridlines"
     categories={monthlyCategories}
     series={revenueCtrSeries}
     leftAxis={{ title: 'Revenue' }}
@@ -240,6 +250,7 @@
 <h3>Negative Values + Wide Currency Ticks</h3>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Quarterly net change and index including negative values"
     categories={negativeCategories}
     series={negativeSeries}
     leftAxis={{ valueFormat: (v) => '₹' + v.toLocaleString('en-IN') }}
@@ -255,6 +266,7 @@
 </p>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Revenue and click-through rate with aggregate legends"
     categories={monthlyCategories}
     series={[
       { ...revenueCtrSeries[0], aggregate: 'sum' },
@@ -277,6 +289,7 @@
 </p>
 <div class="demo-row">
   <DualAxisBarChart
+    ariaLabel="Revenue and orders with a missing value"
     categories={nonFiniteCategories}
     series={nonFiniteSeries}
     leftAxis={{ title: 'Revenue ($)' }}

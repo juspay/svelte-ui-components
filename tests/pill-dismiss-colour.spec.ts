@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { nativeButtonSpaceActive } from './support/native-browser';
 
 const expectBareDismiss = async (
   dismiss: import('@playwright/test').Locator,
@@ -31,6 +32,8 @@ test.describe('Pill dismiss glyph colour', () => {
           );
           expect(['primary', 'ghost']).toContain(consumerVariant);
         }
+        const nativeSpaceActive =
+          state === 'keyboard-active' ? await nativeButtonSpaceActive(page) : null;
         try {
           if (state === 'hover' || state === 'pointer-active') {
             await dismiss.hover();
@@ -48,8 +51,23 @@ test.describe('Pill dismiss glyph colour', () => {
             );
           }
           if (state === 'keyboard-active') {
+            await dismiss.evaluate((element) => {
+              element.setAttribute('data-native-space-clicks', '0');
+              element.addEventListener('click', (event) => {
+                if (event.isTrusted) {
+                  const count = Number(element.getAttribute('data-native-space-clicks'));
+                  element.setAttribute('data-native-space-clicks', String(count + 1));
+                }
+              });
+            });
             await page.keyboard.down('Space');
-            expect(await dismiss.evaluate((element) => element.matches(':active'))).toBe(true);
+            // Held-Space :active follows the engine's native button convention.
+            // The real glyph styling and released-key activation are asserted too.
+            expect(await dismiss.evaluate((element) => element.matches(':active'))).toBe(
+              nativeSpaceActive
+            );
+            await expect(dismiss).toHaveAttribute('data-native-space-clicks', '0');
+            await expect(page.getByTestId('pill-dismiss-count')).toHaveText('0');
           }
           await expectBareDismiss(dismiss, fixture.colour);
           if (state === 'focus' && fixture.id === 'pill-dismiss-under-variant-rule') {
@@ -58,6 +76,12 @@ test.describe('Pill dismiss glyph colour', () => {
         } finally {
           await page.mouse.up();
           await page.keyboard.up('Space');
+        }
+        if (state === 'keyboard-active') {
+          await expect(dismiss).toHaveAttribute('data-native-space-clicks', '1');
+          if (fixture.id === 'pill-dismiss-under-variant-rule') {
+            await expect(page.getByTestId('pill-dismiss-count')).toHaveText('1');
+          }
         }
       });
     }

@@ -8,6 +8,14 @@ export type MandatoryColorPickerProperties = {
 
 export type OptionalColorPickerProperties = {
   label?: string;
+  /**
+   * Names the picker when it has no visible `label` -- a swatch-only picker, say.
+   * Every control inside is named from `label` if there is one, else this ("Brand
+   * color hex value", "Pick a color: Brand color"), so several pickers on a page
+   * can be told apart. Without either, the controls keep their purpose names
+   * ("Hex value", "Red") and the trigger stays "Pick a color".
+   */
+  ariaLabel?: string;
   disabled?: boolean;
   showValue?: boolean;
   testId?: string;

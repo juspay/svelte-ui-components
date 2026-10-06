@@ -160,7 +160,9 @@ A row can carry a `breakdown` array, rendered as a labelled grid beneath the row
 
 ### Header Checkbox
 
-The header renders even without a title. `oncheckboxchange` fires with the new checked state; drive `checkbox.checked` from your own state for a controlled checkbox. On an interactive card (`onclick` set), toggling the checkbox does not fire the card action.
+The header renders even without a title. `oncheckboxchange` fires with the new checked state; drive `checkbox.checked` from your own state for a controlled checkbox. On an interactive card (`onclick` set), toggling the checkbox does not fire the card action, whether it is toggled by pointer or by Space/Enter.
+
+`checkbox.text` is both the label shown beside the box and the checkbox's accessible name (see [CheckListItem](./CheckListItem.md#accessibility)), so write it as a phrase that identifies what is being selected ("With returns", "Live data") rather than a bare "Select". The name does not depend on `title`, so a title-less card names its checkbox the same way.
 
 ```svelte
 <script>

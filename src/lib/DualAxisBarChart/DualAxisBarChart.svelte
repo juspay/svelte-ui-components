@@ -5,6 +5,7 @@
     DualAxisTooltipContext
   } from './properties';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
@@ -32,7 +33,8 @@
   import { SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid for SVG <defs> ids ────────────────────────
-  const uid = Math.random().toString(36).slice(2, 9);
+  const uid = $props.id();
+  const emptyDescriptionId = `dual-axis-empty-desc-${uid}`;
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -55,6 +57,8 @@
     hideLegendBelow = 360,
     tooltipSnippet,
     onbarclick,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes
   }: DualAxisBarChartProperties = $props();
@@ -378,8 +382,20 @@
    */
   type HoverRect = { x: number; width: number; catIdx: number };
 
+  const chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('dual-axis', { seriesNames: series.map((s) => s.name) })
+    )
+  );
+  const chartDescription = $derived(
+    typeof ariaDescription === 'string' && ariaDescription.trim() !== '' ? ariaDescription : null
+  );
+  const hasMarks = $derived(
+    bars.length > 0 || lineSeriesData.some((line) => line.points.length > 0)
+  );
   const hoverRects: HoverRect[] = $derived(
-    categories.map((_, catIdx) => ({
+    (hasMarks ? categories : []).map((_, catIdx) => ({
       x: catScale(categories[catIdx]),
       width: catScale.bandwidth,
       catIdx
@@ -390,10 +406,13 @@
     const parts = series
       .map((s, si) => ({ s, si }))
       .filter(({ si }) => !hiddenSeries.has(si))
-      .map(
-        ({ s }) =>
-          `${s.name} ${(s.yAxisIndex === 0 ? leftFormat : rightFormat)(s.data[catIdx] ?? 0)}`
-      );
+      .map(({ s }) => {
+        const value = s.data[catIdx];
+        const text = Number.isFinite(value)
+          ? (s.yAxisIndex === 0 ? leftFormat : rightFormat)(value)
+          : 'not available';
+        return `${s.name} ${text}`;
+      });
     return `${categories[catIdx]}: ${parts.join(', ')}`;
   }
 
@@ -474,6 +493,9 @@
         {aspectRatio}
         {maxHeight}
         {minHeight}
+        ariaLabel={chartName}
+        {ariaDescription}
+        interactive={hasMarks}
       >
         <g transform="translate({dims.margin.left}, {dims.margin.top})">
           <!-- Left Y-axis (index 0) -->
@@ -544,6 +566,7 @@
               fill={bar.color}
               aria-label="{categories[bar.categoryIndex]}: {bar.value}"
               role="img"
+              aria-hidden="true"
             />
           {/each}
 
@@ -570,6 +593,7 @@
                 style="stroke: var(--dual-axis-dot-stroke, light-dark(#fff, #111827)); stroke-width: var(--dual-axis-dot-stroke-width, 1.5);"
                 aria-label="{categories[ptIdx]}: {series[ls.seriesIndex]?.data[ptIdx] ?? 0}"
                 role="img"
+                aria-hidden="true"
               />
             {/each}
           {/each}
@@ -640,7 +664,17 @@
       {/if}
     </div>
   {:else}
-    <div class="chart-empty">No data available.</div>
+    <div
+      class="chart-empty"
+      role="img"
+      aria-label={chartName}
+      aria-describedby={chartDescription === null ? null : emptyDescriptionId}
+    >
+      No data available.
+      {#if chartDescription !== null}
+        <span id={emptyDescriptionId} hidden>{chartDescription}</span>
+      {/if}
+    </div>
   {/if}
 </div>
 

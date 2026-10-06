@@ -166,16 +166,37 @@
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
+  /*
+   * Native demo controls take their paint from the shell's `--doc-*` tokens, which
+   * switch with the theme. A literal `#fff` background kept its light surface in
+   * dark mode while the UA repainted the label in the dark scheme's `buttontext`
+   * (white), so all eleven actions rendered white on white. Every state names its
+   * own foreground/background pair, so none can fall back to a UA default.
+   */
   button {
     padding: 0.4rem 0.8rem;
     border-radius: 6px;
-    border: 1px solid #c4ccd6;
-    background: #fff;
+    border: 1px solid var(--doc-btn-border, #d1d5db);
+    background: var(--doc-btn-bg, #ffffff);
+    color: var(--doc-text-primary, #374151);
     cursor: pointer;
     font: inherit;
   }
-  button:hover {
-    background: #eef2f6;
+  button:hover:not(:disabled) {
+    background: var(--doc-btn-hover-bg, #f9fafb);
+    border-color: var(--doc-accent-border, #818cf8);
+  }
+  button:active:not(:disabled) {
+    background: var(--doc-accent-subtle-bg, #e0e7ff);
+    border-color: var(--doc-accent-border, #818cf8);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--doc-accent, #4f46e5);
+    outline-offset: 2px;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
   .slow {
     --motion-duration: 2s;
@@ -185,7 +206,7 @@
     --animated-number-digit-transition-easing: cubic-bezier(0.2, 0.9, 0.3, 1.3);
   }
   .state-display {
-    color: #6b7684;
+    color: var(--doc-text-muted, #4b5563);
     font-size: 0.9rem;
     margin: 0 0 1.5rem;
   }

@@ -135,6 +135,10 @@ export type OptionalDualAxisBarChartProperties = {
    */
   tooltipSnippet?: Snippet<[DualAxisTooltipContext]>;
   /** Value set on `data-pw` for test targeting. */
+  /** Accessible name of the drawing; omit to derive one from the plotted data. */
+  ariaLabel?: string;
+  /** Longer chart description, resolved inside the drawing's own DOM/shadow root. */
+  ariaDescription?: string;
   testId?: string;
   /** Extra CSS class string on the root `<div>`. */
   classes?: string;

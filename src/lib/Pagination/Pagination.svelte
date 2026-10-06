@@ -127,6 +127,7 @@
 
 <style>
   .pagination {
+    flex-wrap: wrap;
     display: var(--pagination-display, flex);
     gap: var(--pagination-gap, 4px);
     align-items: var(--pagination-align-items, center);

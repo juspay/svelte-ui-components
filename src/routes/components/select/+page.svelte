@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '$lib/Button/Button.svelte';
+  import Modal from '$lib/Modal/Modal.svelte';
   import Select from '$lib/Select/Select.svelte';
   import type { SelectItem } from '$lib/Select/properties';
 
@@ -74,6 +76,10 @@
   let menuMultiOpen = $state(false);
   let menuApplied = $state('');
   let disabledOptionsValue: string[] = $state([]);
+  let showSearchModal = $state(false);
+  let modalInflowValue: string[] = $state([]);
+  let modalPortalValue: string[] = $state([]);
+  let modalMultiValue: string[] = $state([]);
 
   // Inline SVG data URI — a simple globe icon, no external asset needed
   const globeIconSrc =
@@ -103,7 +109,7 @@
 
 <h3>Single select</h3>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={fruits} bind:value={singleValue} placeholder="Choose a fruit" />
+  <Select ariaLabel="Fruit" items={fruits} bind:value={singleValue} placeholder="Choose a fruit" />
   {#if singleValue.length > 0}
     <p class="demo-info">Selected ID: {singleValue.at(0)}</p>
   {/if}
@@ -116,6 +122,7 @@
        user open the menu and arrow straight through the options without
        typing first. -->
   <Select
+    ariaLabel="City (in-menu search)"
     items={cities}
     bind:value={menuSearchValue}
     searchable
@@ -128,6 +135,7 @@
 <h3>Error state</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (with error)"
     items={fruits}
     bind:value={errorValue}
     placeholder="Choose a fruit"
@@ -141,7 +149,13 @@
 <div class="demo-row" style="max-width: 300px;">
   <!-- Regression guard: a field that stops looking invalid the moment it is
        focused is invalid exactly when nobody can see it. -->
-  <Select items={fruits} placeholder="Choose a fruit" error testId="select-invalid-plain" />
+  <Select
+    ariaLabel="Fruit (error border)"
+    items={fruits}
+    placeholder="Choose a fruit"
+    error
+    testId="select-invalid-plain"
+  />
 </div>
 
 <h3>errorMessage set, error off (inert)</h3>
@@ -150,6 +164,7 @@
        with error false, a non-empty errorMessage must render no alert region and
        leave aria-invalid/aria-describedby untouched. -->
   <Select
+    ariaLabel="Fruit (inert error message)"
     items={fruits}
     placeholder="Choose a fruit"
     error={false}
@@ -161,6 +176,7 @@
 <h3>Clearable trigger</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (clearable)"
     items={fruits}
     bind:value={clearableValue}
     placeholder="Choose a fruit"
@@ -175,12 +191,19 @@
 <div class="demo-row" style="max-width: 300px;">
   <!-- No selection, so no clear control: a × that never clears anything reads
        as broken. -->
-  <Select items={fruits} placeholder="Choose a fruit" clearable testId="select-clearable-empty" />
+  <Select
+    ariaLabel="Fruit (clearable, empty)"
+    items={fruits}
+    placeholder="Choose a fruit"
+    clearable
+    testId="select-clearable-empty"
+  />
 </div>
 
 <h3>Single select with selected tick</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (selected tick)"
     items={fruits}
     bind:value={singleTickValue}
     placeholder="Choose a fruit"
@@ -195,6 +218,7 @@
 <div class="demo-row" style="max-width: 300px;">
   <!-- Regression guard: no searchPosition, so the input stays in the trigger. -->
   <Select
+    ariaLabel="City (searchable)"
     items={cities}
     bind:value={searchValue}
     searchable
@@ -209,6 +233,7 @@
 <h3>Multi select</h3>
 <div class="demo-row" style="max-width: 400px;">
   <Select
+    ariaLabel="Fruits (multiple)"
     items={fruits}
     multiple
     bind:value={multiValue}
@@ -223,6 +248,7 @@
 <h3>Multi select + searchable</h3>
 <div class="demo-row" style="max-width: 400px;">
   <Select
+    ariaLabel="Languages (multiple, searchable)"
     items={languages}
     multiple
     searchable
@@ -242,6 +268,7 @@
 </p>
 <div class="demo-row" style="max-width: 400px;">
   <Select
+    ariaLabel="Fruits (select all)"
     items={fruits}
     multiple
     showSelectAll
@@ -262,6 +289,7 @@
 </p>
 <div class="demo-row" style="max-width: 400px;">
   <Select
+    ariaLabel="Languages (select all, searchable)"
     items={languages}
     multiple
     showSelectAll
@@ -278,7 +306,7 @@
 
 <h3>Disabled</h3>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={fruits} disabled placeholder="Can't touch this" />
+  <Select ariaLabel="Fruit (disabled)" items={fruits} disabled placeholder="Can't touch this" />
 </div>
 
 <h3>Disabled options + Home/End</h3>
@@ -291,6 +319,7 @@
 </p>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (disabled options)"
     items={fruitsWithDisabledEnds}
     bind:value={disabledOptionsValue}
     placeholder="Choose a fruit"
@@ -307,7 +336,12 @@
   <code>label</code>.
 </p>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={statusOptions} bind:value={stringItemsValue} placeholder="Select status" />
+  <Select
+    ariaLabel="Status"
+    items={statusOptions}
+    bind:value={stringItemsValue}
+    placeholder="Select status"
+  />
   {#if stringItemsValue.length > 0}
     <p class="demo-info">Selected: {stringItemsValue.at(0)}</p>
   {/if}
@@ -319,7 +353,12 @@
   action).
 </p>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={fruits} bind:value={bottomContentValue} placeholder="Choose a fruit">
+  <Select
+    ariaLabel="Fruit (bottom content)"
+    items={fruits}
+    bind:value={bottomContentValue}
+    placeholder="Choose a fruit"
+  >
     {#snippet bottomContent()}
       <button class="manage-link" onclick={() => console.log('Manage options clicked')}>
         + Manage options
@@ -334,7 +373,13 @@
 <h3>optionIndicator snippet (multi-select)</h3>
 <p>Replace the default checkbox indicator with a custom one rendered per option.</p>
 <div class="demo-row" style="max-width: 400px;">
-  <Select items={languages} multiple bind:value={customIndicatorValue} placeholder="Pick languages">
+  <Select
+    ariaLabel="Languages (custom indicator)"
+    items={languages}
+    multiple
+    bind:value={customIndicatorValue}
+    placeholder="Pick languages"
+  >
     {#snippet optionIndicator({ checked })}
       <span class="custom-indicator" class:checked>{checked ? '✔' : '○'}</span>
     {/snippet}
@@ -350,7 +395,13 @@
   label — useful for fixed-width filter triggers where pills would overflow.
 </p>
 <div class="demo-row" style="max-width: 220px;">
-  <Select items={fruits} multiple bind:value={summaryValue} placeholder="Filter fruits">
+  <Select
+    ariaLabel="Fruit filter (summary trigger)"
+    items={fruits}
+    multiple
+    bind:value={summaryValue}
+    placeholder="Filter fruits"
+  >
     {#snippet triggerSummary({ value: selected, items: allItems })}
       <span class="trigger-summary">
         {selected.length === 0
@@ -372,7 +423,13 @@
   selects where a full bordered input would be visually heavy.
 </p>
 <div class="demo-row" style="max-width: 300px;">
-  <Select items={fruits} bind:value={ghostValue} placeholder="Ghost trigger" hierarchy="ghost" />
+  <Select
+    ariaLabel="Fruit (ghost)"
+    items={fruits}
+    bind:value={ghostValue}
+    placeholder="Ghost trigger"
+    hierarchy="ghost"
+  />
   {#if ghostValue.length > 0}
     <p class="demo-info">Selected: {ghostValue.at(0)}</p>
   {/if}
@@ -384,6 +441,7 @@
 </p>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (open and close log)"
     items={fruits}
     placeholder="Watch the log"
     onopen={() => (openEventLog = [...openEventLog, 'opened'])}
@@ -401,6 +459,7 @@
 </p>
 <div class="demo-row" style="max-width: 200px; margin-left: 220px;">
   <Select
+    ariaLabel="City (right aligned)"
     items={cities}
     bind:value={alignValue}
     placeholder="Right aligned"
@@ -421,6 +480,7 @@
 </p>
 <div class="demo-row" style="max-width: 300px; --select-color: #2563eb;">
   <Select
+    ariaLabel="City (left icon)"
     items={cities}
     bind:value={leftIconValue}
     placeholder="Select a city"
@@ -450,6 +510,7 @@
   style="max-width: 300px; --select-color: #111827; --select-left-icon-color: #9ca3af;"
 >
   <Select
+    ariaLabel="City (muted icon)"
     items={cities}
     bind:value={iconTintValue}
     placeholder="Muted icon, dark label"
@@ -469,6 +530,7 @@
   <div class="clipper" data-pw="select-inflow-clipper">
     <span class="clipper-label">Default (clipped)</span>
     <Select
+      ariaLabel="Fruit (in-flow)"
       items={fruits}
       bind:value={inflowValue}
       placeholder="In-flow"
@@ -478,6 +540,7 @@
   <div class="clipper" data-pw="select-portal-clipper">
     <span class="clipper-label">usePortal (escapes)</span>
     <Select
+      ariaLabel="Fruit (portaled)"
       items={fruits}
       bind:value={portalValue}
       placeholder="Portaled"
@@ -491,6 +554,7 @@
 <p><code>placement</code> anchors both axes, so an in-flow Select can open upward.</p>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (opens upward)"
     items={fruits}
     bind:value={placementUpValue}
     placement="top-left"
@@ -500,6 +564,7 @@
 </div>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Fruit (auto placement)"
     items={fruits}
     bind:value={placementAutoValue}
     placement="auto"
@@ -511,6 +576,7 @@
 <h3>Portaled in-menu search</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="City (portaled in-menu search)"
     items={cities}
     searchable
     searchPosition="menu"
@@ -524,6 +590,7 @@
 <h3>In-menu multi-select with pinned actions</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select
+    ariaLabel="Cities (in-menu multiple)"
     items={cities}
     multiple
     searchable
@@ -550,6 +617,67 @@
   <p data-pw="select-menu-applied">Applied: {menuApplied}</p>
 </div>
 
+<h3>In-menu search inside a Modal</h3>
+<p>
+  Escape closes only the open Select, never the Modal behind it, and the next activation opens the
+  panel again with an empty query. Covers the in-flow, portaled and multiple variants.
+</p>
+<div class="demo-row">
+  <Button
+    text="Open modal with searchable selects"
+    onclick={() => (showSearchModal = true)}
+    testId="select-modal-trigger"
+  />
+</div>
+{#if showSearchModal}
+  <Modal
+    size="medium"
+    align="center"
+    showOverlay
+    role="dialog"
+    ariaLabel="Choose cities"
+    header={{ text: 'Choose cities' }}
+    testId="select-modal"
+    onclose={() => (showSearchModal = false)}
+    onoverlayclick={() => (showSearchModal = false)}
+  >
+    {#snippet content()}
+      <div class="modal-selects">
+        <Select
+          ariaLabel="City (in-flow, in a modal)"
+          items={cities}
+          bind:value={modalInflowValue}
+          searchable
+          searchPosition="menu"
+          placeholder="Choose a city"
+          testId="select-modal-inflow"
+        />
+        <Select
+          ariaLabel="City (portaled, in a modal)"
+          items={cities}
+          bind:value={modalPortalValue}
+          searchable
+          searchPosition="menu"
+          usePortal
+          placeholder="Choose a city"
+          testId="select-modal-portal"
+        />
+        <Select
+          ariaLabel="Cities (multiple, in a modal)"
+          items={cities}
+          multiple
+          bind:value={modalMultiValue}
+          searchable
+          searchPosition="menu"
+          usePortal
+          placeholder="Choose cities"
+          testId="select-modal-multi"
+        />
+      </div>
+    {/snippet}
+  </Modal>
+{/if}
+
 <h3>Native form submission</h3>
 <p>
   With a <code>name</code>, the selection submits with the surrounding <code>&lt;form&gt;</code> —
@@ -564,19 +692,54 @@
     selectEntries = JSON.stringify(Array.from(new FormData(event.currentTarget).entries()));
   }}
 >
-  <Select items={fruits} name="fruit" bind:value={formFruit} testId="select-form-single" />
-  <Select
-    items={formColorItems}
-    name="colors"
-    multiple
-    bind:value={formColors}
-    testId="select-form-multiple"
-  />
+  <!-- A label that is already on screen names its Select through ariaLabelledby, so
+       the visible text and the accessible name cannot drift apart. Each label is
+       grouped with its own Select so it reads as that field's label. -->
+  <div class="field">
+    <span class="field-label" id="select-form-single-label">Favorite fruit</span>
+    <Select
+      ariaLabelledby="select-form-single-label"
+      items={fruits}
+      name="fruit"
+      bind:value={formFruit}
+      testId="select-form-single"
+    />
+  </div>
+  <div class="field">
+    <span class="field-label" id="select-form-multiple-label">Favorite colors</span>
+    <Select
+      ariaLabelledby="select-form-multiple-label"
+      items={formColorItems}
+      name="colors"
+      multiple
+      bind:value={formColors}
+      testId="select-form-multiple"
+    />
+  </div>
   <button type="submit" data-pw="select-form-submit">Submit</button>
 </form>
 <pre data-pw="select-form-result">{selectEntries}</pre>
 
 <style>
+  .modal-selects {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .field-label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
   /* Small, fixed-height, overflow-clipping boxes to demonstrate the difference
      between the in-flow and portaled dropdown. */
   .overflow-demo-grid {

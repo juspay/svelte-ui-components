@@ -78,6 +78,26 @@
   );
   const describedGroup = $derived(field.describedBy !== null || field.ariaInvalid !== null);
 
+  /* What names the text field. The input is where a screen reader lands, but the
+     name used to stop at the listbox: `ariaLabel` was applied to the popup only,
+     so the combobox itself announced as "combobox, blank" (or as its placeholder,
+     which is not a name and disappears from a multi-select once a pill is picked).
+
+     `inputProperties.ariaLabel` is the most specific and wins, as it always could;
+     then `ariaLabel`; then `inputProperties.label`, which docs/Combobox.md has long
+     said names the field but which Input never renders here (`actionInput`
+     suppresses its <label>), so it is used as the name rather than dropped. The
+     placeholder is the last resort so a consumer who named nothing still has a name
+     that does not vanish when the placeholder does. */
+  const accessibleName = (text?: string | null): string | null =>
+    typeof text === 'string' && text.trim() !== '' ? text : null;
+  const inputName = $derived(
+    accessibleName(inputProperties?.ariaLabel) ??
+      accessibleName(ariaLabel) ??
+      accessibleName(inputProperties?.label) ??
+      accessibleName(placeholder)
+  );
+
   let containerEl: HTMLDivElement | null = $state(null);
   let inputRef: ReturnType<typeof Input> | null = $state(null);
 
@@ -368,6 +388,7 @@
   class:disabled
   bind:this={containerEl}
   role={describedGroup ? 'group' : null}
+  aria-label={describedGroup ? inputName : null}
   aria-describedby={field.describedBy}
   aria-invalid={field.ariaInvalid}
   data-pw={testId}
@@ -383,7 +404,13 @@
         {#if typeof pillSnippet === 'function'}
           {@render pillSnippet(id, () => !disabled && removeValue(id), disabled)}
         {:else}
-          <Pill text={labelOf(id)} dismissible {disabled} ondismiss={() => removeValue(id)} />
+          <Pill
+            text={labelOf(id)}
+            dismissible
+            dismissLabel={`Remove ${labelOf(id)}${inputName ? ` from ${inputName}` : ''}`}
+            {disabled}
+            ondismiss={() => removeValue(id)}
+          />
         {/if}
       {/each}
     {/if}
@@ -393,6 +420,7 @@
         bind:value={inputValue}
         bind:this={inputRef}
         placeholder={multiple && selected.length > 0 ? '' : placeholder}
+        ariaLabel={inputName}
         {name}
         disable={disabled}
         autoComplete="off"
@@ -415,11 +443,15 @@
   </div>
 
   {#if open && !disabled}
+    <!-- tabindex="-1": Firefox gives keyboard focus to a scroll container that holds no
+         tabbable child, and these options are all tabindex="-1". Tab from the open input
+         then landed on the listbox, and the focus was lost when the Tab handler closed it. -->
     <div
       class="combobox-dropdown"
       role="listbox"
       id={listboxId}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? inputName}
+      tabindex="-1"
       use:dismissalAction
     >
       {#if typeof dropdownHeader === 'function'}

@@ -833,16 +833,25 @@
     --input-container-width: 100%;
   }
 
+  /* Wraps so a narrow card (a phone, a chat column) puts the buttons that do not
+     fit on their own line instead of running past the card. Each wrapper is
+     `flex: 1`, and its automatic minimum is its button's text width, so a row
+     that fits is laid out exactly as before; one that does not breaks between
+     buttons and the ones on a short line grow to fill it. `.hitl` is
+     `contain: layout`, so an overflowing button here would be invisible to the
+     page's own scrollWidth and unreachable by scrolling. The wrapping itself comes from the
+     zero-specificity rule below, so --hitl-buttons-wrap: nowrap still turns it off. */
   .action-buttons {
     display: flex;
     gap: var(--hitl-buttons-gap, 0.75rem);
     width: 100%;
   }
 
-  /* Zero specificity, so a consumer's own flex-wrap rule for the row keeps winning, as it
-     did before this hook existed. */
+  /* Zero specificity, so a consumer's own flex-wrap rule for the row keeps winning. The default
+     wraps, because a row that does not fit otherwise runs past the card; a row that fits is laid
+     out exactly as before. Set --hitl-buttons-wrap: nowrap to keep the single line. */
   :where(.action-buttons) {
-    flex-wrap: var(--hitl-buttons-wrap, nowrap);
+    flex-wrap: var(--hitl-buttons-wrap, wrap);
   }
 
   .cancel-button,

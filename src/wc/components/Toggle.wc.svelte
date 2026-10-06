@@ -15,6 +15,7 @@
       testId: { type: 'String', attribute: 'test-id' },
       inputId: { type: 'String', attribute: 'input-id' },
       inputAriaLabel: { type: 'String', attribute: 'input-aria-label' },
+      inputRole: { type: 'String', attribute: 'input-role' },
       inputAriaLabelledby: { type: 'String', attribute: 'input-aria-labelledby' },
       name: { type: 'String', reflect: true },
       value: { type: 'String', reflect: true },
@@ -30,7 +31,13 @@
   import { dispatchEvents } from '../dispatch';
 
   // Keep the host's native identity and ARIA accessors independent of its shadow input.
-  let { inputId = '', inputAriaLabel = '', inputAriaLabelledby = '', ...props } = $props();
+  let {
+    checked = $bindable(false),
+    inputId = '',
+    inputAriaLabel = '',
+    inputAriaLabelledby = '',
+    ...props
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -63,6 +70,7 @@
 <Toggle
   {...props}
   {...dispatchers}
+  bind:checked
   id={inputId}
   ariaLabel={inputAriaLabel}
   ariaLabelledby={inputAriaLabelledby}

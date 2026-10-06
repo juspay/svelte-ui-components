@@ -23,7 +23,16 @@
      rejected. `describeField` composes the reference from the messages that are
      actually rendered, so aria-describedby never points at an id that is not in
      the DOM -- which passes an attribute assertion and resolves to nothing in a
-     real reader. */
+     real reader.
+
+     `aria-invalid` is deliberately NOT put on the input. WAI-ARIA 1.2 supports it on
+     radiogroup (and checkbox, textbox, ...) but not on role="radio", where the
+     attribute is deprecated, so emitting it was an unsupported attribute that the
+     compiler flagged and some assistive technology ignores. The error is reachable
+     the way FileInput's is -- aria-describedby on the control plus role="alert" on
+     the message -- and the state is exposed as `data-invalid` for styling. A group
+     is invalid as a whole, so that state belongs on the consumer's
+     role="radiogroup" wrapper (see docs/Radio.md). */
   const fieldUid = $props.id();
   const field = $derived(
     describeField(fieldUid, { error: errorMessage, info: infoMessage, invalid })
@@ -49,7 +58,6 @@
   <input
     type="radio"
     aria-describedby={field.describedBy}
-    aria-invalid={field.ariaInvalid}
     class="radio-input"
     {name}
     {value}
@@ -59,6 +67,7 @@
     form={typeof form === 'string' ? form : null}
     data-state={checked ? 'checked' : 'unchecked'}
     data-disabled={disabled ? '' : null}
+    data-invalid={field.ariaInvalid === null ? null : ''}
     onchange={handleChange}
   />
   <span class="radio-indicator" class:checked class:disabled>

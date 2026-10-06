@@ -8,6 +8,7 @@
   import type { ChartHighlightAPI } from '$lib/_chart/highlight';
   import { onMount } from 'svelte';
   import ChartContainer from '$lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
   import Axis from '$lib/_chart/Axis.svelte';
   import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
   import Legend from '$lib/_chart/Legend.svelte';
@@ -19,15 +20,10 @@
   import { measureText } from '$lib/_chart/measure';
   import { resolvePointLabels } from '$lib/_chart/labels';
   import { formatSeriesAggregate } from '$lib/_chart/aggregate';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import type { LegendItem, Point, TooltipAnchor } from '$lib/_chart/types';
   import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
   import { SvelteSet } from 'svelte/reactivity';
-
-  // Per-instance ID for SVG gradient <linearGradient id> references. Initialised
-  // inside onMount so the value is only ever generated on the client — avoids an
-  // SSR hydration mismatch that would occur if Math.random() ran on both server
-  // and client and produced different strings.
-  let uid = $state('');
 
   // ── Props ──────────────────────────────────────────────────────
 
@@ -67,9 +63,20 @@
     onchartready,
     onpointclick,
     onpointhover,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes
   }: LineChartProperties = $props();
+
+  // Per-instance id for the SVG <linearGradient id> references and the live
+  // status region. `$props.id()` is unique per component instance and identical
+  // on server and client, so two charts on one page never resolve each other's
+  // `url(#gradient)` and hydration never sees a different id than the server
+  // wrote. It replaces a Math.random() prefix that was only filled in at
+  // mount: until then every chart's gradient id collapsed to the same
+  // `line-grad--0`, and afterwards it was collision-prone by construction.
+  const instanceId = $props.id();
 
   // ── State ──────────────────────────────────────────────────────
 
@@ -120,8 +127,6 @@
   );
 
   onMount(() => {
-    uid = Math.random().toString(36).slice(2, 9);
-
     const api: ChartHighlightAPI = {
       type: 'line-chart',
       highlight: (index) => {
@@ -264,6 +269,29 @@
     }))
   );
 
+  // ── Chart-level accessible name ────────────────────────────────
+
+  // The drawing's own name: the consumer's `ariaLabel`, else one derived from
+  // what the chart plots (see `defaultChartName`).
+  let chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('line', { yAxisLabel, seriesNames: series.map((s) => s.name) })
+    )
+  );
+
+  // Every finite point of a visible series is a focusable role="button" mark
+  // (the `.focus-target` circles below), so the drawing is interactive and must
+  // not be exposed as an image. With nothing to operate -- every series hidden
+  // through the legend, or no finite point -- it is a plain named image.
+  let hasMarks = $derived(
+    lines.some(
+      (line) =>
+        !line.hidden &&
+        line.points.some((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+    )
+  );
+
   // ── Cross-series alignment ──────────────────────────────
 
   // The ONE alignment contract for tooltip/hit-testing (and, via
@@ -400,7 +428,6 @@
   // ── Keyboard access & live status (family-wide contract; see
   //    docs/PieChart.md#keyboard-access) ─────────────────────────
 
-  const instanceId = $props.id();
   const statusId = `line-status-${instanceId}`;
 
   // "Active" datum for announcement purposes, in the SAME precedence order
@@ -434,7 +461,9 @@
     return null;
   });
 
-  let statusText = $derived.by(() => {
+  // What the active datum reads as, whatever drove it. `statusText` below is
+  // what the live region actually carries.
+  let activeStatusText = $derived.by(() => {
     const active = activeDatum;
     if (active === null) {
       return '';
@@ -465,6 +494,22 @@
       : `${name}: ${value}`;
   });
 
+  // A keyboard-focused mark is already spoken as its own accessible name when it
+  // takes focus. Where the region would only repeat that name verbatim (a single
+  // series, or a tooltip that is not shared) it adds nothing but a second
+  // announcement of the same point, so it stays empty. It still speaks whenever
+  // it adds something -- the other series at a shared x -- and for every path
+  // that has no focus event to announce it: pointer hover, `highlightedIndex`
+  // and the `ChartHighlightAPI`.
+  let statusText = $derived.by(() => {
+    const text = activeStatusText;
+    if (text === '' || focused === null) {
+      return text;
+    }
+    const entry = joinedByX.get(focused.x)?.values[focused.si];
+    return entry && text === focusAriaLabel(focused.si, entry.index, entry.point.x) ? '' : text;
+  });
+
   // ── Point labels ───────────────────────────────────────────────
 
   let pointLabelPlacements = $derived.by(() => {
@@ -479,7 +524,11 @@
         : resolvePointLabels({
             points: line.points,
             labels: series[si].data.map((d) => measureText(formatNumber(d.y), font)),
-            plot
+            plot,
+            // Leave room for the 6px keyboard target, its native focus outline
+            // and the label's padded plate. Firefox paints the outline above
+            // SVG siblings, so paint order alone cannot protect nearby text.
+            gap: 16
           })
     );
   });
@@ -754,7 +803,8 @@
   {:else}
     <!-- Mirrors the tooltip's own text for every activation path (pointer,
          keyboard focus, declarative highlightedIndex, imperative
-         ChartHighlightAPI) -- see statusText. -->
+         ChartHighlightAPI) -- except that a focused mark whose own accessible
+         name already says it is not repeated. See statusText. -->
     <div class="sr-only" role="status" aria-live="polite" id={statusId} data-pw="line-status">
       {statusText}
     </div>
@@ -774,13 +824,16 @@
         {aspectRatio}
         {minHeight}
         {maxHeight}
+        ariaLabel={chartName}
+        {ariaDescription}
+        interactive={hasMarks}
       >
         {#if gradientFill || showArea}
           <defs>
             {#each lines as line, si (si)}
               {#if gradientFill}
                 <linearGradient
-                  id="line-grad-{uid}-{si}"
+                  id="line-grad-{instanceId}-{si}"
                   x1="0"
                   y1="0"
                   x2="0"
@@ -804,7 +857,7 @@
               {/if}
               {#if showArea}
                 <linearGradient
-                  id="line-area-{uid}-{si}"
+                  id="line-area-{instanceId}-{si}"
                   x1="0"
                   y1="0"
                   x2="0"
@@ -874,14 +927,14 @@
                   class="line-area-fill"
                   class:dimmed={isLineDimmed(si)}
                   d={line.areaD}
-                  fill="url(#line-area-{uid}-{si})"
+                  fill="url(#line-area-{instanceId}-{si})"
                 />
               {:else if gradientFill}
                 <path
                   class="line-area-fill"
                   class:dimmed={pointerOrFocused !== null && pointerOrFocused.si !== si}
                   d={line.areaD}
-                  fill="url(#line-grad-{uid}-{si})"
+                  fill="url(#line-grad-{instanceId}-{si})"
                 />
               {/if}
               <path
@@ -893,21 +946,6 @@
                 stroke-dasharray={line.dash}
                 fill="none"
               />
-              {#if showValues && pointLabelPlacements[si]}
-                {#each line.points as _point, pi (pi)}
-                  {@const pl = pointLabelPlacements[si][pi]}
-                  {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
-                    <text
-                      class="point-value"
-                      x={pl.x}
-                      y={pl.y}
-                      text-anchor="middle"
-                      dominant-baseline={pl.dominantBaseline}
-                      >{formatNumber(series[si].data[pi].y)}</text
-                    >
-                  {/if}
-                {/each}
-              {/if}
             {/if}
           {/each}
 
@@ -974,7 +1012,15 @@
                        `pointer-events: none` does not block this: it suppresses
                        hit-testing for real pointer input -- which is what keeps
                        mouse hover flowing to the overlay underneath -- while a
-                       dispatched click still fires a listener on the element. -->
+                       dispatched click still fires a listener on the element.
+
+                       No `aria-describedby` pointing at the status region. The
+                       region already announces what the name does not as it
+                       updates, so describing the point by it as well spoke the
+                       same text a second time; and because the region is
+                       shared, every UNFOCUSED point was "described" by whichever
+                       point was announced last. The point is spoken as its own
+                       name, and the region adds only what that name lacks. -->
                   <circle
                     class="focus-target"
                     cx={point.x}
@@ -983,7 +1029,6 @@
                     tabindex="0"
                     role="button"
                     aria-label={focusAriaLabel(si, pi, raw.x)}
-                    aria-describedby={statusId}
                     onfocus={() => handleMarkFocus(si, pi)}
                     onblur={handleBlur}
                     onkeydown={handleMarkKeydown}
@@ -1019,6 +1064,33 @@
             onpointerleave={handlePointerLeave}
             onclick={handleClick}
           />
+          <!-- Labels paint last so every glyph keeps its opaque backdrop across
+               line crossings, highlight markers and hover guides. -->
+          {#each lines as line, si (si)}
+            {#if !line.hidden}
+              {#if showValues && pointLabelPlacements[si]}
+                {#each line.points as _point, pi (pi)}
+                  {@const pl = pointLabelPlacements[si][pi]}
+                  {#if pl?.visible && Number.isFinite(pl.x) && Number.isFinite(pl.y)}
+                    <!-- Repeats the point's own accessible name, which is what
+                         assistive technology reads; exposing it again would announce
+                         every value twice. -->
+                    <LabelPlate>
+                      <text
+                        class="point-value"
+                        aria-hidden="true"
+                        x={pl.x}
+                        y={pl.y}
+                        text-anchor="middle"
+                        dominant-baseline={pl.dominantBaseline}
+                        >{formatNumber(series[si].data[pi].y)}</text
+                      >
+                    </LabelPlate>
+                  {/if}
+                {/each}
+              {/if}
+            {/if}
+          {/each}
         </g>
       </ChartContainer>
 

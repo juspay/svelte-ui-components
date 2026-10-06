@@ -40,6 +40,8 @@ export type FormValueBinding = {
    * set, an unchecked control submits nothing, mirroring native behaviour.
    */
   readonly checked?: string;
+  /** Mixed state restored with the checked default on form reset. */
+  readonly indeterminate?: string;
   /**
    * Prop holding the selected member of a radio group. The control submits its
    * own `value` only while the two match, which is how a native radio group
@@ -120,6 +122,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
     const watched = [
       valueProp,
       binding.checked,
+      binding.indeterminate,
       binding.selected,
       binding.values,
       disabledProp,
@@ -159,12 +162,11 @@ export function formAssociated(binding: FormValueBinding = {}) {
 
       /**
        * The native control the component renders inside its shadow root, if any.
-       * It is preferred over the host's props as the source of truth, because a
-       * wrapper spreads props into its component without binding them back: when
-       * the user clicks `<sui-checkbox>`, the component flips its own state and
-       * the host prop stays at whatever the markup said. The inner control is
-       * what the form would have collected had it not been in a shadow root, so
-       * it is the honest answer.
+       * It is preferred for submission because it reflects the operative native
+       * control, including mixed state and component-specific serialization.
+       * Checkbox and Toggle bind user changes back to their public checked
+       * properties; programmatic assignments and form reset then share that
+       * same state.
        */
       #innerControl(): HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null {
         const root = this.shadowRoot;
@@ -255,7 +257,11 @@ export function formAssociated(binding: FormValueBinding = {}) {
           return;
         }
         const isRequired = readBoolean(this, requiredProp);
-        const missing = isRequired && this.#formValue() === null;
+        const missing =
+          isRequired &&
+          !readBoolean(this, disabledProp) &&
+          !this.matches(':disabled') &&
+          this.#formValue() === null;
         if (missing) {
           // The anchor is the host: the inner control lives in a shadow root,
           // and reportValidity() must scroll and point at something the user
@@ -284,7 +290,6 @@ export function formAssociated(binding: FormValueBinding = {}) {
       connectedCallback(): void {
         // @ts-expect-error -- the base class defines it; TS cannot see through T.
         super.connectedCallback?.();
-        this.#captureDefaults();
         // The inner control's own events are the only signal that the user --
         // rather than the page -- changed the value. They are listened for on the
         // shadow root because that catches both kinds: a native `change` is not
@@ -300,7 +305,13 @@ export function formAssociated(binding: FormValueBinding = {}) {
         this.addEventListener('keyup', this.#onInnerChange, true);
         // Props are applied asynchronously on first render, so the initial
         // value is not readable yet in this tick.
-        queueMicrotask(() => this.syncFormState());
+        // Svelte initializes its custom element after a microtask. Capture the
+        // initial reflected/bindable value then, before genuine user activation,
+        // rather than capturing undefined for an authored checked attribute.
+        queueMicrotask(() => {
+          this.#captureDefaults();
+          this.syncFormState();
+        });
       }
 
       disconnectedCallback(): void {

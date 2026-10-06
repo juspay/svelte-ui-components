@@ -2,6 +2,8 @@
 
 A lightweight Lottie animation player that dynamically loads `lottie-web` and renders animations from a URL or inline JSON data. Supports SVG, canvas, and HTML renderers, imperative play/pause/stop control via `bind:this`, configurable loop and autoplay, and optional callbacks for completion and load errors. The `lottie-web` package is an optional peer dependency — include it in your project's dependencies when using this component.
 
+Try the [interactive example](https://juspay.github.io/svelte-ui-components/components/lottie-player).
+
 ## Usage
 
 ```svelte

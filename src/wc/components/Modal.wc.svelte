@@ -46,7 +46,13 @@
       // a prefixed alias that reaches the inner element the reserved name
       // cannot.
       modalAriaLabel: { type: 'String', attribute: 'modal-aria-label' },
-      modalRole: { type: 'String', attribute: 'modal-role' }
+      modalRole: { type: 'String', attribute: 'modal-role' },
+      // Not an ARIAMixin accessor (measured in Chromium, Firefox and WebKit:
+      // `'ariaDescribedby' in Element.prototype` is false; only
+      // `ariaDescribedByElements` and `ariaDescription` exist), so the plain name
+      // is safe and forwards straight through `...props` to the panel. The id is
+      // resolved inside the shadow root, see ModalProperties.ariaDescribedby.
+      ariaDescribedby: { type: 'String', attribute: 'aria-describedby' }
     }
   }}
 />

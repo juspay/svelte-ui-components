@@ -30,6 +30,7 @@
     dropOverlapping
   } from '$lib/_chart/labels';
   import { formatSeriesAggregate } from '$lib/_chart/aggregate';
+  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
   import type { LegendItem, BarRect } from '$lib/_chart/types';
   import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
   import type { TooltipAnchor } from '$lib/_chart/types';
@@ -37,10 +38,12 @@
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────
-  // Derived at module scope per the library uid pattern (e.g. AreaChart
-  // feat/linechart-gradient line 17) to prevent id collision across multiple
-  // BarChart instances on the same page.
-  const uid = Math.random().toString(36).slice(2, 9);
+  // `$props.id()` is unique per component instance and identical on server and
+  // client, so two BarCharts on one page can never resolve each other's
+  // `url(#pattern)` / `url(#gradient)` references, and hydration never sees a
+  // different id than the one the server wrote. (A `Math.random()` prefix was
+  // collision-prone by construction and differed between SSR and the client.)
+  const uid = $props.id();
 
   /** Returns the plain CSS fallback color for any BarFill (used for legend, aria-label). */
   function fallbackColor(fill: BarFill, index: number): string {
@@ -94,6 +97,8 @@
     tooltipPortal = false,
     onbarclick,
     onbarhover,
+    ariaLabel,
+    ariaDescription,
     testId,
     classes
   }: BarChartProperties = $props();
@@ -635,6 +640,33 @@
 
   let isEmpty = $derived(resolvedSeries.every((s) => s.data.length === 0) || labels.length === 0);
 
+  // ── Chart-level accessible name ────────────────────────────────
+
+  /**
+   * The drawing's accessible name: the consumer's `ariaLabel`, else one derived
+   * from what the chart plots (see `defaultChartName`). It lives on the <svg>
+   * itself. It used to sit only on a wrapping `role="region"` that was present
+   * in every chart, leaving the image inside unnamed -- and giving every chart
+   * on a page the same landmark name.
+   */
+  let chartName = $derived(
+    resolveChartName(
+      ariaLabel,
+      defaultChartName('bar', {
+        yAxisLabel,
+        seriesNames: isMulti ? rawSeries.map((s) => s.name) : []
+      })
+    )
+  );
+
+  /**
+   * Bars are focusable `role="button"` marks, so a chart that draws them is
+   * interactive and must not be exposed as an image. With `hideBarGraphics` (a
+   * legend/label-only mode) or no bars there is nothing to operate, and the
+   * drawing is a plain named image.
+   */
+  let hasMarks = $derived(!hideBarGraphics && bars.length > 0);
+
   // ── Scroll geometry ────────────────────────────────────────────
 
   let minScrollWidth = $derived(
@@ -929,11 +961,20 @@
     {/if}
 
     <div class="chart-plot" bind:this={plotEl}>
+      <!--
+        A region landmark only when this wrapper really is a focusable scroll
+        container (axe: scrollable-region-focusable needs a focusable, named
+        container). It used to be a region in every chart, which put N identically
+        named landmarks on a page (axe: landmark-unique) and named the wrapper
+        while the chart image inside stayed unnamed. Its label deliberately
+        differs from the chart's own name so tabbing from the scroller into the
+        chart does not announce the same words twice.
+      -->
       <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
       <div
         class="chart-scroll-area"
-        role="region"
-        aria-label={yAxisLabel ? `${yAxisLabel} bar chart` : 'Bar chart'}
+        role={scrollable ? 'region' : null}
+        aria-label={scrollable ? `${chartName}, scrollable` : null}
         tabindex={scrollable ? 0 : null}
         style={scrollable
           ? `overflow-x: auto; -webkit-overflow-scrolling: touch; height: var(--barchart-scroll-area-height, auto);`
@@ -946,6 +987,9 @@
             {aspectRatio}
             {maxHeight}
             {minHeight}
+            ariaLabel={chartName}
+            {ariaDescription}
+            interactive={hasMarks}
           >
             <!-- A1-2 / A1-3: SVG <defs> for pattern and gradient fills -->
             {#if defsEntries.length > 0}
@@ -1112,8 +1156,12 @@
                 {/each}
                 {#each barLabels as bl, i (i)}
                   {#if bl.visible}
+                    <!-- Repeats the bar's own accessible name ("Jan: 4.2K"), which is
+                         what assistive technology reads; exposing it again would
+                         announce every value twice. -->
                     <text
                       class="bar-value"
+                      aria-hidden="true"
                       class:bar-value-inside={bl.p.placement === 'inside'}
                       data-inside={bl.p.placement === 'inside' ? 'true' : 'false'}
                       x={bl.p.x}

@@ -70,6 +70,18 @@ export type OptionalAreaChartProperties = {
   empty?: Snippet;
   /** Render the tooltip into document.body so scroll/overflow ancestors never clip it. */
   tooltipPortal?: boolean;
+  /**
+   * Accessible name of the chart (`aria-label` on its `<svg>`). Say what the chart
+   * shows, e.g. `"Monthly revenue, January to June"`. When omitted a name is
+   * derived from the chart's own data (`"{yAxisLabel} area chart"`, else the series names, else `"Area chart"`), so an unlabelled chart is still
+   * identifiable -- but a name written for the page is almost always better.
+   */
+  ariaLabel?: string;
+  /**
+   * Optional longer description (trend, range, the takeaway) announced after the
+   * name. Rendered as an SVG `<desc>` referenced by `aria-describedby`.
+   */
+  ariaDescription?: string;
   testId?: string;
   classes?: string;
 };

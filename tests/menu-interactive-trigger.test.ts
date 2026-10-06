@@ -101,9 +101,11 @@ test.describe('Menu — interactiveTrigger', () => {
   }) => {
     await gotoHydrated(page, '/components/menu');
 
-    // Regression guard for every existing consumer: without the flag, Menu keeps
-    // driving the trigger from its own wrapper exactly as before.
-    const defaultWrapper = page.locator('.menu-trigger').first();
+    // Regression guard for every existing consumer whose trigger content is not itself
+    // interactive: without the flag, Menu keeps driving the trigger from its own wrapper
+    // exactly as before. The page's Button examples set the flag, so the wrapper-owned
+    // example is the one that carries this shape.
+    const defaultWrapper = page.locator('[data-pw="menu-wrapper-owned-demo"] .menu-trigger');
     await expect(defaultWrapper).toHaveAttribute('role', 'button');
     await expect(defaultWrapper).toHaveAttribute('tabindex', '0');
   });

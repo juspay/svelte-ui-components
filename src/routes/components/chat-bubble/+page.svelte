@@ -199,6 +199,7 @@
     position: relative;
     overflow: hidden;
     width: 320px;
+    max-width: 100%;
     height: 260px;
     margin-bottom: 24px;
     border-radius: 10px;

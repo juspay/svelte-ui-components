@@ -102,17 +102,27 @@
 
 <h3>Basic Pie</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={marketShare} />
+  <PieChart
+    ariaDescription="Share of the browser market; each slice exposes its value and percentage."
+    ariaLabel="Browser market share"
+    data={marketShare}
+  />
 </div>
 
 <h3>Donut Chart</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={marketShare} innerRadius={0.6} />
+  <PieChart ariaLabel="Browser market share as a donut" data={marketShare} innerRadius={0.6} />
 </div>
 
 <h3>With Labels</h3>
 <div class="demo-row" style="max-width: 500px;">
-  <PieChart data={expenses} showLabels showValues labelPosition="outside" />
+  <PieChart
+    ariaLabel="Expense distribution with outside labels"
+    data={expenses}
+    showLabels
+    showValues
+    labelPosition="outside"
+  />
 </div>
 
 <h3>
@@ -120,12 +130,19 @@
   highlight, and Enter/Space on either fires the click event)
 </h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={expenses} innerRadius={0.5} showLegend testId="pie-legend-sync-demo" />
+  <PieChart
+    ariaLabel="Expenses with a synchronized legend"
+    data={expenses}
+    innerRadius={0.5}
+    showLegend
+    testId="pie-legend-sync-demo"
+  />
 </div>
 
 <h3>With Legend — themed</h3>
 <div class="demo-row" style="max-width: 400px;">
   <PieChart
+    ariaLabel="Expenses with a themed legend"
     data={expenses}
     innerRadius={0.5}
     showLegend
@@ -140,6 +157,7 @@
 </h3>
 <div class="demo-row" style="max-width: 640px;">
   <PieChart
+    ariaLabel="Traffic from twenty-four sources"
     data={crowdedSources}
     showLabels
     showValues
@@ -151,6 +169,7 @@
 <h3>All-zero values — degrades to the empty state, never NaN geometry</h3>
 <div class="demo-row" style="max-width: 400px;">
   <PieChart
+    ariaLabel="Empty expense distribution"
     data={[
       { label: 'A', value: 0 },
       { label: 'B', value: 0 }
@@ -174,6 +193,7 @@
 </p>
 <div class="demo-row" style="max-width: 560px;">
   <PieChart
+    ariaLabel="Browser share including a missing value"
     data={marketShareGap}
     innerRadius={0.5}
     showLegend
@@ -184,12 +204,22 @@
 
 <h3>Delta Badge — positive change</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={marketShare} innerRadius={0.6} changePercentage={12.5} />
+  <PieChart
+    ariaLabel="Browser share and positive change"
+    data={marketShare}
+    innerRadius={0.6}
+    changePercentage={12.5}
+  />
 </div>
 
 <h3>Delta Badge — negative change (inverted colors for lower-is-better metric)</h3>
 <div class="demo-row" style="max-width: 400px;">
-  <PieChart data={expenses} changePercentage={-8.3} changeInvertColors />
+  <PieChart
+    ariaLabel="Expenses and inverted negative change"
+    data={expenses}
+    changePercentage={-8.3}
+    changeInvertColors
+  />
 </div>
 
 <h3>Highlight Hook — declarative (highlightedIndex prop)</h3>
@@ -206,7 +236,12 @@
     {/each}
     <button class="demo-btn" onclick={() => highlightSlice(null)}>Clear</button>
   </div>
-  <PieChart data={marketShare} innerRadius={0.55} highlightedIndex={highlightedSlice} />
+  <PieChart
+    ariaLabel="Browser share with declarative highlight"
+    data={marketShare}
+    innerRadius={0.55}
+    highlightedIndex={highlightedSlice}
+  />
 </div>
 
 <h3>Highlight Hook — imperative (onChartReady API)</h3>
@@ -219,12 +254,18 @@
     {/each}
     <button class="demo-btn" onclick={() => chartApi?.highlight(null)}>Clear</button>
   </div>
-  <PieChart data={marketShare} innerRadius={0.55} onchartready={handleChartReady} />
+  <PieChart
+    ariaLabel="Browser share with narrated highlight"
+    data={marketShare}
+    innerRadius={0.55}
+    onchartready={handleChartReady}
+  />
 </div>
 
 <h3>Delta Badge + Highlight combined</h3>
 <div class="demo-row" style="max-width: 400px;">
   <PieChart
+    ariaLabel="Expense change with highlighted category"
     data={expenses}
     innerRadius={0.6}
     showLegend
@@ -237,6 +278,7 @@
 <h3>Right-side value legend, capped with an expander</h3>
 <div class="demo-row" style="max-width: 560px;">
   <PieChart
+    ariaLabel="Channel distribution with capped right legend"
     data={channels}
     innerRadius={0.6}
     showLegend
@@ -250,6 +292,7 @@
 <h3>Expander delegated to the consumer (onlegendmore)</h3>
 <div class="demo-row" style="max-width: 560px;">
   <PieChart
+    ariaLabel="Channel distribution with custom expander"
     data={channels}
     innerRadius={0.6}
     showLegend
@@ -267,6 +310,7 @@
   <!-- Regression guard: no legendPosition/legendMaxItems, so this stays the
        below-chart list with every item shown. -->
   <PieChart
+    ariaLabel="Channel distribution with default value legend"
     data={channels}
     innerRadius={0.6}
     showLegend
@@ -281,7 +325,12 @@
 </h3>
 <div class="demo-row" style="max-width: 400px;">
   <div class="clip-box">
-    <PieChart data={marketShare} tooltipPortal testId="pie-tooltip-portal" />
+    <PieChart
+      ariaLabel="Browser share with a portal tooltip"
+      data={marketShare}
+      tooltipPortal
+      testId="pie-tooltip-portal"
+    />
   </div>
 </div>
 

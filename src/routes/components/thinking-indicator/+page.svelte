@@ -136,6 +136,18 @@
 
   const traceKinds: ThinkingIndicatorKind[] = ['steps', 'reasoning', 'search', 'coding'];
 
+  // ---- Host-driven turn: a fixture whose every state is reachable on demand. ----
+  //
+  // The two showcases above settle on page timers (3.2s, 4s), so a test that wants
+  // "the counter at 3s, then frozen, then reset" would have to race those timers. Here
+  // the host owns `busy` outright and nothing else moves it: click Start and the counter
+  // begins at 0s; click Finish and it freezes at whatever it reached; click Start again
+  // and the same instance resets to 0s. `collapseDelayMs={null}` keeps the disclosure
+  // open after settling, so busy, settled and (via the toggle) collapsed are all stable.
+  // tests/thinking-indicator-elapsed.spec.ts and tests/visual/thinking-indicator-states
+  // .visual.ts drive it with a controlled one-second clock (tests/support/thinking-clock.ts).
+  let turnRunning = $state(false);
+
   const traceScenario = $derived(traceScenarios[traceKind]);
   const traceLabel = $derived(traceBusy ? traceScenario.activeLabel : traceScenario.settledLabel);
 
@@ -304,6 +316,34 @@
   </div>
 </div>
 
+<h2>Host-driven turn — counter, settle, and a fresh turn on the same instance</h2>
+<p class="demo-note">
+  The host owns <code>busy</code>. Start a turn and the disclosure opens with the counter at 0s;
+  finish it and the counter freezes at its last value with the trace still open; start another and
+  the same instance resets to 0s. <code>collapseDelayMs=&#123;null&#125;</code> keeps the trace open after
+  settling, so every state stays put until you move it.
+</p>
+<div class="demo-row turn-demo-row">
+  <div class="kind-switch">
+    <Button
+      text={turnRunning ? 'Finish turn' : 'Start turn'}
+      onclick={() => (turnRunning = !turnRunning)}
+      testId="thinking-indicator-turn-run"
+    />
+  </div>
+  <div class="trace-host" data-pw="thinking-indicator-turn-fixture">
+    <ThinkingIndicator
+      label={turnRunning ? 'Thinking' : 'Thought for a moment'}
+      kind="steps"
+      rows={traceScenarios.steps.rows}
+      busy={turnRunning}
+      showElapsed
+      collapseDelayMs={null}
+      testId="thinking-indicator-turn"
+    />
+  </div>
+</div>
+
 <style>
   .assistant-avatar {
     display: block;
@@ -315,6 +355,16 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  /* Stacked, not side by side: with the control beside the fixture, its label ("Start turn" vs
+     "Finish turn") sets the fixture's x offset, which is fractional, so the fixture's text
+     would sit at a different sub-pixel position in every state. Stacked, the fixture starts at
+     the row's own left edge whatever the control says. */
+  .turn-demo-row {
+    flex-direction: column;
+    align-items: flex-start;
+    flex-wrap: nowrap;
   }
 
   .kind-switch {

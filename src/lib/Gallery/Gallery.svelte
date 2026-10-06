@@ -283,27 +283,29 @@
         </div>
       {/if}
       {#if showItemActions}
-        <div class="gallery-item-actions">
-          {#if showEditButton}
-            <div class="gallery-item-action">
-              <Button
-                ariaLabel={`Edit image ${index + 1}: ${image.alt}`}
-                onclick={(event) => handleEditClick(index, event)}
-              >
-                {@render controlIcon(editSvg, editIcon)}
-              </Button>
-            </div>
-          {/if}
-          {#if showDeleteButton}
-            <div class="gallery-item-action">
-              <Button
-                ariaLabel={`Delete image ${index + 1}: ${image.alt}`}
-                onclick={(event) => handleDeleteClick(index, event)}
-              >
-                {@render controlIcon(deleteSvg, deleteIcon)}
-              </Button>
-            </div>
-          {/if}
+        <div class="gallery-item-actions-frame">
+          <div class="gallery-item-actions">
+            {#if showEditButton}
+              <div class="gallery-item-action">
+                <Button
+                  ariaLabel={`Edit image ${index + 1}: ${image.alt}`}
+                  onclick={(event) => handleEditClick(index, event)}
+                >
+                  {@render controlIcon(editSvg, editIcon)}
+                </Button>
+              </div>
+            {/if}
+            {#if showDeleteButton}
+              <div class="gallery-item-action">
+                <Button
+                  ariaLabel={`Delete image ${index + 1}: ${image.alt}`}
+                  onclick={(event) => handleDeleteClick(index, event)}
+                >
+                  {@render controlIcon(deleteSvg, deleteIcon)}
+                </Button>
+              </div>
+            {/if}
+          </div>
         </div>
       {/if}
     </div>
@@ -514,16 +516,43 @@
     font-family: var(--gallery-list-caption-font-family, inherit);
   }
 
+  /* The --_actions-* / --_action-* values are internal fallbacks that only the narrow-tile rule at the
+     end of this block changes. They sit BELOW the public --gallery-item-action* variables, so any value
+     a consumer sets still wins at every tile width. */
   .gallery-item-actions {
     display: flex;
     align-items: center;
-    gap: var(--gallery-item-actions-gap, 4px);
+    gap: var(--gallery-item-actions-gap, var(--_actions-gap, 4px));
+  }
+
+  /* The frame exists so the narrow-tile rule below has a container to ask. It cannot be the tile itself:
+     inline-size containment makes a box report no intrinsic width, and a tile that reports none leaves a
+     grid inside an ancestor that sizes to its content (inline-block, fit-content, an auto-width absolute
+     box) with nothing to measure, so the whole gallery collapsed to its gaps. An out-of-flow box adds
+     nothing to its parent's intrinsic size, so the frame can be contained and the tile sizes as before.
+     It covers the tile exactly and lets pointer events through to the image underneath; in list view it
+     takes no box at all. Named so the rule can only match these frames, never a container in the
+     consumer's own page. */
+  .gallery-item-actions-frame {
+    display: contents;
+  }
+
+  .grid .gallery-item-actions-frame {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    container: gallery-tile / inline-size;
   }
 
   .grid .gallery-item-actions {
     position: absolute;
-    top: var(--gallery-item-actions-top, 8px);
-    right: var(--gallery-item-actions-right, 8px);
+    pointer-events: auto;
+    top: var(--gallery-item-actions-top, var(--_actions-inset, 8px));
+    right: var(--gallery-item-actions-right, var(--_actions-inset, 8px));
   }
 
   .list .gallery-item-actions {
@@ -535,12 +564,28 @@
     border-radius: var(--gallery-item-action-border-radius, 8px);
     --button-color: transparent;
     --button-hover-color: transparent;
-    --button-padding: var(--gallery-item-action-padding, 6px);
+    --button-padding: var(--gallery-item-action-padding, var(--_action-padding, 6px));
     --button-border-radius: var(--gallery-item-action-border-radius, 8px);
     --icon-container-padding: 0px;
     --icon-padding: 0px;
-    --icon-width: var(--gallery-item-action-icon-size, 16px);
-    --icon-height: var(--gallery-item-action-icon-size, 16px);
+    --icon-width: var(--gallery-item-action-icon-size, var(--_action-icon, 16px));
+    --icon-height: var(--gallery-item-action-icon-size, var(--_action-icon, 16px));
+  }
+
+  /* Two default-size actions need 2 x 36px + a 4px gap + both 8px insets = 92px of tile width. A tile
+     narrower than that (a three-column grid on a 320px phone is about 79px) pushed the left button past
+     the tile's overflow:hidden edge. Below 96px the defaults shrink instead: 26px buttons (still above the
+     24px WCAG 2.5.8 target minimum), 2px gap, 4px insets. */
+  @container gallery-tile (max-width: 96px) {
+    .gallery-item-actions {
+      --_actions-gap: 2px;
+      --_actions-inset: 4px;
+    }
+
+    .gallery-item-action {
+      --_action-padding: 3px;
+      --_action-icon: 12px;
+    }
   }
 
   .grid .gallery-item-action {

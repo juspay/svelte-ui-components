@@ -30,7 +30,8 @@ test.describe('MediaPlayer', () => {
     });
     await expect(video).toHaveAttribute('aria-label', 'Pause video');
 
-    await video.click();
+    // The center is a separate play button; activate the actual video surface.
+    await video.click({ position: { x: 12, y: 12 } });
     await expect(video).toHaveAttribute('aria-label', 'Play video');
   });
 

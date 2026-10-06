@@ -33,13 +33,14 @@
 {#if images.length > 0 || videos.length > 0 || files.length > 0}
   <Scroller
     direction="horizontal"
+    ariaLabel="Pending attachments"
     showArrows={false}
     hideScrollbar={false}
     showGradient={false}
     classes={`attachment-chip-row ${classes ?? ''}`}
     {testId}
   >
-    {#each images as image (image.id)}
+    {#each images as image, index (image.id)}
       <div
         class="chip"
         data-pw={typeof testId === 'string' ? `${testId}-image-${image.id}` : null}
@@ -67,7 +68,7 @@
             <Button
               variant="secondary"
               iconOnly={true}
-              ariaLabel="Remove image"
+              ariaLabel={`Remove ${image.filename?.trim() || `image ${index + 1} of ${images.length}`}`}
               testId={testId && `${testId}-remove-image-${image.id}`}
               onclick={() => onremoveimage(image.id)}
             >
@@ -90,7 +91,7 @@
         {/if}
       </div>
     {/each}
-    {#each videos as video (video.id)}
+    {#each videos as video, index (video.id)}
       <div
         class="chip"
         data-pw={typeof testId === 'string' ? `${testId}-video-${video.id}` : null}
@@ -125,7 +126,7 @@
             <Button
               variant="secondary"
               iconOnly={true}
-              ariaLabel="Remove video"
+              ariaLabel={`Remove ${video.filename?.trim() || `video ${index + 1} of ${videos.length}`}`}
               testId={testId && `${testId}-remove-video-${video.id}`}
               onclick={() => onremovevideo(video.id)}
             >
@@ -148,7 +149,7 @@
         {/if}
       </div>
     {/each}
-    {#each files as file (file.id)}
+    {#each files as file, index (file.id)}
       <div
         class="chip"
         data-pw={typeof testId === 'string' ? `${testId}-file-${file.id}` : null}
@@ -190,7 +191,7 @@
             <Button
               variant="secondary"
               iconOnly={true}
-              ariaLabel="Remove file"
+              ariaLabel={`Remove ${file.filename.trim() || `file ${index + 1} of ${files.length}`}`}
               testId={testId && `${testId}-remove-file-${file.id}`}
               onclick={() => onremovefile(file.id)}
             >

@@ -161,11 +161,11 @@
   },
   {
     "name": "FileDropzoneTrigger",
-    "description": "The visual body for a FileInput trigger snippet \u2014 an icon plus heading and optional caption, built on the library's own Img and Button. Supports a compact variant (bare icon-sm + heading, no Button wrapper or caption) for inline/dense placements. Pass onclick={openFilePicker} from FileInput's trigger snippet in the non-compact variant; compact relies on FileInput's own whole-area click/drop handling. Use for upload dropzones, CSV/image pickers, or any file-picker trigger that needs the icon+heading+caption recipe instead of hand-rolled markup."
+    "description": "The visual body for a FileInput trigger snippet \u2014 an icon plus heading and optional caption, built on the library's own Img and Button. Supports a compact variant (bare icon-sm + heading, no Button wrapper or caption) for inline/dense placements. Inside a default FileInput the drop region owns the action, so it renders as plain content (one Tab stop, no nested button); it renders a real Button only when given onclick under <FileInput activation=\"trigger\">, or standalone. Use for upload dropzones, CSV/image pickers, or any file-picker trigger that needs the icon+heading+caption recipe instead of hand-rolled markup."
   },
   {
     "name": "FileInput",
-    "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, and `disabled`."
+    "description": "A headless file-picker region that handles drag-and-drop, click-to-open, MIME/extension filtering, and size validation. All visual chrome is supplied by the required `trigger` snippet, which receives `openFilePicker`, `dragOver`, `disabled` and `describedBy`. The drop region is the single interactive control by default (keep trigger content non-interactive); `activation=\"trigger\"` hands that role to a control inside the snippet."
   },
   {
     "name": "FunnelChart",
@@ -249,7 +249,7 @@
   },
   {
     "name": "MediaPlayer",
-    "description": "An image or video player with a hover-revealed control overlay, reusing Img (image type, with fallback) and Button (video controls). Video shows a centered play/pause and bottom-aligned mute/unmute on hover; the video element itself is a focusable role=button that toggles playback directly. `playing`/`muted` are bindable; `onplay`/`onpause`/`onvolumechange` relay the video's native events. Set `controls` to fall back to native browser controls. Built-in play/pause/volume/mute icons are swappable via snippet props. Fully CSS-variable driven."
+    "description": "An image or video player with a hover-revealed control overlay, reusing Img (image type, with fallback) and Button (video controls). Video shows a centered play/pause and bottom-aligned mute/unmute on hover; the video element itself is a focusable role=button that toggles playback directly. `playing`/`muted` are bindable; `onplay`/`onpause`/`onvolumechange` relay the video's native events. Set `controls` to fall back to native browser controls. Built-in play/pause/volume/mute icons are swappable via snippet props. `captionsSrc` adds a WebVTT track and `captionsButton` an opt-in, `aria-pressed` Captions toggle in the overlay (the custom overlay replaces the browser's captions menu); `captionsVisible` is bindable and `oncaptionschange` reports the viewer's choice. Fully CSS-variable driven."
   },
   {
     "name": "MediaUpload",

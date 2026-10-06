@@ -6,6 +6,7 @@
     SortDirection
   } from './properties';
   import { normalizeColumns } from './normalizeColumns';
+  import { rowContextLabels, selectionControlIds } from './a11y';
   import BuiltinCell from './BuiltinCell.svelte';
   import type { JSONValue } from 'type-decoder';
   import { SvelteSet } from 'svelte/reactivity';
@@ -74,6 +75,9 @@
   // (pre-sort/pre-filter). Row refs are preserved through sort/filter/paginate,
   // so cell callbacks can hand consumers a sort-stable `originalIndex`.
   let originalIndexByRow = $derived(new Map(effectiveData.map((row, index) => [row, index])));
+  const tableUid = $props.id();
+  const selectionId = selectionControlIds(tableUid);
+  let rowLabels = $derived(rowContextLabels(effectiveData, columns));
   let effectiveSortableColumns = $derived(
     normalized ? normalized.sortableColumns : sortableColumns
   );
@@ -544,7 +548,7 @@
     rowIndex: number,
     originalIndex: number
   ): string => {
-    return cfg.getRowId ? cfg.getRowId(row, rowIndex, originalIndex) : String(rowIndex);
+    return cfg.getRowId ? cfg.getRowId(row, rowIndex, originalIndex) : String(originalIndex);
   };
 
   let internalSelectedIds = new SvelteSet<string>();
@@ -569,12 +573,9 @@
   /**
    * Stable string ID for every row in the currently visible (filtered) view.
    *
-   * Each entry is resolved by iterating `filteredTableData` and looking up the
-   * row's pre-sort position via `sortedTableData.indexOf(row)`. Using the
-   * pre-filter index as the default numeric ID keeps `String(originalIndex)`
-   * stable even when the visible set shrinks or expands as the search term
-   * changes — so a row that was "row 2" in the full set keeps ID `"2"` even
-   * when it becomes the only visible result.
+   * The callback retains its current pre-filter sorted index plus originalIndex.
+   * The default ID uses the source index, so sort/filter/page transforms do not
+   * silently transfer selection to a different record.
    *
    * The Map lookup uses object reference equality, so row objects in
    * `filteredTableData` must be the same references as those in
@@ -594,7 +595,7 @@
           originalIndexByRow.get(row) ?? stableIndex
         );
       }
-      return String(stableIndex);
+      return String(originalIndexByRow.get(row) ?? stableIndex);
     });
   });
 
@@ -718,13 +719,13 @@
   };
 
   /**
-   * Attributes for one row checkbox (`rowIndex` -1 is the header). The row id
-   * doubles as the element id the header's `aria-controls` points at; the
-   * consumer's `getRowAttributes` is spread last so its own test attribute wins.
+   * Attributes for one checkbox (`rowIndex` -1 is the header). DOM identity is
+   * separate from the consumer's selection key. Preserve other caller attributes
+   * and valid unique custom IDs, while managing unsafe/colliding IDs ourselves.
    */
   const checkboxAttributes = (rowId: string, rowIndex: number): Record<string, string> => {
     const suffix = rowIndex === -1 ? 'select-all' : `row-checkbox-${rowId}`;
-    const own: Record<string, string> = rowIndex === -1 ? {} : { id: `row-checkbox-${rowId}` };
+    const own: Record<string, string> = {};
     if (typeof testId === 'string') {
       own['data-pw'] = `${testId}-${suffix}`;
       own.testID = `${testId}-${suffix}`;
@@ -732,8 +733,35 @@
     const consumer = checkboxSelection?.getRowAttributes
       ? checkboxSelection.getRowAttributes(rowId, rowIndex)
       : {};
-    return { ...own, ...consumer };
+    return {
+      ...own,
+      ...consumer,
+      id: selectionId(rowId, rowIndex === -1, consumer.id)
+    };
   };
+
+  let headerCheckboxAttributes = $derived(checkboxAttributes('__header__', -1));
+  // Evaluate caller attributes once for each rendered control. Both the DOM and
+  // its IDREF list consume the same result, including a caller-supplied ID.
+  let renderedCheckboxAttributes = $derived.by(() => {
+    if (!checkboxSelection || checkboxSelection.enabled === false) {
+      return new Map<JSONValue[], Record<string, string>>();
+    }
+    return new Map(
+      paginatedTableData.map((row, index) => {
+        const rowIndex = index + rowIndexOffset;
+        const rowId = rowIdByRow.get(row) ?? String(originalIndexByRow.get(row) ?? rowIndex);
+        return [row, checkboxAttributes(rowId, rowIndex)];
+      })
+    );
+  });
+  let controlledRowControlIds = $derived(
+    paginatedTableData.flatMap((row) => {
+      const rowId = rowIdByRow.get(row);
+      const id = renderedCheckboxAttributes.get(row)?.id;
+      return typeof rowId === 'string' && !isRowDisabled(rowId) && id ? [id] : [];
+    })
+  );
 
   // ─── Empty-state reason ───────────────────────────────────────────────────
   // "No records yet" and "nothing matched" need different messages and offer
@@ -821,7 +849,14 @@
           {#if caption}
             <caption class="sr-only">{caption}</caption>
           {/if}
-          <thead role={mobileRole('rowgroup')}>
+          <thead
+            role={mobileRole('rowgroup')}
+            class:mobile-controls={(isCheckboxMode && !isSingleSelect) ||
+              (hasSearchConfig && isInlineSearch) ||
+              effectiveHeaders.some(
+                (_header, index) => isColumnSortable(index) || Boolean(columns?.[index]?.tooltip)
+              )}
+          >
             <tr role={mobileRole('row')}>
               {#if isCheckboxMode && !isSingleSelect}
                 <th
@@ -837,10 +872,8 @@
                     controlled
                     checked={headerCheckboxState === 'all'}
                     indeterminate={headerCheckboxState === 'some'}
-                    ariaControls={selectableRowIds
-                      .map((rowId) => `row-checkbox-${rowId}`)
-                      .join(' ')}
-                    attributes={checkboxAttributes('__header__', -1)}
+                    ariaControls={controlledRowControlIds.join(' ')}
+                    attributes={headerCheckboxAttributes}
                     onclick={toggleAllSelection}
                   />
                 </th>
@@ -1096,7 +1129,7 @@
                         controlled
                         checked={rowSelected}
                         disabled={rowDisabled}
-                        attributes={checkboxAttributes(rowId, rowIndex)}
+                        attributes={renderedCheckboxAttributes.get(row)}
                         onclick={() => toggleRowSelection(rowId)}
                       />
                     </td>
@@ -1148,9 +1181,16 @@
                             {rowIndex}
                             {originalIndex}
                             {usePortal}
+                            ariaLabel={labels
+                              ?.cellEditor?.(
+                                cellLabel,
+                                rowLabels.get(row) ?? `row ${originalIndex + 1}`
+                              )
+                              ?.trim() ||
+                              `${cellLabel} for ${rowLabels.get(row) ?? `row ${originalIndex + 1}`}`}
                           />
                         {:else if typeof cell === 'function'}
-                          {@render cell(cellValue, rowIndex, colIndex)}
+                          {@render cell(cellValue, rowIndex, colIndex, originalIndex)}
                         {:else}
                           {cellValue}
                         {/if}
@@ -1790,6 +1830,7 @@
     align-items: center;
     gap: var(--table-paginator-gap, 12px);
     flex-wrap: wrap;
+    min-width: 0;
   }
 
   .table-paginator-controls :global(.pagination) {
@@ -1872,6 +1913,10 @@
     .table-mobile-cards td {
       display: block;
       width: 100%;
+      /* `width: 100%` is the card's outer width only if padding and border are
+         inside it: the card row has both, so under content-box it was 26px wider
+         than the table and its right edge ran past the column. */
+      box-sizing: border-box;
     }
 
     /* Headers are not shown as a row anymore -- their text now repeats per
@@ -1889,6 +1934,19 @@
       clip-path: inset(50%);
       white-space: nowrap;
       border-width: 0;
+    }
+
+    /* A screen-reader-only header must not conceal operative sort or select-all
+       controls. Keep those headers visible above the record cards, with the same
+       controls, names and table relationships used at desktop width. */
+    .table-mobile-cards thead.mobile-controls {
+      position: static;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      clip: auto;
+      clip-path: none;
+      white-space: normal;
     }
 
     /* The horizontal-scroll affordance this table uses at desktop width (see

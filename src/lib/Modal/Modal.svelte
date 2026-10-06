@@ -48,6 +48,7 @@
     lockScroll = true,
     autoDismissAfter = null,
     ariaLabel,
+    ariaDescribedby,
     role,
     overlayAriaLabel
   }: ModalProperties = $props();
@@ -64,10 +65,13 @@
 
   let dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // Fix [major]: plain const so the debouncer closure retains its internal lastCallTime state
-  // across re-renders. $derived would recreate the debouncer on every reactive re-evaluation,
-  // resetting the timer and breaking debounce correctness.
-  const debounce = createDebouncer(debounceTime);
+  // One plain const, so the debouncer keeps its lastCallTime across re-renders and every
+  // dismissal path (overlay click, Escape, back-press) measures against the same history.
+  // $derived would rebuild it on every change and forget when it last fired. The delay is
+  // passed as a getter instead of the value: a value is captured when this line runs, so a
+  // `debounceTime` changed while the modal is open would never be seen. Reading the prop
+  // inside the closure picks up the current one on each dismissal.
+  const debounce = createDebouncer(() => debounceTime);
 
   /**
    * Where a portalled node is allowed to land. Svelte scopes a custom element's
@@ -328,6 +332,7 @@
           role={role ?? null}
           aria-modal={role != null ? 'true' : null}
           aria-label={ariaLabel ?? null}
+          aria-describedby={ariaDescribedby ?? null}
           tabindex="-1"
         >
           {#if (typeof header?.leftImage === 'string' && header.leftImage.length > 0) || (typeof header?.text === 'string' && header.text.length > 0) || (typeof header?.rightImage === 'string' && header.rightImage.length > 0)}

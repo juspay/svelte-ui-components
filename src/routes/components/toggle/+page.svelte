@@ -23,8 +23,11 @@
   class="demo-row"
   style="--toggle-text-order: 1; --toggle-switch-width: 40px; --toggle-switch-height: 20px; --toggle-ball-height: 18px; --toggle-ball-width: 18px;"
 >
-  <Toggle text="Dark mode" checked={toggleChecked} onclick={(val) => (toggleChecked = val)} />
-  <span class="state-display">{toggleChecked ? 'ON' : 'OFF'}</span>
+  <Toggle text="Dark mode" bind:checked={toggleChecked} testId="toggle-bound" />
+  <span class="state-display" data-pw="toggle-bound-state">{toggleChecked ? 'ON' : 'OFF'}</span>
+  <button type="button" data-pw="toggle-bound-reset" onclick={() => (toggleChecked = false)}>
+    Reset bound toggle
+  </button>
 </div>
 
 <div class="demo-row">

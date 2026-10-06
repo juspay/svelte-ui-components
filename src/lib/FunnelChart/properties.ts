@@ -82,6 +82,10 @@ export type OptionalFunnelChartProperties = {
    */
   tooltipPortal?: boolean;
   /** Value for the `data-pw` attribute on the chart root element. */
+  /** Accessible name of the drawing; omit to derive one from the plotted data. */
+  ariaLabel?: string;
+  /** Longer chart description, resolved inside the drawing's own DOM/shadow root. */
+  ariaDescription?: string;
   testId?: string;
   /** CSS class string applied to the chart root element. Useful for CSS-variable theming. */
   classes?: string;

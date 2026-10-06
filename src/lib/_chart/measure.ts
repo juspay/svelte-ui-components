@@ -48,6 +48,11 @@ export function measureText(text: string, font: FontSpec): { width: number; heig
   return { width, height };
 }
 
+/** A loaded font can replace its fallback without changing the font cache key. */
+export function invalidateTextMeasurements(): void {
+  cache.clear();
+}
+
 /** Reads a px-valued CSS custom property off an element, with an SSR-safe fallback. */
 export function readCssVarPx(el: Element | null, name: string, fallback: number): number {
   if (typeof window === 'undefined' || el === null) {

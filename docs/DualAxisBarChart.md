@@ -31,8 +31,12 @@ A pure-SVG dual-axis chart with two completely independent Y-axes — left (`yAx
 <DualAxisBarChart
   {categories}
   {series}
-  leftAxis={{ title: 'Revenue ($)', color: '#4e79a7' }}
-  rightAxis={{ title: 'CTR (%)', color: '#f28e2b', valueFormat: (v) => `${v.toFixed(1)}%` }}
+  leftAxis={{ title: 'Revenue ($)', color: 'light-dark(#315c85, #a4c6ec)' }}
+  rightAxis={{
+    title: 'CTR (%)',
+    color: 'light-dark(#8a4400, #f7b96f)',
+    valueFormat: (v) => `${v.toFixed(1)}%`
+  }}
 />
 ```
 
@@ -140,6 +144,45 @@ domain to `[NaN, NaN]`, which made every bar on that axis render an invalid,
 unpainted SVG path while its ticks disappeared. See
 [Chart Input Policy](./CHART_INPUT_POLICY.md#why-a-non-finite-value-is-never-just-one-bad-point).
 
+### Chart name and description
+
+Pass `ariaLabel` to identify the chart's purpose and `ariaDescription` for its takeaway,
+units or reading instructions. Both belong to the drawing itself, so its points are
+reached in a named group. Without an explicit name the chart derives one from its data.
+A drawing with no marks is a named image with no point Tab stops.
+
+```svelte
+<DualAxisBarChart
+  {...chartProps}
+  ariaLabel="Revenue and click-through rate by month"
+  ariaDescription="Values are available on each data control."
+/>
+```
+
+The web component uses `chart-aria-label` and `chart-aria-description`, or JS properties
+`chartAriaLabel` / `chartAriaDescription`. These aliases preserve the host's native
+`ariaLabel` / `ariaDescription` accessors. The description resolves in the same shadow
+root as the drawing, with an instance-scoped ID.
+
+```html
+<sui-dual-axis-bar-chart
+  chart-aria-label="Revenue and click-through rate by month"
+  chart-aria-description="Values are available on each data control."
+></sui-dual-axis-bar-chart>
+```
+
+The existing empty placeholder is the named image when there is no data; it retains
+its layout. Hiding every series with the interactive legend removes the drawing
+controls while leaving the legend available to restore them.
+
+### Series-colored axis titles
+
+The series keep their palette colors. Colored title recipes use darker blue/orange
+in light mode and lighter versions of the same hues in dark mode, rather than
+reusing a series fill that may fail against the page. Keep normal-size axis-title
+text at 4.5:1 against its rendered backdrop; `leftAxis.color` and `rightAxis.color`
+still honor the explicit consumer color.
+
 ## Props
 
 | Prop              | Type                                | Required | Default                                        | Description                                                                                                                                                                                                                  |
@@ -154,6 +197,8 @@ unpainted SVG path while its ticks disappeared. See
 | barPadding        | `number`                            | No       | `0.25`                                         | Padding between category bands as a fraction of band width (0–1).                                                                                                                                                            |
 | aspectRatio       | `number`                            | No       | `16/9`                                         | Width-to-height ratio for the chart. Passed to ChartContainer's ResizeObserver sizing.                                                                                                                                       |
 | tooltipSnippet    | `Snippet<[DualAxisTooltipContext]>` | No       | —                                              | Custom tooltip content rendered on hover. Receives a `DualAxisTooltipContext` with the hovered category and all series values. Replaces the default tooltip.                                                                 |
+| ariaLabel         | `string`                            | No       | Derived from data                              | Accessible name of the drawing.                                                                                                                                                                                              |
+| ariaDescription   | `string`                            | No       | —                                              | Longer description scoped to this drawing instance.                                                                                                                                                                          |
 | testId            | `string`                            | No       | —                                              | Value for the `data-pw` attribute on the root element for test targeting.                                                                                                                                                    |
 | classes           | `string`                            | No       | —                                              | Extra CSS class string on the root `<div>`. Useful for applying scoped CSS variable overrides.                                                                                                                               |
 | minBarHeight      | `number`                            | No       | `2`                                            | Minimum rendered bar height in pixels. Set `0` so an all-zero/dormant series renders nothing (e.g. to show an empty state instead of indistinguishable 2px baseline stubs).                                                  |

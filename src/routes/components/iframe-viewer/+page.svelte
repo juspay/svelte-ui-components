@@ -1,14 +1,14 @@
 <script lang="ts">
   import IframeViewer from '$lib/IframeViewer/IframeViewer.svelte';
 
-  const demoDoc = `data:text/html,${encodeURIComponent(
+  const demoDoc = `data:text/html;charset=utf-8,${encodeURIComponent(
     '<div style="font-family: sans-serif; padding: 24px; color: #1a1a1a;">' +
       '<h2>Embedded content</h2>' +
       '<p>This document is rendered inside an IframeViewer.</p>' +
       '</div>'
   )}`;
 
-  const messagingDoc = `data:text/html,${encodeURIComponent(
+  const messagingDoc = `data:text/html;charset=utf-8,${encodeURIComponent(
     '<div style="font-family: sans-serif; padding: 24px; color: #1a1a1a;">' +
       '<h2>credentialless + postMessage</h2>' +
       '<p id="log">Waiting for a message…</p>' +

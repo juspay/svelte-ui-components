@@ -49,6 +49,7 @@
     items={fruits}
     bind:value={selected}
     bind:inputValue={inputText}
+    ariaLabel="Fruit"
     placeholder="Search fruits..."
   />
   <p class="demo-info">Selected: {selected || 'none'} | Input: {inputText || 'empty'}</p>
@@ -60,7 +61,12 @@
   no bindable <code>inputElement</code> prop.
 </p>
 <div class="demo-row" style="max-width: 320px;">
-  <Combobox items={fruits} bind:this={comboboxRef} testId="combobox-input-ref-demo" />
+  <Combobox
+    items={fruits}
+    bind:this={comboboxRef}
+    ariaLabel="Fruit, focused from a button"
+    testId="combobox-input-ref-demo"
+  />
   <button type="button" data-pw="combobox-focus-button" onclick={focusInput}>
     Focus the combobox
   </button>
@@ -71,7 +77,13 @@
   Set <code>multiple</code> with a bindable <code>selected</code> array. Picks become removable pills.
 </p>
 <div class="demo-row" style="max-width: 420px;">
-  <Combobox items={fruits} multiple bind:selected={picked} placeholder="Pick fruits…" />
+  <Combobox
+    items={fruits}
+    multiple
+    bind:selected={picked}
+    ariaLabel="Fruits"
+    placeholder="Pick fruits…"
+  />
   {#if picked.length > 0}
     <p class="demo-info">Selected: {picked.join(', ')}</p>
   {/if}
@@ -88,6 +100,7 @@
     multiple
     allowCreate
     bind:selected={tags}
+    ariaLabel="Tags"
     placeholder="Add tags…"
     oncreate={(value) => {
       if (!tagItems.some((item) => item.id === value)) {
@@ -110,6 +123,7 @@
     multiple
     maxSelected={3}
     bind:selected={limited}
+    ariaLabel="Favourite fruits, up to 3"
     placeholder="Pick up to 3…"
   />
   {#if limited.length > 0}
@@ -124,6 +138,7 @@
     items={fruits}
     multiple
     bind:selected={withAction}
+    ariaLabel="Fruits, with a manage action"
     placeholder="Pick fruits…"
     action={{ label: 'Manage fruits…', onClick: () => alert('Manage clicked') }}
   />
@@ -142,18 +157,18 @@
 >
   <Combobox
     items={fruits}
-    ariaLabel="Fruit"
+    ariaLabel="Fruit with an error"
     errorMessage="Choose a fruit from the list."
     infoMessage="Type to filter."
     testId="combobox-described"
   />
   <Combobox
     items={fruits}
-    ariaLabel="Fruit"
+    ariaLabel="Fruit with a hint"
     infoMessage="Type to filter."
     testId="combobox-info-only"
   />
-  <Combobox items={fruits} ariaLabel="Fruit" testId="combobox-undescribed" />
+  <Combobox items={fruits} ariaLabel="Plain fruit" testId="combobox-undescribed" />
 </div>
 
 <style>

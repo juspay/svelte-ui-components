@@ -12,6 +12,16 @@
     classes
   }: CheckListItemProperties = $props();
 
+  /* The box (`role="checkbox"`) is what assistive technology reads, and the label the row shows is a
+     sibling of it, not inside <Checkbox> -- so nothing tied the two together and every item exposed an
+     unnamed control. `aria-labelledby` points the box at the label wrapper below, so the announced name
+     is exactly what is on screen: the plain `text`, or everything a `checkboxLabel` snippet renders
+     ("Required business details Required"), which `text` alone would not carry. The id lives in the
+     component's own tree, so it resolves inside the shadow root `<sui-check-list-item>` renders into. */
+  const uid = $props.id();
+  const labelId = `check-list-item-label-${uid}`;
+  const checkboxAttributes = { 'aria-labelledby': labelId };
+
   function handleClick(value: boolean): void {
     checked = value;
     onclick?.(checked);
@@ -20,19 +30,25 @@
 
 <div class="container {classes ?? ''}" class:disabled data-pw={testId} testID={testId}>
   <div class="checkbox-wrapper">
+    <!-- `ariaLabel` is the fallback name: it applies only if the label wrapper resolves to nothing
+         (an empty snippet), because `aria-labelledby` outranks it whenever it yields text. -->
     <Checkbox
       text=""
+      ariaLabel={text}
+      attributes={checkboxAttributes}
       bind:checked
       {disabled}
       onclick={handleClick}
       {...typeof testId === 'string' ? { testId: `${testId}-checkbox` } : {}}
     />
   </div>
-  {#if typeof checkboxLabel === 'function'}
-    {@render checkboxLabel()}
-  {:else}
-    <span class="text" class:checked>{text}</span>
-  {/if}
+  <span class="check-list-item-label" id={labelId}>
+    {#if typeof checkboxLabel === 'function'}
+      {@render checkboxLabel()}
+    {:else}
+      <span class="text" class:checked>{text}</span>
+    {/if}
+  </span>
 </div>
 
 <style>
@@ -50,6 +66,12 @@
 
   .checkbox-wrapper {
     flex-shrink: 0;
+  }
+
+  /* Names the checkbox but adds no box of its own: the text or snippet inside stays a direct flex item
+     of .container, so layout, gap and every --check-list-item-* token behave as before. */
+  .check-list-item-label {
+    display: contents;
   }
 
   .container.disabled .checkbox-wrapper {

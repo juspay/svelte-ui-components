@@ -1058,6 +1058,7 @@
       showFooterOnSinglePage: true,
       testId: 'shrink-paged'
     }}
+    labels={{ rowsPerPage: 'Rows per page for the external-shrink demo' }}
     testId="table-page-shrink"
   >
     {#snippet empty()}
@@ -1087,6 +1088,7 @@
         requestedPageSize = size;
       }
     }}
+    labels={{ rowsPerPage: 'Rows per page for the server-request demo' }}
     testId="table-server-refusal"
   />
   <p
@@ -1108,6 +1110,7 @@
     searchConfig={{ placeholder: 'Search items…', testId: 'paged-search' }}
     pagination={{ pageSize: 5, pageSizeOptions: [5, 10], testId: 'paged' }}
     getRowTestId={(_row, rowIndex) => `paged-idx-${rowIndex}`}
+    labels={{ rowsPerPage: 'Rows per page for the built-in pagination demo' }}
     testId="table-paginated"
   />
 </div>
@@ -1124,6 +1127,7 @@
       showFooterOnSinglePage: true,
       testId: 'single-page-paged'
     }}
+    labels={{ rowsPerPage: 'Rows per page for the single-page footer demo' }}
     testId="table-single-page-pagination"
   />
 </div>
@@ -1189,6 +1193,7 @@
       hideSteppers: true,
       testId: 'split-steppers-hidden'
     }}
+    labels={{ rowsPerPage: 'Rows per page for the hidden-steppers demo' }}
     testId="table-split-steppers-hidden"
   />
 </div>
@@ -1236,6 +1241,7 @@
       }
     }}
     pagination={{ pageSize: 5, pageSizeOptions: [5], testId: 'psel' }}
+    labels={{ rowsPerPage: 'Rows per page for the paginated-selection demo' }}
     testId="table-paged-select"
   />
   <p
@@ -1345,6 +1351,7 @@
 <h3>Custom Sort Icons</h3>
 <div class="demo-row" style="max-width: 600px;">
   <Table
+    testId="table-sort-icons"
     tableHeaders={['City', 'Population', 'Area (km\u00B2)']}
     tableData={[
       ['Tokyo', 13960000, 2194],
@@ -1355,9 +1362,24 @@
     --table-row-border="1px solid #f0f0f0"
     --table-header-background="light-dark(#fafafa, #1e1e2e)"
   >
-    {#snippet sortAscIcon()}<span style="font-size: 12px;">↑</span>{/snippet}
-    {#snippet sortDescIcon()}<span style="font-size: 12px;">↓</span>{/snippet}
-    {#snippet sortDefaultIcon()}<span style="font-size: 12px; opacity: 0.3;">↕</span>{/snippet}
+    {#snippet sortAscIcon()}<span
+        class="custom-sort-symbol"
+        data-sort-state="ascending"
+        style="font-size: 12px;"
+        aria-hidden="true">↑</span
+      >{/snippet}
+    {#snippet sortDescIcon()}<span
+        class="custom-sort-symbol"
+        data-sort-state="descending"
+        style="font-size: 12px;"
+        aria-hidden="true">↓</span
+      >{/snippet}
+    {#snippet sortDefaultIcon()}<span
+        class="custom-sort-symbol"
+        data-sort-state="none"
+        style="font-size: 12px;"
+        aria-hidden="true">↕</span
+      >{/snippet}
   </Table>
 </div>
 
@@ -1563,18 +1585,23 @@
   the <code>cell</code> snippet, which runs in consumer scope.
 </p>
 <div class="demo-row" style="max-width: 600px; flex-direction: column; gap: 8px;">
-  <Table tableHeaders={['Name', 'Department']} tableData={editableRows}>
-    {#snippet cell(value, rowIndex, colIndex)}
+  <Table
+    tableHeaders={['Name', 'Department']}
+    tableData={editableRows}
+    testId="table-editable-cells"
+  >
+    {#snippet cell(value, _rowIndex, colIndex, originalIndex)}
       <!-- The snippet runs in consumer scope — handleCellChange is already in closure -->
       <input
         type="text"
+        aria-label="{colIndex === 0 ? 'Name' : 'Department'} for employee {originalIndex + 1}"
         value={String(value ?? '')}
         oninput={(inputEvent) => {
           if (inputEvent.target instanceof HTMLInputElement) {
-            handleCellChange(rowIndex, colIndex, inputEvent.target.value);
+            handleCellChange(originalIndex, colIndex, inputEvent.target.value);
           }
         }}
-        style="border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px 8px; width: 100%; background: transparent;"
+        style="box-sizing: border-box; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px 8px; width: 100%; background: transparent;"
       />
     {/snippet}
   </Table>

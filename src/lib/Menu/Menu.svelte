@@ -4,6 +4,7 @@
   import Img from '../Img/Img.svelte';
   import { computeMenuDropdownPosition } from './dropdownPosition';
   import { eventHitsInside, registerDismissible } from '../_interaction/dismissal';
+  import { findInteractive } from '../_interaction/focusable';
   import { tokenizedFly } from '../Animations/tokenizedFly';
   import type { MenuProperties, MenuItem, MenuPlacement } from './properties';
 
@@ -251,16 +252,17 @@
    * Returns focus to whatever is actually focusable for this trigger. Under
    * `interactiveTrigger` the wrapper carries no tabindex, so focusing it is a no-op and
    * focus falls to <body> — the control the snippet rendered is the real target.
+   * The search follows `<slot>` projection and open shadow roots: through `<sui-menu>`
+   * that control is the consumer's slotted element, which `querySelector` on the
+   * wrapper cannot see.
    */
   function focusTrigger() {
     if (triggerEl === null) {
       return;
     }
     if (interactiveTrigger) {
-      const control = triggerEl.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (control instanceof HTMLElement) {
+      const control = findInteractive(triggerEl);
+      if (control !== null) {
         control.focus({ preventScroll: true });
         return;
       }

@@ -26,21 +26,52 @@ A single radio button within a group. Multiple Radio components sharing the same
 </form>
 ```
 
-The input carries `data-state="checked | unchecked"` and `data-disabled` for styling.
+The input carries `data-state="checked | unchecked"`, `data-disabled` and, while the radio is in error,
+`data-invalid` for styling.
+
+## Validity messaging
+
+`errorMessage` and `infoMessage` are referenced by `aria-describedby` on the radio's input, composed
+from whichever of the two is actually rendered so the attribute never points at an id that is not
+in the DOM. The error text is announced through `role="alert"` on the message element itself, so it
+is read when it appears and again as the input's description. `invalid` marks the radio invalid
+without a message.
+
+`Radio` does **not** put `aria-invalid` on the input: WAI-ARIA 1.2 does not define it for
+`role="radio"` (it is supported on `radiogroup`, `checkbox`, `textbox` and a few other roles), and an
+unsupported attribute is not a harmless extra. The invalid state is exposed as `data-invalid`
+instead. A set of radios is invalid as a whole, so announce that on the element that groups them: give
+it `role="radiogroup"`, a name, `aria-invalid="true"` and a reference to the message.
+
+```svelte
+<div role="radiogroup" aria-labelledby="pay-label" aria-invalid="true" aria-describedby="pay-error">
+  <span id="pay-label">Payment method</span>
+  <Radio name="pay" value="card" bind:selectedValue={method} text="Card" />
+  <Radio name="pay" value="upi" bind:selectedValue={method} text="UPI" />
+  <div id="pay-error" role="alert">Choose a payment method to continue.</div>
+</div>
+```
+
+Each radio keeps its own name from its label and the arrow-key behaviour of the native group; the
+wrapper adds the group name and the invalid state, and `aria-describedby` on it reads the message
+once for the group rather than once per radio.
 
 ## Props
 
-| Prop          | Type      | Required | Default     | Description                                                                                                                                                            |
-| ------------- | --------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name          | `string`  | Yes      | —           | The group name shared by all radio buttons in the same group. Maps to the native input's `name` attribute.                                                             |
-| value         | `string`  | Yes      | —           | The value this radio button represents. When selected, `selectedValue` becomes this value.                                                                             |
-| selectedValue | `string`  | No       | `''`        | The currently selected value in the group. Bindable. When this matches `value`, the radio appears selected.                                                            |
-| text          | `string`  | No       | `''`        | Label text displayed next to the radio indicator. Hidden when empty.                                                                                                   |
-| disabled      | `boolean` | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                          |
-| testId        | `string`  | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                         |
-| classes       | `string`  | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
-| required      | `boolean` | No       | `false`     | Blocks submission until a member of the group is selected. Set it on every member, as the native control expects.                                                      |
-| form          | `string`  | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-radio>`, whose input sits in a shadow root.                                                   |
+| Prop          | Type             | Required | Default     | Description                                                                                                                                                                                                              |
+| ------------- | ---------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| name          | `string`         | Yes      | —           | The group name shared by all radio buttons in the same group. Maps to the native input's `name` attribute.                                                                                                               |
+| value         | `string`         | Yes      | —           | The value this radio button represents. When selected, `selectedValue` becomes this value.                                                                                                                               |
+| selectedValue | `string`         | No       | `''`        | The currently selected value in the group. Bindable. When this matches `value`, the radio appears selected.                                                                                                              |
+| text          | `string`         | No       | `''`        | Label text displayed next to the radio indicator. Hidden when empty.                                                                                                                                                     |
+| disabled      | `boolean`        | No       | `false`     | When true, the radio button cannot be interacted with and appears in a disabled visual state.                                                                                                                            |
+| testId        | `string`         | No       | `undefined` | Test identifier applied as `data-pw` attribute on the container for Playwright test selectors.                                                                                                                           |
+| classes       | `string`         | No       | `-`         | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                   |
+| required      | `boolean`        | No       | `false`     | Blocks submission until a member of the group is selected. Set it on every member, as the native control expects.                                                                                                        |
+| form          | `string`         | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-radio>`, whose input sits in a shadow root.                                                                                                     |
+| errorMessage  | `string \| null` | No       | `undefined` | Text shown, and announced, when the control is in error. Referenced by `aria-describedby` on the input and rendered in a `role="alert"` element; the input carries `data-invalid` while present. See Validity messaging. |
+| infoMessage   | `string \| null` | No       | `undefined` | Persistent helper text describing the control, referenced by `aria-describedby` so it is read before an error appears.                                                                                                   |
+| invalid       | `boolean`        | No       | `false`     | Marks the control invalid without supplying a message (`data-invalid` on the input). The announced state belongs on the wrapping `role="radiogroup"`'s `aria-invalid`.                                                   |
 
 ## Events
 
@@ -86,6 +117,19 @@ Tag: `<sui-radio>`
 ```html
 <sui-radio name="color" value="red" text="Red"></sui-radio>
 <sui-radio name="color" value="blue" text="Blue"></sui-radio>
+```
+
+Attributes: `error-message`, `info-message` and `invalid` mirror the props above. Group the elements in
+your own `role="radiogroup"` to announce an invalid group; its `aria-labelledby`/`aria-describedby` resolve
+in the light DOM, where the message lives:
+
+```html
+<div role="radiogroup" aria-labelledby="pay-label" aria-invalid="true" aria-describedby="pay-error">
+  <span id="pay-label">Payment method</span>
+  <sui-radio name="pay" value="card" text="Card"></sui-radio>
+  <sui-radio name="pay" value="upi" text="UPI"></sui-radio>
+  <div id="pay-error" role="alert">Choose a payment method to continue.</div>
+</div>
 ```
 
 Each `<sui-radio>` renders its native input inside its own shadow root, so the

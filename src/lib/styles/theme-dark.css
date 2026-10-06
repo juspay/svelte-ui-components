@@ -201,8 +201,11 @@
   --hitl-halted-color: #fbbf24;
   --hitl-countdown-filter: brightness(1.6);
 
-  /* ThinkingIndicator */
+  /* ThinkingIndicator. The shimmer gradient is built from the label colour plus this
+     highlight, so both stops of the sweep stay readable on the dark grounds
+     (#9ca3af / #e5e7eb are 5.1-7.5:1 and 10.5-15.4:1 on #0f0f17..#2f2f45). */
   --thinking-indicator-label-color: #9ca3af;
+  --thinking-indicator-shimmer-highlight: #e5e7eb;
   --thinking-indicator-detail-color: #9ca3af;
   --thinking-indicator-arrow-color: #9ca3af;
   --thinking-indicator-border-bottom: 1px solid #2a2a3c;
@@ -212,6 +215,7 @@
   --thinking-indicator-chip-background: #1e1e2e;
   --thinking-indicator-chip-border: 1px solid #2a2a3c;
   --thinking-indicator-chip-color: #9ca3af;
+  --thinking-indicator-chip-shimmer-highlight: #f3f4f6;
   --thinking-indicator-chip-box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
 
   /* AttachmentChipRow */
@@ -710,6 +714,7 @@
   --sankey-label-color: #d1d5db;
 
   /* Scroller */
+  --scroller-focus-outline: 2px solid #818cf8;
   --scroller-arrow-background: #1e1e2e;
   --scroller-arrow-color: #d1d5db;
   --scroller-arrow-hover-background: #252535;

@@ -81,8 +81,12 @@ describe('LineChart keyboard access', () => {
   // ChartHighlightAPI -- neither fires a focus event of its own, so (exactly
   // PieChart's own justification for its live region) a live-status region
   // is the only way either path reaches assistive tech.
-  it('publishes the focused datum through a live status region for assistive tech', async () => {
-    const { container } = render(LineChart, { props: { series, aspectRatio: 2 } });
+  it('publishes the active datum through a live status region for assistive tech', async () => {
+    const twoSeries = [
+      { name: 'Revenue', data: [{ x: 1, y: 10, label: 'Mon' }] },
+      { name: 'Cost', data: [{ x: 1, y: 5, label: 'Mon' }] }
+    ];
+    const { container } = render(LineChart, { props: { series: twoSeries, aspectRatio: 2 } });
     const status = container.querySelector('[data-pw="line-status"]');
     expect(status).not.toBeNull();
     expect(status?.getAttribute('role')).toBe('status');
@@ -90,12 +94,109 @@ describe('LineChart keyboard access', () => {
     expect(status?.textContent?.trim()).toBe('');
 
     const first = container.querySelectorAll('circle.focus-target')[0];
-    expect(first.getAttribute('aria-describedby')).toBe(status?.id);
     await fireEvent.focus(first);
     expect(status?.textContent).toContain('Mon');
 
     await fireEvent.blur(first);
     expect(status?.textContent?.trim()).toBe('');
+  });
+
+  // The status region is the ONE mechanism that announces anything beyond a
+  // focused mark's own name. Pointing every mark's aria-describedby at it as
+  // well made assistive tech read the same text again as the mark's
+  // description, and -- the region being shared -- described every UNFOCUSED
+  // mark by whichever mark was announced last.
+  it('does not also describe the marks by the shared status region', async () => {
+    const { container } = render(LineChart, { props: { series, aspectRatio: 2 } });
+    const marks = [...container.querySelectorAll('circle.focus-target')];
+    expect(marks.length).toBe(3);
+
+    await fireEvent.focus(marks[1]);
+    for (const mark of marks) {
+      expect(mark.hasAttribute('aria-describedby')).toBe(false);
+      expect(mark.getAttribute('aria-label')).toMatch(/^(Mon|Tue|Wed): \d+$/);
+    }
+  });
+
+  // A focused mark is spoken as its own accessible name. Echoing the identical
+  // text through the live region made a screen reader say "Tue: 20 button" and
+  // then "Tue: 20" for the same point.
+  it('does not repeat a focused mark whose own name already says it', async () => {
+    const { container } = render(LineChart, { props: { series, aspectRatio: 2 } });
+    const status = container.querySelector('[data-pw="line-status"]');
+    const marks = [...container.querySelectorAll('circle.focus-target')];
+
+    await fireEvent.focus(marks[1]);
+    expect(marks[1].getAttribute('aria-label')).toBe('Tue: 20');
+    expect(status?.textContent?.trim()).toBe('');
+  });
+
+  it('does not repeat a focused mark of an unshared multi-series tooltip either', async () => {
+    const twoSeries = [
+      { name: 'Revenue', data: [{ x: 1, y: 10, label: 'Mon' }] },
+      { name: 'Cost', data: [{ x: 1, y: 5, label: 'Mon' }] }
+    ];
+    const { container } = render(LineChart, {
+      props: { series: twoSeries, aspectRatio: 2, sharedTooltip: false }
+    });
+    const status = container.querySelector('[data-pw="line-status"]');
+    const second = container.querySelectorAll('circle.focus-target')[1];
+
+    await fireEvent.focus(second);
+    expect(second.getAttribute('aria-label')).toBe('Mon — Cost: 5');
+    expect(status?.textContent?.trim()).toBe('');
+  });
+
+  it('still announces what the focused mark’s name lacks: the other series at a shared x', async () => {
+    const twoSeries = [
+      { name: 'Revenue', data: [{ x: 1, y: 10, label: 'Mon' }] },
+      { name: 'Cost', data: [{ x: 1, y: 5, label: 'Mon' }] }
+    ];
+    const { container } = render(LineChart, { props: { series: twoSeries, aspectRatio: 2 } });
+    const status = container.querySelector('[data-pw="line-status"]');
+    const first = container.querySelectorAll('circle.focus-target')[0];
+
+    await fireEvent.focus(first);
+    expect(first.getAttribute('aria-label')).toBe('Mon — Revenue: 10');
+    expect(status?.textContent?.trim()).toBe('Mon — Revenue: 10, Cost: 5');
+  });
+
+  it('still announces a pointer-hovered datum, which has no focus announcement of its own', async () => {
+    const { container } = render(LineChart, { props: { series, aspectRatio: 2 } });
+    const status = container.querySelector('[data-pw="line-status"]');
+    const overlay = container.querySelector('[data-pw="hover-overlay"]');
+    const mark = container.querySelectorAll('circle.focus-target')[1];
+    const translate = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(
+      container.querySelector('svg > g')?.getAttribute('transform') ?? ''
+    );
+    expect(overlay).not.toBeNull();
+    expect(translate).not.toBeNull();
+
+    overlay?.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: Number(translate![1]) + Number(mark.getAttribute('cx')),
+        clientY: Number(translate![2]) + Number(mark.getAttribute('cy'))
+      })
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(status?.textContent?.trim()).toBe('Tue: 20');
+  });
+
+  it('keeps the programmatic highlight as the fallback once focus leaves a mark', async () => {
+    const { container } = render(LineChart, {
+      props: { series, aspectRatio: 2, highlightedIndex: 0 }
+    });
+    const status = container.querySelector('[data-pw="line-status"]');
+    const second = container.querySelectorAll('circle.focus-target')[1];
+    expect(status?.textContent?.trim()).toBe('Mon: 10');
+
+    // Focus takes precedence; its own name is the announcement.
+    await fireEvent.focus(second);
+    expect(status?.textContent?.trim()).toBe('');
+
+    await fireEvent.blur(second);
+    expect(status?.textContent?.trim()).toBe('Mon: 10');
   });
 
   it('announces a declarative highlightedIndex even with no focus event', () => {

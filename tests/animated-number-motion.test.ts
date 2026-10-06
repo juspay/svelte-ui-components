@@ -638,69 +638,382 @@ test('a space between literals keeps its width', async ({ page }) => {
  * its whole life and the odometer does nothing at all, so adopting it buys
  * nothing. `animateOnMount` is what makes that case worth anything.
  *
- * Asserted by sampling the rendered position rather than by counting
- * animations: an animation object can exist and still not move anything, which
- * is the failure this whole suite was built to catch.
+ * Asserted by reading the rendered position of the glyph that ARRIVES, rather
+ * than by counting animations: an animation object can exist and still not move
+ * anything, which is the failure this whole suite was built to catch.
+ *
+ * How the first version of this probe went wrong, because both mistakes read as
+ * "the component does not animate" and neither was true:
+ *
+ *  1. It watched the wrong glyph. It asked for `.animated-number-glyph`, a class
+ *     that does not exist (the real one is `animated-number-digit-glyph`), and
+ *     fell back to `firstElementChild` -- the glyph for 0, the one LEAVING the
+ *     window. That glyph is parked a full box away within the first sixth of the
+ *     roll and never moves again, so a probe that started after that saw one
+ *     constant position. Failed 2 of 5 in Chromium and 4 of 5 in Firefox on the
+ *     audited build, passed 5 of 5 in WebKit only because its sampler happened to
+ *     start earlier.
+ *  2. It started looking after `page.goto` resolved, i.e. after `load`, after
+ *     hydration, and with the 900ms roll already under way.
+ *
+ * The fix for the second is the same for every test below: observation is
+ * installed by an init script, BEFORE any page script runs, so the first
+ * `Element.animate` call the component makes is already seen. The component is
+ * not touched and the animation is the browser's own -- the wrapper calls the
+ * native `animate`, keeps the returned Animation, and in `hold` mode only
+ * pauses it. It never supplies a keyframe, a position or a callback of its own.
  */
-test('animateOnMount rolls the columns up from zero as the number appears', async ({ page }) => {
-  await page.addInitScript(() => {
-    let recording = false;
-    const record = (column: Element): void => {
-      if (recording) {
+interface EntryRoll {
+  readonly element: HTMLElement;
+  readonly animation: Animation;
+  readonly samples: { offset: number; delta: number; state: AnimationPlayState }[];
+}
+
+interface EntryProbe {
+  readonly rolls: EntryRoll[];
+  readonly offsetOf: (column: HTMLElement) => number;
+}
+
+declare global {
+  interface Window {
+    __entryProbe?: EntryProbe;
+  }
+}
+
+/**
+ * Wraps `Element.prototype.animate` for the `animateOnMount` demo numbers only.
+ *
+ * `sample`: reads each roll once per frame from the frame after it is created.
+ * `hold`: pauses each roll at time 0 as it is created, so a test can scrub the
+ * real effect through its timeline deterministically and then let it play out.
+ *
+ * `offset` is the arriving glyph's top relative to its own column's top, so it is
+ * 0 when settled and independent of page scroll and layout above the number.
+ */
+const observeEntryRolls = async (page: Page, mode: 'sample' | 'hold'): Promise<void> => {
+  await page.addInitScript((installMode) => {
+    const native = Element.prototype.animate;
+    const rolls: EntryRoll[] = [];
+
+    const offsetOf = (column: HTMLElement): number => {
+      const arriving =
+        [...column.querySelectorAll('.animated-number-digit-glyph')].find(
+          (glyph) => !glyph.hasAttribute('inert')
+        ) ?? null;
+      return arriving === null
+        ? Number.NaN
+        : arriving.getBoundingClientRect().top - column.getBoundingClientRect().top;
+    };
+    window.__entryProbe = { rolls, offsetOf };
+
+    const track = (element: HTMLElement, animation: Animation): void => {
+      const roll: EntryRoll = { element, animation, samples: [] };
+      rolls.push(roll);
+      const read = (): void => {
+        roll.samples.push({
+          offset: offsetOf(element),
+          delta:
+            Number.parseFloat(
+              getComputedStyle(element).getPropertyValue('--_animated-number-delta')
+            ) || 0,
+          state: animation.playState
+        });
+      };
+      if (installMode === 'hold') {
+        animation.pause();
+        animation.currentTime = 0;
         return;
       }
-      recording = true;
-      void (async () => {
-        const seen: number[] = [];
-        for (let frame = 0; frame < 45; frame += 1) {
-          await new Promise(requestAnimationFrame);
-          const glyph = column.querySelector('.animated-number-glyph') ?? column.firstElementChild;
-          if (glyph instanceof HTMLElement) {
-            seen.push(Math.round(glyph.getBoundingClientRect().top));
-          }
+      const tick = (): void => {
+        read();
+        if (animation.playState === 'running' || animation.playState === 'paused') {
+          requestAnimationFrame(tick);
         }
-        Reflect.set(window, '__entryMotionSamples', seen);
-      })();
+      };
+      requestAnimationFrame(tick);
+      void animation.finished.then(read, () => null);
     };
-    Element.prototype.animate = new Proxy(Element.prototype.animate, {
-      apply: (animate, element, argumentsList) => {
-        const animation = Reflect.apply(animate, element, argumentsList);
-        if (element instanceof Element && element.closest('[data-pw="entry"]') !== null) {
-          record(element);
-        }
-        return animation;
+
+    Element.prototype.animate = function (
+      this: Element,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes | null,
+      options?: number | KeyframeAnimationOptions
+    ): Animation {
+      const animation = native.call(this, keyframes, options);
+      if (
+        this instanceof HTMLElement &&
+        this.classList.contains('animated-number-digit') &&
+        this.closest('[data-pw^="entry"]') !== null
+      ) {
+        track(this, animation);
       }
-    });
-    const observer = new MutationObserver(() => {
-      if (document.documentElement?.dataset.hydrated === 'true') {
-        const column = document.querySelector('[data-pw="entry"] .animated-number-digit');
-        if (column !== null) {
-          record(column);
-          observer.disconnect();
-        }
-      }
-    });
-    observer.observe(document, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['data-hydrated']
-    });
+      return animation;
+    };
+  }, mode);
+};
+
+/** Waits for hydration to have started at least one entry roll. */
+const waitForEntryRolls = (page: Page): Promise<unknown> =>
+  page.waitForFunction(
+    () =>
+      document.documentElement.dataset.hydrated === 'true' &&
+      (window.__entryProbe?.rolls.length ?? 0) > 0,
+    null,
+    { timeout: 15_000 }
+  );
+
+/** What the entry demo numbers are, read from the DOM rather than restated. */
+const entryColumns = (page: Page): Promise<{ digit: number; rolled: boolean }[]> =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('[data-pw^="entry"] .animated-number-digit')].map(
+      (column) => ({
+        digit: Number.parseInt(column.style.getPropertyValue('--_animated-number-digit'), 10),
+        rolled: (window.__entryProbe?.rolls ?? []).some((roll) => roll.element === column)
+      })
+    )
+  );
+
+/** Every digit column of the two entry numbers is at rest on the digit it shows. */
+const expectEntrySettled = async (page: Page): Promise<void> => {
+  const settled = await page.evaluate(() => {
+    const columns = [
+      ...document.querySelectorAll<HTMLElement>('[data-pw^="entry"] .animated-number-digit')
+    ];
+    return {
+      shown: columns.map((column) => {
+        const glyph = [...column.querySelectorAll('.animated-number-digit-glyph')].find(
+          (node) => !node.hasAttribute('inert')
+        );
+        return glyph?.textContent ?? '?';
+      }),
+      wanted: columns.map((column) => column.style.getPropertyValue('--_animated-number-digit')),
+      offsets: columns.map((column) => window.__entryProbe?.offsetOf(column) ?? Number.NaN),
+      stillSpinning: columns.filter((column) =>
+        column.classList.contains('animated-number-digit--spinning')
+      ).length,
+      stillAnimating: columns.reduce((total, column) => total + column.getAnimations().length, 0)
+    };
   });
-  await page.goto(ROUTE, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => Array.isArray(Reflect.get(window, '__entryMotionSamples')));
-  const positions = await page.evaluate(() => {
-    const samples: unknown = Reflect.get(window, '__entryMotionSamples');
-    if (!Array.isArray(samples) || !samples.every((value) => typeof value === 'number')) {
-      throw new Error('Entry-motion samples are not numeric');
+
+  expect(settled.shown).toEqual(settled.wanted.map((digit) => digit.trim()));
+  for (const offset of settled.offsets) {
+    expect(Math.abs(offset)).toBeLessThan(0.5);
+  }
+  expect(settled.stillSpinning, 'a settled column must drop its spinning class').toBe(0);
+  expect(settled.stillAnimating, 'a settled column must have no live animation').toBe(0);
+};
+
+/** The accessible name the entry numbers must carry before, during and after the roll. */
+const expectEntryNames = async (page: Page): Promise<void> => {
+  await expect(page.getByTestId('entry')).toHaveAttribute('aria-label', '60,000');
+  await expect(page.getByTestId('entry-currency')).toHaveAttribute('aria-label', '₹1,240.00');
+  await expect(page.getByRole('img', { name: '60,000', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('img', { name: '₹1,240.00', exact: true })).toHaveCount(1);
+};
+
+test.describe('animateOnMount entry roll', () => {
+  test('animateOnMount rolls the columns up from zero as the number appears', async ({ page }) => {
+    // Observation first, then the same `page.goto` the original probe used: the
+    // roll starts at hydration, some hundreds of ms after `load`, and the
+    // sampler is already waiting for it.
+    await observeEntryRolls(page, 'sample');
+    await page.goto(ROUTE);
+    await waitForEntryRolls(page);
+    await page.evaluate(() =>
+      Promise.all((window.__entryProbe?.rolls ?? []).map((roll) => roll.animation.finished))
+    );
+
+    // Every column that has somewhere to travel from zero did roll. Columns whose
+    // digit is 0 have no distance to cover and are rightly not animated.
+    const columns = await entryColumns(page);
+    expect(columns.length).toBeGreaterThan(0);
+    for (const column of columns.filter((entry) => entry.digit !== 0)) {
+      expect(column, 'a non-zero entry column never rolled').toMatchObject({ rolled: true });
     }
-    return samples;
+
+    const rolls = await page.evaluate(() =>
+      (window.__entryProbe?.rolls ?? []).map((roll) => ({
+        samples: roll.samples,
+        owner: roll.element.closest('[data-pw^="entry"]')?.getAttribute('data-pw') ?? null
+      }))
+    );
+    // The plain numeric `entry` has one non-zero digit, so it is a single roll.
+    const entry = rolls.find((roll) => roll.owner === 'entry');
+    expect(entry, 'the 60,000 entry number never started a roll').toBeDefined();
+    const series = entry?.samples ?? [];
+
+    // Observation really began with the motion: the first frame saw it running.
+    expect(series[0]?.state).toBe('running');
+    const offsets = series.map((sample) => Math.round(sample.offset * 100) / 100);
+    const start = offsets[0];
+    const end = offsets[offsets.length - 1];
+    expect(
+      Math.abs(start),
+      `the arriving glyph should begin away from its slot, but started at ${start}`
+    ).toBeGreaterThan(5);
+    expect(Math.abs(end), `and finish in its slot, but ended at ${end}`).toBeLessThan(0.5);
+    expect(
+      new Set(offsets).size,
+      `the entry column should travel, but it sat at ${[...new Set(offsets)].join(', ')}`
+    ).toBeGreaterThanOrEqual(MIN_DISTINCT_SAMPLES);
+
+    await expectEntrySettled(page);
+    await expectEntryNames(page);
   });
-  const distinct = new Set(positions);
-  expect(
-    distinct.size,
-    `the entry column should travel, but it sat at ${[...distinct].join(', ')}`
-  ).toBeGreaterThan(1);
+
+  test('a late observer finds the entry numbers settled on their value with their names intact', async ({
+    page
+  }) => {
+    // The deliberately late case: no hook, observation only after hydration, which
+    // is when most of the 900ms roll can already be behind it. All a late observer
+    // can honestly claim is the END state, and that is exactly what it asserts --
+    // it must not claim motion, which is what the original probe tried to do.
+    await gotoHydrated(page, ROUTE);
+    await settleAll(page);
+
+    const rest = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-pw^="entry"] .animated-number-digit')].map(
+        (column) => {
+          const glyph = [...column.querySelectorAll('.animated-number-digit-glyph')].find(
+            (node) => !node.hasAttribute('inert')
+          );
+          return {
+            shown: glyph?.textContent ?? '?',
+            wanted: column.style.getPropertyValue('--_animated-number-digit').trim(),
+            top:
+              (glyph?.getBoundingClientRect().top ?? Number.NaN) -
+              column.getBoundingClientRect().top,
+            spinning: column.classList.contains('animated-number-digit--spinning'),
+            animations: column.getAnimations().length
+          };
+        }
+      )
+    );
+    expect(rest.length).toBeGreaterThan(0);
+    for (const column of rest) {
+      expect(column.shown).toBe(column.wanted);
+      expect(Math.abs(column.top)).toBeLessThan(0.5);
+      expect(column.spinning).toBe(false);
+      expect(column.animations).toBe(0);
+    }
+    await expectEntryNames(page);
+  });
+
+  test('a held entry roll interpolates through its native keyframes and plays out to the value', async ({
+    page
+  }) => {
+    // `hold`: each real roll is paused at time 0 the moment the component creates
+    // it, so what is read below is the browser's own effect at known progress
+    // points rather than a race against a 900ms clock.
+    await observeEntryRolls(page, 'hold');
+    await page.goto(ROUTE);
+    await waitForEntryRolls(page);
+
+    // Held at the start: nothing has advanced, and the names are already correct.
+    await expectEntryNames(page);
+
+    const scrub = await page.evaluate(async () => {
+      const probe = window.__entryProbe;
+      if (!probe) {
+        throw new Error('entry probe missing');
+      }
+      const frame = (): Promise<unknown> =>
+        new Promise((resolve) => requestAnimationFrame(resolve));
+      const reads: { portion: number; offsets: number[]; names: (string | null)[] }[] = [];
+      for (const portion of [0, 0.25, 0.5, 0.75, 1]) {
+        for (const roll of probe.rolls) {
+          const effect = roll.animation.effect;
+          if (effect === null) {
+            throw new Error('a paused entry roll lost its native effect');
+          }
+          roll.animation.currentTime = Number(effect.getComputedTiming().duration) * portion;
+        }
+        await frame();
+        reads.push({
+          portion,
+          offsets: probe.rolls.map((roll) => probe.offsetOf(roll.element)),
+          names: [...document.querySelectorAll('[data-pw^="entry"]')].map((root) =>
+            root.getAttribute('aria-label')
+          )
+        });
+      }
+      return {
+        reads,
+        rolls: probe.rolls.map((roll) => {
+          const effect = roll.animation.effect;
+          const frames = effect instanceof KeyframeEffect ? effect.getKeyframes() : [];
+          return {
+            digit: Number.parseInt(
+              roll.element.style.getPropertyValue('--_animated-number-digit'),
+              10
+            ),
+            property: frames.map((entry) => String(entry['--_animated-number-delta'])),
+            composite: effect instanceof KeyframeEffect ? effect.composite : null,
+            duration: effect === null ? 0 : Number(effect.getComputedTiming().duration)
+          };
+        })
+      };
+    });
+
+    // The real effect: one registered scalar travelling from minus the distance
+    // to zero. From zero, so the first keyframe is minus the digit itself.
+    expect(scrub.rolls.length).toBeGreaterThan(0);
+    for (const roll of scrub.rolls) {
+      expect(roll.property).toEqual([String(-roll.digit), '0']);
+      expect(roll.duration).toBeGreaterThan(0);
+    }
+
+    scrub.rolls.forEach((_, index) => {
+      const at = (portion: number): number =>
+        scrub.reads.find((read) => read.portion === portion)?.offsets[index] ?? Number.NaN;
+      const start = at(0);
+      const end = at(1);
+      expect(Math.abs(start), `roll ${index}: starts away from its slot`).toBeGreaterThan(5);
+      expect(Math.abs(end), `roll ${index}: ends in its slot`).toBeLessThan(0.5);
+
+      // A real interpolation passes through frames that are neither the start
+      // nor the end; a jump would only ever read one or the other.
+      const between = [0.25, 0.5, 0.75].filter((portion) => {
+        const offset = Math.abs(at(portion));
+        return offset > 0.5 && offset < Math.abs(start) - 0.5;
+      });
+      expect(
+        between.length,
+        `roll ${index}: no intermediate frame, offsets were ${scrub.reads
+          .map((read) => read.offsets[index].toFixed(1))
+          .join(', ')}`
+      ).toBeGreaterThan(0);
+
+      // It only ever closes in on its slot. It may START on either side -- the
+      // wheel parks a far glyph a full box above or below and swaps the side while
+      // it is out of sight -- so the distance is what must never grow.
+      const distances = [0, 0.25, 0.5, 0.75, 1].map((portion) => Math.abs(at(portion)));
+      distances.slice(1).forEach((distance, step) => {
+        expect(
+          distance,
+          `roll ${index}: moved away from its slot between ${step * 25}% and ${(step + 1) * 25}%`
+        ).toBeLessThanOrEqual(distances[step] + 0.5);
+      });
+    });
+
+    // The accessible name never moves with the glyphs.
+    for (const read of scrub.reads) {
+      expect(read.names).toEqual(['60,000', '₹1,240.00']);
+    }
+
+    // Now let the same real effects play out from the start, un-held.
+    await page.evaluate(async () => {
+      const rolls = window.__entryProbe?.rolls ?? [];
+      for (const roll of rolls) {
+        roll.animation.currentTime = 0;
+        roll.animation.play();
+      }
+      await Promise.all(rolls.map((roll) => roll.animation.finished));
+    });
+
+    await expectEntrySettled(page);
+    await expectEntryNames(page);
+  });
 });
 
 /*

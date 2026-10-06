@@ -60,38 +60,41 @@ const installRevealObserver = async (
         mutationsAtReduceFlip: null
       };
       (window as unknown as Record<string, RevealTiming>)[windowKey] = timing;
-      /*
-       * Recorded in the page, at the instant the preference actually flips.
-       * Sampling the count from the test process instead would put the
-       * `emulateMedia` CDP round-trip inside the measured window, and every
-       * character that types while that round-trip is in flight would count
-       * against the bound -- which is why this assertion failed under load and
-       * passed in isolation.
-       */
-      const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      reduceQuery.addEventListener('change', (event) => {
-        if (event.matches && timing.mutationsAtReduceFlip === null) {
-          timing.mutationsAtReduceFlip = timing.mutations;
+      // Observe native reads of the real preference, before disclosure. The
+      // asynchronous change event can arrive after the component has already
+      // read matches=true and revealed its suffix; it is not that checkpoint.
+      const nativeMatchMedia = window.matchMedia.bind(window);
+      window.matchMedia = (query: string): MediaQueryList => {
+        const media = nativeMatchMedia(query);
+        if (query !== '(prefers-reduced-motion: reduce)') {
+          return media;
         }
-      });
-      const attach = () => {
+        return new Proxy(media, {
+          get(target, property) {
+            const value = Reflect.get(target, property, target) as unknown;
+            if (property === 'matches' && value === true && timing.mutationsAtReduceFlip === null) {
+              timing.mutationsAtReduceFlip = timing.mutations;
+            }
+            return typeof value === 'function' ? value.bind(target) : value;
+          }
+        });
+      };
+      // Subscribe before parser/hydration creates the target. Waiting for the
+      // first rAF loses an instantaneous reduced-motion disclosure entirely.
+      new MutationObserver((records) => {
         const element = document.querySelector(`[data-pw="${testId}"]`);
-        if (!element) {
-          requestAnimationFrame(attach);
+        if (!element || (element.textContent || '').length === 0) {
           return;
         }
-        new MutationObserver(() => {
-          if ((element.textContent || '').length === 0) {
-            return;
-          }
-          if (timing.firstAt === null) {
-            timing.firstAt = performance.now();
-          }
-          timing.lastAt = performance.now();
-          timing.mutations += 1;
-        }).observe(element, { childList: true, subtree: true, characterData: true });
-      };
-      requestAnimationFrame(attach);
+        if (!records.some((record) => element.contains(record.target))) {
+          return;
+        }
+        if (timing.firstAt === null) {
+          timing.firstAt = performance.now();
+        }
+        timing.lastAt = performance.now();
+        timing.mutations += 1;
+      }).observe(document, { childList: true, subtree: true, characterData: true });
     },
     { testId, windowKey }
   );

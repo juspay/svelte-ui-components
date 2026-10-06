@@ -2,6 +2,8 @@
 
 Headless text-to-speech controller over the browser's `speechSynthesis` API — the symmetric counterpart to `SpeechToTextController`. It owns voice enumeration (including the async `voiceschanged` population), `speak()`/`stop()` with rate/pitch/volume/voice control, toggle-to-stop orchestration, and a self-hiding error toast. It renders nothing: pair it with a "read aloud" button of your own.
 
+Try the [interactive example](https://juspay.github.io/svelte-ui-components/components/speech-synthesis).
+
 ## Usage
 
 ```svelte

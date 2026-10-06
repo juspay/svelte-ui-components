@@ -1,5 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
+import {
+  canHoldThroughDisplayExit,
+  distance,
+  expectExitOpacity,
+  expectExitTransform,
+  expectMs,
+  onlyRun,
+  parseTranslate,
+  peekToastRecording,
+  readToastRecording,
+  startToastRecording,
+  toastEnds,
+  toastRuns
+} from '../support/motion-observers.js';
 import { assertInViewport, beat, caption, highlight, step } from './support/narrate.js';
 
 /**
@@ -24,7 +38,7 @@ import { assertInViewport, beat, caption, highlight, step } from './support/narr
  * it. `setReducedMotion` below does both in one call.
  *
  * Covered gaps (in scratchpad/gaps/motion.json order): ModalAnimation
- * fade+fly, Toast fly, Scroller arrow scrollBy, Tabs overflow-arrow scrollBy,
+ * fade+fly, Toast tokenized travel and reduced-motion fade, Scroller arrow scrollBy, Tabs overflow-arrow scrollBy,
  * Tabs manual/disabled/loop=false + RTL direction, TypewriterText markdown
  * reveal, the VoiceOrb/LottiePlayer :host sizing fix, and the Loader/
  * BrandLoader/Shimmer indefinite loops.
@@ -524,195 +538,207 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
 
 /**
  * `--toast-top` is Toast's own documented CSS override point (Toast.svelte:
- * `top: var(--toast-top, 10px)`), not a private internal. The toast demo route
- * never sets it, so the default `top: 10px` applies, and this route's Toast
- * never passes `direction` or `overlapPage` either -- both default (top-to-bottom,
- * true -- see the PRODUCT DEFECT note below), giving the intro an inY of -500.
+ * `top: var(--toast-top, 10px)`), not a private internal. The demo route never
+ * sets it, so the default `top: 10px` applies.
  *
- * That combination is why a previous attempt at pausing the WAAPI animation
- * mid-flight never showed up on camera: `fly`'s own css callback (svelte/
- * transition/index.js) is `translate((1-t)*x, (1-t)*y)` with opacity `target *
- * t`, so at the moment `pauseMidTransition` first sees opacity >= 0.2 (its
- * default band's floor), `t` has just crossed 0.2 and the remaining offset
- * `(1-t)*y` is bounded at *worst* 0.8 * 500 = 400px. A paused offset that large
- * against a 10px resting position paints the toast at y <= 10 - 400 = -390 --
- * physically above the viewport -- for the entire hold. The frozen frame was
- * real and the transform offset assertion genuinely passed; it was simply
- * never inside the frame the recording could show, exactly the "frame band
- * ... entirely toast-free" the review caught.
- *
- * Resting the toast 500px down instead keeps the worst-case paused y at
- * 500 - 400 = 100 -- comfortably inside the 1280x720 walkthrough viewport for
- * the whole hold, and still well clear of the 720px bottom edge once settled
- * at rest. This changes nothing about the component or the demo route: it is
- * the same public CSS hook a real consumer would reach for to anchor a toast
- * lower on their own page.
+ * Toast enters from `--distance-overlay` (60px) above its resting position, so at
+ * 10px the toast starts at y = -50 and a frame frozen mid-flight is partly above
+ * the viewport. Resting it 300px down instead keeps the whole in-flight frame in
+ * view for the hold, and changes nothing about the component or the demo route:
+ * it is the same public CSS hook a real consumer would reach for to anchor a
+ * toast lower on their own page.
  */
-const TOAST_VISIBLE_REST_TOP_PX = 500;
+const TOAST_VISIBLE_REST_TOP_PX = 300;
 const raiseToastRestPosition = async (page: Page): Promise<void> => {
   await page.addStyleTag({ content: `.toast { --toast-top: ${TOAST_VISIBLE_REST_TOP_PX}px; }` });
 };
 
-test.describe('Toast: fly-in/out collapses to an instant appear/disappear under reduced motion', () => {
-  // PRODUCT DEFECT (fixed) -- was filed instead of asserted around.
-  //
-  // Toast's `in:fly` never played on the toast's first appearance. Measured
-  // with the same `watchTransition` observer used everywhere else in this
-  // file, started before the triggering click (so it could not be a
-  // late-observer race -- see the helper's own doc comment): clicking "Show
-  // Toast" under `no-preference` motion produced transform:'none',
-  // opacity:'1' and animationName:'none' on `.toast` from the very first
-  // frame it was found (~70ms after the click, well inside the configured
-  // 400ms `in` duration) through the rest of a 500ms watch window --
-  // `{ minOpacity: 1, maxOffset: 0, finalOpacity: 1, finalOffset: 0 }`.
-  // `matchMedia('(prefers-reduced-motion: reduce)').matches` was sampled
-  // alongside every frame and read `false` throughout, so it was not the
-  // reduced-motion branch collapsing the animation to a zero-duration fly.
-  //
-  // The *out* transition on the same element, watched the same way over the
-  // auto-hide at `duration` (default 2000ms), genuinely animated:
-  // `{ minOpacity: 0.072, maxOffset: 92.8 }`. Same selector, same helper, same
-  // page -- so the observer was not the difference. What differed was *which*
-  // `{#if}` toggle drove the transition. In src/lib/Toast/Toast.svelte:
-  //   - Outer: the demo route's own `{#if showToast}<Toast .../>{/if}`
-  //     (src/routes/components/toast/+page.svelte) creates the Toast
-  //     instance for the first time on click -- a genuine false->true flip.
-  //   - Inner: Toast.svelte's `let showToast = $state(true)` starts already
-  //     true, so the `{#if showToast}` wrapping `in:fly` was true on that
-  //     instance's very first render, not a later flip.
-  //   - `out:fly` fires later from a real true->false flip on the same,
-  //     already-mounted block (`hideToast()`), which is why it worked.
-  // A *local* transition (Svelte's default) only plays when its own enclosing
-  // block flips as a later reactive update, not when the block is created
-  // already-true -- even though the Toast component itself was freshly
-  // created inside the outer block's own intro. Because the demo's default
-  // props leave `overlapPage` at its `true` default, `inY` is -500 (not the
-  // smaller -20 an explicit `overlapPage={false}` would give), so the missing
-  // animation was a large, visible jump-cut in production, not a
-  // rounding-scale gap.
-  //
-  // Fixed by adding the `|global` modifier to `in:fly` (Toast.svelte), which
-  // plays the intro whenever the block is created regardless of whether that
-  // creation was driven by its own local state or an ancestor's -- matching
-  // the modifier Sheet's panel transition already used for the same reason.
-  test('the toast flies in on a normal click under normal motion', async ({ page }) => {
-    await gotoHydrated(page, '/components/toast');
-    await setReducedMotion(page, false);
+const DEFAULT_TOAST_TRAVEL_PX = 60;
+const TOAST_OPEN_MS = 400;
+const TOAST_CLOSE_MS = 800;
+const TOAST_REDUCED_MS = 50;
 
-    const showToast = page.getByRole('button', { name: 'Show Toast', exact: true });
-    const toast = page.locator('.toast');
-
-    await caption(page, 'Reduced motion is off. The toast flies in from its anchored edge.');
-    const flyInWatch = watchTransition(page, { selector: '.toast', windowMs: 500 });
-    await showToast.click();
-    const flyInResult = await flyInWatch;
-    await highlight(toast);
-
-    expect(flyInResult.maxOffset, 'the toast must actually travel in').toBeGreaterThan(10);
-    expect(flyInResult.minOpacity, 'the fly-in must fade from transparent').toBeLessThan(0.9);
-    expect(flyInResult.finalOffset, 'the toast must settle at its resting position').toBeLessThan(
-      5
-    );
-    expect(flyInResult.finalOpacity).toBeGreaterThan(0.95);
-    await expect(toast).toBeVisible();
-    await beat(page);
-  });
-
-  test('the toast pauses mid-flight under normal motion so the travel is provable, then appears instantly with no travel once reduced motion is set', async ({
+/**
+ * Toast is CSS-native (`@starting-style`, `transition`), not `in:fly`/`out:fly`,
+ * so the sections below read the CSSTransition objects the engine runs
+ * (tests/support/motion-observers.ts) instead of sampling frames:
+ *
+ *  - normal motion travels `--distance-overlay` (60px) over 400ms in and 800ms out,
+ *    and any of `--distance-overlay`, `--toast-open-duration`,
+ *    `--toast-close-duration` retunes it;
+ *  - reduced motion removes the spatial travel but KEEPS a 50ms opacity fade. That
+ *    is deliberate: a 0s transition never starts, so it never fires
+ *    `transitionend`, and `transitionend` is what raises `ontoasthide` so the
+ *    consumer can remove the toast. An earlier version of this walkthrough asserted
+ *    "no faded-in frame is observable" and failed against the intended 50ms fade;
+ *  - the exit needs the engine to hold the toast through `display: flex -> none`
+ *    (a discrete transition). Where it cannot (Firefox 150) there is no exit
+ *    animation, and what is asserted is that the hide is still reported and the
+ *    toast removed -- chosen by probing the capability, never by engine name.
+ */
+test.describe('Toast: tokenized travel under normal motion, a 50ms fade and no travel under reduced motion', () => {
+  test('the toast flies in from the 60px token position, frozen mid-flight in view, settles, then hides and is removed', async ({
     page
   }) => {
     await gotoHydrated(page, '/components/toast');
     await setReducedMotion(page, false);
-    // See raiseToastRestPosition's own doc comment: without this, the paused
-    // mid-flight frame below is real but physically off the top of the
-    // viewport for the whole hold.
+    // See raiseToastRestPosition: without it the frozen frame is partly off the top.
     await raiseToastRestPosition(page);
+    const canExit = await canHoldThroughDisplayExit(page);
 
     const showToast = page.getByRole('button', { name: 'Show Toast', exact: true });
     const toast = page.locator('.toast');
 
-    // The `in` fly is 400ms -- shorter than one frame interval at a 3fps
-    // review sampling rate (333ms) -- so without an explicit hold the
-    // in-flight frame can fall entirely between two sampled frames. This
-    // freezes the real animation mid-flight (pauseMidTransition's own doc
-    // comment) instead of only asserting on it in JS.
+    // Installed before the click, so the entrance is observed from its first frame.
+    const recorder = await startToastRecording(page);
+
+    // The `in` transition is 400ms -- shorter than one frame interval at a 3fps
+    // review sampling rate (333ms) -- so without an explicit hold the in-flight
+    // frame can fall entirely between two sampled frames. This freezes the real
+    // transition mid-flight (pauseMidTransition's own doc comment) instead of only
+    // asserting on it in JS.
     //
-    // The hold below is intentionally a single `highlight(toast, 1_500)`
-    // rather than the highlight-then-beat combo used elsewhere in this file:
-    // Toast.svelte starts a real `setTimeout(hideToast, duration)` (2000ms
-    // here) the instant the component mounts, independent of this paused
-    // animation's own play state, and finishTransition below is deliberately
-    // instantaneous (see its doc comment) to keep the whole paused-hold to
-    // assert-and-move-on sequence comfortably inside that window rather than
-    // racing the toast's own auto-hide.
+    // The hold is a single highlight rather than highlight-then-beat: Toast.svelte
+    // starts a real `setTimeout(hideToast, duration)` (2000ms here) the instant it
+    // mounts, independent of this paused transition's play state, and
+    // finishTransition below is deliberately instantaneous to keep the whole
+    // paused-hold-then-assert sequence inside that window.
     await caption(
       page,
-      'Reduced motion is off. Watch the toast pause mid-flight, still visibly off its resting position.'
+      'Reduced motion is off. The toast starts 60px above its resting place; watch it pause mid-flight, in view.'
     );
     await dismissCaption(page);
     const flyMidWatch = pauseMidTransition(page, { selector: '.toast' });
     await showToast.click();
     const flyMid = await flyMidWatch;
-    await highlight(toast, 1_500);
+    await highlight(toast, 1_200);
 
     expect(
       flyMid.offset,
       'the paused frame must show real in-flight travel, not an already-settled toast'
-    ).toBeGreaterThan(30);
+    ).toBeGreaterThan(2);
     expect(
-      flyMid.opacity,
-      'the fly-in also fades from transparent while paused mid-flight'
-    ).toBeLessThan(0.9);
-    // The gap this closes: a genuinely mid-flight, paused toast is worthless
-    // as proof if it is paused off screen. Assert the frame being held is
-    // actually inside the viewport, not just that its transform looks
-    // mid-transition.
+      flyMid.offset,
+      'and never more than the 60px token distance (the retired 500px/400px fly would)'
+    ).toBeLessThanOrEqual(DEFAULT_TOAST_TRAVEL_PX + 0.5);
+    expect(flyMid.opacity, 'the entrance also fades from transparent').toBeLessThan(0.9);
+    // A mid-flight frame is worthless as proof if it is paused off screen.
     await assertInViewport(page, toast);
 
     const flySettled = await finishTransition(page, { selector: '.toast' });
     expect(
       flySettled.offset,
-      'the toast must settle at its resting position once the paused animation resumes'
-    ).toBeLessThan(5);
+      'the toast must settle at its resting position once the paused transition resumes'
+    ).toBeLessThan(1);
     expect(flySettled.opacity, 'the toast must settle fully visible').toBeGreaterThan(0.95);
     await expect(toast).toBeVisible();
 
-    // A fresh navigation, not waiting out this toast's own 2000ms auto-hide:
-    // Toast's fly properties are a memoised $derived (see the identical note
-    // on the ModalAnimation test above) -- the preference is set before the
-    // navigation that mounts it, matching every other reduced-motion-only
-    // scenario in this file. The navigation itself tears down the old
-    // document (and its pending auto-hide timer) regardless of exactly when
-    // it lands.
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await gotoHydrated(page, '/components/toast');
-    await setReducedMotion(page, true);
+    // Eventual cleanup: the auto-hide fires, the exit runs (where the engine can),
+    // and the consumer's ontoasthide handler removes the node.
+    await caption(page, 'The toast now hides by itself and is removed.');
+    await expect(toast).toHaveCount(0, { timeout: 10_000 });
+    const recording = await readToastRecording(recorder);
 
-    const showToastReduced = page.getByRole('button', { name: 'Show Toast', exact: true });
-    const toastReduced = page.locator('.toast');
+    const enterTransform = onlyRun(recording, 'enter', 'transform');
+    expect(parseTranslate(enterTransform.from)).toEqual({ x: 0, y: -DEFAULT_TOAST_TRAVEL_PX });
+    expect(distance(parseTranslate(enterTransform.to))).toBe(0);
+    expectMs(enterTransform.durationMs, TOAST_OPEN_MS);
+    expectExitTransform(recording, canExit, {
+      to: { x: 0, y: -DEFAULT_TOAST_TRAVEL_PX },
+      durationMs: TOAST_CLOSE_MS
+    });
+    expect(recording.removedAfterMs, 'the toast was never removed').not.toBeNull();
+    await beat(page);
+  });
+
+  test('a themed distance and duration reach the transition, and a mounted toast keeps the new preference', async ({
+    page
+  }) => {
+    await gotoHydrated(page, '/components/toast');
+    await setReducedMotion(page, false);
+    await raiseToastRestPosition(page);
+    const canExit = await canHoldThroughDisplayExit(page);
+    await page.addStyleTag({
+      content:
+        ':root { --distance-overlay: 140px; --toast-open-duration: 700ms; --toast-close-duration: 350ms; }'
+    });
+
+    const toast = page.locator('.toast');
+    const recorder = await startToastRecording(page);
 
     await caption(
       page,
-      'Reduced motion is now on. Showing the toast should simply place it, with no travel.'
+      'Same toast, themed: --distance-overlay 140px, open 700ms, close 350ms. The preference then flips on the mounted toast.'
     );
     await dismissCaption(page);
-    const instantWatch = watchTransition(page, { selector: '.toast', windowMs: 200 });
-    await showToastReduced.click();
-    const instantResult = await instantWatch;
+    await page.getByRole('button', { name: 'Show Toast', exact: true }).click();
+    await expect(toast).toBeVisible();
+    await expect
+      .poll(async () => toastEnds(await peekToastRecording(recorder), 'enter', 'transform').length)
+      .toBe(1);
+    await highlight(toast, 500);
 
-    expect(instantResult.maxOffset, 'a zero-duration fly must not visibly travel').toBeLessThan(10);
+    // Inside the 2s auto-hide, on the SAME mounted toast: no reload, no remount.
+    await setReducedMotion(page, true);
     expect(
-      instantResult.finalOpacity - instantResult.minOpacity,
-      'no faded-in frame should be observable when the transition is instant'
-    ).toBeLessThan(0.1);
-    expect(instantResult.finalOpacity).toBeGreaterThan(0.95);
-    await expect(toastReduced).toBeVisible();
+      await toast.evaluate((node) => getComputedStyle(node).transitionDuration),
+      'the mounted toast must pick up reduced motion without remounting'
+    ).toBe('0.05s');
 
-    // Same reasoning as the motion-enabled hold above: this toast's own
-    // 2000ms auto-hide is already running, so the >=1.5s hold requirement is
-    // met with a single highlight call instead of stacking a separate beat
-    // on top and drifting into that window.
-    await highlight(toastReduced, 1_500);
+    await expect(toast).toHaveCount(0, { timeout: 10_000 });
+    const recording = await readToastRecording(recorder);
+
+    const enter = onlyRun(recording, 'enter', 'transform');
+    expect(parseTranslate(enter.from)).toEqual({ x: 0, y: -140 });
+    expectMs(enter.durationMs, 700);
+    // The exit happened AFTER the flip: no travel, a 50ms fade (or none at all where
+    // the engine has no exit), and still reported hidden.
+    expect(toastRuns(recording, 'exit', 'transform')).toHaveLength(0);
+    expectExitOpacity(recording, canExit, TOAST_REDUCED_MS);
+    expect(recording.removedAfterMs).not.toBeNull();
+    await beat(page);
+  });
+
+  test('under reduced motion the toast fades in over 50ms with no travel, then hides and is removed', async ({
+    page
+  }) => {
+    await gotoHydrated(page, '/components/toast');
+    await setReducedMotion(page, true);
+    const canExit = await canHoldThroughDisplayExit(page);
+    // A consumer token must not be able to revive travel or slow the hide.
+    await page.addStyleTag({
+      content:
+        ':root { --distance-overlay: 200px; --toast-open-duration: 900ms; --toast-close-duration: 900ms; }'
+    });
+
+    const toast = page.locator('.toast');
+    const recorder = await startToastRecording(page);
+
+    await caption(
+      page,
+      'Reduced motion is on, and the theme asks for 200px / 900ms. The toast fades in place for 50ms and does not travel.'
+    );
+    await dismissCaption(page);
+    await page.getByRole('button', { name: 'Show Toast', exact: true }).click();
+    await expect(toast).toBeVisible();
+    await highlight(toast, 1_200);
+
+    await expect(toast).toHaveCount(0, { timeout: 10_000 });
+    const recording = await readToastRecording(recorder);
+
+    // No spatial movement, in either direction, even with the 200px token set.
+    expect(toastRuns(recording, 'enter', 'transform')).toHaveLength(0);
+    expect(toastRuns(recording, 'exit', 'transform')).toHaveLength(0);
+    expect(recording.maxFrameOffsetPx.enter).toBeLessThan(0.5);
+    expect(recording.maxFrameOffsetPx.exit).toBeLessThan(0.5);
+    // The 50ms fade is what remains -- and what lets the toast report it is hidden.
+    const enterFade = onlyRun(recording, 'enter', 'opacity');
+    expect(Number(enterFade.from)).toBe(0);
+    expect(Number(enterFade.to)).toBe(1);
+    expectMs(enterFade.durationMs, TOAST_REDUCED_MS);
+    expectExitOpacity(recording, canExit, TOAST_REDUCED_MS);
+    expect(recording.removedAfterMs, 'the toast was never removed').not.toBeNull();
+    await beat(page);
   });
 });
 
@@ -723,11 +749,10 @@ test.describe('Scroller: arrow-driven scrollBy() honours reduced motion at click
     await gotoHydrated(page, '/components/scroller');
     await setReducedMotion(page, false);
 
-    // Neither Scroller instance on this route carries a testId; the horizontal
-    // one is the first in the DOM, before the "Vertical" heading.
-    const container = page.locator('.scroll-container').first();
-    const nextButton = page.getByRole('button', { name: 'Scroll next' }).first();
-    const prevButton = page.getByRole('button', { name: 'Scroll previous' }).first();
+    const demo = page.getByTestId('scroller-horizontal-default');
+    const container = demo.locator('.scroll-container');
+    const nextButton = demo.getByRole('button', { name: 'Scroll next' });
+    const prevButton = demo.getByRole('button', { name: 'Scroll previous' });
 
     await caption(page, 'Reduced motion is off. The right arrow should glide the row, not jump.');
     const start = await container.evaluate((el) => el.scrollLeft);

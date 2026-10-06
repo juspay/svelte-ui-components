@@ -2,7 +2,98 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.37.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.38.0)
+
+The DateRangePicker panel had no viewport awareness. It is an absolutely positioned box that can be
+up to --drp-panel-max-width wide, so on a phone it ran off the edge of the screen and took Apply
+with it, there was no way to ask for the presets above the calendars, and a host application had to
+rewrite the component's internals with page-level CSS to cope. Two related defects sat underneath.
+The single-month calendar (dualMonth={false} in range mode, and every single-date picker) always
+opened on the current month, ignored presets and typed dates, and did not enforce maxRangeDays. And
+the open panel inherited pointer-events: none from a host ancestor, which left a panel opened from
+the keyboard unclickable.
+
+New API. presetsPosition ('side' | 'top', default 'side', attribute presets-position) lays the
+presets out as a wrapping row above the calendars. responsiveLayout (boolean, default false,
+attribute responsive-layout) is opt-in: at 1023px and below in range mode, or 688px and below in
+single mode, the panel becomes a fixed sheet confined to the viewport with the presets on top. At
+688px and below it also shows one month, stacks the date and time inputs, hides the arrow between
+them and takes its padding from --drp-calendars-padding-narrow. The breakpoints are literals because
+a media query cannot read a custom property. Two matchMedia queries drive both the layout classes
+and the month count, so the breakpoints have one source of truth. A picker subscribes to them only
+while responsiveLayout is true, releases them when the prop turns false or the picker is destroyed,
+and tolerates a missing or partial matchMedia, so a picker that never sets the prop never calls
+matchMedia. The layout follows the window while the panel is open without losing the draft. If the
+flip destroys the focused element, such as a calendar day in the second month, focus moves to the
+first control in the panel instead of dropping to the body; focus outside the panel, or on a control
+that survives the flip, is left where it is. The above or below decision for a dropdown is measured
+again after the flip. A sheet is never marked as opening upward.
+
+New tokens, each with a literal fallback: --drp-sheet-top (auto), --drp-sheet-right,
+--drp-sheet-bottom and --drp-sheet-left (16px), --drp-sheet-max-width (48rem),
+--drp-sheet-max-height (calc(100dvh - 2rem)), --drp-sheet-z-index (falls back to
+--drp-panel-z-index) and --drp-calendars-padding-narrow (16px 8px). New type export
+DateRangePickerPresetsPosition. The .drp-panel and .drp-compare-panel class names are unchanged.
+docs/DateRangePicker.md documents the props, tokens, breakpoints, the ancestor styles that stop a
+fixed sheet being confined to the viewport (transform, perspective, filter, backdrop-filter,
+will-change, content-visibility: auto and contain values that include layout or paint displace it,
+as measured in Chromium), and that the sheet follows the viewport width alone, so a trigger far from
+the left edge can still overflow just above 1023px. The web component wrapper carries both
+attributes and does not reflect either by default.
+
+Default-behaviour changes a consumer can see, whether or not the new props are set. First, the open
+panel and the standalone compare panel now set pointer-events: auto, so a panel opened under a
+pointer-events: none ancestor stays clickable, and anything inside a panel that used to inherit none
+from such an ancestor is now clickable. Second, the single-month calendar (dualMonth={false} in
+range mode, and every mode="single" picker) now opens on the month of the committed rangeStart, or
+of value when there is no range, instead of the current month, so a single-date picker whose value
+is outside the current month opens on that month, and the picker follows the calendar's own previous
+and next buttons. In range mode with dualMonth={false} that calendar is also re-created when a
+preset or a typed date moves the visible month, so a preset click now moves it to the preset's start
+month; a mode="single" picker has no built-in date inputs, and a preset click there still leaves the
+month on screen unchanged. Third, with dualMonth={false} in range mode, maxRangeDays is now enforced
+in the calendar grid as it already was in the two-month layout; mode="single" keeps the raw
+disabledDates. A picker that sets neither new prop makes no matchMedia calls and gets no other new
+rule: the compiled component CSS before and after differs only by added lines, namely
+pointer-events: auto on the two panels and rules scoped to .drp-panel-sheet, .drp-panel-narrow and
+.drp-panel-presets-top.
+
+Verification. jsdom unit tests drive a stubbed matchMedia that evaluates max-width queries against a
+width the test controls. They cover the layout classes, the one-month collapse, a live resize with
+the draft kept, the prop turning on and off with the listener count following it, a picker without
+the prop never calling matchMedia and still mounting under stand-ins that throw, lack
+addEventListener or answer nothing, a missing matchMedia, listener cleanup, typed-date navigation in
+the collapsed layout, focus moving to the first control in the panel after a flip destroys the
+focused day, focus staying put when it is on the trigger or on a control that survives the flip, and
+each single-month fix. Playwright specs measure the docs demo's responsive and presets-top examples,
+and a separate fixture app (tests/fixtures/date-range-picker, registered in vite.config.fixtures.ts)
+that holds the control scenarios so they stay off the public demo and out of its visual baseline.
+They measure the panel at 390, 320, 900 and 1280px (inside the viewport, fixed versus absolute,
+centring and the width cap, presets above or beside the calendars, one versus two months, stacked
+inputs, the hidden arrow, the narrow padding, no horizontal scroll, and the --drp-sheet-* and
+--drp-calendars-padding-narrow tokens), resize an open picker, re-measure above or below for a
+trigger pinned to the bottom after a flip in both directions, type a date in the following month at
+phone width, keep focus in the panel when a collapsing calendar removes the focused day, click Apply
+and the compare panel under a pointer-events: none ancestor, and check the web component attributes.
+The same picker without responsiveLayout overflows in the fixture as the control. Each behaviour
+change that has an assertion was reverted on purpose and the matching assertion failed before the
+file was restored byte for byte. Most were reverted one at a time; a few groups of independent
+changes were reverted together in one run and the failing tests were attributed by name.
+
+Not covered by any test: a sheet inside a transformed, filtered or contained host was measured by
+hand against the demo (it is displaced, as documented) but no application host such as a Modal was
+tried; a single-date picker as a sheet at 688px is exercised in jsdom only; focus restoration inside
+the web component's shadow root is untested; and the --drp-sheet-top and --drp-sheet-max-* token
+overrides are not exercised. Focus staying put when it is not in the panel is covered by the jsdom
+tests only. The date-range-picker demo route gained two sections and new docs text, so its full-page
+visual baseline moves.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+-
+feat(date-range-picker): add presetsPosition and an opt-in responsiveLayout ([eb1b92d](https://github.com/juspay/svelte-ui-components/commit/eb1b92deaf991db503fdf50b33582ca4221cb150))
+
+## [4.38.0](https://github.com/juspay/svelte-ui-components/compare/4.38.0..4.37.1) - 5 October 2026
 
 ListItem laid its left, center and right cells out as a flex row with the direction written as
 a literal, and the center and right cells exposed no minimum-width hook. A consumer that needed

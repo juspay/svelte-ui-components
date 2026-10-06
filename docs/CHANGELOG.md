@@ -2,7 +2,49 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.42.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.43.0)
+
+Banner's rightContent slot had no hook for its left margin, so an app that wants the slot and
+the dismiss button at the end of the row reaches into .banner-right from outside with
+margin-left: auto. --banner-right-margin-left is read as margin-left on that wrapper, and auto
+takes the row's spare width.
+
+The rule is written inside :where(), so it has no specificity and an app's own rules on
+.banner-right keep winning whichever stylesheet loads first. With the token set that includes a
+margin reset: * { margin: 0 } loaded after the library's stylesheet ties with the token and comes
+later, so it wins, and html * { margin: 0 } wins wherever it is loaded. docs/Banner.md says so and
+gives the workaround, measured in all three engines: write the reset inside an @layer, or, for *
+and :where(*), load it before the library's stylesheet.
+
+The unset fallback is revert-layer rather than 0: the slot has no margin of its own, but a
+declaration of 0 would beat a margin the app wrote inside an @layer, and revert-layer gives the
+declaration up instead.
+
+With the token unset the layout equals 4.42.0 in every measured case but one. revert-layer rolls
+back the whole unlayered level, so an unlayered rule with no specificity (a selector made only of *
+and :where()) that sets a non-zero left margin on .banner-right, as margin-left, a margin shorthand
+or margin-inline-start in a left-to-right row, and is loaded before the library's stylesheet, is
+rolled back to 0 with it. The same rule loaded after the library, or written with a class selector,
+is not. docs/Banner.md states this exception.
+
+Measured against 4.42.0 with the token unset: the compiled stylesheet gains one declaration (all 55
+base declarations are present, in order, none removed). 100 elements, every computed property and
+every box, under 27 app stylesheets (a rule before or after the library's, plain or in an @layer,
+resets, the shapes above): identical in 21 and different in the 6 exception shapes, in Chromium 148,
+Firefox 150.0.2 and WebKit 26.4. The /components/banner route renders no right content and is
+identical with its docs hidden, as the visual suite has them (50 elements, three engines).
+
+tests/banner-right-margin.spec.ts drives tests/fixtures/banner-right-margin and &lt;sui-banner&gt;, 29
+tests, among them the vertical writing mode, the exception and the reset cases. Chromium runs in
+the repo's project. The same file was also run in Firefox 150.0.2 and WebKit 26.4 through a scratch
+Playwright config: 87 of 87 pass, and 54 of 87 pass on the 4.42.0 sources, where the 11 tests that
+need the rule fail in every engine.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.43.0](https://github.com/juspay/svelte-ui-components/compare/4.43.0..4.42.0) - 6 October 2026
 
 ChatMessageList could not hide its own scrollbar, which Scroller can, and had no hook for
 overscroll-behavior or overflow-x, so an app reached into the list with :global() rules.

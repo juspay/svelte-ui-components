@@ -2037,11 +2037,25 @@
     border-top: var(--drp-preset-divider-border, 1px solid #e8e8e8);
   }
 
-  /* Cancel button variant via Button's CSS vars */
+  /* The label colour Cancel and Clear fall back to. `inherit` as a var() fallback of a custom
+     property inherits the ancestor's --button-text-color, never the text colour, so an unset
+     token reached Button's white primary label on the white panel. Resolving it here, on the
+     footer, keeps an ancestor's --button-text-color winning (it is read at this element, the
+     buttons' parent) and ends the chain on the secondary button's label rather than on white. */
+  :where(.drp-footer) {
+    --_drp-footer-text-color: var(--button-text-color, var(--button-secondary-text-color, #3a4550));
+  }
+
+  /* Cancel button variant via Button's CSS vars. The label chain restates the secondary label
+     after the footer's resolved colour, so its last literal sits beside a token the dark layer
+     overrides; inside the footer the first link always resolves. */
   :global(.drp-btn-cancel) {
     --button-color: transparent;
     --button-border: 1px solid var(--drp-cancel-border-color, #d0d0d0);
-    --button-text-color: var(--drp-cancel-color, inherit);
+    --button-text-color: var(
+      --drp-cancel-color,
+      var(--_drp-footer-text-color, var(--button-secondary-text-color, #3a4550))
+    );
     --button-hover-color: var(--drp-cancel-hover-background, #f5f5f5);
   }
 
@@ -2049,14 +2063,17 @@
   :global(.drp-btn-clear) {
     --button-color: transparent;
     --button-border: 1px solid var(--drp-clear-border-color, #d0d0d0);
-    --button-text-color: var(--drp-clear-color, inherit);
+    --button-text-color: var(
+      --drp-clear-color,
+      var(--_drp-footer-text-color, var(--button-secondary-text-color, #3a4550))
+    );
     --button-hover-color: var(--drp-clear-hover-background, #f5f5f5);
     margin-right: auto;
   }
 
   /* Apply button variant */
   :global(.drp-btn-apply) {
-    --button-color: var(--drp-apply-background, currentColor);
+    --button-color: var(--drp-apply-background, #3a4550);
     --button-border: none;
     --button-text-color: var(--drp-apply-color, #ffffff);
     --button-hover-color: var(--drp-apply-hover-background, #333333);

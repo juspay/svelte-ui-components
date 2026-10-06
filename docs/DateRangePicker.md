@@ -442,15 +442,15 @@ Override these custom properties to theme the component.
 | `--drp-footer-padding`                  | `12px 16px`                   | Padding of the footer.                                                                         |
 | `--drp-footer-border`                   | `1px solid #e8e8e8`           | Top border of the footer.                                                                      |
 | `--drp-cancel-border-color`             | `#d0d0d0`                     | Cancel button border color.                                                                    |
-| `--drp-cancel-color`                    | `inherit`                     | Cancel button text color.                                                                      |
+| `--drp-cancel-color`                    | `#3a4550`                     | Cancel button text color. Falls back through ancestor colors; see Footer button colors.        |
 | `--drp-cancel-hover-background`         | `#f5f5f5`                     | Cancel button background on hover.                                                             |
-| `--drp-apply-background`                | `currentColor`                | Apply button background color.                                                                 |
+| `--drp-apply-background`                | `#3a4550`                     | Apply button background color, Button's default fill. Was `currentColor`; see below.           |
 | `--drp-apply-color`                     | `#ffffff`                     | Apply button text color.                                                                       |
 | `--drp-apply-hover-background`          | `#333333`                     | Apply button background on hover.                                                              |
 | `--drp-apply-disabled-background`       | `#cccccc`                     | Apply button background when disabled.                                                         |
 | `--drp-apply-disabled-color`            | `#888888`                     | Apply button text color when disabled.                                                         |
 | `--drp-clear-border-color`              | `#d0d0d0`                     | Clear button border color (single-mode `clearable`).                                           |
-| `--drp-clear-color`                     | `inherit`                     | Clear button text color.                                                                       |
+| `--drp-clear-color`                     | `#3a4550`                     | Clear button text color. Falls back through ancestor colors; see Footer button colors.         |
 | `--drp-clear-hover-background`          | `#f5f5f5`                     | Clear button background on hover.                                                              |
 | `--drp-preset-divider-border`           | `1px solid #e8e8e8`           | Border style for the preset group divider line.                                                |
 | `--drp-preset-divider-gap`              | `6px`                         | Gap between the divider line and the group label.                                              |
@@ -507,6 +507,16 @@ Override these custom properties to theme the component.
 | `--drp-preset-item-transition-easing`   | `ease`                        | Easing curve of a preset button's background transition. Falls back through `--motion-easing`. |
 | `--drp-nav-btn-transition-duration`     | `0.12s`                       | Duration of a nav button's background transition. Falls back through `--motion-duration`.      |
 | `--drp-nav-btn-transition-easing`       | `ease`                        | Easing curve of a nav button's background transition. Falls back through `--motion-easing`.    |
+
+### Footer button colors
+
+Cancel and Clear take their text color from `--drp-cancel-color` and `--drp-clear-color`, then from an ancestor's `--button-text-color`, then from `--button-secondary-text-color`, then `#3a4550`. Apply's background is `--drp-apply-background`, then `#3a4550` (Button's default fill), under a `#ffffff` label. Both clear 4.5:1 on the default white panel (9.8:1).
+
+Apply does not follow an ancestor's `--button-color`. Its fill and its white label are a fixed pair, so a theme that sets a light or a transparent `--button-color` for its own buttons cannot leave Apply unreadable (a light `#e0e0e0` fill measures 1.3:1 under the white label, a transparent one 1:1). To match a themed fill, set `--drp-apply-background`, and `--drp-apply-color` when the label should not be white.
+
+The old defaults rendered white on white. `inherit` inside a custom property takes the ancestor's `--button-text-color`, not the text color, so with neither set Cancel and Clear showed Button's white label on the white panel, and `currentColor` made an enabled Apply's background its own white label (1:1 until hover). A token you set to a color still wins exactly as before, and an ancestor's `--button-text-color` still reaches Cancel and Clear; only a button with none of its tokens set changes. The two old defaults, set by hand, differ: `--drp-cancel-color: inherit` and `--drp-clear-color: inherit` now render like an unset token (a custom property set to `inherit` takes its parent's value, which is empty), while `--drp-apply-background: currentColor` is a color you chose and still renders the old white fill.
+
+An app that sets a light `--button-text-color` for every button still gets a light Cancel label until it sets `--drp-cancel-color` and `--drp-clear-color`, and Cancel and Clear hover text still follows an ancestor's `--button-hover-text-color`, so pair a light one with `--drp-cancel-hover-background` and `--drp-clear-hover-background`. On a dark panel, set those two and `--drp-apply-background`, or load `theme-dark.css`, which sets `--button-secondary-text-color` for Cancel and Clear but leaves Apply on Button's default fill (1.7:1 against the dark panel).
 
 ### Selector specificity note
 

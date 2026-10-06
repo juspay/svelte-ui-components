@@ -31,6 +31,14 @@ test ids belong to `tests/chat-message-list-scroll-tokens.spec.ts`, which also i
 to mount `<sui-chat-message-list>` (run `pnpm run build:wc` first), so the matrix stays out of the docs
 demo and that route's visual baseline does not move.
 
+`banner-right-margin/` mounts the real Banner in fixed-size rows (an 18px icon, a 120px body, a 60px
+right-content slot), so every offset in `tests/banner-right-margin.spec.ts` is an exact number. Rows set
+or leave unset `--banner-right-margin-left`, in left-to-right, right-to-left and vertical writing modes,
+with and without right content; an app stylesheet before or after the library's, plain or in an `@layer`,
+comes from the query string (`?css=.banner-right{margin-left:24px}&order=first`). Its `brm-*` test ids
+belong to that spec, so the matrix stays out of the public `/components/banner` demo and its full-page
+visual baseline.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

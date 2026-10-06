@@ -48,6 +48,40 @@ A notification banner with optional icon snippet, text content, inline link text
 </Banner>
 ```
 
+### Pushing Right Content to the End
+
+The banner is a flex row. By default the icon, text and right content sit together, centred (see `--banner-justify-content`), and the dismiss button follows them. Set `--banner-right-margin-left: auto` and the slot's left margin takes all the spare width in the row, so the icon and text pack at the start and the slot and the dismiss button sit at the end:
+
+```css
+/* app.css */
+.banner-trailing {
+  --banner-right-margin-left: auto;
+}
+```
+
+```svelte
+<Banner text="Trial ends in 3 days" classes="banner-trailing">
+  {#snippet rightContent()}
+    <button>Upgrade</button>
+  {/snippet}
+</Banner>
+```
+
+When it has an effect, and when it does not:
+
+- It needs spare width. The default `--banner-width: 100%` is as wide as its container, so a banner wider than its content has spare width; one that is already full has none and does not move.
+- An auto margin takes the spare width before `justify-content` distributes it, so with the slot present `--banner-justify-content` no longer moves the row.
+- It acts on the slot only. A banner with no `rightContent` has no slot, so the token does nothing there and the dismiss button stays where it was.
+- It is the physical left margin. In a right-to-left row it lies between the slot and the dismiss button, so `auto` keeps the slot against the text and sends the dismiss button to the end.
+- A length (`24px`) is added to the gap between the text and the slot rather than pushing anything to the end.
+- In a vertical writing mode (`writing-mode: vertical-rl` or `vertical-lr`) the row runs top to bottom and the left margin lies across it, so `auto` moves the slot to the right edge of the banner instead of to the end of the row. The dismiss button does not move.
+
+How the token ranks against your own CSS:
+
+- Your CSS wins. The declaration has no specificity, so a margin your CSS already sets on `.banner-right` keeps applying whichever stylesheet loads first, and with the token set, a rule of yours on the slot's left margin still beats it. A margin reset is such a rule: `* { margin: 0 }` or `:where(*) { margin: 0 }` loaded after the library's stylesheet ties the token at zero specificity and comes later, so the slot keeps a left margin of 0 and `auto` does nothing. `html * { margin: 0 }` does the same wherever it is loaded.
+- To keep a reset and use the token, write the reset inside a cascade layer (`@layer reset { * { margin: 0 } }`), which an unlayered declaration beats whatever its specificity or position. A reset with no specificity (`*`, `:where(*)`) also works when it is loaded before the library's stylesheet.
+- Unset, the token gives itself up (`revert-layer`), so the slot keeps the margin your own CSS gives `.banner-right`, and none otherwise; a rule of yours inside an `@layer` still applies. The layout is the one you had before the token existed, with one exception. An unlayered rule with no specificity (a selector made only of `*` and `:where(...)`, such as `*` or `:where(.banner-right)`) that sets a non-zero left margin on `.banner-right`, as `margin-left`, a `margin` shorthand or `margin-inline-start` in a left-to-right row, and is loaded before the library's stylesheet, no longer applies: `revert-layer` rolls the slot's left margin back past the whole unlayered level, which discards this rule with it, so the slot gets 0. Load that rule after the library's stylesheet, or give it a selector with specificity (`.banner-right { margin-left: 8px }`), and it applies as before.
+
 ### Consumer Theming via `classes` (error + compact variant)
 
 No tone enum is needed — define the variant in your app's CSS and pass it through `classes`:
@@ -121,6 +155,7 @@ Override these custom properties to theme the component.
 | `--banner-text-ellipsis`            | `ellipsis`           | text-overflow    | Text truncation style of the banner text.                                                                                      |
 | `--banner-white-space`              | `nowrap`             | white-space      | Whether the banner text wraps.                                                                                                 |
 | `--banner-right-flex-shrink`        | `0`                  | flex-shrink      | Whether the right-hand content may shrink (and wrap inside itself) when the row is narrow.                                     |
+| `--banner-right-margin-left`        | `-`                  | margin-left      | Left margin of the right content slot. `auto` pushes the slot, and the dismiss button after it, to the end of the row.         |
 | `--banner-padding`                  | `10px 12px`          | padding          | Inner padding of the banner.                                                                                                   |
 | `--banner-gap`                      | `8px`                | gap              | Gap between banner content elements (icon, text, right content, dismiss).                                                      |
 | `--banner-justify-content`          | `center`             | justify-content  | Horizontal alignment of banner content.                                                                                        |
@@ -179,6 +214,8 @@ Tag: `<sui-banner>`
 > way to render body markup through this prop; the default (unnamed) slot is not wired to
 > it, so a host with no `bodySnippet` renders through `text`/`linkText` exactly as before
 > this prop existed.
+
+The `--banner-right-margin-left` token needs no attribute: custom properties cross the shadow root, so set it on the `<sui-banner>` element or an ancestor. The wrapper always renders the right-content wrapper, even when nothing is slotted, so `auto` also sends the dismiss button to the end of a `<sui-banner>` with no `right-content`.
 
 ### Web Component Events
 

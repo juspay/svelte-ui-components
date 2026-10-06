@@ -2,7 +2,42 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.44.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.45.0)
+
+A Scroller with hideScrollbar={false} showed the browser scrollbar and gave an app
+no hook to theme it, so apps reached into .scroll-container with :global() rules.
+Add --scroller-scrollbar-width and --scroller-scrollbar-color, read by the scroll
+container only while the scrollbar is shown.
+
+The two declarations sit in an anonymous cascade layer, inside :where(), and fall
+back to revert-layer. Unset, the computed style is the base one: an inherited
+scrollbar-color is not cut off, an app rule such as * { scrollbar-width: thin }
+is not displaced, and ::-webkit-scrollbar rules stay in force. A plain declaration
+(auto, initial or inherit as the fallback) fails at least one of those; each
+variant was measured.
+
+Where the app's own CSS wins over a set token: an unlayered rule, a rule in a layer
+that first appears after the library's CSS, and any !important rule. A set token wins
+over a rule in an earlier layer. A set width token turns off ::-webkit-scrollbar
+styling in Chromium and WebKit; a set color token does so in Chromium only, because
+WebKit does not implement scrollbar-color. The docs say all of this.
+
+Compiled stylesheet against the base: 18 lines added, none removed or reordered.
+Before/after browser measurement of 7 unset scenarios (2695 to 3206 computed
+property values and 35 box groups per engine) showed no difference in Chromium 148,
+Firefox 150 (headless and headed) or WebKit 26.4. The cascade statements in the docs
+were probed in the same three engines. The new spec runs on a new fixture app
+(tests/fixtures/scroller-scrollbar), so the docs demo is unchanged.
+The Playwright project runs Chromium only; the same spec was also run through a
+scratch config in Firefox and WebKit, not by CI. WebKit does not implement
+scrollbar-color and headless Firefox reports scrollbar-width none everywhere, so
+those assertions skip there.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.45.0](https://github.com/juspay/svelte-ui-components/compare/4.45.0..4.44.1) - 6 October 2026
 
 The ChatMessage root exposed a max-width token and no min-width one, so an app that needed a
 message to shrink below its content, or short messages to keep a floor, reached into the

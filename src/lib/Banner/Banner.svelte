@@ -177,6 +177,21 @@
     flex-shrink: var(--banner-right-flex-shrink, 0);
   }
 
+  /* Zero specificity: an app that already pushes .banner-right to the end with its own
+     margin-left wrote that rule before this existed, and keeps winning whatever the load
+     order. Svelte compiles :where(.x) to :where(.x.svelte-hash), which stays at zero.
+
+     The fallback is revert-layer rather than 0. The slot never had a margin, but 0 is a
+     declaration, and an unlayered declaration beats a margin-left the app wrote inside an
+     @layer, even though that rule won before. revert-layer gives this declaration up when
+     the token is unset, so the cascade lands on whatever it landed on without it. Its one
+     cost: it rolls back the whole unlayered layer, so an earlier unlayered rule of zero
+     specificity (a bare * or :where()) that sets a non-zero margin-left on .banner-right
+     is rolled back with it. Zero-specificity ties go to the later rule, which is this one. */
+  :where(.banner-right) {
+    margin-left: var(--banner-right-margin-left, revert-layer);
+  }
+
   .banner-dismiss {
     --button-color: transparent;
     --button-border: none;

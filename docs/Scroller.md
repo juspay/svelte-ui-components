@@ -106,6 +106,27 @@ import {Scroller} from '@juspay/svelte-ui-components';
 </Scroller>
 ```
 
+### Themed Scrollbar
+
+A visible scrollbar (`hideScrollbar={false}`) takes its width and colors from tokens, so it can be themed through a class on the root instead of a rule that reaches into `.scroll-container`. A plain `scrollbar-width` on that class never reached the scroll container, because the property is not inherited; the width token does, because custom properties are.
+
+```svelte
+<Scroller hideScrollbar={false} classes="slim-scroller">
+  {#each items as item}
+    <div class="card">{item.name}</div>
+  {/each}
+</Scroller>
+
+<style>
+  :global(.slim-scroller) {
+    --scroller-scrollbar-width: thin;
+    --scroller-scrollbar-color: #888888 transparent;
+  }
+</style>
+```
+
+Leave both unset and nothing changes, including any `::-webkit-scrollbar` rules, inherited `scrollbar-color` or `scrollbar-width` rule you already have. The tokens apply in a cascade layer, so your own CSS can still beat a set token: a rule outside any layer that matches `.scroll-container` (including `*`) wins, a rule in a layer that first appears after the library's CSS wins, and so does any `!important` rule. A set token wins over a rule inside an earlier layer. Setting the width token turns off `::-webkit-scrollbar` styling in Chromium and WebKit; setting the color token does so in Chromium only, because WebKit has no `scrollbar-color`. Neither applies while `hideScrollbar` is `true`.
+
 ## CSS Custom Properties
 
 ### Container
@@ -147,6 +168,15 @@ import {Scroller} from '@juspay/svelte-ui-components';
 | Variable               | Default                       | Description                                                                          |
 | ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
 | `--scroller-snap-type` | `x mandatory` / `y mandatory` | CSS scroll-snap-type value. Automatically adapts to direction but can be overridden. |
+
+### Scrollbar
+
+Applied to the scroll container only while the scrollbar is shown (`hideScrollbar={false}`).
+
+| Variable                     | Default                     | Description                                                                                                                                                                    |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--scroller-scrollbar-width` | Unset (browser `auto`)      | CSS `scrollbar-width` of the scroll container: `auto`, `thin` or `none` (`none` hides the scrollbar). Unset, no width is applied.                                              |
+| `--scroller-scrollbar-color` | Unset (inherits from above) | CSS `scrollbar-color` of the scroll container, as `<thumb> <track>` (for example `#888888 transparent`). It is inherited, so scrollable areas inside the items pick it up too. |
 
 ## Type Reference
 
@@ -198,8 +228,8 @@ scroller.addEventListener('scrollposition', (e) => console.log(e.detail.progress
 
 ### Slots
 
-| Slot Name        | Maps to Snippet | Description                 |
-| ---------------- | --------------- | --------------------------- |
-| _(default)_      | `children`      | Scrollable content.         |
+| Slot Name        | Maps to Snippet | Description                                                   |
+| ---------------- | --------------- | ------------------------------------------------------------- |
+| _(default)_      | `children`      | Scrollable content.                                           |
 | `arrow-previous` | `arrowPrevious` | Custom previous/left arrow; defaults to the built-in chevron. |
 | `arrow-next`     | `arrowNext`     | Custom next/right arrow; defaults to the built-in chevron.    |

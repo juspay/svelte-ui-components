@@ -56,6 +56,16 @@ mounts `<sui-chat-message>` from `dist-wc`, so the scenario matrix stays off the
 there. The Playwright project runs Chromium only; the spec header says how Firefox and WebKit were
 measured.
 
+`scroller-scrollbar/` mounts the real Scroller (and, in the spec, `<sui-scroller>`) in 200px hosts that each
+carry what an app might: an inherited `scrollbar-color`, a `::-webkit-scrollbar` rule, a zero-specificity
+`*` reset, a reset inside a cascade layer ahead of the library's, or the two `--scroller-scrollbar-*`
+tokens. Every Scroller sits beside a hand-written `-ref` twin that computes what the base
+`.scroll-container` did, so each "unset" test compares against a twin rather than a remembered value.
+The app stylesheet is imported ahead of the component on purpose, as an app's is. Its `sb-*` test ids
+belong to `tests/scroller-scrollbar.spec.ts`; the scenario matrix stays out of the docs demo, whose
+full-page visual baseline would move with it. That spec runs Chromium only in CI; its header says how
+Firefox and WebKit were measured, and which assertions those two engines cannot make.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

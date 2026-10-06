@@ -315,6 +315,24 @@
     display: none;
   }
 
+  /* Scrollbar tokens, only while a scrollbar is shown. Unset, they must change nothing, and
+     a plain declaration cannot manage that: one that resolves to nothing still computes as
+     unset, which wipes an inherited scrollbar-color and replaces an earlier rule of zero
+     specificity such as `* { scrollbar-width: thin }`. So the pair sits in an anonymous
+     layer, where any unlayered rule of the app beats it whatever its specificity, and the
+     fallback is revert-layer, which hands the property back to whatever the layers before
+     this one (an app's own `@layer base`, then the browser) would have given it. The
+     keywords initial and inherit, tried first, restore the browser default but still
+     displace that earlier layer. The selector is inside :where() so it adds no specificity.
+     Chromium stops applying ::-webkit-scrollbar rules once either property is not auto, so
+     setting a token replaces an app's webkit scrollbar styling instead of adding to it. */
+  @layer {
+    :where(.scroll-container:not(.hide-scrollbar)) {
+      scrollbar-width: var(--scroller-scrollbar-width, revert-layer);
+      scrollbar-color: var(--scroller-scrollbar-color, revert-layer);
+    }
+  }
+
   .scroll-container.dragging {
     cursor: grabbing;
   }

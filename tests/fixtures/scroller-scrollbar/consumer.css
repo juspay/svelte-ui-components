@@ -1,0 +1,85 @@
+/* Stands in for an app's own stylesheet. Every rule is scoped to a class on a scenario so
+   scenarios stay independent on one page; none of them touches the library's classes except
+   the ones a real consumer reaches for (.scroll-container). */
+
+body {
+  margin: 0;
+  padding: 16px;
+}
+
+.sb-host {
+  width: 200px;
+  margin-bottom: 12px;
+}
+
+.sb-item {
+  flex: 0 0 150px;
+  height: 20px;
+  background: #cccccc;
+}
+
+/* The reference twin: what .scroll-container computes to in the library's base, written out
+   by hand so the spec has an independent measurement to compare the component against. It
+   carries the .scroll-container class so the app's rules below reach it exactly as they
+   reach the component's. */
+.sb-ref {
+  display: flex;
+  width: 200px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.sb-ref-hidden {
+  scrollbar-width: none;
+}
+
+.sb-ref-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* An ancestor of the scroller hands down an inherited scrollbar-color. */
+.sb-ancestor-color {
+  scrollbar-color: rgb(1, 2, 3) rgb(4, 5, 6);
+}
+
+/* A consumer's ::-webkit-scrollbar styling on the scroll container. */
+.sb-webkit .scroll-container::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+/* A global reset: a universal rule with no specificity at all, the shape of
+   `* { scrollbar-width: thin }`. It is scoped by :where() only so the other scenarios on this
+   page are not styled by it. */
+:where(.sb-global-reset) * {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(7, 8, 9) rgb(10, 11, 12);
+}
+
+/* An app that keeps its resets in a cascade layer, declared ahead of the library's. */
+@layer base {
+  :where(.sb-app-layer) * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(13, 14, 15) rgb(16, 17, 18);
+  }
+}
+
+/* A consumer rule on the scroll container itself. */
+.sb-consumer-rule .scroll-container {
+  scrollbar-width: auto;
+  scrollbar-color: rgb(0, 128, 0) rgb(0, 0, 0);
+}
+
+/* The tokens, set the way an app does: a class on the Scroller's root. */
+.sb-tokens {
+  --scroller-scrollbar-width: thin;
+  --scroller-scrollbar-color: rgb(255, 0, 0) rgb(0, 0, 255);
+}
+
+.sb-token-width {
+  --scroller-scrollbar-width: thin;
+}
+
+.sb-token-color {
+  --scroller-scrollbar-color: rgb(255, 0, 0) rgb(0, 0, 255);
+}

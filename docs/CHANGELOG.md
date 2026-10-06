@@ -2,7 +2,119 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.40.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.41.0)
+
+The Modal sized its content panel by height only. The three size classes read a width token with
+no ceiling and the footer action row could not wrap, so any consumer width token wider than the
+screen, any wide child and any long footer label pushed the dialog off-screen. A 34.375rem token
+put a medium dialog at -87px to 462px on a 375px phone, and a 700px unbreakable body did the same.
+Height already had a viewport cap; width never did, which is why apps wrapped every width token in
+their own min() and re-declared the footer row from outside.
+
+The content panel now carries a per-alignment max-width. Each alignment resolves its own ceiling
+on the overlay and the panel only reads it, so the panel rule stays a single class. A centred
+dialog is capped at 100vw minus a gutter; top and bottom sheets are capped at 100vw. The ceiling
+caps the width a size token or a child asks for instead of wrapping the token in min(), so a
+keyword token such as fit-content keeps working and a consumer token still wins until it exceeds
+the ceiling.
+
+A percentage size token resolves against the shrink-to-fit transition wrapper, and a plain
+max-width on the panel narrows that wrapper: calc(100% - 32px) rendered 311px instead of 343px on
+a 375px phone. The ceiling is therefore written as a max-width that contains a percentage, which
+the wrapper ignores while it works out its own width, so a percentage token resolves against the
+same box as before. Because the wrapper can now be wider than the capped panel, it is bounded to
+the overlay (or to the ceiling, where an embedded overlay is narrower), it stops taking pointer
+events, and the panel is inset by half of what the wrapper has beyond the ceiling.
+
+Every declaration this change adds to a selector an app may already target sits in a :where()
+rule, so it has no specificity and an app rule for the same property wins whatever its selector
+and whichever stylesheet loads first: the panel ceiling and its inset inside the wrapper, the
+wrapper's pointer-events and max-width, and the footer row's flex-wrap and justify-content. Svelte
+compiles :where(.x) to :where(.x.svelte-hash), and the compiled selectors measure (0,0,0). A
+bare .modal-content { max-width: 600px } or margin: 0 auto, and a .modal-content
+.footer-action-buttons { justify-content: flex-end } rule, therefore keep working as they did
+before this change. A max-width of an app's own replaces the ceiling, so it has to fit the
+viewport itself, and a universal * rule that comes later in the cascade ties with these rules.
+
+The default height cap now subtracts the same gutter, so one token governs both axes for size
+small, medium and large; fit-content height stays bounded by --modal-fit-content-max-height. The
+footer action row gains flex-wrap and a justify token.
+
+New tokens: --modal-viewport-gutter (32px), --modal-center-max-width (100vw minus the gutter),
+--modal-top-max-width (100vw), --modal-bottom-max-width (100vw) and
+--modal-footer-action-buttons-justify-content (flex-start, equal to the previous behaviour). A
+private --_modal-max-width carries the choice from the overlay to the panel and the wrapper, and
+the transition wrapper element gains a modal-animation class that Modal's own rules select; a
+ModalAnimation used on its own is not restyled. docs/Modal.md documents each token, the corrected
+--modal-max-height default and a Viewport fit section. The docs demo is unchanged; the scenario
+matrix lives in a fixture app, tests/fixtures/modal-viewport, so it is not a page the visual suite
+has to baseline.
+
+Default behaviour a consumer can see:
+- A centred modal wider than the viewport minus 32px is capped to it. One with no width token
+whose content was wider than the screen minus 32px either ran edge to edge or overflowed the
+screen, and now keeps 16px either side. Top and bottom sheets are capped at the viewport width.
+Opt out of the centred ceiling with --modal-center-max-width: none.
+- Footer actions that do not fit wrap onto a second row instead of overflowing.
+- With the transition wrapper on, which is the default, a percentage width keeps its width but
+moves when the wrapper spans nearly the whole viewport, as it does on a phone. A capped panel is
+centred. A percentage panel narrower than the ceiling is offset from the start edge by half the
+gutter, 16px at 375px, instead of flush with it, so it is not centred: 90% sits at 16px with
+21.5px on the other side. enableTransition={false} already centred it, and where the wrapper is
+narrower than the ceiling the position is unchanged.
+- A percentage token beside content that cannot shrink below the viewport width now resolves
+against the wrapper bounded to the viewport. At 375px, 90% beside an unbreakable 700px child is
+337.5px where it was 658.8px and ran off the screen, and 50% is 187.5px where it was 366px. This
+is the one case where the width is not the smaller of the previous width and the ceiling.
+- The default height cap reads the gutter token, whose default is the same 32px.
+- The transition wrapper no longer takes pointer events, so the area beside the panel that it
+covers counts as the overlay: a click there calls onoverlayclick and ondismiss, where it used to
+land on the wrapper and do nothing. That area exists beside a percentage panel narrower than its
+wrapper, beside a capped panel, and beside every top or bottom sheet narrower than the viewport,
+because the wrapper stretches across the sheet by default. A drag that starts inside the panel and
+is released beside it also dismisses in Chromium and WebKit, which send the click to the nearest
+common ancestor, as a drag released on the far overlay already did; Firefox sends no click. A
+click inside the panel never dismisses. This matches the documented meaning of onoverlayclick, a
+click outside the modal content; pointer-events: auto on .modal-animation restores the old
+behaviour.
+- The ceiling is chosen on the overlay, so a rule that sets one of the width tokens on the panel
+itself is ignored; set them through classes or an ancestor, and with usePortal an ancestor of
+the portal target. The ceilings are measured against the viewport, so a host that embeds the
+modal in a narrower region sets --modal-center-max-width itself.
+- A unitless --modal-viewport-gutter: 0 makes the calc() invalid and drops both caps, the height
+cap included; write 0px.
+
+The ceiling reaches &lt;sui-modal&gt;. The default footer it builds from its footer property is half
+covered: the footer container tokens (background, padding, border-top, border-radius,
+justify-content) reach it because Modal.svelte renders that container, but the action row and the
+buttons are created in the wrapper's own template, outside Modal.svelte's scoped footer rules, so
+the wrap, the gap, the width, the justify token and the per-button tokens do not. That predates
+this change, is documented in docs/Modal.md and is left for a separate change because fixing it
+alters the default look of the element.
+
+Verified in Chromium with tests/modal-viewport-width.spec.ts: 72 tests, 69 against the fixture app
+and 3 against the compiled sui-modal bundle. They cover enableTransition true and false, align
+center, top and bottom, percentage and keyword tokens including where each panel starts, the
+549/550 boundary, every new token, an app-wide centred token leaving top and bottom sheets alone,
+sheets with start, end and centre alignment, a click beside a capped panel, a percentage panel
+and a top and a bottom sheet, a drag released beside the panel, an embedded overlay, usePortal,
+the 700px body, footer wrap and justify, and sui-modal. Six tests place an app rule ahead of the
+library stylesheet, as an app's is, and assert that it wins: two on the footer row, two with
+margin: 0 auto on the panel, a bare max-width on the panel and pointer-events on the wrapper.
+Restoring the earlier scoped selectors fails exactly those six, and removing one declaration of
+the change fails the tests that exercise it. Reverting Modal.svelte and ModalAnimation.svelte to
+the parent release fails 40 of the 69 fixture tests. The percentage and keyword behaviour was
+also measured in Chromium, Firefox and WebKit over 360 viewport, alignment, transition, body and
+token combinations against a build of the parent release: the width is the smaller of the
+previous width and the ceiling in 358 of them, the other two being the percentage case beside
+the 700px child above, no panel leaves the viewport, and the three engines agree.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+-
+feat(modal): clamp every size to the viewport and let footer actions wrap ([ba46fc8](https://github.com/juspay/svelte-ui-components/commit/ba46fc86b3a182926d9b8be3932ebb4d946d56e6))
+
+## [4.41.0](https://github.com/juspay/svelte-ui-components/compare/4.41.0..4.40.1) - 6 October 2026
 
 A Button is as wide as its label and the label does not wrap (white-space: nowrap), so fit-content
 never drops below the label's full width. --button-max-width and --button-min-width reach only the

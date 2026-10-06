@@ -2,7 +2,103 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.40.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.40.1)
+
+A Button is as wide as its label and the label does not wrap (white-space: nowrap), so fit-content
+never drops below the label's full width. --button-max-width and --button-min-width reach only the
+inner button, and a percentage there resolves against .button-container, which is as wide as the
+label unless fullWidth or --button-width sizes it. A Button in a parent narrower than its label (a
+flex row, a grid cell or a plain block) therefore could not give width back: an 80-character label
+in a 240px parent measured 471px wide in the test fixture's font and overflowed it by 231px.
+
+Add one opt-in boolean prop, shrinkable (default false). When set, .button-container gets
+min-width: 0, width: 100% and max-width: var(--button-width, max-content), .button-el gets
+max-width: var(--button-max-width, 100%), and an icon snippet gets flex-shrink: 0. A label that does
+not fit is truncated with the existing ellipsis on .button-text. A label that fits keeps its natural
+width and its place in the parent, whatever the parent's justify-items, justify-self or the root's
+auto margins say.
+
+The box is width: 100% bounded by max-content, not fit-content, because of the grid. Firefox and
+WebKit size a 1fr or auto grid track to at least the content width of an item whose width is an
+intrinsic keyword such as fit-content, so the track grew to the label and the Button never shrank in
+a grid cell (Chromium shrinks the track). Measured on a bare div with a 470px nowrap child, a
+percentage or auto width is not counted that way and fit-content, max-content, min-content and
+fit-content(100%) are (Chromium counts all of them but the fit-content keyword). width: auto would
+shrink the track too and was rejected: it stretches the box across a block, stretch or
+justify-items: normal parent, so margin: auto on the root stops centring it.
+
+Two things follow from the box being a percentage clamped to the label's width, both in a flex row.
+Each shrinkable button starts from an equal share of the row, so a short label narrower than that
+share keeps its natural width beside a long one and the long label gives up the rest (with the
+earlier fit-content box it was squeezed to 25.9px beside an 80-character label). A label wider than
+the share is cut to it: "Save changes" beside a long label in a 240px row with an 8px gap is 116px
+and so is the long one. When the row is too narrow for every label each shrinkable button still
+gives up width, and flex-shrink: 0 through classes keeps one readable. And flex-grow or flex: 1 on
+the root no longer widens it past its label; fullWidth fills the row.
+
+What the prop does not do, as docs/Button.md and the JSDoc now state it. Wrapping with
+--button-white-space: normal already works without it; what the prop adds there is that a single
+word wider than the parent is contained and clipped instead of overflowing. Only the text label is
+truncated: custom children content is left as it is and has to manage its own overflow. With
+iconOnly it changes nothing while the square fits; in a narrower parent the padding gives way before
+the glyph does, and the button never gets narrower than its padding. On a root reset to
+display: inline (all: unset) the container rules are inert and the inner button's max-width caps it
+against the parent, as --button-max-width: 100% already does there in a block parent. It has no
+effect on the buttons a Modal renders from footer.primaryButton and footer.secondaryButton (a footer
+row sized to its labels, wrappers that are flex: none): in a 320px Modal the label stayed about
+471px wide in all three engines, while in footerSnippet it truncated at 280px.
+
+API and tokens: a new prop shrinkable on Button and ButtonProperties, and a shrinkable attribute
+and property on &lt;sui-button&gt;. No new CSS variables. The --button-max-width and --button-min-width
+rows in docs/Button.md now say that they reach only the inner button, and the max-width row says
+that a percentage resolves against the container. The wrapper adds :host([shrinkable]) with
+min-width: 0 and max-width: 100%, because the host is the flex or grid item there, and mirrors the
+property onto the attribute from an effect, since reflect: true is inert for props that reach
+Button through the ...props rest.
+
+The rules are gated on a .button-shrinkable class instead of being hoisted onto every container,
+and the class carries the component prefix because classes lands on the same element. An
+unconditional declaration would outrank a consumer's own max-width class on the root, and a
+consumer class named shrinkable must not opt a Button in.
+
+How it was verified. tests/button-shrinkable.spec.ts has 80 browser tests that assert bounding boxes
+against tests/fixtures/button-shrinkable, a fixture app registered in vite.config.fixtures.ts, so
+the scenario matrix stays out of the public /components/button demo and its visual baseline. The
+repo's Playwright project runs Chromium only, so CI runs them in Chromium alone and cannot see the
+Firefox and WebKit grid behaviour above. Those two engines were measured with a rig outside CI: the
+same spec through a scratch Playwright config on Firefox 150.0.2 and WebKit 26.4 (Playwright 1.60.0,
+Chromium 148.0.7778.96), 80 of 80 in each engine. The same rig cloned the compiled Button into 10
+parent kinds (flex row, two flex columns, block, inline-flex, inline-block, four grid tracks) with a
+long and a short label and justify-items normal, start, center and end on the grids, before and
+after: 264 rows. The 198 rows with a short label or no prop are unchanged, and the 66 long-label
+rows all fit their parent in the three engines (8 grid rows each in Firefox and WebKit overflowed
+before). 240 more rows of &lt;sui-button&gt; are identical before and after.
+
+Reverting the container rule to min-width: 0 and max-width: 100% fails 2 tests in Chromium (the
+shared row and flex-grow ones) and 15 in each of Firefox and WebKit, 13 of them grid cells. Setting
+the width to auto, with max-width: 100%, instead fails 8 in Chromium and in Firefox, and a width of
+100% with max-width: 100% (no max-content bound) fails 23 in Chromium. Removing the container rule,
+the inner rule, the icon rule, the :host rule, the attribute effect, the class directive or the
+max-width token fails its intended assertion, and so does making the container rule or the icon rule
+unconditional. The compiled stylesheet of Button differs from the base commit by three added rules
+and no removed line, each selector containing .button-shrinkable.
+
+Default behaviour: unchanged for every Button that does not set shrinkable. Things a consumer
+could notice. A &lt;sui-button&gt; that already carries an unrelated shrinkable attribute is now opted in.
+With shrinkable set, the root's width and max-width come from the rules above, so a max-width class
+on the root no longer applies to that Button (--button-max-width is the supported cap) and
+flex-grow does not widen it. A horizontal margin on the root is added to the 100% width, so in a
+block or grid parent the margin box runs past the parent by the margin (a flex row is not
+affected). In a vertical writing mode Firefox gives the box the parent's full width, because width
+is physical; that case was not otherwise measured. The /components/button demo and its docs text
+gain content, so that route's full-page visual baseline moves.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+-
+feat(button): add a shrinkable prop so a label can truncate inside a constrained parent ([4791ac0](https://github.com/juspay/svelte-ui-components/commit/4791ac08ffe6af0065162752db459740b8ead98a))
+
+## [4.40.1](https://github.com/juspay/svelte-ui-components/compare/4.40.1..4.40.0) - 6 October 2026
 
 Table's built-in paginator puts the page-size select and the Pagination stepper in one
 flex row that could not wrap. That row is 320px wide on page 1 and 440px on the page with

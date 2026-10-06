@@ -2,7 +2,39 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.47.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.48.0)
+
+ChatMessage styles the &lt;ul&gt; and &lt;ol&gt; of its body from --chat-message-list-margin and
+--chat-message-list-padding. ChatMessageList reads --chat-message-list-padding for its own padding
+too, so a page that sets it to 0 for the list also removes the indent of every list inside a
+message, and there was no way to give the two different values.
+
+Add --chat-message-body-list-margin and --chat-message-body-list-padding, read first, with the older
+names as the fallback, so the indent is
+var(--chat-message-body-list-padding, var(--chat-message-list-padding, 1.4em)). A message that sets
+neither new token is what it was, including one that sets the older names, and the older names keep
+their meaning for ChatMessageList. The docs say that the two share a name and what the new tokens
+are for.
+
+How it was verified. tests/chat-message-body-list-tokens.spec.ts has 10 browser tests on a new
+fixture app, run through a scratch config in Chromium, Firefox and WebKit: 10 of 10 in each. They
+measure the margin and indent of a bulleted and a numbered list against the computed font size:
+unset, each older name alone, each new token alone and beside the older names, a ChatMessageList
+whose own padding is 0 with and without the new token, and &lt;sui-chat-message&gt; with tokens set on the
+element. With only ChatMessage.svelte put back to the base (2 added, 6 removed), the 5 tests that
+use a new token fail in Chromium and the 5 that do not still pass: unset, each older name alone, the
+older name inside a list, and an unset element. The repository's Playwright project runs Chromium
+only, so CI cannot see Firefox and WebKit. pnpm lint exits 0.
+
+Default behaviour: unchanged for a message that sets neither new token. The older names are not
+renamed or removed, so this is not breaking. The /components/chat-message demo and its visual
+baseline are unchanged. Not measured: RTL (the indent is padding-left, as before), print, zoom.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.48.0](https://github.com/juspay/svelte-ui-components/compare/4.48.0..4.47.0) - 6 October 2026
 
 ChatMessageList lays its messages out in an inner column that only had a gap token, so an app that
 reserves room below the last message for a floating composer, or centres the column at a maximum

@@ -2,7 +2,54 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.38.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.39.0)
+
+DateRangePicker and Calendar had no token for filling a container. The picker root was hard-coded
+to display inline-block, and Calendar sized its day-name row, its grid columns and its day cells
+from --calendar-cell-size alone, so a host had to reach into the library's own selectors (.drp-root,
+.day-names, .grid, .cell) from outside.
+
+Three CSS custom properties now carry that decision, with no new props and no script changes.
+--drp-root-display sets the display of the picker root and defaults to inline-block.
+--calendar-grid-columns sets the column tracks of the day-name row and the day grid and defaults to
+repeat(7, var(--calendar-cell-size, 36px)). --calendar-cell-width sets the width of each day cell
+and defaults to var(--calendar-cell-size, 36px). Every default is today's value, so a consumer that
+sets none of the three sees no change, and a consumer that sets --calendar-cell-size still gets
+columns, day names and cells of that size. Cell height still follows --calendar-cell-size. The
+library did not read any of the three names before, so the only consumer that could notice a change
+is one whose own stylesheet already defines a custom property with one of those names.
+
+A single-month picker without presets (mode="single") fills its container by setting
+--drp-root-display to block, --drp-panel-min-width and --calendar-width to 100%,
+--calendar-grid-columns to repeat(7, minmax(0, 1fr)) and --calendar-cell-width to 100%. Set the two
+grid tokens together: fluid columns with the default fixed-width cells bring back the gaps that
+broke the range highlight. The picker trigger is not stretched and keeps the width
+--drp-trigger-min-width gives it.
+
+The panel is content-box, so with --drp-panel-min-width at 100% its border sits outside the host:
+1px per side on a page without a border-box reset, and always inside the web component, where a
+page-level reset does not reach the shadow root. A host leaves 2px of room or sets
+--drp-panel-border to none. Range mode shows two months side by side, and a presets sidebar is at
+least 140px wide: measured with four presets, a single-month picker is about 316px wide in a 300px
+host and overhangs hosts from 305px to 314px, and a range-mode picker with presets needs about
+393px. The recipe was verified only for a single-month picker without presets.
+
+The recipe does not combine with responsiveLayout at narrow widths. At and below the sheet's
+breakpoints (688px for a single-month picker, 1023px in range mode) the panel is a fixed sheet with
+min-width 0, so --drp-panel-min-width no longer applies and the viewport, not the host, sizes it.
+
+The web component wrappers need no change, because a custom property set on the host reaches the
+shadow root. The sui-date-range-picker element is its own box and still needs the existing
+--sui-date-range-picker-display token set to block.
+
+docs/Calendar.md gains a Fluid grid section, and docs/DateRangePicker.md gains the display token
+row and a Filling a container section that states these limits.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.39.0](https://github.com/juspay/svelte-ui-components/compare/4.39.0..4.38.0) - 6 October 2026
 
 The DateRangePicker panel had no viewport awareness. It is an absolutely positioned box that can be
 up to --drp-panel-max-width wide, so on a phone it ran off the edge of the screen and took Apply

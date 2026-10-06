@@ -46,6 +46,16 @@ string, as an app sets them, and `theme=dark` turns the library's own dark theme
 `tests/date-range-picker-footer-contrast.spec.ts` reads the rendered label and background colours
 from it, so the scenario matrix stays off the public docs demo, whose visual baseline would move.
 
+`chat-message-min-width/` mounts the real ChatMessage in 240px parents that are a flex row, a flex
+column, a grid track and a block, each with the `--chat-message-min-width` token unset, set to `auto`,
+`0`, or a length, beside twin elements that carry the root's box rules and no min-width rule at all.
+`?css=` adds a consumer rule ahead of the library's stylesheet, as an app's is, and the rule may sit
+inside an `@layer`. Its `mw-*` test ids belong to `tests/chat-message-min-width.spec.ts`, which also
+mounts `<sui-chat-message>` from `dist-wc`, so the scenario matrix stays off the
+`/components/chat-message` demo, whose full-page visual baseline would move with every parent added
+there. The Playwright project runs Chromium only; the spec header says how Firefox and WebKit were
+measured.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

@@ -142,6 +142,7 @@ pinning to the left. `--chat-message-marker-offset` is the one to reach for: it 
 | Variable                                       | Default                   | CSS Property       | Description                                             |
 | ---------------------------------------------- | ------------------------- | ------------------ | ------------------------------------------------------- |
 | `--chat-message-max-width`                     | `82%`                     | max-width          | Max width of the message.                               |
+| `--chat-message-min-width`                     | `auto`                    | min-width          | Minimum width; `0` or a length replaces `auto`.         |
 | `--chat-message-margin`                        | `0`                       | margin             | Margin around the message.                              |
 | `--chat-message-gap`                           | `10px`                    | gap                | Gap between avatar and bubble.                          |
 | `--chat-message-content-gap`                   | `6px`                     | gap                | Gap between header, bubble, attachments.                |
@@ -198,12 +199,44 @@ pinning to the left. `--chat-message-marker-offset` is the one to reach for: it 
 | `--chat-message-action-color`                  | `#71717a`                 | color              | Icon color of action buttons.                           |
 | `--chat-message-action-hover-background-color` | `#f4f4f5`                 | background         | Action button hover background.                         |
 
+`--chat-message-min-width` leaves the message's minimum width alone, which is `auto`: a content-based
+minimum in a flex row or a grid track, and `0` in a block parent. Set it to `0` or to a length to
+replace that minimum. A message in a flex row or a grid track can then shrink below its content, so a
+long code line or a wide table scrolls inside the bubble instead of stretching the row. A length such
+as `120px` also gives short messages a floor, and likewise lets one wider than its parent shrink to it.
+In a column flex parent and a block parent `0` changes nothing. For `<sui-chat-message>` see Web
+Component below.
+
+The shrink shows once `--chat-message-max-width` lets the content through. With the default `82%` a
+flex row already holds the message to 82% of the row, so `0` changes only its computed `min-width`
+there. A grid track is sized from the content in Chromium and Firefox, so the cap does not hold and `0`
+brings the message back to it (WebKit holds the cap either way).
+
+The declaration has no specificity, and while the token is unset it gives the property up, so an app
+rule that already sets `min-width` on `.chat-message` keeps winning, including one inside a cascade
+`@layer`. The exception is a `*` rule that comes before the library's stylesheet: it ties with the
+declaration and loses, so set the token to the value you want. A token that is set wins over a layered
+rule and over such a `*` rule, and loses to an unlayered rule on `.chat-message`.
+
 ## Web Component
 
 Tag: `<sui-chat-message>`
 
 ```html
 <sui-chat-message role="sender" content="Hello!"></sui-chat-message>
+```
+
+### Minimum width
+
+`--chat-message-min-width` crosses the shadow root and sets the `min-width` of the message inside, so a
+floor such as `--chat-message-min-width: 120px` works on `<sui-chat-message>`. The flex or grid item is
+the element itself, though, and it keeps its own content-based minimum, so `--chat-message-min-width: 0`
+on a parent does not let the element shrink. Put `min-width: 0` on the element for that:
+
+```css
+sui-chat-message {
+  min-width: 0;
+}
 ```
 
 ### Web Component Events

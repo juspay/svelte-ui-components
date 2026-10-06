@@ -16,6 +16,7 @@
       autoscroll: { type: 'Boolean', reflect: true },
       scrollPolicy: { type: 'String', attribute: 'scroll-policy' },
       pinHold: { type: 'Boolean', attribute: 'pin-hold' },
+      hideScrollbar: { type: 'Boolean', attribute: 'hide-scrollbar' },
       jump: { type: 'Boolean', reflect: true },
       jumpLabel: { type: 'String', attribute: 'jump-label' },
       jumpIcon: { type: 'Object' },

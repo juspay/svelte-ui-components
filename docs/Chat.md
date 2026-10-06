@@ -176,6 +176,7 @@ The fixed-height `.chat-panel` gives `Chat` its bounds; add a slide/scale transi
 | autoscroll                                   | `boolean`                            | No       | `true`             | Auto-scroll to the latest message (only when already near the bottom).                                                     |
 | scrollPolicy                                 | `'near-bottom' \| 'pin-sender-turn'` | No       | `'near-bottom'`    | Follow policy for new messages. `pin-sender-turn` pins each new sender message to the top so its reply streams beneath it. |
 | pinHold                                      | `boolean`                            | No       | `false`            | With `pin-sender-turn`, retain the reserved reply headroom while the current turn is busy; set false when it finishes.     |
+| hideScrollbar                                | `boolean`                            | No       | `false`            | Hide the message list's scrollbar without losing scrolling (web component: `hide-scrollbar`).                              |
 | jump                                         | `boolean`                            | No       | `true`             | Render the built-in jump-to-latest button. Set false when providing your own affordance.                                   |
 | jumpLabel                                    | `string`                             | No       | `'Jump to latest'` | Accessible label for the built-in jump-to-latest button.                                                                   |
 | jumpIcon                                     | `Snippet`                            | No       | `-`                | Custom icon for the built-in jump-to-latest button.                                                                        |
@@ -238,7 +239,7 @@ Tag: `<sui-chat>`
 <sui-chat title="Assistant"></sui-chat>
 ```
 
-Set `.messages`, `.onsend`, and other object/array props via JavaScript. Scroll controls map to `scroll-policy`, `pin-hold`, `jump`, `jump-label`, and the `.jumpIcon` / `.onscrollstate` properties; `onscrollstate` receives `{ atBottom, scrollable }`.
+Set `.messages`, `.onsend`, and other object/array props via JavaScript. Scroll controls map to `scroll-policy`, `pin-hold`, `hide-scrollbar`, `jump`, `jump-label`, and the `.jumpIcon` / `.onscrollstate` properties; `onscrollstate` receives `{ atBottom, scrollable }`.
 
 ### Web Component Events
 

@@ -23,6 +23,7 @@ export type OptionalChatProperties = {
   autoscroll?: boolean;
   scrollPolicy?: ChatMessageListProperties['scrollPolicy'];
   pinHold?: ChatMessageListProperties['pinHold'];
+  hideScrollbar?: ChatMessageListProperties['hideScrollbar'];
   jump?: ChatMessageListProperties['jump'];
   jumpLabel?: ChatMessageListProperties['jumpLabel'];
   jumpIcon?: ChatMessageListProperties['jumpIcon'];

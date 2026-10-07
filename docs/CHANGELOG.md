@@ -2,7 +2,37 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.49.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.50.0)
+
+A Scroller's scroll container is a flex row (a column when vertical) and nothing on it read a
+justify-content, so an app that wanted a short row at the end, as Lighthouse does for the chat
+attachment chips (an AttachmentChipRow renders a Scroller), reached into .scroll-container with a
+:global() rule. Add --scroller-justify-content, read by the scroll container, so the same placement
+is a custom property on the class the app already passes to the root, which inherits through the
+component boundary and the shadow root.
+
+The declaration sits in an anonymous cascade layer, inside :where(), and falls back to revert-layer,
+as the scrollbar tokens do. Unset, the computed style is the base one: an app rule such as
+`.scroll-container { justify-content: center }`, a `*` reset, or a rule in an earlier layer keeps
+winning. A plain `justify-content: var(--scroller-justify-content, normal)` fails five of the new
+tests, each variant measured. A set token wins over a rule in an earlier layer and loses to an
+unlayered rule of the app.
+
+The docs recommend `safe flex-end` over `flex-end`: a plain flex-end puts the overflow before the
+start edge, where a scroll container has no scrollable range, so the first items of an overflowing
+row are cut off and cannot be scrolled to (measured for a Scroller and an AttachmentChipRow in three
+engines).
+
+Compiled stylesheet against the base: 11 lines added, none removed or reordered. Before/after
+browser measurement of 8 unset scenarios (48831 computed property values and 107 boxes in
+Chromium 148, 41020 in Firefox 150, 44872 in WebKit 26.4) showed no difference. The new spec runs on
+a new fixture app (tests/fixtures/scroller-justify-content), so the docs demo is unchanged. The
+Playwright project runs Chromium only; the same spec was also run through a scratch config in
+Firefox and WebKit, not by CI.
+
+Refs: BZ-6632
+
+## [4.50.0](https://github.com/juspay/svelte-ui-components/compare/4.50.0..4.49.0) - 7 October 2026
 
 Chat wraps ChatMessageList and forwards scrollPolicy, pinHold and the jump controls to it, but not
 hideScrollbar, so an app that renders Chat could not hide the message list's scrollbar without a

@@ -100,6 +100,19 @@ message list each one renders. The spec also injects `dist-wc/index.js` to mount
 `pnpm run build:wc` first), so the pair stays out of the docs demo and that route's visual baseline does
 not move.
 
+`scroller-justify-content/` mounts the real Scroller, in 400px hosts with three or eight 80px items, and the
+real AttachmentChipRow, with two or eight chips, each beside what an app might have: nothing set, the
+`--scroller-justify-content` token on the root class (`flex-end`, `center`, `safe flex-end`), and an app rule that
+reaches `.scroll-container` with one class of specificity, with none at all (`*`), or inside a cascade layer
+ahead of the library's. Every horizontal Scroller sits beside a hand-written `-ref` twin that computes what the
+base `.scroll-container` did, so each "unset" test compares against a twin rather than a remembered value. A
+vertical pair shows the token acts along the scrolling axis. `main.ts` puts the app stylesheet at the head of the
+page, ahead of every sheet the build links, on purpose, as an app's is: an import would leave that order to the
+build. Its `jc-*` test ids belong to `tests/scroller-justify-content.spec.ts`, which also injects
+`dist-wc/index.js` to mount `<sui-scroller>` and `<sui-attachment-chip-row>` (run `pnpm run build:wc` first), so
+the matrix stays out of the docs demo and its full-page visual baseline does not move. That spec runs Chromium
+only in CI; its header says how Firefox and WebKit were measured.
+
 The functional Playwright configuration builds this small Vite app and starts its
 preview server alongside the docs server. It uses the existing Svelte plugin and
 a separate port derived from this checkout's fixture path. It never reuses an

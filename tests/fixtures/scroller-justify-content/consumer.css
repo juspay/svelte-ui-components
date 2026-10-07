@@ -1,0 +1,76 @@
+/* Stands in for an app's own stylesheet. Every rule is scoped to a class on a scenario so
+   scenarios stay independent on one page; none of them touches the library's classes except
+   the ones a real consumer reaches for (.scroll-container). */
+
+body {
+  margin: 0;
+  padding: 16px;
+}
+
+.jc-host {
+  width: 400px;
+  margin-bottom: 12px;
+}
+
+.jc-host-tall {
+  height: 300px;
+}
+
+.jc-item {
+  flex: 0 0 80px;
+  height: 20px;
+  background: #cccccc;
+}
+
+/* The reference twin: what .scroll-container computes to in the library's base, written out
+   by hand so the spec has an independent measurement to compare the component against. It
+   carries the .scroll-container class so the app's rules below reach it exactly as they
+   reach the component's. */
+.jc-ref {
+  display: flex;
+  flex-direction: row;
+  width: 400px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.jc-ref::-webkit-scrollbar {
+  display: none;
+}
+
+/* The tokens, set the way an app does: a class on the Scroller's root. */
+.jc-end {
+  --scroller-justify-content: flex-end;
+}
+
+.jc-center {
+  --scroller-justify-content: center;
+}
+
+.jc-safe-end {
+  --scroller-justify-content: safe flex-end;
+}
+
+.jc-tall {
+  --scroller-height: 300px;
+}
+
+/* An app rule on the scroll container with one class of specificity: lower than a rule the
+   library scopes with its own class and a hash. A plain library declaration would displace it.
+   The :where() keeps the host class out of the count, so this is (0,1,0). */
+:where(.jc-low-rule) .scroll-container {
+  justify-content: center;
+}
+
+/* A global reset: a universal rule with no specificity at all. */
+:where(.jc-global-reset) * {
+  justify-content: space-between;
+}
+
+/* An app that keeps its resets in a cascade layer, declared ahead of the library's. */
+@layer base {
+  :where(.jc-app-layer) * {
+    justify-content: space-around;
+  }
+}

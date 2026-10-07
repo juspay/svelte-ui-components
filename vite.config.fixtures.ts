@@ -30,7 +30,8 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/img-max-size/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chat-message-list-inner/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chat-message-body-list/index.html'),
-        resolve(import.meta.dirname, 'tests/fixtures/chat-hide-scrollbar/index.html')
+        resolve(import.meta.dirname, 'tests/fixtures/chat-hide-scrollbar/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/scroller-justify-content/index.html')
       ]
     }
   }

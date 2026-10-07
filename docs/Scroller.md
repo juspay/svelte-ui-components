@@ -127,17 +127,40 @@ A visible scrollbar (`hideScrollbar={false}`) takes its width and colors from to
 
 Leave both unset and nothing changes, including any `::-webkit-scrollbar` rules, inherited `scrollbar-color` or `scrollbar-width` rule you already have. The tokens apply in a cascade layer, so your own CSS can still beat a set token: a rule outside any layer that matches `.scroll-container` (including `*`) wins, a rule in a layer that first appears after the library's CSS wins, and so does any `!important` rule. A set token wins over a rule inside an earlier layer. Setting the width token turns off `::-webkit-scrollbar` styling in Chromium and WebKit; setting the color token does so in Chromium only, because WebKit has no `scrollbar-color`. Neither applies while `hideScrollbar` is `true`.
 
+### Aligning Items
+
+Items start at the leading edge of the Scroller, because the scroll container is a flex row (a flex column for `direction="vertical"`). `--scroller-justify-content` sets the scroll container's `justify-content`, which places the items along the scrolling axis, so a short row can sit at the end or in the middle from a class on the root instead of a rule that reaches into `.scroll-container`.
+
+```svelte
+<Scroller classes="end-aligned">
+  {#each items as item}
+    <div class="card">{item.name}</div>
+  {/each}
+</Scroller>
+
+<style>
+  :global(.end-aligned) {
+    --scroller-justify-content: safe flex-end;
+  }
+</style>
+```
+
+Write `safe flex-end` (or `safe center`) rather than `flex-end` (or `center`) when the content can outgrow the Scroller. A plain `flex-end` puts the overflow before the start edge, where a scroll container has no scrollable range, so the first items are cut off and cannot be scrolled to. `safe` falls back to start alignment once the content overflows, and the whole row stays reachable.
+
+Leave it unset and nothing changes, including any `justify-content` rule you already have on `.scroll-container`. The token applies in a cascade layer, so your own CSS can still beat a set token: a rule outside any layer that matches `.scroll-container` (including `*`) wins. A set token wins over a rule inside an earlier layer.
+
 ## CSS Custom Properties
 
 ### Container
 
-| Variable                     | Default       | Description                                                                               |
-| ---------------------------- | ------------- | ----------------------------------------------------------------------------------------- |
-| `--scroller-width`           | `100%`        | Width of the entire scroller component including arrows.                                  |
-| `--scroller-height`          | `fit-content` | Height of the entire scroller component. Useful for vertical scrollers with fixed height. |
-| `--scroller-gap`             | `0px`         | Gap between child items inside the scroll container.                                      |
-| `--scroller-padding`         | `0px`         | Padding inside the scroll container around the child items.                               |
-| `--scroller-scroll-behavior` | `smooth`      | CSS scroll-behavior for the scroll container. Controls transition style.                  |
+| Variable                     | Default          | Description                                                                                          |
+| ---------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `--scroller-width`           | `100%`           | Width of the entire scroller component including arrows.                                             |
+| `--scroller-height`          | `fit-content`    | Height of the entire scroller component. Useful for vertical scrollers with fixed height.            |
+| `--scroller-gap`             | `0px`            | Gap between child items inside the scroll container.                                                 |
+| `--scroller-padding`         | `0px`            | Padding inside the scroll container around the child items.                                          |
+| `--scroller-scroll-behavior` | `smooth`         | CSS scroll-behavior for the scroll container. Controls transition style.                             |
+| `--scroller-justify-content` | Unset (`normal`) | CSS `justify-content` of the scroll container, along the scrolling axis. Unset, no value is applied. |
 
 ### Arrows
 
@@ -211,6 +234,16 @@ Tag: `<sui-scroller>`
 
 ```html
 <sui-scroller direction="horizontal" show-arrows>
+  <div>Scrollable content</div>
+</sui-scroller>
+```
+
+### Web Component Tokens
+
+The CSS custom properties above are inherited, so set them on the `<sui-scroller>` element itself; a class in the page's stylesheet cannot reach the `classes` of the Scroller inside its shadow root.
+
+```html
+<sui-scroller style="--scroller-justify-content: safe flex-end">
   <div>Scrollable content</div>
 </sui-scroller>
 ```

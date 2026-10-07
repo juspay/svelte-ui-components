@@ -2,7 +2,39 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.48.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.49.0)
+
+Chat wraps ChatMessageList and forwards scrollPolicy, pinHold and the jump controls to it, but not
+hideScrollbar, so an app that renders Chat could not hide the message list's scrollbar without a
+rule that reaches into the component.
+
+Add hideScrollbar to Chat (default false, as in ChatMessageList) and the hide-scrollbar attribute to
+&lt;sui-chat&gt;, forwarded the way pinHold is. A Chat that does not set it renders the list as before.
+
+How it was verified. tests/chat-hide-scrollbar.spec.ts has 4 browser tests on a new fixture app, run
+through a scratch config in Chromium, Firefox and WebKit: 4 of 4 in each. They read the class and
+the computed scrollbar width of the list a default Chat and a hideScrollbar Chat render, check that
+the hidden list still scrolls, and cover &lt;sui-chat&gt; with the attribute, with the property set to
+true and back to false, and without either. With only Chat.svelte put back to the base (0 added, 2
+removed), the 2 tests that need the prop fail in Chromium and the 2 that describe the default still
+pass. The repository's Playwright project runs Chromium only, so CI cannot see Firefox and WebKit.
+The computed scrollbar-width assertion skips Firefox, whose Playwright build hides every scrollbar.
+pnpm lint exits 0.
+
+The new fixture imports Chat, which shares Scroller with the scroller-scrollbar fixture. With
+both in the build, Vite links Scroller's stylesheet ahead of that fixture's own, so the app's
+rules in consumer.css came after the library's and 3 tests in tests/scroller-scrollbar.spec.ts
+failed on their own source-order check (14 of 17 passed in Chromium). That fixture now puts
+consumer.css at the head of the page from main.ts, so the order no longer depends on which other
+fixtures share Scroller.
+
+Default behaviour: unchanged. The /components/chat demo and its visual baseline are unchanged.
+
+Lighthouse adoption follows verification of the actual npm release.
+
+Refs: BZ-6632
+
+## [4.49.0](https://github.com/juspay/svelte-ui-components/compare/4.49.0..4.48.0) - 6 October 2026
 
 ChatMessage styles the &lt;ul&gt; and &lt;ol&gt; of its body from --chat-message-list-margin and
 --chat-message-list-padding. ChatMessageList reads --chat-message-list-padding for its own padding

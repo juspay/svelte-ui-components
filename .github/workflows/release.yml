@@ -116,9 +116,12 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     # Every publish now waits on this job, so a step that hangs would hold the
-    # release open indefinitely instead of failing it. Playwright install plus
-    # both suites finish in well under half of this.
-    timeout-minutes: 30
+    # release open indefinitely instead of failing it. The limit has to clear the
+    # suite with room to spare: the integration step took 17.6 min on 4.51.0's
+    # release run, and 34.0 min on the PR that added the a11y audit's tests (the
+    # whole checks job: 40.0 min). At 30 the verify job was cancelled mid-suite,
+    # `release` was skipped and nothing published.
+    timeout-minutes: 60
 
     # `contents: read` is all this job's own steps need. `actions: write` is here
     # by review decision, not by demonstrated need: the artifact upload and the

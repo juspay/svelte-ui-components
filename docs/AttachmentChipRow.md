@@ -78,6 +78,22 @@ The pending-attachment strip above a chat composer: image thumbnails and file ti
 | `--attachment-chip-row-file-name-font-size`      | `0.75rem`                                 | Filename font size.                                                                                                                                        |
 | `--attachment-chip-row-file-name-color`          | `#52525b`                                 | Filename color.                                                                                                                                            |
 
+## Aligning the Row
+
+Chips start at the leading edge. The row's track is the [Scroller](./Scroller.md)'s, so its `--scroller-justify-content` token applies: set it on a class passed through `classes` to push a short row to the end of its container, without a rule that reaches into `.scroll-container`.
+
+```svelte
+<AttachmentChipRow {images} classes="composer-chips" />
+
+<style>
+  :global(.composer-chips) {
+    --scroller-justify-content: safe flex-end;
+  }
+</style>
+```
+
+Write `safe flex-end` rather than `flex-end`: a row with more chips than fit would otherwise lose its first chips, which end up before the start edge where the row cannot scroll to them. Unset, nothing changes.
+
 ## Web Component
 
 Tag: `<sui-attachment-chip-row>`
@@ -89,6 +105,8 @@ Tag: `<sui-attachment-chip-row>`
 `images`, `files`, `videos`, the tooltip functions, both icon snippets and every `on*` handler
 are set as JavaScript properties — none of them is serialisable as an attribute. `test-id` and
 `classes` are attributes.
+
+On `<sui-attachment-chip-row>`, set the token on the element itself (`style="--scroller-justify-content: safe flex-end"`): custom properties are inherited into the shadow root, but a class in the page's stylesheet cannot match the Scroller inside it.
 
 ### Web Component Events
 

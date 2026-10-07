@@ -333,6 +333,17 @@
     }
   }
 
+  /* Main-axis alignment token. Unset it must change nothing, so it takes the same route as the
+     scrollbar pair: its own anonymous layer and a revert-layer fallback. A plain
+     `justify-content: var(--scroller-justify-content, normal)` would outrank an app's
+     `.scroll-container { justify-content: center }` and any rule in an earlier layer, both of
+     which win today because the library declares nothing here. */
+  @layer {
+    :where(.scroll-container) {
+      justify-content: var(--scroller-justify-content, revert-layer);
+    }
+  }
+
   .scroll-container.dragging {
     cursor: grabbing;
   }

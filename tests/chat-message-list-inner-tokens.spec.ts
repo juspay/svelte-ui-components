@@ -33,7 +33,7 @@ type InnerState = {
   marginRight: string;
   inner: Box;
   list: Box;
-  firstRow: Box;
+  firstRow: Box | null;
   scrollHeight: number;
 };
 
@@ -50,8 +50,8 @@ const readInner = (page: Page, listSelector: string): Promise<InnerState> =>
     if (inner === null) {
       throw new Error('the list has no .inner column');
     }
-    const box = (element: Element | null): Box => {
-      const rect = (element ?? inner).getBoundingClientRect();
+    const box = (element: Element): Box => {
+      const rect = element.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     };
     const style = getComputedStyle(inner);
@@ -64,13 +64,20 @@ const readInner = (page: Page, listSelector: string): Promise<InnerState> =>
       marginRight: style.marginRight,
       inner: box(inner),
       list: box(list),
-      firstRow: box(row),
+      firstRow: row === null ? null : box(row),
       scrollHeight: list.scrollHeight
     };
   });
 
 const scenario = (page: Page, id: string): Promise<InnerState> =>
   readInner(page, `[data-pw="cmi-${id}-list"]`);
+
+const firstRowOf = (state: InnerState): Box => {
+  if (state.firstRow === null) {
+    throw new Error('The light-DOM fixture did not render its first row');
+  }
+  return state.firstRow;
+};
 
 test.describe('unset', () => {
   test('the column has no padding, margin or maximum width and is as wide as the list', async ({
@@ -87,7 +94,7 @@ test.describe('unset', () => {
     expect([state.maxWidth, state.marginLeft, state.marginRight]).toEqual(['none', '0px', '0px']);
     expect(state.inner.width).toBeCloseTo(HOST_WIDTH, 0);
     expect(state.inner.x).toBeCloseTo(state.list.x, 0);
-    expect(state.firstRow.x).toBeCloseTo(state.list.x, 0);
+    expect(firstRowOf(state).x).toBeCloseTo(state.list.x, 0);
     expect(state.scrollHeight).toBe(CONTENT_HEIGHT);
   });
 });
@@ -101,7 +108,7 @@ test.describe('the tokens', () => {
 
     expect(state.paddingBottom).toBe('36px');
     expect(state.scrollHeight).toBe(CONTENT_HEIGHT + 36);
-    expect(state.firstRow.y).toBeCloseTo((await scenario(page, 'unset')).firstRow.y, 0);
+    expect(firstRowOf(state).y).toBeCloseTo(firstRowOf(await scenario(page, 'unset')).y, 0);
   });
 
   test('--chat-message-list-inner-padding-inline pads both sides of the column', async ({
@@ -112,8 +119,8 @@ test.describe('the tokens', () => {
 
     expect([state.paddingLeft, state.paddingRight]).toEqual(['20px', '20px']);
     expect(state.inner.width).toBeCloseTo(HOST_WIDTH, 0);
-    expect(state.firstRow.x).toBeCloseTo(state.list.x + 20, 0);
-    expect(state.firstRow.width).toBeCloseTo(HOST_WIDTH - 40, 0);
+    expect(firstRowOf(state).x).toBeCloseTo(state.list.x + 20, 0);
+    expect(firstRowOf(state).width).toBeCloseTo(HOST_WIDTH - 40, 0);
   });
 
   test('--chat-message-list-inner-max-width caps the column and leaves it at the start', async ({
@@ -154,8 +161,8 @@ test.describe('the tokens', () => {
 
     expect(state.inner.width).toBeCloseTo(240, 0);
     expect(state.inner.x).toBeCloseTo(state.list.x + 80, 0);
-    expect(state.firstRow.x).toBeCloseTo(state.list.x + 80 + 20, 0);
-    expect(state.firstRow.width).toBeCloseTo(240 - 40, 0);
+    expect(firstRowOf(state).x).toBeCloseTo(state.list.x + 80 + 20, 0);
+    expect(firstRowOf(state).width).toBeCloseTo(240 - 40, 0);
     expect(state.scrollHeight).toBe(CONTENT_HEIGHT + 36);
   });
 });
@@ -265,6 +272,7 @@ test.describe('<sui-chat-message-list>', () => {
     await loadBundle(page);
     await mountElement(page, { style: '' });
     const state = await readInner(page, '#wc-list .chat-message-list');
+    expect(state.firstRow, 'the default web-component message has no fixture row').toBeNull();
 
     expect([state.paddingBottom, state.paddingLeft, state.maxWidth, state.marginLeft]).toEqual([
       '0px',
@@ -282,6 +290,7 @@ test.describe('<sui-chat-message-list>', () => {
         '--chat-message-list-inner-max-width:240px;--chat-message-list-inner-margin-inline:auto'
     });
     const state = await readInner(page, '#wc-list .chat-message-list');
+    expect(state.firstRow, 'the default web-component message has no fixture row').toBeNull();
 
     expect([state.paddingBottom, state.maxWidth]).toEqual(['36px', '240px']);
     expect(state.inner.width).toBeCloseTo(240, 0);

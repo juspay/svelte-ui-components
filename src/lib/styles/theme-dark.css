@@ -709,6 +709,9 @@
   --radio-disabled-background: #1a1a26;
   --radio-selected-background: #1e1e2e;
 
+  /* Shared opaque label plates for charts. Consumer overrides remain authoritative. */
+  --chart-label-background: #111827;
+
   /* SankeyChart */
   --sankey-col-label-color: #9ca3af;
   --sankey-label-color: #d1d5db;

@@ -108,7 +108,9 @@
     pointer-events: none;
   }
   .chart-label-backdrop {
-    fill: var(--chart-label-background, light-dark(#fff, #111827));
+    /* Keep the default literal: consumer CSS compilers may lower light-dark()
+       into private variables that their inherited theme never initializes. */
+    fill: var(--chart-label-background, #fff);
     stroke: none;
   }
 </style>

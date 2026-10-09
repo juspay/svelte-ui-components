@@ -4,6 +4,31 @@ Human-in-the-loop approval: the assistant wants to run an action, and the person
 
 Set `confirmDisabled` while an action's arguments are being edited or validated. Confirm becomes disabled, any running auto-approval countdown stops, and Cancel remains available. Re-enabling Confirm does not restart a stopped countdown; the user must approve explicitly. The default is `false`.
 
+Pass `expiresAt` when the server owns the approval deadline. It is a finite Unix
+timestamp in milliseconds; the countdown uses the wall clock, so a delayed mount
+or suspended tab cannot extend the approval window. An elapsed deadline attempts
+auto-approval once on mount. Without a finite deadline, `countdownSeconds` is
+converted once to a wall-clock deadline. `countdownSeconds={0}` remains manual
+only even with an elapsed `expiresAt`; history, disabled approval and interaction
+pause retain their existing safeguards. The server must still validate the
+decision: the browser's clock and timer cannot establish server authorization.
+
+Changing a finite `expiresAt` on a pending card updates its running countdown on
+the next timer tick. Removing it or setting a non-finite value uses the relative
+deadline anchored when that countdown started; rerenders and later duration
+changes do not extend that fallback. Deadline changes never restart a stopped,
+paused, disabled, manual-only or settled card, and a settled card does not emit
+another decision.
+
+When the card starts an asynchronous microphone toggle on mount, a decision
+waits for that call and its controlled state update before restoring the original
+microphone state. An already elapsed deadline cannot leave a late initial mute
+running after its decision. A failed initial toggle remains best-effort.
+
+```svelte
+<HITL countdownSeconds={60} expiresAt={confirmation.expiresAt} ... />
+```
+
 ## Usage
 
 ```svelte
@@ -129,6 +154,7 @@ caller owns semantic markup, accessible names and diff rendering. For HTML consu
 | showConfirm           | `boolean`                                         | No       | `true`                     | Hides the confirm button (and with it the countdown sweep) — for a card whose dispositions are all `'decision'`/`'ask-for-text'` actions. Pair with `countdownSeconds={0}`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | showEmptyParameters   | `boolean`                                         | No       | `true`                     | A card with nothing to list (no `sections`, and no `functionArguments` that survive `hiddenKeys`) shows a "PARAMETERS / No parameters" placeholder. `false` hides it — for a card whose body is its own `children` (a plan, say) and has no parameters to show. Supplying `children` does not hide it by itself, and a card that asks `questions` never shows it either way.                                                                                                                                                                                                                                                                                                                                                                                                      |
 | countdownSeconds      | `number`                                          | No       | `10`                       | Auto-approve countdown; `0` disables.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| expiresAt             | `number`                                          | No       | `-`                        | Absolute server expiry in Unix milliseconds. Non-finite values fall back to `countdownSeconds`; `0` countdown still disables auto-approval. |
 | autoCancelSeconds     | `number`                                          | No       | `0`                        | Auto-reject an untouched card after N seconds; `0` disables.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | isMicMuted            | `boolean`                                         | No       | `false`                    | With `onmictoggle`: mic is muted while the card is open, restored on decision.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | onmictoggle           | `(() => void \| Promise<void>) \| null`           | No       | `null`                     | Toggle handler for voice sessions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -234,7 +260,7 @@ Tag: `<sui-hitl>`
 <sui-hitl confirmation-id="txn-123" title="Transfer funds" countdown-seconds="10"></sui-hitl>
 ```
 
-`title` maps to the `hITLTitle` element property (renamed because `title` is a reserved global HTML attribute); every other attribute name matches its `HITLProperties` field. `children` is not exposed on the custom element (see Notes above). `actions`, `sections`, `functionArguments`, `hiddenKeys`, and `initialState` are available as object-valued JS properties.
+`title` maps to the `hITLTitle` element property (renamed because `title` is a reserved global HTML attribute); every other attribute name matches its `HITLProperties` field. `expiresAt` is exposed as the numeric `expires-at` attribute and `expiresAt` JS property. `children` is not exposed on the custom element (see Notes above). `actions`, `sections`, `functionArguments`, `hiddenKeys`, and `initialState` are available as object-valued JS properties.
 
 ### Rich details slot
 

@@ -164,6 +164,11 @@ export type OptionalHITLProperties = {
    */
   countdownSeconds?: number;
   /**
+   * Absolute server expiry in Unix milliseconds. Updates affect a running
+   * countdown; paused or settled cards never restart. Zero keeps manual-only approval.
+   */
+  expiresAt?: number;
+  /**
    * Seconds until an untouched card auto-rejects — for confirmations that must
    * not auto-approve (e.g. OAuth) but should not block a conversation forever.
    */

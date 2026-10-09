@@ -17,6 +17,7 @@ export default defineConfig({
     rolldownOptions: {
       input: [
         resolve(import.meta.dirname, 'tests/fixtures/owned-overlay-host/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/hitl-deadline/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/overlay-scroll-ownership/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/button-shrinkable/index.html'),

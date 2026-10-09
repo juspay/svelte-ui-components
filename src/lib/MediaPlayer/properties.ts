@@ -13,6 +13,8 @@ export type MandatoryMediaPlayerProperties = {
 
 export type OptionalMediaPlayerProperties = {
   alt?: string;
+  /** Accessible name for the video. Image naming uses alt. Defaults to "Video player". */
+  ariaLabel?: string;
   fallback?: string;
   autoplay?: boolean;
   loop?: boolean;

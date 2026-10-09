@@ -19,6 +19,8 @@ export type OptionalBookProperties = {
   showNavigation?: boolean;
   showPageIndicator?: boolean;
   enableSwipe?: boolean;
+  /** Accessible name for the keyboard-operated book region. Defaults to "Book". */
+  ariaLabel?: string;
   testId?: string;
   previousIcon?: Snippet;
   nextIcon?: Snippet;

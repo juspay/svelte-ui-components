@@ -21,6 +21,8 @@ test.describe('Choicebox takes part in native form submission', () => {
     await expect(result).toHaveText('');
 
     await page.getByTestId('choicebox-form-basic').click();
+    await expect(page.getByTestId('choicebox-form-basic')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('choicebox-form-basic-native-input')).toBeChecked();
     await page.getByTestId('choicebox-form-submit').click();
     await expect(result).toHaveText('plan=basic');
   });

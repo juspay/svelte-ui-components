@@ -1,0 +1,77 @@
+name: Firefox and WebKit verification
+
+on:
+  schedule:
+    - cron: '30 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-engines-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  engines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [firefox, webkit]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps ${{ matrix.engine }}
+
+      - name: Record tested source and browser inventory
+        run: |
+          mkdir -p engine-evidence
+          git rev-parse HEAD > engine-evidence/head.txt
+          pnpm exec playwright --version > engine-evidence/playwright.txt
+          pnpm exec playwright test --config playwright.engines.config.ts --project=${{ matrix.engine }} --list > engine-evidence/functional-inventory.txt
+          pnpm exec playwright test --config playwright.walkthrough.engines.config.ts --project=${{ matrix.engine }} --list > engine-evidence/walkthrough-inventory.txt
+
+      - name: Complete functional suite, no retries
+        id: functional
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: engine-evidence/functional.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: engine-evidence/functional-html
+        run: pnpm run test:integration:engines --project=${{ matrix.engine }} --workers=2 --retries=0 --reporter=list,json,html
+
+      - name: Complete walkthrough suite, no retries
+        if: ${{ !cancelled() && steps.functional.outcome != 'skipped' }}
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: engine-evidence/walkthrough.json
+          PLAYWRIGHT_HTML_OUTPUT_DIR: engine-evidence/walkthrough-html
+        run: pnpm run test:walkthrough:engines --project=${{ matrix.engine }} --workers=1 --retries=0 --reporter=list,json,html
+
+      - name: Upload inventories, results and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence-${{ matrix.engine }}-${{ github.sha }}
+          path: |
+            engine-evidence/
+            test-results-engines/
+            test-results-walkthrough-engines/
+          retention-days: 14
+          if-no-files-found: error

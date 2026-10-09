@@ -11,6 +11,8 @@
   <h1>Accordion</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="flex-direction: column; max-width: 500px;">
   <button class="toggle-btn" onclick={() => (accordionExpanded = !accordionExpanded)}>
     {accordionExpanded ? 'Collapse' : 'Expand'} Accordion

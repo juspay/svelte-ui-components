@@ -29,6 +29,8 @@
   <h1>FileDropzoneTrigger</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p>
   Inside a <code>FileInput</code> the drop region is the single control (one Tab stop; click, Enter or
   Space opens the chooser), so the trigger is plain content there — the same button-styled surface with

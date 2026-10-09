@@ -86,18 +86,26 @@ describe('StatCard header checkbox on an interactive card', () => {
     expect(onclick).not.toHaveBeenCalled();
   });
 
-  it('still runs the card action from the card itself', async () => {
+  it('runs the same action from its native button and delegated card pointer click', async () => {
     const onclick = vi.fn();
-    const { getByRole } = render(StatCard, {
+    const { getByRole, container } = render(StatCard, {
       title: 'View Report',
       value: '68.4%',
       checkbox: { text: 'Live data' },
       onclick
     });
     const card = getByRole('button');
+    expect(card.tagName).toBe('BUTTON');
+    expect(card.querySelector('[role="checkbox"]')).toBeNull();
     await fireEvent.click(card);
     expect(onclick).toHaveBeenCalledTimes(1);
-    await fireEvent.keyDown(card, { key: 'Enter' });
+    // jsdom does not synthesize native button activation from a keydown.
+    // Trusted Enter/Space behavior is covered by independent-action-semantics.spec.ts.
+    const value = container.querySelector('.statcard-value');
+    if (value === null) {
+      throw new Error('Expected the card value pointer surface');
+    }
+    await fireEvent.click(value);
     expect(onclick).toHaveBeenCalledTimes(2);
   });
 });

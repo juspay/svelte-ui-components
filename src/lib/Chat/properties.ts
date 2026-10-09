@@ -26,6 +26,8 @@ export type OptionalChatProperties = {
   hideScrollbar?: ChatMessageListProperties['hideScrollbar'];
   jump?: ChatMessageListProperties['jump'];
   jumpLabel?: ChatMessageListProperties['jumpLabel'];
+  /** Transcript name; defaults to the chat title plus `messages`, or `Conversation messages`. */
+  messageListLabel?: ChatMessageListProperties['ariaLabel'];
   jumpIcon?: ChatMessageListProperties['jumpIcon'];
   toolStatus?: ChatToolStatus | null;
   suggestions?: ChatSuggestion[];

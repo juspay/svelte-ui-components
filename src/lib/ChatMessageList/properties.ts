@@ -49,6 +49,8 @@ export type OptionalChatMessageListProperties = {
   allowCopy?: boolean;
   testId?: string;
   classes?: string;
+  /** Accessible transcript name. Default: `Conversation messages`. */
+  ariaLabel?: string;
 };
 
 export type ChatMessageListEventProperties = {

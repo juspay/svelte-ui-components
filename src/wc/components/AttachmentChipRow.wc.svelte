@@ -12,6 +12,7 @@
       fileIcon: { type: 'Object' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      attachmentChipRowAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true },
       onremoveimage: { type: 'Object' },
       onremovefile: { type: 'Object' },
       onremovevideo: { type: 'Object' },
@@ -25,7 +26,7 @@
 <script lang="ts">
   import AttachmentChipRow from '$lib/AttachmentChipRow/AttachmentChipRow.svelte';
   import { dispatchEvents } from '../dispatch';
-  let props = $props();
+  let { attachmentChipRowAriaLabel, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -57,7 +58,7 @@
   fallback, so even the built-in cross and document glyphs would be lost. Both stay
   JS-property-only props.
 -->
-<AttachmentChipRow {...props} {...dispatchers} />
+<AttachmentChipRow {...props} {...dispatchers} ariaLabel={attachmentChipRowAriaLabel} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

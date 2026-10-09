@@ -152,7 +152,7 @@ under the same name would double-deliver it to that same listener. This holds ev
 | `name`           | `name`          | String  | Submits the card under this name. See the note below on grouping.                                                                                                                      |
 | `value`          | `value`         | String  | Value submitted while selected (default `'on'`).                                                                                                                                       |
 | `required`       | `required`      | Boolean | Makes an unselected card block submission.                                                                                                                                             |
-| `form`           | `form`          | String  | Has no effect on the element — see below.                                                                                                                                              |
+| `form`           | —               | String  | Host attribute for native external-form association. The JavaScript `form` owner getter is read-only.                                                                                  |
 
 `onclick` is a function prop — set it as a property from JS, not as an attribute.
 
@@ -182,9 +182,10 @@ Until this is bridged, either drive exclusivity yourself from `onclick` (clearin
 set. `<sui-radio>` already implements cross-root grouping and is the better choice for a
 plain radio group.
 
-**`form` does not work here.** The prop sets the `form` attribute on the control inside
-the shadow root, which cannot reach a form in the host document. Place the element inside
-its form instead; `ElementInternals` finds the owner from the DOM.
+**External form association is supported.** Set `form="checkout"` on the host to associate
+`<sui-choicebox>` with `<form id="checkout">` in the same document. The host participates
+through `ElementInternals`, independently of its shadow input. Read `element.form` for
+the owning form; that JavaScript getter is read-only.
 
 ### Indicator
 

@@ -10,12 +10,14 @@
   import { onDestroy, onMount } from 'svelte';
   import { partyOf } from '../Chat/roles';
   import type { ChatMessageProperties } from './properties';
+  import type { RenderMarkdownOptions } from '../MarkdownText/properties';
 
   let {
     role,
     content = '',
     html,
     markdown,
+    markdownTableLabel,
     body,
     streaming = false,
     typewriter = false,
@@ -90,7 +92,9 @@
      `marked` — a peer dependency — is only pulled in at runtime, never during
      SSR, and rendering `markdown` degrades to the `html`/`content` fallback
      until the module resolves or when the peer is absent. */
-  let renderMarkdownFn = $state<((source: string) => string) | null>(null);
+  let renderMarkdownFn = $state<
+    ((source: string, options?: RenderMarkdownOptions) => string) | null
+  >(null);
 
   onMount(() => {
     void import('../MarkdownText/markdown')
@@ -102,8 +106,19 @@
       });
   });
 
+  // Both rendering branches share the same options-aware renderer. Capture the label
+  // reactively so a locale/name update also refreshes already-revealed typewriter HTML.
+  let messageMarkdownRenderer = $derived.by(() => {
+    const renderer = renderMarkdownFn;
+    if (renderer === null) {
+      return null;
+    }
+    const options: RenderMarkdownOptions =
+      typeof markdownTableLabel === 'string' ? { tableLabel: markdownTableLabel } : {};
+    return (source: string) => renderer(source, options);
+  });
   let effectiveHtml = $derived(
-    hasMarkdown && renderMarkdownFn !== null ? renderMarkdownFn(markdown ?? '') : html
+    hasMarkdown && messageMarkdownRenderer !== null ? messageMarkdownRenderer(markdown ?? '') : html
   );
   let hasHtml = $derived(typeof effectiveHtml === 'string' && effectiveHtml.length > 0);
 
@@ -128,7 +143,7 @@
       (!hasMarkdown || renderMarkdownFn !== null)
   );
   let typewriterRenderText = $derived(
-    hasMarkdown && renderMarkdownFn !== null ? { renderText: renderMarkdownFn } : {}
+    hasMarkdown && messageMarkdownRenderer !== null ? { renderText: messageMarkdownRenderer } : {}
   );
   // Clamped at the boundary the way LoadingDots clamps `dots`, so the prop's floor is part
   // of this component's contract rather than something a consumer discovers. The finite

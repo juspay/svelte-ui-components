@@ -14,6 +14,8 @@ export type ChatMessageData = {
    * MarkdownText). Wins over `html` and `content` in the bubble.
    */
   markdown?: string;
+  /** Accessible table scroll-region name for static and streamed markdown bubbles. */
+  markdownTableLabel?: string;
   streaming?: boolean;
   /**
    * Reveal this message progressively as it grows. Opt-in per message so it cannot stack with

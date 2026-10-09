@@ -56,6 +56,8 @@
   <h1>FunnelChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p>
   A horizontal funnel chart built entirely from pure SVG. Each stage bar height is proportional to
   its value relative to the maximum stage, with trapezoidal connectors showing the transition

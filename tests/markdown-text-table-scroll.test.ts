@@ -89,9 +89,9 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
     }
   });
 
-  // An unnamed region announces a landmark the user cannot identify, so the role
-  // is present only when a name is supplied.
-  test('the region is named only when the caller supplies a label', async ({ page }) => {
+  // Both demonstration recipes now author a tableLabel. The renderer unit retains
+  // the independent default/empty-label contract: no named region is invented.
+  test('demonstrated table regions expose the labels their callers supply', async ({ page }) => {
     await gotoHydrated(page, '/components/markdown-text');
 
     const labelled = page
@@ -100,11 +100,10 @@ test.describe('MarkdownText — a wide table scrolls, stays a table, and can be 
     await expect(labelled).toHaveAttribute('role', 'region');
     await expect(labelled).toHaveAttribute('aria-label', 'Recent orders');
 
-    const unlabelled = page
-      .getByTestId('markdown-text-wide-table')
-      .locator('.markdown-table-wrapper');
-    await expect(unlabelled).toHaveAttribute('tabindex', '0');
-    expect(await unlabelled.getAttribute('role')).toBeNull();
+    const wide = page.getByTestId('markdown-text-wide-table').locator('.markdown-table-wrapper');
+    await expect(wide).toHaveAttribute('tabindex', '0');
+    await expect(wide).toHaveAttribute('role', 'region');
+    await expect(wide).toHaveAccessibleName('Wide recent orders table');
   });
 });
 

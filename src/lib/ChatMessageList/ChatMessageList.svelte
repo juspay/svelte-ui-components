@@ -28,13 +28,15 @@
     onretry,
     onfeedback,
     testId,
-    classes
+    classes,
+    ariaLabel = 'Conversation messages'
   }: ChatMessageListProperties = $props();
 
   let listEl: HTMLElement | null = $state(null);
   let innerEl: HTMLElement | null = $state(null);
   let atBottom = $state(true);
   let scrollable = $state(false);
+  let keyboardScrollable = $state(false);
   let pinActive = false;
   // Set when a turn without pinHold has asked for its reservation back, but the reply is not yet
   // tall enough to hold the pinned position without it. Cleared by tryReleasePin.
@@ -78,6 +80,7 @@
 
   function reportScrollState(node: HTMLElement): void {
     atBottom = isNearBottom(node);
+    keyboardScrollable = node.scrollHeight - node.clientHeight > 1;
     scrollable = node.scrollHeight - node.clientHeight > NEAR_BOTTOM_THRESHOLD;
     onscrollstate?.({ atBottom, scrollable });
   }
@@ -260,19 +263,29 @@
     if (typeof ResizeObserver === 'undefined') {
       return;
     }
+    let pendingFrame: number | null = null;
     const observer = new ResizeObserver(() => {
-      if (listEl === null) {
+      if (pendingFrame !== null) {
         return;
       }
-      if (scrollPolicy === 'near-bottom' && autoscroll && atBottom) {
-        listEl.scrollTop = listEl.scrollHeight;
-      }
-      tryReleasePin();
-      reportScrollState(listEl);
+      pendingFrame = requestAnimationFrame(() => {
+        pendingFrame = null;
+        if (listEl === null || !node.isConnected) {
+          return;
+        }
+        if (scrollPolicy === 'near-bottom' && autoscroll && atBottom) {
+          listEl.scrollTop = listEl.scrollHeight;
+        }
+        tryReleasePin();
+        reportScrollState(listEl);
+      });
     });
     observer.observe(node);
     return {
       destroy(): void {
+        if (pendingFrame !== null) {
+          cancelAnimationFrame(pendingFrame);
+        }
         observer.disconnect();
       }
     };
@@ -291,9 +304,14 @@
   };
 </script>
 
+<!-- The transcript is an independent scrolling surface. Native keyboard focus
+     enables the browser's scroll keys while it overflows, even without actions. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="chat-message-list {classes ?? ''}"
   role="log"
+  aria-label={ariaLabel}
+  tabindex={keyboardScrollable ? 0 : null}
   aria-live="polite"
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
@@ -323,6 +341,7 @@
           content={msg.content}
           html={msg.html}
           markdown={msg.markdown}
+          markdownTableLabel={msg.markdownTableLabel}
           body={typeof messageBody === 'function' ? bodyFor : null}
           streaming={msg.streaming}
           typewriter={msg.typewriter}
@@ -352,6 +371,11 @@
 </div>
 
 <style>
+  .chat-message-list:focus-visible {
+    outline: var(--chat-message-list-focus-outline, 2px solid currentColor);
+    outline-offset: -2px;
+  }
+
   .chat-message-list {
     box-sizing: border-box;
     display: flex;

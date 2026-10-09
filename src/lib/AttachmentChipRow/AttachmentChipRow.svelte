@@ -26,14 +26,15 @@
     removeIcon,
     fileIcon,
     testId,
-    classes
+    classes,
+    ariaLabel = 'Pending attachments'
   }: AttachmentChipRowProperties = $props();
 </script>
 
 {#if images.length > 0 || videos.length > 0 || files.length > 0}
   <Scroller
     direction="horizontal"
-    ariaLabel="Pending attachments"
+    {ariaLabel}
     showArrows={false}
     hideScrollbar={false}
     showGradient={false}

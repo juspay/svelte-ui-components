@@ -13,6 +13,8 @@
   <h1>Menu</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p>
   Every trigger below is one Tab stop. Examples that render a <code>Button</code> set
   <code>interactiveTrigger</code> and spread the wiring onto it; the last example shows a wrapper-owned

@@ -9,6 +9,7 @@
     testId,
     onchange,
     classes,
+    ariaLabel = 'Pagination',
     hasMore = false,
     prevButtonTestId,
     nextButtonTestId,
@@ -69,6 +70,7 @@
 <nav
   class="pagination {classes ?? ''}"
   class:disabled
+  aria-label={ariaLabel}
   data-pw={typeof testId === 'string' && testId.length > 0 ? testId : null}
   testID={typeof testId === 'string' && testId.length > 0 ? testId : null}
 >

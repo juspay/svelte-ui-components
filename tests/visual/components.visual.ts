@@ -737,6 +737,25 @@ async function prepare(page: Page, slug: string): Promise<void> {
   if (viewportFit === 'fitted') {
     await pinCaptureHeightToWholePixels(page, slug);
   }
+  if (slug === 'voice-orb') {
+    // Viewport fitting can resize and clear a canvas after the clock drain.
+    // Advance real draw callbacks until the seeded, paused example is painted.
+    const canvas = page.locator('.orb-still canvas');
+    await expect(async () => {
+      await page.clock.runFor(32);
+      expect(
+        await canvas.evaluate((node: HTMLCanvasElement) => {
+          const context = node.getContext('2d');
+          if (context === null) {
+            return false;
+          }
+          return context
+            .getImageData(0, 0, node.width, node.height)
+            .data.some((channel, index) => index % 4 === 3 && channel > 0);
+        })
+      ).toBe(true);
+    }).toPass({ timeout: 5000 });
+  }
 }
 
 /**

@@ -9,6 +9,8 @@
   <h1>MediaUpload</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row">
   <MediaUpload
     bind:files

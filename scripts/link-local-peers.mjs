@@ -35,8 +35,10 @@ if (existsSync(configPath)) {
   try {
     symlinkSync(target, link, 'dir');
   } catch (error) {
-    // Windows refuses a directory symlink without elevation; a junction needs none
-    // and still links the target rather than copying it.
+    // Windows can reject a directory symlink when the account lacks the symlink
+    // privilege. A junction is a separate kind of link that still points at the
+    // target instead of copying it, so retry with one. If that is rejected as well,
+    // its error propagates and the package step fails.
     if (process.platform !== 'win32') {
       throw error;
     }

@@ -28,23 +28,24 @@ their original attachment and ID payloads.
 
 ## Props
 
-| Prop          | Type                                     | Required | Default | Description                                                                                                |
-| ------------- | ---------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| images        | `AttachmentChipImage[]`                  | No       | `[]`    | `{ id, thumbnailData, filename? }` — thumbnailData is the img src.                                         |
-| files         | `AttachmentChipFile[]`                   | No       | `[]`    | `{ id, filename }`.                                                                                        |
-| videos        | `AttachmentChipVideo[]`                  | No       | `[]`    | `{ id, thumbnailData?, filename? }` — a poster tile with a play badge; a plain dark tile without a poster. |
-| onremoveimage | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row (no remove buttons).                                    |
-| onremovefile  | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
-| onremovevideo | `(id: string) => void`                   | No       | `-`     | Fires with the chip's id. Omit for a read-only row.                                                        |
-| onopenimage   | `(image: AttachmentChipImage) => void`   | No       | `-`     | Makes the image tile a real button; fires on click (e.g. open a lightbox).                                 |
-| onopenvideo   | `(video: AttachmentChipVideo) => void`   | No       | `-`     | Makes the video tile a real button; fires on click (e.g. play the video).                                  |
-| onopenfile    | `(file: AttachmentChipFile) => void`     | No       | `-`     | Makes the file tile a real button; fires on click.                                                         |
-| imageTooltip  | `(image: AttachmentChipImage) => string` | No       | `-`     | Tooltip text for an image chip.                                                                            |
-| videoTooltip  | `(video: AttachmentChipVideo) => string` | No       | `-`     | Tooltip text for a video chip.                                                                             |
-| removeIcon    | `Snippet`                                | No       | `-`     | Glyph inside the remove button. Built-in cross when omitted.                                               |
-| fileIcon      | `Snippet`                                | No       | `-`     | Glyph on a file tile. Built-in document when omitted.                                                      |
-| testId        | `string`                                 | No       | `-`     | On the Scroller; chips get `-image-<id>` / `-file-<id>`.                                                   |
-| classes       | `string`                                 | No       | `-`     | Class string passed through to the Scroller.                                                               |
+| Prop          | Type                                     | Required | Default                 | Description                                                                                                |
+| ------------- | ---------------------------------------- | -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| images        | `AttachmentChipImage[]`                  | No       | `[]`                    | `{ id, thumbnailData, filename? }` — thumbnailData is the img src.                                         |
+| files         | `AttachmentChipFile[]`                   | No       | `[]`                    | `{ id, filename }`.                                                                                        |
+| videos        | `AttachmentChipVideo[]`                  | No       | `[]`                    | `{ id, thumbnailData?, filename? }` — a poster tile with a play badge; a plain dark tile without a poster. |
+| onremoveimage | `(id: string) => void`                   | No       | `-`                     | Fires with the chip's id. Omit for a read-only row (no remove buttons).                                    |
+| onremovefile  | `(id: string) => void`                   | No       | `-`                     | Fires with the chip's id. Omit for a read-only row.                                                        |
+| onremovevideo | `(id: string) => void`                   | No       | `-`                     | Fires with the chip's id. Omit for a read-only row.                                                        |
+| onopenimage   | `(image: AttachmentChipImage) => void`   | No       | `-`                     | Makes the image tile a real button; fires on click (e.g. open a lightbox).                                 |
+| onopenvideo   | `(video: AttachmentChipVideo) => void`   | No       | `-`                     | Makes the video tile a real button; fires on click (e.g. play the video).                                  |
+| onopenfile    | `(file: AttachmentChipFile) => void`     | No       | `-`                     | Makes the file tile a real button; fires on click.                                                         |
+| imageTooltip  | `(image: AttachmentChipImage) => string` | No       | `-`                     | Tooltip text for an image chip.                                                                            |
+| videoTooltip  | `(video: AttachmentChipVideo) => string` | No       | `-`                     | Tooltip text for a video chip.                                                                             |
+| removeIcon    | `Snippet`                                | No       | `-`                     | Glyph inside the remove button. Built-in cross when omitted.                                               |
+| fileIcon      | `Snippet`                                | No       | `-`                     | Glyph on a file tile. Built-in document when omitted.                                                      |
+| testId        | `string`                                 | No       | `-`                     | On the Scroller; chips get `-image-<id>` / `-file-<id>`.                                                   |
+| ariaLabel     | `string`                                 | No       | `'Pending attachments'` | Accessible name of the attachment strip; distinguish independent strips on the same page.                  |
+| classes       | `string`                                 | No       | `-`                     | Class string passed through to the Scroller.                                                               |
 
 ## CSS Variables
 
@@ -147,3 +148,5 @@ document.querySelector('sui-attachment-chip-row').removeIcon = mySnippet;
 
 Omitting them renders the built-in cross on each remove button and the built-in document glyph
 on each file tile.
+
+`ariaLabel` names the attachment strip and defaults to `Pending attachments`. Use distinct names when a page has multiple strips. `<sui-attachment-chip-row>` accepts `aria-label` or the `attachmentChipRowAriaLabel` JavaScript property.

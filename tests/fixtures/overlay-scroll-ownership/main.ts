@@ -1,4 +1,5 @@
 import { mount } from 'svelte';
+import { acquireScrollLock } from '$lib';
 import OverlayOwnership from './OverlayOwnership.svelte';
 const app = document.getElementById('app');
 if (app === null) {
@@ -15,3 +16,23 @@ if (target instanceof ShadowRoot) {
   }
 }
 mount(OverlayOwnership, { target });
+
+// The public entry (src/lib/index.ts) is compiled by this fixture build, independently of
+// the built WC bundle. `$lib` rather than the package name: the latter resolves to dist/,
+// which a clean checkout has not built when `pnpm check` runs.
+// The fixture controls only API acquisition/release; overlays use their public props.
+let releasePublicHold = () => {};
+window.addEventListener('public-scroll-lock-control', (event) => {
+  if (!(event instanceof CustomEvent)) {
+    return;
+  }
+  if (event.detail === 'acquire') {
+    const owner = target.querySelector<HTMLElement>('[data-pw="scroll-root"]');
+    if (owner === null) {
+      throw new Error('Missing public scroll owner');
+    }
+    releasePublicHold = acquireScrollLock(owner);
+  } else if (event.detail === 'release') {
+    releasePublicHold();
+  }
+});

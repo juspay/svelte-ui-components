@@ -136,6 +136,24 @@ export function formAssociated(binding: FormValueBinding = {}) {
       #internalsAttached = false;
       #defaults: Map<string, unknown> = new Map();
       #captured = false;
+      #activationEvents = ['pointerdown', 'mousedown', 'click', 'keydown', 'keyup', 'beforeinput'];
+
+      #preventDisabledActivation = (event: Event): void => {
+        // Native fieldsets disable the form-associated host, but its shadow
+        // controls do not inherit that state. Keep user activation inside the
+        // same disabled boundary without changing authored component props.
+        const key = (event as KeyboardEvent).key;
+        if (
+          (event.type === 'keydown' || event.type === 'keyup') &&
+          (key === 'Tab' || key === 'Escape')
+        ) {
+          return;
+        }
+        if (this.matches(':disabled')) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      };
 
       /**
        * Attached on first use rather than in a constructor. A mixin over a
@@ -154,6 +172,19 @@ export function formAssociated(binding: FormValueBinding = {}) {
           this.#internals = this.attachInternals();
         }
         return this.#internals;
+      }
+
+      #applyEffectiveDisabled(): void {
+        // Update the operative Svelte prop without changing the requested host
+        // prop/attribute. This is the same component update the generated
+        // custom-element setter uses, so native controls, ARIA and styling all
+        // follow the component's existing disabled path.
+        const component = Reflect.get(this, '$$c') as
+          | { $set: (props: Record<string, unknown>) => void }
+          | undefined;
+        component?.$set({
+          [disabledProp]: readBoolean(this, disabledProp) || this.matches(':disabled')
+        });
       }
 
       get internals(): ElementInternals | null {
@@ -186,7 +217,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
 
       /** The value this control contributes, or null when it contributes none. */
       #formValue(): string | FormData | null {
-        if (readBoolean(this, disabledProp)) {
+        if (readBoolean(this, disabledProp) || this.matches(':disabled')) {
           return null;
         }
         // Multi-select first: the array is the value when there is one, and the
@@ -224,9 +255,9 @@ export function formAssociated(binding: FormValueBinding = {}) {
         }
         const inner = binding.innerControlIsNotTheValue === true ? null : this.#innerControl();
         if (inner !== null) {
-          if (inner.disabled) {
-            return null;
-          }
+          // Disabled state belongs to the requested host prop and the native
+          // form-associated host. The rendered control can retain the previous
+          // inherited state until Svelte updates it after fieldset reenable.
           if (
             inner instanceof HTMLInputElement &&
             (inner.type === 'checkbox' || inner.type === 'radio')
@@ -234,7 +265,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
             if (!inner.checked) {
               return null;
             }
-            return inner.value === '' ? checkedFallback : inner.value;
+            return inner.value;
           }
           return inner.value === '' ? null : inner.value;
         }
@@ -273,6 +304,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
       }
 
       syncFormState(): void {
+        this.#applyEffectiveDisabled();
         this.#elementInternals()?.setFormValue(this.#formValue());
         this.#syncValidity();
       }
@@ -288,8 +320,20 @@ export function formAssociated(binding: FormValueBinding = {}) {
       }
 
       connectedCallback(): void {
+        // A pre-definition assignment creates an own property that bypasses
+        // the reflected setter. Upgrade it before Svelte consumes the props,
+        // so the host name and the core control name reach the same form.
+        if (Object.hasOwn(this, 'name')) {
+          const initialName: unknown = Reflect.get(this, 'name');
+          Reflect.deleteProperty(this, 'name');
+          this.name =
+            initialName === null || typeof initialName === 'undefined' ? null : String(initialName);
+        }
         // @ts-expect-error -- the base class defines it; TS cannot see through T.
         super.connectedCallback?.();
+        for (const type of this.#activationEvents) {
+          this.addEventListener(type, this.#preventDisabledActivation, true);
+        }
         // The inner control's own events are the only signal that the user --
         // rather than the page -- changed the value. They are listened for on the
         // shadow root because that catches both kinds: a native `change` is not
@@ -315,12 +359,26 @@ export function formAssociated(binding: FormValueBinding = {}) {
       }
 
       disconnectedCallback(): void {
+        for (const type of this.#activationEvents) {
+          this.removeEventListener(type, this.#preventDisabledActivation, true);
+        }
         this.shadowRoot?.removeEventListener('input', this.#onInnerChange, true);
         this.shadowRoot?.removeEventListener('change', this.#onInnerChange, true);
         this.removeEventListener('click', this.#onInnerChange, true);
         this.removeEventListener('keyup', this.#onInnerChange, true);
         // @ts-expect-error -- the base class defines it; TS cannot see through T.
         super.disconnectedCallback?.();
+      }
+
+      attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
+        // @ts-expect-error -- the base class defines it; TS cannot see through T.
+        super.attributeChangedCallback?.(name, previous, next);
+        if (name === 'name' && this.#captured && this.isConnected) {
+          // Multi-value controls store FormData with the name embedded in each
+          // entry. A rename must replace those entries as well as the core prop.
+          // Initial props are read by connectedCallback's initialization tick.
+          this.syncFormState();
+        }
       }
 
       #onInnerChange = (): void => {
@@ -341,6 +399,11 @@ export function formAssociated(binding: FormValueBinding = {}) {
 
       formDisabledCallback(): void {
         this.syncFormState();
+        queueMicrotask(() => {
+          if (this.isConnected) {
+            this.syncFormState();
+          }
+        });
       }
 
       get form(): HTMLFormElement | null {
@@ -349,6 +412,16 @@ export function formAssociated(binding: FormValueBinding = {}) {
 
       get name(): string | null {
         return this.getAttribute('name');
+      }
+
+      set name(next: string | null | undefined) {
+        // Preserve the generated prop's writable surface through the same
+        // attribute callback that updates the core control and form owner.
+        if (next === null || next === undefined) {
+          this.removeAttribute('name');
+        } else {
+          this.setAttribute('name', next);
+        }
       }
 
       get type(): string {

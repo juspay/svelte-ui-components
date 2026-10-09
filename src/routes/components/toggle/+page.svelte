@@ -19,6 +19,8 @@
   <h1>Toggle</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div
   class="demo-row"
   style="--toggle-text-order: 1; --toggle-switch-width: 40px; --toggle-switch-height: 20px; --toggle-ball-height: 18px; --toggle-ball-width: 18px;"

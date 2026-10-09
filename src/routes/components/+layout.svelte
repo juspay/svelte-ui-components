@@ -4,6 +4,7 @@
   import { marked } from 'marked';
   import type { Snippet } from 'svelte';
   import { componentNav } from './_nav';
+  import { documentationName } from './_documentation';
 
   let { children }: { children: Snippet } = $props();
 
@@ -18,6 +19,7 @@
     const filename = path.split('/').pop()?.replace('.md', '') ?? '';
     docs[filename] = content;
   }
+  const documentationNames = new Set(Object.keys(docs));
 
   const slugToName: Record<string, string> = {};
   for (const group of componentNav) {
@@ -80,6 +82,10 @@
   for (const group of componentNav) {
     for (const item of group.items) {
       nameToSlug[item.name] = item.slug;
+      const canonicalName = documentationName(item.name, documentationNames);
+      if (canonicalName !== null) {
+        nameToSlug[canonicalName] = item.slug;
+      }
     }
   }
 
@@ -136,8 +142,8 @@
   }
 
   let currentSlug = $derived($page.url.pathname.split('/').pop() ?? '');
-  let docName = $derived(slugToName[currentSlug] ?? '');
-  let rawMarkdown = $derived(docs[docName] ?? '');
+  let docName = $derived(documentationName(slugToName[currentSlug] ?? '', documentationNames));
+  let rawMarkdown = $derived(docName === null ? '' : docs[docName]);
   let cleanMarkdown = $derived(rawMarkdown.replace(/^# .+\n+/, ''));
   let renderedHtml = $derived(cleanMarkdown ? renderMarkdown(cleanMarkdown) : '');
 </script>

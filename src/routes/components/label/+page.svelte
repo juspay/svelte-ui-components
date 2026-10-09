@@ -7,6 +7,8 @@
   <h1>Label</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3 class="demo-heading">Explicit association</h3>
 <p class="demo-caption">
   <code>for</code> links the label to the control's <code>id</code>. Clicking the text focuses the

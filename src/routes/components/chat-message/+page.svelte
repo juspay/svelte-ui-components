@@ -1,5 +1,6 @@
 <script lang="ts">
   import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
+  import { renderMarkdown } from '$lib/MarkdownText/markdown';
   import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
   import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
   import type { ThinkingIndicatorTraceRow } from '$lib/ThinkingIndicator/properties';
@@ -89,7 +90,13 @@
   reach the scroll.
 </p>
 <div class="demo-stack">
-  <ChatMessage role="responder" markdown={markdownTable} testId="chat-message-table" />
+  <!-- The existing sanitized renderer names the table wrapper; content keeps the copy text. -->
+  <ChatMessage
+    role="responder"
+    content={markdownTable}
+    html={renderMarkdown(markdownTable, { tableLabel: 'Quarterly revenue table' })}
+    testId="chat-message-table"
+  />
 </div>
 
 <h2>Settled turn — a persistent trace and tool log in history</h2>

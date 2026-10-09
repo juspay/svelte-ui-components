@@ -43,6 +43,8 @@
   <h1>Combobox</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Single select</h3>
 <div class="demo-row" style="max-width: 320px;">
   <Combobox

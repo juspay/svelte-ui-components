@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { fixtureBaseURL } from './support/fixture-server';
-import { activateOverlay, inlineDeclarations } from './support/overlay-assertions';
+import { inlineDeclarations } from './support/overlay-assertions';
+import { activateOverlayBy, ownedStyle, type OverlayActivation } from './support/overlay-ownership';
 
 const fixtureURL =
   process.env.SUI_OVERLAY_HOST_FIXTURE_URL ?? `${fixtureBaseURL}/owned-overlay-host/`;
@@ -10,7 +11,9 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-fixture-ready', 'true');
 });
 
-for (const activation of ['pointer', 'keyboard'] as const) {
+const activations: readonly OverlayActivation[] = ['pointer', 'keyboard', 'tab'];
+
+for (const activation of activations) {
   for (const kind of ['modal', 'sheet', 'menu']) {
     test(`${kind}: owned app lock preserves host styles, bounds, scroll and focus (${activation})`, async ({
       page
@@ -34,7 +37,8 @@ for (const activation of ['pointer', 'keyboard'] as const) {
         theme: document.querySelector('#embedded-app')?.getAttribute('data-theme'),
         url: location.href
       }));
-      const assertRestoredFocus = await activateOverlay(
+      const assertRestoredFocus = await activateOverlayBy(
+        page,
         page.getByTestId(`open-${kind}`),
         activation
       );
@@ -130,6 +134,30 @@ test('wrong body owner is detected by the host mutation assertion', async ({ pag
     }
     expect(await inlineDeclarations(page)).toEqual(before);
   }
+});
+
+test('wrong body owner keeps host declarations written while the lock is held', async ({
+  page
+}) => {
+  await page.goto(`${fixtureURL}?owner=body`);
+  await expect(page.locator('html')).toHaveAttribute('data-fixture-ready', 'true');
+  const body = page.locator('body');
+  const before = await ownedStyle(body);
+  await page.getByTestId('open-modal').click();
+  await expect(page.getByTestId('owned-modal')).toBeVisible();
+  expect(await ownedStyle(body)).not.toEqual(before);
+  await expect(body).toHaveCSS('overflow', 'hidden');
+  await body.evaluate((node) => {
+    node.style.setProperty('padding-right', '13px');
+    node.style.setProperty('--host-live', 'updated');
+  });
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('owned-modal')).toHaveCount(0);
+  expect(await ownedStyle(body)).toEqual({
+    ...before,
+    inline: { ...before.inline, 'padding-right': ['13px', ''], '--host-live': ['updated', ''] },
+    computed: { ...before.computed, paddingRight: '13px' }
+  });
 });
 
 for (const kind of ['sheet', 'menu']) {

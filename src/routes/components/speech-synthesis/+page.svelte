@@ -92,6 +92,8 @@
   <span class="category-badge">Chat</span>
   <h1>SpeechSynthesis</h1>
 </div>
+
+<h2 class="demo-examples-heading">Examples</h2>
 <h3>Browser speech</h3>
 <p data-pw="speech-support">
   {native.supported

@@ -100,6 +100,8 @@
   <h1>PieChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Basic Pie</h3>
 <div class="demo-row" style="max-width: 400px;">
   <PieChart

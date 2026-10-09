@@ -137,11 +137,12 @@ test('as="button" with dismissible degrades to the div root instead of nesting b
   const pill = page.locator('[data-pw="pill-as-button-dismissible"]');
 
   expect(await pill.evaluate((el) => el.tagName)).toBe('DIV');
-  expect(await pill.getAttribute('role')).toBe('button');
+  expect(await pill.getAttribute('role')).toBeNull();
+  await expect(pill.locator('button.pill-action')).not.toHaveAccessibleName('');
 
   // The dismiss control is still there and is still a real button — just not nested
   // inside another one.
   const dismiss = page.locator('[data-pw="pill-as-button-dismissible-dismiss"]');
   await expect(dismiss).toBeVisible();
-  expect(await pill.evaluate((el) => el.querySelectorAll('button').length)).toBe(1);
+  expect(await pill.evaluate((el) => el.querySelectorAll('button').length)).toBe(2);
 });

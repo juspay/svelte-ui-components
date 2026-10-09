@@ -38,6 +38,8 @@
   <h1>AnimatedNumber</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="intro">
   A per-digit odometer. Each digit is an overflow-clipped column holding the glyphs 0&ndash;9; a
   value change rewrites one CSS custom property per column and a tokenised <code>transition</code>

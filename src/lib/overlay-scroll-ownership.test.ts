@@ -20,6 +20,30 @@ beforeAll(() => {
 });
 
 describe('owned scroll container utility', () => {
+  it('keeps the same real owner locked across document adoption and cleans up the final hold', () => {
+    const owner = document.createElement('div');
+    owner.style.setProperty('overflow', 'auto', 'important');
+    const releaseFirst = acquireScrollLock(owner);
+    const foreign = document.implementation.createHTMLDocument('adopted owner');
+    expect(foreign.adoptNode(owner)).toBe(owner);
+    foreign.body.append(owner);
+    const releaseSecond = acquireScrollLock(owner);
+    owner.style.color = 'blue';
+    releaseFirst();
+    releaseFirst();
+    expect(owner.style.overflow).toBe('hidden');
+    expect(owner.style.getPropertyPriority('overflow')).toBe('important');
+    releaseSecond();
+    expect(owner.style.overflow).toBe('auto');
+    expect(owner.style.getPropertyPriority('overflow')).toBe('important');
+    expect(owner.style.color).toBe('blue');
+    const releaseLater = acquireScrollLock(owner);
+    expect(owner.style.overflow).toBe('hidden');
+    releaseLater();
+    expect(owner.style.overflow).toBe('auto');
+    owner.remove();
+  });
+
   it('counts independent containers and restores longhands and priorities without replacing unrelated styles', () => {
     const first = document.createElement('div');
     const second = document.createElement('div');

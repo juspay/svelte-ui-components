@@ -8,6 +8,8 @@
   <h1>EmptyState</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="flex-direction: column; max-width: 500px; gap: 24px;">
   <EmptyState
     title="No results found"

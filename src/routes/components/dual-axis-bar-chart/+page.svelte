@@ -146,6 +146,8 @@
   <h1>DualAxisBarChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="page-intro">
   A pure-SVG dual-axis chart with two independent Y-axes (left and right) sharing one categorical
   X-axis. Each series independently declares its axis (<code>yAxisIndex: 0 | 1</code>) and render

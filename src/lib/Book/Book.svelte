@@ -11,6 +11,7 @@
     showNavigation = true,
     showPageIndicator = true,
     enableSwipe = false,
+    ariaLabel = 'Book',
     testId,
     previousIcon,
     nextIcon,
@@ -108,6 +109,7 @@
   onmousedown={handleMouseDown}
   onmouseup={handleMouseUp}
   role="region"
+  aria-label={ariaLabel}
   tabindex="0"
 >
   <div class="book-viewport">

@@ -129,6 +129,8 @@
   <h1>SankeyChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>
   Simple Flow — keyboard access (Tab through links then nodes; Enter/Space activates the focused one
   exactly like a click)

@@ -11,6 +11,8 @@
   <h1>Img</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row">
   <Img src="{base}/demo-media/sunset-beach-thumb.jpg" alt="Sample landscape" />
   <Img src="{base}/demo-media/sunset-beach-thumb.jpg" alt="Sample architecture" />

@@ -7,6 +7,8 @@
   <h1>Book</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 {#snippet bookPage1()}
   <div style="padding: 20px;">
     <h3>Chapter 1</h3>
@@ -28,6 +30,7 @@
 
 <div class="demo-row">
   <Book
+    ariaLabel="Chapter reader"
     pages={[
       { content: bookPage1, title: 'Introduction' },
       { content: bookPage2, title: 'Getting Started' },

@@ -40,6 +40,7 @@
 
 <div class="demo-row media-stage">
   <MediaPlayer
+    ariaLabel="Custom controls video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     testId="media-player-video-demo"
@@ -53,6 +54,7 @@
   />
 
   <MediaPlayer
+    ariaLabel="Native controls video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     controls
@@ -65,6 +67,7 @@
   />
 
   <MediaPlayer
+    ariaLabel="Captioned video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     captionsSrc="{base}/demo-media/promo-clip.vtt"
@@ -81,6 +84,7 @@
   />
 
   <MediaPlayer
+    ariaLabel="Externally paused video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     bind:playing={playingA}
@@ -88,6 +92,7 @@
   />
 
   <MediaPlayer
+    ariaLabel="Externally played video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     autoplay={false}
@@ -96,6 +101,7 @@
   />
 
   <MediaPlayer
+    ariaLabel="Transport controls video"
     type="video"
     src="{base}/demo-media/promo-clip.mp4"
     autoplay={false}

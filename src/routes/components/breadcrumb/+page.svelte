@@ -29,9 +29,11 @@
   <h1>Breadcrumb</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>(a) Basic hyperlink trail</h3>
 <div class="demo-row">
-  <Breadcrumb items={basicItems} ariaLabel="Page navigation">
+  <Breadcrumb items={basicItems} ariaLabel="Basic page trail">
     {#snippet item(ctx: BreadcrumbItemContext)}
       {#if ctx.isLast}
         <span aria-current="page">{ctx.label}</span>
@@ -44,7 +46,7 @@
 
 <h3>Deep hierarchy</h3>
 <div class="demo-row">
-  <Breadcrumb items={deepItems} ariaLabel="Page navigation">
+  <Breadcrumb items={deepItems} ariaLabel="Deep page trail">
     {#snippet item(ctx: BreadcrumbItemContext)}
       {#if ctx.isLast}
         <span aria-current="page">{ctx.label}</span>
@@ -103,7 +105,7 @@
 
 <h3>(c) Custom separator snippet</h3>
 <div class="demo-row">
-  <Breadcrumb items={basicItems} ariaLabel="Page navigation">
+  <Breadcrumb items={basicItems} ariaLabel="Custom page trail">
     {#snippet item(ctx: BreadcrumbItemContext)}
       {#if ctx.isLast}
         <span aria-current="page">{ctx.label}</span>

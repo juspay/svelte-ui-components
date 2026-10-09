@@ -51,4 +51,6 @@ export type OptionalAttachmentChipRowProperties = {
   fileIcon?: Snippet;
   testId?: string;
   classes?: string;
+  /** Name of this attachment strip. Default: `Pending attachments`. */
+  ariaLabel?: string;
 };

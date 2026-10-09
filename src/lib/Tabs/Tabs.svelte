@@ -156,24 +156,147 @@
     return getComputedStyle(scrollContainer).direction === 'rtl';
   }
 
+  function availableWithoutArrows(node: HTMLElement, vertical: boolean): number {
+    const owner = node.parentElement;
+    const current = vertical ? node.clientHeight : node.clientWidth;
+    if (owner === null) {
+      return current;
+    }
+    const ownerStyle = getComputedStyle(owner);
+    const barStyle = getComputedStyle(node);
+    const flexLayout = ownerStyle.display === 'flex' || ownerStyle.display === 'inline-flex';
+    const matchingAxis = vertical
+      ? ownerStyle.flexDirection === 'column' || ownerStyle.flexDirection === 'column-reverse'
+      : ownerStyle.flexDirection === 'row' || ownerStyle.flexDirection === 'row-reverse';
+    if (!flexLayout || !matchingAxis || Number.parseFloat(barStyle.flexGrow) <= 0) {
+      return current;
+    }
+    const pixels = (value: string): number => Number.parseFloat(value) || 0;
+    const padding = vertical
+      ? pixels(ownerStyle.paddingTop) + pixels(ownerStyle.paddingBottom)
+      : pixels(ownerStyle.paddingLeft) + pixels(ownerStyle.paddingRight);
+    const budget = (vertical ? owner.clientHeight : owner.clientWidth) - padding;
+    const arrows = Array.from(owner.querySelectorAll<HTMLElement>(':scope > .tabs-arrow'));
+    const gap = pixels(vertical ? ownerStyle.rowGap : ownerStyle.columnGap);
+    const gutter = arrows.reduce(
+      (total, arrow) => total + (vertical ? arrow.offsetHeight : arrow.offsetWidth),
+      gap * arrows.length
+    );
+    const border = vertical
+      ? pixels(barStyle.borderTopWidth) + pixels(barStyle.borderBottomWidth)
+      : pixels(barStyle.borderLeftWidth) + pixels(barStyle.borderRightWidth);
+    let available = Math.min(current + gutter, Math.max(0, budget - border));
+    const maximum = vertical ? barStyle.maxHeight : barStyle.maxWidth;
+    if (maximum !== 'none') {
+      const limit = maximum.endsWith('%')
+        ? (pixels(maximum) * budget) / 100
+        : maximum.endsWith('px')
+          ? pixels(maximum)
+          : Number.NaN;
+      if (!Number.isFinite(limit)) {
+        // Keep the measured constraint when an authored CSS expression cannot
+        // be resolved here without changing that layout.
+        return current;
+      }
+      const barPadding = vertical
+        ? pixels(barStyle.paddingTop) + pixels(barStyle.paddingBottom)
+        : pixels(barStyle.paddingLeft) + pixels(barStyle.paddingRight);
+      available = Math.min(
+        available,
+        barStyle.boxSizing === 'border-box' ? Math.max(0, limit - border) : limit + barPadding
+      );
+    }
+    return available;
+  }
+
+  function inFlowContentExtent(node: HTMLElement, vertical: boolean): number {
+    let minimum = Number.POSITIVE_INFINITY;
+    let maximum = Number.NEGATIVE_INFINITY;
+    const pixels = (value: string): number => Number.parseFloat(value) || 0;
+    for (const child of Array.from(node.children)) {
+      if (
+        !(child instanceof HTMLElement) ||
+        child.classList.contains('tabs-indicator') ||
+        child.getClientRects().length === 0
+      ) {
+        continue;
+      }
+      if (child.offsetParent !== node) {
+        // An authored offset parent uses another coordinate system.
+        return vertical ? node.scrollHeight : node.scrollWidth;
+      }
+      const childStyle = getComputedStyle(child);
+      const start = vertical ? child.offsetTop : child.offsetLeft;
+      const end = start + (vertical ? child.offsetHeight : child.offsetWidth);
+      const before = pixels(vertical ? childStyle.marginTop : childStyle.marginLeft);
+      const after = pixels(vertical ? childStyle.marginBottom : childStyle.marginRight);
+      minimum = Math.min(minimum, start, start - before);
+      maximum = Math.max(maximum, end, end + after);
+    }
+    const style = getComputedStyle(node);
+    const padding = vertical
+      ? pixels(style.paddingTop) + pixels(style.paddingBottom)
+      : pixels(style.paddingLeft) + pixels(style.paddingRight);
+    // The absolute indicator can temporarily extend during its transition;
+    // it is decoration rather than additional tab content.
+    return (Number.isFinite(minimum) ? Math.max(0, maximum - minimum) : 0) + padding;
+  }
+
   function updateOverflow(): void {
     if (scrollContainer === null) {
       return;
     }
     if (isVertical) {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      if (clientHeight <= 0) {
+        return;
+      }
+      if (
+        inFlowContentExtent(scrollContainer, true) <=
+        availableWithoutArrows(scrollContainer, true) + 1
+      ) {
+        canScrollUp = false;
+        canScrollDown = false;
+        return;
+      }
       canScrollUp = scrollTop > 1;
       canScrollDown = scrollTop + clientHeight < scrollHeight - 1;
       return;
     }
     const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
-    canScrollLeft = scrollLeft > 1;
-    canScrollRight = scrollLeft + clientWidth < scrollWidth - 1;
+    if (clientWidth <= 0) {
+      return;
+    }
+    if (
+      inFlowContentExtent(scrollContainer, false) <=
+      availableWithoutArrows(scrollContainer, false) + 1
+    ) {
+      canScrollLeft = false;
+      canScrollRight = false;
+      return;
+    }
+    const maxScroll = Math.max(0, scrollWidth - clientWidth);
+    // RTL starts at zero at the physical right edge and moves negatively to
+    // the left. Express both directions as distance from the physical left.
+    const physicalLeft = Math.min(
+      maxScroll,
+      Math.max(
+        0,
+        getComputedStyle(scrollContainer).direction === 'rtl' ? maxScroll + scrollLeft : scrollLeft
+      )
+    );
+    canScrollLeft = physicalLeft > 1;
+    canScrollRight = physicalLeft < maxScroll - 1;
   }
 
   function updateIndicator(): void {
     if (scrollContainer === null || isLinkMode) {
       indicatorReady = false;
+      return;
+    }
+    // A hidden or temporarily zero-sized viewport cannot provide label offsets.
+    // Keep the last measured indicator until this axis can be laid out again.
+    if ((isVertical ? scrollContainer.clientHeight : scrollContainer.clientWidth) <= 0) {
       return;
     }
     const activeEl = scrollContainer.querySelector<HTMLElement>('.tabs-item.active');
@@ -359,6 +482,21 @@
     if (next instanceof HTMLElement && tabElements().includes(next)) {
       return;
     }
+    if (next === null && event.target instanceof HTMLElement) {
+      const target = event.target;
+      const previousKey = focusedKey;
+      focusedKey = null;
+      // Chromium fires focusout before removing the focused node. Let that
+      // mutation finish before restoring removal focus. An intentional blur
+      // releases ownership immediately, including during a selection update.
+      queueMicrotask(() => {
+        if (!target.isConnected && focusedKey === null && previousKey !== null) {
+          focusedKey = previousKey;
+          reconcileFocus();
+        }
+      });
+      return;
+    }
     focusedKey = null;
   }
 
@@ -387,8 +525,20 @@
       focusedKey = null;
       return;
     }
-    if (!isInside && focusedKey === null) {
-      return;
+    if (!isInside) {
+      // A removed tab leaves focus on the body; restore that lost focus. An
+      // external control (including this strip's arrow) owns its own focus.
+      const root = scrollContainer?.getRootNode();
+      const hostActive = root instanceof ShadowRoot ? getActiveElement(root.host) : null;
+      const lostToBody =
+        active === scrollContainer?.ownerDocument.body ||
+        (root instanceof ShadowRoot &&
+          active === null &&
+          (hostActive === root.host || hostActive === scrollContainer?.ownerDocument.body));
+      if (focusedKey === null || !lostToBody) {
+        focusedKey = null;
+        return;
+      }
     }
     // Focus follows a selection made elsewhere, so a parent switching tabs does not
     // strand the user on a tab that is no longer the selected one.
@@ -414,7 +564,32 @@
     updateOverflow();
     updateIndicator();
     reconcileFocus();
+    const resizeObserver = new ResizeObserver(() => {
+      updateOverflow();
+      updateIndicator();
+    });
+    let resizeTargets: Element[] = [];
+    const syncResizeTargets = (): void => {
+      const targets: Element[] = [
+        node,
+        ...node.querySelectorAll('.tabs-item, .tabs-section-label')
+      ];
+      for (const previous of resizeTargets) {
+        if (!targets.includes(previous)) {
+          resizeObserver.unobserve(previous);
+        }
+      }
+      for (const target of targets) {
+        if (!resizeTargets.includes(target)) {
+          resizeObserver.observe(target, {
+            box: target === node ? 'content-box' : 'border-box'
+          });
+        }
+      }
+      resizeTargets = targets;
+    };
     const observer = new MutationObserver(() => {
+      syncResizeTargets();
       updateOverflow();
       updateIndicator();
       reconcileFocus();
@@ -425,11 +600,7 @@
       attributes: true,
       attributeFilter: ['class', 'tabindex', 'aria-selected', 'aria-disabled']
     });
-    const resizeObserver = new ResizeObserver(() => {
-      updateOverflow();
-      updateIndicator();
-    });
-    resizeObserver.observe(node);
+    syncResizeTargets();
     return () => {
       observer.disconnect();
       resizeObserver.disconnect();
@@ -521,7 +692,11 @@
           {#if typeof tabItem?.icon === 'string' && tabItem.icon.length > 0}
             <Img inlineSvg src={tabItem.icon} alt="" fallback="" classes="tabs-item-icon" />
           {/if}
-          <span class="tabs-item-label" data-text={label}>{label}</span>
+          <!-- Refresh only the label node: WebKit can retain the old attr() ghost
+               after a reused label changes, while the tab and its focus stay stable. -->
+          {#key label}
+            <span class="tabs-item-label" data-text={label}>{label}</span>
+          {/key}
           {#if tabItem?.status && tabItem.status !== 'none'}
             <span class="tabs-item-status status-{tabItem.status}" aria-hidden="true"></span>
           {/if}
@@ -735,12 +910,12 @@
      with height:0/visibility:hidden -- invisible, but its width still sets
      the shrink-to-fit width of the inline-block label, so the box is already
      as wide as the active state needs even while showing the lighter weight. */
-  .tabs-item-label {
+  .tabs-item :global(.tabs-item-label) {
     position: relative;
     display: inline-block;
   }
 
-  .tabs-item-label::after {
+  .tabs-item :global(.tabs-item-label)::after {
     content: attr(data-text);
     display: block;
     height: 0;

@@ -379,6 +379,8 @@ The empty message renders in the table body, so the header, the caption and the 
 
 A clickable row (`onrowclick`) and interactive content inside a cell both want the same click and the same Enter. The two halves are handled differently, deliberately.
 
+Clickable rows keep native row and cell semantics and receive a name from their readable source-row context, such as **Growth Monthly**. Duplicate captions receive a stable source-record suffix that survives sorting, filtering and pagination. `labels.rowAction(rowLabel)` can localize or customize that name; ordinary rows without an action remain unnamed containers for their cell content.
+
 **Keyboard is handled for you.** The row activates on Enter/Space only when the ROW ITSELF has focus. A key pressed inside a cell control never reaches it, so typing a space in an editable cell types a space instead of opening the record, and Enter on a cell button fires only the button. Nothing to opt into, and no allowlist of "interactive" tags, which could never be complete for inputs, editable regions, custom elements or portaled controls.
 
 **Click is opt-out, because "click anywhere on the row" is the feature.** Guarding click by event target would break clicking the row's own text, which is most of the row. Mark interactive content instead:
@@ -632,7 +634,7 @@ With no `getRowId`, selection uses the original source index through client-side
 | isTableScrollable     | `boolean`                                                           | No       | `false`               | When true, creates a bounded scroll area on the table container. Headers are automatically sticky. Use `--table-container-height` to set the scroll area height.                                                                                                                                                                      |
 | isContentScrollable   | `boolean`                                                           | No       | `false`               | When true, individual cell content scrolls vertically if it overflows the fixed cell height.                                                                                                                                                                                                                                          |
 | testId                | `string`                                                            | No       | `-`                   | Value for the data-pw attribute on the table container, used for end-to-end testing selectors.                                                                                                                                                                                                                                        |
-| caption               | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element.                                                                                                                                                                                                                                             |
+| caption               | `string`                                                            | No       | `-`                   | Accessible caption for screen readers. Rendered as a visually hidden `<caption>` element; a non-empty caption also names the existing horizontal scroll group and any actual vertical-overflow group without adding tab stops.                                                                                                                                                                                                                                             |
 | sortAscIcon           | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the ascending sort indicator. Default is the up/down chevron pair with the up half in `currentColor` and the down half in `--table-sort-inactive-color`.                                                                                                                                                  |
 | sortDescIcon          | `Snippet`                                                           | No       | Two-tone chevron pair | Custom snippet rendered for the descending sort indicator. Default is the up/down chevron pair with the down half in `currentColor` and the up half in `--table-sort-inactive-color`.                                                                                                                                                 |
 | sortDefaultIcon       | `Snippet`                                                           | No       | SVG chevron pair      | Custom snippet rendered for columns that haven't been sorted yet. Default is the solid up/down chevron pair in `--table-sort-inactive-color`.                                                                                                                                                                                         |
@@ -948,8 +950,11 @@ type TableLabels = {
   sortBy?: (header: string) => string; // default: `Sort by ${header}`
   filterBy?: (header: string) => string; // default: `Filter by ${header}`
   selectRow?: (rowId: string) => string; // default: `Select row ${rowId || 'non-selectable'}`
+  selectionColumn?: string; // default: 'Row selection'
+  pageNavigation?: string; // default: table title + ' pagination', or 'Pagination'
   selectAllRows?: string; // default: 'Select all rows'
   cellEditor?: (columnLabel: string, rowLabel: string) => string;
+  rowAction?: (rowLabel: string) => string; // default: rowLabel
   clearSearch?: string; // default: 'Clear search'
   closeSearch?: string; // default: 'Close search'
   rowsPerPage?: string; // default: 'Rows per page'
@@ -967,7 +972,7 @@ type TableLabels = {
 />
 ```
 
-The three that depend on a column or a row are functions rather than templates
+The members that depend on a column or a row are functions rather than templates
 with a placeholder, because a translator needs to decide where the header goes
 rather than fill the slot an English sentence happens to leave.
 
@@ -1196,3 +1201,7 @@ table.addEventListener('sort', (e) => {
 > **Svelte-only:** `cell` (receives `(cellValue, rowIndex, colIndex)`) and `column.cell` (receives `(row, rowIndex, originalIndex)`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.
 >
 > `toolbarSlot` (receives `{ selectedIds: Set<string> }`) and `empty` (receives `{ reason, searchTerm }`) are the parameterized snippets `<sui-table>` still bridges, because both are usable without their argument — a static toolbar, a static "No records" message: assign one as a JavaScript property (`el.toolbarSlot = snippet`, `el.empty = snippet`) and it is rendered WITH its argument; fill `slot="toolbar-slot"` / `slot="empty"` with markup instead and it renders without them, so the static toolbar cannot tell which rows are selected and the static empty message cannot tell "no records" from "no matches". Assigning the property wins over the slot.
+
+`labels.selectionColumn` names the row-selection column when single selection does not render a select-all control. Its default is `Row selection`; override it with localized text.
+
+`labels.pageNavigation` names the built-in page-navigation landmark. It defaults to the table title followed by `pagination` when `tableTitle` is set, and `Pagination` otherwise. Give different tables distinct contextual names. This applies to the Svelte built-in paginator; the existing custom-element paginator limitation remains.

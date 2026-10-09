@@ -7,6 +7,7 @@
       content: { type: 'String' },
       html: { type: 'String' },
       markdown: { type: 'String' },
+      markdownTableLabel: { type: 'String', attribute: 'markdown-table-label' },
       body: { type: 'Object' },
       streaming: { type: 'Boolean', reflect: true },
       typewriter: { type: 'Boolean', reflect: true },

@@ -19,6 +19,7 @@
       allowCopy: { type: 'Boolean', attribute: 'allow-copy' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      chatMessageListAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true },
       onretry: { type: 'Object' },
       onfeedback: { type: 'Object' }
     }
@@ -27,6 +28,7 @@
 
 <script lang="ts">
   import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
+  import type { ChatMessageListProperties } from '$lib/ChatMessageList/properties';
   import { dispatchEvents } from '../dispatch';
   import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
 
@@ -35,7 +37,12 @@
   // carry that argument -- bridging one to markup would compile and render while
   // silently dropping the value it exists to display. They pass through untouched
   // in the spread below. See docs/ChatMessageList.md.
-  let props = $props();
+  let {
+    chatMessageListAriaLabel,
+    ...props
+  }: Omit<ChatMessageListProperties, 'ariaLabel'> & {
+    chatMessageListAriaLabel?: ChatMessageListProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -56,7 +63,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<ChatMessageList {...props} {...dispatchers}>
+<ChatMessageList {...props} {...dispatchers} ariaLabel={chatMessageListAriaLabel}>
   {#snippet empty()}
     <slot name="empty"></slot>
   {/snippet}

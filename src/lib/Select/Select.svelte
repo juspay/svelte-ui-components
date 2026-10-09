@@ -635,6 +635,14 @@
         }
         /* Outside the in-menu variant, Tab always means focus is leaving. */
         if (!searchInMenu) {
+          // Closing is rendered after this keydown. Firefox otherwise includes
+          // the still-present scrollable dropdown in native Tab navigation,
+          // then loses focus to body when that temporary target is removed.
+          // Exclude the closing panel immediately so native forward and backward
+          // navigation keep their real next stop, including across a shadow root.
+          if (dropdownEl !== null) {
+            dropdownEl.inert = true;
+          }
           close();
           break;
         }

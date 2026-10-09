@@ -139,6 +139,8 @@
   <h1>AreaChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Basic Area</h3>
 <div class="demo-row">
   <AreaChart

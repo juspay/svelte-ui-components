@@ -20,7 +20,7 @@ appearance are CSS-variable driven.
 
 <MediaPlayer type="image" src="/photo.jpg" alt="A photo" />
 
-<MediaPlayer type="video" src="/clip.mp4" />
+<MediaPlayer type="video" src="/clip.mp4" ariaLabel="Product walkthrough" />
 
 <!-- Captions: the track is loaded and shown through the overlay's Captions toggle -->
 <MediaPlayer
@@ -43,37 +43,38 @@ appearance are CSS-variable driven.
 
 ## Props
 
-| Prop               | Type               | Required | Default | Description                                                                                                                                                                                      |
-| ------------------ | ------------------ | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| src                | `string`           | Yes      | `-`     | URL of the image or video to display.                                                                                                                                                            |
-| type               | `'image'\|'video'` | Yes      | `-`     | Whether the source is rendered as an image or a video with controls.                                                                                                                             |
-| alt                | `string`           | No       | `''`    | Alternative text for the image (ignored for video).                                                                                                                                              |
-| fallback           | `string`           | No       | `-`     | Fallback image URL used (via `Img`) if `src` fails to load. Image type only.                                                                                                                     |
-| autoplay           | `boolean`          | No       | `true`  | Whether the video begins playing automatically (video only).                                                                                                                                     |
-| loop               | `boolean`          | No       | `false` | Whether the video restarts when it ends (video only).                                                                                                                                            |
-| controls           | `boolean`          | No       | `false` | Use the browser's native video controls and hide the custom overlay (video only).                                                                                                                |
-| playing            | `boolean`          | No       | `true`  | Bindable, both directions: toggling playback (click/keyboard/native controls) updates `playing`, and a host setting `playing` itself calls `play()`/`pause()` on the video.                      |
-| muted              | `boolean`          | No       | `true`  | Bindable. Reflects whether the video audio is muted.                                                                                                                                             |
-| playIcon           | `Snippet`          | No       | `-`     | Custom play-control icon. Falls back to the built-in asset.                                                                                                                                      |
-| pauseIcon          | `Snippet`          | No       | `-`     | Custom pause-control icon. Falls back to the built-in asset.                                                                                                                                     |
-| muteIcon           | `Snippet`          | No       | `-`     | Custom muted-control icon. Falls back to the built-in asset.                                                                                                                                     |
-| unmuteIcon         | `Snippet`          | No       | `-`     | Custom unmuted-control icon. Falls back to the built-in asset.                                                                                                                                   |
-| captionsSrc        | `string`           | No       | `-`     | URL of a WebVTT captions file (video only). Omit entirely for no captions track — a track with no source is never rendered.                                                                      |
-| captionsLabel      | `string`           | No       | `-`     | Label shown in the browser's caption menu. Only meaningful with `captionsSrc`.                                                                                                                   |
-| captionsSrcLang    | `string`           | No       | `-`     | BCP 47 language tag for the captions track, e.g. `"en"`. Only meaningful with `captionsSrc`.                                                                                                     |
-| captionsButton     | `boolean`          | No       | `false` | Opt-in captions toggle in the overlay's bottom row: a native `<button>` named "Captions" with `aria-pressed`. Video only, drawn only when `captionsSrc` is set and `controls` is off.            |
-| captionsVisible    | `boolean`          | No       | `false` | Bindable, both directions: the toggle and the browser's own captions menu (under `controls`) report outward, and a host writing it shows or hides the track. Only meaningful with `captionsSrc`. |
-| captionsIcon       | `Snippet`          | No       | `-`     | Custom captions-toggle icon while captions are hidden. Falls back to the built-in asset.                                                                                                         |
-| captionsOnIcon     | `Snippet`          | No       | `-`     | Custom captions-toggle icon while captions are showing. Falls back to the built-in asset.                                                                                                        |
-| seekBar            | `boolean`          | No       | `false` | Opt-in scrubber (a `Slider`) in the overlay's bottom row. Video only.                                                                                                                            |
-| timeDisplay        | `boolean`          | No       | `false` | Opt-in elapsed/total clock, `m:ss` and `h:mm:ss` past an hour. Video only.                                                                                                                       |
-| fullscreenButton   | `boolean`          | No       | `false` | Opt-in fullscreen toggle. Requests fullscreen on the container, not the `<video>`, so the overlay controls stay on screen. Video only.                                                           |
-| fullscreenIcon     | `Snippet`          | No       | `-`     | Custom enter-fullscreen icon. Falls back to the built-in asset.                                                                                                                                  |
-| exitFullscreenIcon | `Snippet`          | No       | `-`     | Custom exit-fullscreen icon. Falls back to the built-in asset.                                                                                                                                   |
-| currentTime        | `number`           | No       | `0`     | Bindable, both directions: playback and scrubbing report outward, and a host writing it seeks the video (clamped to `duration`). An inward write does not fire `onseek`.                         |
-| duration           | `number`           | No       | `0`     | Bindable, outward. The media's length once known; `0` until metadata loads.                                                                                                                      |
-| testId             | `string`           | No       | `-`     | `data-pw` on the root element.                                                                                                                                                                   |
-| classes            | `string`           | No       | `-`     | Class string on the root element.                                                                                                                                                                |
+| Prop               | Type               | Required | Default          | Description                                                                                                                                                                                      |
+| ------------------ | ------------------ | -------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| src                | `string`           | Yes      | `-`              | URL of the image or video to display.                                                                                                                                                            |
+| type               | `'image'\|'video'` | Yes      | `-`              | Whether the source is rendered as an image or a video with controls.                                                                                                                             |
+| alt                | `string`           | No       | `''`             | Alternative text for the image (ignored for video).                                                                                                                                              |
+| ariaLabel          | `string`           | No       | `'Video player'` | Accessible name for the video, including its native controls. Image naming uses `alt`.                                                                                                           |
+| fallback           | `string`           | No       | `-`              | Fallback image URL used (via `Img`) if `src` fails to load. Image type only.                                                                                                                     |
+| autoplay           | `boolean`          | No       | `true`           | Whether the video begins playing automatically (video only).                                                                                                                                     |
+| loop               | `boolean`          | No       | `false`          | Whether the video restarts when it ends (video only).                                                                                                                                            |
+| controls           | `boolean`          | No       | `false`          | Use the browser's native video controls and hide the custom overlay (video only).                                                                                                                |
+| playing            | `boolean`          | No       | `true`           | Bindable, both directions: toggling playback (click/keyboard/native controls) updates `playing`, and a host setting `playing` itself calls `play()`/`pause()` on the video.                      |
+| muted              | `boolean`          | No       | `true`           | Bindable. Reflects whether the video audio is muted.                                                                                                                                             |
+| playIcon           | `Snippet`          | No       | `-`              | Custom play-control icon. Falls back to the built-in asset.                                                                                                                                      |
+| pauseIcon          | `Snippet`          | No       | `-`              | Custom pause-control icon. Falls back to the built-in asset.                                                                                                                                     |
+| muteIcon           | `Snippet`          | No       | `-`              | Custom muted-control icon. Falls back to the built-in asset.                                                                                                                                     |
+| unmuteIcon         | `Snippet`          | No       | `-`              | Custom unmuted-control icon. Falls back to the built-in asset.                                                                                                                                   |
+| captionsSrc        | `string`           | No       | `-`              | URL of a WebVTT captions file (video only). Omit entirely for no captions track — a track with no source is never rendered.                                                                      |
+| captionsLabel      | `string`           | No       | `-`              | Label shown in the browser's caption menu. Only meaningful with `captionsSrc`.                                                                                                                   |
+| captionsSrcLang    | `string`           | No       | `-`              | BCP 47 language tag for the captions track, e.g. `"en"`. Only meaningful with `captionsSrc`.                                                                                                     |
+| captionsButton     | `boolean`          | No       | `false`          | Opt-in captions toggle in the overlay's bottom row: a native `<button>` named "Captions" with `aria-pressed`. Video only, drawn only when `captionsSrc` is set and `controls` is off.            |
+| captionsVisible    | `boolean`          | No       | `false`          | Bindable, both directions: the toggle and the browser's own captions menu (under `controls`) report outward, and a host writing it shows or hides the track. Only meaningful with `captionsSrc`. |
+| captionsIcon       | `Snippet`          | No       | `-`              | Custom captions-toggle icon while captions are hidden. Falls back to the built-in asset.                                                                                                         |
+| captionsOnIcon     | `Snippet`          | No       | `-`              | Custom captions-toggle icon while captions are showing. Falls back to the built-in asset.                                                                                                        |
+| seekBar            | `boolean`          | No       | `false`          | Opt-in scrubber (a `Slider`) in the overlay's bottom row. Video only.                                                                                                                            |
+| timeDisplay        | `boolean`          | No       | `false`          | Opt-in elapsed/total clock, `m:ss` and `h:mm:ss` past an hour. Video only.                                                                                                                       |
+| fullscreenButton   | `boolean`          | No       | `false`          | Opt-in fullscreen toggle. Requests fullscreen on the container, not the `<video>`, so the overlay controls stay on screen. Video only.                                                           |
+| fullscreenIcon     | `Snippet`          | No       | `-`              | Custom enter-fullscreen icon. Falls back to the built-in asset.                                                                                                                                  |
+| exitFullscreenIcon | `Snippet`          | No       | `-`              | Custom exit-fullscreen icon. Falls back to the built-in asset.                                                                                                                                   |
+| currentTime        | `number`           | No       | `0`              | Bindable, both directions: playback and scrubbing report outward, and a host writing it seeks the video (clamped to `duration`). An inward write does not fire `onseek`.                         |
+| duration           | `number`           | No       | `0`              | Bindable, outward. The media's length once known; `0` until metadata loads.                                                                                                                      |
+| testId             | `string`           | No       | `-`              | `data-pw` on the root element.                                                                                                                                                                   |
+| classes            | `string`           | No       | `-`              | Class string on the root element.                                                                                                                                                                |
 
 ## Events
 
@@ -93,11 +94,17 @@ applied), not synthesized ones.
 
 ## Accessibility
 
-For video, the video element itself is a focusable (`tabindex="0"`) `role="button"` with
-an `aria-label` that tracks play state ("Play video" / "Pause video"), so clicking or
-pressing Enter/Space directly on the video toggles playback even before the overlay is
-hovered/focused. Both overlay controls are real `Button` instances with their own
-`ariaLabel`, so they carry `Button`'s own keyboard and focus handling.
+For custom video controls, a transparent native button covers the video surface and tracks
+play state in its accessible name ("Play video" / "Pause video"). Clicking the surface or
+pressing Enter/Space on that button toggles playback. The video keeps its native semantics;
+it does not take a button role. Focusing the surface button reveals the overlay, whose
+controls are sibling buttons with their own names and keyboard handling. Native `controls`
+mode uses the browser's controls and omits the custom surface button.
+
+The surface button's focus ring uses an inset white outline with a black inner band,
+so it stays inside the player's clipping boundary and remains visible over imagery.
+Use `--media-player-focus-outline`, `--media-player-focus-outline-offset`, and
+`--media-player-focus-box-shadow` to customize it.
 
 The captions toggle (`captionsButton`) is a native `<button type="button">` named "Captions"
 whose `aria-pressed` carries the state, so a screen reader announces "Captions, toggle button,
@@ -206,6 +213,8 @@ type MediaType = 'image' | 'video';
 ## Web Component
 
 Tag: `<sui-media-player>`
+
+The `aria-label` attribute names the inner video. Its JavaScript adapter property is `mediaAriaLabel`, which avoids replacing the native `HTMLElement.ariaLabel` accessor. The image branch continues to use `alt`.
 
 ```html
 <sui-media-player src="/clip.mp4" type="video"></sui-media-player>

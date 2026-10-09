@@ -17,6 +17,7 @@
     src,
     type,
     alt = '',
+    ariaLabel = 'Video player',
     autoplay = true,
     loop = false,
     controls = false,
@@ -212,13 +213,6 @@
     onpause?.(event);
   }
 
-  function handleVideoKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      togglePlayback();
-    }
-  }
-
   function handleTimeUpdate(): void {
     if (videoPlayer === null) {
       return;
@@ -390,6 +384,7 @@
       bind:muted
       {src}
       class="media"
+      aria-label={ariaLabel}
       {controls}
       {autoplay}
       {loop}
@@ -399,11 +394,6 @@
       onpause={handlePause}
       ontimeupdate={handleTimeUpdate}
       onloadedmetadata={handleLoadedMetadata}
-      onclick={controls ? null : togglePlayback}
-      onkeydown={controls ? null : handleVideoKeydown}
-      role={controls ? null : 'button'}
-      tabindex={controls ? null : 0}
-      aria-label={controls ? null : playing ? 'Pause video' : 'Play video'}
     >
       {#if hasCaptions}
         <track
@@ -417,6 +407,14 @@
     </video>
 
     {#if !controls}
+      <!-- A video cannot carry role="button". The full-surface native button
+           preserves pointer/keyboard playback without nesting the other controls. -->
+      <button
+        type="button"
+        class="media-surface-action"
+        aria-label={playing ? 'Pause video' : 'Play video'}
+        onclick={togglePlayback}
+      ></button>
       <div class="overlay">
         <div class="center-controls">
           <div class="control center-control">
@@ -571,6 +569,23 @@
     --image-margin: 0px;
   }
 
+  .media-surface-action {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .media-surface-action:focus-visible {
+    /* Keep both colors inside the clipping container and visible over imagery. */
+    outline: var(--media-player-focus-outline, 2px solid #ffffff);
+    outline-offset: var(--media-player-focus-outline-offset, -2px);
+    box-shadow: var(--media-player-focus-box-shadow, inset 0 0 0 4px #000000);
+  }
+
   .overlay {
     /* Decorative overlay space leaves the native video pointer route operative. */
     pointer-events: none;
@@ -601,7 +616,7 @@
      reachable for keyboard users too -- :hover alone left them visibility:hidden (and
      so out of the tab order) for anyone not using a mouse. */
   .media-player:hover .overlay,
-  .overlay:focus-within {
+  .media-player:focus-within .overlay {
     background-color: var(--media-player-overlay-hover-color, #0000004d);
     --center-controls-visibility: visible;
     --bottom-controls-visibility: visible;

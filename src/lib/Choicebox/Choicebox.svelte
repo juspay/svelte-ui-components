@@ -82,12 +82,20 @@
     onclick?.(selected);
   }
 
-  // The form control is `tabindex="-1"`, so the browser's own "focus the invalid
-  // field" step would land on an element the user cannot see or reach. Focus the
-  // card that carries the role instead.
-  function handleInvalid(e: Event): void {
-    e.preventDefault();
-    card?.focus();
+  // Let native validation choose the first invalid control. Redirect only its
+  // actual focus to the visible card, so checkValidity() stays a silent query
+  // and later invalid fields cannot replace the first field's focus.
+  function handleNativeFocus(event: FocusEvent & { currentTarget: HTMLInputElement }): void {
+    const carrier = event.currentTarget;
+    // Finish native interactive validation before moving focus. Firefox can
+    // open its validation UI after a synchronous handoff and swallow the next
+    // pointer click. A later owner or an unmounted card must keep its focus.
+    queueMicrotask(() => {
+      const root = carrier.getRootNode();
+      if (card?.isConnected && 'activeElement' in root && root.activeElement === carrier) {
+        card.focus();
+      }
+    });
   }
 
   function handleKeyDown(e: KeyboardEvent): void {
@@ -143,21 +151,6 @@
   testID={testId}
   {@attach groupMembership}
 >
-  <input
-    type={mode === 'radio' ? 'radio' : 'checkbox'}
-    class="native-control"
-    checked={selected}
-    {disabled}
-    {value}
-    {required}
-    name={typeof name === 'string' ? name : null}
-    form={typeof form === 'string' ? form : null}
-    oninvalid={handleInvalid}
-    tabindex={-1}
-    aria-hidden="true"
-    data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
-    testID={typeof testId === 'string' ? `${testId}-native-input` : null}
-  />
   {#if typeof children === 'function'}
     {@render children()}
   {/if}
@@ -170,6 +163,23 @@
     </span>
   {/if}
 </div>
+
+<!-- Native form participation remains outside the interactive accessibility owner. -->
+<input
+  type={mode === 'radio' ? 'radio' : 'checkbox'}
+  class="native-control"
+  checked={selected}
+  {disabled}
+  {value}
+  {required}
+  name={typeof name === 'string' ? name : null}
+  form={typeof form === 'string' ? form : null}
+  onfocus={handleNativeFocus}
+  tabindex={-1}
+  aria-hidden="true"
+  data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
+  testID={typeof testId === 'string' ? `${testId}-native-input` : null}
+/>
 
 {#if field.showsError}
   <div
@@ -197,8 +207,8 @@
   .native-control {
     position: absolute;
     opacity: 0;
-    width: 0;
-    height: 0;
+    width: 1px;
+    height: 1px;
     margin: 0;
     pointer-events: none;
   }

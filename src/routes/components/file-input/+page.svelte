@@ -30,6 +30,8 @@
   <h1>FileInput</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p>
   The drop region is the single control for each upload action: one Tab stop, announced as a button
   named by its content, opening the chooser on a click, Enter or Space. Its content is therefore

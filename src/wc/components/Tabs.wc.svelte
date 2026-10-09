@@ -108,7 +108,9 @@
       {#if typeof icon === 'string' && icon.length > 0}
         <Img inlineSvg src={icon} alt="" fallback="" classes="tabs-item-icon" />
       {/if}
-      <span class="tabs-item-label" data-text={label}>{label}</span>
+      {#key label}
+        <span class="tabs-item-label" data-text={label}>{label}</span>
+      {/key}
       {#if status && status !== 'none'}
         <span class="tabs-item-status status-{status}" aria-hidden="true"></span>
       {/if}

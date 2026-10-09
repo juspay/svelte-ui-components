@@ -40,6 +40,9 @@ test.describe('Form controls take part in native form submission', () => {
     await expect(result).toHaveText('');
 
     await page.getByTestId('radio-form-cod').click();
+    // Firefox completes associated label activation after the pointer action.
+    // Prove the member is actually chosen before asking the browser to validate.
+    await expect(page.getByTestId('radio-form-cod').locator('input')).toBeChecked();
     await page.getByTestId('radio-form-submit').click();
     await expect(result).toHaveText('checkout-method=cod');
   });

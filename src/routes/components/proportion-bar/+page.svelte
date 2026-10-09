@@ -40,6 +40,8 @@
   <h1>ProportionBar</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="intro">
   A horizontal bar that visualises how a total is distributed across segments. Renders an SVG track
   with proportional coloured bands and an optional legend listing each segment with its label and

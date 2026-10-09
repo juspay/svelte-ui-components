@@ -72,7 +72,11 @@
   from one <code>markdown</code> prop. No sanitizer to configure: safety is built into the renderer.
 </p>
 <div class="demo-panel">
-  <MarkdownText markdown={assistantReply} testId="markdown-text-reply" />
+  <MarkdownText
+    markdown={assistantReply}
+    tableLabel="Order summary table"
+    testId="markdown-text-reply"
+  />
 </div>
 
 <h2>Inside ChatMessage</h2>
@@ -82,7 +86,12 @@
 </p>
 <div class="chat-theme demo-col">
   <ChatMessage role="user" content="How did the store do today?" />
-  <ChatMessage role="assistant" markdown={assistantReply} testId="markdown-text-chat-message" />
+  <ChatMessage
+    role="assistant"
+    markdown={assistantReply}
+    markdownTableLabel="Order summary in assistant message"
+    testId="markdown-text-chat-message"
+  />
 </div>
 
 <h2>Hostile input stays text</h2>
@@ -123,7 +132,11 @@
   across header and body while it does.
 </p>
 <div class="demo-panel">
-  <MarkdownText markdown={wideTable} testId="markdown-text-wide-table" />
+  <MarkdownText
+    markdown={wideTable}
+    tableLabel="Wide recent orders table"
+    testId="markdown-text-wide-table"
+  />
 </div>
 
 <h2>A named table region</h2>

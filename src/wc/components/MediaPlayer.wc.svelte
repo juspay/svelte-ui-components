@@ -6,6 +6,7 @@
       src: { type: 'String' },
       type: { type: 'String' },
       alt: { type: 'String' },
+      mediaAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       autoplay: { type: 'Boolean' },
       loop: { type: 'Boolean' },
       controls: { type: 'Boolean' },
@@ -61,7 +62,14 @@
   // `muted` stays unset on the element after the viewer's own mute click. `captionsVisible` is
   // bound so that `captions-visible` and `el.captionsVisible` follow the viewer's choice, and so a
   // later host write is never swallowed by a stale copy that still reads the old value.
-  let { captionsVisible = $bindable(false), ...props }: MediaPlayerProperties = $props();
+  // Avoid replacing HTMLElement.ariaLabel; the public attribute stays aria-label.
+  let {
+    captionsVisible = $bindable(false),
+    mediaAriaLabel,
+    ...props
+  }: Omit<MediaPlayerProperties, 'ariaLabel'> & {
+    mediaAriaLabel?: MediaPlayerProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -96,7 +104,7 @@
   the component renders repeatedly would leave every site after the first empty --
   not defaulted, empty.
 -->
-<MediaPlayer {...props} {...dispatchers} bind:captionsVisible>
+<MediaPlayer {...props} {...dispatchers} ariaLabel={mediaAriaLabel} bind:captionsVisible>
   {#snippet playIcon()}
     {#if props.playIcon}{@render props.playIcon()}{:else}<slot name="play-icon">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->

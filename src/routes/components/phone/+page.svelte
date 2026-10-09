@@ -7,6 +7,8 @@
   <h1>Phone</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="align-items: flex-start;">
   <div style="--phone-scale: 0.8;">
     <Phone variant="modern" showStatusBar showHomeBar>

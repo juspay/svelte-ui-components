@@ -7,7 +7,7 @@ import { gotoHydrated } from './support/hydrated';
 // comes from `checkbox.text`, the label the card shows beside the box.
 //
 // Naming alone is not the contract. On an interactive card (`onclick` set) the box lives inside a
-// `role="button"` root, so the same fix has to leave "toggle the box" and "run the card action" as
+// neutral root beside a native action button, so the same fix has to leave "toggle the box" and "run the card action" as
 // two separate gestures, for the keyboard as much as for the pointer.
 const CARDS = [
   { testId: 'with-checkbox', name: 'With returns' },
@@ -68,9 +68,9 @@ test.describe('StatCard — header checkbox accessible name', () => {
     const clicks = page.getByTestId('card-click-count');
     const box = card.getByRole('checkbox', { name: 'Live data' });
 
-    // Tab order inside an interactive card: the card itself, then its checkbox.
-    await card.focus();
-    await expect(card).toBeFocused();
+    // Tab order inside an interactive card: the native card action, then its sibling checkbox.
+    await card.getByRole('button').focus();
+    await expect(card.getByRole('button')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(box).toBeFocused();
 
@@ -82,7 +82,7 @@ test.describe('StatCard — header checkbox accessible name', () => {
     await expect(clicks).toHaveText('0');
 
     // The card action is still one keypress away on the card itself.
-    await card.focus();
+    await card.getByRole('button').focus();
     await page.keyboard.press('Enter');
     await expect(clicks).toHaveText('1');
     await page.keyboard.press('Space');
@@ -99,7 +99,7 @@ test.describe('StatCard — header checkbox accessible name', () => {
     await box.click();
     await expect(box).toHaveAttribute('aria-checked', 'true');
     await expect(clicks).toHaveText('0');
-    await card.getByTestId('clickable-checkbox-card-value').click();
+    await card.getByRole('button').click();
     await expect(clicks).toHaveText('1');
   });
 

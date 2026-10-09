@@ -9,6 +9,8 @@
   <h1>Tooltip</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Positions</h3>
 <div class="demo-row" style="gap: 32px;">
   <Tooltip text="This is a top tooltip" position="top" testId="tooltip-container">

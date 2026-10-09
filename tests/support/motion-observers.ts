@@ -169,11 +169,16 @@ export const startToastRecording = (
     // creates the transitions, so calling it in the mutation microtask (before any
     // frame) sees them every time. Each Animation is recorded once.
     const recorded = new WeakSet<Animation>();
+    let seen = false;
     const scan = (): void => {
       const toast = observed.querySelector('.toast');
       if (toast === null) {
+        if (seen && state.removedAfterMs === null) {
+          state.removedAfterMs = performance.now() - startedAt;
+        }
         return;
       }
+      seen = true;
       for (const animation of toast.getAnimations()) {
         if (!(animation instanceof CSSTransition) || recorded.has(animation)) {
           continue;
@@ -235,7 +240,6 @@ export const startToastRecording = (
       return parts.length === 6 ? Math.hypot(parts[4], parts[5]) : 0;
     };
 
-    let seen = false;
     const frame = (): void => {
       scan();
       const toast = observed.querySelector('.toast');

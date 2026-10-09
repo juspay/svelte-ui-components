@@ -144,6 +144,8 @@
   <h1>BarChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="intro">
   A responsive SVG bar chart for comparing categorical values. Supports vertical and horizontal
   orientations, single or multi-series data (grouped/stacked), value labels, custom fills, hover

@@ -17,6 +17,12 @@ test.describe('Stepper and Step — suppressRoleAndTabindex', () => {
     await expect(paymentStep).not.toHaveAttribute('role');
     await expect(paymentStep).not.toHaveAttribute('tabindex');
 
+    for (const step of [cartStep, shippingStep, paymentStep]) {
+      await expect(step).not.toHaveAttribute('aria-label');
+      await expect(step).not.toHaveAttribute('aria-labelledby');
+    }
+    await expect(container.getByRole('listitem')).toHaveCount(3);
+
     const cartTabIndex = await cartStep.evaluate((element) => (element as HTMLElement).tabIndex);
     expect(cartTabIndex).toBe(-1);
   });

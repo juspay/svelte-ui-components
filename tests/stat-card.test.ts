@@ -77,7 +77,7 @@ test.describe('StatCard', () => {
     await expect(clickCount).toHaveText('0');
 
     // Clicking the card body still fires the action.
-    await card.getByTestId('clickable-checkbox-card-value').click();
+    await card.getByRole('button').click();
     await expect(clickCount).toHaveText('1');
   });
 

@@ -24,6 +24,8 @@
   <h1>Sheet</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Right (default)</h3>
 <div class="demo-row">
   <Button text="Open right" onclick={() => (showRight = true)} testId="sheet-right-trigger" />

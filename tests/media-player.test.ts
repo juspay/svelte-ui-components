@@ -10,29 +10,35 @@ test.describe('MediaPlayer', () => {
     await expect(imagePlayer.locator('video')).toHaveCount(0);
   });
 
-  test('video type renders a video element with an accessible toggle role', async ({ page }) => {
+  test('custom video has a separate native playback action', async ({ page }) => {
     await gotoHydrated(page, '/components/media-player');
 
     const videoPlayer = page.getByTestId('media-player-video-demo');
     const video = videoPlayer.locator('video');
     await expect(video).toBeVisible();
-    await expect(video).toHaveAttribute('role', 'button');
-    await expect(video).toHaveAttribute('tabindex', '0');
+    await expect(video).not.toHaveAttribute('role');
+    await expect(video).not.toHaveAttribute('tabindex');
+    await expect(videoPlayer.locator('button.media-surface-action')).toHaveAccessibleName(
+      'Play video'
+    );
   });
 
-  test('clicking the video toggles its aria-label between play and pause', async ({ page }) => {
+  test('clicking the video surface updates the native playback action', async ({ page }) => {
     await gotoHydrated(page, '/components/media-player');
 
-    const video = page.getByTestId('media-player-video-demo').locator('video');
+    const player = page.getByTestId('media-player-video-demo');
+    const video = player.locator('video');
+    const action = player.locator('button.media-surface-action');
     await video.evaluate((el: HTMLVideoElement) => {
       el.muted = true;
       return el.play();
     });
-    await expect(video).toHaveAttribute('aria-label', 'Pause video');
+    await expect(action).toHaveAccessibleName('Pause video');
 
     // The center is a separate play button; activate the actual video surface.
-    await video.click({ position: { x: 12, y: 12 } });
-    await expect(video).toHaveAttribute('aria-label', 'Play video');
+    await action.click({ position: { x: 12, y: 12 } });
+    await expect(video).toHaveJSProperty('paused', true);
+    await expect(action).toHaveAccessibleName('Play video');
   });
 
   test('hovering reveals the overlay controls, which are real Button instances', async ({
@@ -68,7 +74,7 @@ test.describe('MediaPlayer', () => {
     const playButton = videoPlayer.locator('.center-control button');
 
     // Not hovering at all -- reach the button purely via keyboard.
-    await videoPlayer.locator('video').focus();
+    await videoPlayer.locator('button.media-surface-action').focus();
     await page.keyboard.press('Tab');
     await expect(playButton).toBeFocused();
     await expect(playButton).toBeVisible();
@@ -268,7 +274,7 @@ test.describe('MediaPlayer', () => {
 
     // Never hover. A visibility:hidden element cannot take focus, so if the overlay only
     // revealed on :hover the Tab below could never land here.
-    await player.locator('video').focus();
+    await player.locator('button.media-surface-action').focus();
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
 

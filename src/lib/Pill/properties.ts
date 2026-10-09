@@ -72,11 +72,10 @@ export type MandatoryPillProperties = {
 export type PillTone = 'accent' | 'ok' | 'warn' | 'danger' | 'muted';
 
 /**
- * Root element for the pill. `'div'` is the default and renders exactly as before —
- * non-interactive, or carrying the synthetic `role="button"`/`tabindex`/keydown shim when
- * an `onclick` is supplied. `'button'` renders a real `<button type="button">` instead, so
- * a chip-shaped control gets native focus, activation and announcement rather than an
- * imitation of them.
+ * Root element for a label or single-action pill. The default div is a label,
+ * or a keyboard-operable button role when onclick is supplied. A button root
+ * uses native activation. Interactive dismissible pills use a neutral container
+ * with independent native primary and dismiss buttons.
  */
 export type PillRootTag = 'div' | 'button';
 
@@ -90,17 +89,10 @@ export type OptionalPillProperties = {
    */
   tone?: PillTone;
   /**
-   * Root element. Defaults to `'div'`, which renders exactly as before this prop existed.
-   *
-   * `'button'` gives a chip real control semantics — native keyboard activation, focus and
-   * announcement — instead of the `role="button"`/`tabindex`/keydown shim a `<div>` needs.
-   * Reach for it when the chip is a disclosure or a toggle (see `ariaExpanded` /
-   * `ariaPressed`), which a shimmed div cannot express correctly.
-   *
-   * One combination cannot be honoured: a `<button>` may not contain another button, and a
-   * `dismissible` pill is inherently two controls. `as="button"` together with
-   * `dismissible` therefore falls back to the `div` root and its shim rather than emitting
-   * invalid markup — the same rule `Card` applies to `as="a"` with no `href`.
+   * Root element for a label or single action. Defaults to 'div'; 'button' uses
+   * native keyboard activation and focus. Dismissible pills use a neutral div
+   * container. When onclick is supplied, that container holds independent native
+   * primary and dismiss buttons, including when as='button'.
    */
   as?: PillRootTag;
   /**

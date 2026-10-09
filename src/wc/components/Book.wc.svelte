@@ -9,6 +9,7 @@
       showNavigation: { type: 'Boolean', reflect: true, attribute: 'show-navigation' },
       showPageIndicator: { type: 'Boolean', reflect: true, attribute: 'show-page-indicator' },
       enableSwipe: { type: 'Boolean', reflect: true, attribute: 'enable-swipe' },
+      bookAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       testId: { type: 'String', attribute: 'test-id' },
       previousIcon: { type: 'Object' },
       nextIcon: { type: 'Object' },
@@ -20,11 +21,18 @@
 
 <script lang="ts">
   import Book from '$lib/Book/Book.svelte';
+  import type { BookProperties } from '$lib/Book/properties';
   // Mirrors Book.svelte's own previousIcon/nextIcon defaults.
   import chevronLeftLgSvg from '$lib/assets/chevron-left-lg.svg?raw';
   import chevronRightLgSvg from '$lib/assets/chevron-right-lg.svg?raw';
   import { dispatchEvents } from '../dispatch';
-  let props = $props();
+  // Avoid replacing HTMLElement.ariaLabel; the public attribute stays aria-label.
+  let {
+    bookAriaLabel,
+    ...props
+  }: Omit<BookProperties, 'ariaLabel'> & {
+    bookAriaLabel?: BookProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -43,7 +51,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Book {...props} {...dispatchers}>
+<Book {...props} {...dispatchers} ariaLabel={bookAriaLabel}>
   {#snippet previousIcon()}
     <!--
       A snippet declared here is always a function, so Book.svelte's own

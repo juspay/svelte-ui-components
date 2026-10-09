@@ -130,13 +130,23 @@
 
   let root: HTMLDivElement | null = $state(null);
 
-  // The hidden native input is tabindex="-1", so the browser's own "focus the invalid
-  // field" step would land on an element the user cannot see or reach. Focus the
-  // role="slider" element that carries the group's single tab stop instead -- the same
-  // pattern Checkbox.svelte uses for its own hidden control.
-  function handleInvalid(e: Event): void {
-    e.preventDefault();
-    root?.focus();
+  // The browser decides whether validation is interactive and which invalid
+  // field is first. Forward the carrier's actual focus to the visible slider;
+  // an invalid event alone must not move focus during checkValidity().
+  function handleNativeFocus(event: FocusEvent & { currentTarget: HTMLInputElement }): void {
+    const carrier = event.currentTarget;
+    // Let interactive validation finish before moving focus, so Firefox's
+    // native validation UI cannot swallow the user's next star click.
+    queueMicrotask(() => {
+      const carrierRoot = carrier.getRootNode();
+      if (
+        root?.isConnected &&
+        'activeElement' in carrierRoot &&
+        carrierRoot.activeElement === carrier
+      ) {
+        root.focus();
+      }
+    });
   }
 
   // A native number input can't distinguish "explicitly rated 0" from "never touched",
@@ -191,24 +201,26 @@
       {/if}
     </span>
   {/each}
-  <input
-    type="number"
-    class="native-input"
-    tabindex={-1}
-    aria-hidden="true"
-    min={0}
-    max={hasValidMax ? max : null}
-    step={allowHalf ? 0.5 : 1}
-    value={submittedValue === null ? '' : submittedValue}
-    {disabled}
-    {required}
-    name={typeof name === 'string' && submittedValue !== null ? name : null}
-    form={typeof form === 'string' ? form : null}
-    oninvalid={handleInvalid}
-    data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
-    testID={typeof testId === 'string' ? `${testId}-native-input` : null}
-  />
 </div>
+
+<!-- Native form participation remains outside the interactive accessibility owner. -->
+<input
+  type="number"
+  class="native-input"
+  tabindex={-1}
+  aria-hidden="true"
+  min={0}
+  max={hasValidMax ? max : null}
+  step={allowHalf ? 0.5 : 1}
+  value={submittedValue === null ? '' : submittedValue}
+  {disabled}
+  {required}
+  name={typeof name === 'string' && submittedValue !== null ? name : null}
+  form={typeof form === 'string' ? form : null}
+  onfocus={handleNativeFocus}
+  data-pw={typeof testId === 'string' ? `${testId}-native-input` : null}
+  testID={typeof testId === 'string' ? `${testId}-native-input` : null}
+/>
 
 <style>
   .rating-group {
@@ -285,8 +297,8 @@
   .native-input {
     position: absolute;
     opacity: 0;
-    width: 0;
-    height: 0;
+    width: 1px;
+    height: 1px;
     pointer-events: none;
   }
 </style>

@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.51.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.52.0)
+
+-
+fix(select): preserve viewport fitting for auto placement ([607f693](https://github.com/juspay/svelte-ui-components/commit/607f693ef2cd8fda3fcec9a48a54e0318c9adc50))
+-
+build(deps): bump proxy-addr ([656cb4b](https://github.com/juspay/svelte-ui-components/commit/656cb4b661b54e8e9ea966a514f0bed16a269a49))
+
+## [4.52.0](https://github.com/juspay/svelte-ui-components/compare/4.52.0..4.51.0) - 9 October 2026
 
 -
 feat(a11y): resolve the component-library audit and add the props it needed ([f127358](https://github.com/juspay/svelte-ui-components/commit/f12735889acf858f485b3c9e16a054ad2cc5960d))

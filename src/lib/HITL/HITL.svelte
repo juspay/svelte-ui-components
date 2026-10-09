@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { get } from 'svelte/store';
   import Button from '../Button/Button.svelte';
   import Card from '../Card/Card.svelte';
@@ -43,6 +43,7 @@
     showConfirm = true,
     showEmptyParameters = true,
     countdownSeconds = 10,
+    expiresAt,
     autoCancelSeconds = 0,
     isMicMuted = false,
     // The resolver this replaced defaulted to null, and the call sites test for
@@ -88,9 +89,14 @@
   // Seeded from the prop; startCountdown re-seeds it on every (re)start.
   // svelte-ignore state_referenced_locally
   let timeRemaining = $state(countdownSeconds);
+  // svelte-ignore state_referenced_locally
+  let countdownDuration = $state(countdownSeconds);
+  let relativeDeadline: number | null = null;
+  let countdownDeadline: number | null = null;
   let countdownInterval: ReturnType<typeof setInterval> | null = null;
   let autoCancelTimeout: ReturnType<typeof setTimeout> | null = null;
   let originalMicState: boolean | null = null;
+  let initialMicToggle: Promise<void> | null = null;
 
   // Expiry from the caller takes precedence, including during a live request.
   // History mode renders the settled state from props; live mode from local state.
@@ -111,7 +117,7 @@
   });
   const isCompleted = $derived(userResponse !== null);
   const isApproved = $derived(userResponse === 'approved' || userResponse === 'auto-approved');
-  const elapsedTime = $derived(countdownSeconds - timeRemaining);
+  const elapsedTime = $derived(Math.max(0, countdownDuration - timeRemaining));
   const approvalBlocked = (action: HITLAction): boolean => action !== 'rejected' && confirmDisabled;
 
   const completionText = $derived(
@@ -140,6 +146,13 @@
   };
 
   const restoreMicState = async (): Promise<void> => {
+    // An elapsed deadline may decide in the same mount that starts auto-mute.
+    // Finish that call and flush its controlled prop before restoring it.
+    if (initialMicToggle !== null) {
+      await initialMicToggle;
+      await tick();
+      initialMicToggle = null;
+    }
     // Consume restoration before awaiting: a failed decision may be retried
     // before the caller has updated isMicMuted, but must not toggle twice.
     const stateToRestore = originalMicState;
@@ -214,19 +227,41 @@
       return;
     }
     countdownActive = true;
-    timeRemaining = countdownSeconds;
-    countdownInterval = setInterval(() => {
+    const now = Date.now();
+    // Relative duration is anchored once; rerenders must not extend it. An
+    // explicit absolute expiry remains live while this timer is running.
+    relativeDeadline ??= now + countdownSeconds * 1000;
+    const updateCountdown = (): void => {
       // A sibling card's interaction pauses this countdown on its next tick.
-      if (confirmDisabled || get(pauseAllConfirmationTimers)) {
+      if (
+        countdownSeconds <= 0 ||
+        confirmDisabled ||
+        isHistoryMode ||
+        isCompleted ||
+        get(pauseAllConfirmationTimers)
+      ) {
         stopCountdown();
         return;
       }
-      timeRemaining = timeRemaining - 0.1;
+      const currentTime = Date.now();
+      const nextDeadline =
+        typeof expiresAt === 'number' && Number.isFinite(expiresAt)
+          ? expiresAt
+          : (relativeDeadline ?? now);
+      if (nextDeadline !== countdownDeadline) {
+        countdownDeadline = nextDeadline;
+        countdownDuration = Math.max(0, (nextDeadline - currentTime) / 1000);
+      }
+      timeRemaining = Math.max(0, (nextDeadline - currentTime) / 1000);
       if (timeRemaining <= 0) {
         stopCountdown();
         void decide('auto-approved');
       }
-    }, 100);
+    };
+    updateCountdown();
+    if (countdownActive) {
+      countdownInterval = setInterval(updateCountdown, 100);
+    }
   };
 
   // Any interaction pauses this card's own countdown and every sibling's.
@@ -345,9 +380,15 @@
     if (onmictoggle !== null) {
       originalMicState = isMicMuted;
       if (!isMicMuted) {
-        void Promise.resolve(onmictoggle()).catch(() => {
-          // Auto-mute is best-effort.
-        });
+        try {
+          // Preserve the existing synchronous mount invocation. Only the
+          // decision waits for its result and the controlled prop update.
+          initialMicToggle = Promise.resolve(onmictoggle()).catch(() => {
+            // Auto-mute is best-effort; settlement still follows a failed call.
+          });
+        } catch {
+          initialMicToggle = Promise.resolve();
+        }
       }
     }
     pauseAllConfirmationTimers.set(false);
@@ -679,7 +720,7 @@
               <div class="confirm-button">
                 {#if countdownActive && !confirmDisabled}
                   <div class="progress-anchor">
-                    <Progress value={elapsedTime} max={countdownSeconds} />
+                    <Progress value={elapsedTime} max={countdownDuration} />
                   </div>
                 {/if}
                 <Button

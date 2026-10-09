@@ -14,6 +14,7 @@
       confirmDisabled: { type: 'Boolean', attribute: 'confirm-disabled' },
       cancelLabel: { type: 'String', attribute: 'cancel-label' },
       countdownSeconds: { type: 'Number', attribute: 'countdown-seconds' },
+      expiresAt: { type: 'Number', attribute: 'expires-at' },
       autoCancelSeconds: { type: 'Number', attribute: 'auto-cancel-seconds' },
       isMicMuted: { type: 'Boolean', attribute: 'is-mic-muted' },
       isHistoryMode: { type: 'Boolean', attribute: 'is-history-mode' },

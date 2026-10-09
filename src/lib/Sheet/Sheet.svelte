@@ -3,14 +3,16 @@
   import type { SheetProperties } from './properties';
   import { fade } from 'svelte/transition';
   import { tokenizedFly } from '../Animations/tokenizedFly';
-  import { lockBodyScroll, unlockBodyScroll } from '../utils';
-  import { tick } from 'svelte';
+  import { acquireScrollLock, resolveScrollContainer } from '../utils';
+  import { tick, onMount, untrack } from 'svelte';
+  import { toStore } from 'svelte/store';
   import Button from '../Button/Button.svelte';
   import { focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
   import { registerDismissible } from '../_interaction/dismissal';
 
   let {
     open = $bindable(false),
+    scrollContainer,
     side = 'right',
     title,
     showOverlay = true,
@@ -150,6 +152,27 @@
     }
   }
 
+  let scrollLockNode: HTMLElement | null = null;
+  let releaseScrollLock: (() => void) | null = null;
+  let scrollLockSpanEnded = false;
+
+  onMount(() =>
+    toStore(() => open).subscribe((isOpen) => {
+      if (!isOpen) {
+        scrollLockSpanEnded = true;
+      } else if (scrollLockSpanEnded && scrollLockNode !== null) {
+        // Reversing an outro reuses the action. Resolve the next logical open's
+        // owner without subscribing to ownership changes during that open.
+        scrollLockSpanEnded = false;
+        const releaseNext = untrack(() =>
+          acquireScrollLock(resolveScrollContainer(scrollLockNode, scrollContainer))
+        );
+        releaseScrollLock?.();
+        releaseScrollLock = releaseNext;
+      }
+    })
+  );
+
   function scrollLockAction(node: HTMLElement) {
     // getActiveElement rather than document.activeElement: when the sheet is
     // used through its custom element the opener lives inside a shadow root,
@@ -157,7 +180,9 @@
     // could never be handed focus back.
     const previousFocus = getActiveElement(node);
     let active = true;
-    lockBodyScroll();
+    scrollLockNode = node;
+    scrollLockSpanEnded = false;
+    releaseScrollLock = acquireScrollLock(resolveScrollContainer(node, scrollContainer));
     // Registered here rather than in an onMount/onDestroy pair: this action's
     // mount/destroy already brackets exactly the open span (the overlay only
     // exists while `open` is true, per the `{#if open}` below), the same
@@ -177,7 +202,9 @@
       destroy() {
         active = false;
         releaseDismissible();
-        unlockBodyScroll();
+        releaseScrollLock?.();
+        releaseScrollLock = null;
+        scrollLockNode = null;
         // Only take focus back when it is still somewhere the sheet is
         // responsible for -- inside the panel, or nowhere at all. If the user
         // has already moved on to another control, stealing it back would be

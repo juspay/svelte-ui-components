@@ -3,6 +3,7 @@
     tag: 'sui-modal',
     shadow: 'open',
     props: {
+      scrollContainer: { type: 'Object' },
       size: { type: 'String', reflect: true },
       align: { type: 'String', reflect: true },
       showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },

@@ -31,6 +31,9 @@ export type InputDataType =
 
 export type ModalTransition = 'IN' | 'ALL';
 
+/** An overlay's owned scroll element. A null value/getter result disables locking. */
+export type ScrollContainer = HTMLElement | (() => HTMLElement | null) | null;
+
 /**
  * @name CustomValidator
  * @description Function type for taking input parameter and returning a boolean denoting if the value is valid or not

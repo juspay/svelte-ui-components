@@ -1,3 +1,4 @@
+import type { ScrollContainer } from '$lib/types';
 import type { Snippet } from 'svelte';
 
 export type SheetSide = 'left' | 'right' | 'top' | 'bottom' | 'center';
@@ -11,6 +12,11 @@ export type MandatorySheetProperties = {
 };
 
 export type OptionalSheetProperties = {
+  /** Scroll owner, resolved once per open span. Omit for the overlay's ownerDocument.body.
+   * Supply the embedded scroll element or a getter; explicit null means no lock.
+   * Changing ownership while open takes effect on the next open, and teardown
+   * always releases the originally acquired container. */
+  scrollContainer?: ScrollContainer;
   open?: boolean;
   side?: SheetSide;
   title?: string;

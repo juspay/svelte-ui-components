@@ -246,7 +246,13 @@ export { createSoundKit } from './SoundKit/SoundKit';
 // applies just as much across the boundary. A consumer driving motion from JavaScript
 // -- a canvas, a chart, an imperative animation -- cannot reach the preference through
 // a stylesheet, so leaving this unexported made every such consumer write it again.
-export { validateInput, lockBodyScroll, unlockBodyScroll, prefersReducedMotion } from './utils';
+export {
+  validateInput,
+  lockBodyScroll,
+  unlockBodyScroll,
+  acquireScrollLock,
+  prefersReducedMotion
+} from './utils';
 // The reactive counterpart to `prefersReducedMotion()` above: a consumer
 // building their own component with runes needs a value that stays current
 // inside a `$derived`, which a plain function call cannot give them, for the

@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { CommandMenuProperties, CommandItem } from './properties';
-  import { tick, onMount, onDestroy } from 'svelte';
-  import { lockBodyScroll, unlockBodyScroll } from '../utils';
+  import { tick, onMount, onDestroy, untrack } from 'svelte';
+  import { toStore } from 'svelte/store';
+  import { acquireScrollLock, resolveScrollContainer } from '../utils';
   import { registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
   import { tokenizedFly } from '$lib/Animations/tokenizedFly';
@@ -16,6 +17,7 @@
   let {
     items,
     open = $bindable(false),
+    scrollContainer,
     query = $bindable(''),
     shortcutEnabled = true,
     placeholder = 'Search commands...',
@@ -289,10 +291,10 @@
     }
   }
 
-  // Lock and unlock strictly in this action so the pairing is 1:1. Svelte destroys
-  // the action when the node goes away, including on component teardown, so the
-  // onDestroy below must NOT unlock as well: with a shared reference count a second
-  // decrement would release a lock another open surface still needs.
+  // The action owns the scroll hold until its node goes away; the logical-open
+  // observer below replaces that hold if an outro is reversed with a new owner.
+  // onDestroy must NOT release it again: a second decrement could release a
+  // hold another open surface still needs.
   //
   // The dismissible layer is registered here too, for the same reason: this
   // action's mount/destroy already brackets exactly the open span (the overlay
@@ -321,12 +323,35 @@
   // input logic below it. Deferred rather than shipped half-verified: a wrong
   // guess here risks a worse regression (stealing focus into the wrong
   // element on every open) than the narrow bug it would fix.
+  let scrollLockNode: HTMLElement | null = null;
+  let releaseScrollLock: (() => void) | null = null;
+  let scrollLockSpanEnded = false;
+
+  onMount(() =>
+    toStore(() => open).subscribe((isOpen) => {
+      if (!isOpen) {
+        scrollLockSpanEnded = true;
+      } else if (scrollLockSpanEnded && scrollLockNode !== null) {
+        // A same-outro reopen keeps the node/action; it still starts a new
+        // scroll-owner span. Changes within an open remain intentionally frozen.
+        scrollLockSpanEnded = false;
+        const releaseNext = untrack(() =>
+          acquireScrollLock(resolveScrollContainer(scrollLockNode, scrollContainer))
+        );
+        releaseScrollLock?.();
+        releaseScrollLock = releaseNext;
+      }
+    })
+  );
+
   function scrollLockAction(node: HTMLElement) {
     const opener = getActiveElement(node);
     if (openerElement === null && opener instanceof HTMLElement) {
       openerElement = opener;
     }
-    lockBodyScroll();
+    scrollLockNode = node;
+    scrollLockSpanEnded = false;
+    releaseScrollLock = acquireScrollLock(resolveScrollContainer(node, scrollContainer));
     const releaseDismissible = registerDismissible({
       element: () => dialogElement,
       onEscape: close
@@ -339,7 +364,9 @@
     return {
       destroy() {
         releaseDismissible();
-        unlockBodyScroll();
+        releaseScrollLock?.();
+        releaseScrollLock = null;
+        scrollLockNode = null;
         // Opt-in only (clearStateOnClose): a controlled parent can set
         // `open = false` without calling close(), and the overlay action still
         // unmounts on every close path either way -- this is the lifecycle

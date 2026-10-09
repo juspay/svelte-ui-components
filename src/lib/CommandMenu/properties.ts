@@ -1,3 +1,4 @@
+import type { ScrollContainer } from '$lib/types';
 import type { Snippet } from 'svelte';
 
 export type CommandItem = {
@@ -18,6 +19,11 @@ export type MandatoryCommandMenuProperties = {
 };
 
 export type OptionalCommandMenuProperties = {
+  /** Scroll owner, resolved once per open span. Omit for the overlay's ownerDocument.body.
+   * Supply the embedded scroll element or a getter; explicit null means no lock.
+   * Changing ownership while open takes effect on the next open, and teardown
+   * always releases the originally acquired container. */
+  scrollContainer?: ScrollContainer;
   open?: boolean;
   /** Bindable search text. Omit to keep the built-in uncontrolled search. */
   query?: string;

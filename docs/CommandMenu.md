@@ -316,3 +316,50 @@ to avoid handling it twice. `onselect` still runs before the query reset.
 > this component — assign the property instead (`menu.onselect = (item) => ...`).
 
 > **Svelte-only:** `itemIcon` (receives `CommandItem`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+## Embedded scroll ownership
+
+`scrollContainer?: ScrollContainer` selects the element whose scrolling this overlay owns.
+Omit it for the overlay's `ownerDocument.body` (the standalone default). Pass an
+`HTMLElement`, or a getter such as `scrollContainer={() => rootElement}` when the
+application binds its scroll root after initialization. An explicit `null`, or a
+getter returning `null`, acquires no lock and never falls back to the host body.
+The element must be the actual scrolling container, which may be an element
+inside an application shadow root; a `ShadowRoot` itself does not scroll.
+
+Ownership is resolved once per open span. A changed prop/getter takes effect on
+the next open; closing or unmounting always releases the element acquired when
+opening. Nested Modal, Sheet and CommandMenu instances share reference counting
+per element, including legacy body locks. The last release restores the original
+overflow shorthand/longhands and their CSS priorities while preserving scroll
+position and unrelated inline declarations. Focus and dismissal behavior are
+unchanged. Scroll ownership does not select a portal destination; embedded Modal
+callers should keep the default `usePortal={false}`, or retain their shadow-root
+portal containment.
+
+```svelte
+<script lang="ts">
+  import { CommandMenu, type ScrollContainer } from '@juspay/svelte-ui-components';
+  let rootElement: HTMLDivElement | null = $state(null);
+  const scrollContainer: ScrollContainer = () => rootElement;
+</script>
+
+<div bind:this={rootElement} style="height: 100%; overflow: auto">
+  <CommandMenu {scrollContainer} open={true} items={[]} />
+</div>
+```
+
+The package also exports `acquireScrollLock(element)` for custom overlays. It
+returns an idempotent disposer; retain that disposer and invoke it on teardown.
+
+For the custom element, assign `element.scrollContainer = rootElement` (or a
+getter) as a JavaScript property **before opening/mounting**. No selector string
+or serialized HTML attribute API is supported. Invalid non-element property
+values are ignored without falling back to the host body.
+
+A close followed by reopening during the closing animation starts a new logical
+open even when Svelte reuses the overlay node. The new open resolves its scroll
+owner again. It acquires the new hold before releasing the previous one, so a
+shared owner stays locked during the handoff; the old owner is restored when it
+has no remaining holders. Ownership changes during an uninterrupted open remain
+frozen until the next open.

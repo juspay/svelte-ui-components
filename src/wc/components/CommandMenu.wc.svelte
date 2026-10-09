@@ -3,6 +3,7 @@
     tag: 'sui-command-menu',
     shadow: 'open',
     props: {
+      scrollContainer: { type: 'Object' },
       items: { type: 'Object' },
       open: { type: 'Boolean', reflect: true },
       query: { type: 'String' },

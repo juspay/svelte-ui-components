@@ -1,4 +1,12 @@
-import type { CustomValidator, Hsv, Hsl, InputDataType, Rgb, ValidationState } from '$lib/types';
+import type {
+  CustomValidator,
+  Hsv,
+  Hsl,
+  InputDataType,
+  Rgb,
+  ValidationState,
+  ScrollContainer
+} from '$lib/types';
 
 /**
  * A phone-number shape a consumer opts into, as the pair of patterns the
@@ -443,40 +451,88 @@ export function createDebouncer(delay: number | (() => number)) {
   };
 }
 
-/**
- * Body scroll lock, reference counted.
- *
- * Modal, Sheet and CommandMenu each hide body overflow while they are open. Doing
- * that with a bare assignment means the FIRST of them to unmount restores
- * scrolling for all of them, so closing a confirmation dialog inside a still-open
- * modal silently lets the page behind it scroll again. Counting the holders keeps
- * the lock until the last one releases it.
- *
- * Callers must pair every lock with exactly one unlock.
- */
-let bodyScrollLockCount = 0;
-// Whatever inline overflow the host page had set before the first lock, so the last unlock
-// hands it back instead of clearing it: a host running `overflow: clip` on its body keeps it.
-let bodyScrollPreviousOverflow = '';
+/** Per-container locks shared by overlays and the legacy body helpers. */
+const scrollLocks = new WeakMap<
+  HTMLElement,
+  { count: number; overflow: [string, string, string][] }
+>();
+const bodyScrollReleases: (() => void)[] = [];
 
+/**
+ * Acquire one hold and return its idempotent release function. Only overflow
+ * declarations are touched; their original values, priorities and order are
+ * restored after the final hold. Scroll position and unrelated styles stay intact.
+ * A null container is a no-op, including during SSR.
+ */
+export function acquireScrollLock(
+  container: HTMLElement | null = typeof document === 'undefined' ? null : document.body
+): () => void {
+  if (container === null) {
+    return () => {};
+  }
+  let lock = scrollLocks.get(container);
+  if (!lock) {
+    const overflow: [string, string, string][] = [];
+    for (let index = 0; index < container.style.length; index += 1) {
+      const name = container.style.item(index);
+      if (name === 'overflow' || name === 'overflow-x' || name === 'overflow-y') {
+        overflow.push([
+          name,
+          container.style.getPropertyValue(name),
+          container.style.getPropertyPriority(name)
+        ]);
+      }
+    }
+    lock = { count: 0, overflow };
+    scrollLocks.set(container, lock);
+    container.style.setProperty('overflow', 'hidden', 'important');
+  }
+  lock.count += 1;
+  const heldLock = lock;
+  let released = false;
+  return () => {
+    if (released) {
+      return;
+    }
+    released = true;
+    heldLock.count -= 1;
+    if (heldLock.count === 0) {
+      container.style.removeProperty('overflow');
+      container.style.removeProperty('overflow-x');
+      container.style.removeProperty('overflow-y');
+      for (const [name, value, priority] of heldLock.overflow) {
+        container.style.setProperty(name, value, priority);
+      }
+      scrollLocks.delete(container);
+    }
+  };
+}
+
+/** Explicit ownership never falls back to body, even if the getter returns null. */
+export function resolveScrollContainer(
+  node: HTMLElement | null,
+  container?: ScrollContainer
+): HTMLElement | null {
+  const resolved = typeof container === 'function' ? container() : container;
+  if (typeof resolved === 'object') {
+    return resolved !== null && resolved.nodeType === 1 && typeof resolved.style === 'object'
+      ? resolved
+      : null;
+  }
+  // Invalid JavaScript/custom-element values are never permission to lock body.
+  if (typeof container !== 'undefined') {
+    return null;
+  }
+  return node?.ownerDocument.body ?? (typeof document === 'undefined' ? null : document.body);
+}
+
+/** Backwards-compatible body helpers; every acquired hold needs one unlock. */
 export function lockBodyScroll(): void {
-  if (typeof document === 'undefined') {
-    return;
+  if (typeof document !== 'undefined') {
+    bodyScrollReleases.push(acquireScrollLock(document.body));
   }
-  if (bodyScrollLockCount === 0) {
-    bodyScrollPreviousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-  }
-  bodyScrollLockCount += 1;
 }
 
 export function unlockBodyScroll(): void {
-  if (typeof document === 'undefined') {
-    return;
-  }
-  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
-  if (bodyScrollLockCount === 0) {
-    document.body.style.overflow = bodyScrollPreviousOverflow;
-    bodyScrollPreviousOverflow = '';
-  }
+  bodyScrollReleases.pop()?.();
 }

@@ -24,6 +24,8 @@
   <h1>Radio</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row">
   <Radio name="payment" value="upi" bind:selectedValue={selectedRadio} text="UPI" />
   <Radio name="payment" value="card" bind:selectedValue={selectedRadio} text="Card" />

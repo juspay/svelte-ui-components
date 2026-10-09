@@ -107,6 +107,8 @@
   <h1>Select</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Single select</h3>
 <div class="demo-row" style="max-width: 300px;">
   <Select ariaLabel="Fruit" items={fruits} bind:value={singleValue} placeholder="Choose a fruit" />

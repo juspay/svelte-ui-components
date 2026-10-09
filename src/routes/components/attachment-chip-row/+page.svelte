@@ -51,6 +51,8 @@
   <span class="category-badge">Chat</span>
   <h1>AttachmentChipRow</h1>
 </div>
+
+<h2 class="demo-examples-heading">Examples</h2>
 <p>Open a local preview or remove an attachment. The strip scrolls within its column on a phone.</p>
 <h3>Open and remove attachments</h3>
 <div class="strip">
@@ -59,6 +61,7 @@
     {files}
     {videos}
     testId="attachments-editable"
+    ariaLabel="Editable attachment preview"
     imageTooltip={(image) => image.filename ?? 'Landscape image'}
     videoTooltip={(video) => video.filename ?? 'Promotional video'}
     onopenimage={(image) => (opened = { kind: 'image', name: image.filename ?? 'Landscape' })}
@@ -118,7 +121,13 @@
 {/if}
 <h3>Read-only attachments</h3>
 <p>Without action callbacks, an overflowing strip is reached and scrolled with the keyboard.</p>
-<div class="strip"><AttachmentChipRow files={initialFiles} testId="attachments-readonly" /></div>
+<div class="strip">
+  <AttachmentChipRow
+    files={initialFiles}
+    testId="attachments-readonly"
+    ariaLabel="Read-only files"
+  />
+</div>
 
 <style>
   .strip {

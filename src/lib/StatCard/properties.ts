@@ -187,7 +187,7 @@ export type OptionalStatCardProperties = {
 };
 
 export type StatCardEventProperties = {
-  /** Makes the card interactive: adds `role="button"`, `tabindex=0`, and wires click/Enter/Space. */
+  /** Makes the card interactive with a native action button; child controls remain independent. */
   onclick?: (event: MouseEvent) => void;
   /** Fired when the header checkbox changes. */
   oncheckboxchange?: (checked: boolean) => void;

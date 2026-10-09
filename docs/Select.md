@@ -318,11 +318,11 @@ Define a class in your app's CSS that sets the three variables together, then pa
 
 Measured against the unmodified component, those recipes give:
 
-|              | `--select-trigger-min-height` | `--select-trigger-padding` | `--select-font-size` | rendered height |
-| ------------ | ----------------------------- | -------------------------- | -------------------- | --------------- |
-| `.select-sm` | 32px                          | 4px 10px                   | 13px                 | 42px            |
-| default      | 40px                          | 8px 12px                   | 14px                 | 58px            |
-| `.select-lg` | 48px                          | 12px 14px                  | 15px                 | 74px            |
+| Density recipe | `--select-trigger-min-height` | `--select-trigger-padding` | `--select-font-size` | rendered height |
+| -------------- | ----------------------------- | -------------------------- | -------------------- | --------------- |
+| `.select-sm`   | 32px                          | 4px 10px                   | 13px                 | 42px            |
+| default        | 40px                          | 8px 12px                   | 14px                 | 58px            |
+| `.select-lg`   | 48px                          | 12px 14px                  | 15px                 | 74px            |
 
 Those rendered heights are for a **single-line trigger**; a multi-select whose pills wrap
 onto a second row grows past them.

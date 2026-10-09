@@ -86,4 +86,64 @@ test.describe('An unthemed chrome button keeps its own label color on hover', ()
     const { rest, hover } = await labelOnHover(voice);
     expect(hover).toBe(rest);
   });
+
+  // The other two controls #648 moved to ghost. Table sort is the one that never set
+  // --button-color: transparent, so it had no wrapper-level fallback before the move.
+  // Each theme is its own case: a dark-only hover override would pass in light.
+  for (const theme of ['light', 'dark'] as const) {
+    test.describe(`${theme} theme`, () => {
+      test.use({ colorScheme: theme });
+
+      const sortButton = (page: Page): Locator =>
+        page
+          .getByTestId('table-keyed-features')
+          .getByRole('button', { name: /^Sort by / })
+          .first();
+      const attachButton = (page: Page): Locator =>
+        page.locator('.chat-composer .control.attach button').first();
+
+      test('Table sort button', async ({ page }) => {
+        await gotoHydrated(page, '/components/table');
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+
+        const sort = sortButton(page);
+        await expect(sort).toBeEnabled();
+        const { rest, hover } = await labelOnHover(sort);
+        expect(hover).toBe(rest);
+      });
+
+      test('ChatComposer attach control', async ({ page }) => {
+        await gotoHydrated(page, '/components/chat-composer');
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+
+        const attach = attachButton(page);
+        await expect(attach).toBeEnabled();
+        const { rest, hover } = await labelOnHover(attach);
+        expect(hover).toBe(rest);
+      });
+
+      // Control: the same measurement must fail when a hover label does change, or a pass
+      // above could mean the hover state was never reached.
+      test('the measurement detects a hover label change on both controls', async ({ page }) => {
+        const RED = 'rgb(255, 0, 0)';
+        const withForcedHoverLabel = async (button: Locator): Promise<Locator> => {
+          await button.evaluate((element) => element.setAttribute('data-forced-hover-label', ''));
+          await button.page().addStyleTag({
+            content: `[data-forced-hover-label]:hover { color: ${RED} !important; }`
+          });
+          return button;
+        };
+
+        await gotoHydrated(page, '/components/table');
+        const sort = await labelOnHover(await withForcedHoverLabel(sortButton(page)));
+        expect(sort.hover).toBe(RED);
+        expect(sort.rest).not.toBe(RED);
+
+        await gotoHydrated(page, '/components/chat-composer');
+        const attach = await labelOnHover(await withForcedHoverLabel(attachButton(page)));
+        expect(attach.hover).toBe(RED);
+        expect(attach.rest).not.toBe(RED);
+      });
+    });
+  }
 });

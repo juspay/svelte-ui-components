@@ -34,6 +34,8 @@
   <h1>Checkbox</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row">
   <Checkbox text="Default checkbox" bind:checked={checkboxChecked} testId="checkbox-default" />
   <Checkbox text="Disabled" disabled />

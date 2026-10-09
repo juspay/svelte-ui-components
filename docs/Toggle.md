@@ -40,7 +40,7 @@ does not depend on class names.
 | name           | `string`                 | No       | `undefined` | Sets the underlying native input's `name`, so the toggle participates in a surrounding `<form>`'s submission (`FormData`) like any native checkbox: absent when off or disabled, present with its value when on. Omitting it leaves the DOM byte-identical to before.      |
 | value          | `string`                 | No       | `undefined` | Sets the underlying native input's `value`. Only meaningful once `name` is set. Left unset, the attribute is omitted and an unstyled native checkbox defaults its submitted value to `"on"` — this component relies on that same native default rather than hardcoding it. |
 | required       | `boolean`                | No       | `false`     | Blocks submission while the switch is off.                                                                                                                                                                                                                                 |
-| form           | `string`                 | No       | `undefined` | `id` of a form elsewhere in the same document. Unavailable through `<sui-toggle>`, whose input sits in a shadow root.                                                                                                                                                      |
+| form           | `string`                 | No       | `undefined` | `id` of a form elsewhere in the same document. For `<sui-toggle>`, set the host's `form` attribute; `ElementInternals` associates it with that form. The JavaScript `form` owner getter is read-only.                                                                      |
 
 ## Events
 

@@ -14,6 +14,8 @@
   <h1>DeltaIndicator</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="intro">
   A compact inline indicator that conveys change direction and magnitude using a directional arrow
   and formatted text. Positive values render in green, negative in red, and values within the

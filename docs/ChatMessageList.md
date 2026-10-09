@@ -19,23 +19,24 @@ A scrollable, auto-scrolling container for a conversation. It renders each messa
 
 ## Props
 
-| Prop               | Type                                 | Required | Default            | Description                                                                                                        |
-| ------------------ | ------------------------------------ | -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| messages           | `ChatMessageData[]`                  | Yes      | `-`                | Messages to render.                                                                                                |
-| autoscroll         | `boolean`                            | No       | `true`             | Auto-scroll to the latest message as content changes.                                                              |
-| message            | `Snippet<[ChatMessageData]>`         | No       | `-`                | Custom per-message rendering; overrides the default bubble.                                                        |
-| messageBody        | `Snippet<[ChatMessageData]>`         | No       | `-`                | Own markup inside each bubble; keeps role styling and actions.                                                     |
-| scrollPolicy       | `'near-bottom' \| 'pin-sender-turn'` | No       | `'near-bottom'`    | `pin-sender-turn` pins each new sender message to the top and reserves headroom so the reply streams beneath it.   |
-| pinHold            | `boolean`                            | No       | `false`            | pin-sender-turn only: hold the reserved headroom while the host's turn is still busy; flipping false collapses it. |
-| jump               | `boolean`                            | No       | `true`             | Render the built-in jump-to-latest button. Hosts with their own affordance pass false.                             |
-| hideScrollbar      | `boolean`                            | No       | `false`            | Hide the list's own scrollbar while it stays scrollable, like Scroller's `hideScrollbar`.                          |
-| messageAttachments | `Snippet<[ChatMessageData]>`         | No       | `-`                | Own UI below each bubble; keeps the default bubble and actions.                                                    |
-| empty              | `Snippet`                            | No       | `-`                | Shown when there are no messages.                                                                                  |
-| jumpLabel          | `string`                             | No       | `'Jump to latest'` | Aria-label for the jump-to-latest button.                                                                          |
-| jumpIcon           | `Snippet`                            | No       | `-`                | Custom jump-to-latest icon. Falls back to a built-in asset.                                                        |
-| allowCopy          | `boolean`                            | No       | `false`            | Show copy buttons on assistant messages (default rendering).                                                       |
-| testId             | `string`                             | No       | `-`                | `data-pw` on the root element.                                                                                     |
-| classes            | `string`                             | No       | `-`                | Class string on the root element.                                                                                  |
+| Prop               | Type                                 | Required | Default                   | Description                                                                                                        |
+| ------------------ | ------------------------------------ | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| messages           | `ChatMessageData[]`                  | Yes      | `-`                       | Messages to render.                                                                                                |
+| autoscroll         | `boolean`                            | No       | `true`                    | Auto-scroll to the latest message as content changes.                                                              |
+| message            | `Snippet<[ChatMessageData]>`         | No       | `-`                       | Custom per-message rendering; overrides the default bubble.                                                        |
+| messageBody        | `Snippet<[ChatMessageData]>`         | No       | `-`                       | Own markup inside each bubble; keeps role styling and actions.                                                     |
+| scrollPolicy       | `'near-bottom' \| 'pin-sender-turn'` | No       | `'near-bottom'`           | `pin-sender-turn` pins each new sender message to the top and reserves headroom so the reply streams beneath it.   |
+| pinHold            | `boolean`                            | No       | `false`                   | pin-sender-turn only: hold the reserved headroom while the host's turn is still busy; flipping false collapses it. |
+| jump               | `boolean`                            | No       | `true`                    | Render the built-in jump-to-latest button. Hosts with their own affordance pass false.                             |
+| hideScrollbar      | `boolean`                            | No       | `false`                   | Hide the list's own scrollbar while it stays scrollable, like Scroller's `hideScrollbar`.                          |
+| messageAttachments | `Snippet<[ChatMessageData]>`         | No       | `-`                       | Own UI below each bubble; keeps the default bubble and actions.                                                    |
+| empty              | `Snippet`                            | No       | `-`                       | Shown when there are no messages.                                                                                  |
+| jumpLabel          | `string`                             | No       | `'Jump to latest'`        | Aria-label for the jump-to-latest button.                                                                          |
+| jumpIcon           | `Snippet`                            | No       | `-`                       | Custom jump-to-latest icon. Falls back to a built-in asset.                                                        |
+| allowCopy          | `boolean`                            | No       | `false`                   | Show copy buttons on assistant messages (default rendering).                                                       |
+| testId             | `string`                             | No       | `-`                       | `data-pw` on the root element.                                                                                     |
+| ariaLabel          | `string`                             | No       | `'Conversation messages'` | Accessible transcript name, including its native keyboard scroll stop when content overflows.                      |
+| classes            | `string`                             | No       | `-`                       | Class string on the root element.                                                                                  |
 
 ### Scrollbar, overflow and overscroll
 
@@ -180,3 +181,7 @@ nothing to caveat here.
 | `jump-icon` | `jumpIcon`      | Custom jump-to-latest icon. Defaults to the built-in chevron glyph. |
 
 > **Svelte-only:** `message` (receives `ChatMessageData`), `messageBody` (receives `ChatMessageData`), `messageAttachments` (receives `ChatMessageData`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.
+
+## Keyboard reading
+
+An overflowing transcript joins the native Tab order so readers can use the browser's scroll keys even when its messages contain no interactive controls and `jump={false}`. It leaves that order when the transcript fits. `ariaLabel` supplies its accessible name (default `Conversation messages`), and `--chat-message-list-focus-outline` customizes the visible focus ring. The custom element accepts `aria-label` or `chatMessageListAriaLabel`.

@@ -71,6 +71,11 @@ Keyboard arrows move the handle in the same direction as a pointer drag. Right o
 a left edge decreases width; Down on a top edge decreases height. Right and bottom
 edges increase their respective dimensions in those directions.
 
+Behavior change in 4.37.0: before it, Arrow Right always increased width and Arrow Down
+always increased height, whichever edge the handle sat on. On a left or top edge that was the
+opposite of a pointer drag. Code that relied on the old direction for those edges now moves
+the other way.
+
 ## Accessibility
 
 Handles follow the WAI-ARIA **window splitter** pattern: each is `role="separator"`, focusable (`tabindex`), with `aria-orientation` and `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflecting the current/allowed size, and an `aria-label` (`handleLabel`, default `'Resize'`). Hidden entirely when `disabled`.

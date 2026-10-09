@@ -127,7 +127,8 @@ for (const theme of ['light', 'dark'] as const) {
           .evaluate((el) => el.scrollWidth > el.clientWidth)
       ).toBe(true);
       const strip = page.getByTestId('attachments-readonly').locator('.scroll-container');
-      await expect(strip).toHaveAttribute('aria-label', 'Pending attachments');
+      await expect(strip).toHaveAttribute('aria-label', 'Read-only files');
+      await expect(strip).toHaveAccessibleName('Read-only files');
       await expect(strip).toHaveAttribute('tabindex', '0');
       await strip.scrollIntoViewIfNeeded();
       await focusTabStopBefore(strip);

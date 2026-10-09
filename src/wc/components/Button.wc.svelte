@@ -14,8 +14,8 @@
       statusText: { type: 'String', attribute: 'status-text' },
       statusTestId: { type: 'String', attribute: 'status-test-id' },
       buttonAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
-      buttonAriaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
-      buttonAriaPressed: { type: 'Boolean', attribute: 'aria-pressed' },
+      buttonAriaExpanded: { type: 'String', attribute: 'aria-expanded' },
+      buttonAriaPressed: { type: 'String', attribute: 'aria-pressed' },
       ariaControls: { type: 'String', attribute: 'aria-controls' },
       classes: { type: 'String' },
       onclick: { type: 'Object' },
@@ -49,6 +49,7 @@
 <script lang="ts">
   import Button from '$lib/Button/Button.svelte';
   import { dispatchEvents } from '../dispatch';
+  import { ariaBoolean } from '../aria-boolean';
   let { buttonAriaExpanded, buttonAriaLabel, buttonAriaPressed, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
@@ -89,8 +90,8 @@
   {...props}
   {...dispatchers}
   ariaLabel={buttonAriaLabel}
-  ariaExpanded={buttonAriaExpanded}
-  ariaPressed={buttonAriaPressed}
+  ariaExpanded={ariaBoolean(buttonAriaExpanded)}
+  ariaPressed={ariaBoolean(buttonAriaPressed)}
 >
   {#snippet icon()}
     {#if props.icon}{@render props.icon()}{:else}<slot name="icon"></slot>{/if}

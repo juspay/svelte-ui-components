@@ -9,6 +9,7 @@
       disabled: { type: 'Boolean', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
+      paginationAriaLabel: { type: 'String', attribute: 'aria-label', reflect: true },
       hasMore: { type: 'Boolean', reflect: true, attribute: 'has-more' },
       prevButtonTestId: { type: 'String', attribute: 'prev-button-test-id' },
       nextButtonTestId: { type: 'String', attribute: 'next-button-test-id' },
@@ -20,9 +21,15 @@
 
 <script lang="ts">
   import Pagination from '$lib/Pagination/Pagination.svelte';
+  import type { PaginationProperties } from '$lib/Pagination/properties';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let {
+    paginationAriaLabel,
+    ...props
+  }: Omit<PaginationProperties, 'ariaLabel'> & {
+    paginationAriaLabel?: PaginationProperties['ariaLabel'];
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -42,7 +49,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Pagination {...props} {...dispatchers} />
+<Pagination {...props} {...dispatchers} ariaLabel={paginationAriaLabel} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

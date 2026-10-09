@@ -35,6 +35,8 @@
   <h1>KeyValue</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="kv-demos">
   <h3>Default (2 columns)</h3>
   <div class="demo-row">

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import Table from './Table.svelte';
 import type { TableColumn, TableRow, TableLabels } from './properties';
 
@@ -43,6 +43,41 @@ beforeAll(() => {
 });
 
 describe('Table labels', () => {
+  it('keeps localized duplicate row names and activation bound to original records after sort', async () => {
+    const onrowclick = vi.fn();
+    const { getByRole, container } = render(Table, {
+      columns: [
+        { id: 'name', label: 'Name' },
+        { id: 'score', label: 'Score' }
+      ],
+      rows: [
+        { name: 'Same', score: 3 },
+        { name: 'Same', score: 1 },
+        { name: 'Other', score: 2 }
+      ],
+      onrowclick,
+      labels: { rowAction: (rowLabel) => `Ouvrir ${rowLabel}` }
+    });
+    await fireEvent.click(getByRole('button', { name: 'Sort by Score' }));
+    await waitFor(() => {
+      expect(container.querySelector('tbody tr')?.getAttribute('aria-label')).toBe(
+        'Ouvrir Same, record 2'
+      );
+    });
+    const row = getByRole('row', { name: 'Ouvrir Same, record 2' });
+    await fireEvent.keyDown(row, { key: 'Enter' });
+    expect(onrowclick).toHaveBeenCalledExactlyOnceWith(0, ['Same', 1], 1);
+  });
+
+  it('keeps nonaction rows as ordinary cell containers even when rowAction is supplied', () => {
+    const { container, getByRole } = render(Table, {
+      tableHeaders: ['Name'],
+      tableData: [['Same']],
+      labels: { rowAction: (rowLabel) => `Ouvrir ${rowLabel}` }
+    });
+    expect(container.querySelector('tbody tr')?.hasAttribute('aria-label')).toBe(false);
+    expect(getByRole('cell', { name: 'Same' })).toBeTruthy();
+  });
   it('uses the English defaults when no labels are given', () => {
     const { getByRole } = render(Table, { columns, rows });
     expect(getByRole('button', { name: 'Sort by Nom' })).toBeTruthy();

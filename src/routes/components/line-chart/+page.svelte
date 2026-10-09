@@ -281,6 +281,8 @@
   <h1>LineChart</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p>
   A responsive SVG line chart for visualizing trends over continuous data. Supports multiple series,
   five curve interpolations, gradient fill, categorical x-axis labels, filled area with custom

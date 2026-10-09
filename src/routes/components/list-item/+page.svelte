@@ -19,6 +19,8 @@
   <h1>ListItem</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="flex-direction: column; max-width: 500px;">
   <ListItem label="John Doe" rightContentText="$120.00" />
   <ListItem label="Payment Received" rightContentText="Yesterday" />
@@ -134,18 +136,21 @@
         label="Outer"
         useAccordion
         expand
+        suppressRoleAndTabindex
         topSectionTestId="list-item-fit-stack-nested-outer-top"
       >
         {#snippet bottomContent()}
           <ListItem
             label="Inherits"
             rightContentText="stacked"
+            suppressRoleAndTabindex
             topSectionTestId="list-item-fit-stack-nested-inherit-top"
           />
           <div class="fit-reset">
             <ListItem
               label="Reset"
               rightContentText="row"
+              suppressRoleAndTabindex
               topSectionTestId="list-item-fit-stack-nested-reset-top"
             />
           </div>

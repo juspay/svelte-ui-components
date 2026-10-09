@@ -53,15 +53,25 @@
   let interactive = $derived(typeof onclick === 'function');
 
   // A <button> may not contain another button, and a dismissible pill is inherently two
-  // controls. Rather than emit invalid markup, that combination degrades to the div root —
-  // the same graceful-degradation rule Card applies to `as="a"` with no `href`.
+  // controls. A neutral div holds independent primary and dismiss buttons when
+  // both actions are present, preserving native activation for each action.
   const isButtonRoot = $derived(as === 'button' && !dismissible);
   const rootTag = $derived(isButtonRoot ? 'button' : 'div');
+  const hasSeparateAction = $derived(interactive && dismissible);
+  const rootAttrs = $derived(
+    hasSeparateAction
+      ? Object.fromEntries(
+          Object.entries(attrs ?? {}).filter(
+            ([key]) => !['aria-label', 'aria-labelledby', 'aria-describedby'].includes(key)
+          )
+        )
+      : attrs
+  );
 
   // The synthetic shim exists only because a <div> has no button semantics. A real button
   // already has them, and adding role/tabindex/keydown on top would duplicate the platform's
   // own activation — Enter would fire the handler twice.
-  const needsInteractiveShim = $derived(interactive && !isButtonRoot);
+  const needsInteractiveShim = $derived(interactive && !isButtonRoot && !hasSeparateAction);
 
   // aria-expanded / aria-pressed / aria-disabled describe a control's state, so they are
   // meaningless on a plain label and are emitted only once the pill actually is one.
@@ -102,9 +112,10 @@
 
 <svelte:element
   this={rootTag}
-  {...attrs ?? {}}
+  {...rootAttrs ?? {}}
   class="pill {pillToneClass(tone)} {classes ?? ''}"
   class:disabled
+  class:separate-action={hasSeparateAction}
   type={isButtonRoot ? 'button' : null}
   onclick={interactive ? handleClick : null}
   onkeydown={needsInteractiveShim ? handleKeydown : null}
@@ -117,6 +128,22 @@
   title={title ?? null}
   testID={typeof testId === 'string' ? testId : null}
 >
+  {#if hasSeparateAction}
+    <button
+      type="button"
+      class="pill-action"
+      {disabled}
+      aria-label={typeof attrs?.['aria-label'] === 'string' ? attrs['aria-label'] : text}
+      aria-labelledby={typeof attrs?.['aria-labelledby'] === 'string'
+        ? attrs['aria-labelledby']
+        : null}
+      aria-describedby={typeof attrs?.['aria-describedby'] === 'string'
+        ? attrs['aria-describedby']
+        : null}
+      aria-expanded={typeof ariaExpanded === 'boolean' ? ariaExpanded : null}
+      aria-pressed={typeof ariaPressed === 'boolean' ? ariaPressed : null}
+    ></button>
+  {/if}
   {#if typeof leadingIcon === 'function'}
     <span class="pill-leading-icon">{@render leadingIcon()}</span>
   {/if}
@@ -143,6 +170,35 @@
 </svelte:element>
 
 <style>
+  .separate-action {
+    position: relative;
+  }
+
+  .pill-action {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: inherit;
+    outline: none;
+  }
+
+  .separate-action:has(> .pill-action:focus-visible) {
+    outline: var(--pill-focus-outline, 2px solid currentColor);
+    outline-offset: var(--pill-focus-outline-offset, 2px);
+  }
+
+  .separate-action > .pill-text,
+  .separate-action > .pill-leading-icon {
+    pointer-events: none;
+  }
+
+  .separate-action > .pill-dismiss {
+    position: relative;
+  }
+
   .pill {
     display: inline-flex;
     align-items: center;
@@ -176,6 +232,7 @@
     flex-shrink: var(--pill-flex-shrink);
   }
 
+  .pill.separate-action,
   .pill[role='button'],
   button.pill {
     cursor: var(--pill-cursor, pointer);

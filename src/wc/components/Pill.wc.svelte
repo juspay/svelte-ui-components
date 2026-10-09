@@ -8,8 +8,8 @@
       disabled: { type: 'Boolean', reflect: true },
       tone: { type: 'String', attribute: 'tone' },
       as: { type: 'String', reflect: true, attribute: 'as' },
-      pillAriaExpanded: { type: 'Boolean', attribute: 'aria-expanded' },
-      pillAriaPressed: { type: 'Boolean', attribute: 'aria-pressed' },
+      pillAriaExpanded: { type: 'String', attribute: 'aria-expanded' },
+      pillAriaPressed: { type: 'String', attribute: 'aria-pressed' },
       testId: { type: 'String', attribute: 'test-id' },
       pillTitle: { type: 'String', reflect: true, attribute: 'title' },
       leadingIcon: { type: 'Object' },
@@ -28,6 +28,7 @@
   import type { PillProperties } from '$lib/Pill/properties';
   import closeSvg from '$lib/assets/close.svg?raw';
   import { dispatchEvents } from '../dispatch';
+  import { ariaBoolean } from '../aria-boolean';
   // The element renames `title` to `pillTitle` because the platform already defines `title` on every
   // HTMLElement, and `ariaExpanded`/`ariaPressed` for the same reason -- ARIAMixin reflects both as
   // accessors on Element, so declaring them here would replace the platform's own. The attributes
@@ -41,8 +42,8 @@
     ...props
   }: Omit<PillProperties, 'title' | 'ariaExpanded' | 'ariaPressed'> & {
     pillTitle?: PillProperties['title'];
-    pillAriaExpanded?: PillProperties['ariaExpanded'];
-    pillAriaPressed?: PillProperties['ariaPressed'];
+    pillAriaExpanded?: PillProperties['ariaExpanded'] | string | null;
+    pillAriaPressed?: PillProperties['ariaPressed'] | string | null;
   } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
@@ -67,8 +68,8 @@
   {...props}
   {...dispatchers}
   title={pillTitle}
-  ariaExpanded={pillAriaExpanded}
-  ariaPressed={pillAriaPressed}
+  ariaExpanded={ariaBoolean(pillAriaExpanded)}
+  ariaPressed={ariaBoolean(pillAriaPressed)}
 >
   {#snippet leadingIcon()}
     <slot name="leading-icon"></slot>

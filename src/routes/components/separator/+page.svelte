@@ -7,6 +7,8 @@
   <h1>Separator</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3 class="demo-heading">Horizontal (default)</h3>
 <p class="demo-caption">
   A decorative divider between stacked content. Hidden from assistive technology by default.

@@ -681,6 +681,8 @@
   <h1>Table</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <!-- Basic Table -->
 <h3>Basic</h3>
 <div class="demo-row" style="max-width: 600px;">
@@ -727,7 +729,12 @@
 <!-- Built-in cell renderers: tag, tag-array, two-line-text, avatar-stack, compare, toggle, link -->
 <h3>Built-in Cell Renderers</h3>
 <div class="demo-row" style="max-width: 1000px;">
-  <Table columns={builtinColumns} rows={builtinRows} testId="table-builtin-cells" />
+  <Table
+    columns={builtinColumns}
+    rows={builtinRows}
+    caption="Subscription plan details"
+    testId="table-builtin-cells"
+  />
   {#if toggledRow}
     <p
       data-pw="builtin-toggle-result"
@@ -913,6 +920,7 @@
       onrowclick={(_rowIndex, rowData) => {
         opsLog = `opened ${String(rowData[0])}`;
       }}
+      labels={{ pageNavigation: 'Operational records pages' }}
     >
       {#snippet empty(context)}
         <!-- An error is not an empty result: the fetch never established that
@@ -1058,7 +1066,10 @@
       showFooterOnSinglePage: true,
       testId: 'shrink-paged'
     }}
-    labels={{ rowsPerPage: 'Rows per page for the external-shrink demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the external-shrink demo',
+      pageNavigation: 'External shrink pages'
+    }}
     testId="table-page-shrink"
   >
     {#snippet empty()}
@@ -1088,7 +1099,10 @@
         requestedPageSize = size;
       }
     }}
-    labels={{ rowsPerPage: 'Rows per page for the server-request demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the server-request demo',
+      pageNavigation: 'Server request pages'
+    }}
     testId="table-server-refusal"
   />
   <p
@@ -1110,7 +1124,10 @@
     searchConfig={{ placeholder: 'Search items…', testId: 'paged-search' }}
     pagination={{ pageSize: 5, pageSizeOptions: [5, 10], testId: 'paged' }}
     getRowTestId={(_row, rowIndex) => `paged-idx-${rowIndex}`}
-    labels={{ rowsPerPage: 'Rows per page for the built-in pagination demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the built-in pagination demo',
+      pageNavigation: 'Items pages'
+    }}
     testId="table-paginated"
   />
 </div>
@@ -1127,7 +1144,10 @@
       showFooterOnSinglePage: true,
       testId: 'single-page-paged'
     }}
-    labels={{ rowsPerPage: 'Rows per page for the single-page footer demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the single-page footer demo',
+      pageNavigation: 'Single-page footer pages'
+    }}
     testId="table-single-page-pagination"
   />
 </div>
@@ -1144,6 +1164,7 @@
       testId: 'count-only-paged'
     }}
     testId="table-count-only-pagination"
+    labels={{ pageNavigation: 'Count-only footer pages' }}
   />
 </div>
 
@@ -1162,6 +1183,7 @@
       rangeTestId: 'followup-range'
     }}
     testId="table-followups"
+    labels={{ pageNavigation: 'Follow-up records pages' }}
   />
 </div>
 
@@ -1178,6 +1200,7 @@
       testId: 'split-selector-hidden'
     }}
     testId="table-split-selector-hidden"
+    labels={{ pageNavigation: 'Page-size-hidden pages' }}
   />
 </div>
 
@@ -1193,7 +1216,10 @@
       hideSteppers: true,
       testId: 'split-steppers-hidden'
     }}
-    labels={{ rowsPerPage: 'Rows per page for the hidden-steppers demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the hidden-steppers demo',
+      pageNavigation: 'Steppers-hidden pages'
+    }}
     testId="table-split-steppers-hidden"
   />
 </div>
@@ -1241,7 +1267,10 @@
       }
     }}
     pagination={{ pageSize: 5, pageSizeOptions: [5], testId: 'psel' }}
-    labels={{ rowsPerPage: 'Rows per page for the paginated-selection demo' }}
+    labels={{
+      rowsPerPage: 'Rows per page for the paginated-selection demo',
+      pageNavigation: 'Selection records pages'
+    }}
     testId="table-paged-select"
   />
   <p
@@ -1278,6 +1307,7 @@
       testId: 'srv-paged'
     }}
     testId="table-server-paginated"
+    labels={{ pageNavigation: 'Server pagination pages' }}
   />
 </div>
 
@@ -1340,6 +1370,8 @@
   <Table
     tableHeaders={['Name', 'Department', 'Score', 'Status']}
     tableData={scrollableData}
+    caption="Employee scores by department"
+    testId="table-sticky-header"
     stickyHeader
     isTableScrollable
     --table-container-height="260px"

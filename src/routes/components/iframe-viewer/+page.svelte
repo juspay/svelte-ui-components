@@ -16,7 +16,8 @@
       'window.addEventListener("message", (event) => {' +
       'document.getElementById("log").textContent = "Received: " + JSON.stringify(event.data);' +
       '});' +
-      '<\\/script>' +
+      '</scr' +
+      'ipt>' +
       '</div>'
   )}`;
 
@@ -31,6 +32,8 @@
   <span class="category-badge">Layout &amp; Containers</span>
   <h1>IframeViewer</h1>
 </div>
+
+<h2 class="demo-examples-heading">Examples</h2>
 
 <p class="intro">
   A security-conscious iframe embed. It renders an <code>&lt;iframe&gt;</code> for the given

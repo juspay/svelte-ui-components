@@ -19,6 +19,7 @@
       hideScrollbar: { type: 'Boolean', attribute: 'hide-scrollbar' },
       jump: { type: 'Boolean', reflect: true },
       jumpLabel: { type: 'String', attribute: 'jump-label' },
+      messageListLabel: { type: 'String', attribute: 'message-list-label' },
       jumpIcon: { type: 'Object' },
       toolStatus: { type: 'Object', attribute: 'tool-status' },
       suggestions: { type: 'Object' },

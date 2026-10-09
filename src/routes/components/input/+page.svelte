@@ -24,6 +24,8 @@
   <h1>Input</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Validation errors are announced</h3>
 <p>
   When a field is invalid it carries <code>aria-invalid</code> and points at its message through

@@ -415,7 +415,7 @@ test.describe('Modal viewport width: overlay hit area', () => {
       ({ x, y }) => document.elementFromPoint(x, y)?.className ?? null,
       point
     );
-    expect(hitClass).toMatch(/(^|\s)modal(\s|$)/);
+    expect(hitClass).toMatch(/(^|\s)modal-overlay-action(\s|$)/);
 
     await page.mouse.move(panel.x + panel.width / 2, point.y);
     await page.mouse.down();

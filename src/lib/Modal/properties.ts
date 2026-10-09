@@ -62,12 +62,13 @@ export type OptionalModalProperties = {
   /** Accessible name for the left header image's role="button" wrapper (e.g. a back control). Rendered as aria-label. */
   leftImageAriaLabel?: string;
   /**
-   * Accessible name for the overlay's `role="button"` wrapper, rendered as
+   * Accessible name for the independent native backdrop button, rendered as
    * `aria-label` -- same pattern as `leftImageAriaLabel` and
    * `header.buttonAriaLabel`. Only meaningful when the overlay is dismissible
    * (an `onoverlayclick` or `ondismiss` handler is supplied), which is the
-   * only state where the overlay is announced as a focusable "button" at all.
-   * Default: unset (no accessible name).
+   * only state where a backdrop action exists. Named dialogs keep that action
+   * outside their Tab cycle; generic panels retain Enter/Space activation.
+   * Default: "Dismiss modal".
    */
   overlayAriaLabel?: string;
   testId?: string;
@@ -111,7 +112,7 @@ export type OptionalModalProperties = {
    * ARIA role for the modal content panel. Default: unset -- the panel
    * renders no `role` and no `aria-modal` at all, byte-for-byte matching
    * behavior prior to this prop's introduction, so an existing consumer who
-   * never touches `role` sees no DOM/ARIA change. Set it explicitly (e.g.
+   * never touches `role` sees no panel role/aria-modal change. Set it explicitly (e.g.
    * `'dialog'` or `'alertdialog'`) to opt in: the panel then also carries
    * `aria-modal="true"`, since a role without aria-modal is not a complete
    * dialog announcement.

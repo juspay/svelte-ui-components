@@ -33,7 +33,7 @@ test.describe('Scroller — keyboard route when arrows are absent', () => {
     await expect(scroller).toBeFocused();
     await expect(scroller).toHaveAttribute('tabindex', '0');
     await expect(scroller).toHaveAttribute('role', 'region');
-    await expect(scroller).toHaveAccessibleName('Scrollable content');
+    await expect(scroller).toHaveAccessibleName('Keyboard horizontal item strip');
 
     expect(await offset(scroller, 'x')).toBe(0);
     for (let press = 0; press < 4; press += 1) {
@@ -69,7 +69,7 @@ test.describe('Scroller — keyboard route when arrows are absent', () => {
     await page.getByTestId('scroller-vertical-before').focus();
     await page.keyboard.press('Tab');
     await expect(scroller).toBeFocused();
-    await expect(scroller).toHaveAccessibleName('Scrollable content');
+    await expect(scroller).toHaveAccessibleName('Keyboard vertical item list');
 
     // WebKit does not scroll a focused vertical region with ArrowDown/ArrowUp on its own, so this
     // is the assertion that fails in that engine without the component's own key handling.
@@ -127,12 +127,12 @@ test.describe('Scroller — keyboard route when arrows are absent', () => {
     await expect(scroller).toBeFocused();
   });
 
-  test('content that fits adds no Tab stop and no region name', async ({ page }) => {
+  test('named content that fits keeps its authored name and adds no Tab stop', async ({ page }) => {
     await gotoHydrated(page, '/components/scroller');
 
     const scroller = region(page, 'scroller-no-arrows-fits');
     await expect(scroller).toHaveAttribute('tabindex', '-1');
-    await expect(scroller).not.toHaveAttribute('aria-label', /.*/);
+    await expect(scroller).toHaveAccessibleName('Fitting content example');
 
     await page.getByTestId('scroller-fits-before').focus();
     await page.keyboard.press('Tab');
@@ -267,7 +267,7 @@ test.describe('Scroller — the route follows resize and content changes', () =>
 
     await page.getByTestId('scroller-dynamic-shrink').click();
     await expect(scroller).toHaveAttribute('tabindex', '-1');
-    await expect(scroller).not.toHaveAttribute('aria-label', /.*/);
+    await expect(scroller).toHaveAccessibleName('Dynamic content example');
     await page.getByTestId('scroller-dynamic-before').focus();
     await page.keyboard.press('Tab');
     await expect(page.getByTestId('scroller-dynamic-after')).toBeFocused();
@@ -407,7 +407,7 @@ test.describe('Scroller — the route follows controls hidden without any resize
       await page.getByTestId('scroller-nested-before').focus();
       await page.keyboard.press('Tab');
       await expect(scroller).toBeFocused();
-      await expect(scroller).toHaveAccessibleName('Scrollable content');
+      await expect(scroller).toHaveAccessibleName('Nested controls example');
       await page.keyboard.press('ArrowRight');
       await page.keyboard.press('ArrowRight');
       await expect.poll(() => offset(scroller, 'x')).toBe(80);
@@ -416,7 +416,7 @@ test.describe('Scroller — the route follows controls hidden without any resize
 
       await strategy.show(page);
       await expect(scroller).toHaveAttribute('tabindex', '-1');
-      await expect(scroller).not.toHaveAttribute('aria-label', /.*/);
+      await expect(scroller).toHaveAccessibleName('Nested controls example');
       await page.getByTestId('scroller-nested-before').focus();
       await page.keyboard.press('Tab');
       await expect(page.getByTestId('scroller-nested-first')).toBeFocused();
@@ -465,7 +465,7 @@ test.describe('Scroller — arrows hidden on a touch device', () => {
     await page.getByTestId('scroller-touch-before').focus();
     await page.keyboard.press('Tab');
     await expect(scroller).toBeFocused();
-    await expect(scroller).toHaveAccessibleName('Scrollable content');
+    await expect(scroller).toHaveAccessibleName('Touch item strip');
 
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
@@ -473,4 +473,67 @@ test.describe('Scroller — arrows hidden on a touch device', () => {
     await page.keyboard.press('Tab');
     await expect(page.getByTestId('scroller-touch-after')).toBeFocused();
   });
+});
+
+// The documentation examples deliberately supply contextual names. An isolated default consumer
+// proves automatic naming is still conditional on its actual keyboard route, without deleting
+// those authored names to recreate an obsolete demo assumption.
+test('an unnamed default Scroller auto-names only its overflowing keyboard route', async ({
+  page
+}) => {
+  await gotoHydrated(page, '/components/scroller');
+  await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
+  await page.waitForFunction(() => Boolean(customElements.get('sui-scroller')));
+  await page.evaluate(() => {
+    const before = document.createElement('button');
+    before.id = 'default-scroller-before';
+    before.textContent = 'Before default scroller';
+    const host = document.createElement('sui-scroller');
+    host.id = 'default-scroller-contract';
+    host.style.width = '500px';
+    Object.assign(host, { showArrows: false, smoothScroll: false });
+    const content = document.createElement('div');
+    content.style.cssText = 'width:200px;min-width:200px;flex-shrink:0;height:40px';
+    content.textContent = 'Default noninteractive content';
+    host.append(content);
+    const after = document.createElement('button');
+    after.id = 'default-scroller-after';
+    after.textContent = 'After default scroller';
+    document.querySelector('main')?.prepend(before, host, after);
+  });
+  const host = page.locator('#default-scroller-contract');
+  const scroller = host.locator('.scroll-container');
+  await expect(scroller).toHaveAttribute('tabindex', '-1');
+  await expect(scroller).not.toHaveAttribute('aria-label', /.*/);
+  await page.locator('#default-scroller-before').click();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#default-scroller-after')).toBeFocused();
+
+  await host.evaluate((element) => {
+    element.style.width = '100px';
+  });
+  await expect
+    .poll(() => scroller.evaluate((element) => element.scrollWidth - element.clientWidth))
+    .toBeGreaterThanOrEqual(100);
+  await expect(scroller).toHaveAttribute('tabindex', '0');
+  await expect(scroller).toHaveAccessibleName('Scrollable content');
+  await page.locator('#default-scroller-before').click();
+  await page.keyboard.press('Tab');
+  await expect(scroller).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => offset(scroller, 'x')).toBe(40);
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#default-scroller-after')).toBeFocused();
+
+  await host.evaluate((element) => {
+    element.style.width = '500px';
+  });
+  await expect
+    .poll(() => scroller.evaluate((element) => element.scrollWidth <= element.clientWidth))
+    .toBe(true);
+  await expect(scroller).toHaveAttribute('tabindex', '-1');
+  await expect(scroller).not.toHaveAttribute('aria-label', /.*/);
+  await page.locator('#default-scroller-before').click();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#default-scroller-after')).toBeFocused();
 });

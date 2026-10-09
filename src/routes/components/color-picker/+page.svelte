@@ -12,6 +12,8 @@
   <h1>Color Picker</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="max-width: 400px;">
   <h3>With editable hex input</h3>
   <ColorPicker bind:value={color} label="Brand color" showValue />

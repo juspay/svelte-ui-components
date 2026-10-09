@@ -40,7 +40,82 @@
   }
 
   function isDisabledHost(host: Element): boolean {
-    return Reflect.get(host, 'disabled') === true;
+    return Reflect.get(host, 'disabled') === true || host.matches(':disabled');
+  }
+
+  const rootObservers = new WeakMap<
+    Node,
+    { observer: MutationObserver; listeners: Set<() => void> }
+  >();
+  const broadcasting = new WeakSet<HTMLElement>();
+
+  function watchRadioRoot(host: HTMLElement, refresh: () => void): () => void {
+    const root = host.getRootNode();
+    let watched = rootObservers.get(root);
+    if (watched === undefined) {
+      const listeners = new Set<() => void>();
+      const observer = new MutationObserver(() => {
+        for (const listener of listeners) {
+          listener();
+        }
+      });
+      observer.observe(root, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['name', 'form', 'id', 'required', 'disabled', 'value', 'selected-value']
+      });
+      watched = { observer, listeners };
+      rootObservers.set(root, watched);
+    }
+    watched.listeners.add(refresh);
+    return () => {
+      watched.listeners.delete(refresh);
+      if (watched.listeners.size === 0) {
+        watched.observer.disconnect();
+        rootObservers.delete(root);
+      } else {
+        queueMicrotask(() => {
+          for (const listener of watched.listeners) {
+            listener();
+          }
+        });
+      }
+    };
+  }
+
+  function updateGroupValidity(members: readonly HTMLElement[]): void {
+    const required = members.some((member) => Reflect.get(member, 'required') === true);
+    const selected = members.some((member) => {
+      const input = member.shadowRoot?.querySelector<HTMLInputElement>('input[type="radio"]');
+      return input?.checked === true && input.value === readStringProp(member, 'value');
+    });
+    const enabled = members.filter((member) => !isDisabledHost(member));
+    const tabStop =
+      enabled.find(
+        (member) =>
+          member.shadowRoot?.querySelector<HTMLInputElement>('input[type="radio"]')?.checked ===
+          true
+      ) ?? enabled[0];
+    for (const member of members) {
+      const input = member.shadowRoot?.querySelector<HTMLInputElement>('input[type="radio"]');
+      if (input !== null && typeof input !== 'undefined') {
+        input.tabIndex = member === tabStop ? 0 : -1;
+      }
+      const internals = Reflect.get(member, 'internals') as ElementInternals | null;
+      if (internals === null || typeof internals === 'undefined') {
+        continue;
+      }
+      if (required && !selected && !isDisabledHost(member)) {
+        internals.setValidity(
+          { valueMissing: true },
+          'Please fill in this field.',
+          input ?? member
+        );
+      } else {
+        internals.setValidity({});
+      }
+    }
   }
 
   /**
@@ -76,17 +151,13 @@
       return [host];
     }
     const formOwner = Reflect.get(host, 'form');
-    const scope = formOwner instanceof HTMLFormElement ? formOwner : host.getRootNode();
-    if (
-      !(scope instanceof HTMLFormElement) &&
-      !(scope instanceof Document) &&
-      !(scope instanceof ShadowRoot)
-    ) {
+    const scope = host.getRootNode();
+    if (!('querySelectorAll' in scope)) {
       return [host];
     }
     const members: HTMLElement[] = [];
-    scope.querySelectorAll('sui-radio').forEach((node) => {
-      if (node instanceof HTMLElement && node.getAttribute('name') === name) {
+    (scope as Node & ParentNode).querySelectorAll<HTMLElement>('sui-radio').forEach((node) => {
+      if (node.getAttribute('name') === name && Reflect.get(node, 'form') === formOwner) {
         members.push(node);
       }
     });
@@ -109,13 +180,34 @@
    * rely on, so that path passes `true`.
    */
   function broadcastSelection(host: HTMLElement, notify: boolean): void {
+    if (broadcasting.has(host)) {
+      return;
+    }
     const value = readStringProp(host, 'value');
     if (value === null) {
       return;
     }
-    for (const member of groupMembers(host)) {
-      if (readStringProp(member, 'selectedValue') !== value) {
-        Reflect.set(member, 'selectedValue', value);
+    const members = groupMembers(host);
+    for (const member of members) {
+      broadcasting.add(member);
+    }
+    try {
+      for (const member of members) {
+        const input = member.shadowRoot?.querySelector<HTMLInputElement>('input[type="radio"]');
+        if (input !== null && typeof input !== 'undefined') {
+          input.checked = member === host;
+        }
+        if (readStringProp(member, 'selectedValue') !== value) {
+          Reflect.set(member, 'selectedValue', value);
+        }
+        const refresh: unknown = Reflect.get(member, 'syncFormState');
+        if (typeof refresh === 'function') {
+          refresh.call(member);
+        }
+      }
+    } finally {
+      for (const member of members) {
+        broadcasting.delete(member);
       }
     }
     if (notify) {
@@ -134,6 +226,26 @@
    */
   function radioGrouping<T extends HostConstructor>(Base: T): T {
     const Grouped = class extends Base {
+      #stopWatching: (() => void) | null = null;
+
+      syncFormState(): void {
+        const input = this.shadowRoot?.querySelector<HTMLInputElement>('input[type="radio"]');
+        if (input !== null && typeof input !== 'undefined') {
+          const disabled = isDisabledHost(this);
+          input.disabled = disabled;
+          input.closest('.radio-container')?.classList.toggle('disabled', disabled);
+        }
+        // @ts-expect-error -- formAssociated defines it; TS cannot see through T.
+        super.syncFormState();
+        if (
+          input?.checked === true &&
+          readStringProp(this, 'selectedValue') === readStringProp(this, 'value')
+        ) {
+          broadcastSelection(this, false);
+        }
+        updateGroupValidity(groupMembers(this));
+      }
+
       #onChange = (event: Event): void => {
         const input = event.target;
         if (!(input instanceof HTMLInputElement) || input.type !== 'radio' || !input.checked) {
@@ -147,6 +259,9 @@
       // nextEnabledIndex/edgeIndex). Unlike Tabs, moving always selects --
       // a native radio group has no separate "manual" activation mode.
       #onKeydown = (event: KeyboardEvent): void => {
+        if (isDisabledHost(this)) {
+          return;
+        }
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
           return;
         }
@@ -195,6 +310,12 @@
       connectedCallback(): void {
         // @ts-expect-error -- the base class defines it; TS cannot see through T.
         super.connectedCallback?.();
+        this.#stopWatching = watchRadioRoot(this, () => {
+          if (this.isConnected) {
+            this.syncFormState();
+          }
+        });
+        this.syncFormState();
         // `change` does not compose across the shadow boundary, so it is
         // listened for where it actually fires, same as formAssociated's own
         // choice for the same event. `keydown` does compose, so the host is
@@ -204,6 +325,8 @@
       }
 
       disconnectedCallback(): void {
+        this.#stopWatching?.();
+        this.#stopWatching = null;
         this.shadowRoot?.removeEventListener('change', this.#onChange, true);
         this.removeEventListener('keydown', this.#onKeydown);
         // @ts-expect-error -- the base class defines it; TS cannot see through T.

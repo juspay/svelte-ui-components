@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RatingGroup from './RatingGroup.svelte';
 
@@ -249,16 +250,41 @@ describe('RatingGroup native form participation', () => {
     expect(new FormData(form).get('stars')).toBe('3');
   });
 
-  it('validates required against the unrated state and focuses the slider on invalid submit', async () => {
+  it('keeps required validity queries silent and redirects native carrier focus to the slider', async () => {
     const { getByRole } = render(RatingGroup, {
       target: form,
       props: { value: 0, name: 'stars', required: true }
     });
     const group = getByRole('slider');
+    const before = document.createElement('input');
+    form.before(before);
+    before.focus();
     expect(form.checkValidity()).toBe(false);
+    expect(document.activeElement).toBe(before);
+    const carrier = form.querySelector('input[type="number"]');
+    if (!(carrier instanceof HTMLInputElement)) {
+      throw new Error('Native rating carrier missing');
+    }
+    carrier.focus();
+    expect(document.activeElement).toBe(carrier);
+    await tick();
     expect(document.activeElement).toBe(group);
     await fireEvent.keyDown(group, { key: 'End' });
     expect(form.checkValidity()).toBe(true);
+  });
+
+  it('keeps an external control focused if it wins before the queued carrier handoff', async () => {
+    const { container } = render(RatingGroup, { required: true });
+    const carrier = container.querySelector('input[type="number"]');
+    if (!(carrier instanceof HTMLInputElement)) {
+      throw new Error('Native rating carrier missing');
+    }
+    const external = document.createElement('input');
+    container.after(external);
+    carrier.focus();
+    external.focus();
+    await tick();
+    expect(document.activeElement).toBe(external);
   });
 
   it('associates with an external form via `form` and stays readonly-submittable', async () => {

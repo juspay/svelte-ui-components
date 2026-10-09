@@ -68,6 +68,29 @@ const press = (el: HTMLElement, key: string): boolean =>
   el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
 
 describe('Choicebox takes part in a form', () => {
+  it('hands native carrier focus to the card after focus dispatch finishes', async () => {
+    const { container } = render(Choicebox, { mode: 'checkbox', required: true });
+    const carrier = nativeControl(container);
+    const owner = card(container);
+    let duringDispatch: Element | null = null;
+    carrier.addEventListener('focus', () => {
+      duringDispatch = document.activeElement;
+    });
+    carrier.focus();
+    expect(duringDispatch).toBe(carrier);
+    await tick();
+    expect(document.activeElement).toBe(owner);
+  });
+
+  it('does not reclaim focus if another control owns it before the queued handoff', async () => {
+    const { container } = render(Choicebox, { mode: 'checkbox', required: true });
+    const external = document.createElement('input');
+    container.after(external);
+    nativeControl(container).focus();
+    external.focus();
+    await tick();
+    expect(document.activeElement).toBe(external);
+  });
   it('submits its value under its name only while selected', async () => {
     const form = formWithId('signup');
     const { rerender } = render(Choicebox, {
@@ -95,7 +118,7 @@ describe('Choicebox takes part in a form', () => {
       value: 'insurance',
       selected: true
     });
-    form.appendChild(card(container));
+    form.append(...container.childNodes);
 
     expect(submittedEntries(form)).toEqual(['addons=insurance']);
   });
@@ -136,7 +159,7 @@ describe('Choicebox takes part in a form', () => {
     const form = document.createElement('form');
     document.body.appendChild(form);
     const { container } = render(Choicebox, { mode: 'checkbox', selected: true });
-    form.appendChild(card(container));
+    form.append(...container.childNodes);
     expect(submittedEntries(form)).toEqual([]);
   });
 });

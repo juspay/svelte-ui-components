@@ -10,6 +10,7 @@ A page-flip presentation component that displays content in a book-like format w
 </script>
 
 <Book
+  ariaLabel="Onboarding guide"
   pages={[
     { content: myPageSnippet1, title: 'Introduction' },
     { content: myPageSnippet2, title: 'Details' }
@@ -27,8 +28,11 @@ A page-flip presentation component that displays content in a book-like format w
 | showNavigation    | `boolean`        | No       | `true`    | When true, shows previous/next arrow buttons on the left and right sides of the book.                                                                                                                                      |
 | showPageIndicator | `boolean`        | No       | `true`    | When true, shows clickable dot indicators below the book for direct page navigation.                                                                                                                                       |
 | enableSwipe       | `boolean`        | No       | `false`   | When true, enables touch swipe and mouse drag gestures (20px threshold) to navigate between pages.                                                                                                                         |
+| ariaLabel         | `string`         | No       | `'Book'`  | Accessible name for the keyboard-operated book region.                                                                                                                                                                     |
 | testId            | `string`         | No       | `-`       | Test identifier applied as `data-pw` on the root element.                                                                                                                                                                  |
 | classes           | `string`         | No       | `-`       | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides (e.g., `.btn-primary { --button-color: #0070f3; }`) and pass them to create variant styles. |
+
+The keyboard-operated book region is named "Book" by default. Set `ariaLabel` to describe the content or provide a localized name, especially when a page has several books.
 
 ## Snippets
 
@@ -98,6 +102,8 @@ This component uses the following library components internally:
 ## Web Component
 
 Tag: `<sui-book>`
+
+The `aria-label` attribute names the inner book region. Its JavaScript adapter property is `bookAriaLabel`, which avoids replacing the native `HTMLElement.ariaLabel` accessor. Both attribute updates and property assignment update the region name.
 
 ```html
 <sui-book show-navigation show-page-indicator></sui-book>

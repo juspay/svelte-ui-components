@@ -9,7 +9,7 @@
       loop: { type: 'Boolean', reflect: true },
       speed: { type: 'Number', reflect: true },
       renderer: { type: 'String', reflect: true },
-      lottiePlayerAriaHidden: { type: 'Boolean', reflect: true, attribute: 'aria-hidden' },
+      lottiePlayerAriaHidden: { type: 'String', reflect: true, attribute: 'aria-hidden' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       oncomplete: { type: 'Object' },
@@ -21,6 +21,7 @@
 <script lang="ts">
   import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
   import { dispatchEvents } from '../dispatch';
+  import { ariaBoolean } from '../aria-boolean';
   let { lottiePlayerAriaHidden, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's name
@@ -44,7 +45,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<LottiePlayer {...props} ariaHidden={lottiePlayerAriaHidden} {...dispatchers} />
+<LottiePlayer {...props} ariaHidden={ariaBoolean(lottiePlayerAriaHidden)} {...dispatchers} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

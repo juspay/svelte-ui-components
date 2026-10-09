@@ -193,3 +193,18 @@
   outline: 2px solid var(--doc-accent);
   outline-offset: 2px;
 }
+
+/* Give the demonstration section a heading without shifting its visual layout.
+ * The route title is level one; each individual recipe remains a level-three
+ * heading beneath this level-two Examples section. */
+.demo-examples-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

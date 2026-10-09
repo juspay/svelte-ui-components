@@ -64,8 +64,8 @@
   onkeydown={handleKeydown}
   role={suppressRoleAndTabindex ? null : 'button'}
   tabindex={suppressRoleAndTabindex ? null : 0}
-  aria-label={ariaLabel ?? null}
-  aria-labelledby={ariaLabel ? null : labelId}
+  aria-label={suppressRoleAndTabindex ? null : (ariaLabel ?? null)}
+  aria-labelledby={suppressRoleAndTabindex || ariaLabel ? null : labelId}
   aria-current={status === 'active' ? 'step' : null}
 >
   {#if typeof icon === 'string' && icon.length > 0}

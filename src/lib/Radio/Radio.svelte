@@ -102,6 +102,7 @@
 
 <style>
   .radio-container {
+    position: relative;
     display: var(--radio-container-display, inline-flex);
     align-items: var(--radio-container-align-items, center);
     gap: var(--radio-container-gap, 8px);
@@ -116,8 +117,11 @@
   .radio-input {
     position: absolute;
     opacity: 0;
-    width: 0;
-    height: 0;
+    width: var(--radio-size, 20px);
+    height: var(--radio-size, 20px);
+    inset-inline-start: 0;
+    top: 50%;
+    transform: translateY(-50%);
     margin: 0;
     pointer-events: none;
   }

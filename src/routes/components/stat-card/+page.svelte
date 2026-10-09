@@ -113,6 +113,8 @@
   <h1>StatCard</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <p class="intro">
   A flexible metric card for displaying KPIs. Supports a single value with a delta badge, or
   multiple metric rows with per-row headings, tooltips, deltas, and breakdown grids. Additional

@@ -26,6 +26,8 @@
   <h1>RatingGroup</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <div class="demo-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
   <RatingGroup bind:value={basicValue} ariaLabel="Rate this product" testId="rating-basic" />
   <span data-pw="rating-basic-value">Value: {basicValue}</span>

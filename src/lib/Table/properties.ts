@@ -565,12 +565,11 @@ export type TableProperties = OptionalTableProperties & TableEventProperties;
  * Accessible names Table generates for its own controls, for callers who do
  * not ship an English UI.
  *
- * Every member is optional and falls back to an English default. All but
- * `rowsPerPage` and `cellEditor` keep the string Table has always used; those
- * two add a name to a control that previously had none.
+ * Every member is optional. Control labels use English defaults; rowAction
+ * uses the readable source-row caption.
  *
- * The two that depend on a column, and the one that depends on a row, are
- * functions rather than templates with a placeholder: a translator needs to
+ * Members that depend on a column or row are functions rather than templates
+ * with a placeholder: a translator needs to
  * put the header where their grammar wants it, not where an English sentence
  * happens to leave a slot.
  *
@@ -587,6 +586,8 @@ export type TableLabels = {
    *  naming an empty row. Default: `Select row ${rowId || 'non-selectable'}`. */
   selectRow?: (rowId: string) => string;
   /** Header checkbox that selects every row on the page. Default: `Select all rows`. */
+  /** Accessible header name for the row-selection column, including single-selection mode. */
+  selectionColumn?: string;
   selectAllRows?: string;
   /** Button that empties the search box. Default: `Clear search`. */
   clearSearch?: string;
@@ -594,8 +595,12 @@ export type TableLabels = {
   closeSearch?: string;
   /** Built-in editor name. Default: `${columnLabel} for ${rowLabel}`. */
   cellEditor?: (columnLabel: string, rowLabel: string) => string;
+  /** Clickable row name. Receives stable readable source-row context. Default: rowLabel. */
+  rowAction?: (rowLabel: string) => string;
   /** Page-size selector in the built-in paginator footer. Default: `Rows per page`. */
   rowsPerPage?: string;
+  /** Page-navigation landmark name. Default: `Pagination`. */
+  pageNavigation?: string;
 };
 
 export type OptionalTableProperties = {
@@ -709,6 +714,7 @@ export type OptionalTableProperties = {
   isTableScrollable?: boolean;
   isContentScrollable?: boolean;
   testId?: string;
+  /** Visually hidden native table caption; non-empty also names existing scroll groups. */
   caption?: string;
   sortAscIcon?: Snippet;
   sortDescIcon?: Snippet;

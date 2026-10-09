@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { tick } from 'svelte';
+  import Button from '$lib/Button/Button.svelte';
   import Tabs from '$lib/Tabs/Tabs.svelte';
 
   let activeTab = $state(0);
@@ -50,6 +52,17 @@
     }
   }
 
+  async function closeWorkspaceFile(index: number) {
+    closeFile(index);
+    await tick();
+    const tab = document.querySelector(
+      '[data-pw="workspace-tabs-demo"] [role="tab"][aria-selected="true"]'
+    );
+    if (tab instanceof HTMLElement) {
+      tab.focus();
+    }
+  }
+
   const manualItems = [
     { key: 'overview', label: 'Overview' },
     { key: 'billing', label: 'Billing', disabled: true },
@@ -64,6 +77,8 @@
   <span class="category-badge">Navigation</span>
   <h1>Tabs</h1>
 </div>
+
+<h2 class="demo-examples-heading">Examples</h2>
 
 <h3 class="demo-heading">Default (slide indicator)</h3>
 <p class="demo-caption">
@@ -80,7 +95,11 @@
 </div>
 
 <h3 class="demo-heading">Custom tab snippet (workspace-style)</h3>
-<div class="demo-row" style="flex-direction: column; max-width: 600px;">
+<div
+  data-pw="workspace-tabs-demo"
+  class="demo-row"
+  style="flex-direction: column; max-width: 600px;"
+>
   <Tabs
     items={workspaceFiles.map((file) => file.name)}
     activeIndex={activeWorkspace}
@@ -96,29 +115,19 @@
           ></span>
         {/if}
         <span>{label}</span>
-        <button
-          style="all: unset; cursor: pointer; font-size: 12px; line-height: 1; padding: 2px; border-radius: 3px; color: inherit; opacity: 0.9;"
-          onmouseenter={(event) => {
-            if (event.currentTarget instanceof HTMLElement) {
-              event.currentTarget.style.opacity = '1';
-            }
-          }}
-          onmouseleave={(event) => {
-            if (event.currentTarget instanceof HTMLElement) {
-              event.currentTarget.style.opacity = '0.9';
-            }
-          }}
-          onclick={(event) => {
-            event.stopPropagation();
-            closeFile(index);
-          }}
-          aria-label="Close {label}"
-        >
-          ✕
-        </button>
       </span>
     {/snippet}
   </Tabs>
+  <div class="workspace-file-actions" role="group" aria-label="Close workspace files">
+    {#each workspaceFiles as file, index (file.name)}
+      <Button
+        variant="ghost"
+        text={`Close ${file.name}`}
+        ariaLabel={`Close ${file.name}`}
+        onclick={() => closeWorkspaceFile(index)}
+      />
+    {/each}
+  </div>
   <p class="state-display">Active file: {workspaceFiles[activeWorkspace]?.name ?? 'none'}</p>
 </div>
 
@@ -206,6 +215,13 @@
 </div>
 
 <style>
+  .workspace-file-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
   .demo-heading {
     margin: 24px 0 8px;
   }

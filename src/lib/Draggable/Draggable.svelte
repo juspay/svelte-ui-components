@@ -134,13 +134,15 @@
   }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- This named content group moves with arrow keys; it can contain independent
+     controls, so button semantics would hide their accessibility semantics. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
   class="draggable {classes ?? ''}"
   class:dragging={active !== null}
   data-pw={typeof testId === 'string' ? testId : null}
   tabindex={disabled ? -1 : 0}
+  role="group"
   aria-label={dragLabel}
   style:transform={`translate(${x}px, ${y}px)`}
   onpointerdown={startDrag}

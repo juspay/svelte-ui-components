@@ -12,6 +12,8 @@ export type OptionalPaginationProperties = {
   disabled?: boolean;
   testId?: string;
   classes?: string;
+  /** Name of the page-navigation landmark. Default: `Pagination`. */
+  ariaLabel?: string;
   /**
    * Cursor-pagination hint. When `true`, the next button stays enabled even
    * when `currentPage >= totalPages` — use this when the total page count is

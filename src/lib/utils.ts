@@ -451,11 +451,30 @@ export function createDebouncer(delay: number | (() => number)) {
   };
 }
 
-/** Per-container locks shared by overlays and the legacy body helpers. */
-const scrollLocks = new WeakMap<
-  HTMLElement,
-  { count: number; overflow: [string, string, string][] }
->();
+type ScrollLock = { count: number; overflow: [string, string, string][] };
+const scrollLocksKey = Symbol.for('@juspay/svelte-ui-components/scroll-locks/v1');
+const activeScrollLocksKey = Symbol.for('@juspay/svelte-ui-components/active-scroll-locks/v1');
+
+/** Independent package and custom-element bundles share the actual owner's holds. */
+function scrollLocksFor(container: HTMLElement): WeakMap<HTMLElement, ScrollLock> {
+  const activeOwner: HTMLElement & {
+    [activeScrollLocksKey]?: WeakMap<HTMLElement, ScrollLock>;
+  } = container;
+  if (activeOwner[activeScrollLocksKey]) {
+    return activeOwner[activeScrollLocksKey];
+  }
+  const owner: Document & {
+    [scrollLocksKey]?: WeakMap<HTMLElement, ScrollLock>;
+  } = container.ownerDocument;
+  let locks = owner[scrollLocksKey];
+  if (!locks) {
+    locks = new WeakMap<HTMLElement, ScrollLock>();
+    Object.defineProperty(owner, scrollLocksKey, { value: locks });
+  }
+  // The same real owner can be adopted into another document while held.
+  Object.defineProperty(activeOwner, activeScrollLocksKey, { value: locks, configurable: true });
+  return locks;
+}
 const bodyScrollReleases: (() => void)[] = [];
 
 /**
@@ -470,6 +489,7 @@ export function acquireScrollLock(
   if (container === null) {
     return () => {};
   }
+  const scrollLocks = scrollLocksFor(container);
   let lock = scrollLocks.get(container);
   if (!lock) {
     const overflow: [string, string, string][] = [];
@@ -504,6 +524,7 @@ export function acquireScrollLock(
         container.style.setProperty(name, value, priority);
       }
       scrollLocks.delete(container);
+      Reflect.deleteProperty(container, activeScrollLocksKey);
     }
   };
 }

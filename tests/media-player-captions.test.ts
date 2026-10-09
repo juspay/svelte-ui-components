@@ -40,7 +40,7 @@ const trackState = (video: Locator): Promise<TrackState> =>
 const toggleOf = (player: Locator): Locator =>
   player.getByRole('button', { name: 'Captions', exact: true });
 
-// The video element itself is also a role=button with the same name, so the overlay's own
+// The native video-surface button also has the same name, so the overlay's own
 // transport button is addressed through its wrapper.
 const transportButton = (player: Locator): Locator => player.locator('.center-control button');
 
@@ -299,7 +299,7 @@ test.describe('MediaPlayer captions (ISSUE-031)', () => {
     const toggle = toggleOf(player);
 
     // Real sequential navigation from the video, no hover and no click on the toggle.
-    await video.focus();
+    await player.locator('button.media-surface-action').focus();
     const reached: string[] = [];
     for (let presses = 0; presses < 6; presses++) {
       await page.keyboard.press('Tab');

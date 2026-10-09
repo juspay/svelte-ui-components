@@ -225,11 +225,24 @@
   // viewports, but a bare scroll container gives no visual hint that more
   // columns exist. Track whether either edge has hidden content and surface
   // it as edge scrims (see .table-scroll-shell styles).
+  // Caption identity must reach the actual keyboard scroll owner, not only its
+  // descendant table. Groups keep nested axes out of the landmark namespace and
+  // add no tab stop or keyboard handler; native overflow/fit focus stays intact.
+  let scrollCaption = $derived(
+    typeof caption === 'string' && caption.trim().length > 0 ? caption : null
+  );
+  let hasVerticalScrollOwner = $state(false);
   let canScrollLeft = $state(false);
   let canScrollRight = $state(false);
 
   const trackHorizontalScroll = (scrollNode: HTMLElement) => {
+    const containerNode = scrollNode.closest<HTMLElement>('.table-container');
     const updateScrollHints = () => {
+      const verticalOverflow = containerNode ? getComputedStyle(containerNode).overflowY : '';
+      hasVerticalScrollOwner =
+        containerNode !== null &&
+        (verticalOverflow === 'auto' || verticalOverflow === 'scroll') &&
+        containerNode.scrollHeight > containerNode.clientHeight;
       canScrollLeft = scrollNode.scrollLeft > 2;
       canScrollRight = scrollNode.scrollLeft + scrollNode.clientWidth < scrollNode.scrollWidth - 2;
     };
@@ -239,6 +252,9 @@
     // (async rows/columns arriving) change scrollWidth, so observe both.
     const hintResizeObserver = new ResizeObserver(updateScrollHints);
     hintResizeObserver.observe(scrollNode);
+    if (containerNode !== null) {
+      hintResizeObserver.observe(containerNode);
+    }
     const tableElement = scrollNode.querySelector('table');
     if (tableElement) {
       hintResizeObserver.observe(tableElement);
@@ -836,6 +852,8 @@
   <div
     class="table-container {isTableScrollable ? 'scrollable-table' : ''} {classes ?? ''}"
     class:table-mobile-cards={mobileCardLayout}
+    role={scrollCaption !== null && hasVerticalScrollOwner ? 'group' : null}
+    aria-label={hasVerticalScrollOwner ? scrollCaption : null}
     data-pw={testId}
     testID={testId}
   >
@@ -844,7 +862,12 @@
       class:scrollable-left={canScrollLeft}
       class:scrollable-right={canScrollRight}
     >
-      <div class="table-scroll" use:trackHorizontalScroll>
+      <div
+        class="table-scroll"
+        role={scrollCaption !== null ? 'group' : null}
+        aria-label={scrollCaption}
+        use:trackHorizontalScroll
+      >
         <table role={mobileRole('table')}>
           {#if caption}
             <caption class="sr-only">{caption}</caption>
@@ -878,8 +901,9 @@
                   />
                 </th>
               {:else if isCheckboxMode && isSingleSelect}
-                <!-- In single-select mode the header cell is an empty spacer -->
+                <!-- Selection is a real column even without a select-all action. -->
                 <th
+                  aria-label={labels?.selectionColumn ?? 'Row selection'}
                   class="table-header table-checkbox-col"
                   class:table-header-sticky={isStickyHeader}
                   role={mobileRole('columnheader')}
@@ -1084,6 +1108,7 @@
               {#each paginatedTableData as row, pageRowIndex (rowIdByRow.get(row) ?? pageRowIndex)}
                 {@const rowIndex = pageRowIndex + rowIndexOffset}
                 {@const originalIndex = originalIndexByRow.get(row) ?? rowIndex}
+                {@const rowContext = rowLabels.get(row) ?? `row ${originalIndex + 1}`}
                 {@const rowId = rowIdByRow.get(row) ?? String(rowIndex)}
                 {@const rowDisabled = isCheckboxMode && isRowDisabled(rowId)}
                 {@const rowSelected = isCheckboxMode && isRowSelected(rowId)}
@@ -1094,6 +1119,9 @@
                   class:table-summary-row={summaryRowIndex !== null &&
                     originalIndex === summaryRowIndex}
                   role={mobileRole('row')}
+                  aria-label={isRowClickable
+                    ? (labels?.rowAction?.(rowContext) ?? rowContext)
+                    : null}
                   data-pw={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   testID={typeof getRowTestId === 'function' ? getRowTestId(row, rowIndex) : null}
                   onclick={isRowClickable
@@ -1280,6 +1308,8 @@
             {/if}
             {#if !hideSteppers}
               <Pagination
+                ariaLabel={labels?.pageNavigation ??
+                  (tableTitle ? `${tableTitle} pagination` : 'Pagination')}
                 totalPages={paginationTotalPages}
                 currentPage={effectivePage}
                 hasMore={pagination.hasMore ?? false}

@@ -139,7 +139,7 @@ test('interactive Pill does not intercept keyboard activation of its dismiss but
   await dismiss.press('Enter');
   await expect(page.getByTestId('pill-dismiss-count')).toHaveText('2');
   await expect(page.getByTestId('pill-click-count')).toHaveText('0');
-  await page.getByTestId('pill-interactive').press('Space');
+  await page.getByTestId('pill-interactive').locator('button.pill-action').press('Space');
   await expect(page.getByTestId('pill-click-count')).toHaveText('1');
 });
 

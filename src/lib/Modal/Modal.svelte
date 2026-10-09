@@ -10,6 +10,7 @@
   import Img from '$lib/Img/Img.svelte';
 
   let overlayDiv: HTMLDivElement | null = $state(null);
+  let overlayButton: HTMLButtonElement | null = $state(null);
   let modalContent: HTMLDivElement | null = $state(null);
   let backPressed = $state(false);
   // Captured in onMount right before focus moves in, restored in onDestroy.
@@ -54,12 +55,8 @@
     overlayAriaLabel
   }: ModalProperties = $props();
 
-  // The overlay only takes role="button" and becomes keyboard-reachable when a
-  // click on it would actually do something. Without either handler, clicking
-  // or activating it is already a no-op (see handleOverlayClick's guard) --
-  // announcing it as a focusable "button" in that case is worse for assistive
-  // tech than leaving it unannounced, same reasoning already applied to the
-  // header images below.
+  // A dismissible backdrop has its own native button, beside the content panel.
+  // It must never make the whole panel an interactive descendant of a button.
   const overlayDismissible = $derived(
     typeof onoverlayclick === 'function' || typeof ondismiss === 'function'
   );
@@ -142,7 +139,7 @@
   };
 
   const handleOverlayClick = (event: MouseEvent): void => {
-    if (event.target === overlayDiv) {
+    if (event.target === overlayDiv || event.target === overlayButton) {
       debounce(() => {
         onoverlayclick?.();
         ondismiss?.();
@@ -183,37 +180,6 @@
       onoverlayclick?.();
       ondismiss?.();
     });
-  };
-
-  // The overlay's own Enter/Space activation, additional to the shared
-  // handleKeyDown (Tab/onkeydown-prop -- Escape is the dismissal module's,
-  // via handleEscape) that svelte:window already delivers here via
-  // bubbling -- this handler must not also call handleKeyDown itself, or
-  // every keydown on/under the overlay would run it twice (once from this
-  // direct call, once from the window listener seeing the same event bubble
-  // past it), double-firing onkeydown and re-running the Tab trap. Enter/Space
-  // activation is scoped to this handler, not folded into handleKeyDown itself,
-  // because handleKeyDown also runs
-  // from the window listener for a keypress anywhere in the modal (e.g. an
-  // input field) -- it must not treat every Enter/Space in the modal as an
-  // overlay dismissal. This handler is bound to the overlay div, so a keydown
-  // on any focusable descendant (the back button, a footer button, an input
-  // field) bubbles up and reaches it too -- the target check below is what
-  // actually stops that bubbled Enter/Space from being read as an activation
-  // of the overlay itself, mirroring the guard handleOverlayClick already has
-  // for the click case.
-  const handleOverlayKeyDown = (event: KeyboardEvent): void => {
-    if (
-      (event.key === 'Enter' || event.key === ' ') &&
-      overlayDismissible &&
-      event.target === overlayDiv
-    ) {
-      event.preventDefault();
-      debounce(() => {
-        onoverlayclick?.();
-        ondismiss?.();
-      });
-    }
   };
 
   // Fix [major]: role=button image divs need Enter/Space handlers for WCAG 2.1 SC 2.1.1.
@@ -307,7 +273,8 @@
 
 {#if typeof content === 'function'}
   <OverlayAnimation fadeIn={overlayFadeIn}>
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <!-- Native backdrop activation bubbles here; only the backdrop target dismisses. -->
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div
       bind:this={overlayDiv}
       use:portalAction={{ usePortal }}
@@ -316,13 +283,18 @@
         ? `--modal-overlay-backdrop-filter: ${overlayBackdropFilter};`
         : null}
       onclick={handleOverlayClick}
-      onkeydown={handleOverlayKeyDown}
-      role={overlayDismissible ? 'button' : null}
-      tabindex={overlayDismissible ? 0 : null}
-      aria-label={overlayAriaLabel ?? null}
       data-pw={testId}
       testID={testId}
     >
+      {#if overlayDismissible}
+        <button
+          bind:this={overlayButton}
+          type="button"
+          class="modal-overlay-action"
+          aria-label={overlayAriaLabel ?? 'Dismiss modal'}
+          tabindex={role === 'dialog' || role === 'alertdialog' ? -1 : 0}
+        ></button>
+      {/if}
       <ModalAnimation enable={enableTransition} {align} {transitionType} {entryAnimation}>
         <div
           bind:this={modalContent}
@@ -435,6 +407,21 @@
     z-index: var(--modal-z-index, 15);
     -webkit-tap-highlight-color: transparent;
     margin: var(--modal-margin);
+  }
+
+  .modal-overlay-action {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .modal-overlay-action:focus-visible {
+    outline: var(--modal-overlay-focus-outline, 2px solid #2563eb);
+    outline-offset: var(--modal-overlay-focus-outline-offset, -2px);
   }
 
   .overlay-active {

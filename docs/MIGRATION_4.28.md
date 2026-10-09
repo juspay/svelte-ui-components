@@ -211,7 +211,7 @@ node --experimental-strip-types scripts/migrate/legacy-palette.ts --out legacy-p
 ```
 
 generates `:root` rules pinning each changed property to its 4.27.x value, by
-diffing `origin/release` against this release rather than from a hand-written
+diffing the fixed `4.27.6` tag against the current release rather than from a hand-written
 list. A property whose fallback differs between its own usage sites is reported
 as ambiguous and deliberately **not** pinned, because one `:root` rule could
 not reproduce it.

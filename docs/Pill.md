@@ -136,7 +136,7 @@ layer is never consulted — every `tone="ok"` and `tone="danger"` chip renders 
 grey as an untoned one, with no error and no visual hint that the prop stopped working. Measured
 on a real `tone="ok"` pill:
 
-|                                                    | background | color     |
+| Configuration                                      | background | color     |
 | -------------------------------------------------- | ---------- | --------- |
 | tone alone                                         | `#d4edda`  | `#155724` |
 | tone + a global `--pill-background`/`--pill-color` | `#252535`  | `#d1d5db` |
@@ -190,11 +190,10 @@ the click and dismiss handlers stay inert. A button root emits it whether or not
 was supplied — it is a real, focusable control either way — whereas a `div` root emits it only
 when an `onclick` makes it one.
 
-**`as="button"` and `dismissible` cannot be combined.** A `<button>` may not contain another
-button, and a dismissible pill is inherently two controls. Rather than emit invalid markup,
-that combination falls back to the `div` root and its shim — the same graceful-degradation rule
-`Card` applies to `as="a"` with no `href`. If you need both, render the dismiss control as a
-sibling of the pill rather than inside it.
+With an action and `dismissible`, the outer element is a layout `div`. Its primary action and
+dismiss control are sibling native buttons, so neither contains another interactive control.
+The primary action retains the supplied name/description, expanded and pressed state; dismiss
+retains its own label and disabled behavior.
 
 Opting in changes semantics only, not appearance: a button root is neutralised back to the same
 computed font, padding, margin, border and height as the equivalent `div`.
@@ -253,7 +252,7 @@ a component never touches would be a fake restriction.
 | ------------ | --------------------------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | text         | `string`                                            | Yes      | `-`       | The label text displayed inside the pill. Long text is truncated with an ellipsis when it exceeds the maximum width.                                                                                                                                                                                                                                                                          |
 | tone         | `'accent' \| 'ok' \| 'warn' \| 'danger' \| 'muted'` | No       | `-`       | Semantic tone for a status/category chip. Sets the background/text color from the matching `--pill-tone-{tone}-background` / `--pill-tone-{tone}-color` variables (each with a built-in default). An explicit `--pill-background` / `--pill-color` (set directly, or via `classes`) always wins over the tone default. Omitted by default, which renders exactly as before this prop existed. |
-| as           | `'div' \| 'button'`                                 | No       | `'div'`   | Root element. `'div'` renders exactly as before this prop existed. `'button'` renders a real `<button type="button">`, giving a chip native focus, keyboard activation and announcement instead of the `role="button"`/`tabindex`/keydown shim. Falls back to `'div'` when combined with `dismissible`, since a button may not contain another button.                                        |
+| as           | `'div' \| 'button'`                                 | No       | `'div'`   | Root element. `'div'` renders exactly as before this prop existed. `'button'` renders a real `<button type="button">`, giving a chip native focus, keyboard activation and announcement instead of the `role="button"`/`tabindex`/keydown shim. With `dismissible`, the outer layout is a `div` and the primary action is a separate native button beside dismiss.                            |
 | ariaExpanded | `boolean`                                           | No       | `-`       | Expanded state of a disclosure chip, rendered as `aria-expanded`. Applied only when the pill is interactive (a button root, or a div with `onclick`). Web component attribute: `aria-expanded`.                                                                                                                                                                                               |
 | ariaPressed  | `boolean`                                           | No       | `-`       | Pressed state of a toggle chip, rendered as `aria-pressed`. Applied only when the pill is interactive. Web component attribute: `aria-pressed`.                                                                                                                                                                                                                                               |
 | dismissible  | `boolean`                                           | No       | `false`   | When true, shows a small X button after the text that triggers the ondismiss event when clicked. Forces the `div` root — see `as`.                                                                                                                                                                                                                                                            |
@@ -362,3 +361,5 @@ double-deliver it to that same listener.
 | -------------- | --------------- | ------------------------------------------------------------------------ |
 | `leading-icon` | `leadingIcon`   | Content rendered before the text label (icon, image, or inline element). |
 | `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button; defaults to the close glyph.   |
+
+When a pill has both an action and a dismiss control, each has a separate native button. The outer pill remains a layout container. `ariaExpanded` and `ariaPressed` describe the primary action, while dismiss keeps its own label and keyboard activation. A non-dismissible pill keeps its existing root behavior.

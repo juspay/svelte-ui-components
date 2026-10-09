@@ -31,6 +31,12 @@
   }: StatCardProperties = $props();
 
   const isInteractive = $derived(typeof onclick === 'function');
+  let actionButton: HTMLButtonElement | null = $state(null);
+  const actionName = $derived(
+    [title, value, subtitle]
+      .filter((text) => typeof text === 'string' && text.length > 0)
+      .join(' ') || 'Open metric details'
+  );
 
   /**
    * Which ONE value on this card rolls.
@@ -154,19 +160,24 @@
     hasTitle || Boolean(checkbox) || typeof headerRight === 'function'
   );
 
-  const handleKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      if (event.key === ' ') {
-        event.preventDefault();
-      }
-      if (event.currentTarget instanceof HTMLElement) {
-        event.currentTarget.click();
-      }
-    }
-  };
-
   const handleCheckboxChange = (checked: boolean): void => {
     oncheckboxchange?.(checked);
+  };
+
+  const handleCardClick = (event: MouseEvent): void => {
+    const target = event.composedPath()[0];
+    const control =
+      target instanceof Element
+        ? target.closest(
+            'button, a[href], input, select, textarea, [role="button"], [role="checkbox"], [role="link"], [contenteditable="true"]'
+          )
+        : null;
+    // Snippet and slotted controls own their actions. Only this card's action
+    // button, or a click on its noninteractive body, delegates to onclick.
+    if (control !== null && control !== actionButton) {
+      return;
+    }
+    onclick?.(event);
   };
 
   /**
@@ -179,18 +190,21 @@
   };
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<!-- Card pointer activation delegates to the same native action button's handler.
+     Child controls remain siblings of that button and keep their own semantics. -->
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div
   {@attach measurePrimary(valueSignature)}
   class="statcard {classes ?? ''}"
   class:statcard-interactive={isInteractive}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
-  role={isInteractive ? 'button' : null}
-  tabindex={isInteractive ? 0 : null}
-  onclick={isInteractive ? onclick : null}
-  onkeydown={isInteractive ? handleKeydown : null}
+  onclick={isInteractive ? handleCardClick : null}
 >
+  {#if isInteractive}
+    <button bind:this={actionButton} type="button" class="statcard-action" aria-label={actionName}
+    ></button>
+  {/if}
   {#if hasHeaderContent}
     <div
       class="statcard-header"
@@ -465,12 +479,49 @@
   }
 
   .statcard-interactive {
+    position: relative;
     cursor: var(--statcard-cursor, pointer);
   }
 
-  .statcard-interactive:focus-visible {
+  .statcard-interactive:has(> .statcard-action:focus-visible) {
     outline: var(--statcard-focus-outline, 2px solid currentColor);
     outline-offset: var(--statcard-focus-outline-offset, 2px);
+  }
+
+  .statcard-action {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: inherit;
+    outline: none;
+  }
+
+  .statcard-interactive > :not(.statcard-action) {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Text clicks reach the card action; controls and tooltip triggers stay usable. */
+  .statcard-interactive
+    :global(
+      :is(
+        button,
+        input,
+        select,
+        textarea,
+        a,
+        slot,
+        [role='checkbox'],
+        [tabindex],
+        .tooltip-container
+      )
+    ) {
+    pointer-events: auto;
   }
 
   .statcard-header {

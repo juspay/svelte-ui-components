@@ -23,6 +23,7 @@
     showArrows
     showGradient
     dragToScroll
+    ariaLabel="Horizontal item strip"
     testId="scroller-horizontal-default"
   >
     <div style="display: flex; gap: 12px; padding: 8px;">
@@ -36,7 +37,13 @@
 <h2>Vertical</h2>
 <div class="demo-row">
   <div style="--scroller-height: 200px;">
-    <Scroller direction="vertical" showArrows showGradient testId="scroller-vertical-default">
+    <Scroller
+      direction="vertical"
+      showArrows
+      showGradient
+      ariaLabel="Vertical item list"
+      testId="scroller-vertical-default"
+    >
       <div style="display: flex; flex-direction: column; gap: 12px; padding: 8px;">
         {#each Array(12) as _, i (i)}
           <div class="scroll-item">Row {i + 1}</div>
@@ -106,7 +113,12 @@
 <div class="demo-row kbd-row" data-pw="scroller-kbd-horizontal">
   <button type="button" class="toggle-btn" data-pw="scroller-horizontal-before">Before</button>
   <div class="kbd-slot">
-    <Scroller direction="horizontal" showArrows={false} testId="scroller-no-arrows-horizontal">
+    <Scroller
+      direction="horizontal"
+      showArrows={false}
+      ariaLabel="Keyboard horizontal item strip"
+      testId="scroller-no-arrows-horizontal"
+    >
       <div class="wide-content">
         <span>Start of a 1600px line of text that cannot be focused</span>
         <span>End of the line</span>
@@ -120,7 +132,12 @@
 <div class="demo-row kbd-row" data-pw="scroller-kbd-vertical">
   <button type="button" class="toggle-btn" data-pw="scroller-vertical-before">Before</button>
   <div class="kbd-slot" style="--scroller-height: 140px;">
-    <Scroller direction="vertical" showArrows={false} testId="scroller-no-arrows-vertical">
+    <Scroller
+      direction="vertical"
+      showArrows={false}
+      ariaLabel="Keyboard vertical item list"
+      testId="scroller-no-arrows-vertical"
+    >
       <div class="tall-content">
         {#each Array(10) as _, i (i)}
           <p>Row {i + 1} of text that cannot be focused</p>
@@ -140,7 +157,12 @@
 <div class="demo-row kbd-row">
   <button type="button" class="toggle-btn" data-pw="scroller-touch-before">Before</button>
   <div class="kbd-slot">
-    <Scroller direction="horizontal" showArrows testId="scroller-touch-arrows">
+    <Scroller
+      direction="horizontal"
+      showArrows
+      ariaLabel="Touch item strip"
+      testId="scroller-touch-arrows"
+    >
       <div class="wide-content">
         <span>Swipe on touch, scroll with the arrow keys from a keyboard</span>
       </div>
@@ -171,7 +193,12 @@
 <div class="demo-row kbd-row">
   <button type="button" class="toggle-btn" data-pw="scroller-fits-before">Before</button>
   <div class="kbd-slot">
-    <Scroller direction="horizontal" showArrows={false} testId="scroller-no-arrows-fits">
+    <Scroller
+      direction="horizontal"
+      showArrows={false}
+      ariaLabel="Fitting content example"
+      testId="scroller-no-arrows-fits"
+    >
       <div class="narrow-content">Everything fits</div>
     </Scroller>
   </div>
@@ -182,7 +209,12 @@
 <div class="demo-row kbd-row">
   <button type="button" class="toggle-btn" data-pw="scroller-nested-before">Before</button>
   <div class="kbd-slot">
-    <Scroller direction="horizontal" showArrows={false} testId="scroller-no-arrows-nested">
+    <Scroller
+      direction="horizontal"
+      showArrows={false}
+      ariaLabel="Nested controls example"
+      testId="scroller-no-arrows-nested"
+    >
       <div class="wide-content">
         <button type="button" data-pw="scroller-nested-first">First action</button>
         <span class="spacer"></span>
@@ -201,7 +233,12 @@
     style:max-width={dynamicNarrow ? '240px' : '500px'}
     data-pw="scroller-dynamic-slot"
   >
-    <Scroller direction="horizontal" showArrows={false} testId="scroller-dynamic">
+    <Scroller
+      direction="horizontal"
+      showArrows={false}
+      ariaLabel="Dynamic content example"
+      testId="scroller-dynamic"
+    >
       <div class="dynamic-content" style:width="{dynamicContentWidth}px">
         <span>Dynamic content</span>
         {#if dynamicFocusable}

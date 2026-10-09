@@ -23,9 +23,17 @@
   <h1>Pagination</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Default</h3>
 <div class="demo-row">
-  <Pagination totalPages={10} bind:currentPage siblingCount={1} testId="pagination-basic" />
+  <Pagination
+    totalPages={10}
+    bind:currentPage
+    siblingCount={1}
+    ariaLabel="Numbered pages"
+    testId="pagination-basic"
+  />
   <span class="state-display">Page: {currentPage}</span>
 </div>
 
@@ -37,6 +45,7 @@
 <div class="demo-row">
   <Pagination
     totalPages={3}
+    ariaLabel="Cursor pages"
     bind:currentPage={cursorPage}
     {hasMore}
     prevButtonTestId="cursor-prev"
@@ -52,6 +61,7 @@
 <div class="demo-row">
   <Pagination
     totalPages={cursorTotalPages}
+    ariaLabel="Load more pages"
     bind:currentPage={loadMorePage}
     hasMore={cursorHasMore}
     onloadmore={handleLoadMore}
@@ -64,5 +74,5 @@
 
 <h3>Disabled</h3>
 <div class="demo-row">
-  <Pagination totalPages={10} currentPage={5} disabled />
+  <Pagination totalPages={10} currentPage={5} disabled ariaLabel="Disabled pagination example" />
 </div>

@@ -20,6 +20,7 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/hitl-deadline/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/overlay-scroll-ownership/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/composite-validity/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/button-shrinkable/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/date-range-picker/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/embedded-fill/index.html'),
@@ -36,7 +37,8 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/chat-hide-scrollbar/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/scroller-justify-content/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/toast-close-lifecycle/index.html'),
-        resolve(import.meta.dirname, 'tests/fixtures/chart-label-plate/index.html')
+        resolve(import.meta.dirname, 'tests/fixtures/chart-label-plate/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/tabs-scroll-bounds/index.html')
       ]
     }
   }

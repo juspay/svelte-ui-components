@@ -23,6 +23,7 @@
     hideScrollbar = false,
     jump = true,
     jumpLabel = 'Jump to latest',
+    messageListLabel,
     jumpIcon,
     toolStatus = null,
     suggestions = [],
@@ -97,6 +98,7 @@
   {/if}
 
   <ChatMessageList
+    ariaLabel={messageListLabel ?? (title.trim() ? `${title} messages` : 'Conversation messages')}
     {messages}
     {autoscroll}
     {scrollPolicy}

@@ -388,9 +388,8 @@ describe('StatCard.wc.svelte (oncheckboxchange, 1 argument, non-colliding)', () 
       fired += 1;
     });
 
-    // isInteractive (StatCard.svelte) only wires role="button"/tabindex/click
-    // handling once onclick is a function -- exactly what was just assigned.
-    const card = el.shadowRoot?.querySelector('[role="button"]');
+    // isInteractive wires a native action button only when onclick is a function.
+    const card = el.shadowRoot?.querySelector('button.statcard-action');
     expect(card).not.toBeNull();
     card?.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
 

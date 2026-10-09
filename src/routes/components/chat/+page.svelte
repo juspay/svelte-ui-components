@@ -510,6 +510,7 @@
       scrollPolicyState = state;
     }}
     testId="chat-scroll-policy-pin"
+    messageListLabel="Pinned conversation transcript"
   />
   <div class="scroll-policy-controls">
     <Button
@@ -533,6 +534,7 @@
     messages={scrollPolicyMessages}
     jumpLabel="Show latest reply"
     testId="chat-scroll-policy-jump"
+    messageListLabel="Latest-reply conversation transcript"
   >
     {#snippet jumpIcon()}
       <span data-pw="chat-scroll-policy-jump-icon">↓</span>

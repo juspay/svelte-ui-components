@@ -28,6 +28,8 @@
   <h1>Choicebox</h1>
 </div>
 
+<h2 class="demo-examples-heading">Examples</h2>
+
 <h3>Radio mode</h3>
 <!-- Grouped and named, so assistive tech announces "1 of 3" rather than three
      unrelated radios. These cards carry no `name`, so they are deliberately NOT

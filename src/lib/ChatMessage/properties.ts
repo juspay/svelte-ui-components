@@ -27,6 +27,12 @@ export type OptionalChatMessageProperties = {
    */
   markdown?: string;
   /**
+   * Accessible name for each table scroll region rendered from `markdown`, including
+   * progressive/typewriter rendering. Omitted or empty leaves the shared renderer's
+   * unnamed, keyboard-scrollable wrapper unchanged. Does not alter `html` or `body`.
+   */
+  markdownTableLabel?: string;
+  /**
    * Replaces the rendered bubble body with arbitrary markup while keeping the
    * message chrome (role styling, avatar, header, attachments, copy/retry/
    * feedback actions). Keep `content` populated with the text form so the copy

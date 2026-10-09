@@ -261,8 +261,7 @@
       disabled
       testId="pill-as-button-disabled-no-handler"
     />
-    <!-- A button may not contain another button, so this combination degrades to
-         the div root with the interactive shim. -->
+    <!-- A neutral root holds independent native primary and dismiss buttons. -->
     <Pill
       text="Dismissible button"
       as="button"

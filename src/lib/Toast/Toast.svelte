@@ -31,6 +31,7 @@
   // or the no-exit path in hideToast) and however many times hideToast runs
   // (the close button after the auto-hide timer already fired).
   let hideNotified = false;
+  let hideGeneration = 0;
 
   const rootClass = $derived(
     ['toast', type ?? '', classes ?? ''].filter((cls) => cls.length > 0).join(' ')
@@ -96,19 +97,46 @@
   }
 
   function hideToast() {
+    const generation = ++hideGeneration;
     showToast = false;
-    // The closed rule's `display: none` only keeps the toast on screen for its
-    // exit through a discrete `display` transition (`allow-discrete`). An engine
-    // without one -- Firefox 150, as shipped in Playwright 1.60 -- applies
-    // `display: none` at once, which cancels the exit before it starts, so no
-    // `transitionend` is ever dispatched and the consumer's `ontoasthide` cleanup
-    // would never run.
-    // If the toast is already not displayed once the closed state has applied,
-    // there is no exit left to wait for: report the hide now. Where the
-    // transition does run the toast is still displayed here, and the
-    // `transitionend` below remains the only path.
-    void tick().then(() => {
-      if (!showToast && rootEl !== null && getComputedStyle(rootEl).display === 'none') {
+    void tick().then(async () => {
+      const element = rootEl;
+      if (generation !== hideGeneration || showToast || !element?.isConnected) {
+        return;
+      }
+      const style = getComputedStyle(element);
+      if (style.display === 'none') {
+        notifyHidden();
+        return;
+      }
+
+      // An exit can be cancelled before transitionrun/transitioncancel is dispatched.
+      // Its animation promise still settles, including rejection on cancellation.
+      // Keep transitionend as the normal path; both paths share the exactly-once guard.
+      const opacityExits =
+        element
+          .getAnimations?.()
+          .filter(
+            (animation) =>
+              'transitionProperty' in animation && animation.transitionProperty === 'opacity'
+          ) ?? [];
+      if (opacityExits.length > 0) {
+        const completions = await Promise.allSettled(
+          opacityExits.map((animation) => animation.finished)
+        );
+        // A fulfilled promise settles before transitionend is dispatched. Preserve that
+        // normal event path so consumers and motion observers receive the complete exit.
+        if (
+          completions.some((completion) => completion.status === 'rejected') &&
+          generation === hideGeneration &&
+          !showToast &&
+          rootEl === element &&
+          element.isConnected
+        ) {
+          notifyHidden();
+        }
+      } else if (style.opacity === '0') {
+        // A coalesced first frame or consumer-disabled motion has no animation to await.
         notifyHidden();
       }
     });
@@ -144,6 +172,7 @@
     void duration;
 
     untrack(() => {
+      hideGeneration++;
       showToast = true;
       hideNotified = false;
     });
@@ -152,6 +181,7 @@
 
     return () => {
       clearTimeout(id);
+      hideGeneration++;
     };
   });
 </script>

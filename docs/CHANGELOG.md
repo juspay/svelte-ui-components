@@ -2,7 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.50.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.51.0)
+
+-
+feat(a11y): resolve the component-library audit and add the props it needed ([f127358](https://github.com/juspay/svelte-ui-components/commit/f12735889acf858f485b3c9e16a054ad2cc5960d))
+-
+fix(overlays): support owned scroll containers across modal surfaces ([5b95c2a](https://github.com/juspay/svelte-ui-components/commit/5b95c2a789ee8c69a04b2d9fb6325ff34fb12847))
+-
+fix(ci): give the release verify job 60 minutes for the integration suite ([59df660](https://github.com/juspay/svelte-ui-components/commit/59df660f8f442ebb2b62ad673d5001e316b2710b))
+
+## [4.51.0](https://github.com/juspay/svelte-ui-components/compare/4.51.0..4.50.0) - 7 October 2026
 
 A Scroller's scroll container is a flex row (a column when vertical) and nothing on it read a
 justify-content, so an app that wanted a short row at the end, as Lighthouse does for the chat

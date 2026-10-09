@@ -3,7 +3,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
-  import { createDebouncer, lockBodyScroll, unlockBodyScroll } from '../utils';
+  import { createDebouncer, acquireScrollLock, resolveScrollContainer } from '../utils';
   import { focusEntryPoint, focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
   import { registerDismissible } from '../_interaction/dismissal';
   import Button from '$lib/Button/Button.svelte';
@@ -46,6 +46,7 @@
     overlayFadeIn = false,
     usePortal = false,
     lockScroll = true,
+    scrollContainer,
     autoDismissAfter = null,
     ariaLabel,
     ariaDescribedby,
@@ -237,7 +238,7 @@
   // prop changed while the modal was open: turned off, the count never comes back
   // down and the page stays frozen; turned on, this modal releases a hold another
   // component is still relying on. Release exactly what was taken.
-  let heldScrollLock = false;
+  let releaseScrollLock: (() => void) | null = null;
 
   // Set once in onMount, cleared once in onDestroy -- registerDismissible's
   // own release function already tolerates a repeat call, but this still
@@ -253,8 +254,7 @@
       onEscape: handleEscape
     });
     if (lockScroll) {
-      lockBodyScroll();
-      heldScrollLock = true;
+      releaseScrollLock = acquireScrollLock(resolveScrollContainer(modalContent, scrollContainer));
     }
     if (typeof autoDismissAfter === 'number') {
       dismissTimer = setTimeout(() => onclose?.(), autoDismissAfter);
@@ -284,10 +284,8 @@
       clearTimeout(dismissTimer);
     }
     if (typeof window !== 'undefined') {
-      if (heldScrollLock) {
-        unlockBodyScroll();
-        heldScrollLock = false;
-      }
+      releaseScrollLock?.();
+      releaseScrollLock = null;
       if (supportHardwareBackPress) {
         if (!backPressed) {
           history.back();

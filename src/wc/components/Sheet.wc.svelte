@@ -3,6 +3,7 @@
     tag: 'sui-sheet',
     shadow: 'open',
     props: {
+      scrollContainer: { type: 'Object' },
       open: { type: 'Boolean', reflect: true },
       side: { type: 'String', reflect: true },
       sheetTitle: { type: 'String', reflect: true, attribute: 'title' },

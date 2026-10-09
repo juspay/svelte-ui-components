@@ -301,3 +301,45 @@ The viewport ceilings above apply to `<sui-modal>` unchanged. The default footer
 | ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------ |
 | _(default)_ | `content`       | The main body content of the modal.                                                                                |
 | `footer`    | `footerSnippet` | Content rendered in the modal footer area; defaults to the primary/secondary buttons built from the `footer` prop. |
+
+## Embedded scroll ownership
+
+`scrollContainer?: ScrollContainer` selects the element whose scrolling this overlay owns.
+Omit it for the overlay's `ownerDocument.body` (the standalone default). Pass an
+`HTMLElement`, or a getter such as `scrollContainer={() => rootElement}` when the
+application binds its scroll root after initialization. An explicit `null`, or a
+getter returning `null`, acquires no lock and never falls back to the host body.
+The element must be the actual scrolling container, which may be an element
+inside an application shadow root; a `ShadowRoot` itself does not scroll.
+
+Ownership is resolved once per open span. A changed prop/getter takes effect on
+the next open; closing or unmounting always releases the element acquired when
+opening. Nested Modal, Sheet and CommandMenu instances share reference counting
+per element, including legacy body locks. The last release restores the original
+overflow shorthand/longhands and their CSS priorities while preserving scroll
+position and unrelated inline declarations. Focus and dismissal behavior are
+unchanged. Scroll ownership does not select a portal destination; embedded Modal
+callers should keep the default `usePortal={false}`, or retain their shadow-root
+portal containment.
+
+```svelte
+<script lang="ts">
+  import { Modal, type ScrollContainer } from '@juspay/svelte-ui-components';
+  let rootElement: HTMLDivElement | null = $state(null);
+  const scrollContainer: ScrollContainer = () => rootElement;
+</script>
+
+<div bind:this={rootElement} style="height: 100%; overflow: auto">
+  <Modal {scrollContainer}>
+    {#snippet content()}<p>Owned dialog content</p>{/snippet}
+  </Modal>
+</div>
+```
+
+The package also exports `acquireScrollLock(element)` for custom overlays. It
+returns an idempotent disposer; retain that disposer and invoke it on teardown.
+
+For the custom element, assign `element.scrollContainer = rootElement` (or a
+getter) as a JavaScript property **before opening/mounting**. No selector string
+or serialized HTML attribute API is supported. Invalid non-element property
+values are ignored without falling back to the host body.

@@ -2,7 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.53.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.0)
+
+Bridge the Input label-suffix slot and the Progress leading-label,
+header-start, header-end, and note slots only when filled. Document the
+parameterized DockPanel and WindowedList snippets as Svelte-only, and drop
+the DiffViewer chevron transition under prefers-reduced-motion.
+
+Reject a serialized element lookalike in resolveScrollContainer. A
+custom-element scrollContainer can carry nodeType 1 and a plain style
+object, and acquireScrollLock then throws on the missing setProperty.
+
+-
+fix: bridge remaining content slots and reject scroll lookalikes ([f5db457](https://github.com/juspay/svelte-ui-components/commit/f5db45783ad8773aa1832022fd25692bc5baaa0b))
+
+## [4.54.0](https://github.com/juspay/svelte-ui-components/compare/4.54.0..4.53.1) - 10 October 2026
 
 - A command opens on the first character of its name: "/model" on "/", "@support" on "@"
 - Typing a trigger lists only the commands that share it, so "/" and "@" can coexist

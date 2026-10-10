@@ -2,7 +2,21 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.53.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.53.1)
+
+- A command opens on the first character of its name: "/model" on "/", "@support" on "@"
+- Typing a trigger lists only the commands that share it, so "/" and "@" can coexist
+- Read the trigger as a whole code point, so emoji triggers match descriptions too
+- Letters, digits and whitespace never trigger; existing "/" commands behave as before
+- Second-stage choices work for any trigger
+- Move the ChatComposer focus-visible allowlist entry to the shifted outline line
+
+Co-Authored-By: Claude Opus 5.5 &lt;noreply@anthropic.com&gt;
+
+-
+feat(chatcomposer): open the command menu on each command's own trigger character ([45c6bbe](https://github.com/juspay/svelte-ui-components/commit/45c6bbea4a8978f48785b4f9ea02d90e45688424))
+
+## [4.53.1](https://github.com/juspay/svelte-ui-components/compare/4.53.1..4.53.0) - 10 October 2026
 
 Found while checking the open and closed issues against the released tree. Each correction was
 checked against the source it describes.

@@ -536,7 +536,15 @@ export function resolveScrollContainer(
 ): HTMLElement | null {
   const resolved = typeof container === 'function' ? container() : container;
   if (typeof resolved === 'object') {
-    return resolved !== null && resolved.nodeType === 1 && typeof resolved.style === 'object'
+    // A custom-element Object property can be a JSON lookalike with nodeType 1
+    // and a plain style object. acquireScrollLock calls style.setProperty, so
+    // that lookalike must resolve to null instead of throwing.
+    return resolved !== null &&
+      resolved.nodeType === 1 &&
+      typeof resolved.getRootNode === 'function' &&
+      typeof resolved.style === 'object' &&
+      resolved.style !== null &&
+      typeof resolved.style.setProperty === 'function'
       ? resolved
       : null;
   }

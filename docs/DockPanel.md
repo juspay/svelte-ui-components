@@ -116,6 +116,8 @@ with their single value in detail. Their names do not collide with native handle
 | (default) | body            | Body content when no named body slot is assigned.                 |
 | footer    | footer          | Optional footer; absent slot preserves a supplied footer snippet. |
 
+> **Svelte-only:** `header` (receives `DockPanelControls`) takes an argument, so the expand, collapse, and close controls cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so those controls would be silently dropped. The `header` slot still projects static header markup. Use the Svelte component directly when the header needs the controls.
+
 The host display is controlled by --sui-dock-panel-display (block by default).
 
 A `body` snippet assigned as a JavaScript property takes precedence over the named

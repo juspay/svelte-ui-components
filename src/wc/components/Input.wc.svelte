@@ -157,7 +157,20 @@
   // out of sync with the one dispatchEvents(hostEl, props) above already uses.
   const hasLeftIconSlot = $host().querySelector('[slot="left-icon"]') !== null;
   const hasRightIconSlot = $host().querySelector('[slot="right-icon"]') !== null;
+  // Same gate as the icons. Input only wraps the label in a row when labelSuffix
+  // is a snippet, so claiming it for every <sui-input> would change the label
+  // layout of fields that never slot one. A JS-assigned labelSuffix still applies
+  // when the slot is empty.
+  const hasLabelSuffixSlot = $host().querySelector('[slot="label-suffix"]') !== null;
 </script>
+
+<!--
+  Reads props.labelSuffix so this stays in component scope. A bare top-level
+  slot snippet is hoisted and then throws `$$props is not defined` when it renders.
+-->
+{#snippet labelSuffixImpl()}
+  {#if props.labelSuffix}{@render props.labelSuffix()}{:else}<slot name="label-suffix"></slot>{/if}
+{/snippet}
 
 <!--
   Four branches rather than two conditional snippet props, for the reason
@@ -177,6 +190,7 @@
     ariaLabel={inputAriaLabel}
     autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
+    labelSuffix={hasLabelSuffixSlot ? labelSuffixImpl : props.labelSuffix}
   >
     {#snippet leftIcon()}
       <slot name="left-icon"></slot>
@@ -193,6 +207,7 @@
     ariaLabel={inputAriaLabel}
     autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
+    labelSuffix={hasLabelSuffixSlot ? labelSuffixImpl : props.labelSuffix}
   >
     {#snippet leftIcon()}
       <slot name="left-icon"></slot>
@@ -206,6 +221,7 @@
     ariaLabel={inputAriaLabel}
     autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
+    labelSuffix={hasLabelSuffixSlot ? labelSuffixImpl : props.labelSuffix}
   >
     {#snippet rightIcon()}
       <slot name="right-icon"></slot>
@@ -219,6 +235,7 @@
     ariaLabel={inputAriaLabel}
     autofocus={inputAutofocus}
     spellcheck={asSpellcheck(props.spellcheck)}
+    labelSuffix={hasLabelSuffixSlot ? labelSuffixImpl : props.labelSuffix}
   />
 {/if}
 

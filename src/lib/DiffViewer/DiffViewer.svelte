@@ -134,6 +134,14 @@
     transform: rotate(90deg);
   }
 
+  /* The rotate still happens. Only the 120ms slide is removed, so a reduced-motion
+     user gets the open or closed chevron immediately instead of watching it turn. */
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+
   .counts {
     display: flex;
     gap: var(--diff-small-gap, 8px);

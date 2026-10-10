@@ -92,3 +92,14 @@ Tag: `<sui-progress>`
 ```html
 <sui-progress value="60" max="100" show-label></sui-progress>
 ```
+
+### Slots
+
+| Slot Name | Maps to Snippet | Description |
+| --- | --- | --- |
+| `leading-label` | `leadingLabel` | Content before the track. Nothing renders when the slot is empty. |
+| `header-start` | `headerStart` | Left end of the header row. The header row exists only when this slot or `header-end` is filled. |
+| `header-end` | `headerEnd` | Right end of the header row. |
+| `note` | `note` | Row after the progressbar. |
+
+The element claims each snippet only when that slot is filled, because supplying it is what creates the header or note row. A JavaScript-assigned snippet still applies when its slot is empty.

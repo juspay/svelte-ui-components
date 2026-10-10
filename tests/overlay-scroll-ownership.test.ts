@@ -201,7 +201,7 @@ test('custom-element invalid and null scroll ownership cannot acquire a host bod
     for (const [tag, scrollContainer] of [
       ['sui-modal', '#host-body'],
       ['sui-sheet', null],
-      ['sui-command-menu', {}]
+      ['sui-command-menu', JSON.parse('{"nodeType":1,"style":{}}')]
     ]) {
       const element = document.createElement(String(tag));
       Object.assign(element, { scrollContainer, open: true, items: [] });

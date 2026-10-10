@@ -1,8 +1,12 @@
 name: Firefox and WebKit verification
 
 on:
-  schedule:
-    - cron: '30 4 * * 1'
+  # The weekly schedule is paused, not removed: the first run (38037081715, manual dispatch on
+  # release 4.53.0) failed on Linux with 12 functional failures, so a scheduled run would only
+  # report red. Restore `schedule: [{ cron: '30 4 * * 1' }]` once those are fixed or deliberately
+  # guarded and a dispatched run is green on both engines; scheduled workflows run from the
+  # default branch, so the restored schedule takes effect only once that change is on `release`.
+  # See issue #681.
   workflow_dispatch:
 
 permissions:

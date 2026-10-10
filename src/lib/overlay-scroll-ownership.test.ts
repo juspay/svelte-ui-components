@@ -88,6 +88,15 @@ describe('owned scroll container utility', () => {
     expect(resolveScrollContainer(document.body, null)).toBeNull();
     acquireScrollLock(null)();
   });
+
+  it('refuses serialized element lookalikes without acquiring a lock or throwing', () => {
+    const lookalike: unknown = JSON.parse('{"nodeType":1,"style":{}}');
+    expect(resolveScrollContainer(document.body, lookalike as HTMLElement)).toBeNull();
+    expect(resolveScrollContainer(document.body, () => lookalike as HTMLElement)).toBeNull();
+    expect(() =>
+      acquireScrollLock(resolveScrollContainer(document.body, lookalike as HTMLElement))()
+    ).not.toThrow();
+  });
 });
 
 describe('rendered owned overlays', () => {

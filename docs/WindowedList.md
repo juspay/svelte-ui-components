@@ -58,4 +58,4 @@ The window is anchored by item key, not by position. Items appended to the list 
 
 ## Web Component
 
-None. `getKey` is a function and `row` is a snippet with arguments, which a custom element's attributes and slots cannot express. Use the Svelte component.
+None. **Svelte-only:** `row` (receives `{ item, index, isFirst }`) and `earlier` (receives `{ hidden, next, showEarlier }`) take arguments, so they cannot be expressed as named slots: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. `getKey` is a function, which a custom element's attributes cannot express either. Use the Svelte component directly.

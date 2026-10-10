@@ -295,6 +295,7 @@ them in the order given.
 | ------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `left-icon`  | `leftIcon`      | Icon inside the field on the leading edge. Nothing renders when the slot is empty, and the field keeps its normal padding — there is no built-in icon.  |
 | `right-icon` | `rightIcon`     | Icon inside the field on the trailing edge. Nothing renders when the slot is empty, and the field keeps its normal padding — there is no built-in icon. |
+| `label-suffix` | `labelSuffix` | Content beside the visible label. Nothing renders, and the label stays a bare label, when both `label-suffix` and `labelSuffix` are absent. Ignored when `label` is absent or `actionInput` is set, matching the Svelte prop. |
 
 The element claims the snippet only when the slot is actually filled, which matters here beyond
 the glyph: supplying `leftIcon`/`rightIcon` is also what adds

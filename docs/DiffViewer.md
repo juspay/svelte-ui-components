@@ -70,7 +70,7 @@ body the same way the bottom "show" control does.
 | `--diff-header-font-size`        | `12px`                         | Header, badge and hunk-separator font size.                        |
 | `--diff-filename-color`          | `#111827`                      | The path's final segment, and the show-button's hover text color.  |
 | `--diff-gutter-color`            | `#6b7280`                      | Directory prefix, chevron, and both line-number gutters.           |
-| `--diff-chevron-transition`      | `120ms ease`                   | The header chevron's rotate transition.                            |
+| `--diff-chevron-transition`      | `120ms ease`                   | The header chevron's rotate transition. Dropped under `prefers-reduced-motion: reduce`. |
 | `--diff-add-color`               | `#166534`                      | Added-line text and the header's `+N` count.                       |
 | `--diff-remove-color`            | `#991b1b`                      | Removed-line text and the header's `−N` count.                     |
 | `--diff-add-background`          | `#f0fdf4`                      | Added-line row background.                                          |

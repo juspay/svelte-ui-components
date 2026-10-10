@@ -451,7 +451,12 @@ export function createDebouncer(delay: number | (() => number)) {
   };
 }
 
-type ScrollLock = { count: number; overflow: [string, string, string][] };
+type ScrollLock = {
+  count: number;
+  overflow: [string, string, string][];
+  originalCssText: string;
+  lockedCssText: string;
+};
 const scrollLocksKey = Symbol.for('@juspay/svelte-ui-components/scroll-locks/v1');
 const activeScrollLocksKey = Symbol.for('@juspay/svelte-ui-components/active-scroll-locks/v1');
 
@@ -471,8 +476,13 @@ function scrollLocksFor(container: HTMLElement): WeakMap<HTMLElement, ScrollLock
     locks = new WeakMap<HTMLElement, ScrollLock>();
     Object.defineProperty(owner, scrollLocksKey, { value: locks });
   }
-  // The same real owner can be adopted into another document while held.
-  Object.defineProperty(activeOwner, activeScrollLocksKey, { value: locks, configurable: true });
+  // The same real owner can be adopted into another document while held. A sealed or
+  // non-extensible owner cannot carry the pointer, so it keeps only the document registry.
+  try {
+    Object.defineProperty(activeOwner, activeScrollLocksKey, { value: locks, configurable: true });
+  } catch {
+    // Locking still works; adoption of such an owner while held is not tracked.
+  }
   return locks;
 }
 const bodyScrollReleases: (() => void)[] = [];
@@ -503,9 +513,15 @@ export function acquireScrollLock(
         ]);
       }
     }
-    lock = { count: 0, overflow };
+    lock = {
+      count: 0,
+      overflow,
+      originalCssText: container.style.cssText,
+      lockedCssText: ''
+    };
     scrollLocks.set(container, lock);
     container.style.setProperty('overflow', 'hidden', 'important');
+    lock.lockedCssText = container.style.cssText;
   }
   lock.count += 1;
   const heldLock = lock;
@@ -517,11 +533,17 @@ export function acquireScrollLock(
     released = true;
     heldLock.count -= 1;
     if (heldLock.count === 0) {
-      container.style.removeProperty('overflow');
-      container.style.removeProperty('overflow-x');
-      container.style.removeProperty('overflow-y');
-      for (const [name, value, priority] of heldLock.overflow) {
-        container.style.setProperty(name, value, priority);
+      if (container.style.cssText === heldLock.lockedCssText) {
+        // Nothing else wrote to the inline style while held: put it back verbatim, which keeps the
+        // declaration order that removing and re-adding the overflow longhands would change.
+        container.style.cssText = heldLock.originalCssText;
+      } else {
+        container.style.removeProperty('overflow');
+        container.style.removeProperty('overflow-x');
+        container.style.removeProperty('overflow-y');
+        for (const [name, value, priority] of heldLock.overflow) {
+          container.style.setProperty(name, value, priority);
+        }
       }
       scrollLocks.delete(container);
       Reflect.deleteProperty(container, activeScrollLocksKey);

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import Modal from './Modal/Modal.svelte';
 import Sheet from './Sheet/Sheet.svelte';
 import CommandMenu from './CommandMenu/CommandMenu.svelte';
@@ -96,6 +96,68 @@ describe('owned scroll container utility', () => {
     expect(() =>
       acquireScrollLock(resolveScrollContainer(document.body, lookalike as HTMLElement))()
     ).not.toThrow();
+  });
+  it('coordinates independently evaluated modules on the physical owner and clears private state', async () => {
+    const owner = document.createElement('div');
+    owner.style.cssText = 'overflow-x: clip !important; overflow-y: auto; color: red';
+    const originalSymbols = Object.getOwnPropertySymbols(owner);
+    const first = acquireScrollLock(owner);
+    vi.resetModules();
+    const independent = await import('./utils');
+    const second = independent.acquireScrollLock(owner);
+    first();
+    first();
+    expect(owner.style.overflow).toBe('hidden');
+    second();
+    expect(owner.style.overflowX).toBe('clip');
+    expect(owner.style.getPropertyPriority('overflow-x')).toBe('important');
+    expect(owner.style.overflowY).toBe('auto');
+    expect(owner.style.color).toBe('red');
+    expect(Object.getOwnPropertySymbols(owner)).toEqual(originalSymbols);
+  });
+
+  it('restores exact declaration order while retaining independent writes', () => {
+    const owner = document.createElement('div');
+    owner.style.cssText = 'overflow-x: clip !important; overflow-y: auto; color: red';
+    const original = owner.style.cssText;
+    acquireScrollLock(owner)();
+    expect(owner.style.cssText).toBe(original);
+    const release = acquireScrollLock(owner);
+    owner.style.color = 'blue';
+    owner.style.width = '41px';
+    release();
+    expect(owner.style.overflowX).toBe('clip');
+    expect(owner.style.getPropertyPriority('overflow-x')).toBe('important');
+    expect(owner.style.color).toBe('blue');
+    expect(owner.style.width).toBe('41px');
+  });
+
+  it('locks a non-extensible real owner and does not reuse stale state after sealing while held', () => {
+    const owner = document.createElement('div');
+    owner.style.overflow = 'auto';
+    Object.preventExtensions(owner);
+    const first = acquireScrollLock(owner);
+    expect(owner.style.overflow).toBe('hidden');
+    Object.seal(owner);
+    first();
+    expect(owner.style.overflow).toBe('auto');
+    owner.style.setProperty('overflow', 'scroll', 'important');
+    acquireScrollLock(owner)();
+    expect(owner.style.overflow).toBe('scroll');
+    expect(owner.style.getPropertyPriority('overflow')).toBe('important');
+  });
+
+  // jsdom has no cascade, so this proves only that the serialized text round-trips. That the lock
+  // still wins over an `all` shorthand is asserted against computed style in
+  // tests/overlay-scroll-ownership.test.ts.
+  it('restores the inline style text verbatim when it holds an all shorthand', () => {
+    const owner = document.createElement('div');
+    owner.style.cssText = 'overflow: auto !important; all: initial !important; color: red';
+    const original = owner.style.cssText;
+    const release = acquireScrollLock(owner);
+    expect(owner.style.overflow).toBe('hidden');
+    release();
+    expect(owner.style.cssText).toBe(original);
   });
 });
 

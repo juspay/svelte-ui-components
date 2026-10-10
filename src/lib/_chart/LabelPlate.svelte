@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
+  import { CHART_LABEL_PLATE_PADDING } from '$lib/_chart/types';
 
   let { children }: { children: Snippet } = $props();
   let group: SVGGElement | null = $state(null);
   let bounds: { x: number; y: number; width: number; height: number } | null = $state(null);
-  const PADDING = 3;
+  const PADDING = CHART_LABEL_PLATE_PADDING;
 
   onMount(() => {
     const text = group?.querySelector('text');

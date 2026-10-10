@@ -327,6 +327,65 @@ for (const foreign of [false, true]) {
   }
 }
 
+// Real-engine cases for the public hold. The first restores declaration order, which removing and
+// re-adding the overflow longhands changed in Chromium, Firefox and WebKit. The second is a guard: an
+// `all` shorthand expands into longhands, so the hold must still decide the computed overflow and the
+// text must come back; the previous implementation also satisfied it.
+for (const [name, inlineStyle] of [
+  ['declaration order', 'overflow-x: clip !important; overflow-y: auto; color: red'],
+  ['an all shorthand', 'overflow: auto !important; all: initial !important; color: red']
+] as const) {
+  test(`public API hold locks an owner and restores its inline style verbatim (${name})`, async ({
+    page
+  }) => {
+    await page.goto(`${baseURL}/overlay-scroll-ownership/`);
+    const root = page.getByTestId('scroll-root');
+    await root.evaluate((owner, cssText) => {
+      owner.style.cssText = cssText;
+    }, inlineStyle);
+    const before = await root.evaluate((owner) => owner.style.cssText);
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent('public-scroll-lock-control', { detail: 'acquire' }))
+    );
+    await expect(root).toHaveCSS('overflow', 'hidden');
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent('public-scroll-lock-control', { detail: 'release' }))
+    );
+    expect(await root.evaluate((owner) => owner.style.cssText)).toBe(before);
+  });
+}
+
+test('public API hold locks a non-extensible owner without throwing', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(`${baseURL}/overlay-scroll-ownership/`);
+  // Playwright marks the elements it acts on and a non-extensible owner refuses the mark, so the
+  // owner is read only through page.evaluate.
+  const overflow = () =>
+    page.evaluate(() => {
+      const owner = document.querySelector('[data-pw="scroll-root"]');
+      return owner === null ? null : getComputedStyle(owner).overflow;
+    });
+  const control = (detail: 'acquire' | 'release') =>
+    page.evaluate(
+      (action) =>
+        window.dispatchEvent(new CustomEvent('public-scroll-lock-control', { detail: action })),
+      detail
+    );
+  const initial = await overflow();
+  await page.evaluate(() => {
+    const owner = document.querySelector('[data-pw="scroll-root"]');
+    if (owner !== null) {
+      Object.preventExtensions(owner);
+    }
+  });
+  await control('acquire');
+  await expect.poll(overflow).toBe('hidden');
+  await control('release');
+  await expect.poll(overflow).toBe(initial);
+  expect(errors).toEqual([]);
+});
+
 test('public API hold follows a real owner adopted into an independent WC realm', async ({
   page
 }) => {

@@ -2,7 +2,54 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.52.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.52.1)
+
+Brings the audit work that never reached release onto d3610f2: the local candidate 2c9e94c,
+merged three-way from its 4e073fd parent. The HITL expiry, Toast lifecycle, compiled chart
+label and Select placement changes that merged in the meantime are kept as they are.
+
+Behavior:
+- Pill and Tabs semantics, with independent native primary and dismiss buttons where a pill is
+both actionable and dismissible.
+- Form-associated controls: required, first-invalid, name, value, fieldset and cross-document
+adoption behavior, in the Svelte components and the custom elements.
+- Contextual names, headings and landmarks across Chat, Book, Pagination, Table, Modal,
+MediaPlayer and the attachment strip. MediaPlayer's video surface is now a native button
+instead of a video carrying role="button".
+- Tabs RTL, fit, font, zero-axis and scale behavior, and scrolling for keyboard, chat,
+Markdown tables and Table.
+- Shared public-API and custom-element scroll locks across separately built bundles and
+adopted elements.
+
+New optional props: ariaLabel (AttachmentChipRow, Book, ChatMessageList, MediaPlayer,
+Pagination), Chat messageListLabel, markdownTableLabel, and Table label members
+selectionColumn, rowAction and pageNavigation. No existing prop default changes in the
+components, and Table's rowsPerPage label keeps its released text.
+
+Consumer-facing text and examples:
+- The example pages for the touched components (60 route files) now carry real headings and
+the new names, and show suppressRoleAndTabindex where a nested item must not be a button.
+- The install-time notice and the codemod --help text no longer announce changes "coming in
+4.0.0" at 4.52; they describe the current migration guidance and the same codemod command.
+
+Tests and tooling:
+- The overlay specs keep the pointer and keyboard activations and the full inline-declaration
+oracle, and add real Tab traversal and host edits made while a lock is held.
+- Hover-label cases for the Table sort and ChatComposer attach buttons, in light and dark.
+- Durable narration observer for the chart narration tests.
+- scripts/check-focus-visible.js: the Select search-field note and line reference follow the
+current suppression.
+- .github/workflows/browser-engines.yml runs the functional and walkthrough suites in Firefox
+and WebKit weekly, with no retries.
+- docs/Resizable.md notes that arrow-key direction became edge-aware in 4.37.0, and the
+Windows junction comment in scripts/link-local-peers.mjs no longer claims no elevation.
+
+Refs #651, #679, #681
+
+-
+feat(a11y): close the remaining audit defects in forms, tabs, overlays and naming ([0a8701d](https://github.com/juspay/svelte-ui-components/commit/0a8701de8590f4b0b15e7225e428269a10875f2a))
+
+## [4.52.1](https://github.com/juspay/svelte-ui-components/compare/4.52.1..4.52.0) - 9 October 2026
 
 -
 fix(select): preserve viewport fitting for auto placement ([607f693](https://github.com/juspay/svelte-ui-components/commit/607f693ef2cd8fda3fcec9a48a54e0318c9adc50))

@@ -58,10 +58,11 @@ wrapper class. Omit it for today's default sizing.
 ### Left-Aligned (or any other alignment)
 
 `align-items` was previously hardcoded to `center`. `--empty-state-align-items`
-now reaches it directly — no wrapper class required:
+now reaches it directly — no wrapper class required. `--empty-state-text-align` (default `center`)
+aligns the text itself, so set both for content that wraps:
 
 ```svelte
-<div style="--empty-state-align-items: flex-start;">
+<div style="--empty-state-align-items: flex-start; --empty-state-text-align: left;">
   <EmptyState title="Left-aligned" description="Aligned via a CSS variable." />
 </div>
 ```
@@ -173,7 +174,10 @@ Tag: `<sui-empty-state>`
 CSS custom property — set it on the host element (or an ancestor) directly:
 
 ```html
-<sui-empty-state title="Left-aligned" style="--empty-state-align-items: flex-start;" />
+<sui-empty-state
+  title="Left-aligned"
+  style="--empty-state-align-items: flex-start; --empty-state-text-align: left;"
+/>
 ```
 
 ### Slots

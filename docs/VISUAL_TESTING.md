@@ -33,7 +33,7 @@ regressions the suite exists to catch.
 So the renderer is pinned instead: `mcr.microsoft.com/playwright:v1.60.0-noble`,
 used by `scripts/visual-test.sh` locally and by the `container:` block in
 `.github/workflows/visual.yml`. A baseline regenerated on a laptop is the same
-measurement CI takes, which is what makes `maxDiffPixelRatio: 0` sustainable.
+measurement CI takes, which is what lets almost every route compare with `maxDiffPixelRatio: 0` and no allowance. That is not pixel identity: see "What the comparison catches, and what it does not" below.
 
 **Three places pin the version and must move together:**
 
@@ -44,7 +44,7 @@ measurement CI takes, which is what makes `maxDiffPixelRatio: 0` sustainable.
 | `.github/workflows/visual.yml` | `container.image`          |
 
 The script fails fast if the image and `node_modules` disagree, so a partial
-bump is caught before it produces 94 bogus diffs.
+bump is caught before it produces a bogus diff on every route.
 
 ## What is compared
 
@@ -82,8 +82,9 @@ the same way elsewhere. All off-origin images are now served as a fixed local
 stub and other off-origin requests are refused, which also removes a network
 dependency: without it the suite fails whenever a third-party image host is slow.
 
-**The clock is manual.** `page.clock.install()` pins `Date.now()` _and_ makes
-timers fire only when the test advances them, then the test advances a fixed
+**The clock is paused.** `page.clock.install()` alone leaves time running, so an
+interval kept ticking on wall-clock time. `page.clock.pauseAt()` is what stops it:
+timers then fire only when the test advances them, and the test advances a fixed
 amount. Pinning only the date (`setFixedTime`) was not enough: the Chat and
 ThinkingIndicator demos append content on an interval, which grew the element
 between successive screenshots so the comparison never stabilised. Two demos run
@@ -147,6 +148,31 @@ preferable to skipping a route.
 | `lottie-player` | `.demo-row` | Lottie drives frames from rAF in JS; `animations: 'disabled'` cannot pin those. |
 | `media-player`  | `.demo-row` | Renders a real `<video>`; the decoded frame depends on decoder timing.          |
 
+## What the comparison catches, and what it does not
+
+`toHaveScreenshot` has two thresholds, and the suite sets only one of them to zero.
+`maxDiffPixelRatio: 0` allows no pixel to differ _by more than the per-pixel
+`threshold`_, which `playwright.visual.config.ts` sets explicitly to `0.2`. A pixel
+counts as different only when its pixelmatch YIQ delta exceeds `35215 × 0.2²`, about
+1408.6. So this is not a pixel-identity check.
+
+- **Colour-only changes under that delta are invisible.** The contrast fix
+  `#637c95` to `#4d6174` measures 354.6 and passed the whole suite with no baseline
+  touched. Guard colour in a unit test: `src/lib/a11y-contrast.test.ts` pins the
+  contrast defaults. Geometry is what this suite guards well, because a size mismatch
+  fails before any pixel is compared.
+- **The threshold stays at 0.2 because capture noise reaches it.** Measured on 14
+  Sep 2026 with two captures of every route and no change between them, `hitl`
+  differed from itself by up to 1314.3 and `theme-switcher` by 520.2: 93% and 37% of
+  the 1408.6 budget. `theme-switcher` has since been pinned. The `hitl` cause was
+  later traced to the fake clock still running, and `clock.pauseAt` was added, but
+  the comparison has not been re-run since, so the threshold stays until it is. See
+  issue #622.
+- **`--update-snapshots` cannot repair a stale baseline that differs by less than the
+  threshold.** It applies the same threshold, so it writes nothing and reports
+  success. Delete the PNG and run the suite again: a missing baseline is not a
+  comparison.
+
 ## When a diff appears
 
 CI uploads a `visual-report` artifact on failure containing expected/actual/diff
@@ -162,33 +188,22 @@ diff. That converts the tool into a rubber stamp.
 
 ### Excluded routes
 
-Two routes are **not** baselined. They are declared as skipped tests rather than
-omitted, so they still appear in the report with their reason attached.
-
-| Route                | Why                                             |
-| -------------------- | ----------------------------------------------- |
-| `thinking-indicator` | animated dots plus a per-second elapsed counter |
-| `task-list`          | one of the tallest demos, with staged reveals   |
-
-Both pass reliably when run alone and fail intermittently inside the full suite
-at any worker count — load sensitivity in how much settles before capture,
-rather than anything in the components themselves. Everything that stabilised
-the other 92 was tried on them: manual clock, longer settles, per-route viewport
-fitting, stripped animations, stubbed network.
-
-They are excluded deliberately, and the tradeoff is worth stating plainly: a
-gate that fails at random on unrelated PRs gets switched off within a week, and
-then you have neither the coverage nor the gate. Two documented holes in a
-suite people trust beats 94 routes in one they don't. Closing them is real
-remaining work, not a settled matter.
+None at present. A route that cannot be baselined is declared in `EXCLUDED` and becomes a
+skipped test rather than being omitted, so it still appears in the report with its reason
+attached. `thinking-indicator` and `task-list` used to be listed; both were removed once the
+cause that earned the entry was fixed (the fake clock was never paused), so re-check an
+entry's reason before assuming it still holds, and before adding one.
+`thinking-indicator` is now baselined as a whole route and by
+`tests/visual/thinking-indicator-states.visual.ts`; `task-list` is baselined with a small
+pixel allowance in `TOLERANCES`.
 
 **Do not use `test.skip(condition, reason)` inside the describe body to add to
-this list.** That form applies to the whole enclosing describe: it skipped all
-94 routes while the job still exited 0, which is a gate that reports success
+this list.** That form applies to the whole enclosing describe: it skipped
+every route while the job still exited 0, which is a gate that reports success
 without checking anything.
 
 ## Cost
 
-92 baselines, ~11MB total. `main.content` stretches to the viewport, so a short
+Around 115 baseline PNGs, ~11MB total. `main.content` stretches to the viewport, so a short
 demo's PNG is mostly empty — which compresses well, but means a baseline refresh
 is a visible diff in review.

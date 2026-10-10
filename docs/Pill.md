@@ -88,7 +88,8 @@ need to fork the tone.
 
 Every fallback baked into Pill is a light value (`--pill-background` falls back to `#e0e0e0`,
 `--pill-color` to `#333333`, and each `tone` to a pastel pair), so a pill dropped onto a dark
-page keeps its light chip until you override the variables.
+page keeps its light chip until you override the variables. `--pill-border` falls back to `none`,
+so it needs no dark value unless you set a border of your own.
 
 Theme the **tone** variables at the theme root. These are always safe to set globally — each one
 only reaches the pills carrying that tone:
@@ -327,7 +328,7 @@ Keyboard activation of the dismiss button does not activate the pill body.
 | `--pill-tone-danger-background` | `#f8d7da`                                                                  | background-color | `tone="danger"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                      |
 | `--pill-tone-danger-color`      | `#721c24`                                                                  | color            | `tone="danger"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                           |
 | `--pill-tone-muted-background`  | `#f1f1f1`                                                                  | background-color | `tone="muted"` background. Ignored unless `tone` is set; overridden by `--pill-background`.                       |
-| `--pill-tone-muted-color`       | `#6b7280`                                                                  | color            | `tone="muted"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                            |
+| `--pill-tone-muted-color`       | `#5b626d`                                                                  | color            | `tone="muted"` text color. Ignored unless `tone` is set; overridden by `--pill-color`.                            |
 | `--pill-focus-outline`          | `2px solid currentColor`                                                   | outline          | Focus ring shown on the pill when interactive (`role="button"`) and focused via keyboard.                         |
 | `--pill-focus-outline-offset`   | `2px`                                                                      | outline-offset   | Offset of the focus ring from the pill edge.                                                                      |
 

@@ -131,6 +131,10 @@ Tag: `<sui-toolbar>`
 > a same-named property/attribute here would collide with it instead of reaching this
 > component. `headingLevel`/`subtitle`/`rootTag` keep their own names unchanged.
 
+Set `back-href` to render the back control as a real link, as `backHref` does in Svelte:
+`<sui-toolbar show-back-button back-href="/previous" back-label="Back">` renders an `<a>` with that
+href instead of a `<button>`.
+
 ### Web Component Events
 
 `onkeydown` is a callback prop, not a DOM event — assign it as a plain property. The

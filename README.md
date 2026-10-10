@@ -154,6 +154,20 @@ fix to something that did not work.
 | **RelativeTime**   | Auto-updating relative time display ("5 minutes ago") with locale support and optional tooltip.                                                | [docs](docs/RelativeTime.md)   |
 | **AspectRatio**    | Constrains content to a fixed width-to-height ratio using CSS `aspect-ratio`, reserving layout space before an image, video or iframe loads.   | [docs](docs/AspectRatio.md)    |
 
+### Charts
+
+Pure-SVG charts with no charting-library dependency; each takes plain data arrays.
+
+| Component | Description | Docs |
+| --- | --- | --- |
+| **AreaChart**         | Responsive area chart for volume under a trend: multiple series, regular or 100% stacking, gradient fill, data labels and a hover overlay. | [docs](docs/AreaChart.md) |
+| **BarChart**          | Responsive bar chart for comparing categories: vertical or horizontal, single or multi-series (grouped or stacked), value labels, per-point colours and hover tooltips. | [docs](docs/BarChart.md) |
+| **DualAxisBarChart**  | Two independent Y-axes over one categorical X-axis; each series declares its own axis and render type. | [docs](docs/DualAxisBarChart.md) |
+| **FunnelChart**       | Horizontal funnel: one bar per stage, proportional to its value, with connectors between stages. | [docs](docs/FunnelChart.md) |
+| **LineChart**         | Responsive line chart for trends: multiple series, five curve interpolations, gradient fill and an optional area mode. | [docs](docs/LineChart.md) |
+| **PieChart**          | Responsive pie or donut chart with slice hover highlighting, a delta badge, custom labels, a legend and donut centre content. | [docs](docs/PieChart.md) |
+| **SankeyChart**       | Sankey diagram for flows between nodes, positioned into columns automatically. | [docs](docs/SankeyChart.md) |
+
 ### Feedback & Loading
 
 | Component       | Description                                                                                     | Docs                        |

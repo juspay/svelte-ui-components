@@ -138,9 +138,9 @@ const TOLERANCES: Readonly<Record<string, number>> = {
  * headings, and a passing suite that did not notice the orb had gone blank.
  * Masking a Confirm button would hide the control this route exists to cover.
  *
- * Second-largest is `theme-switcher` at 520.2, in 5 of 15 pairs -- the segment
- * indicator, same shape of problem. Whether pinning the clock also settles that
- * one, and how far the threshold can then drop, is a measurement to make in the
+ * Second-largest was `theme-switcher` at 520.2, in 5 of 15 pairs -- the segment
+ * indicator, a different cause: its transitions, since set to `none` in `prepare`
+ * (520.2 to 0.1). How far the threshold can drop now is a measurement to make in the
  * container rather than a number to guess at here: the 0.2 above is left alone
  * until someone has re-run the six-capture comparison that produced it.
  */
@@ -711,12 +711,16 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // What holds up: diffPx lands on a ladder (212/412/612/1012/1212/1612), the fill
   // is 50 rows tall so 200px is four columns, and a ~400px bar over a 10s countdown
   // moves ~4px per 100ms tick -- so each step is one interval tick and the count
-  // varies between runs. WHY it varies, with a manual clock and a fixed `runFor`,
-  // is not established; the hydration gate above did not change it either.
+  // varies between runs. The hydration gate above did not change it either. Why it
+  // varied was found afterwards: `clock.install` leaves time running, so the countdown
+  // received a different number of ticks every run; `clock.pauseAt`, called earlier in
+  // `prepare`, pins it (see the note above `EXCLUDED`).
   //
-  // So 1314.3 is still 93% of the budget and the threshold still cannot be lowered:
-  // at 0.1, sixteen `hitl` pixels exceed it with no source change. `theme-switcher`
-  // is off the list; `hitl` is open -- see issue #622.
+  // The figures in this table are from before `pauseAt`, and `hitl` has not been
+  // re-measured since. So 1314.3 is still what the threshold is sized against: at 0.1,
+  // sixteen `hitl` pixels exceeded it with no source change. `theme-switcher` is off
+  // the list; whether `hitl` is quiet now is the measurement still owed -- see issue
+  // #622.
   await page.addStyleTag({
     content: `
       *, *::before, *::after {

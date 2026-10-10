@@ -608,6 +608,7 @@ property for those two instead: `el.onchange = (value) => ...`, `el.onclose = ()
 | `disabled`          | `disabled`             | boolean | Disables the select.                                                                                                            |
 | `multiple`          | `multiple`             | boolean | Enables multi-select mode.                                                                                                      |
 | `searchable`        | `searchable`           | boolean | Enables search filtering.                                                                                                       |
+| `search-position`   | `searchPosition`       | string  | `'trigger'` (default) or `'menu'`: where the `searchable` input renders. `'menu'` puts it inside the open dropdown.             |
 | `open`              | `open`                 | boolean | Reflected. Controls dropdown open state.                                                                                        |
 | `dropdown-align`    | `dropdownAlign`        | string  | **Deprecated — use `placement`.** `'left'` or `'right'` — anchors the dropdown panel horizontally.                              |
 | `placement`         | `placement`            | string  | `'bottom-left'`, `'bottom-right'`, `'top-left'`, `'top-right'` or `'auto'` — anchors both axes, so the panel can open upward.   |

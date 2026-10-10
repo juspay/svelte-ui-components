@@ -32,8 +32,9 @@ const config: PlaywrightTestConfig = {
   testDir: 'tests/visual',
   testMatch: /.*\.visual\.ts/,
   timeout: 60_000,
-  // Baselines are byte-comparisons; a retry cannot change the bytes, so a retry
-  // here would only burn CI minutes re-rendering an identical diff.
+  // Baselines are compared pixel by pixel within the threshold set below; a retry
+  // re-renders the same page in the same renderer, so it would only burn CI minutes
+  // repeating an identical diff.
   retries: 0,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-visual' }]],
   // Drops Playwright's default {platform} and {projectName} suffixes. Safe ONLY

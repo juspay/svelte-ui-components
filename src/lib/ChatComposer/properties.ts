@@ -106,9 +106,11 @@ export type OptionalChatComposerProperties = {
   /** Test id on the status region (see `statusText`). */
   statusTestId?: string;
   /**
-   * Opt-in slash-command menu. With commands passed, typing "/" opens a
-   * listbox of the ones that match (name prefix, or the text after "/" found
-   * in a description); arrows move, Tab completes, Enter picks (Enter on a
+   * Opt-in slash-command menu. With commands passed, typing a command's
+   * trigger -- the first character of its name, "/" for "/model" or "@" for
+   * "@support" -- opens a listbox of the commands sharing that trigger that
+   * match (name prefix, or the text after the trigger found in a
+   * description); arrows move, Tab completes, Enter picks (Enter on a
    * complete match submits), Escape dismisses -- through the shared
    * dismissible stack, so an overlay above the composer closes first. A
    * command with `choices` keeps the menu open past the space for a second
@@ -206,7 +208,11 @@ export type ChatComposerSlashCommandChoice = {
 
 /** One entry of ChatComposer's slash-command menu. */
 export type ChatComposerSlashCommand = {
-  /** Including the slash, e.g. "/model". */
+  /**
+   * Including its trigger character, e.g. "/model" or "@support". The first
+   * character opens the menu, so it must be punctuation or a symbol: a name
+   * starting with a letter, digit or space is never offered.
+   */
   name: string;
   description?: string;
   /** Shown after the name, e.g. "[model]". */

@@ -219,6 +219,81 @@ describe('ChatComposer slash commands', () => {
     expect(input.getAttribute('aria-activedescendant')).toBe(options(container)[0].id);
   });
 
+  it('opens on each command trigger, listing only the commands that share it', async () => {
+    const mixed = [
+      ...commands,
+      { name: '@geo-optimizer', description: 'Audits how the store shows up in AI answers' },
+      { name: '@support', description: 'Answers support questions' }
+    ];
+    const { container, rerender } = render(ChatComposer, {
+      props: { value: '@', slashCommands: mixed }
+    });
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '@geo-optimizer',
+      '@support'
+    ]);
+
+    await rerender({ value: '@geo', slashCommands: mixed });
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '@geo-optimizer'
+    ]);
+
+    await rerender({ value: '/', slashCommands: mixed });
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '/compact',
+      '/context',
+      '/model'
+    ]);
+  });
+
+  it('matches a description only among commands sharing the typed trigger', () => {
+    const mixed = [
+      { name: '/audit', description: 'Run the store audit' },
+      { name: '@geo-optimizer', description: 'Audits how the store shows up in AI answers' }
+    ];
+    const { container } = render(ChatComposer, {
+      props: { value: '@store', slashCommands: mixed }
+    });
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '@geo-optimizer'
+    ]);
+  });
+
+  it('reads an emoji trigger whole, so its description still matches', () => {
+    const { container } = render(ChatComposer, {
+      props: {
+        value: '\u{1F600}help',
+        slashCommands: [
+          { name: '\u{1F600}support', description: 'Answers help questions' },
+          { name: '\u{1F680}launch', description: 'Help with launches' }
+        ]
+      }
+    });
+    expect(options(container).map((o) => o.textContent?.trim().split(/\s/)[0])).toEqual([
+      '\u{1F600}support'
+    ]);
+  });
+
+  it('Tab completes a mention and closes the menu when it has no choices', async () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '@ge', slashCommands: [{ name: '@geo-optimizer' }] }
+    });
+    const input = container.querySelector('textarea') as HTMLTextAreaElement;
+    await fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.value).toBe('@geo-optimizer ');
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it('never opens for a name or a word that starts with a letter or digit', () => {
+    const { container } = render(ChatComposer, {
+      props: {
+        value: 'model',
+        slashCommands: [{ name: 'model', description: 'model picker' }, ...commands]
+      }
+    });
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
   it('leaves the textarea a plain textbox when slashCommands is unset', () => {
     const { container } = render(ChatComposer, { props: { value: 'hello' } });
     const input = container.querySelector('textarea') as HTMLTextAreaElement;

@@ -134,15 +134,27 @@
   let slashSelected = $state(0);
   let slashList: HTMLUListElement | null = $state(null);
 
+  // A command opens on the first character of its name: "/model" on "/",
+  // "@support" on "@". Letters, digits and whitespace never trigger, so a
+  // plain word typed into the composer never opens the menu. Read as a whole
+  // code point, so an emoji trigger is never split into half a surrogate pair.
+  function slashTrigger(text: string): string | null {
+    const [first = ''] = text;
+    return /^[^\p{L}\p{N}\s]$/u.test(first) ? first : null;
+  }
+
   const slashMatches = $derived.by((): ChatComposerSlashCommand[] => {
-    if (slashCommands === null || slashDismissed || !/^\/\S*$/.test(value)) {
+    const trigger = slashTrigger(value);
+    if (slashCommands === null || slashDismissed || trigger === null || /\s/.test(value)) {
       return [];
     }
     const query = value.toLowerCase();
     return slashCommands.filter(
       (command) =>
-        command.name.toLowerCase().startsWith(query) ||
-        (query.length > 1 && (command.description ?? '').toLowerCase().includes(query.slice(1)))
+        slashTrigger(command.name) === trigger &&
+        (command.name.toLowerCase().startsWith(query) ||
+          (query.length > trigger.length &&
+            (command.description ?? '').toLowerCase().includes(query.slice(trigger.length))))
     );
   });
   const slashArg = $derived.by(
@@ -150,8 +162,8 @@
       if (slashCommands === null || slashDismissed) {
         return null;
       }
-      const parsed = /^(\/\S+)\s(\S*)$/.exec(value);
-      if (parsed === null) {
+      const parsed = /^(\S+)\s(\S*)$/.exec(value);
+      if (parsed === null || slashTrigger(parsed[1] ?? '') === null) {
         return null;
       }
       const name = (parsed[1] ?? '').toLowerCase();

@@ -56,14 +56,14 @@ for (const api of ['Svelte', 'WC']) {
             : '.drp-compare-trigger-wrapper button'
         );
         const panel = scope.locator(panelKind === 'main' ? '.drp-panel' : '.drp-compare-panel');
-        // The standalone calendar is consumer-owned. Seed a supported committed
-        // compare range before exercising the three closing paths.
+        // Seed a committed compare range before exercising the three closing paths. A pick in
+        // the compare calendar is a draft: Apply commits it, whereas Escape would discard it.
         if (api === 'Svelte' && panelKind === 'compare') {
           await trigger.click();
           const dates = panel.locator('button.cell:not([disabled])');
           await dates.nth(8).click();
           await dates.nth(12).click();
-          await page.keyboard.press('Escape');
+          await panel.getByRole('button', { name: 'Apply compare selection', exact: true }).click();
           await expect(panel).toBeHidden();
         }
         for (const close of ['Escape', 'Cancel', 'Apply']) {

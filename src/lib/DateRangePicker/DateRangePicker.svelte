@@ -1,5 +1,6 @@
 <script lang="ts">
   import type {
+    DateRangeCompareDraft,
     DateRangePickerProperties,
     DateRangePreset,
     TimeDisplayBoundary
@@ -95,8 +96,11 @@
   let draftStart: Date | null = $state(null);
   let draftEnd: Date | null = $state(null);
   let draftValue: Date | null = $state(null);
-  let draftCompareStart: Date | null = $state(null);
-  let draftCompareEnd: Date | null = $state(null);
+  // The compare range is a draft too. It is handed to `compareCalendar` so a consumer's calendar
+  // has somewhere to write that Apply commits and Cancel discards; `compareSnapshot` is what the
+  // committed range was when the session opened, which is what Cancel restores.
+  const compareDraft: DateRangeCompareDraft = $state({ start: null, end: null });
+  let compareSnapshot: DateRangeCompareDraft = $state({ start: null, end: null });
 
   // Tracks the label of the currently active preset, or null when the user
   // made a custom calendar selection (or before any selection is made).
@@ -339,6 +343,67 @@
     }
   }
 
+  const sameInstant = (a: Date | null, b: Date | null): boolean =>
+    (a === null ? null : a.getTime()) === (b === null ? null : b.getTime());
+
+  // The compare calendar lives in the main panel unless a standalone `compareTrigger` gives it
+  // its own panel and its own Apply/Cancel.
+  const compareInMain: boolean = $derived(
+    typeof compareCalendar === 'function' && typeof compareTrigger !== 'function'
+  );
+
+  function seedCompareSession(): void {
+    compareSnapshot = { start: compareStart, end: compareEnd };
+    compareDraft.start = compareStart;
+    compareDraft.end = compareEnd;
+  }
+
+  // What Apply commits. A calendar bound to `compareDraft` edits the draft. A calendar bound
+  // straight to `compareStart`/`compareEnd` (how this component's docs wired it before the draft
+  // was exposed) edits the committed values in place and leaves the draft at its seed; Apply used
+  // to write that stale seed back over the pick, and could not be pressed at all on first use.
+  const pendingCompare = $derived.by(() => {
+    const edited =
+      !sameInstant(compareDraft.start, compareSnapshot.start) ||
+      !sameInstant(compareDraft.end, compareSnapshot.end);
+    return edited
+      ? { start: compareDraft.start, end: compareDraft.end }
+      : { start: compareStart, end: compareEnd };
+  });
+  const canApplyCompare: boolean = $derived(
+    pendingCompare.start !== null && pendingCompare.end !== null
+  );
+
+  function commitCompare(): void {
+    const { start, end } = pendingCompare;
+    if (start === null || end === null) {
+      return;
+    }
+    compareStart = start;
+    compareEnd = end;
+    onapplycompare?.({ compareStart: start, compareEnd: end, presetLabel: selectedPresetLabel });
+  }
+
+  // Cancel, Escape and an outside press all land here: whatever the session did to the draft or
+  // to the committed range goes back to what it was when the session opened.
+  function discardCompare(): void {
+    if (!sameInstant(compareStart, compareSnapshot.start)) {
+      compareStart = compareSnapshot.start;
+    }
+    if (!sameInstant(compareEnd, compareSnapshot.end)) {
+      compareEnd = compareSnapshot.end;
+    }
+    compareDraft.start = compareSnapshot.start;
+    compareDraft.end = compareSnapshot.end;
+  }
+
+  function abandonPicker(): void {
+    if (compareInMain) {
+      discardCompare();
+    }
+    closePicker();
+  }
+
   function openPicker(): void {
     // Pointer activation need not focus a button in WebKit. Return to the
     // invoking control, not an unrelated previously focused field or body.
@@ -347,8 +412,9 @@
     draftStart = rangeStart;
     draftEnd = rangeEnd;
     draftValue = value;
-    draftCompareStart = compareStart;
-    draftCompareEnd = compareEnd;
+    if (compareInMain) {
+      seedCompareSession();
+    }
 
     // Re-seed the session from the committed preset so the sidebar re-highlights it
     // by label. A direct calendar click later clears this, reverting to date matching.
@@ -500,7 +566,7 @@
   // a second click feeling dead — the panel could only be closed by clicking away.
   function togglePicker(): void {
     if (isOpen) {
-      closePicker();
+      abandonPicker();
     } else {
       openPicker();
     }
@@ -508,8 +574,7 @@
 
   function openComparePicker(): void {
     compareFocusReturnEl = compareTriggerRef ? findInteractive(compareTriggerRef) : null;
-    draftCompareStart = compareStart ?? null;
-    draftCompareEnd = compareEnd ?? null;
+    seedCompareSession();
     openCompare = true;
     tick().then(() => focusFirstElement(comparePanelRef));
   }
@@ -524,19 +589,12 @@
   }
 
   function handleApplyCompare(): void {
-    if (draftCompareStart !== null && draftCompareEnd !== null) {
-      compareStart = draftCompareStart;
-      compareEnd = draftCompareEnd;
-      onapplycompare?.({
-        compareStart: draftCompareStart,
-        compareEnd: draftCompareEnd,
-        presetLabel: selectedPresetLabel
-      });
-    }
+    commitCompare();
     closeComparePicker();
   }
 
   function handleCancelCompare(): void {
+    discardCompare();
     closeComparePicker();
   }
 
@@ -568,18 +626,8 @@
           presetLabel: selectedPresetLabel
         });
       }
-      if (
-        typeof compareCalendar === 'function' &&
-        draftCompareStart !== null &&
-        draftCompareEnd !== null
-      ) {
-        compareStart = draftCompareStart;
-        compareEnd = draftCompareEnd;
-        onapplycompare?.({
-          compareStart: draftCompareStart,
-          compareEnd: draftCompareEnd,
-          presetLabel: selectedPresetLabel
-        });
+      if (typeof compareCalendar === 'function') {
+        commitCompare();
       }
     } else {
       if (draftValue !== null) {
@@ -601,7 +649,7 @@
 
   function handleCancel(): void {
     oncancel?.();
-    closePicker();
+    abandonPicker();
   }
 
   function handlePreset(preset: DateRangePreset): void {
@@ -893,9 +941,10 @@
      outside both at once. */
   function handleDismissOutside(): void {
     if (isOpen) {
-      closePicker();
+      abandonPicker();
     }
     if (openCompare) {
+      discardCompare();
       closeComparePicker();
     }
   }
@@ -1053,7 +1102,7 @@
         >
           {#if typeof compareCalendar === 'function'}
             <div class="drp-compare-panel-body">
-              {@render compareCalendar()}
+              {@render compareCalendar(compareDraft)}
             </div>
           {/if}
           <div class="drp-footer">
@@ -1066,7 +1115,7 @@
               onclick={handleApplyCompare}
               ariaLabel="Apply compare selection"
               classes="drp-btn-apply"
-              disabled={draftCompareStart === null || draftCompareEnd === null}>Apply</Button
+              disabled={!canApplyCompare}>Apply</Button
             >
           </div>
         </div>
@@ -1442,7 +1491,7 @@
                causes a Svelte 5 runtime error. -->
           {#if typeof compareCalendar === 'function' && typeof compareTrigger !== 'function'}
             <div class="drp-compare-section">
-              {@render compareCalendar()}
+              {@render compareCalendar(compareDraft)}
             </div>
           {/if}
         </div>

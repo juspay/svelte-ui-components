@@ -79,7 +79,8 @@
   ],
   "sideEffects": [
     "./src/wc/**",
-    "./dist-wc/**"
+    "./dist-wc/**",
+    "**/*.css"
   ],
   "peerDependencies": {
     "lottie-web": ">=5.0.0",

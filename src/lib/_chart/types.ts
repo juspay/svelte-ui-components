@@ -23,6 +23,13 @@ export const DEFAULT_CHART_CORNER_RADIUS = 4;
  */
 export const DEFAULT_CHART_MAX_HEIGHT = 420;
 
+/**
+ * Padding (px) a label plate draws around its text's bounding box. A label that
+ * is clamped to a canvas edge must stay at least this far inside it, otherwise
+ * its plate paints outside the SVG and is clipped there.
+ */
+export const CHART_LABEL_PLATE_PADDING = 3;
+
 // ── Primitive shapes ──────────────────────────────────────────
 
 export type Margin = {

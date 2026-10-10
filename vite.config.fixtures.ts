@@ -38,7 +38,8 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/scroller-justify-content/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/toast-close-lifecycle/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chart-label-plate/index.html'),
-        resolve(import.meta.dirname, 'tests/fixtures/tabs-scroll-bounds/index.html')
+        resolve(import.meta.dirname, 'tests/fixtures/tabs-scroll-bounds/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/sankey-label-plate-inset/index.html')
       ]
     }
   }

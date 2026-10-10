@@ -18,6 +18,7 @@
   import { truncateToWidth } from '$lib/_chart/labels';
   import {
     DEFAULT_CHART_CORNER_RADIUS,
+    CHART_LABEL_PLATE_PADDING,
     DEFAULT_CHART_MAX_HEIGHT,
     type TooltipAnchor
   } from '$lib/_chart/types';
@@ -369,8 +370,10 @@
       measureText(truncateColumnLabel(label), colLabelFont).width,
       fontMetrics?.columnWidths[columnIndex] ?? 0
     );
-    const canvasLeft = -(marginX + firstColumnLabelGutter) + 2;
-    const canvasRight = plotWidth + lastColumnLabelGutter + marginX - 2;
+    // Inset by the plate padding: a header clamped any closer paints its plate
+    // outside the SVG, where it is clipped.
+    const canvasLeft = -(marginX + firstColumnLabelGutter) + CHART_LABEL_PLATE_PADDING;
+    const canvasRight = plotWidth + lastColumnLabelGutter + marginX - CHART_LABEL_PLATE_PADDING;
     const min = canvasLeft + textWidth / 2;
     const max = canvasRight - textWidth / 2;
     // Text wider than the whole canvas keeps its centre; the colWidth-based

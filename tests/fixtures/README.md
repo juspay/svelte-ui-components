@@ -154,3 +154,9 @@ full-page visual baseline. Run them with:
 ```sh
 pnpm exec playwright test tests/date-range-picker-responsive.test.ts
 ```
+
+`sankey-label-plate-inset/` mounts two SankeyCharts whose column headers are forced against a canvas
+edge: no first-column gutter and no margin for the left clamp, no last-column gutter and a long last
+header for the right one. `tests/sankey-label-plate-inset.spec.ts` asserts every header plate stays
+inside the svg, so the clamp cases stay out of the public `/components/sankey-chart` demo and its
+full-page visual baseline.

@@ -2,7 +2,38 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.52.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.53.0)
+
+Found while checking the open and closed issues against the released tree. Each correction was
+checked against the source it describes.
+
+- README: add a Charts group (AreaChart, BarChart, DualAxisBarChart, FunnelChart, LineChart,
+PieChart, SankeyChart); it had no mention of charts.
+- Pill: the muted tone token defaults to hex 5b626d, not 6b7280, and --pill-border needs no
+dark value.
+- ToolCallLog: Pill's root can be a button (as="button" with ariaExpanded), so that is not why
+chips stay bespoke markup; the doc and the component comment now give the real reason, which
+is their mixed content.
+- Select: document the search-position attribute of the custom element.
+- Toolbar: document back-href on the custom element.
+- EmptyState: left alignment of wrapped text also needs --empty-state-text-align.
+- Visual suite: docs/VISUAL_TESTING.md states the 0.2 per-pixel threshold and what it hides, the
+delete-the-PNG repair path, that the clock is paused with pauseAt, and that no route is excluded.
+The spec paragraph saying the hitl cause is not established is replaced, and the
+"byte-comparisons" wording in the config is corrected.
+
+No behaviour changes; the one source file touched changes a CSS comment.
+
+-
+fix(date-range-picker): let compareCalendar reach the compare draft so Apply and Cancel work ([3d6b629](https://github.com/juspay/svelte-ui-components/commit/3d6b629871b682cd851b2fa8936d8dbd7a8a1b0d))
+-
+docs(audit): correct docs and comments that no longer match release 4.53.0 ([4919eb8](https://github.com/juspay/svelte-ui-components/commit/4919eb80776ae17600d8ce1ea9bf92c884600007))
+-
+fix(package): keep the theme CSS import when a bundler drops side-effect-free modules ([85c6dd0](https://github.com/juspay/svelte-ui-components/commit/85c6dd0b1d2310b0f8bec80b180ed3f90a08e669))
+-
+ci(browser-engines): pause the weekly run until its first run is green ([91c2880](https://github.com/juspay/svelte-ui-components/commit/91c288077fe509ddf16ca6687cc377b69be58894))
+
+## [4.53.0](https://github.com/juspay/svelte-ui-components/compare/4.53.0..4.52.1) - 10 October 2026
 
 Brings the audit work that never reached release onto d3610f2: the local candidate 2c9e94c,
 merged three-way from its 4e073fd parent. The HITL expiry, Toast lifecycle, compiled chart

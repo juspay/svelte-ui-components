@@ -121,10 +121,11 @@ means true and there is no attribute spelling for false. Turn it off with a prop
 
 ## Accessibility
 
-Every chip is a real `<button>` — `Pill`'s root is a non-interactive `<div>` and can't host
-`aria-expanded`/button semantics, so chips are not `Pill`-based even though their sizing recipe
-(line-height, cursor) is pulled from Pill's own tokens. Chips with a `detail` string get
-`aria-expanded`, toggling their popover.
+Every chip is a real `<button>`. `Pill` can itself be a button (`as="button"`, with
+`ariaExpanded`), so the semantics are not why chips stay bespoke markup: a chip holds mixed content
+(a spinner, a bold label, a meta string and nested diffstat `Pill` badges), where `Pill` renders a
+single `text` string. Their sizing recipe (line-height, cursor) is pulled from Pill's own tokens.
+Chips with a `detail` string get `aria-expanded`, toggling their popover.
 
 The open popover is portaled out to the root of the tree it lives in (Menu's `usePortal` placement
 math, reused) and positioned `position: fixed` against the chip's live anchor rect, so it can never

@@ -289,10 +289,10 @@
     gap: var(--tool-call-log-gap, 8px);
   }
 
-  /* Bespoke <button> markup (Pill's root is a non-interactive <div> and can't carry
-     aria-expanded/button semantics — see docs), but its sizing recipe is deliberately
-     pulled from Pill's own tokens (line-height, cursor) so it reads as the same family
-     of control as the diffstat Pill badges nested inside it. */
+  /* Bespoke <button> markup (the chip holds mixed content -- spinner, label, meta and nested
+     diffstat Pill badges -- where Pill renders one `text` string; see docs), but its sizing
+     recipe is deliberately pulled from Pill's own tokens (line-height, cursor) so it reads as
+     the same family of control as the diffstat Pill badges nested inside it. */
   .chip {
     display: inline-flex;
     align-items: center;

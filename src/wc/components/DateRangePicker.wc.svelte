@@ -126,8 +126,12 @@
     {#snippet timePicker()}
       <slot name="time-picker"></slot>
     {/snippet}
-    {#snippet compareCalendar()}
-      <slot name="compare-calendar"></slot>
+    {#snippet compareCalendar(draft)}
+      {#if props.compareCalendar}
+        {@render props.compareCalendar(draft)}
+      {:else}
+        <slot name="compare-calendar"></slot>
+      {/if}
     {/snippet}
   </DateRangePicker>
 {:else if hasTimePickerSlot}
@@ -150,8 +154,12 @@
           {@html chevronDownSvg}
         </slot>{/if}
     {/snippet}
-    {#snippet compareCalendar()}
-      <slot name="compare-calendar"></slot>
+    {#snippet compareCalendar(draft)}
+      {#if props.compareCalendar}
+        {@render props.compareCalendar(draft)}
+      {:else}
+        <slot name="compare-calendar"></slot>
+      {/if}
     {/snippet}
   </DateRangePicker>
 {:else}

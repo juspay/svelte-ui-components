@@ -1,8 +1,9 @@
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
+import type { RenderResult } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DateRangePicker from './DateRangePicker.svelte';
-import type { DateRangePreset } from './properties';
+import type { DateRangeCompareDraft, DateRangePreset } from './properties';
 
 // Fixed dates so preset getValue() results are deterministic across test runs.
 const TODAY = new Date(2026, 5, 15);
@@ -272,6 +273,266 @@ describe('DateRangePicker compare panel focus management (still works alongside 
     });
     await waitFor(() => {
       expect(document.activeElement).toBe(compareTrigger);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// The compare draft. `compareCalendar` used to be rendered with no argument, so the draft Apply
+// commits lived where a consumer could not reach it: first-use Apply stayed disabled, Apply wrote
+// the open-time seed back over the pick, and Cancel kept whatever a bound Calendar had written.
+// ---------------------------------------------------------------------------------------------
+
+const FIRST = { start: new Date(2026, 5, 1), end: new Date(2026, 5, 7) };
+const SECOND = { start: new Date(2026, 5, 10), end: new Date(2026, 5, 14) };
+
+const stamp = (date: Date | null): string =>
+  date === null ? 'none' : `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+/**
+ * A compare calendar that writes `pick` to its draft when its button is pressed. `read()` reports
+ * the live draft the snippet was handed, so a test can see what a session holds without depending
+ * on a raw snippet re-rendering its HTML.
+ */
+const draftProbe = (pick: { start: Date; end: Date }) => {
+  let live: DateRangeCompareDraft | null = null;
+  const snippet = createRawSnippet<[DateRangeCompareDraft]>((draft) => ({
+    render: () => {
+      live = draft();
+      return '<div><button type="button" data-action="pick">pick</button></div>';
+    },
+    setup: (node) => {
+      node.addEventListener('click', (event) => {
+        if (event.target instanceof Element && event.target.closest('[data-action="pick"]')) {
+          draft().start = pick.start;
+          draft().end = pick.end;
+        }
+      });
+    }
+  }));
+  const read = (): string =>
+    live === null ? 'not rendered' : `${stamp(live.start)} to ${stamp(live.end)}`;
+  return { snippet, read };
+};
+
+type DrpView = Pick<RenderResult<typeof DateRangePicker>, 'getByRole' | 'queryByRole'>;
+
+const openStandaloneCompare = async (view: DrpView): Promise<void> => {
+  await fireEvent.click(view.getByRole('button', { name: 'Open compare period picker' }));
+  await waitFor(() => {
+    expect(view.queryByRole('dialog', { name: 'Compare period picker' })).not.toBeNull();
+  });
+};
+
+const compareDialogClosed = async (view: DrpView): Promise<void> => {
+  await waitFor(() => {
+    expect(view.queryByRole('dialog', { name: 'Compare period picker' })).toBeNull();
+  });
+};
+
+describe('DateRangePicker compare draft', () => {
+  it('hands compareCalendar a draft seeded from the committed compare range', async () => {
+    const probe = draftProbe(SECOND);
+    const view = render(DateRangePicker, {
+      mode: 'range',
+      testId: 'drp',
+      compareStart: FIRST.start,
+      compareEnd: FIRST.end,
+      compareTrigger: compareTriggerSnippet,
+      compareCalendar: probe.snippet
+    });
+    await openStandaloneCompare(view);
+    expect(probe.read()).toBe('2026-6-1 to 2026-6-7');
+  });
+
+  it('keeps Apply disabled until both ends are picked, then commits the draft', async () => {
+    const onapplycompare = vi.fn();
+    const probe = draftProbe(SECOND);
+    const view = render(DateRangePicker, {
+      mode: 'range',
+      testId: 'drp',
+      compareTrigger: compareTriggerSnippet,
+      compareCalendar: probe.snippet,
+      onapplycompare
+    });
+    await openStandaloneCompare(view);
+
+    const apply = view.getByRole('button', { name: 'Apply compare selection' });
+    expect(apply).toHaveProperty('disabled', true);
+    expect(probe.read()).toBe('none to none');
+
+    await fireEvent.click(view.getByRole('button', { name: 'pick' }));
+    await waitFor(() => {
+      expect(apply).toHaveProperty('disabled', false);
+    });
+    expect(onapplycompare).not.toHaveBeenCalled();
+
+    await fireEvent.click(apply);
+    await compareDialogClosed(view);
+    expect(onapplycompare).toHaveBeenCalledTimes(1);
+    expect(onapplycompare.mock.calls[0][0]).toMatchObject({
+      compareStart: SECOND.start,
+      compareEnd: SECOND.end
+    });
+
+    // The commit is real: a new session is seeded from it.
+    await openStandaloneCompare(view);
+    expect(probe.read()).toBe('2026-6-10 to 2026-6-14');
+  });
+
+  it.each([
+    [
+      'Cancel',
+      async (view: DrpView) =>
+        fireEvent.click(view.getByRole('button', { name: 'Cancel compare selection' }))
+    ],
+    ['Escape', async () => fireEvent.keyDown(document, { key: 'Escape' })],
+    ['an outside press', async () => pointerDownOn(document.body)]
+  ])(
+    '%s discards a pick and the next session starts from the committed range',
+    async (_, dismiss) => {
+      const onapplycompare = vi.fn();
+      const probe = draftProbe(SECOND);
+      const view = render(DateRangePicker, {
+        mode: 'range',
+        testId: 'drp',
+        compareStart: FIRST.start,
+        compareEnd: FIRST.end,
+        compareTrigger: compareTriggerSnippet,
+        compareCalendar: probe.snippet,
+        onapplycompare
+      });
+      await openStandaloneCompare(view);
+      await fireEvent.click(view.getByRole('button', { name: 'pick' }));
+      await waitFor(() => {
+        expect(probe.read()).toBe('2026-6-10 to 2026-6-14');
+      });
+
+      await dismiss(view);
+      await compareDialogClosed(view);
+      expect(onapplycompare).not.toHaveBeenCalled();
+
+      await openStandaloneCompare(view);
+      expect(probe.read()).toBe('2026-6-1 to 2026-6-7');
+    }
+  );
+
+  describe('a calendar bound straight to compareStart / compareEnd (the wiring before the draft)', () => {
+    it('enables Apply on first use and commits what the calendar wrote', async () => {
+      const onapplycompare = vi.fn();
+      const view = render(DateRangePicker, {
+        mode: 'range',
+        testId: 'drp',
+        compareTrigger: compareTriggerSnippet,
+        compareCalendar: compareCalendarSnippet,
+        onapplycompare
+      });
+      await openStandaloneCompare(view);
+      const apply = view.getByRole('button', { name: 'Apply compare selection' });
+      expect(apply).toHaveProperty('disabled', true);
+
+      await view.rerender({ compareStart: SECOND.start, compareEnd: SECOND.end });
+      await waitFor(() => {
+        expect(apply).toHaveProperty('disabled', false);
+      });
+
+      await fireEvent.click(apply);
+      expect(onapplycompare.mock.calls[0][0]).toMatchObject({
+        compareStart: SECOND.start,
+        compareEnd: SECOND.end
+      });
+    });
+
+    it('does not write the open-time seed back over the calendar pick on Apply', async () => {
+      const onapplycompare = vi.fn();
+      const view = render(DateRangePicker, {
+        mode: 'range',
+        testId: 'drp',
+        compareStart: FIRST.start,
+        compareEnd: FIRST.end,
+        compareTrigger: compareTriggerSnippet,
+        compareCalendar: compareCalendarSnippet,
+        onapplycompare
+      });
+      await openStandaloneCompare(view);
+      await view.rerender({ compareStart: SECOND.start, compareEnd: SECOND.end });
+
+      await fireEvent.click(view.getByRole('button', { name: 'Apply compare selection' }));
+      expect(onapplycompare.mock.calls[0][0]).toMatchObject({
+        compareStart: SECOND.start,
+        compareEnd: SECOND.end
+      });
+    });
+
+    it('restores the range the session opened with on Cancel', async () => {
+      const probe = draftProbe(SECOND);
+      const view = render(DateRangePicker, {
+        mode: 'range',
+        testId: 'drp',
+        compareStart: FIRST.start,
+        compareEnd: FIRST.end,
+        compareTrigger: compareTriggerSnippet,
+        compareCalendar: probe.snippet
+      });
+      await openStandaloneCompare(view);
+      await view.rerender({ compareStart: SECOND.start, compareEnd: SECOND.end });
+
+      await fireEvent.click(view.getByRole('button', { name: 'Cancel compare selection' }));
+      await compareDialogClosed(view);
+      await openStandaloneCompare(view);
+      expect(probe.read()).toBe('2026-6-1 to 2026-6-7');
+    });
+  });
+
+  it('commits the draft from the main panel when the compare calendar is inline', async () => {
+    const onapplycompare = vi.fn();
+    const probe = draftProbe(SECOND);
+    const view = render(DateRangePicker, {
+      mode: 'range',
+      testId: 'drp',
+      rangeStart: FIRST.start,
+      rangeEnd: FIRST.end,
+      compareCalendar: probe.snippet,
+      onapplycompare
+    });
+    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await waitFor(() => {
+      expect(probe.read()).toBe('none to none');
+    });
+
+    await fireEvent.click(view.getByRole('button', { name: 'pick' }));
+    await fireEvent.click(view.getByRole('button', { name: 'Apply date selection' }));
+    await waitFor(() => {
+      expect(onapplycompare).toHaveBeenCalledTimes(1);
+    });
+    expect(onapplycompare.mock.calls[0][0]).toMatchObject({
+      compareStart: SECOND.start,
+      compareEnd: SECOND.end
+    });
+  });
+
+  it('discards an inline draft when the main panel is cancelled', async () => {
+    const onapplycompare = vi.fn();
+    const probe = draftProbe(SECOND);
+    const view = render(DateRangePicker, {
+      mode: 'range',
+      testId: 'drp',
+      rangeStart: FIRST.start,
+      rangeEnd: FIRST.end,
+      compareCalendar: probe.snippet,
+      onapplycompare
+    });
+    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await fireEvent.click(view.getByRole('button', { name: 'pick' }));
+    await fireEvent.click(view.getByRole('button', { name: 'Cancel date selection' }));
+    await waitFor(() => {
+      expect(view.queryByRole('dialog', { name: 'Date range picker' })).toBeNull();
+    });
+    expect(onapplycompare).not.toHaveBeenCalled();
+
+    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await waitFor(() => {
+      expect(probe.read()).toBe('none to none');
     });
   });
 });

@@ -111,7 +111,9 @@ By default the time inputs sit in a collapsible row revealed by a clock toggle. 
 
 ### With compare calendar (consumer snippet)
 
-Pass a `compareCalendar` snippet to render a comparison period section inside the panel. The consumer controls all compare state and wires `onapplycompare` to commit it.
+Pass a `compareCalendar` snippet to render a comparison period section inside the panel. The snippet receives the compare **draft**, a reactive `{ start, end }` (type `DateRangeCompareDraft`) to bind a Calendar to. Apply commits the draft to `compareStart` and `compareEnd` and fires `onapplycompare`; Cancel, Escape and a press outside discard it and restore the compare range the panel opened with. Apply stays disabled until both ends are picked.
+
+A snippet written before the draft existed, one that takes no argument and binds its Calendar straight to `compareStart` and `compareEnd`, still works: Apply keeps what the Calendar wrote, and Cancel restores the range the panel opened with.
 
 ```svelte
 <script>
@@ -130,9 +132,9 @@ Pass a `compareCalendar` snippet to render a comparison period section inside th
     compareEnd = e.compareEnd;
   }}
 >
-  {#snippet compareCalendar()}
+  {#snippet compareCalendar(draft)}
     <span>Compare period</span>
-    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+    <Calendar mode="range" bind:rangeStart={draft.start} bind:rangeEnd={draft.end} />
   {/snippet}
 </DateRangePicker>
 ```
@@ -163,8 +165,8 @@ Pass a `compareTrigger` snippet to render a separate trigger button for the comp
   {#snippet compareTrigger(label)}
     Compare: {label}
   {/snippet}
-  {#snippet compareCalendar()}
-    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+  {#snippet compareCalendar(draft)}
+    <Calendar mode="range" bind:rangeStart={draft.start} bind:rangeEnd={draft.end} />
   {/snippet}
 </DateRangePicker>
 ```
@@ -345,9 +347,9 @@ These apply whether or not `responsiveLayout` is set.
 | presetsPosition     | `'side' \| 'top'`                     | No       | `'side'`        | Where the presets sit. `'top'` lays them out as a wrapping row above the calendars, at any width. Group dividers are hidden while they are on top.                                                                                                                                                                                                                 |
 | responsiveLayout    | `boolean`                             | No       | `false`         | Opt-in viewport awareness. At 1023px and below (range mode) or 688px and below (single mode) the panel becomes a fixed sheet confined to the viewport with the presets on top; at 688px and below it also shows one month and stacks the date and time inputs. See Responsive layout.                                                                              |
 | timePicker          | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-time-row` wrapper below the calendars. Consumer owns all time state and input elements.                                                                                                                                                                                                                                            |
-| compareStart        | `Date \| null`                        | No       | `null`          | Bindable. Start of the compare range. Meaningful when `compareCalendar` snippet is provided and `onapplycompare` commits it.                                                                                                                                                                                                                                       |
+| compareStart        | `Date \| null`                        | No       | `null`          | Bindable. Start of the committed compare range. Meaningful when a `compareCalendar` snippet is provided; Apply writes it from the compare draft.                                                                                                                                                                                                                                       |
 | compareEnd          | `Date \| null`                        | No       | `null`          | Bindable. End of the compare range.                                                                                                                                                                                                                                                                                                                                |
-| compareCalendar     | `Snippet`                             | No       | —               | Snippet rendered inside a `.drp-compare-section` wrapper below the calendars. Consumer owns all compare state and calendar.                                                                                                                                                                                                                                        |
+| compareCalendar     | `Snippet<[DateRangeCompareDraft]>`    | No       | —               | Snippet rendered inside a `.drp-compare-section` wrapper below the calendars. It receives the compare draft (`{ start, end }`) to bind a Calendar to; Apply commits it, Cancel, Escape and an outside press discard it.                                                                                                                                                                                                                                        |
 | weekStartsOn        | `0 \| 1`                              | No       | `0`             | Which day starts the week. 0 = Sunday, 1 = Monday.                                                                                                                                                                                                                                                                                                                 |
 | locale              | `string`                              | No       | `undefined`     | BCP-47 locale string for date formatting on the trigger label (e.g., `'en-US'`, `'de-DE'`).                                                                                                                                                                                                                                                                        |
 | testId              | `string`                              | No       | `undefined`     | Value for the `data-pw` attribute on the root wrapper element, used for end-to-end testing selectors.                                                                                                                                                                                                                                                              |
@@ -364,7 +366,7 @@ These apply whether or not `responsiveLayout` is set.
 | triggerSnippet  | `label: string` | Custom trigger content. Receives the current formatted label string. When provided, the default label+icon layout is replaced entirely.                                                                                                                      |
 | triggerIcon     | —               | Custom icon rendered inside the default trigger layout, replacing the default chevron-down SVG.                                                                                                                                                              |
 | timePicker      | —               | Rendered in the time-picker slot (`.drp-time-row`) below the calendars. Use this to add start/end time inputs. Consumer owns all time state.                                                                                                                 |
-| compareCalendar | —               | When `compareTrigger` is **not** provided: rendered in the compare slot (`.drp-compare-section`) below the calendars inside the main panel. When `compareTrigger` **is** provided: rendered inside the standalone compare panel (`.drp-compare-panel-body`). |
+| compareCalendar | `draft: DateRangeCompareDraft` | When `compareTrigger` is **not** provided: rendered in the compare slot (`.drp-compare-section`) below the calendars inside the main panel. When `compareTrigger` **is** provided: rendered inside the standalone compare panel (`.drp-compare-panel-body`). |
 | compareTrigger  | `label: string` | Standalone compare trigger button. Receives the formatted compare label string. When provided, a separate trigger+panel widget is rendered adjacent to the main trigger so the compare period can be picked independently of the main panel.                 |
 
 ## Events
@@ -373,7 +375,7 @@ These apply whether or not `responsiveLayout` is set.
 | -------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | onapply        | `(event: { rangeStart: Date; rangeEnd: Date }) => void`     | Fired when Apply is clicked in range mode and both dates are set.                                                               |
 | onapplysingle  | `(event: { date: Date }) => void`                           | Fired when Apply is clicked in single mode and a date is set.                                                                   |
-| onapplycompare | `(event: { compareStart: Date; compareEnd: Date }) => void` | Fired when Apply is clicked and the `compareCalendar` snippet is present.                                                       |
+| onapplycompare | `(event: { compareStart: Date; compareEnd: Date }) => void` | Fired when Apply is clicked, the `compareCalendar` snippet is present and both ends of the compare range are set.                                                       |
 | oncancel       | `() => void`                                                | Fired when the user dismisses the picker without applying.                                                                      |
 | onopentoggle   | `(event: { open: boolean }) => void`                        | Fired whenever the panel opens or closes.                                                                                       |
 | onclear        | `() => void`                                                | Fired when the Clear button is clicked in single mode (`clearable=true`). `value` is already reset to `null` before this fires. |
@@ -614,6 +616,12 @@ styled `border-top` plus padding, so an always-claimed snippet would draw a divi
 panel above an empty strip, and `compareCalendar` additionally gates whether Apply commits
 `compareStart`/`compareEnd` and fires `onapplycompare`.
 
+A slot cannot receive the compare draft that a Svelte `compareCalendar` snippet is handed. Slotted
+markup writes its pick to the element's `compareStart` and `compareEnd` properties instead: Apply
+keeps what was written, and Cancel, Escape and an outside press restore the range the panel opened
+with. A snippet assigned as the `compareCalendar` property is called with the draft, like the Svelte
+one.
+
 > **Svelte-only:** `triggerSnippet` (receives `string`), `compareTrigger` (receives `string`) take arguments, so they cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the arguments above would be silently dropped. Use the Svelte component directly when you need these.
 
 ## Consumer Recipes
@@ -655,7 +663,7 @@ The `timePicker` snippet gives full control over time input UI and state. A mini
 
 ### Compare range (inline, inside main panel)
 
-The `compareCalendar` snippet lets you embed a second Calendar for period comparison inside the main DRP panel. Wire its selection back through `onapplycompare`:
+The `compareCalendar` snippet lets you embed a second Calendar for period comparison inside the main DRP panel. Bind the Calendar to the `draft` the snippet receives; the main panel's Apply commits it:
 
 ```svelte
 <script>
@@ -674,9 +682,9 @@ The `compareCalendar` snippet lets you embed a second Calendar for period compar
     compareEnd = e.compareEnd;
   }}
 >
-  {#snippet compareCalendar()}
+  {#snippet compareCalendar(draft)}
     <p>Compare period</p>
-    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+    <Calendar mode="range" bind:rangeStart={draft.start} bind:rangeEnd={draft.end} />
   {/snippet}
 </DateRangePicker>
 ```
@@ -705,8 +713,8 @@ Pass both `compareTrigger` and `compareCalendar` for an independent compare pick
   {#snippet compareTrigger(label)}
     Compare: {label}
   {/snippet}
-  {#snippet compareCalendar()}
-    <Calendar mode="range" bind:rangeStart={compareStart} bind:rangeEnd={compareEnd} />
+  {#snippet compareCalendar(draft)}
+    <Calendar mode="range" bind:rangeStart={draft.start} bind:rangeEnd={draft.end} />
   {/snippet}
 </DateRangePicker>
 ```

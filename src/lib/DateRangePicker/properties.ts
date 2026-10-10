@@ -1,5 +1,14 @@
 import type { Snippet } from 'svelte';
 
+/**
+ * The compare range a `compareCalendar` snippet edits before Apply commits it. A plain
+ * reactive object, so a Calendar can bind to its fields.
+ */
+export type DateRangeCompareDraft = {
+  start: Date | null;
+  end: Date | null;
+};
+
 export type DateRangePreset = {
   label: string;
   getValue: () => { start: Date; end: Date };
@@ -102,8 +111,16 @@ export type OptionalDateRangePickerProperties = {
   compareStart?: Date | null;
   /** End of compare range (bindable). Used when compareCalendar snippet is provided. */
   compareEnd?: Date | null;
-  /** Snippet rendered in the compare-calendar slot. Consumer controls all compare UI. */
-  compareCalendar?: Snippet;
+  /**
+   * Snippet rendered in the compare-calendar slot. Consumer controls all compare UI.
+   *
+   * It receives the compare draft, a reactive `{ start, end }` that Apply commits and that
+   * Cancel, Escape and an outside press discard. Bind a Calendar to it:
+   * `bind:rangeStart={draft.start} bind:rangeEnd={draft.end}`. A snippet that takes no
+   * argument and edits `compareStart`/`compareEnd` directly still works: Apply keeps what
+   * it wrote, and Cancel restores the range the session opened with.
+   */
+  compareCalendar?: Snippet<[DateRangeCompareDraft]>;
   /** Which day of the week starts the calendar. 0=Sunday, 1=Monday. */
   weekStartsOn?: 0 | 1;
   /** BCP-47 locale string for date formatting. */

@@ -21,8 +21,6 @@
   // --- Compare mode state ---
   let compareStart = $state<Date | null>(null);
   let compareEnd = $state<Date | null>(null);
-  let draftCompareStart = $state<Date | null>(null);
-  let draftCompareEnd = $state<Date | null>(null);
 
   // --- Standalone compare trigger state (separate instance, own bindings so it
   //     doesn't share state with the inline-compare demo above) ---
@@ -497,18 +495,20 @@
         compareEnd = e.compareEnd;
       }}
     >
-      {#snippet compareCalendar()}
+      {#snippet compareCalendar(draft)}
         <span class="compare-title">Compare period</span>
         <Calendar
           mode="range"
-          bind:rangeStart={draftCompareStart}
-          bind:rangeEnd={draftCompareEnd}
+          bind:rangeStart={draft.start}
+          bind:rangeEnd={draft.end}
           classes="drp-calendar-embedded drp-compare-calendar"
         />
       {/snippet}
     </DateRangePicker>
   </div>
-  <p class="result-label">Compare range: <strong>{compareLabel}</strong></p>
+  <p class="result-label" data-pw="drp-compare-demo-result">
+    Compare range: <strong>{compareLabel}</strong>
+  </p>
 </section>
 
 <!-- ── 5b. Compare mode (standalone trigger, independent panel) ── -->
@@ -534,17 +534,17 @@
       {#snippet compareTrigger(label)}
         Compare: {label}
       {/snippet}
-      {#snippet compareCalendar()}
+      {#snippet compareCalendar(draft)}
         <Calendar
           mode="range"
-          bind:rangeStart={standaloneCompareStart}
-          bind:rangeEnd={standaloneCompareEnd}
+          bind:rangeStart={draft.start}
+          bind:rangeEnd={draft.end}
           classes="drp-calendar-embedded drp-compare-calendar"
         />
       {/snippet}
     </DateRangePicker>
   </div>
-  <p class="result-label">
+  <p class="result-label" data-pw="drp-standalone-compare-demo-result">
     Compare range: <strong
       >{formatDate(standaloneCompareStart)} – {formatDate(standaloneCompareEnd)}</strong
     >

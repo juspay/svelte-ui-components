@@ -195,9 +195,29 @@ const GUARDED: ReadonlyArray<{ component: Component; slot: string }> = [
   { component: 'ThinkingIndicator', slot: 'toggle-icon' }
 ];
 
+/**
+ * Snippet props that take arguments but keep a named slot, as the FALLBACK to a snippet
+ * assigned as a JS property: the wrapper renders `props.<prop>(...)` WITH the arguments
+ * when one is assigned, and projects the slot otherwise. That is the shape
+ * scripts/check-wc-contract.js prescribes (Menu's `trigger` is the other example). The slot
+ * cannot carry the arguments, so it serves consumers that need none of them, which is every
+ * consumer there was before the prop took any.
+ *
+ * Each entry is re-derived from source below, so dropping the property-assigned branch, or
+ * the arguments, fails a test rather than leaving a slot that quietly lost its meaning.
+ */
+const PARAMETERIZED_WITH_SLOT_FALLBACK: ReadonlyArray<{ component: Component; prop: string }> = [
+  { component: 'DateRangePicker', prop: 'compareCalendar' }
+];
+
 describe('argument-less content props reachable from markup', () => {
   it.each(WC2_COMPONENTS)('%s: every declared slot names a real snippet prop', (component) => {
-    const props = argumentlessSnippetProps(component);
+    const props = new Set([
+      ...argumentlessSnippetProps(component),
+      ...PARAMETERIZED_WITH_SLOT_FALLBACK.filter((entry) => entry.component === component).map(
+        (entry) => entry.prop
+      )
+    ]);
     const byKebab = new Map([...props].map((prop) => [kebab(prop), prop]));
     for (const slot of declaredSlots(component)) {
       // A slot whose name is a typo compiles, renders and projects nothing. Nothing else
@@ -206,6 +226,18 @@ describe('argument-less content props reachable from markup', () => {
       expect(byKebab.has(slot), `<slot name="${slot}"> in ${component}.wc.svelte`).toBe(true);
     }
   });
+
+  it.each(PARAMETERIZED_WITH_SLOT_FALLBACK)(
+    '$component $prop: takes arguments, and its slot is only the fallback to an assigned snippet',
+    ({ component, prop }) => {
+      const declared = new RegExp(`${prop}\\??\\s*:\\s*Snippet<\\[`);
+      expect(read(`src/lib/${component}/properties.ts`)).toMatch(declared);
+      const text = wrapper(component);
+      expect(text).toMatch(new RegExp(`\\{#snippet ${prop}\\(\\w+\\)\\}`));
+      expect(text).toMatch(new RegExp(`\\{@render props\\.${prop}\\(\\w+\\)\\}`));
+      expect(declaredSlots(component).has(kebab(prop))).toBe(true);
+    }
+  );
 
   it.each(WC2_COMPONENTS)('%s: every declared slot is documented', (component) => {
     const slots = declaredSlots(component);

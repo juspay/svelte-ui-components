@@ -65,6 +65,7 @@
     statusText,
     statusTestId,
     slashCommands = null,
+    inlineTriggers = null,
     slashMenuAriaLabel = 'slash commands',
     slashMenuHint = '↑↓ move · tab complete · ↵ select · esc dismiss',
     slashMenuClasses,
@@ -96,6 +97,7 @@
 
   let fileInput: HTMLInputElement | null = $state(null);
   let inputElement: HTMLTextAreaElement | null = $state(null);
+  let menuRaised = $state(false);
 
   export const focus = (options?: FocusOptions): void => {
     inputElement?.focus(options);
@@ -133,6 +135,10 @@
   let slashDismissed = $state(false);
   let slashSelected = $state(0);
   let slashList: HTMLUListElement | null = $state(null);
+  let highlightLayer: HTMLDivElement | null = $state(null);
+
+  // Where the caret sits, so an inline trigger can open the menu on the word it is in.
+  let caret = $state(0);
 
   // A command opens on the first character of its name: "/model" on "/",
   // "@support" on "@". Letters, digits and whitespace never trigger, so a
@@ -143,12 +149,31 @@
     return /^[^\p{L}\p{N}\s]$/u.test(first) ? first : null;
   }
 
+  // The word ending at the caret when it starts with an inline trigger: "@ge" in
+  // "ask @ge|". Null unless the caret sits at the end of that word.
+  const inlineWord = $derived.by((): { start: number; text: string } | null => {
+    if (inlineTriggers === null || slashCommands === null) {
+      return null;
+    }
+    const text = /(?:^|\s)(\S*)$/.exec(value.slice(0, caret))?.[1] ?? '';
+    const trigger = slashTrigger(text);
+    if (trigger === null || !inlineTriggers.includes(trigger) || /^\S/.test(value.slice(caret))) {
+      return null;
+    }
+    return { start: caret - text.length, text };
+  });
+
   const slashMatches = $derived.by((): ChatComposerSlashCommand[] => {
-    const trigger = slashTrigger(value);
-    if (slashCommands === null || slashDismissed || trigger === null || /\s/.test(value)) {
+    const typed = inlineWord?.text ?? value;
+    const trigger = slashTrigger(typed);
+    if (slashCommands === null || slashDismissed || trigger === null || /\s/.test(typed)) {
       return [];
     }
-    const query = value.toLowerCase();
+    // An inline trigger opens only on the word at the caret.
+    if (inlineWord === null && inlineTriggers?.includes(trigger)) {
+      return [];
+    }
+    const query = typed.toLowerCase();
     return slashCommands.filter(
       (command) =>
         slashTrigger(command.name) === trigger &&
@@ -163,7 +188,8 @@
         return null;
       }
       const parsed = /^(\S+)\s(\S*)$/.exec(value);
-      if (parsed === null || slashTrigger(parsed[1] ?? '') === null) {
+      const trigger = parsed === null ? null : slashTrigger(parsed[1] ?? '');
+      if (parsed === null || trigger === null || inlineTriggers?.includes(trigger)) {
         return null;
       }
       const name = (parsed[1] ?? '').toLowerCase();
@@ -229,12 +255,126 @@
     if (typeof command !== 'object') {
       return;
     }
+    // Inline: replace only the word at the caret and keep the rest of the text.
+    const word = inlineWord;
+    if (word !== null) {
+      const rest = value.slice(caret).replace(/^\s/, '');
+      value = `${value.slice(0, word.start)}${command.name} ${rest}`;
+      placeCaret(word.start + command.name.length + 1);
+      slashSelected = 0;
+      return;
+    }
     // A command that takes arguments gets a trailing space and waits for
     // them; with enumerable choices the menu stays open for stage two.
     value = `${command.name} `;
     slashDismissed = (command.choices?.length ?? 0) === 0;
     slashSelected = 0;
   }
+
+  function placeCaret(position: number): void {
+    caret = position;
+    void tick().then(() => {
+      inputElement?.focus();
+      inputElement?.setSelectionRange(position, position);
+    });
+  }
+
+  function trackCaret(event: Event & { currentTarget: HTMLTextAreaElement }): void {
+    caret = event.currentTarget.selectionStart ?? value.length;
+  }
+
+  // Command names with an inline trigger, drawn in the mention colour wherever they sit.
+  const mentionNames = $derived.by((): Set<string> => {
+    if (inlineTriggers === null || slashCommands === null) {
+      return new Set();
+    }
+    const triggers = inlineTriggers;
+    return new Set(
+      slashCommands
+        .map((command) => command.name.toLowerCase())
+        .filter((name) => {
+          const trigger = slashTrigger(name);
+          return trigger !== null && triggers.includes(trigger);
+        })
+    );
+  });
+
+  function syncHighlightScroll(): void {
+    if (highlightLayer !== null && inputElement !== null) {
+      highlightLayer.scrollTop = inputElement.scrollTop;
+    }
+  }
+
+  // Painted from script, not the template: the layer must hold the text exactly as typed,
+  // and template whitespace would be collapsed. The trailing space keeps a final newline
+  // its own line, as the textarea shows it.
+  const paintMentions: Action<HTMLDivElement, { text: string; names: Set<string> }> = (
+    node,
+    initial
+  ) => {
+    function paint({ text, names }: { text: string; names: Set<string> }): void {
+      node.replaceChildren(
+        ...text.split(/(\s+)/).map((part) => {
+          if (!names.has(part.toLowerCase())) {
+            return document.createTextNode(part);
+          }
+          const mention = document.createElement('span');
+          mention.className = 'mention';
+          mention.textContent = part;
+          return mention;
+        }),
+        document.createTextNode(' ')
+      );
+      syncHighlightScroll();
+    }
+    paint(initial);
+    return { update: paint };
+  };
+
+  // The menu opens in the browser's top layer where it can, so no ancestor's overflow or
+  // mask clips it, and is then placed against the composer exactly where it sat before.
+  // Without popover support it stays absolutely positioned inside the composer.
+  const raiseMenu: Action<HTMLDivElement> = (node) => {
+    // The menu is the composer's own child, so its parent is the box it sits above.
+    const anchor = node.parentElement;
+    if (anchor === null || typeof node.showPopover !== 'function') {
+      return {};
+    }
+    node.setAttribute('popover', 'manual');
+    try {
+      node.showPopover();
+    } catch {
+      node.removeAttribute('popover');
+      return {};
+    }
+    menuRaised = true;
+    function place(): void {
+      if (anchor === null) {
+        return;
+      }
+      const rect = anchor.getBoundingClientRect();
+      const outset =
+        parseFloat(
+          getComputedStyle(anchor).getPropertyValue('--chat-composer-slash-menu-outset')
+        ) || 0;
+      node.style.left = `${rect.left + anchor.clientLeft - outset}px`;
+      node.style.width = `${anchor.clientWidth + outset * 2}px`;
+      node.style.bottom = `${document.documentElement.clientHeight - (rect.top + anchor.clientTop) + outset}px`;
+    }
+    place();
+    const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(place) : null;
+    resizeObserver?.observe(anchor);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return {
+      destroy() {
+        resizeObserver?.disconnect();
+        window.removeEventListener('resize', place);
+        window.removeEventListener('scroll', place, true);
+        menuRaised = false;
+      }
+    };
+  };
 
   // Keeps the highlighted row in view while the list scrolls.
   function revealSlash(): void {
@@ -265,8 +405,8 @@
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       // Enter on a complete match submits it; otherwise it completes and
-      // the next Enter submits.
-      if (value.trim() === slashCompletion(slashActive)) {
+      // the next Enter submits. An inline word always completes.
+      if (inlineWord === null && value.trim() === slashCompletion(slashActive)) {
         submit();
       } else {
         pickSlash(slashActive);
@@ -342,6 +482,7 @@
     // A fresh edit un-dismisses the slash menu and resets its highlight.
     slashDismissed = false;
     slashSelected = 0;
+    trackCaret(event);
     oninput?.(event.currentTarget.value, event);
   }
 
@@ -409,8 +550,25 @@
 {/snippet}
 
 {#snippet textInput()}
+  {#if inlineTriggers !== null}
+    <div class="input-field">
+      <div
+        class="input-highlights"
+        aria-hidden="true"
+        bind:this={highlightLayer}
+        use:paintMentions={{ text: value, names: mentionNames }}
+      ></div>
+      {@render textArea()}
+    </div>
+  {:else}
+    {@render textArea()}
+  {/if}
+{/snippet}
+
+{#snippet textArea()}
   <textarea
     class="input"
+    class:inline-mentions={inlineTriggers !== null}
     bind:this={inputElement}
     data-pw={inputTestId ?? null}
     bind:value
@@ -427,6 +585,9 @@
     oninput={handleInput}
     onfocus={(event) => oninputfocus?.(event)}
     onkeydown={handleKeydown}
+    onkeyup={trackCaret}
+    onclick={trackCaret}
+    onscroll={syncHighlightScroll}
     onpaste={(event) => onpaste?.(event)}
     use:autoGrow={value}
   ></textarea>
@@ -518,10 +679,12 @@
   {#if slashOpen}
     <div
       class="slash-menu {slashMenuClasses ?? ''}"
+      class:top-layer={menuRaised}
       role="listbox"
       id={slashListboxId}
       aria-label={slashMenuAriaLabel}
       use:slashDismissal
+      use:raiseMenu
     >
       <!-- role="presentation": a listbox's accessible children must be its own role=option
            rows. Left as a plain <ul>, this list's implicit role=list would sit between the
@@ -541,6 +704,7 @@
           >
             <Button
               type="button"
+              variant="ghost"
               classes={[slashItemClasses, index === slashActive ? slashSelectedItemClasses : '']
                 .filter((value) => typeof value === 'string' && value.length > 0)
                 .join(' ')}
@@ -716,6 +880,58 @@
     overflow-y: auto;
   }
 
+  /* Inline mentions: an identical text layer sits behind a transparent textarea and
+     colours the mentions, so the caret, selection and editing stay the textarea's own. */
+  .input-field {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+  }
+
+  .input-field .input {
+    position: relative;
+    width: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  .input.inline-mentions {
+    color: transparent;
+    caret-color: var(--chat-composer-color, #18181b);
+  }
+
+  .input.inline-mentions::selection {
+    color: var(--chat-composer-color, #18181b);
+  }
+
+  .input-highlights {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    scrollbar-gutter: stable;
+    pointer-events: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    letter-spacing: normal;
+    word-spacing: normal;
+    font-family: var(--chat-composer-font-family, inherit);
+    font-size: var(--chat-composer-font-size, 0.9375rem);
+    font-weight: var(--chat-composer-font-weight, 400);
+    line-height: var(--chat-composer-line-height, 1.5);
+    color: var(--chat-composer-color, #18181b);
+    padding: var(--chat-composer-input-padding, 6px 4px);
+  }
+
+  /* The mention must lay out exactly like the textarea's text, so it inherits every font
+     property: a consumer's global span styles would otherwise shift it off the caret. */
+  .input-highlights :global(.mention) {
+    font: inherit;
+    letter-spacing: inherit;
+    word-spacing: inherit;
+    color: var(--chat-composer-mention-color, var(--chat-composer-slash-name-color, #2563eb));
+  }
+
   .input::placeholder {
     color: var(--chat-composer-placeholder-color, #52525b);
   }
@@ -792,10 +1008,24 @@
     margin-bottom: var(--chat-composer-slash-menu-gap, 8px);
     overflow: hidden;
     z-index: var(--chat-composer-slash-menu-z-index, 30);
-    background: var(--chat-composer-slash-menu-background, #ffffff);
-    border: var(--chat-composer-slash-menu-border, 1px solid #e4e4e7);
+    background: var(--chat-composer-slash-menu-background, var(--menu-background-color, #ffffff));
+    border: var(--chat-composer-slash-menu-border, var(--menu-border, 1px solid #e0e0e0));
     border-radius: var(--chat-composer-slash-menu-border-radius, 12px);
-    box-shadow: var(--chat-composer-slash-menu-box-shadow, 0 8px 24px rgb(0 0 0 / 12%));
+    box-shadow: var(
+      --chat-composer-slash-menu-box-shadow,
+      var(--menu-box-shadow, 0px 4px 16px rgba(0, 0, 0, 0.12))
+    );
+  }
+
+  /* In the top layer the menu is placed by script against the composer, so the popover's
+     own defaults (inset, auto margin, padding, overflow) are cleared. */
+  .chat-composer > .slash-menu.top-layer {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    margin: 0 0 var(--chat-composer-slash-menu-gap, 8px);
+    padding: 0;
+    color: inherit;
   }
 
   .slash-menu > .slash-list {
@@ -808,17 +1038,40 @@
     gap: var(--chat-composer-slash-list-gap, 2px);
   }
 
+  /* Rows are menu items, not buttons: the row sets its Button's tokens itself so a
+     consumer's app-wide button fill never reaches it, and the highlighted row is
+     tinted by the <li> beneath a transparent Button. */
   .slash-menu .slash-list li {
     min-width: 0;
+    border-radius: var(--chat-composer-slash-item-border-radius, 8px);
+    --button-color: var(--chat-composer-slash-item-background, transparent);
+    --button-background: none;
+    --button-hover-color: var(--chat-composer-slash-item-hover-background, transparent);
+    --button-text-color: var(--chat-composer-slash-item-color, var(--menu-item-color, #333333));
+    --button-hover-text-color: var(
+      --chat-composer-slash-item-color,
+      var(--menu-item-color, #333333)
+    );
+    --button-border: none;
+    --button-box-shadow: none;
+    --button-border-radius: var(--chat-composer-slash-item-border-radius, 8px);
+    --button-width: 100%;
+    --button-height: auto;
+    --button-justify-content: flex-start;
+    --button-padding: var(--chat-composer-slash-item-padding, 8px 12px);
+    --button-content-gap: var(--chat-composer-slash-item-gap, 8px);
   }
 
   .slash-menu > .slash-foot {
     padding: var(--chat-composer-slash-foot-padding, 4px 12px);
-    border-top: var(--chat-composer-slash-foot-border, 1px solid #e4e4e7);
+    border-top: var(
+      --chat-composer-slash-foot-border,
+      1px solid var(--menu-separator-color, #e0e0e0)
+    );
     font-family: var(--chat-composer-slash-foot-font-family, inherit);
     font-variant-ligatures: var(--chat-composer-slash-foot-font-variant-ligatures, inherit);
     font-size: var(--chat-composer-slash-foot-font-size, 12px);
-    color: var(--chat-composer-slash-foot-color, #71717a);
+    color: var(--chat-composer-slash-foot-color, var(--menu-item-color, #333333));
   }
 
   /* The default row content (a consumer's slashItem snippet replaces it). */
@@ -837,6 +1090,7 @@
   .slash-menu .slash-desc {
     flex: 1;
     min-width: 0;
+    text-align: start;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -849,7 +1103,10 @@
      Scoped so a consumer's own class stays authoritative the moment it's
      supplied: this rule simply never applies then. */
   .slash-menu .slash-item-selected-default {
-    background: var(--chat-composer-slash-item-selected-background, #f4f4f5);
+    background: var(
+      --chat-composer-slash-item-selected-background,
+      var(--menu-item-hover-background-color, #f5f5f5)
+    );
   }
 
   .slash-menu .slash-badge {

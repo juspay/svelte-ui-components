@@ -302,4 +302,126 @@ describe('ChatComposer slash commands', () => {
     expect(input.getAttribute('aria-controls')).toBeNull();
     expect(input.getAttribute('aria-activedescendant')).toBeNull();
   });
+
+  describe('inline triggers', () => {
+    const mentions = [
+      { name: '@geo-optimizer', description: 'Audits AI search' },
+      { name: '@refunds', description: 'Refund questions' },
+      ...commands
+    ];
+    const typeAt = async (
+      container: HTMLElement,
+      text: string,
+      caretAt: number = text.length
+    ): Promise<HTMLTextAreaElement> => {
+      const input = container.querySelector('textarea') as HTMLTextAreaElement;
+      input.value = text;
+      input.setSelectionRange(caretAt, caretAt);
+      await fireEvent.input(input);
+      return input;
+    };
+
+    it('opens on the word at the caret anywhere in the text', async () => {
+      const { container } = render(ChatComposer, {
+        props: { value: '', slashCommands: mentions, inlineTriggers: ['@'] }
+      });
+      await typeAt(container, 'hey i would like to use @ge');
+      expect(options(container).map((option) => option.textContent?.trim())).toEqual([
+        expect.stringContaining('@geo-optimizer')
+      ]);
+    });
+
+    it('replaces only that word when a row is picked, keeping the rest of the text', async () => {
+      const { container } = render(ChatComposer, {
+        props: { value: '', slashCommands: mentions, inlineTriggers: ['@'] }
+      });
+      const input = await typeAt(container, 'ask @ge about my store', 'ask @ge'.length);
+      await fireEvent.keyDown(input, { key: 'Tab' });
+      expect(input.value).toBe('ask @geo-optimizer about my store');
+      expect(options(container)).toHaveLength(0);
+    });
+
+    it('stays closed when the caret is inside a word, and for a trigger that is not inline', async () => {
+      const { container } = render(ChatComposer, {
+        props: { value: '', slashCommands: mentions, inlineTriggers: ['@'] }
+      });
+      await typeAt(container, 'ask @geo now', 'ask @g'.length);
+      expect(options(container)).toHaveLength(0);
+      await typeAt(container, '@geo', '@g'.length);
+      expect(options(container)).toHaveLength(0);
+      await typeAt(container, 'run /co');
+      expect(options(container)).toHaveLength(0);
+    });
+
+    it('colours each known mention in the text and leaves other words plain', async () => {
+      const { container } = render(ChatComposer, {
+        props: {
+          value: 'use @geo-optimizer and @nobody',
+          slashCommands: mentions,
+          inlineTriggers: ['@']
+        }
+      });
+      const layer = container.querySelector('.input-highlights') as HTMLElement;
+      expect([...layer.querySelectorAll('.mention')].map((node) => node.textContent)).toEqual([
+        '@geo-optimizer'
+      ]);
+      expect(layer.textContent).toBe('use @geo-optimizer and @nobody ');
+    });
+
+    it('keeps a mid-sentence trigger closed and renders no highlight layer without inlineTriggers', async () => {
+      const { container } = render(ChatComposer, {
+        props: { value: '', slashCommands: mentions }
+      });
+      await typeAt(container, 'hey use @ge');
+      expect(options(container)).toHaveLength(0);
+      expect(container.querySelector('.input-highlights')).toBeNull();
+    });
+  });
+
+  // An ancestor's overflow or mask would clip a menu positioned inside the composer, so
+  // where popovers exist the menu opens in the top layer and is placed by hand.
+  it('opens the menu in the top layer when the browser supports popovers', () => {
+    const prototype = HTMLElement.prototype as HTMLElement & { showPopover?: () => void };
+    const original = prototype.showPopover;
+    const showPopover = vi.fn();
+    prototype.showPopover = showPopover;
+    try {
+      const { container } = render(ChatComposer, {
+        props: { value: '/co', slashCommands: commands }
+      });
+      const menu = container.querySelector('[role="listbox"]') as HTMLElement;
+      expect(showPopover).toHaveBeenCalledTimes(1);
+      expect(menu.getAttribute('popover')).toBe('manual');
+      expect(menu.classList.contains('top-layer')).toBe(true);
+      expect(menu.style.bottom).not.toBe('');
+      expect(menu.style.width).not.toBe('');
+    } finally {
+      prototype.showPopover = original;
+    }
+  });
+
+  it('keeps the menu inside the composer when popovers are unsupported', () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '/co', slashCommands: commands }
+    });
+    const menu = container.querySelector('[role="listbox"]') as HTMLElement;
+    expect(menu.hasAttribute('popover')).toBe(false);
+    expect(menu.classList.contains('top-layer')).toBe(false);
+  });
+
+  // A primary row Button picks up a consumer's app-wide primary fill, so every
+  // menu row rendered as a solid button.
+  it('renders each row as a ghost Button, never the primary variant', () => {
+    const { container } = render(ChatComposer, {
+      props: { value: '/co', slashCommands: commands }
+    });
+    const rowButtons = options(container).map((option) =>
+      option.querySelector('.button-container')
+    );
+    expect(rowButtons).toHaveLength(2);
+    for (const rowButton of rowButtons) {
+      expect(rowButton?.classList.contains('variant-ghost')).toBe(true);
+      expect(rowButton?.classList.contains('variant-primary')).toBe(false);
+    }
+  });
 });

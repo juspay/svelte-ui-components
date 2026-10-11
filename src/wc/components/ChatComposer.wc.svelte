@@ -48,6 +48,7 @@
       trailing: { type: 'Object' },
       statusText: { type: 'String', attribute: 'status-text' },
       slashCommands: { type: 'Object', attribute: 'slash-commands' },
+      inlineTriggers: { type: 'Array', attribute: 'inline-triggers' },
       slashMenuAriaLabel: { type: 'String', attribute: 'slash-menu-aria-label' },
       slashMenuHint: { type: 'String', attribute: 'slash-menu-hint' },
       slashMenuClasses: { type: 'String', attribute: 'slash-menu-classes' },

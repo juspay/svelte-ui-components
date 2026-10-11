@@ -2,7 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.2)
+
+- Add inlineTriggers: a trigger such as "@" opens the menu on the word at the caret, anywhere in the text
+- Picking a row replaces only that word and keeps the rest of the text
+- Colour known mentions in place with --chat-composer-mention-color via a text layer behind the textarea
+- Open the command menu in the browser's top layer where popovers exist, so an ancestor's overflow or mask never clips it
+- Render each row as a ghost Button that sets its own fill, so an app-wide --button-color or --button-background never reaches it
+- Fall back to the Menu tokens for the menu surface, border, shadow, text, divider and highlighted row
+- Add --chat-composer-slash-item-* tokens for row fill, hover, colour, corners, padding and gap
+- Cover inline triggers, mention colouring, the top-layer menu and ghost rows in the slash-command tests
+
+Co-Authored-By: Claude Opus 5.5 &lt;noreply@anthropic.com&gt;
+
+-
+feat(chatcomposer): inline @ mentions and menu-item rows in the command menu ([f247b47](https://github.com/juspay/svelte-ui-components/commit/f247b477fbba58a03bf6103a0425da13f01cd5f8))
+
+## [4.54.2](https://github.com/juspay/svelte-ui-components/compare/4.54.2..4.54.1) - 11 October 2026
 
 A column header clamped to a canvas edge was inset 2px from it, but its
 label plate is drawn 3px beyond the text, so the plate hung 0.71px outside

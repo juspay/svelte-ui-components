@@ -117,6 +117,14 @@ export type OptionalChatComposerProperties = {
    * stage listing them. `null` (the default) turns the whole feature off.
    */
   slashCommands?: ChatComposerSlashCommand[] | null;
+  /**
+   * Triggers that open the command menu on the word at the caret, anywhere in the text,
+   * instead of only when the whole input is one command: `['@']` makes "@geo" mid-sentence
+   * list the `@` commands, and picking one replaces just that word. Each command name with
+   * one of these triggers is drawn in `--chat-composer-mention-color` wherever it appears in
+   * the input. `null` (the default) keeps every trigger start-of-input only.
+   */
+  inlineTriggers?: string[] | null;
   /** Accessible name of the slash-command listbox. Defaults to 'slash commands'. */
   slashMenuAriaLabel?: string;
   /** Key-hint line under the slash-command list. */

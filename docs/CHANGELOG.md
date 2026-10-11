@@ -2,7 +2,24 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.1)
+
+A column header clamped to a canvas edge was inset 2px from it, but its
+label plate is drawn 3px beyond the text, so the plate hung 0.71px outside
+the svg and was clipped there. The right edge had the same 1px twin
+whenever the right clamp bound.
+
+Inset the clamp by the plate padding, now a shared constant so the two
+cannot drift again, and add a fixture that makes each clamp bind plus a
+spec asserting every header plate lies inside the svg. The fixture keeps the
+cases out of the docs demo, so its visual baseline does not move.
+
+-
+fix(sankey): keep header label plates inside the chart svg ([e4a38d6](https://github.com/juspay/svelte-ui-components/commit/e4a38d6dc1ed1ea0e7d1097701bc27a6c6d706cd))
+-
+fix(scroll-lock): restore an owner's inline style verbatim and tolerate sealed owners ([496939a](https://github.com/juspay/svelte-ui-components/commit/496939a27003c593da9bc693b9e30726b763f30a))
+
+## [4.54.1](https://github.com/juspay/svelte-ui-components/compare/4.54.1..4.54.0) - 10 October 2026
 
 Bridge the Input label-suffix slot and the Progress leading-label,
 header-start, header-end, and note slots only when filled. Document the

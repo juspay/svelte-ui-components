@@ -8,7 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  checks:
+  # Lint, type-check and vitest. Split from the Playwright suite so they run
+  # once rather than once per shard; `checks` below waits on both halves.
+  static:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +39,37 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm run test:unit -- --run
 
+  # The Playwright suite, split across parallel runners. Each shard still pays
+  # its own install, browser download and app + fixture build (~3 min) before
+  # its first test, so adding shards stops paying off quickly; rebalance from
+  # the per-shard timings rather than raising the count blindly.
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      # One failing shard must not cancel the rest: their results are what the
+      # merged report is for.
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
@@ -55,13 +88,79 @@ jobs:
       # which continue-on-error rewrites to success. `outcome` is the field
       # that survives it. The gate stands on the suite passing now, checked
       # per-run by this step, rather than on a tally nobody can re-derive.
-      - name: Integration tests (playwright)
-        run: pnpm run test:integration
+      # `--reporter` replaces the config's list + html pair for this run only:
+      # `list` keeps the console output, `blob` is the per-shard form that
+      # `integration-report` merges back into one html report.
+      - name: Integration tests (playwright, shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: pnpm run test:integration --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=list,blob
 
-      - name: Upload Playwright report
-        if: always()
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: blob-report-${{ github.run_attempt }}-${{ matrix.shardIndex }}
+          path: blob-report/
+          retention-days: 1
+          if-no-files-found: warn
+
+  # Merges the shards' blob reports into the single `playwright-report`
+  # artifact the unsharded job used to upload. Not part of the gate: a failed
+  # merge loses the report, not the merge check.
+  integration-report:
+    needs: integration
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-${{ github.run_attempt }}-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into html report
+        run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        with:
+          # Suffixed with the attempt: v4 artifacts are immutable, so the old
+          # fixed name would make a re-run's upload fail.
+          name: playwright-report-${{ github.run_attempt }}
           path: playwright-report/
           retention-days: 14
+
+  # The merge gate. Keeps the old single job's name so the required status
+  # check `checks` still means "lint, types, unit and every shard passed". It
+  # must run when a dependency failed (`!cancelled()`) and fail itself then: a
+  # skipped required check does not block a merge.
+  checks:
+    needs: [static, integration]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require static checks and every integration shard to pass
+        env:
+          STATIC: ${{ needs.static.result }}
+          INTEGRATION: ${{ needs.integration.result }}
+        run: |
+          echo "static: $STATIC, integration: $INTEGRATION"
+          [ "$STATIC" = success ] && [ "$INTEGRATION" = success ]

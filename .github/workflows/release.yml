@@ -112,24 +112,12 @@ jobs:
   # 'skipped', so the gate would have opened precisely when it should shut.
   # Running it on every push costs one suite on a push that releases nothing,
   # and removes both holes.
-  verify:
+  # Lint, type-checks and vitest. Split from the Playwright suite so they run
+  # once rather than once per shard; `verify` below waits on both halves.
+  checks:
     needs: detect-changes
     runs-on: ubuntu-latest
-    # Every publish now waits on this job, so a step that hangs would hold the
-    # release open indefinitely instead of failing it. The limit has to clear the
-    # suite with room to spare: the integration step took 17.6 min on 4.51.0's
-    # release run, and 34.0 min on the PR that added the a11y audit's tests (the
-    # whole checks job: 40.0 min). At 30 the verify job was cancelled mid-suite,
-    # `release` was skipped and nothing published.
-    timeout-minutes: 60
-
-    # `contents: read` is all this job's own steps need. `actions: write` is here
-    # by review decision, not by demonstrated need: the artifact upload and the
-    # pnpm store cache were both observed working under `contents: read` alone
-    # (ci.yml runs the identical pair and uploaded a 335 MB report on d49920fff).
-    # It is granted deliberately and recorded here so the next reader knows this
-    # workflow -- which publishes to npm -- can also cancel runs and delete
-    # artifacts, and can drop the line if that reach is ever unwanted.
+    timeout-minutes: 30
     permissions:
       contents: read
       actions: write
@@ -174,28 +162,149 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm run test:unit --run
 
+  # The Playwright suite, split across parallel runners. Unsharded it was the
+  # bulk of every release: 17.6 min on 4.51.0's run, 34.0 min on the PR that
+  # added the a11y audit's tests. Each shard still pays its own install,
+  # browser download and app + fixture build (~3 min) before its first test,
+  # so adding shards stops paying off quickly; rebalance from the per-shard
+  # timings rather than raising the count blindly.
+  integration:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    # Every publish waits on this job, so a step that hangs would hold the
+    # release open indefinitely instead of failing it. Kept at the unsharded
+    # limit: at 30 the old single-job suite was cancelled mid-run, `release` was
+    # skipped and nothing published, and a slow shard should not reopen that.
+    timeout-minutes: 60
+    # `contents: read` is all this job's own steps need. `actions: write` is here
+    # by review decision, not by demonstrated need: the artifact upload and the
+    # pnpm store cache were both observed working under `contents: read` alone
+    # (ci.yml runs the identical pair and uploaded a 335 MB report on d49920fff).
+    # It is granted deliberately and recorded here so the next reader knows this
+    # workflow -- which publishes to npm -- can also cancel runs and delete
+    # artifacts, and can drop the line if that reach is ever unwanted.
+    permissions:
+      contents: read
+      actions: write
+    strategy:
+      # One failing shard must not cancel the rest: their results are what the
+      # merged report is for, and a re-run should only need to repeat the failure.
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Integration tests (playwright)
-        run: pnpm run test:integration
+      # `--reporter` replaces the config's list + html pair for this run only:
+      # `list` keeps the console output, `blob` is the per-shard form that
+      # `integration-report` merges back into one html report.
+      - name: Integration tests (playwright, shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: pnpm run test:integration --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=list,blob
 
-      - name: Upload Playwright report
-        if: always()
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           # v4 artifacts are immutable, so a fixed name makes the upload fail on
           # a re-run -- which is the one time the report is most wanted.
+          name: release-verify-blob-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shardIndex }}
+          path: blob-report/
+          retention-days: 1
+          # Absent only when the job failed before Playwright ran; say so in the
+          # log rather than fail a job whose tests never started.
+          if-no-files-found: warn
+
+  # Merges the shards' blob reports into the single html report the unsharded
+  # job used to upload. Deliberately not a dependency of `verify`: a failed
+  # merge or upload loses the report, not the release.
+  integration-report:
+    needs: integration
+    if: ${{ !cancelled() && needs.integration.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-verify-blob-${{ github.run_id }}-${{ github.run_attempt }}-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into html report
+        run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        with:
           name: release-verify-playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
           path: playwright-report/
           retention-days: 14
-          # `if: always()` also fires when the job was cancelled or failed before
-          # Playwright ran. `warn` is the setting that satisfies both halves of the
-          # review on this line: nothing is uploaded when the directory is absent, so
-          # there is no empty artifact masquerading as evidence, and the run still
-          # says so in the log rather than passing over it in silence. `ignore` hid
-          # the diagnosis; `error` would fail a job whose tests never ran.
           if-no-files-found: warn
+
+  # The single gate `release` and `publish-mcp` wait on. Kept under the old job
+  # name so their `needs: verify` and `needs.verify.result == 'success'` still
+  # mean "every check passed" without being rewritten. It has to run even when a
+  # dependency failed (`!cancelled()`, not the default success()) and fail
+  # itself then: a skipped `verify` reads as 'skipped' downstream, and
+  # `publish-mcp` treats a skipped upstream as a reason to proceed.
+  verify:
+    needs: [checks, integration]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+
+    steps:
+      - name: Require checks and every integration shard to pass
+        env:
+          CHECKS: ${{ needs.checks.result }}
+          INTEGRATION: ${{ needs.integration.result }}
+        run: |
+          echo "checks: $CHECKS, integration: $INTEGRATION"
+          [ "$CHECKS" = success ] && [ "$INTEGRATION" = success ]
 
   release:
     needs: [detect-changes, verify]
@@ -229,7 +338,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Linting moved to the `verify` job this one now needs, so it gates the
+      # Linting moved to the `checks` job behind `verify`, so it gates the
       # publish rather than running beside it.
 
       # Reads EVERY commit since the last `chore(release):`, not just the newest

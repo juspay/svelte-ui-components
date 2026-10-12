@@ -273,6 +273,22 @@ jobs:
           path: all-blob-reports
           merge-multiple: true
 
+      # "Re-run failed jobs" skips the shards that passed, so they upload no
+      # blob under the new attempt, and download-artifact cannot reach an
+      # earlier attempt's artifacts. The merged report would then cover only
+      # the re-run shards, with nothing saying so. Warn rather than fail: the
+      # gate is unaffected, only the report is partial. "Re-run all jobs"
+      # gives a complete one. SHARD_TOTAL must match the matrix's shardTotal.
+      - name: Warn when the report is missing shards
+        env:
+          SHARD_TOTAL: 4
+        run: |
+          found=$(find all-blob-reports -name '*.zip' 2>/dev/null | wc -l | tr -d ' ')
+          echo "blob reports: $found of $SHARD_TOTAL"
+          if [ "$found" -lt "$SHARD_TOTAL" ]; then
+            echo "::warning title=Partial Playwright report::Only $found of $SHARD_TOTAL shard reports were found for attempt ${{ github.run_attempt }}. A partial re-run only reports the re-run shards; use \"Re-run all jobs\" for a complete report."
+          fi
+
       - name: Merge into html report
         run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
 

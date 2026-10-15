@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { base } from '$app/paths';
   import maskIconUrl from '$lib/assets/close.svg?url';
   import {
     Accordion,
@@ -62,7 +63,7 @@
 <div class="contract-stage" data-pw="native-consumer-stage">
   <Img
     unstyled
-    src="/favicon.png"
+    src={`${base}/favicon.png`}
     alt="Example brand"
     bind:element={image}
     nativeAttrs={{ loading: 'lazy', width: 42, height: 42, decoding: 'async' }}
@@ -175,11 +176,11 @@
     autoplay={false}
     playing={false}
     bind:element={video}
-    nativeAttrs={{ preload: 'none', poster: '/favicon.png' }}
+    nativeAttrs={{ preload: 'none', poster: `${base}/favicon.png` }}
     testId="native-consumer-video"
   >
-    <source src="/demo-media/promo-clip.mp4" type="video/mp4" media="(min-width: 600px)" />
-    <source src="/demo-media/promo-clip.mp4" type="video/mp4" />
+    <source src={`${base}/demo-media/promo-clip.mp4`} type="video/mp4" media="(min-width: 600px)" />
+    <source src={`${base}/demo-media/promo-clip.mp4`} type="video/mp4" />
   </MediaPlayer>
   <MediaPlayer
     unstyled

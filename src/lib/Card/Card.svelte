@@ -3,6 +3,10 @@
   import { CARD_MANAGED_ATTRS, discardedAttrWarnings } from '../attrs-discard';
 
   let {
+    unstyled = false,
+    interactive = false,
+    nativeAttrs,
+    onkeydown,
     children,
     title,
     description,
@@ -65,7 +69,7 @@
   // drop the interactive-div keyboard shim (role/tabindex/onkeydown) with no
   // native behaviour to replace it.
   const isAnchor = $derived(rootTag === 'a' && typeof href === 'string' && href.length > 0);
-  const isInteractive = $derived(isAnchor || typeof onclick === 'function');
+  const isInteractive = $derived(interactive || isAnchor || typeof onclick === 'function');
   // HTML target values are ASCII case-insensitive (e.g. "_BLANK" opens a new
   // context identically to "_blank"), so the comparison must normalize case
   // to keep the noopener/noreferrer default from being silently skipped.
@@ -82,10 +86,14 @@
   );
 
   const handleKeydown = (event: KeyboardEvent): void => {
+    onkeydown?.(event);
+    if (event.defaultPrevented) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
-      if (event.key === ' ') {
-        event.preventDefault();
-      }
+      // A synchronous action can move focus into a dialog. Suppress the
+      // original key's default activation so it cannot click the new focus.
+      event.preventDefault();
       if (event.currentTarget instanceof HTMLElement) {
         event.currentTarget.click();
       }
@@ -95,9 +103,10 @@
 
 <svelte:element
   this={rootTag}
+  {...nativeAttrs}
   {...attrs ?? {}}
-  class="card {classes ?? ''}"
-  class:card-interactive={isInteractive}
+  class={unstyled ? (classes ?? '') : `card ${classes ?? ''}`}
+  class:card-interactive={isInteractive && !unstyled}
   class:card-stretch={stretch}
   class:card-has-scroll={scrollable}
   style={styleAttr}
@@ -132,17 +141,21 @@
       {/if}
     </div>
   {/if}
-  {#if typeof children === 'function'}
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div
-      class="card-content"
-      class:card-content-scrollable={scrollable}
-      role={scrollable ? 'region' : null}
-      aria-label={scrollable ? 'Scrollable card content' : null}
-      tabindex={scrollable ? 0 : null}
-    >
-      {@render children()}
-    </div>
+  {#if unstyled}
+    {@render children?.()}
+  {:else}
+    {#if typeof children === 'function'}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <div
+        class="card-content"
+        class:card-content-scrollable={scrollable}
+        role={scrollable ? 'region' : null}
+        aria-label={scrollable ? 'Scrollable card content' : null}
+        tabindex={scrollable ? 0 : null}
+      >
+        {@render children()}
+      </div>
+    {/if}
   {/if}
   {#if typeof footer === 'function'}
     <footer class="card-footer">

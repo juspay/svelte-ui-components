@@ -4,9 +4,9 @@
 
   let { src, alt, name, size = 'medium', testId, onclick, classes }: AvatarProperties = $props();
 
-  let imageError = $state(false);
+  let failedSource = $state<string | null>(null);
 
-  let showImage = $derived(typeof src === 'string' && src.length > 0 && !imageError);
+  let showImage = $derived(typeof src === 'string' && src.length > 0 && failedSource !== src);
 
   let initials = $derived.by(() => {
     if (typeof name !== 'string' || name.trim().length === 0) {
@@ -27,7 +27,7 @@
   });
 
   function handleImageError(): void {
-    imageError = true;
+    failedSource = src ?? null;
   }
 </script>
 
@@ -55,8 +55,9 @@
 {:else}
   <div
     class="avatar avatar-{size} {classes ?? ''}"
-    role="img"
-    aria-label={alt}
+    role={alt.length > 0 ? 'img' : null}
+    aria-label={alt.length > 0 ? alt : null}
+    aria-hidden={alt.length === 0 ? 'true' : null}
     data-pw={testId}
     testID={testId}
   >
@@ -125,5 +126,10 @@
 
   .avatar-large .avatar-initials {
     font-size: var(--avatar-large-font-size, 20px);
+  }
+  @layer svelte-ui-avatar {
+    :where(.avatar) {
+      background-image: var(--avatar-background-image, revert-layer);
+    }
   }
 </style>

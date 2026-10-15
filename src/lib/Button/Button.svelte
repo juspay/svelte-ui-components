@@ -3,6 +3,10 @@
   import type { ButtonProperties } from './properties';
 
   let {
+    unstyled = false,
+    nativeAttrs,
+    element = $bindable(),
+    elementClasses,
     text,
     variant = 'primary',
     size = 'md',
@@ -70,20 +74,14 @@
   }
 </script>
 
-<div
-  class="button-container variant-{variant} size-{size} {classes ?? ''}"
-  class:icon-only={iconOnly}
-  class:full-width={fullWidth}
-  class:button-shrinkable={shrinkable}
-  style={style ?? null}
->
-  {#if showProgressBar}
-    <div class="button-progress-bar"></div>
-  {/if}
+{#snippet control()}
   <svelte:element
     this={href ? 'a' : 'button'}
-    class="button-el"
-    class:disabled={isDisabled}
+    {...nativeAttrs}
+    bind:this={element}
+    class={unstyled ? (classes ?? '') : `button-el ${elementClasses ?? ''}`}
+    style={unstyled ? (style ?? null) : null}
+    class:disabled={isDisabled && !unstyled}
     onclick={handleButtonClick}
     {onkeydown}
     {onkeyup}
@@ -109,7 +107,7 @@
     target={href ? target : null}
     rel={href ? resolvedRel : null}
     aria-disabled={href && isDisabled ? 'true' : null}
-    tabindex={href && isDisabled ? -1 : null}
+    tabindex={href && isDisabled ? -1 : (nativeAttrs?.tabindex ?? null)}
   >
     {#if showCircularLoader}
       <div class="button-loader"><Loader /></div>
@@ -129,12 +127,29 @@
       {@render children()}
     {/if}
   </svelte:element>
-  {#if typeof statusText === 'string'}
-    <div class="button-status" role="status" aria-live="polite" data-pw={statusTestId ?? null}>
-      {statusText}
-    </div>
-  {/if}
-</div>
+{/snippet}
+
+{#if unstyled}
+  {@render control()}
+{:else}
+  <div
+    class="button-container variant-{variant} size-{size} {classes ?? ''}"
+    class:icon-only={iconOnly}
+    class:full-width={fullWidth}
+    class:button-shrinkable={shrinkable}
+    style={style ?? null}
+  >
+    {#if showProgressBar}
+      <div class="button-progress-bar"></div>
+    {/if}
+    {@render control()}
+    {#if typeof statusText === 'string'}
+      <div class="button-status" role="status" aria-live="polite" data-pw={statusTestId ?? null}>
+        {statusText}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <style>
   .button-container {

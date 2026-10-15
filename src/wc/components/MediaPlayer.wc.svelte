@@ -3,6 +3,10 @@
     tag: 'sui-media-player',
     shadow: 'open',
     props: {
+      onplayerror: { type: 'Object' },
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       src: { type: 'String' },
       type: { type: 'String' },
       alt: { type: 'String' },
@@ -64,6 +68,7 @@
   // later host write is never swallowed by a stale copy that still reads the old value.
   // Avoid replacing HTMLElement.ariaLabel; the public attribute stays aria-label.
   let {
+    element = $bindable<HTMLVideoElement | HTMLAudioElement | null>(null),
     captionsVisible = $bindable(false),
     mediaAriaLabel,
     ...props
@@ -104,7 +109,16 @@
   the component renders repeatedly would leave every site after the first empty --
   not defaulted, empty.
 -->
-<MediaPlayer {...props} {...dispatchers} ariaLabel={mediaAriaLabel} bind:captionsVisible>
+<MediaPlayer
+  bind:element
+  {...props}
+  {...dispatchers}
+  ariaLabel={mediaAriaLabel}
+  bind:captionsVisible
+>
+  {#snippet children()}
+    <slot></slot>
+  {/snippet}
   {#snippet playIcon()}
     {#if props.playIcon}{@render props.playIcon()}{:else}<slot name="play-icon">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->

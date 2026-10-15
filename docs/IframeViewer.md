@@ -109,3 +109,15 @@ frame.addEventListener('message', (e) => console.log(e.detail.data));
 ```
 
 `postMessage` is **not** exposed on `<sui-iframe-viewer>` — it is a Svelte-only instance accessor (see Instance Methods above). Web Component consumers already have a standard way to reach the same outcome: query the rendered `<iframe>` inside the element's shadow root and call its `contentWindow.postMessage` directly.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.
+
+Web components expose `onframeload` / `frameload` and `onframeerror` / `frameerror` for native frame callbacks, preserving host accessors.

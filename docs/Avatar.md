@@ -83,3 +83,15 @@ Tag: `<sui-avatar>`
 dispatch a DOM event: `click` is already `HTMLElement`'s own native event, so a real one already
 bubbles out of the shadow root, and a second, synthetic one under the same name would
 double-deliver it to an `avatar.addEventListener('click', ...)` listener.
+
+## Image recovery and decorative display
+
+A failed source falls back to initials; changing `src` retries the new image. A
+noninteractive avatar with empty `alt` is decorative (`aria-hidden`) rather than
+an unnamed image. Interactive avatars still require an accessible name.
+
+| CSS variable                | Default | Purpose                                                |
+| --------------------------- | ------- | ------------------------------------------------------ |
+| `--avatar-background-image` | `none`  | Host-authored initials background, including gradients |
+
+The loaded image uses the composed Img component's existing `--image-background` token.

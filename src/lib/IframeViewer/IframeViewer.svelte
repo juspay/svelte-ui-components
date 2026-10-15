@@ -3,7 +3,12 @@
   import type { IframeViewerProperties } from './properties';
 
   let {
+    unstyled = false,
     src,
+    nativeAttrs,
+    element = $bindable(),
+    onload,
+    onerror,
     title = 'Embedded Content',
     allowedOrigins = [],
     allow = 'fullscreen',
@@ -17,7 +22,7 @@
     onmessage = () => {}
   }: IframeViewerProperties = $props();
 
-  let iframeEl: HTMLIFrameElement | null = $state(null);
+  const iframeEl = $derived(element);
 
   export const postMessage = (message: unknown, targetOrigin: string): void => {
     iframeEl?.contentWindow?.postMessage(message, targetOrigin);
@@ -48,10 +53,15 @@
   });
 </script>
 
-<div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
+{#snippet frame()}
   {#if src}
     <iframe
-      bind:this={iframeEl}
+      {...nativeAttrs}
+      class={unstyled ? (classes ?? '') : nativeAttrs?.class}
+      class:iframe-unstyled={unstyled}
+      bind:this={element}
+      {onload}
+      {onerror}
       {src}
       {title}
       {allow}
@@ -61,7 +71,15 @@
       {...credentialless ? { credentialless: '' } : {}}
     ></iframe>
   {/if}
-</div>
+{/snippet}
+
+{#if unstyled}
+  {@render frame()}
+{:else}
+  <div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
+    {@render frame()}
+  </div>
+{/if}
 
 <style>
   .iframe-viewer {
@@ -70,7 +88,7 @@
     display: flex;
   }
 
-  iframe {
+  iframe:where(:not(.iframe-unstyled)) {
     width: 100%;
     height: 100%;
     border: var(--iframe-viewer-border, none);

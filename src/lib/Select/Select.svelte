@@ -11,6 +11,12 @@
   import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
 
   let {
+    native = false,
+    children,
+    required = false,
+    id,
+    nativeAttrs,
+    element = $bindable(),
     items: rawItems,
     value = $bindable([]),
     multiple = false,
@@ -766,384 +772,454 @@
   });
 </script>
 
-<div
-  class="select {classes ?? ''}"
-  class:open
-  class:disabled
-  class:error
-  class:ghost={hierarchy === 'ghost'}
-  bind:this={containerEl}
-  {...typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
->
-  {#if typeof name === 'string' && name.length > 0}
-    <!-- No native <select> exists to carry `name`/`value` -- this is a custom
+{#snippet nativeOptions()}
+  {#if children}
+    {@render children()}
+  {:else}
+    {#if placeholder}
+      <option value="" disabled selected={value.length === 0}>{placeholder}</option>
+    {/if}
+    {#each items as item (item.id)}
+      <option value={item.id} selected={value.includes(item.id)}>{item.label}</option>
+    {/each}
+  {/if}
+{/snippet}
+
+{#if native}
+  {#if multiple}
+    <select
+      class:select-native={true}
+      {...nativeAttrs}
+      bind:this={element}
+      {id}
+      {name}
+      multiple
+      {required}
+      {disabled}
+      class={classes ?? ''}
+      aria-label={ariaLabel ?? null}
+      aria-labelledby={ariaLabelledby ?? null}
+      data-pw={testId}
+      bind:value={
+        () => value,
+        (selected) => {
+          value = typeof selected === 'string' ? [selected] : selected;
+          onchange?.(value);
+        }
+      }
+    >
+      {@render nativeOptions()}
+    </select>
+  {:else}
+    <select
+      class:select-native={true}
+      {...nativeAttrs}
+      bind:this={element}
+      {id}
+      {name}
+      {required}
+      {disabled}
+      class={classes ?? ''}
+      aria-label={ariaLabel ?? null}
+      aria-labelledby={ariaLabelledby ?? null}
+      data-pw={testId}
+      bind:value={
+        () => value[0] ?? '',
+        (selected) => {
+          value = typeof selected === 'string' ? [selected] : selected;
+          onchange?.(value);
+        }
+      }
+    >
+      {@render nativeOptions()}
+    </select>
+  {/if}
+{:else}
+  <div
+    class="select {classes ?? ''}"
+    class:open
+    class:disabled
+    class:error
+    class:ghost={hierarchy === 'ghost'}
+    bind:this={containerEl}
+    {...typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
+  >
+    {#if typeof name === 'string' && name.length > 0}
+      <!-- No native <select> exists to carry `name`/`value` -- this is a custom
          combobox/listbox. One hidden input per selected id mirrors a native
          `<select multiple>`, which likewise submits one FormData entry per
          selected <option> under the same name; `disabled` matches native
          behaviour by excluding all of them from the submission. -->
-    {#each value as id (id)}
-      <input type="hidden" {name} value={id} {disabled} />
-    {/each}
-  {/if}
-  <div class="select-control" class:has-clear={showClearButton}>
-    <div
-      class="select-trigger"
-      bind:this={triggerEl}
-      onclick={handleTriggerClick}
-      onkeydown={handleKeydown}
-      role="combobox"
-      aria-expanded={open}
-      aria-haspopup="listbox"
-      aria-controls={listboxId}
-      aria-label={accessibleName}
-      aria-labelledby={accessibleLabelledby}
-      aria-disabled={disabled ? 'true' : null}
-      aria-invalid={field.ariaInvalid}
-      aria-describedby={field.describedBy}
-      {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
-      tabindex={disabled ? -1 : searchInTrigger ? -1 : 0}
-    >
-      {#if typeof leftIcon === 'string' && leftIcon.length > 0}
-        <Img
-          inlineSvg
-          src={leftIcon}
-          alt=""
-          fallback=""
-          classes="select-left-icon"
-          {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
-        />
-      {/if}
-      {#if multiple}
-        {#if typeof triggerSummary === 'function'}
-          {@render triggerSummary({ value, items })}
-          {#if searchInTrigger}
-            <input
-              class="select-search"
-              type="text"
-              value={query}
-              oninput={handleSearchInput}
-              onfocus={handleSearchFocus}
-              bind:this={searchInputEl}
-              placeholder={value.length === 0 ? placeholder : ''}
-              {disabled}
-              aria-label={accessibleName}
-              aria-labelledby={accessibleLabelledby}
-              aria-invalid={field.ariaInvalid}
-              aria-describedby={field.describedBy}
-              autocomplete="off"
-              tabindex={disabled ? -1 : 0}
-              data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-              testID={typeof testId === 'string' ? `${testId}-search` : null}
-            />
-          {/if}
-        {:else}
-          {#each value as id (id)}
-            <Pill
-              text={getLabel(id)}
-              dismissible
-              {disabled}
-              ondismiss={() => removeItem(id)}
-              {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
-            />
-          {/each}
-          {#if searchInTrigger}
-            <input
-              class="select-search"
-              type="text"
-              value={query}
-              oninput={handleSearchInput}
-              onfocus={handleSearchFocus}
-              bind:this={searchInputEl}
-              placeholder={value.length === 0 ? placeholder : ''}
-              {disabled}
-              aria-label={accessibleName}
-              aria-labelledby={accessibleLabelledby}
-              aria-invalid={field.ariaInvalid}
-              aria-describedby={field.describedBy}
-              autocomplete="off"
-              tabindex={disabled ? -1 : 0}
-              data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-              testID={typeof testId === 'string' ? `${testId}-search` : null}
-            />
-          {:else if value.length === 0}
-            <span class="select-placeholder">{placeholder}</span>
-          {/if}
-        {/if}
-      {:else if searchInTrigger}
-        <input
-          class="select-search"
-          type="text"
-          value={open ? query : displayText}
-          oninput={handleSearchInput}
-          onfocus={handleSearchFocus}
-          bind:this={searchInputEl}
-          placeholder={searchPlaceholder}
-          {disabled}
-          aria-label={accessibleName}
-          aria-labelledby={accessibleLabelledby}
-          aria-invalid={field.ariaInvalid}
-          aria-describedby={field.describedBy}
-          autocomplete="off"
-          tabindex={disabled ? -1 : 0}
-          data-pw={typeof testId === 'string' ? `${testId}-search` : null}
-          testID={typeof testId === 'string' ? `${testId}-search` : null}
-        />
-      {:else}
-        <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
-          {displayText.length > 0 ? displayText : placeholder}
-        </span>
-      {/if}
-      <!-- eslint-disable svelte/no-at-html-tags -->
-      <span class="select-arrow">{@html chevronDownSvg}</span>
-    </div>
-    {#if showClearButton}
-      <button
-        type="button"
-        class="select-clear"
-        aria-label="Clear selection"
-        onkeydown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.stopPropagation();
-          }
-        }}
-        onclick={handleClear}
-        data-pw={typeof testId === 'string' ? `${testId}-clear` : null}
-        testID={typeof testId === 'string' ? `${testId}-clear` : null}
-      >
-        <span aria-hidden="true">×</span>
-      </button>
+      {#each value as id (id)}
+        <input type="hidden" {name} value={id} {disabled} />
+      {/each}
     {/if}
-  </div>
-
-  {#if field.showsError}
-    <div
-      id={field.errorId}
-      role="alert"
-      class="select-error-message"
-      data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-      testID={typeof testId === 'string' ? `${testId}-error-message` : null}
-    >
-      {errorMessage}
-    </div>
-  {/if}
-
-  {#snippet menuOptions()}
-    {#if filteredItems.length === 0}
-      <div class="select-empty">No results</div>
-    {:else}
-      {#each optionRows as row, index (row.kind === 'select-all' ? 'select-all' : row.item.id)}
-        {#if row.kind === 'select-all'}
-          <div
-            class="select-option select-all"
-            class:multi={multiple}
-            class:selected={allFilteredSelected}
-            class:highlighted={index === highlightedIndex}
-            role="option"
-            id={`${listboxId}-option-${index}`}
-            aria-selected={allFilteredSelected}
-            aria-label={selectAllIndeterminate
-              ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
-              : selectAllLabel}
-            tabindex="-1"
-            {...typeof testId === 'string'
-              ? { 'data-pw': `${testId}-select-all`, testID: `${testId}-select-all` }
-              : {}}
-            onclick={toggleSelectAll}
-            onmouseenter={() => (highlightedIndex = index)}
-          >
-            {#if typeof optionIndicator === 'function'}
-              {@render optionIndicator({
-                checked: allFilteredSelected,
-                indeterminate: selectAllIndeterminate
-              })}
-            {:else}
-              <span
-                class="select-option-indicator"
-                class:checked={allFilteredSelected}
-                class:indeterminate={selectAllIndeterminate}
-                aria-hidden="true"
-                data-checked={allFilteredSelected ? 'true' : 'false'}
-                data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
-                testID={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
-              >
-                {#if allFilteredSelected}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  <span class="select-option-check">{@html checkmarkSvg}</span>
-                {:else if selectAllIndeterminate}
-                  <span
-                    class="select-option-dash"
-                    data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
-                    testID={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
-                  ></span>
-                {/if}
-              </span>
+    <div class="select-control" class:has-clear={showClearButton}>
+      <div
+        class="select-trigger"
+        bind:this={triggerEl}
+        onclick={handleTriggerClick}
+        onkeydown={handleKeydown}
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
+        aria-label={accessibleName}
+        aria-labelledby={accessibleLabelledby}
+        aria-disabled={disabled ? 'true' : null}
+        aria-invalid={field.ariaInvalid}
+        aria-describedby={field.describedBy}
+        {...highlightedOptionId !== null ? { 'aria-activedescendant': highlightedOptionId } : {}}
+        tabindex={disabled ? -1 : searchInTrigger ? -1 : 0}
+      >
+        {#if typeof leftIcon === 'string' && leftIcon.length > 0}
+          <Img
+            inlineSvg
+            src={leftIcon}
+            alt=""
+            fallback=""
+            classes="select-left-icon"
+            {...typeof leftIconTestId === 'string' ? { testId: leftIconTestId } : {}}
+          />
+        {/if}
+        {#if multiple}
+          {#if typeof triggerSummary === 'function'}
+            {@render triggerSummary({ value, items })}
+            {#if searchInTrigger}
+              <input
+                class="select-search"
+                type="text"
+                value={query}
+                oninput={handleSearchInput}
+                onfocus={handleSearchFocus}
+                bind:this={searchInputEl}
+                placeholder={value.length === 0 ? placeholder : ''}
+                {disabled}
+                aria-label={accessibleName}
+                aria-labelledby={accessibleLabelledby}
+                aria-invalid={field.ariaInvalid}
+                aria-describedby={field.describedBy}
+                autocomplete="off"
+                tabindex={disabled ? -1 : 0}
+                data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+                testID={typeof testId === 'string' ? `${testId}-search` : null}
+              />
             {/if}
-            {selectAllLabel}
-          </div>
+          {:else}
+            {#each value as id (id)}
+              <Pill
+                text={getLabel(id)}
+                dismissible
+                {disabled}
+                ondismiss={() => removeItem(id)}
+                {...typeof testId === 'string' ? { testId: `${testId}-pill-${id}` } : {}}
+              />
+            {/each}
+            {#if searchInTrigger}
+              <input
+                class="select-search"
+                type="text"
+                value={query}
+                oninput={handleSearchInput}
+                onfocus={handleSearchFocus}
+                bind:this={searchInputEl}
+                placeholder={value.length === 0 ? placeholder : ''}
+                {disabled}
+                aria-label={accessibleName}
+                aria-labelledby={accessibleLabelledby}
+                aria-invalid={field.ariaInvalid}
+                aria-describedby={field.describedBy}
+                autocomplete="off"
+                tabindex={disabled ? -1 : 0}
+                data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+                testID={typeof testId === 'string' ? `${testId}-search` : null}
+              />
+            {:else if value.length === 0}
+              <span class="select-placeholder">{placeholder}</span>
+            {/if}
+          {/if}
+        {:else if searchInTrigger}
+          <input
+            class="select-search"
+            type="text"
+            value={open ? query : displayText}
+            oninput={handleSearchInput}
+            onfocus={handleSearchFocus}
+            bind:this={searchInputEl}
+            placeholder={searchPlaceholder}
+            {disabled}
+            aria-label={accessibleName}
+            aria-labelledby={accessibleLabelledby}
+            aria-invalid={field.ariaInvalid}
+            aria-describedby={field.describedBy}
+            autocomplete="off"
+            tabindex={disabled ? -1 : 0}
+            data-pw={typeof testId === 'string' ? `${testId}-search` : null}
+            testID={typeof testId === 'string' ? `${testId}-search` : null}
+          />
         {:else}
-          <div
-            class="select-option"
-            class:multi={multiple}
-            class:tickable={showSelectedTick && !multiple}
-            class:selected={value.includes(row.item.id)}
-            class:highlighted={index === highlightedIndex}
-            class:select-option-disabled={row.item.disabled === true}
-            role="option"
-            id={`${listboxId}-option-${index}`}
-            aria-selected={value.includes(row.item.id)}
-            aria-disabled={row.item.disabled === true ? 'true' : null}
-            tabindex="-1"
-            {...typeof row.item.testId === 'string'
-              ? { 'data-pw': row.item.testId, testID: row.item.testId }
-              : typeof itemTestId === 'string'
-                ? {
-                    'data-pw': `${itemTestId}-${row.item.id}`,
-                    testID: `${itemTestId}-${row.item.id}`
-                  }
-                : typeof testId === 'string'
-                  ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
-                  : {}}
-            onclick={() => selectItem(row.item.id)}
-            onmouseenter={() => {
-              if (row.item.disabled !== true) {
-                highlightedIndex = index;
-              }
-            }}
-          >
-            {#if multiple}
+          <span class={displayText.length > 0 ? 'select-value' : 'select-placeholder'}>
+            {displayText.length > 0 ? displayText : placeholder}
+          </span>
+        {/if}
+        <!-- eslint-disable svelte/no-at-html-tags -->
+        <span class="select-arrow">{@html chevronDownSvg}</span>
+      </div>
+      {#if showClearButton}
+        <button
+          type="button"
+          class="select-clear"
+          aria-label="Clear selection"
+          onkeydown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.stopPropagation();
+            }
+          }}
+          onclick={handleClear}
+          data-pw={typeof testId === 'string' ? `${testId}-clear` : null}
+          testID={typeof testId === 'string' ? `${testId}-clear` : null}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      {/if}
+    </div>
+
+    {#if field.showsError}
+      <div
+        id={field.errorId}
+        role="alert"
+        class="select-error-message"
+        data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+        testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+      >
+        {errorMessage}
+      </div>
+    {/if}
+
+    {#snippet menuOptions()}
+      {#if filteredItems.length === 0}
+        <div class="select-empty">No results</div>
+      {:else}
+        {#each optionRows as row, index (row.kind === 'select-all' ? 'select-all' : row.item.id)}
+          {#if row.kind === 'select-all'}
+            <div
+              class="select-option select-all"
+              class:multi={multiple}
+              class:selected={allFilteredSelected}
+              class:highlighted={index === highlightedIndex}
+              role="option"
+              id={`${listboxId}-option-${index}`}
+              aria-selected={allFilteredSelected}
+              aria-label={selectAllIndeterminate
+                ? `${selectAllLabel}, ${selectedFilteredCount} of ${filteredItems.length} selected`
+                : selectAllLabel}
+              tabindex="-1"
+              {...typeof testId === 'string'
+                ? { 'data-pw': `${testId}-select-all`, testID: `${testId}-select-all` }
+                : {}}
+              onclick={toggleSelectAll}
+              onmouseenter={() => (highlightedIndex = index)}
+            >
               {#if typeof optionIndicator === 'function'}
                 {@render optionIndicator({
-                  checked: value.includes(row.item.id),
-                  indeterminate: false
+                  checked: allFilteredSelected,
+                  indeterminate: selectAllIndeterminate
                 })}
               {:else}
                 <span
                   class="select-option-indicator"
-                  class:checked={value.includes(row.item.id)}
+                  class:checked={allFilteredSelected}
+                  class:indeterminate={selectAllIndeterminate}
                   aria-hidden="true"
-                  data-checked={value.includes(row.item.id) ? 'true' : 'false'}
-                  data-pw={typeof testId === 'string'
-                    ? `${testId}-option-indicator-${row.item.id}`
-                    : null}
-                  testID={typeof testId === 'string'
-                    ? `${testId}-option-indicator-${row.item.id}`
-                    : null}
+                  data-checked={allFilteredSelected ? 'true' : 'false'}
+                  data-pw={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
+                  testID={typeof testId === 'string' ? `${testId}-select-all-indicator` : null}
                 >
-                  {#if value.includes(row.item.id)}
+                  {#if allFilteredSelected}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     <span class="select-option-check">{@html checkmarkSvg}</span>
+                  {:else if selectAllIndeterminate}
+                    <span
+                      class="select-option-dash"
+                      data-pw={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                      testID={typeof testId === 'string' ? `${testId}-select-all-dash` : null}
+                    ></span>
                   {/if}
                 </span>
               {/if}
-            {/if}
-            {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
-              <Img inlineSvg src={row.item.icon} alt="" fallback="" classes="select-option-icon" />
-            {/if}
-            <span class="select-option-label">{row.item.label}</span>
-            {#if showSelectedTick && !multiple && value.includes(row.item.id)}
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              <span class="select-option-tick" aria-hidden="true">{@html checkmarkSvg}</span>
-            {/if}
-          </div>
-        {/if}
-      {/each}
-    {/if}
-    {#if typeof bottomContent === 'function' && !searchInMenu}
-      <div class="select-bottom-content">
-        {@render bottomContent()}
-      </div>
-    {/if}
-  {/snippet}
+              {selectAllLabel}
+            </div>
+          {:else}
+            <div
+              class="select-option"
+              class:multi={multiple}
+              class:tickable={showSelectedTick && !multiple}
+              class:selected={value.includes(row.item.id)}
+              class:highlighted={index === highlightedIndex}
+              class:select-option-disabled={row.item.disabled === true}
+              role="option"
+              id={`${listboxId}-option-${index}`}
+              aria-selected={value.includes(row.item.id)}
+              aria-disabled={row.item.disabled === true ? 'true' : null}
+              tabindex="-1"
+              {...typeof row.item.testId === 'string'
+                ? { 'data-pw': row.item.testId, testID: row.item.testId }
+                : typeof itemTestId === 'string'
+                  ? {
+                      'data-pw': `${itemTestId}-${row.item.id}`,
+                      testID: `${itemTestId}-${row.item.id}`
+                    }
+                  : typeof testId === 'string'
+                    ? { 'data-pw': `${testId}-${row.item.id}`, testID: `${testId}-${row.item.id}` }
+                    : {}}
+              onclick={() => selectItem(row.item.id)}
+              onmouseenter={() => {
+                if (row.item.disabled !== true) {
+                  highlightedIndex = index;
+                }
+              }}
+            >
+              {#if multiple}
+                {#if typeof optionIndicator === 'function'}
+                  {@render optionIndicator({
+                    checked: value.includes(row.item.id),
+                    indeterminate: false
+                  })}
+                {:else}
+                  <span
+                    class="select-option-indicator"
+                    class:checked={value.includes(row.item.id)}
+                    aria-hidden="true"
+                    data-checked={value.includes(row.item.id) ? 'true' : 'false'}
+                    data-pw={typeof testId === 'string'
+                      ? `${testId}-option-indicator-${row.item.id}`
+                      : null}
+                    testID={typeof testId === 'string'
+                      ? `${testId}-option-indicator-${row.item.id}`
+                      : null}
+                  >
+                    {#if value.includes(row.item.id)}
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      <span class="select-option-check">{@html checkmarkSvg}</span>
+                    {/if}
+                  </span>
+                {/if}
+              {/if}
+              {#if typeof row.item.icon === 'string' && row.item.icon.length > 0}
+                <Img
+                  inlineSvg
+                  src={row.item.icon}
+                  alt=""
+                  fallback=""
+                  classes="select-option-icon"
+                />
+              {/if}
+              <span class="select-option-label">{row.item.label}</span>
+              {#if showSelectedTick && !multiple && value.includes(row.item.id)}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <span class="select-option-tick" aria-hidden="true">{@html checkmarkSvg}</span>
+              {/if}
+            </div>
+          {/if}
+        {/each}
+      {/if}
+      {#if typeof bottomContent === 'function' && !searchInMenu}
+        <div class="select-bottom-content">
+          {@render bottomContent()}
+        </div>
+      {/if}
+    {/snippet}
 
-  {#if open && !disabled}
-    {#if searchInMenu}
-      <!-- The panel itself carries no role here: a listbox may only contain
+    {#if open && !disabled}
+      {#if searchInMenu}
+        <!-- The panel itself carries no role here: a listbox may only contain
            options, so the search box has to be a SIBLING of the listbox rather
            than a child of it. `aria-controls` on the trigger still points at
            the inner element that actually holds the options. -->
-      <div
-        class="select-dropdown"
-        class:select-dropdown-right={placementAlign === 'right'}
-        class:select-dropdown-up={!usePortal &&
-          (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
-        class:select-dropdown-measuring={measuringPlacement}
-        class:select-dropdown-portal={usePortal}
-        data-placement={effectivePlacement}
-        use:resolveAutoPlacementOnMount
-        bind:this={dropdownEl}
-        bind:clientWidth={dropdownWidth}
-        bind:clientHeight={dropdownHeight}
-        style={portalStyle}
-        use:menuKeys
-        use:portalToRoot
-        use:dismissalAction
-      >
-        <input
-          class="select-menu-search"
-          type="search"
-          value={query}
-          oninput={handleSearchInput}
-          onkeydown={handleKeydown}
-          bind:this={searchInputEl}
-          placeholder={placeholder.length > 0 ? placeholder : 'Search'}
-          aria-label="Search options"
-          aria-controls={listboxId}
-          autocomplete="off"
-          data-pw={typeof testId === 'string' ? `${testId}-menu-search` : null}
-          testID={typeof testId === 'string' ? `${testId}-menu-search` : null}
-        />
-        <!-- tabindex="-1" because the list scrolls, and a scroll container is
+        <div
+          class="select-dropdown"
+          class:select-dropdown-right={placementAlign === 'right'}
+          class:select-dropdown-up={!usePortal &&
+            (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
+          class:select-dropdown-measuring={measuringPlacement}
+          class:select-dropdown-portal={usePortal}
+          data-placement={effectivePlacement}
+          use:resolveAutoPlacementOnMount
+          bind:this={dropdownEl}
+          bind:clientWidth={dropdownWidth}
+          bind:clientHeight={dropdownHeight}
+          style={portalStyle}
+          use:menuKeys
+          use:portalToRoot
+          use:dismissalAction
+        >
+          <input
+            class="select-menu-search"
+            type="search"
+            value={query}
+            oninput={handleSearchInput}
+            onkeydown={handleKeydown}
+            bind:this={searchInputEl}
+            placeholder={placeholder.length > 0 ? placeholder : 'Search'}
+            aria-label="Search options"
+            aria-controls={listboxId}
+            autocomplete="off"
+            data-pw={typeof testId === 'string' ? `${testId}-menu-search` : null}
+            testID={typeof testId === 'string' ? `${testId}-menu-search` : null}
+          />
+          <!-- tabindex="-1" because the list scrolls, and a scroll container is
              a tab stop of its own in Chromium -- which swallowed the Tab that
              should reach the pinned bottom actions. The options are navigated
              from the search box via aria-activedescendant, so the list itself
              never needs to hold focus. -->
+          <div
+            class="select-menu-list"
+            role="listbox"
+            id={listboxId}
+            aria-label={accessibleName}
+            aria-labelledby={accessibleLabelledby}
+            aria-multiselectable={multiple}
+            tabindex="-1"
+          >
+            {@render menuOptions()}
+          </div>
+          {#if typeof bottomContent === 'function'}
+            <!-- Outside the listbox: a listbox may only contain options, so
+               pinned actions (clear-all, apply) would be invalid children and
+               assistive tech would announce them as options. -->
+            <div class="select-bottom-content">
+              {@render bottomContent()}
+            </div>
+          {/if}
+        </div>
+      {:else}
         <div
-          class="select-menu-list"
+          class="select-dropdown"
+          class:select-dropdown-right={placementAlign === 'right'}
+          class:select-dropdown-up={!usePortal &&
+            (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
+          class:select-dropdown-measuring={measuringPlacement}
+          class:select-dropdown-portal={usePortal}
+          data-placement={effectivePlacement}
+          use:resolveAutoPlacementOnMount
+          bind:this={dropdownEl}
+          bind:clientWidth={dropdownWidth}
+          bind:clientHeight={dropdownHeight}
           role="listbox"
           id={listboxId}
           aria-label={accessibleName}
           aria-labelledby={accessibleLabelledby}
           aria-multiselectable={multiple}
-          tabindex="-1"
+          style={portalStyle}
+          use:portalToRoot
+          use:dismissalAction
         >
           {@render menuOptions()}
         </div>
-        {#if typeof bottomContent === 'function'}
-          <!-- Outside the listbox: a listbox may only contain options, so
-               pinned actions (clear-all, apply) would be invalid children and
-               assistive tech would announce them as options. -->
-          <div class="select-bottom-content">
-            {@render bottomContent()}
-          </div>
-        {/if}
-      </div>
-    {:else}
-      <div
-        class="select-dropdown"
-        class:select-dropdown-right={placementAlign === 'right'}
-        class:select-dropdown-up={!usePortal &&
-          (effectivePlacement === 'top-left' || effectivePlacement === 'top-right')}
-        class:select-dropdown-measuring={measuringPlacement}
-        class:select-dropdown-portal={usePortal}
-        data-placement={effectivePlacement}
-        use:resolveAutoPlacementOnMount
-        bind:this={dropdownEl}
-        bind:clientWidth={dropdownWidth}
-        bind:clientHeight={dropdownHeight}
-        role="listbox"
-        id={listboxId}
-        aria-label={accessibleName}
-        aria-labelledby={accessibleLabelledby}
-        aria-multiselectable={multiple}
-        style={portalStyle}
-        use:portalToRoot
-        use:dismissalAction
-      >
-        {@render menuOptions()}
-      </div>
+      {/if}
     {/if}
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
   .select {
@@ -1160,7 +1236,7 @@
     pointer-events: none;
   }
 
-  .select-trigger {
+  .select-trigger:where(:not(.select-native)) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1190,7 +1266,7 @@
     );
   }
 
-  .select-trigger :global(.select-left-icon) {
+  .select-trigger:where(:not(.select-native)) :global(.select-left-icon) {
     --image-width: var(--select-left-icon-size, 16px);
     --image-height: var(--select-left-icon-size, 16px);
     --image-object-fit: contain;
@@ -1204,12 +1280,14 @@
     flex: none;
   }
 
-  .select-trigger:hover:not(.disabled .select-trigger) {
+  .select-trigger:where(:not(.select-native)):hover:not(
+      .disabled .select-trigger:where(:not(.select-native))
+    ) {
     border-color: var(--select-trigger-hover-border-color, #999999);
   }
 
-  .select-trigger:focus-within,
-  .select.open .select-trigger {
+  .select-trigger:where(:not(.select-native)):focus-within,
+  .select.open .select-trigger:where(:not(.select-native)) {
     border-color: var(--select-trigger-focus-border-color, #2563eb);
     box-shadow: var(--select-trigger-focus-shadow, 0 0 0 2px rgba(37, 99, 235, 0.2));
   }
@@ -1217,7 +1295,7 @@
   /* Pressed feedback on the trigger. `:active` only, so it lasts exactly as
      long as the pointer is down and never lingers as a stuck state the way a
      class-driven one can. */
-  .select:not(.disabled) .select-trigger:active {
+  .select:not(.disabled) .select-trigger:where(:not(.select-native)):active {
     background: var(--select-trigger-pressed-background, #ededed);
   }
 
@@ -1225,15 +1303,15 @@
      stops reading as invalid the moment the user enters it -- which is the one
      moment they most need to see it. Listed after them, at equal or higher
      specificity, rather than reached for with !important. */
-  .select.error .select-trigger,
-  .select.error .select-trigger:hover,
-  .select.error .select-trigger:focus-within,
-  .select.error.open .select-trigger {
+  .select.error .select-trigger:where(:not(.select-native)),
+  .select.error .select-trigger:where(:not(.select-native)):hover,
+  .select.error .select-trigger:where(:not(.select-native)):focus-within,
+  .select.error.open .select-trigger:where(:not(.select-native)) {
     border-color: var(--select-trigger-error-border-color, #dc2626);
   }
 
-  .select.error .select-trigger:focus-within,
-  .select.error.open .select-trigger {
+  .select.error .select-trigger:where(:not(.select-native)):focus-within,
+  .select.error.open .select-trigger:where(:not(.select-native)) {
     box-shadow: var(--select-trigger-error-shadow, 0 0 0 2px rgba(220, 38, 38, 0.2));
   }
 
@@ -1247,7 +1325,7 @@
     position: relative;
   }
 
-  .select-control.has-clear .select-trigger {
+  .select-control.has-clear .select-trigger:where(:not(.select-native)) {
     padding-inline-end: calc(var(--select-clear-size, 18px) + 36px);
   }
 
@@ -1577,7 +1655,7 @@
     padding: var(--select-bottom-content-padding, 8px 12px);
   }
 
-  .select-trigger :global(.pill) {
+  .select-trigger:where(:not(.select-native)) :global(.pill) {
     --pill-background: var(--select-pill-background, #e0e0e0);
     --pill-color: var(--select-pill-color, #333333);
     --pill-border-radius: var(--select-pill-border-radius, 999px);
@@ -1586,18 +1664,21 @@
   }
 
   /* Ghost hierarchy: transparent, borderless trigger */
-  .select.ghost .select-trigger {
+  .select.ghost .select-trigger:where(:not(.select-native)) {
     background: var(--select-ghost-trigger-background, transparent);
     border-color: var(--select-ghost-trigger-border-color, transparent);
     box-shadow: none;
   }
 
-  .select.ghost .select-trigger:hover:not(.disabled .select-trigger) {
+  .select.ghost
+    .select-trigger:where(:not(.select-native)):hover:not(
+      .disabled .select-trigger:where(:not(.select-native))
+    ) {
     border-color: var(--select-ghost-trigger-hover-border-color, transparent);
     background: var(--select-ghost-trigger-hover-background, rgba(0, 0, 0, 0.04));
   }
 
-  .select.ghost.open .select-trigger {
+  .select.ghost.open .select-trigger:where(:not(.select-native)) {
     border-color: var(--select-ghost-trigger-open-border-color, transparent);
     background: var(--select-ghost-trigger-open-background, rgba(0, 0, 0, 0.06));
     box-shadow: none;

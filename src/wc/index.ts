@@ -1,3 +1,5 @@
+import './components/Link.wc.svelte';
+import './components/Dialog.wc.svelte';
 import './components/AnimatedNumber.wc.svelte';
 import './components/Avatar.wc.svelte';
 import './components/Badge.wc.svelte';

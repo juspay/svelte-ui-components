@@ -3,6 +3,9 @@
     tag: 'sui-file-input',
     shadow: 'open',
     props: {
+      native: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       errorMessage: { type: 'String', attribute: 'error-message' },
       infoMessage: { type: 'String', attribute: 'info-message' },
       invalid: { type: 'Boolean', reflect: true },
@@ -24,7 +27,7 @@
   import FileInput from '$lib/FileInput/FileInput.svelte';
   import { dispatchEvents } from '../dispatch';
 
-  let props = $props();
+  let { element = $bindable<HTMLInputElement | null>(null), ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -44,7 +47,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<FileInput {...props} {...dispatchers}>
+<FileInput bind:element {...props} {...dispatchers}>
   {#snippet trigger({ openFilePicker, dragOver, disabled })}
     <slot name="trigger">
       <!-- The region is the one control, so its default content is not a button; only when the

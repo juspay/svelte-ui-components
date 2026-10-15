@@ -152,3 +152,15 @@ there is no spelling for a per-option slot and one shared name would reach only 
 Per-option icons are Svelte-only. Leaving `icon` off an option is the normal case: each falls
 back to a built-in sun, moon or monitor glyph chosen by its `value`, and to a palette glyph for
 an unrecognised one.
+
+## Host menu composition
+
+Segment buttons expose `data-mode` with the option value for native event/testing
+identification. A host-owned collapsible menu can preserve its geometry through:
+
+| CSS variable                                   | Default       | Purpose                                                        |
+| ---------------------------------------------- | ------------- | -------------------------------------------------------------- |
+| `--theme-switcher-segment-indicator-display`   | `block`       | Hide the shared indicator when selection is painted per button |
+| `--theme-switcher-segment-button-width`        | `auto`        | Per-option width                                               |
+| `--theme-switcher-segment-button-height`       | `auto`        | Per-option height                                              |
+| `--theme-switcher-segment-selected-background` | `transparent` | Per-option selected background                                 |

@@ -257,3 +257,18 @@ its own transport and none of these slots appear.
 A JavaScript-assigned property of the same name wins over slotted markup; the slot is the
 fallback, and the slot's own fallback is the built-in glyph, so supplying neither still renders
 the control.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.
+
+In unstyled video mode the `children` snippet can contain native `source`/`track`
+elements for media-query and codec selection. Pass an empty `src` when sources
+supply the URL. `nativeAttrs` can retain `preload`, `poster`, and media metadata.
+The host remains responsible for its visibility/reduced-motion playback policy.

@@ -1,6 +1,8 @@
 # Icon
 
-A clickable icon component that displays an image or inline SVG with an optional text label. The entire container is a button for accessibility. Layout direction (row or column) is controlled via CSS variable `--icon-container-direction`. Supports two rendering modes: image URL via `icon` prop, or raw SVG markup via `svg` prop.
+An icon component with URL, inline SVG, and CSS mask modes. A click handler makes
+it keyboard operable. Use `--icon-container-direction` for the icon-and-text
+layout; monochrome mask icons follow the surrounding text color.
 
 ## Usage
 
@@ -21,6 +23,18 @@ A clickable icon component that displays an image or inline SVG with an optional
 
 ## Interactivity
 
+### Monochrome mask icons
+
+Use `mask` for an existing monochrome asset that follows the surrounding text
+color. Omit `label` for decoration; provide it when the image has meaning of its
+own. A mask icon with an `onclick` handler renders a native Button around its
+painted shape, keeping the focus ring outside the mask.
+
+```svelte
+<Icon mask icon="/icons/address.svg" size={20} label="Saved address" />
+<Icon mask icon="/icons/close.svg" label="Close" onclick={close} />
+```
+
 An icon given an `onclick` handler becomes a real control: it takes `role="button"`,
 joins the tab order, and activates on Enter and Space as well as click. Without a
 click handler it stays a plain decorative element with no role and no tab stop, so a
@@ -28,13 +42,17 @@ screen reader does not announce a button that does nothing.
 
 ## Props
 
-| Prop    | Type             | Required | Default | Description                                                                                                                                                                                                                      |
-| ------- | ---------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| icon    | `string`         | No       | `-`     | URL of the icon image to display. Rendered as `<img src>`.                                                                                                                                                                       |
-| svg     | `string`         | No       | `-`     | Raw SVG markup string to render inline via `{@html}`. When provided, takes priority over `icon`. Inherits `currentColor` for styling. **Must be trusted content** — never pass unsanitized user input (see Security note below). |
-| text    | `string \| null` | No       | `-`     | Optional text label displayed below the icon.                                                                                                                                                                                    |
-| classes | `string`         | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                           |
-| testId  | `string`         | No       | `-`     | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                                                                                    |
+| Prop    | Type             | Required | Default        | Description                                                                                                                                                                                                                      |
+| ------- | ---------------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| icon    | `string`         | No       | `-`            | URL of the icon image to display. Rendered as `<img src>`.                                                                                                                                                                       |
+| mask    | `boolean`        | No       | `false`        | Use a CSS mask to paint the `icon` asset with currentColor.                                                                                                                                                                      |
+| size    | `number`         | No       | `24`           | Mask size in CSS pixels; when omitted CSS can override `--icon-size`.                                                                                                                                                            |
+| color   | `string`         | No       | `currentColor` | Optional mask color override.                                                                                                                                                                                                    |
+| label   | `string`         | No       | `-`            | Accessible mask-image or action name. Omit for decorative mask icons.                                                                                                                                                            |
+| svg     | `string`         | No       | `-`            | Raw SVG markup string to render inline via `{@html}`. When provided, takes priority over `icon`. Inherits `currentColor` for styling. **Must be trusted content** — never pass unsanitized user input (see Security note below). |
+| text    | `string \| null` | No       | `-`            | Optional text label displayed below the icon.                                                                                                                                                                                    |
+| classes | `string`         | No       | `-`            | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles.                                                           |
+| testId  | `string`         | No       | `-`            | Value for the `data-pw` attribute on the root element, used for end-to-end testing selectors.                                                                                                                                    |
 
 > **Note:** At least one of `icon` or `svg` should be provided. If both are provided, `svg` takes priority.
 
@@ -51,17 +69,20 @@ screen reader does not announce a button that does nothing.
 
 Override these custom properties to theme the component.
 
-| Variable                     | Default        | CSS Property   | Description                                                                |
-| ---------------------------- | -------------- | -------------- | -------------------------------------------------------------------------- |
-| `--icon-container-paddding`  | `4px`          | padding        | Inner padding of the icon container.                                       |
-| `--icon-container-direction` | `column`       | flex-direction | Layout direction of icon + text (column for vertical, row for horizontal). |
-| `--icon-height`              | `20px`         | height         | Height of the icon image or SVG container.                                 |
-| `--icon-width`               | `20px`         | width          | Width of the icon image or SVG container.                                  |
-| `--icon-padding`             | `4px`          | padding        | Padding around the icon image or SVG container.                            |
-| `--icon-svg-color`           | `currentColor` | color          | Color of the inline SVG icon (only applies when using `svg` prop).         |
-| `--icon-text-padding`        | `4px`          | padding        | Padding around the text label.                                             |
-| `--icon-text-direction`      | `column`       | flex-direction | Layout direction of the text area.                                         |
-| `--icon-text-font-size`      | `12px`         | font-size      | Font size of the text label.                                               |
+| Variable                     | Default            | CSS Property     | Description                                                                |
+| ---------------------------- | ------------------ | ---------------- | -------------------------------------------------------------------------- |
+| `--icon-container-paddding`  | `4px`              | padding          | Inner padding of the icon container.                                       |
+| `--icon-container-direction` | `column`           | flex-direction   | Layout direction of icon + text (column for vertical, row for horizontal). |
+| `--icon-height`              | `20px`             | height           | Height of the icon image or SVG container.                                 |
+| `--icon-width`               | `20px`             | width            | Width of the icon image or SVG container.                                  |
+| `--icon-padding`             | `4px`              | padding          | Padding around the icon image or SVG container.                            |
+| `--icon-svg-color`           | `currentColor`     | color            | Color of the inline SVG icon (only applies when using `svg` prop).         |
+| `--icon-text-padding`        | `4px`              | padding          | Padding around the text label.                                             |
+| `--icon-text-direction`      | `column`           | flex-direction   | Layout direction of the text area.                                         |
+| `--icon-text-font-size`      | `12px`             | font-size        | Font size of the text label.                                               |
+| `--icon-size`                | `24px`             | width, height    | Size of the mask shape. Explicit `size` takes precedence.                  |
+| `--icon-color`               | `currentColor`     | background-color | Mask paint, inherited from the surrounding theme.                          |
+| `--icon-url`                 | supplied by `icon` | mask-image       | Mask asset URL; assigned by the component.                                 |
 
 ## Web Component
 

@@ -1,8 +1,19 @@
 import type { Snippet } from 'svelte';
+import type { Attachment } from 'svelte/attachments';
+import type { HTMLDetailsAttributes, HTMLAttributes } from 'svelte/elements';
 
 export type AccordionProperties = OptionalAccordionProperties & AccordionEventProperties;
 
 export type OptionalAccordionProperties = {
+  /** Use native details/summary semantics, including before hydration. */
+  native?: boolean;
+  /** Native details attachment for host-owned motion/measurement. */
+  attachment?: Attachment<HTMLDetailsElement>;
+  /** Attributes on the native details element. */
+  nativeAttrs?: Omit<HTMLDetailsAttributes, 'open' | 'class' | 'ontoggle'>;
+  /** Attributes on the native summary element. */
+  summaryAttrs?: HTMLAttributes<HTMLElement>;
+  element?: HTMLDetailsElement | null;
   expand?: boolean;
   children?: Snippet;
   trigger?: Snippet<[{ expanded: boolean }]>;

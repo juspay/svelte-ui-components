@@ -8,8 +8,20 @@ import IframeViewer from './IframeViewer/IframeViewer.svelte';
 import Avatar from './Avatar/Avatar.svelte';
 import NativeBindings from './NativeBindings.test.svelte';
 import Icon from './Icon/Icon.svelte';
+import InputMountFocus from './InputMountFocus.test.svelte';
 
 describe('native consumer contracts', () => {
+  it.each([false, true])(
+    'honors parent mount focus before the native binding settles (native=%s)',
+    async (native) => {
+      const scroll = HTMLElement.prototype.scrollIntoView;
+      HTMLElement.prototype.scrollIntoView = () => {};
+      const view = render(InputMountFocus, { native });
+      await tick();
+      expect(document.activeElement).toBe(view.getByRole('textbox'));
+      HTMLElement.prototype.scrollIntoView = scroll;
+    }
+  );
   it('keeps noninteractive empty-alt avatars decorative and named avatars discoverable', async () => {
     const view = render(Avatar, { alt: '', name: 'Demo person' });
     expect(view.queryByRole('img')).toBeNull();

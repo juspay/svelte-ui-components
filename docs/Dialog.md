@@ -61,3 +61,7 @@ Dialog focuses its first eligible composed descendant, respecting native autofoc
 Set `returnFocusTo` when the opening control is known: pointer interactions do not
 focus buttons consistently across engines. Focus is restored on close, not on
 a later unrelated unmount of an already-closed dialog.
+
+Focus restoration runs once per open cycle, including unmount. A native `close`
+notification queued by destruction does not invoke `onclose` against an unmounted
+component. Replacing props does not discard the mounted dialog reference.

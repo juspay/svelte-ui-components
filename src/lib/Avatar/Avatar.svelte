@@ -2,7 +2,15 @@
   import type { AvatarProperties } from './properties';
   import Img from '../Img/Img.svelte';
 
-  let { src, alt, name, size = 'medium', testId, onclick, classes }: AvatarProperties = $props();
+  let {
+    src,
+    alt = '',
+    name,
+    size = 'medium',
+    testId,
+    onclick,
+    classes
+  }: AvatarProperties = $props();
 
   let failedSource = $state<string | null>(null);
 

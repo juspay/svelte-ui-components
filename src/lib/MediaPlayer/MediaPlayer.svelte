@@ -17,6 +17,7 @@
     unstyled = false,
     nativeAttrs,
     children,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
     element = $bindable(),
     src,
     type,
@@ -26,7 +27,7 @@
     loop = false,
     controls = false,
     fallback,
-    playing = $bindable(true),
+    playing = $bindable(untrack(() => autoplay)),
     muted = $bindable(true),
     playIcon,
     pauseIcon,
@@ -73,7 +74,11 @@
   // A host write that arrived before the element could accept it; applied once metadata is.
   let pendingSeek: number | null = null;
 
-  const videoPlayer = $derived(element ?? null);
+  let videoPlayer = $state<HTMLVideoElement | HTMLAudioElement | null>(null);
+  const assignMediaElement = (node: HTMLVideoElement | HTMLAudioElement | null) => {
+    videoPlayer = node;
+    element = node;
+  };
   let container: HTMLDivElement | null = $state(null);
   let isFullscreen = $state(false);
 
@@ -386,7 +391,7 @@
 {#if type === 'audio'}
   <audio
     {...nativeAttrs}
-    bind:this={element}
+    bind:this={() => videoPlayer, assignMediaElement}
     bind:muted
     src={src || null}
     class={classes ?? ''}
@@ -405,7 +410,7 @@
 {:else if unstyled && type === 'video'}
   <video
     {...nativeAttrs}
-    bind:this={element}
+    bind:this={() => videoPlayer, assignMediaElement}
     bind:muted
     src={src || null}
     class={classes ?? ''}
@@ -434,32 +439,24 @@
         <Img {src} {alt} {fallback} />
       </span>
     {:else}
-      <!--
-      The caption track is caller-supplied (`captionsSrc`) and rendered only when it is. The
-      compiler only counts a `<track>` that is a static, unconditional child of the
-      `<video>`, so this warning is a false positive for the conditional one below. The
-      alternative it pushes toward -- an always-present `<track>` with no `src` -- would put
-      an empty, non-functional entry in every player's native captions menu, which is
-      exactly what the optional contract exists to avoid. Scoped to this one element and
-      this one rule; nothing else in the file is silenced.
-    -->
-      <!-- svelte-ignore a11y_media_has_caption -->
       <video
-        bind:this={element}
+        {...nativeAttrs}
+        bind:this={() => videoPlayer, assignMediaElement}
         bind:muted
-        {src}
+        src={src || null}
         class="media"
         aria-label={effectiveAriaLabel}
         {controls}
         {autoplay}
         {loop}
         playsinline
-        preload={hasTransportRow ? 'metadata' : null}
+        preload={hasTransportRow ? 'metadata' : nativeAttrs?.preload}
         onplay={handlePlay}
         onpause={handlePause}
         ontimeupdate={handleTimeUpdate}
         onloadedmetadata={handleLoadedMetadata}
       >
+        {@render children?.()}
         {#if hasCaptions}
           <track
             bind:this={captionTrack}

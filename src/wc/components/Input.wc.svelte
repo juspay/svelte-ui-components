@@ -207,6 +207,7 @@
   </Input>
 {:else if hasLeftIconSlot}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}
@@ -221,6 +222,7 @@
   </Input>
 {:else if hasRightIconSlot}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}
@@ -235,6 +237,7 @@
   </Input>
 {:else}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}

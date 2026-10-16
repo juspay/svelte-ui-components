@@ -6,6 +6,7 @@
   let {
     native = false,
     nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
     element = $bindable(),
     trigger,
     activation = 'region',
@@ -46,8 +47,13 @@
   });
 
   let dragOver = $state(false);
-  const inputEl = $derived(element);
+  let inputEl = $state<HTMLInputElement | null>(null);
+  const assignInputElement = (node: HTMLInputElement | null) => {
+    inputEl = node;
+    element = node;
+  };
   let pickerBusy = false;
+  let selectionBeforePicker: File[] | null = null;
 
   export const openFilePicker = (): void => {
     if (disabled || pickerBusy) {
@@ -120,8 +126,30 @@
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+    selectionBeforePicker = null;
     processFiles(target.files);
+    if (!native) {
+      target.value = '';
+    }
+  }
+
+  function prepareNativePicker(event: MouseEvent): void {
+    const target = event.currentTarget;
+    if (disabled || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    selectionBeforePicker = Array.from(target.files ?? []);
     target.value = '';
+  }
+
+  function cancelNativePicker(event: Event): void {
+    const target = event.currentTarget;
+    if (target instanceof HTMLInputElement && selectionBeforePicker?.length) {
+      const transfer = new DataTransfer();
+      selectionBeforePicker.forEach((file) => transfer.items.add(file));
+      target.files = transfer.files;
+    }
+    selectionBeforePicker = null;
   }
 
   function handleDragOver(event: DragEvent): void {
@@ -169,7 +197,7 @@
 {#if native}
   <input
     {...nativeAttrs}
-    bind:this={element}
+    bind:this={() => inputEl, assignInputElement}
     type="file"
     class={classes ?? ''}
     class:file-input-native={true}
@@ -177,6 +205,8 @@
     {multiple}
     {disabled}
     data-pw={testId}
+    onclick={prepareNativePicker}
+    oncancel={cancelNativePicker}
     onchange={handleInputChange}
   />
 {:else}
@@ -201,7 +231,7 @@
     onclick={regionOwnsActivation ? handleClick : null}
   >
     <input
-      bind:this={element}
+      bind:this={() => inputEl, assignInputElement}
       type="file"
       class="file-input-hidden"
       {accept}

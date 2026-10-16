@@ -103,3 +103,7 @@ Tag: `<sui-icon>`
 `icon.addEventListener('click', ...)` (or `'keydown'`) listener already sees the real event that
 bubbles out of the shadow root on its own, and a synthetic duplicate under the same name would
 double-deliver it.
+
+Mask asset URLs are escaped as quoted CSS URLs, including literal quotes and
+backslashes. Raw quoted SVG data URLs and their URI-encoded equivalents paint
+the same mask.

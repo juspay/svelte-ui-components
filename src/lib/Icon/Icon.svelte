@@ -21,6 +21,9 @@
   // role and stays out of the tab order, rather than being a focusable no-op that
   // assistive technology announces as a button.
   const interactive = $derived(typeof onclick === 'function');
+  const maskUrl = $derived(
+    `url("${(icon ?? '').replace(/["\\\n\r\f]/g, (character) => `\\${character.charCodeAt(0).toString(16)} `)}")`
+  );
   const maskActionProperties = $derived(
     typeof label === 'string'
       ? { ariaLabel: label }
@@ -44,7 +47,7 @@
 {#snippet maskShape()}
   <span
     class="icon-mask {interactive ? '' : (classes ?? '')}"
-    style:--icon-url={`url("${icon ?? ''}")`}
+    style:--icon-url={maskUrl}
     style:--icon-size={typeof size === 'number' ? `${size}px` : null}
     style:--icon-color={color ?? null}
     role={!interactive && label ? 'img' : null}

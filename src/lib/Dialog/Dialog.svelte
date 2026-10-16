@@ -10,6 +10,7 @@
     modal = true,
     lockScroll = true,
     returnFocusTo,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
     element = $bindable(),
     classes,
     testId,
@@ -21,20 +22,28 @@
     onkeydown
   }: DialogProperties = $props();
 
+  let dialogElement = $state<HTMLDialogElement | null>(null);
+  const assignDialogElement = (node: HTMLDialogElement | null) => {
+    dialogElement = node;
+    element = node;
+  };
   let opener: HTMLElement | null = null;
+  let destroyed = false;
+  let focusPending = false;
 
   // A real native browser API must run after mount; an open attribute would
   // create a non-modal dialog and lose top-layer focus/background isolation.
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
-    if (!element) {
+    if (!dialogElement) {
       return;
     }
-    const dialog = element;
+    const dialog = dialogElement;
     const releaseLayer = open ? registerDismissible({ element: () => dialog }) : null;
     if (open && !dialog.open) {
       const active = getActiveElement(dialog);
       opener = active instanceof HTMLElement ? active : null;
+      focusPending = true;
       try {
         if (modal) {
           dialog.showModal();
@@ -48,6 +57,7 @@
       void tick().then(() => {
         const active = getActiveElement(dialog);
         if (
+          !destroyed &&
           dialog.open &&
           isTopmostDismissible(dialog) &&
           !dialog.hasAttribute('autofocus') &&
@@ -68,12 +78,16 @@
 
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
-    if (open && modal && lockScroll && element) {
-      return acquireScrollLock(element.ownerDocument.body);
+    if (open && modal && lockScroll && dialogElement) {
+      return acquireScrollLock(dialogElement.ownerDocument.body);
     }
   });
 
   const restoreFocus = () => {
+    if (!focusPending) {
+      return;
+    }
+    focusPending = false;
     const target = returnFocusTo ?? opener;
     opener = null;
     if (target?.isConnected) {
@@ -82,11 +96,12 @@
   };
 
   onDestroy(() => {
-    const wasOpen = element?.open ?? false;
+    destroyed = true;
+    const wasOpen = dialogElement?.open ?? false;
     if (wasOpen) {
-      element?.close();
-      restoreFocus();
+      dialogElement?.close();
     }
+    restoreFocus();
   });
 
   const handleKeydown = (event: KeyboardEvent) => {
@@ -95,13 +110,13 @@
       event.key !== 'Tab' ||
       event.defaultPrevented ||
       !modal ||
-      !isTopmostDismissible(element ?? null)
+      !isTopmostDismissible(dialogElement)
     ) {
       return;
     }
     const target = focusTrapTabTarget({
-      container: element ?? null,
-      activeElement: getActiveElement(element ?? null),
+      container: dialogElement,
+      activeElement: getActiveElement(dialogElement),
       shiftKey: event.shiftKey
     });
     if (target) {
@@ -118,7 +133,7 @@
   };
 
   const handleClose = (event: Event) => {
-    if (element?.open) {
+    if (destroyed || dialogElement?.open) {
       return;
     } // ignore a stale close notification after reopening
     open = false;
@@ -131,7 +146,7 @@
      owns its accessible name through nativeAttrs and its own heading/labels. -->
 <dialog
   {...nativeAttrs}
-  bind:this={element}
+  bind:this={() => dialogElement, assignDialogElement}
   class={classes ?? ''}
   data-pw={testId}
   onkeydown={handleKeydown}

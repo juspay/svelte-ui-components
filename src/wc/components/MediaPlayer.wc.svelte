@@ -60,6 +60,7 @@
   import captionsSvg from '$lib/assets/captions.svg?raw';
   import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
   import { dispatchEvents } from '../dispatch';
+  import { adoptMediaChildren } from '../media-children';
 
   // Destructured, unlike the rest of the props, because the element can only reflect and read
   // back a prop it has an accessor for: `$props()` bound whole exposes none, which is why
@@ -80,6 +81,11 @@
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
   // as used before its declaration.
   const hostEl = $host();
+
+  // eslint-disable-next-line no-restricted-syntax -- Native media selection requires real children, not projected slots.
+  $effect(() => {
+    if (element) return adoptMediaChildren(hostEl, element);
+  });
 
   // onplay/onpause/onvolumechange/ontimeupdate/onfullscreenchange all collide
   // with native HTMLElement accessors (HOST_EVENT_HANDLER_PROPS), so dispatchEvents

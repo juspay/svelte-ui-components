@@ -95,3 +95,8 @@ an unnamed image. Interactive avatars still require an accessible name.
 | `--avatar-background-image` | `none`  | Host-authored initials background, including gradients |
 
 The loaded image uses the composed Img component's existing `--image-background` token.
+
+Untyped JavaScript and web-component calls that omit `alt` normalize it to an empty
+string rather than throwing. Noninteractive empty-alt avatars remain decorative.
+Typed Svelte callers should still provide an intentional image/action label or
+`alt=""` for a decorative avatar.

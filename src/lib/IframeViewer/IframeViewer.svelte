@@ -6,6 +6,7 @@
     unstyled = false,
     src,
     nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
     element = $bindable(),
     onload,
     onerror,
@@ -22,7 +23,11 @@
     onmessage = () => {}
   }: IframeViewerProperties = $props();
 
-  const iframeEl = $derived(element);
+  let iframeEl = $state<HTMLIFrameElement | null>(null);
+  const assignFrameElement = (node: HTMLIFrameElement | null) => {
+    iframeEl = node;
+    element = node;
+  };
 
   export const postMessage = (message: unknown, targetOrigin: string): void => {
     iframeEl?.contentWindow?.postMessage(message, targetOrigin);
@@ -57,9 +62,10 @@
   {#if src}
     <iframe
       {...nativeAttrs}
+      {...unstyled && typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
       class={unstyled ? (classes ?? '') : nativeAttrs?.class}
       class:iframe-unstyled={unstyled}
-      bind:this={element}
+      bind:this={() => iframeEl, assignFrameElement}
       {onload}
       {onerror}
       {src}

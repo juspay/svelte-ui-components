@@ -1,6 +1,7 @@
 import type { Snippet } from 'svelte';
+import type { HTMLVideoAttributes } from 'svelte/elements';
 
-export type MediaType = 'image' | 'video';
+export type MediaType = 'image' | 'video' | 'audio';
 
 export type MediaPlayerProperties = MandatoryMediaPlayerProperties &
   OptionalMediaPlayerProperties &
@@ -12,6 +13,23 @@ export type MandatoryMediaPlayerProperties = {
 };
 
 export type OptionalMediaPlayerProperties = {
+  /** Wrapper-free native video for art-directed/background media with host-owned controls. */
+  unstyled?: boolean;
+  /** Bindable native video reference for visibility and playback controllers. */
+  element?: HTMLVideoElement | HTMLAudioElement | null;
+  nativeAttrs?: Omit<
+    HTMLVideoAttributes,
+    | Extract<keyof HTMLVideoAttributes, `on${string}`>
+    | 'src'
+    | 'class'
+    | 'onplay'
+    | 'onpause'
+    | 'onloadedmetadata'
+    | 'ontimeupdate'
+    | 'muted'
+  >;
+  /** Native source/track children; retains browser media-query/codec selection. */
+  children?: Snippet;
   alt?: string;
   /** Accessible name for the video. Image naming uses alt. Defaults to "Video player". */
   ariaLabel?: string;
@@ -98,6 +116,8 @@ export type OptionalMediaPlayerProperties = {
 };
 
 export type MediaPlayerEventProperties = {
+  /** Rejected autoplay/play request; state settles to paused. */
+  onplayerror?: (error: unknown) => void;
   onplay?: (event: Event) => void;
   onpause?: (event: Event) => void;
   onvolumechange?: (muted: boolean) => void;

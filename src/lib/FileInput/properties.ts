@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { HTMLInputAttributes } from 'svelte/elements';
 
 export type FileInputSnippetProps = {
   openFilePicker: () => void;
@@ -31,7 +32,19 @@ export type FileInputProperties = {
    * region is already the control, and a button inside it is a second Tab stop and a second
    * announcement for the same action.
    */
-  trigger: Snippet<[FileInputSnippetProps]>;
+  trigger?: Snippet<[FileInputSnippetProps]>;
+  /** Render the native picker without a drop-zone wrapper. */
+  native?: boolean;
+  element?: HTMLInputElement | null;
+  nativeAttrs?: Omit<
+    HTMLInputAttributes,
+    | Extract<keyof HTMLInputAttributes, `on${string}`>
+    | 'type'
+    | 'class'
+    | 'accept'
+    | 'multiple'
+    | 'disabled'
+  >;
   /** Who owns the single interactive control. Defaults to `'region'`; see {@link FileInputActivation}. */
   activation?: FileInputActivation;
   accept?: string;

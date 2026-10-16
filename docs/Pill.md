@@ -364,3 +364,9 @@ double-deliver it to that same listener.
 | `dismiss-icon` | `dismissIcon`   | Custom icon for the dismiss/close button; defaults to the close glyph.   |
 
 When a pill has both an action and a dismiss control, each has a separate native button. The outer pill remains a layout container. `ariaExpanded` and `ariaPressed` describe the primary action, while dismiss keeps its own label and keyboard activation. A non-dismissible pill keeps its existing root behavior.
+
+## Host-authored labels
+
+`unstyled` leaves the root's appearance to the host recipe and renders the text
+directly. `as="span"` preserves inline informational-label semantics; button and
+dismissible behavior retain their existing guards. Default rendering is unchanged.

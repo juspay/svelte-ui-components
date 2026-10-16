@@ -4,6 +4,10 @@
   import type { FileInputProperties } from './properties';
 
   let {
+    native = false,
+    nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
+    element = $bindable(),
     trigger,
     activation = 'region',
     accept,
@@ -43,8 +47,13 @@
   });
 
   let dragOver = $state(false);
-  let inputEl: HTMLInputElement | null = $state(null);
+  let inputEl = $state<HTMLInputElement | null>(null);
+  const assignInputElement = (node: HTMLInputElement | null) => {
+    inputEl = node;
+    element = node;
+  };
   let pickerBusy = false;
+  let selectionBeforePicker: File[] | null = null;
 
   export const openFilePicker = (): void => {
     if (disabled || pickerBusy) {
@@ -117,8 +126,30 @@
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+    selectionBeforePicker = null;
     processFiles(target.files);
+    if (!native) {
+      target.value = '';
+    }
+  }
+
+  function prepareNativePicker(event: MouseEvent): void {
+    const target = event.currentTarget;
+    if (disabled || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    selectionBeforePicker = Array.from(target.files ?? []);
     target.value = '';
+  }
+
+  function cancelNativePicker(event: Event): void {
+    const target = event.currentTarget;
+    if (target instanceof HTMLInputElement && selectionBeforePicker?.length) {
+      const transfer = new DataTransfer();
+      selectionBeforePicker.forEach((file) => transfer.items.add(file));
+      target.files = transfer.files;
+    }
+    selectionBeforePicker = null;
   }
 
   function handleDragOver(event: DragEvent): void {
@@ -163,63 +194,80 @@
   }
 </script>
 
-<!-- The role is a ternary Svelte cannot resolve, so it reads the element as a plain div. Whenever
-     the tabindex renders, the role is "button" on the very same expression. -->
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
-  class="file-input {classes ?? ''}"
-  class:file-input-dragover={dragOver}
-  class:file-input-disabled={disabled}
-  class:file-input-passive={!regionOwnsActivation}
-  data-pw={testId}
-  testID={testId}
-  role={regionOwnsActivation ? 'button' : null}
-  tabindex={regionOwnsActivation ? (disabled ? -1 : 0) : null}
-  aria-disabled={regionOwnsActivation ? disabled : null}
-  aria-describedby={regionOwnsActivation ? field.describedBy : null}
-  ondragover={handleDragOver}
-  ondragleave={handleDragLeave}
-  ondrop={handleDrop}
-  onkeydown={regionOwnsActivation ? handleKeyDown : null}
-  onclick={regionOwnsActivation ? handleClick : null}
->
+{#if native}
   <input
-    bind:this={inputEl}
+    {...nativeAttrs}
+    bind:this={() => inputEl, assignInputElement}
     type="file"
-    class="file-input-hidden"
+    class={classes ?? ''}
+    class:file-input-native={true}
     {accept}
     {multiple}
     {disabled}
-    data-pw={typeof testId === 'string' ? `${testId}-input` : null}
-    testID={typeof testId === 'string' ? `${testId}-input` : null}
+    data-pw={testId}
+    onclick={prepareNativePicker}
+    oncancel={cancelNativePicker}
     onchange={handleInputChange}
-    tabindex="-1"
-    aria-hidden="true"
   />
-
-  {@render trigger({ openFilePicker, dragOver, disabled, describedBy: field.describedBy })}
-</div>
-
-{#if field.showsError}
+{:else}
+  <!-- The role is a ternary Svelte cannot resolve, so it reads the element as a plain div. Whenever
+     the tabindex renders, the role is "button" on the very same expression. -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div
-    id={field.errorId}
-    role="alert"
-    class="field-error"
-    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+    class="file-input {classes ?? ''}"
+    class:file-input-dragover={dragOver}
+    class:file-input-disabled={disabled}
+    class:file-input-passive={!regionOwnsActivation}
+    data-pw={testId}
+    testID={testId}
+    role={regionOwnsActivation ? 'button' : null}
+    tabindex={regionOwnsActivation ? (disabled ? -1 : 0) : null}
+    aria-disabled={regionOwnsActivation ? disabled : null}
+    aria-describedby={regionOwnsActivation ? field.describedBy : null}
+    ondragover={handleDragOver}
+    ondragleave={handleDragLeave}
+    ondrop={handleDrop}
+    onkeydown={regionOwnsActivation ? handleKeyDown : null}
+    onclick={regionOwnsActivation ? handleClick : null}
   >
-    {errorMessage}
+    <input
+      bind:this={() => inputEl, assignInputElement}
+      type="file"
+      class="file-input-hidden"
+      {accept}
+      {multiple}
+      {disabled}
+      data-pw={typeof testId === 'string' ? `${testId}-input` : null}
+      testID={typeof testId === 'string' ? `${testId}-input` : null}
+      onchange={handleInputChange}
+      tabindex="-1"
+      aria-hidden="true"
+    />
+
+    {@render trigger?.({ openFilePicker, dragOver, disabled, describedBy: field.describedBy })}
   </div>
-{/if}
-{#if field.showsInfo}
-  <div
-    id={field.infoId}
-    class="field-info"
-    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
-  >
-    {infoMessage}
-  </div>
+
+  {#if field.showsError}
+    <div
+      id={field.errorId}
+      role="alert"
+      class="field-error"
+      data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
+      testID={typeof testId === 'string' ? `${testId}-error-message` : null}
+    >
+      {errorMessage}
+    </div>
+  {/if}
+  {#if field.showsInfo}
+    <div
+      id={field.infoId}
+      class="field-info"
+      data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
+      testID={typeof testId === 'string' ? `${testId}-info-message` : null}
+    >
+      {infoMessage}
+    </div>
+  {/if}
 {/if}
 
 <style>
@@ -234,7 +282,7 @@
     margin-top: var(--file-input-info-margin-top, 4px);
   }
 
-  .file-input {
+  .file-input:where(:not(.file-input-native)) {
     display: var(--file-input-display, inline-flex);
     flex-direction: var(--file-input-flex-direction, column);
     align-items: var(--file-input-align-items, center);
@@ -260,7 +308,7 @@
      is the library's convention for a ring that needs no colour literal (Card, Pill, StatCard):
      it follows the surrounding text colour, so it clears 3:1 on the light and the dark ground
      alike and stays visible in forced-colors mode. :focus-visible keeps it off pointer clicks. */
-  .file-input:focus-visible {
+  .file-input:where(:not(.file-input-native)):focus-visible {
     outline: var(--file-input-focus-outline, 2px solid currentColor);
     outline-offset: var(--file-input-focus-outline-offset, 2px);
   }

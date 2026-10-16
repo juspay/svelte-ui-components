@@ -111,3 +111,22 @@ Tag: `<sui-img>`
 DOM event: `error` is already `HTMLElement`'s own native event, so an
 `img.addEventListener('error', ...)` listener still sees the real one, and adding a second,
 synthetic one under the same name would double-deliver it to that same listener.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.
+
+Image `nativeAttrs` includes `loading`, intrinsic `width`/`height`, `decoding`,
+`fetchpriority`, `srcset`, and `sizes`. They render with the image, including during
+SSR, rather than being applied after the browser may have started a request.
+`onload` receives the native load event. The existing `onerror`/fallback chain
+retains ownership of source failures. Native-image attributes apply to the image
+path; SVG inlining uses its separate SVG semantics.
+
+Web components expose `onimageload` / the `imageload` event for image loads; the native host `onload` accessor remains intact.

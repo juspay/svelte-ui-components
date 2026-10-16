@@ -4,6 +4,10 @@
     shadow: 'open',
     extend: formAssociated({ disabled: 'disable' }),
     props: {
+      native: { type: 'Boolean' },
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       value: { type: 'String', reflect: true },
       placeholder: { type: 'String', reflect: true },
       dataType: { type: 'String', reflect: true, attribute: 'data-type' },
@@ -81,6 +85,7 @@
   // The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.
   let {
+    element = $bindable<HTMLInputElement | HTMLTextAreaElement | null>(null),
     inputAriaLabel,
     inputId,
     inputAutofocus,
@@ -184,6 +189,7 @@
 -->
 {#if hasLeftIconSlot && hasRightIconSlot}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}
@@ -201,6 +207,7 @@
   </Input>
 {:else if hasLeftIconSlot}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}
@@ -215,6 +222,7 @@
   </Input>
 {:else if hasRightIconSlot}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}
@@ -229,6 +237,7 @@
   </Input>
 {:else}
   <Input
+    bind:element
     {...props}
     {...dispatchers}
     id={inputId}

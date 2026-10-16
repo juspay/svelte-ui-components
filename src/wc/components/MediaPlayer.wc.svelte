@@ -3,6 +3,10 @@
     tag: 'sui-media-player',
     shadow: 'open',
     props: {
+      onplayerror: { type: 'Object' },
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       src: { type: 'String' },
       type: { type: 'String' },
       alt: { type: 'String' },
@@ -56,6 +60,7 @@
   import captionsSvg from '$lib/assets/captions.svg?raw';
   import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
   import { dispatchEvents } from '../dispatch';
+  import { adoptMediaChildren } from '../media-children';
 
   // Destructured, unlike the rest of the props, because the element can only reflect and read
   // back a prop it has an accessor for: `$props()` bound whole exposes none, which is why
@@ -64,6 +69,7 @@
   // later host write is never swallowed by a stale copy that still reads the old value.
   // Avoid replacing HTMLElement.ariaLabel; the public attribute stays aria-label.
   let {
+    element = $bindable<HTMLVideoElement | HTMLAudioElement | null>(null),
     captionsVisible = $bindable(false),
     mediaAriaLabel,
     ...props
@@ -75,6 +81,11 @@
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
   // as used before its declaration.
   const hostEl = $host();
+
+  // eslint-disable-next-line no-restricted-syntax -- Native media selection requires real children, not projected slots.
+  $effect(() => {
+    if (element) return adoptMediaChildren(hostEl, element);
+  });
 
   // onplay/onpause/onvolumechange/ontimeupdate/onfullscreenchange all collide
   // with native HTMLElement accessors (HOST_EVENT_HANDLER_PROPS), so dispatchEvents
@@ -104,7 +115,16 @@
   the component renders repeatedly would leave every site after the first empty --
   not defaulted, empty.
 -->
-<MediaPlayer {...props} {...dispatchers} ariaLabel={mediaAriaLabel} bind:captionsVisible>
+<MediaPlayer
+  bind:element
+  {...props}
+  {...dispatchers}
+  ariaLabel={mediaAriaLabel}
+  bind:captionsVisible
+>
+  {#snippet children()}
+    <slot></slot>
+  {/snippet}
   {#snippet playIcon()}
     {#if props.playIcon}{@render props.playIcon()}{:else}<slot name="play-icon">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -->

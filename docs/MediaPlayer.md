@@ -53,7 +53,7 @@ appearance are CSS-variable driven.
 | autoplay           | `boolean`          | No       | `true`           | Whether the video begins playing automatically (video only).                                                                                                                                     |
 | loop               | `boolean`          | No       | `false`          | Whether the video restarts when it ends (video only).                                                                                                                                            |
 | controls           | `boolean`          | No       | `false`          | Use the browser's native video controls and hide the custom overlay (video only).                                                                                                                |
-| playing            | `boolean`          | No       | `true`           | Bindable, both directions: toggling playback (click/keyboard/native controls) updates `playing`, and a host setting `playing` itself calls `play()`/`pause()` on the video.                      |
+| playing            | `boolean`          | No       | `autoplay`           | Bindable, both directions: toggling playback (click/keyboard/native controls) updates `playing`, and a host setting `playing` itself calls `play()`/`pause()` on the video.                      |
 | muted              | `boolean`          | No       | `true`           | Bindable. Reflects whether the video audio is muted.                                                                                                                                             |
 | playIcon           | `Snippet`          | No       | `-`              | Custom play-control icon. Falls back to the built-in asset.                                                                                                                                      |
 | pauseIcon          | `Snippet`          | No       | `-`              | Custom pause-control icon. Falls back to the built-in asset.                                                                                                                                     |
@@ -257,3 +257,37 @@ its own transport and none of these slots appear.
 A JavaScript-assigned property of the same name wins over slotted markup; the slot is the
 fallback, and the slot's own fallback is the built-in glyph, so supplying neither still renders
 the control.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.
+
+In unstyled video mode the `children` snippet can contain native `source`/`track`
+elements for media-query and codec selection. Pass an empty `src` when sources
+supply the URL. `nativeAttrs` can retain `preload`, `poster`, and media metadata.
+The host remains responsible for its visibility/reduced-motion playback policy.
+
+### Native metadata in every rendering mode
+
+Audio, unstyled video and styled video all render `source`/`track` children.
+Pass `src=""` when child sources choose the resource. `nativeAttrs` reaches
+styled video too; transport controls still request metadata preload when needed.
+When `playing` is omitted, its initial value follows `autoplay`; an explicit
+`playing={true}` still requests playback with `autoplay={false}`.
+
+For `<sui-media-player>`, default-slot `source` and `track` nodes are temporarily
+adopted into the actual native media element. Native source selection, text tracks,
+node identity and native metadata events therefore work. Named icon slots stay in
+place. Metadata is restored to the host when the native branch is replaced or
+disconnected. Keep references to metadata nodes or use `player.element` to update
+them while connected; call the native `load()` method when changing sources, as
+with an ordinary media element.
+
+The native media reference stays mounted when the caller replaces props, so later
+`playing` and other controller updates still reach the existing element.

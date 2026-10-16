@@ -3,6 +3,11 @@
     tag: 'sui-accordion',
     shadow: 'open',
     props: {
+      attachment: { type: 'Object' },
+      summaryAttrs: { type: 'Object' },
+      native: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       expand: { type: 'Boolean', reflect: true },
       classes: { type: 'String' },
       triggerClasses: { type: 'String', attribute: 'trigger-classes' },
@@ -19,7 +24,7 @@
 <script lang="ts">
   import Accordion from '$lib/Accordion/Accordion.svelte';
   import { dispatchEvents } from '../dispatch';
-  let props = $props();
+  let { element = $bindable<HTMLDetailsElement | null>(null), ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -42,7 +47,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Accordion {...props} {...dispatchers}>
+<Accordion bind:element {...props} {...dispatchers}>
   {#snippet children()}
     <slot></slot>
   {/snippet}

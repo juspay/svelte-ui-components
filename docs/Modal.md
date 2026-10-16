@@ -343,3 +343,10 @@ For the custom element, assign `element.scrollContainer = rootElement` (or a
 getter) as a JavaScript property **before opening/mounting**. No selector string
 or serialized HTML attribute API is supported. Invalid non-element property
 values are ignored without falling back to the host body.
+
+## Focus containment
+
+`containFocus` (default false) brings programmatic/background focus back to the
+modal while it owns the foreground. It yields to later registered library popups
+and native Dialog surfaces, and removes its listener on unmount. It complements
+the existing Tab trap without forcing a new policy on existing consumers.

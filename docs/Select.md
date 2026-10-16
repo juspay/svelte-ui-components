@@ -620,3 +620,9 @@ property for those two instead: `el.onchange = (value) => ...`, `el.onclose = ()
 > **Svelte-only:** The `optionIndicator` snippet is not available in Web Component mode. The `option-indicator` slot was removed because Web Component `<slot>` elements do not forward Svelte snippet parameters as HTML attributes, causing the `checked` state to be silently dropped. Use the Svelte component directly when a custom option indicator is needed.
 
 An `aria-labelledby` reference follows a WC host moved into another DOM or shadow root, and subsequent label edits in that root remain reactive.
+
+## Native rendering
+
+`native` uses a real select with the operating-system picker and browser form validation. `required`, `id`, `name`, `disabled`, `multiple`, `nativeAttrs`, and bindable `element` retain native form semantics. `value` and `onchange` still use an array of item IDs. `classes` applies to the select.
+
+The web component uses `fieldId` (`field-id`) for the native picker ID so the host element retains its own native `id`.

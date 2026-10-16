@@ -11,6 +11,32 @@ export type MandatoryInputProperties = {
 };
 
 export type OptionalInputProperties = {
+  /** Preserve browser input/paste behavior and delegate validation/error state to
+   * the host. The default keeps the existing library validation/phone formatting. */
+  native?: boolean;
+  /** Render only the native element, without component appearance or layout wrappers. */
+  unstyled?: boolean;
+  /** Native constraints and accessibility metadata on the actual field.
+   * State/value/events remain owned by the component's dedicated props. */
+  nativeAttrs?: Omit<
+    HTMLInputAttributes,
+    | Extract<keyof HTMLInputAttributes, `on${string}`>
+    | 'class'
+    | 'value'
+    | 'oninput'
+    | 'onchange'
+    | 'onfocus'
+    | 'onblur'
+    | 'onfocusout'
+    | 'onpaste'
+    | 'onclick'
+    | 'onkeydown'
+    | 'type'
+    | 'disabled'
+    | 'required'
+  >;
+  /** Bindable reference to the actual input or textarea. */
+  element?: HTMLInputElement | HTMLTextAreaElement | null;
   placeholder?: string | null;
   /**
    * Native input type, and the switch `validateInput` runs on.

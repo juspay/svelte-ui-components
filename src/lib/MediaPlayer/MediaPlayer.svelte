@@ -14,15 +14,20 @@
   import type { MediaPlayerProperties } from './properties';
 
   let {
+    unstyled = false,
+    nativeAttrs,
+    children,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
+    element = $bindable(),
     src,
     type,
     alt = '',
-    ariaLabel = 'Video player',
+    ariaLabel,
     autoplay = true,
     loop = false,
     controls = false,
     fallback,
-    playing = $bindable(true),
+    playing = $bindable(untrack(() => autoplay)),
     muted = $bindable(true),
     playIcon,
     pauseIcon,
@@ -43,6 +48,7 @@
     currentTime = $bindable(0),
     duration = $bindable(0),
     onplay,
+    onplayerror,
     onpause,
     onvolumechange,
     oncaptionschange,
@@ -52,6 +58,10 @@
     testId,
     classes
   }: MediaPlayerProperties = $props();
+
+  const effectiveAriaLabel = $derived(
+    ariaLabel ?? (type === 'audio' ? 'Audio player' : 'Video player')
+  );
 
   // HTMLMediaElement.HAVE_METADATA. Named rather than inlined as 1, because `readyState >= 1`
   // at a call site reads like a truthiness check rather than a specific media state.
@@ -64,7 +74,11 @@
   // A host write that arrived before the element could accept it; applied once metadata is.
   let pendingSeek: number | null = null;
 
-  let videoPlayer: HTMLVideoElement | null = $state(null);
+  let videoPlayer = $state<HTMLVideoElement | HTMLAudioElement | null>(null);
+  const assignMediaElement = (node: HTMLVideoElement | HTMLAudioElement | null) => {
+    videoPlayer = node;
+    element = node;
+  };
   let container: HTMLDivElement | null = $state(null);
   let isFullscreen = $state(false);
 
@@ -93,12 +107,28 @@
     return `${minutes}:${padded}`;
   }
 
+  let playRevision = 0;
+  const requestPlay = (): void => {
+    const media = videoPlayer;
+    const revision = ++playRevision;
+    if (media === null) {
+      return;
+    }
+    void media.play().catch((error: unknown) => {
+      if (media !== videoPlayer || revision !== playRevision) {
+        return;
+      }
+      playing = false;
+      onplayerror?.(error);
+    });
+  };
+
   function togglePlayback(): void {
     if (videoPlayer === null) {
       return;
     }
     if (videoPlayer.paused) {
-      videoPlayer.play();
+      requestPlay();
     } else {
       videoPlayer.pause();
     }
@@ -116,7 +146,7 @@
       return;
     }
     if (playing && videoPlayer.paused) {
-      videoPlayer.play();
+      requestPlay();
     } else if (!playing && !videoPlayer.paused) {
       videoPlayer.pause();
     }
@@ -358,182 +388,215 @@
   });
 </script>
 
-<div
-  bind:this={container}
-  class="media-player {classes ?? ''}"
-  class:fullscreen={isFullscreen}
-  data-pw={typeof testId === 'string' ? testId : null}
->
-  {#if type === 'image'}
-    <span class="media-image">
-      <Img {src} {alt} {fallback} />
-    </span>
-  {:else}
-    <!--
-      The caption track is caller-supplied (`captionsSrc`) and rendered only when it is. The
-      compiler only counts a `<track>` that is a static, unconditional child of the
-      `<video>`, so this warning is a false positive for the conditional one below. The
-      alternative it pushes toward -- an always-present `<track>` with no `src` -- would put
-      an empty, non-functional entry in every player's native captions menu, which is
-      exactly what the optional contract exists to avoid. Scoped to this one element and
-      this one rule; nothing else in the file is silenced.
-    -->
-    <!-- svelte-ignore a11y_media_has_caption -->
-    <video
-      bind:this={videoPlayer}
-      bind:muted
-      {src}
-      class="media"
-      aria-label={ariaLabel}
-      {controls}
-      {autoplay}
-      {loop}
-      playsinline
-      preload={hasTransportRow ? 'metadata' : null}
-      onplay={handlePlay}
-      onpause={handlePause}
-      ontimeupdate={handleTimeUpdate}
-      onloadedmetadata={handleLoadedMetadata}
-    >
-      {#if hasCaptions}
-        <track
-          bind:this={captionTrack}
-          kind="captions"
-          src={captionsSrc}
-          label={typeof captionsLabel === 'string' ? captionsLabel : null}
-          srclang={typeof captionsSrcLang === 'string' ? captionsSrcLang : null}
-        />
-      {/if}
-    </video>
+{#if type === 'audio'}
+  <audio
+    {...nativeAttrs}
+    bind:this={() => videoPlayer, assignMediaElement}
+    bind:muted
+    src={src || null}
+    class={classes ?? ''}
+    data-pw={testId}
+    aria-label={effectiveAriaLabel}
+    {autoplay}
+    {controls}
+    {loop}
+    onplay={handlePlay}
+    onpause={handlePause}
+    ontimeupdate={handleTimeUpdate}
+    onloadedmetadata={handleLoadedMetadata}
+  >
+    {@render children?.()}
+  </audio>
+{:else if unstyled && type === 'video'}
+  <video
+    {...nativeAttrs}
+    bind:this={() => videoPlayer, assignMediaElement}
+    bind:muted
+    src={src || null}
+    class={classes ?? ''}
+    data-pw={testId}
+    aria-label={effectiveAriaLabel}
+    {autoplay}
+    {controls}
+    {loop}
+    playsinline
+    onplay={handlePlay}
+    onpause={handlePause}
+    ontimeupdate={handleTimeUpdate}
+    onloadedmetadata={handleLoadedMetadata}
+  >
+    {@render children?.()}
+  </video>
+{:else}
+  <div
+    bind:this={container}
+    class="media-player {classes ?? ''}"
+    class:fullscreen={isFullscreen}
+    data-pw={typeof testId === 'string' ? testId : null}
+  >
+    {#if type === 'image'}
+      <span class="media-image">
+        <Img {src} {alt} {fallback} />
+      </span>
+    {:else}
+      <video
+        {...nativeAttrs}
+        bind:this={() => videoPlayer, assignMediaElement}
+        bind:muted
+        src={src || null}
+        class="media"
+        aria-label={effectiveAriaLabel}
+        {controls}
+        {autoplay}
+        {loop}
+        playsinline
+        preload={hasTransportRow ? 'metadata' : nativeAttrs?.preload}
+        onplay={handlePlay}
+        onpause={handlePause}
+        ontimeupdate={handleTimeUpdate}
+        onloadedmetadata={handleLoadedMetadata}
+      >
+        {@render children?.()}
+        {#if hasCaptions}
+          <track
+            bind:this={captionTrack}
+            kind="captions"
+            src={captionsSrc}
+            label={typeof captionsLabel === 'string' ? captionsLabel : null}
+            srclang={typeof captionsSrcLang === 'string' ? captionsSrcLang : null}
+          />
+        {/if}
+      </video>
 
-    {#if !controls}
-      <!-- A video cannot carry role="button". The full-surface native button
+      {#if !controls}
+        <!-- A video cannot carry role="button". The full-surface native button
            preserves pointer/keyboard playback without nesting the other controls. -->
-      <button
-        type="button"
-        class="media-surface-action"
-        aria-label={playing ? 'Pause video' : 'Play video'}
-        onclick={togglePlayback}
-      ></button>
-      <div class="overlay">
-        <div class="center-controls">
-          <div class="control center-control">
-            <Button onclick={togglePlayback} ariaLabel={playing ? 'Pause video' : 'Play video'}>
-              {#if playing}
-                {#if typeof pauseIcon === 'function'}
-                  {@render pauseIcon()}
-                {:else}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html pauseSvg}
-                {/if}
-              {:else if typeof playIcon === 'function'}
-                {@render playIcon()}
-              {:else}
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html playSvg}
-              {/if}
-            </Button>
-          </div>
-        </div>
-        <div class="bottom-controls" class:transport={hasTransportRow}>
-          {#if seekBar}
-            <div class="seek" data-pw={typeof testId === 'string' ? `${testId}-seek` : null}>
-              <Slider
-                value={currentTime}
-                min={0}
-                max={duration > 0 ? duration : 1}
-                step={0.1}
-                disabled={duration <= 0}
-                oninput={handleSeek}
-                onchange={handleSeek}
-                ariaLabel="Seek"
-              />
-            </div>
-          {/if}
-          {#if timeDisplay}
-            <span class="time" data-pw={typeof testId === 'string' ? `${testId}-time` : null}>
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-          {/if}
-          <div class="control bottom-control">
-            <Button onclick={toggleMute} ariaLabel={muted ? 'Unmute' : 'Mute'}>
-              {#if muted}
-                {#if typeof muteIcon === 'function'}
-                  {@render muteIcon()}
-                {:else}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html muteSvg}
-                {/if}
-              {:else if typeof unmuteIcon === 'function'}
-                {@render unmuteIcon()}
-              {:else}
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html volumeSvg}
-              {/if}
-            </Button>
-          </div>
-          {#if captionsButton && hasCaptions}
-            <div
-              class="control bottom-control"
-              data-pw={typeof testId === 'string' ? `${testId}-captions` : null}
-            >
-              <!-- A native button rather than `Button`: the pressed state is the whole
-                   point of this control and `Button` has no `aria-pressed`. The name stays
-                   "Captions" and `aria-pressed` carries on/off, so a screen reader hears
-                   "Captions, toggle button, pressed" rather than a name that flips under it. -->
-              <button
-                type="button"
-                class="captions-toggle"
-                aria-label="Captions"
-                aria-pressed={captionsVisible}
-                onclick={toggleCaptions}
-              >
-                {#if captionsVisible}
-                  {#if typeof captionsOnIcon === 'function'}
-                    {@render captionsOnIcon()}
+        <button
+          type="button"
+          class="media-surface-action"
+          aria-label={playing ? 'Pause video' : 'Play video'}
+          onclick={togglePlayback}
+        ></button>
+        <div class="overlay">
+          <div class="center-controls">
+            <div class="control center-control">
+              <Button onclick={togglePlayback} ariaLabel={playing ? 'Pause video' : 'Play video'}>
+                {#if playing}
+                  {#if typeof pauseIcon === 'function'}
+                    {@render pauseIcon()}
                   {:else}
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    {@html captionsOnSvg}
+                    {@html pauseSvg}
                   {/if}
-                {:else if typeof captionsIcon === 'function'}
-                  {@render captionsIcon()}
+                {:else if typeof playIcon === 'function'}
+                  {@render playIcon()}
                 {:else}
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html captionsSvg}
-                {/if}
-              </button>
-            </div>
-          {/if}
-          {#if fullscreenButton}
-            <div
-              class="control bottom-control"
-              data-pw={typeof testId === 'string' ? `${testId}-fullscreen` : null}
-            >
-              <Button
-                onclick={toggleFullscreen}
-                ariaLabel={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-              >
-                {#if isFullscreen}
-                  {#if typeof exitFullscreenIcon === 'function'}
-                    {@render exitFullscreenIcon()}
-                  {:else}
-                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    {@html exitFullscreenSvg}
-                  {/if}
-                {:else if typeof fullscreenIcon === 'function'}
-                  {@render fullscreenIcon()}
-                {:else}
-                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                  {@html fullscreenSvg}
+                  {@html playSvg}
                 {/if}
               </Button>
             </div>
-          {/if}
+          </div>
+          <div class="bottom-controls" class:transport={hasTransportRow}>
+            {#if seekBar}
+              <div class="seek" data-pw={typeof testId === 'string' ? `${testId}-seek` : null}>
+                <Slider
+                  value={currentTime}
+                  min={0}
+                  max={duration > 0 ? duration : 1}
+                  step={0.1}
+                  disabled={duration <= 0}
+                  oninput={handleSeek}
+                  onchange={handleSeek}
+                  ariaLabel="Seek"
+                />
+              </div>
+            {/if}
+            {#if timeDisplay}
+              <span class="time" data-pw={typeof testId === 'string' ? `${testId}-time` : null}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            {/if}
+            <div class="control bottom-control">
+              <Button onclick={toggleMute} ariaLabel={muted ? 'Unmute' : 'Mute'}>
+                {#if muted}
+                  {#if typeof muteIcon === 'function'}
+                    {@render muteIcon()}
+                  {:else}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html muteSvg}
+                  {/if}
+                {:else if typeof unmuteIcon === 'function'}
+                  {@render unmuteIcon()}
+                {:else}
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html volumeSvg}
+                {/if}
+              </Button>
+            </div>
+            {#if captionsButton && hasCaptions}
+              <div
+                class="control bottom-control"
+                data-pw={typeof testId === 'string' ? `${testId}-captions` : null}
+              >
+                <!-- A native button rather than `Button`: the pressed state is the whole
+                   point of this control and `Button` has no `aria-pressed`. The name stays
+                   "Captions" and `aria-pressed` carries on/off, so a screen reader hears
+                   "Captions, toggle button, pressed" rather than a name that flips under it. -->
+                <button
+                  type="button"
+                  class="captions-toggle"
+                  aria-label="Captions"
+                  aria-pressed={captionsVisible}
+                  onclick={toggleCaptions}
+                >
+                  {#if captionsVisible}
+                    {#if typeof captionsOnIcon === 'function'}
+                      {@render captionsOnIcon()}
+                    {:else}
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      {@html captionsOnSvg}
+                    {/if}
+                  {:else if typeof captionsIcon === 'function'}
+                    {@render captionsIcon()}
+                  {:else}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html captionsSvg}
+                  {/if}
+                </button>
+              </div>
+            {/if}
+            {#if fullscreenButton}
+              <div
+                class="control bottom-control"
+                data-pw={typeof testId === 'string' ? `${testId}-fullscreen` : null}
+              >
+                <Button
+                  onclick={toggleFullscreen}
+                  ariaLabel={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                >
+                  {#if isFullscreen}
+                    {#if typeof exitFullscreenIcon === 'function'}
+                      {@render exitFullscreenIcon()}
+                    {:else}
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      {@html exitFullscreenSvg}
+                    {/if}
+                  {:else if typeof fullscreenIcon === 'function'}
+                    {@render fullscreenIcon()}
+                  {:else}
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html fullscreenSvg}
+                  {/if}
+                </Button>
+              </div>
+            {/if}
+          </div>
         </div>
-      </div>
+      {/if}
     {/if}
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
   .media-player {

@@ -3,6 +3,7 @@
     tag: 'sui-empty-state',
     shadow: 'open',
     props: {
+      unstyled: { type: 'Boolean' },
       emptyStateTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },

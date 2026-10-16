@@ -77,9 +77,11 @@ export type PillTone = 'accent' | 'ok' | 'warn' | 'danger' | 'muted';
  * uses native activation. Interactive dismissible pills use a neutral container
  * with independent native primary and dismiss buttons.
  */
-export type PillRootTag = 'div' | 'button';
+export type PillRootTag = 'div' | 'button' | 'span';
 
 export type OptionalPillProperties = {
+  /** Retain host-authored tag/control appearance without default pill styling. */
+  unstyled?: boolean;
   dismissible?: boolean;
   disabled?: boolean;
   /**

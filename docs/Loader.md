@@ -16,6 +16,8 @@ A rotating circular spinner with a gradient foreground that transitions from `--
 
 | Prop    | Type     | Required | Default | Description                                                                                                                                                            |
 | ------- | -------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| variant | `'default' \| 'border' \| 'orbit'` | No | `default` | Opt-in ring/orbit paint; the existing gradient stays the default. |
+| ariaLabel | `string` | No | unset | Optional standalone status name; omit when a parent status owns the loading message. |
 | classes | `string` | No       | `-`     | CSS class string applied to the component's top-level element. Useful for theming — define classes with CSS variable overrides and pass them to create variant styles. |
 | testId  | `string` | No       | `-`     | `data-pw`/`testID` on the root element.                                                                                                                                |
 
@@ -55,3 +57,29 @@ Tag: `<sui-loader>`
 ```html
 <sui-loader></sui-loader>
 ```
+
+## Border and orbit variants
+
+`variant="border"` renders a three-quarter border ring. `variant="orbit"` renders
+two rotating dots. Both keep a visible static shape for reduced motion. Existing
+calls without `variant` retain the original gradient loader and token defaults.
+
+```svelte
+<Loader variant="border" ariaLabel="Loading orders" />
+<Loader variant="orbit" ariaLabel="Loading content" />
+```
+
+| Token | Default | Purpose |
+| --- | --- | --- |
+| `--loader-border-width` | `2px` | Border-ring thickness |
+| `--loader-active-color` | `#6c5ff9` | Active border color |
+| `--loader-track-color` | `#e0e0e0` | Remaining border color |
+| `--loader-orbit-dot-size` | `24px` | Orbit dot dimensions |
+| `--loader-orbit-dot-radius` | `50%` | Orbit dot rounding |
+| `--loader-orbit-primary` | `#6c5ff9` | Primary orbit dot |
+| `--loader-orbit-secondary` | `#f3f4f6` | Secondary orbit dot |
+
+The existing width/height, radius and spin-duration/easing tokens also apply.
+Border defaults to 20px; orbit defaults to 48px and both new variants default to
+one second. `<sui-loader>` accepts `variant` and `aria-label`; the JS label adapter
+is `loaderAriaLabel`, preserving the native host `ariaLabel` accessor.

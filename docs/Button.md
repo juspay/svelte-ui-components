@@ -369,3 +369,13 @@ name would double-deliver it to a `button.addEventListener(...)` listener.
 ## Accessibility
 
 Under `prefers-reduced-motion: reduce` the continuous fill becomes **five discrete jumps** rather than being removed outright: a bare "stop" would freeze the bar at its base `width: 100%` and read as finished for the whole duration it is actually still counting. Stepping holds each interval's PRIOR value, so the bar can under-report elapsed time but never overstate it. The step count is deliberately **not** a token — `steps()` is invalid below 1, and an invalid value drops the whole declaration and restores the continuous slide, so a tunable here would let a consumer switch the guard off by accident.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.

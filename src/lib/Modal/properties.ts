@@ -24,6 +24,8 @@ export type ModalRole = 'dialog' | 'alertdialog';
 export type ModalProperties = OptionalModalProperties & ModalEventProperties;
 
 export type OptionalModalProperties = {
+  /** Pull programmatic/background focus back into this modal while it owns the foreground. */
+  containFocus?: boolean;
   /** Scroll owner, resolved once per open span. Omit for the overlay's ownerDocument.body.
    * Supply the embedded scroll element or a getter; explicit null means no lock.
    * Changing ownership while open takes effect on the next open, and teardown

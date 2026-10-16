@@ -160,3 +160,9 @@ edge: no first-column gutter and no margin for the left clamp, no last-column gu
 header for the right one. `tests/sankey-label-plate-inset.spec.ts` asserts every header plate stays
 inside the svg, so the clamp cases stay out of the public `/components/sankey-chart` demo and its
 full-page visual baseline.
+
+`native-review/` exercises native file form submission, same-file reselection, a
+simulated picker-cancel notification, quoted mask URLs and real media source/track
+selection. `tests/native-review-contracts.spec.ts` also covers all WC input icon-slot
+branches and media metadata ownership across rendering changes. These fixtures
+stay outside the public Pages application and its visual baselines.

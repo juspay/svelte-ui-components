@@ -201,3 +201,19 @@ Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the
 The `activation` attribute also exists on the element, but slotted content cannot receive `openFilePicker` (see the note below), so `activation="trigger"` is only useful there with the fallback: leave the slot empty and the fallback becomes a real "Choose file" `<button>` that opens the picker. For your own control, use the Svelte component.
 
 > **Svelte-only:** `trigger` (receives `FileInputSnippetProps`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+## Native picker integration
+
+`native` renders only the real file input. `classes`, `testId`, `nativeAttrs`, and
+bindable `element` apply to that input. The existing `accept`, size validation,
+`onfiles`, `onerror`, and same-file reselection behavior remain shared with the
+drop-zone rendering. `trigger` is optional for this path.
+
+### Native selection and form behavior
+
+In `native` mode, the selected files remain on the input after `change`, so
+`required`, the visible filename and `FormData` work normally. Picker activation
+permits choosing the same file again; cancellation restores the previous selection.
+The styled drop-zone mode keeps its existing reset-after-callback behavior.
+The mounted field owns its reference, so replacing props does not disable
+`openFilePicker()`.

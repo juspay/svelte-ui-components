@@ -3,6 +3,7 @@
 
   let {
     title,
+    unstyled = false,
     description,
     icon,
     children,
@@ -26,49 +27,73 @@
 </script>
 
 <div
-  class="empty-state {classes ?? ''}"
+  class={`${unstyled ? '' : 'empty-state'} ${classes ?? ''}`}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
   data-density={typeof density === 'string' ? density : null}
 >
-  {#if typeof icon === 'function'}
-    <div class="empty-state-icon">
-      {@render icon()}
-    </div>
-  {/if}
-  <svelte:element
-    this={headingTag}
-    class="empty-state-title"
-    data-pw={typeof testId === 'string' ? `${testId}-title` : null}
-    testID={typeof testId === 'string' ? `${testId}-title` : null}
-  >
+  {#if unstyled}
+    {@render icon?.()}
     {#if typeof titleSnippet === 'function'}
       {@render titleSnippet()}
     {:else}
-      {title}
+      <svelte:element
+        this={headingTag}
+        data-pw={typeof testId === 'string' ? `${testId}-title` : null}
+        testID={typeof testId === 'string' ? `${testId}-title` : null}>{title}</svelte:element
+      >
     {/if}
-  </svelte:element>
-  {#if typeof descriptionSnippet === 'function'}
-    <div
-      class="empty-state-description"
-      data-pw={typeof testId === 'string' ? `${testId}-description` : null}
-      testID={typeof testId === 'string' ? `${testId}-description` : null}
-    >
+    {#if typeof descriptionSnippet === 'function'}
       {@render descriptionSnippet()}
-    </div>
-  {:else if typeof description === 'string' && description.length > 0}
-    <div
-      class="empty-state-description"
-      data-pw={typeof testId === 'string' ? `${testId}-description` : null}
-      testID={typeof testId === 'string' ? `${testId}-description` : null}
+    {:else if typeof description === 'string' && description.length > 0}
+      <div
+        data-pw={typeof testId === 'string' ? `${testId}-description` : null}
+        testID={typeof testId === 'string' ? `${testId}-description` : null}
+      >
+        {description}
+      </div>
+    {/if}
+    {@render children?.()}
+  {:else}
+    {#if typeof icon === 'function'}
+      <div class="empty-state-icon">
+        {@render icon()}
+      </div>
+    {/if}
+    <svelte:element
+      this={headingTag}
+      class="empty-state-title"
+      data-pw={typeof testId === 'string' ? `${testId}-title` : null}
+      testID={typeof testId === 'string' ? `${testId}-title` : null}
     >
-      {description}
-    </div>
-  {/if}
-  {#if typeof children === 'function'}
-    <div class="empty-state-actions">
-      {@render children()}
-    </div>
+      {#if typeof titleSnippet === 'function'}
+        {@render titleSnippet()}
+      {:else}
+        {title}
+      {/if}
+    </svelte:element>
+    {#if typeof descriptionSnippet === 'function'}
+      <div
+        class="empty-state-description"
+        data-pw={typeof testId === 'string' ? `${testId}-description` : null}
+        testID={typeof testId === 'string' ? `${testId}-description` : null}
+      >
+        {@render descriptionSnippet()}
+      </div>
+    {:else if typeof description === 'string' && description.length > 0}
+      <div
+        class="empty-state-description"
+        data-pw={typeof testId === 'string' ? `${testId}-description` : null}
+        testID={typeof testId === 'string' ? `${testId}-description` : null}
+      >
+        {description}
+      </div>
+    {/if}
+    {#if typeof children === 'function'}
+      <div class="empty-state-actions">
+        {@render children()}
+      </div>
+    {/if}
   {/if}
 </div>
 

@@ -1,3 +1,7 @@
+export { default as Link } from './Link/Link.svelte';
+export type { LinkProperties } from './Link/properties';
+export { default as Dialog } from './Dialog/Dialog.svelte';
+export type { DialogProperties } from './Dialog/properties';
 export { default as ArmedButton } from './ArmedButton/ArmedButton.svelte';
 export { default as Modal } from './Modal/Modal.svelte';
 export { default as DockPanel } from './DockPanel/DockPanel.svelte';

@@ -1,17 +1,20 @@
 <script lang="ts">
   import type { LoaderProperties } from './properties';
 
-  let { classes, testId }: LoaderProperties = $props();
+  let { classes, testId, variant = 'default', ariaLabel }: LoaderProperties = $props();
+  const mode = $derived(variant === 'border' || variant === 'orbit' ? variant : 'default');
 </script>
 
 <div
-  class="loader {classes ?? ''}"
+  class="loader loader-{mode} {classes ?? ''}"
+  role={ariaLabel ? 'status' : null}
+  aria-label={ariaLabel ?? null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 ></div>
 
 <style>
-  .loader {
+  .loader:where(.loader-default) {
     font-size: var(--loader-font-size, 10px);
     text-indent: var(--loader-text-indent, -9999em);
     width: var(--loader-width, 20px);
@@ -55,7 +58,7 @@
     -ms-transform: translateZ(0);
     transform: translateZ(0);
   }
-  .loader:before {
+  .loader:where(.loader-default):before {
     width: var(--loader-before-width, 10px);
     height: var(--loader-before-height, 10px);
     background: var(--loader-foreground);
@@ -65,7 +68,7 @@
     left: var(--loader-before-left, 0);
     content: '';
   }
-  .loader:after {
+  .loader:where(.loader-default):after {
     background: var(--loader-background);
     width: var(--loader-after-width, 15px);
     height: var(--loader-after-height, 15px);
@@ -93,6 +96,48 @@
     }
     100% {
       -webkit-transform: rotate(360deg);
+      transform: rotate(360deg);
+    }
+  }
+  .loader-border {
+    box-sizing: border-box;
+    width: var(--loader-width, 20px);
+    height: var(--loader-height, 20px);
+    border: var(--loader-border-width, 2px) solid var(--loader-active-color, #6c5ff9);
+    border-left-color: var(--loader-track-color, #e0e0e0);
+    border-radius: var(--loader-border-radius, 50%);
+    animation: loader-spin var(--loader-spin-duration, 1s) var(--loader-spin-easing, linear)
+      infinite;
+  }
+  .loader-orbit {
+    box-sizing: border-box;
+    position: relative;
+    width: var(--loader-width, 48px);
+    height: var(--loader-height, 48px);
+    animation: loader-spin var(--loader-spin-duration, 1s) var(--loader-spin-easing, linear)
+      infinite;
+  }
+  .loader-orbit::before,
+  .loader-orbit::after {
+    content: '';
+    width: var(--loader-orbit-dot-size, 24px);
+    height: var(--loader-orbit-dot-size, 24px);
+    position: absolute;
+    border-radius: var(--loader-orbit-dot-radius, 50%);
+    background: var(--loader-orbit-primary, #6c5ff9);
+    animation: loader-spin var(--loader-spin-duration, 1s) var(--loader-spin-easing, linear)
+      infinite;
+    transform-origin: 0 100%;
+  }
+  .loader-orbit::before {
+    transform-origin: 0 50%;
+    background: var(--loader-orbit-secondary, #f3f4f6);
+  }
+  @keyframes loader-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
       transform: rotate(360deg);
     }
   }

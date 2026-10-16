@@ -256,3 +256,146 @@ test('review: WC source/track nodes belong to the native player across rendering
     await expect(media).toHaveJSProperty('paused', false);
   }
 });
+
+test('render: shared loading variants preserve the legacy ring and orbit geometry', async ({
+  page
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await fixture(page);
+  await page.evaluate(async () => {
+    const animations = document
+      .getAnimations()
+      .filter((animation) => animation.effect?.getTiming().iterations === Infinity);
+    animations.forEach((animation) => animation.pause());
+    await Promise.all(animations.map((animation) => animation.ready));
+    animations.forEach((animation) => {
+      animation.currentTime = 0;
+    });
+  });
+  for (const variant of ['border', 'orbit']) {
+    const pair = await page.evaluate((variant) => {
+      const properties = [
+        'width',
+        'height',
+        'box-sizing',
+        'position',
+        'border-top-width',
+        'border-top-color',
+        'border-left-color',
+        'border-radius',
+        'background-color',
+        'animation-duration',
+        'animation-timing-function',
+        'transform',
+        'transform-origin'
+      ];
+      return ['legacy', 'shared'].map((kind) => {
+        const node = document.querySelector(`[data-pw="${kind}-${variant}"]`)!;
+        return [null, '::before', '::after'].map((pseudo) => {
+          const style = getComputedStyle(node, pseudo);
+          return Object.fromEntries(
+            properties.map((property) => [property, style.getPropertyValue(property)])
+          );
+        });
+      });
+    }, variant);
+    expect(pair[1]).toEqual(pair[0]);
+  }
+});
+
+test('render: segmented tour progress preserves legacy responsive label and bar bounds', async ({
+  page
+}) => {
+  await fixture(page);
+  for (const width of [320, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    const pair = await page.evaluate(() =>
+      ['legacy', 'shared'].map((kind) => {
+        const root = document.querySelector(`[data-pw="${kind}-progress"]`)!;
+        const box = root.getBoundingClientRect();
+        // Firefox returns float32 coordinates; translation changes the last bits.
+        // 0.001 CSS px remains smaller than a layout unit or device pixel.
+        const scalar = (value: number) => Math.round(value * 1000) / 1000;
+        const nodes = [
+          root.querySelector('.left')!,
+          ...root.querySelectorAll(kind === 'legacy' ? '.legacy-segment' : '.segment'),
+          root.querySelector('.right')!
+        ];
+        return {
+          width: scalar(box.width),
+          height: scalar(box.height),
+          children: nodes.map((node) => {
+            const r = node.getBoundingClientRect();
+            const s = getComputedStyle(node);
+            return {
+              x: scalar(r.x - box.x),
+              y: scalar(r.y - box.y),
+              width: scalar(r.width),
+              height: scalar(r.height),
+              color: s.backgroundColor,
+              font: s.font,
+              radius: s.borderRadius
+            };
+          })
+        };
+      })
+    );
+    expect(pair[1], `${width}px legacy/shared progress geometry`).toEqual(pair[0]);
+  }
+});
+
+test('render: reduced motion keeps new loading shapes visible without looping', async ({
+  page
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await fixture(page);
+  for (const hook of ['shared-border', 'shared-orbit']) {
+    const loader = page.getByTestId(hook);
+    await expect(loader).toBeVisible();
+    expect(await loader.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0);
+  }
+});
+
+test('render: WC loading and segmented progress expose names without replacing native ARIA accessors', async ({
+  page
+}) => {
+  await fixture(page);
+  await wc(page, 'sui-progress');
+  await page.evaluate(() => {
+    const loader = document.createElement('sui-loader') as HTMLElement & {
+      variant: string;
+      loaderAriaLabel: string;
+    };
+    loader.id = 'review-wc-loader';
+    loader.variant = 'orbit';
+    loader.loaderAriaLabel = 'Loading review data';
+    const progress = document.createElement('sui-progress') as HTMLElement & {
+      value: number;
+      segments: number;
+      progressAriaLabel: string;
+    };
+    progress.id = 'review-wc-progress';
+    progress.value = 40;
+    progress.segments = 3;
+    progress.progressAriaLabel = 'Review progress';
+    const label = document.createElement('span');
+    label.slot = 'trailing-label';
+    label.textContent = '03';
+    progress.append(label);
+    document.body.append(loader, progress);
+  });
+  await expect(
+    page.locator('#review-wc-loader').getByRole('status', { name: 'Loading review data' })
+  ).toBeVisible();
+  await expect(
+    page.locator('#review-wc-progress').getByRole('progressbar', { name: 'Review progress' })
+  ).toHaveAttribute('aria-valuenow', '40');
+  await expect(page.locator('#review-wc-progress').getByText('03', { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      ['sui-loader', 'sui-progress'].map((name) =>
+        Object.hasOwn(customElements.get(name)!.prototype, 'ariaLabel')
+      )
+    )
+  ).toEqual([false, false]);
+});

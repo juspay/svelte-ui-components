@@ -6,6 +6,8 @@
     value,
     max = 100,
     leadingLabel,
+    trailingLabel,
+    segments,
     showLabel = false,
     animateValue = false,
     ariaLabel,
@@ -42,6 +44,13 @@
   // Gauge's labelText convention. "Loading" matches the aria-label
   // LoadingDots already uses for its own indeterminate role="status" element.
   let labelText = $derived(isIndeterminate ? 'Loading' : `${Math.round(percentage)}%`);
+  const segmentCount = $derived(
+    typeof segments === 'number' && Number.isFinite(segments) && segments > 0
+      ? Math.min(1000, Math.floor(segments))
+      : 0
+  );
+  const segmented = $derived(!isIndeterminate && segmentCount > 0);
+  const filledSegments = $derived(Math.ceil((percentage / 100) * segmentCount));
 </script>
 
 <!-- The bar itself. Rendered bare, exactly as it always was, unless a header
@@ -62,14 +71,20 @@
     {#if typeof leadingLabel === 'function'}
       {@render leadingLabel()}
     {/if}
-    <div class="track">
-      <div
-        class="bar"
-        class:indeterminate={isIndeterminate}
-        style:width={isIndeterminate ? null : `${percentage}%`}
-      ></div>
+    <div class="track" class:segmented>
+      {#if segmented}
+        {#each Array(segmentCount) as _, index (index)}
+          <div class="segment" class:filled={index < filledSegments}></div>
+        {/each}
+      {:else}<div
+          class="bar"
+          class:indeterminate={isIndeterminate}
+          style:width={isIndeterminate ? null : `${percentage}%`}
+        ></div>{/if}
     </div>
-    {#if showLabel && !isIndeterminate}
+    {#if typeof trailingLabel === 'function'}
+      {@render trailingLabel()}
+    {:else if showLabel && !isIndeterminate}
       <div class="label">
         {#if animateValue}
           <!-- The rounded percentage is already the display value labelText
@@ -161,6 +176,27 @@
     transition: var(--progress-bar-transition, width 0.3s ease);
   }
 
+  .track.segmented {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--progress-segment-gap, 4px);
+    padding: var(--progress-segment-padding, 0);
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .segment {
+    flex: 1;
+    height: var(--progress-segment-height, var(--progress-track-height, 8px));
+    background: var(--progress-track-background, #e0e0e0);
+    border-radius: var(--progress-segment-border-radius, var(--radius, 4px));
+    transition: var(--progress-segment-transition, background-color 0.3s ease);
+  }
+  .segment.filled {
+    background: var(--progress-bar-background, #2196f3);
+  }
+
   .bar.indeterminate {
     width: 30%;
     animation: indeterminate var(--progress-indeterminate-duration, 1.5s) ease-in-out infinite;
@@ -190,6 +226,9 @@
      <style> because that is the only stylesheet that reaches inside the shadow
      root a custom-element consumer gets. */
   @media (prefers-reduced-motion: reduce) {
+    .segment {
+      transition: none;
+    }
     .bar.indeterminate {
       /* `animation: none` alone would strand a 30%-wide bar at the left of the
          track, which is indistinguishable from determinate 30% progress -- the

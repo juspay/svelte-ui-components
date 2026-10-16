@@ -487,6 +487,10 @@
   --book-nav-color: #9ca3af;
 
   /* BrandLoader */
+  --loader-active-color: #a5b4fc;
+  --loader-track-color: #374151;
+  --loader-orbit-primary: #a5b4fc;
+  --loader-orbit-secondary: #374151;
   --loader-dot-color: #9ca3af;
   --loader-sub-text-color: #b8bcc4;
   --loader-text-color: #d1d5db;

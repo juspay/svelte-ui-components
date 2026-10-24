@@ -39,8 +39,9 @@ export type FocusTrapBoundary = {
 /**
  * True when `el` can actually take focus. `FOCUSABLE_SELECTOR` alone matches
  * candidates that pass its tag/attribute shape but still cannot receive
- * focus in a real browser: hidden via the `hidden` attribute, inside an
- * `inert` subtree, or explicitly marked `aria-disabled="true"`. Without this,
+ * focus in a real browser: an input with type="hidden", hidden via the
+ * `hidden` attribute, inside an `inert` subtree, or explicitly marked
+ * `aria-disabled="true"`. Without this,
  * Tab wrapping can land focus on one of these -- worse than no trap at all,
  * since focus then effectively vanishes instead of just not being managed.
  *
@@ -54,7 +55,7 @@ export type FocusTrapBoundary = {
  * jsdom, which the test suite runs under, never computes layout, so a
  * layout-based check would either be a permanent no-op there or -- worse --
  * report every element as non-focusable and empty out every boundary under
- * test. The three checks below are all attribute/tree-shape reads, which
+ * test. The checks below are all attribute/tree-shape reads, which
  * jsdom does support, so behavior under test matches behavior in a browser.
  */
 function canReceiveFocus(el: HTMLElement): boolean {
@@ -64,6 +65,12 @@ function canReceiveFocus(el: HTMLElement): boolean {
     typeof el.closest !== 'function'
   ) {
     return true;
+  }
+  if (
+    el.tagName?.toLowerCase() === 'input' &&
+    el.getAttribute('type')?.toLowerCase() === 'hidden'
+  ) {
+    return false;
   }
   if (el.hasAttribute('hidden')) {
     return false;

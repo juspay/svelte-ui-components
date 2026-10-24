@@ -185,6 +185,10 @@ const SETTLE_MS = 1_500;
  */
 const SETTLE_OVERRIDES: Readonly<Record<string, number>> = {
   chat: 30_000,
+  // One reveal chain now follows the declared 15ms cadence. The initially
+  // nonempty answer needs more than the default 1500ms to finish; the old
+  // duplicate chains only made that shorter budget appear sufficient.
+  'typewriter-text': 3_000,
   // Its demo calls the sequence "showcase choreography": tool entries land one
   // per 700ms with a chip that resolves afterwards. Same shape as chat's.
   'tool-call-log': 30_000
@@ -629,6 +633,15 @@ async function prepare(page: Page, slug: string): Promise<void> {
   // under load (see its own doc comment), which is exactly the mid-cascade
   // state the paragraph above needs this call to avoid measuring.
   await settleClock(page, slug);
+
+  if (slug === 'typewriter-text') {
+    const examples = page.locator('.demo-row .typewriter-text');
+    const historicText = await examples.nth(1).textContent();
+    if (historicText === null || historicText.length === 0) {
+      throw new Error('The historic Typewriter example must be complete before visual capture.');
+    }
+    await expect(examples.first()).toHaveText(historicText);
+  }
 
   await warmUpRasterizer(page);
 

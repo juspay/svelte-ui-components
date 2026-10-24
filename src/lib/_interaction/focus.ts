@@ -108,7 +108,8 @@ export function getFocusTrapBoundary(container: ParentNode | null): FocusTrapBou
  * element focus should move to, or null when the default browser behavior
  * (move to the next/previous focusable element) should be left alone.
  *
- * Wrapping only happens exactly at an edge: focus sits on the last focusable
+ * An empty panel keeps focus on itself when it is already the active element.
+ * Otherwise wrapping only happens exactly at an edge: focus sits on the last focusable
  * element and Tab (not Shift+Tab) was pressed, or focus sits on the first and
  * Shift+Tab was pressed. Anywhere else in the middle of the tab order, the
  * browser's own handling is correct and this returns null.
@@ -120,7 +121,14 @@ export function focusTrapTabTarget(params: {
 }): HTMLElement | null {
   const { first, last } = getFocusTrapBoundary(params.container);
   if (first === null || last === null) {
-    return null;
+    // focusEntryPoint focuses the panel itself when it has no controls. Keep
+    // that panel, but never take focus from another (possibly nested) layer.
+    const active = params.activeElement;
+    return active === params.container &&
+      typeof HTMLElement === 'function' &&
+      active instanceof HTMLElement
+      ? active
+      : null;
   }
   const edge = params.shiftKey ? first : last;
   if (params.activeElement !== edge) {

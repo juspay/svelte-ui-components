@@ -328,3 +328,66 @@ describe('Modal dialog description', () => {
     await tick();
   });
 });
+
+// A real panel can have content but no Tab stops (e.g. an attachment warning).
+// Dispatch does not emulate the browser's native Tab traversal, so these check
+// that the actual Modal wiring cancels it; browser proof still drives real keys.
+describe('Modal control-free focus containment', () => {
+  const content = createRawSnippet(() => ({ render: () => '<p>Attachment warning</p>' }));
+
+  for (const semantic of [false, true]) {
+    it(`contains both Tab directions with ${semantic ? 'dialog' : 'omitted role'} props`, async () => {
+      const view = render(Modal, {
+        content,
+        enableTransition: false,
+        onoverlayclick: () => {},
+        ...(semantic ? { role: 'dialog' as const, ariaLabel: 'Attachment validation' } : {})
+      });
+      await tick();
+      const panel = view.container.querySelector<HTMLElement>('.modal-content');
+      if (panel === null) {
+        throw new Error('warning panel did not render');
+      }
+      expect(document.activeElement).toBe(panel);
+      expect(view.container.querySelector('.modal-overlay-action')?.getAttribute('tabindex')).toBe(
+        semantic ? '-1' : '0'
+      );
+      for (const shiftKey of [false, true]) {
+        const event = new KeyboardEvent('keydown', {
+          key: 'Tab',
+          shiftKey,
+          bubbles: true,
+          cancelable: true
+        });
+        panel.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(panel);
+      }
+    });
+  }
+
+  it('does not let an empty parent reclaim focus from an empty child modal', async () => {
+    const outer = render(Modal, { content, enableTransition: false });
+    await tick();
+    const inner = render(Modal, { content, enableTransition: false });
+    await tick();
+    const child = inner.container.querySelector<HTMLElement>('.modal-content');
+    if (child === null) {
+      throw new Error('child panel did not render');
+    }
+    for (const shiftKey of [false, true]) {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey,
+        bubbles: true,
+        cancelable: true
+      });
+      child.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(child);
+    }
+    inner.unmount();
+    await tick();
+    expect(document.activeElement).toBe(outer.container.querySelector('.modal-content'));
+  });
+});

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Modal from '$lib/Modal/Modal.svelte';
-  import type { ModalAlign, ModalSize } from '$lib/Modal/properties';
+  import type { ModalAlign, ModalSize, ModalProperties } from '$lib/Modal/properties';
 
   const sizes: readonly ModalSize[] = ['small', 'medium', 'large', 'fit-content'];
   const aligns: readonly ModalAlign[] = ['top', 'center', 'bottom'];
@@ -28,10 +28,25 @@
   const align = pick('align', aligns, 'center');
   const enableTransition = pick('transition', ['on', 'off'] as const, 'on') === 'on';
   const body = pick('body', ['normal', 'wide', 'narrow'] as const, 'normal');
+  const emptyFocus = params.get('focus') === 'empty';
+  const emptySemantics: ModalProperties =
+    emptyFocus && params.get('semantics') === 'dialog'
+      ? { role: 'dialog', ariaLabel: 'Control-free warning' }
+      : {};
+
   // Custom properties on an ancestor of the overlay, which is where an app sets
   // them for every modal at once.
   const tokens = params.get('tokens') ?? '';
   const primaryLabel = params.get('primary') ?? 'Save';
+  const footerProps: Pick<ModalProperties, 'footer'> = emptyFocus
+    ? {}
+    : {
+        footer: {
+          primaryButton: { text: primaryLabel, testId: 'fixture-modal-primary' },
+          secondaryButton: { text: 'Cancel', testId: 'fixture-modal-secondary' }
+        }
+      };
+
   const usePortal = pick('portal', ['on', 'off'] as const, 'off') === 'on';
 
   // An app's own stylesheet is linked before the library's, so a rule of the
@@ -53,22 +68,23 @@
 
 <p data-pw="fixture-overlay-clicks">{overlayClicks}</p>
 <div style={tokens}>
+  {#if emptyFocus}<button data-pw="fixture-outside">Outside action</button>{/if}
   <Modal
+    {...emptySemantics}
+    {...footerProps}
     {size}
     {align}
     {enableTransition}
     {usePortal}
     showOverlay
-    testId="fixture-modal"
+    testId={emptyFocus ? 'fixture-empty-modal' : 'fixture-modal'}
     onoverlayclick={() => (overlayClicks += 1)}
-    header={{ text: 'Viewport fit' }}
-    footer={{
-      primaryButton: { text: primaryLabel, testId: 'fixture-modal-primary' },
-      secondaryButton: { text: 'Cancel', testId: 'fixture-modal-secondary' }
-    }}
+    header={{ text: emptyFocus ? 'Control-free warning' : 'Viewport fit' }}
   >
     {#snippet content()}
-      {#if body === 'wide'}
+      {#if emptyFocus}
+        <p>Control-free warning</p>
+      {:else if body === 'wide'}
         <div data-pw="fixture-modal-wide-child" style="flex: none; width: 700px; padding: 16px;">
           A child that cannot shrink below 700px.
         </div>

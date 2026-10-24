@@ -67,6 +67,198 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('TypewriterText reveal timer ownership', () => {
+  it('starts one reveal chain for initially nonempty streaming text', async () => {
+    const onprogress = vi.fn<(progress: TypewriterProgress) => void>();
+    const { container } = render(TypewriterText, {
+      text: 'Read this answer',
+      isStreaming: true,
+      speed: 25,
+      onprogress
+    });
+    await tick();
+
+    expect(root(container).textContent).toBe('R');
+    expect(onprogress).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(1);
+    await advance(24);
+    expect(root(container).textContent).toBe('R');
+    await advance(1);
+    expect(root(container).textContent).toBe('Re');
+    expect(onprogress).toHaveBeenCalledTimes(2);
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
+  it('cancels every pending reveal before unmount returns', async () => {
+    const onprogress = vi.fn<(progress: TypewriterProgress) => void>();
+    const resolveDelay = vi.fn(() => 25);
+    const { unmount } = render(TypewriterText, {
+      text: 'This answer is still arriving',
+      isStreaming: true,
+      onprogress,
+      resolveDelay
+    });
+    await tick();
+    await advance(25);
+    const progressCount = onprogress.mock.calls.length;
+    const delayCount = resolveDelay.mock.calls.length;
+
+    await unmount();
+    // Assert before afterEach's generic timer cleanup can hide leaked work.
+    expect(vi.getTimerCount()).toBe(0);
+    await advance(1000);
+    expect(onprogress).toHaveBeenCalledTimes(progressCount);
+    expect(resolveDelay).toHaveBeenCalledTimes(delayCount);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('does not schedule a successor when onprogress synchronously unmounts it', async () => {
+    let unmountOnProgress: (() => void) | null = null;
+    const onprogress = vi.fn(() => {
+      unmountOnProgress?.();
+    });
+    const resolveDelay = vi.fn(() => 25);
+    const view = render(TypewriterText, {
+      text: 'Remove this answer while it is revealing',
+      isStreaming: true,
+      onprogress,
+      resolveDelay
+    });
+    await tick();
+    const delayCount = resolveDelay.mock.calls.length;
+    unmountOnProgress = view.unmount;
+    await advance(25);
+    expect(view.container.querySelector('.typewriter-text')).toBeNull();
+    const progressCount = onprogress.mock.calls.length;
+    expect(resolveDelay).toHaveBeenCalledTimes(delayCount);
+    expect(vi.getTimerCount()).toBe(0);
+    await advance(1000);
+    expect(onprogress).toHaveBeenCalledTimes(progressCount);
+    expect(resolveDelay).toHaveBeenCalledTimes(delayCount);
+  });
+
+  it('continues an append without starting another chain while text is pending', async () => {
+    const onprogress = vi.fn<(progress: TypewriterProgress) => void>();
+    const { container, rerender } = render(TypewriterText, {
+      text: 'abc',
+      isStreaming: true,
+      speed: 25,
+      onprogress
+    });
+    await tick();
+    await rerender({ text: 'abcdef' });
+    expect(root(container).textContent).toBe('a');
+    expect(onprogress).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(1);
+    await advance(25);
+    expect(root(container).textContent).toBe('ab');
+    expect(onprogress).toHaveBeenLastCalledWith({
+      index: 2,
+      total: 6,
+      displayedText: 'ab'
+    });
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
+  it('resumes an append after catching up without retaining the old timeout', async () => {
+    const { container, rerender } = render(TypewriterText, {
+      text: 'abc',
+      isStreaming: true,
+      speed: 25
+    });
+    await tick();
+    await advance(50);
+    expect(root(container).textContent).toBe('abc');
+    await rerender({ text: 'abcde' });
+    expect(root(container).textContent).toBe('abcd');
+    expect(vi.getTimerCount()).toBe(1);
+    await advance(25);
+    expect(root(container).textContent).toBe('abcde');
+  });
+
+  it('cancels the old chain when nonempty text is replaced or shortened', async () => {
+    const { container, rerender } = render(TypewriterText, {
+      text: 'Original answer',
+      isStreaming: true,
+      speed: 25
+    });
+    await tick();
+    await advance(25);
+    await rerender({ text: 'New' });
+    expect(root(container).textContent).toBe('N');
+    expect(vi.getTimerCount()).toBe(1);
+    await advance(25);
+    expect(root(container).textContent).toBe('Ne');
+    await rerender({ text: 'N' });
+    expect(root(container).textContent).toBe('N');
+    expect(vi.getTimerCount()).toBe(1);
+    await advance(25);
+    expect(root(container).textContent).toBe('N');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('discloses stream completion and historic text without pending reveal work', async () => {
+    const onprogress = vi.fn<(progress: TypewriterProgress) => void>();
+    const text = 'The answer is complete';
+    const { container, rerender, unmount } = render(TypewriterText, {
+      text,
+      isStreaming: true,
+      speed: 25,
+      onprogress
+    });
+    await tick();
+    await rerender({ isStreaming: false });
+    expect(root(container).textContent).toBe(text);
+    expect(onprogress).toHaveBeenLastCalledWith({
+      index: text.length,
+      total: text.length,
+      displayedText: text
+    });
+    expect(vi.getTimerCount()).toBe(0);
+    await unmount();
+
+    const historic = render(TypewriterText, { text });
+    await tick();
+    expect(root(historic.container).textContent).toBe(text);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('discloses initially nonempty reduced-motion text without pacing callbacks', async () => {
+    mockReducedMotion(true);
+    const resolveDelay = vi.fn(() => 25);
+    const onprogress = vi.fn<(progress: TypewriterProgress) => void>();
+    const text = 'Show the whole answer';
+    const { container } = render(TypewriterText, {
+      text,
+      isStreaming: true,
+      resolveDelay,
+      onprogress
+    });
+    await tick();
+    expect(root(container).textContent).toBe(text);
+    expect(onprogress).toHaveBeenCalledTimes(1);
+    expect(resolveDelay).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('cancels pending pacing when reduced motion becomes active', async () => {
+    const resolveDelay = vi.fn(() => 25);
+    const text = 'The stream is still in progress';
+    const { container } = render(TypewriterText, {
+      text,
+      isStreaming: true,
+      resolveDelay
+    });
+    await tick();
+    expect(root(container).textContent).toBe('T');
+    mockReducedMotion(true);
+    await advance(25);
+    expect(root(container).textContent).toBe(text);
+    expect(resolveDelay).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
 describe('TypewriterText safe Markdown mode', () => {
   it('renders rich Markdown without requiring a callback or the plain whitespace class', async () => {
     const { container } = render(TypewriterText, {

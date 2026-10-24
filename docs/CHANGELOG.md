@@ -2,7 +2,15 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.55.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.55.1)
+
+Advance only the Typewriter visual clock to its complete single-chain state.
+Assert that the live answer equals the historic reference before capture,
+without changing the baseline, screenshot tolerance or product cadence.
+
+Refs: BZ-7178
+
+## [4.55.1](https://github.com/juspay/svelte-ui-components/compare/4.55.1..4.55.0) - 24 October 2026
 
 -
 ci: shard the Playwright suite across four parallel runners ([5e649c6](https://github.com/juspay/svelte-ui-components/commit/5e649c61c7da37889ef8cf2b582a4db88fbe5347))

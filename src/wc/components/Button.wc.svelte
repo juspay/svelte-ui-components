@@ -3,6 +3,10 @@
     tag: 'sui-button',
     shadow: 'open',
     props: {
+      elementClasses: { type: 'String', attribute: 'element-classes' },
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       text: { type: 'String', reflect: true },
       enable: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },
@@ -50,7 +54,13 @@
   import Button from '$lib/Button/Button.svelte';
   import { dispatchEvents } from '../dispatch';
   import { ariaBoolean } from '../aria-boolean';
-  let { buttonAriaExpanded, buttonAriaLabel, buttonAriaPressed, ...props } = $props();
+  let {
+    element = $bindable<HTMLButtonElement | HTMLAnchorElement | null>(null),
+    buttonAriaExpanded,
+    buttonAriaLabel,
+    buttonAriaPressed,
+    ...props
+  } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -87,6 +97,7 @@
      inside the body snippet so `<slot>` keeps its `$$props` scope. `children` is
      no longer a declared prop, so the default slot is its only path. -->
 <Button
+  bind:element
   {...props}
   {...dispatchers}
   ariaLabel={buttonAriaLabel}

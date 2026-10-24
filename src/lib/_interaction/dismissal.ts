@@ -53,7 +53,11 @@ function handleKeydown(event: KeyboardEvent): void {
   if (event.key !== 'Escape' || event.isComposing || event.keyCode === 229) {
     return;
   }
-  topmost()?.onEscape?.();
+  const layer = topmost();
+  if (layer?.onEscape) {
+    event.preventDefault();
+    layer.onEscape();
+  }
 }
 
 function handlePointerdown(event: Event): void {
@@ -159,3 +163,7 @@ export function closestInEventPath(event: Event, selector: string): Element | nu
   }
   return null;
 }
+
+/** Focus containment yields to a later registered popup or dialog. */
+export const isTopmostDismissible = (node: Node | null): boolean =>
+  node !== null && topmost()?.element() === node;

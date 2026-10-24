@@ -2,11 +2,17 @@
   import { prefersReducedMotion } from '../utils';
   import { getActiveElement } from '../_interaction/focus';
   import { describeField } from '../_field/description';
+  import { watchFormReset } from '../_field/form-reset';
   import { validateInput } from '$lib/utils';
   import type { InputProperties } from './properties';
   import type { ValidationState } from '$lib/types';
 
   let {
+    native = false,
+    unstyled = false,
+    nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned when the native field attaches.
+    element = $bindable(),
     value = $bindable(''),
     placeholder = '',
     dataType = 'text',
@@ -22,7 +28,7 @@
     validationPattern = null,
     inProgressPattern = null,
     addFocusColor = false,
-    maxLength = 1000,
+    maxLength,
     minLength = 0,
     min,
     max,
@@ -110,7 +116,51 @@
     return inputElement;
   }
 
-  let inputElement: HTMLInputElement | HTMLTextAreaElement | null = $state(null);
+  // The mounted field owns its reference. Replacing a caller's props object can
+  // omit the output binding; that must not erase the field used by validation.
+  let inputElement = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const assignElement = (node: HTMLInputElement | HTMLTextAreaElement | null) => {
+    inputElement = node;
+    element = node;
+  };
+  let inputRevision = 0;
+
+  // Reset changes the native value without dispatching input/change. Wait for
+  // its default action and parent reset handlers before synchronizing bindings.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    const node = inputElement;
+    if (!node) {
+      return;
+    }
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const stop = watchFormReset(node, (event) => {
+      if (pending !== null) {
+        clearTimeout(pending);
+      }
+      const revision = inputRevision;
+      const previousValue = value;
+      // Capture-listener microtasks can run before later reset handlers cancel
+      // the event. Settle after dispatch, without overwriting a newer edit.
+      pending = setTimeout(() => {
+        if (
+          !event.defaultPrevented &&
+          node.isConnected &&
+          node === inputElement &&
+          revision === inputRevision &&
+          value === previousValue
+        ) {
+          value = node.defaultValue;
+        }
+      }, 0);
+    });
+    return () => {
+      stop();
+      if (pending !== null) {
+        clearTimeout(pending);
+      }
+    };
+  });
 
   // Guarded to once per mount: without hasAutoFocused, a later element swap
   // (useTextArea toggling, or a left/right-icon layout change moving
@@ -126,6 +176,9 @@
   });
 
   let validationState = $derived.by(() => {
+    if (native) {
+      return 'Valid';
+    }
     const valueValidation: ValidationState = validateInput(
       value,
       dataType,
@@ -146,7 +199,9 @@
 
   // eslint-disable-next-line no-restricted-syntax
   $effect(() => {
-    onstatechange(validationState);
+    if (!native) {
+      onstatechange(validationState);
+    }
   });
 
   const showErrorMessage = $derived(validationState === 'Invalid');
@@ -171,6 +226,10 @@
       invalid: effectiveShowError
     })
   );
+  const describedBy = $derived(
+    [nativeAttrs?.['aria-describedby'], field.describedBy].filter(Boolean).join(' ') || null
+  );
+
   const hasLeftIcon = $derived(typeof leftIcon === 'function');
   const hasRightIcon = $derived(typeof rightIcon === 'function');
 
@@ -178,6 +237,14 @@
   // Every numeric use below is either tel-only normalisation or the character
   // counter; `null` means "no attribute", not "no ceiling on those paths".
   const effectiveMaxLength = $derived(maxLength ?? 1000);
+  const fieldMaxLength = $derived(
+    nativeAttrs?.maxlength ??
+      (native
+        ? (maxLength ?? null)
+        : dataType === 'tel' || maxLength === null
+          ? null
+          : effectiveMaxLength)
+  );
   const effectiveResize = $derived(autoResize ? 'none' : resize);
 
   // Grow the textarea to fit its content between minRows and maxRows.
@@ -221,6 +288,13 @@
     if (inputElement === null) {
       return;
     }
+    inputRevision++;
+
+    if (native) {
+      value = inputElement.value;
+      oninput?.(value, event);
+      return;
+    }
 
     let currentValue = inputElement.value;
     if (dataType === 'tel' && currentValue.length > 0) {
@@ -259,6 +333,11 @@
    */
   function handleOnPaste(event: ClipboardEvent) {
     if (inputElement === null) {
+      return;
+    }
+
+    if (native) {
+      onpaste?.(event);
       return;
     }
 
@@ -327,176 +406,187 @@
   }
 </script>
 
-<div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
-  <!-- One chain, so the label-only default is the same single block it always was. -->
-  {#if hasVisibleLabel && typeof labelSuffix === 'function'}
-    <div class="label-row">
+{#snippet fieldElement()}
+  {#if useTextArea}
+    <textarea
+      class:input-unstyled={unstyled}
+      class={unstyled ? (classes ?? '') : null}
+      {...nativeAttrs}
+      id={effectiveId}
+      {value}
+      {placeholder}
+      aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
+      autocomplete={autoComplete}
+      inputmode={inputMode}
+      {name}
+      {role}
+      aria-expanded={ariaExpanded}
+      aria-autocomplete={ariaAutocomplete}
+      aria-controls={ariaControls}
+      aria-activedescendant={ariaActivedescendant}
+      aria-required={isRequired || null}
+      aria-invalid={nativeAttrs?.['aria-invalid'] ?? field.ariaInvalid}
+      aria-describedby={describedBy}
+      required={isRequired || null}
+      {onfocus}
+      onfocusout={_onFocusOut}
+      oninput={handleOnInput}
+      onpaste={handleOnPaste}
+      {onclick}
+      {onkeydown}
+      data-pw={testId}
+      testID={testId}
+      class:action-input={actionInput}
+      style="--focus-border: {addFocusColor ? 1 : 0}px;"
+      style:resize={effectiveResize}
+      rows={rows ?? null}
+      disabled={disable}
+      readonly={readonly || null}
+      {spellcheck}
+      bind:this={() => inputElement, assignElement}
+      maxlength={fieldMaxLength}
+      minlength={minLength}
+    ></textarea>
+  {:else}
+    <input
+      class:input-unstyled={unstyled}
+      class={unstyled ? (classes ?? '') : null}
+      {...nativeAttrs}
+      id={effectiveId}
+      type={dataType}
+      {value}
+      {placeholder}
+      aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
+      autocomplete={autoComplete}
+      inputmode={inputMode}
+      {name}
+      {role}
+      aria-expanded={ariaExpanded}
+      aria-autocomplete={ariaAutocomplete}
+      aria-controls={ariaControls}
+      aria-activedescendant={ariaActivedescendant}
+      aria-required={isRequired || null}
+      aria-invalid={nativeAttrs?.['aria-invalid'] ?? field.ariaInvalid}
+      aria-describedby={describedBy}
+      required={isRequired || null}
+      {onfocus}
+      onfocusout={_onFocusOut}
+      oninput={handleOnInput}
+      onpaste={handleOnPaste}
+      {onclick}
+      {onkeydown}
+      data-pw={testId}
+      testID={testId}
+      class:action-input={actionInput}
+      disabled={disable}
+      readonly={readonly || null}
+      {spellcheck}
+      bind:this={() => inputElement, assignElement}
+      maxlength={fieldMaxLength}
+      minlength={minLength}
+      {min}
+      {max}
+    />
+  {/if}
+{/snippet}
+
+{#if unstyled}
+  {@render fieldElement()}
+{:else}
+  <div class="input-container {classes ?? ''}" class:input-error={showError && !actionInput}>
+    <!-- One chain, so the label-only default is the same single block it always was. -->
+    {#if hasVisibleLabel && typeof labelSuffix === 'function'}
+      <div class="label-row">
+        <label class="label" for={effectiveId}>
+          {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span
+            >{/if}
+        </label>
+        <span>{@render labelSuffix()}</span>
+      </div>
+    {:else if hasVisibleLabel}
       <label class="label" for={effectiveId}>
         {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span
           >{/if}
       </label>
-      <span>{@render labelSuffix()}</span>
-    </div>
-  {:else if hasVisibleLabel}
-    <label class="label" for={effectiveId}>
-      {label}{#if isRequired}<span class="input-mandatory-asterisk" aria-hidden="true">*</span>{/if}
-    </label>
-  {/if}
-
-  {#snippet fieldElement()}
-    {#if useTextArea}
-      <textarea
-        id={effectiveId}
-        {value}
-        {placeholder}
-        aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
-        autocomplete={autoComplete}
-        inputmode={inputMode}
-        {name}
-        {role}
-        aria-expanded={ariaExpanded}
-        aria-autocomplete={ariaAutocomplete}
-        aria-controls={ariaControls}
-        aria-activedescendant={ariaActivedescendant}
-        aria-required={isRequired || null}
-        aria-invalid={field.ariaInvalid}
-        aria-describedby={field.describedBy}
-        required={isRequired || null}
-        {onfocus}
-        onfocusout={_onFocusOut}
-        oninput={handleOnInput}
-        onpaste={handleOnPaste}
-        {onclick}
-        {onkeydown}
-        data-pw={testId}
-        testID={testId}
-        class:action-input={actionInput}
-        style="--focus-border: {addFocusColor ? 1 : 0}px;"
-        style:resize={effectiveResize}
-        rows={rows ?? null}
-        disabled={disable}
-        readonly={readonly || null}
-        {spellcheck}
-        bind:this={inputElement}
-        maxlength={dataType === 'tel' ? null : maxLength}
-        minlength={minLength}
-      ></textarea>
-    {:else}
-      <input
-        id={effectiveId}
-        type={dataType}
-        {value}
-        {placeholder}
-        aria-label={hasVisibleLabel ? null : (ariaLabel ?? null)}
-        autocomplete={autoComplete}
-        inputmode={inputMode}
-        {name}
-        {role}
-        aria-expanded={ariaExpanded}
-        aria-autocomplete={ariaAutocomplete}
-        aria-controls={ariaControls}
-        aria-activedescendant={ariaActivedescendant}
-        aria-required={isRequired || null}
-        aria-invalid={field.ariaInvalid}
-        aria-describedby={field.describedBy}
-        required={isRequired || null}
-        {onfocus}
-        onfocusout={_onFocusOut}
-        oninput={handleOnInput}
-        onpaste={handleOnPaste}
-        {onclick}
-        {onkeydown}
-        data-pw={testId}
-        testID={testId}
-        class:action-input={actionInput}
-        disabled={disable}
-        readonly={readonly || null}
-        {spellcheck}
-        bind:this={inputElement}
-        maxlength={dataType === 'tel' ? null : maxLength}
-        minlength={minLength}
-        {min}
-        {max}
-      />
     {/if}
-  {/snippet}
 
-  {#if hasLeftIcon || hasRightIcon}
-    <div
-      class="input-field-wrap"
-      class:has-left-icon={hasLeftIcon}
-      class:has-right-icon={hasRightIcon}
-    >
-      {#if hasLeftIcon}
-        {#if onlefticonclick}
-          <button
-            type="button"
-            class="input-icon input-icon-left input-icon-button"
-            aria-label={leftIconLabel}
-            onclick={onlefticonclick}
-          >
-            {@render leftIcon?.()}
-          </button>
-        {:else}
-          <span class="input-icon input-icon-left">{@render leftIcon?.()}</span>
+    {#if hasLeftIcon || hasRightIcon}
+      <div
+        class="input-field-wrap"
+        class:has-left-icon={hasLeftIcon}
+        class:has-right-icon={hasRightIcon}
+      >
+        {#if hasLeftIcon}
+          {#if onlefticonclick}
+            <button
+              type="button"
+              class="input-icon input-icon-left input-icon-button"
+              aria-label={leftIconLabel}
+              onclick={onlefticonclick}
+            >
+              {@render leftIcon?.()}
+            </button>
+          {:else}
+            <span class="input-icon input-icon-left">{@render leftIcon?.()}</span>
+          {/if}
         {/if}
-      {/if}
+        {@render fieldElement()}
+        {#if hasRightIcon}
+          {#if onrighticonclick}
+            <button
+              type="button"
+              class="input-icon input-icon-right input-icon-button"
+              aria-label={rightIconLabel}
+              onclick={onrighticonclick}
+            >
+              {@render rightIcon?.()}
+            </button>
+          {:else}
+            <span class="input-icon input-icon-right">{@render rightIcon?.()}</span>
+          {/if}
+        {/if}
+      </div>
+    {:else}
       {@render fieldElement()}
-      {#if hasRightIcon}
-        {#if onrighticonclick}
-          <button
-            type="button"
-            class="input-icon input-icon-right input-icon-button"
-            aria-label={rightIconLabel}
-            onclick={onrighticonclick}
-          >
-            {@render rightIcon?.()}
-          </button>
-        {:else}
-          <span class="input-icon input-icon-right">{@render rightIcon?.()}</span>
-        {/if}
-      {/if}
-    </div>
-  {:else}
-    {@render fieldElement()}
-  {/if}
+    {/if}
 
-  {#if field.showsError}
-    <div
-      id={field.errorId}
-      role="alert"
-      class="error-message"
-      data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
-      testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
-    >
-      {onErrorMessage}
-    </div>
-  {/if}
-  {#if field.showsInfo}
-    <div
-      id={field.infoId}
-      class="info-message"
-      data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
-      testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
-    >
-      {infoMessage}
-    </div>
-  {/if}
-  {#if useTextArea && showCount && !actionInput}
-    <div class="input-char-count" class:at-limit={charCount >= effectiveMaxLength}>
-      {charCount}/{effectiveMaxLength}
-    </div>
-  {/if}
-</div>
+    {#if field.showsError}
+      <div
+        id={field.errorId}
+        role="alert"
+        class="error-message"
+        data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
+        testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
+      >
+        {onErrorMessage}
+      </div>
+    {/if}
+    {#if field.showsInfo}
+      <div
+        id={field.infoId}
+        class="info-message"
+        data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
+        testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
+      >
+        {infoMessage}
+      </div>
+    {/if}
+    {#if useTextArea && showCount && !actionInput}
+      <div class="input-char-count" class:at-limit={charCount >= effectiveMaxLength}>
+        {charCount}/{effectiveMaxLength}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <style>
-  textarea,
-  input {
+  textarea:where(:not(.input-unstyled)),
+  input:where(:not(.input-unstyled)) {
     box-sizing: var(--input-box-sizing, border-box);
     height: var(--input-height, fit-content);
 
     /* Both default to the CSS initial value, so a consumer that sets neither is
-       byte-identical to before. A textarea that grows with its content needs a
+       byte-identical to before. A textarea:where(:not(.input-unstyled)) that grows with its content needs a
        ceiling before it can scroll, and one used as a paste target needs a floor;
        neither was reachable through the --input-* surface. */
     min-height: var(--input-min-height, auto);
@@ -509,7 +599,7 @@
     padding: var(--input-padding, 16px);
     font-weight: var(--input-font-weight, 500);
 
-    /* `normal` is what a textarea/input computes today regardless of any inherited
+    /* `normal` is what a textarea:where(:not(.input-unstyled))/input:where(:not(.input-unstyled)) computes today regardless of any inherited
        value — the UA sheet sets it, and inheritance loses to a UA declaration on the
        element itself. So the default here is byte-identical for existing consumers,
        and this is the only way a consumer can set it at all. */
@@ -531,13 +621,13 @@
      width/style but not colour, so a mouse-focused OR keyboard-focused field
      looked identical to unfocused. Text inputs use a real :focus (not
      :focus-visible): unlike a button-shaped control, a text field's focus
-     ring has to stay visible regardless of input modality, since a mouse
+     ring has to stay visible regardless of input:where(:not(.input-unstyled)) modality, since a mouse
      click into a field is itself the start of a keyboard interaction.
      --input-focus-border-color already exists for exactly this colour (see
      .input-icon-button:focus-visible below), so this reuses it instead of
      minting a second token for the same ring. */
-  textarea:focus,
-  input:focus {
+  textarea:where(:not(.input-unstyled)):focus,
+  input:where(:not(.input-unstyled)):focus {
     border: var(--input-focus-border, 1px solid var(--input-focus-border-color, #005fcc));
   }
 
@@ -608,8 +698,8 @@
     margin: var(--input-margin, 0);
   }
 
-  .input-field-wrap > :global(textarea),
-  .input-field-wrap > :global(input) {
+  .input-field-wrap > :global(textarea:where(:not(.input-unstyled))),
+  .input-field-wrap > :global(input:where(:not(.input-unstyled))) {
     margin: 0 !important;
     width: var(--input-width, 100%);
   }
@@ -650,13 +740,13 @@
     right: var(--input-icon-gap, 12px);
   }
 
-  .input-field-wrap.has-left-icon > :global(textarea),
-  .input-field-wrap.has-left-icon > :global(input) {
+  .input-field-wrap.has-left-icon > :global(textarea:where(:not(.input-unstyled))),
+  .input-field-wrap.has-left-icon > :global(input:where(:not(.input-unstyled))) {
     padding-left: calc(var(--input-icon-size, 20px) + var(--input-icon-gap, 12px) * 2);
   }
 
-  .input-field-wrap.has-right-icon > :global(textarea),
-  .input-field-wrap.has-right-icon > :global(input) {
+  .input-field-wrap.has-right-icon > :global(textarea:where(:not(.input-unstyled))),
+  .input-field-wrap.has-right-icon > :global(input:where(:not(.input-unstyled))) {
     padding-right: calc(var(--input-icon-size, 20px) + var(--input-icon-gap, 12px) * 2);
   }
 
@@ -694,7 +784,7 @@
     color: var(--input-char-count-limit-color, var(--input-error-msg-text-color, #c5120a));
   }
 
-  ::placeholder {
+  :where(:not(.input-unstyled))::placeholder {
     color: var(--input-placeholder-color, #5c6b7a);
   }
 </style>

@@ -5,6 +5,21 @@ const trigger = { left: 100, right: 300, top: 200, bottom: 240, width: 200 };
 const viewport = { width: 1000, height: 800 };
 
 describe('computeSelectDropdownPosition', () => {
+  it('keeps a custom-width left panel inside the viewport without forcing the trigger width', () => {
+    const placement = computeSelectDropdownPosition({
+      trigger: { left: 280, right: 376, top: 200, bottom: 248, width: 96 },
+      dropdown: { width: 320, height: 200 },
+      viewport: { width: 390, height: 900 },
+      align: 'left',
+      matchTriggerWidth: false,
+      gap: 4
+    });
+    expect(placement.width).toBeNull();
+    expect(placement.minWidth).toBe(96);
+    expect(placement.left).toBe(62);
+    expect(placement.left + 320).toBe(382);
+  });
+
   it('anchors a left-aligned panel to the trigger left edge and matches its width', () => {
     const placement = computeSelectDropdownPosition({
       trigger,

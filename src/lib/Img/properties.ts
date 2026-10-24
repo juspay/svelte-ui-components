@@ -1,3 +1,5 @@
+import type { HTMLImgAttributes } from 'svelte/elements';
+
 export type ImgProperties = MandatoryImgProperties & OptionalImgProperties & ImgEventProperties;
 
 export type MandatoryImgProperties = {
@@ -6,6 +8,14 @@ export type MandatoryImgProperties = {
 };
 
 export type OptionalImgProperties = {
+  /** Render only the native element, without component appearance or layout wrappers. */
+  unstyled?: boolean;
+  /** Native image attributes, present during SSR and before the first request.
+   * Component-owned source, alternative text, classes, callbacks and test hooks
+   * must use their dedicated props instead. */
+  nativeAttrs?: Omit<HTMLImgAttributes, 'src' | 'alt' | 'class' | 'onerror' | 'onload'>;
+  /** Bindable native image/SVG reference for measurement and animation. */
+  element?: HTMLImageElement | SVGSVGElement | null;
   fallback?: string | null;
   classes?: string;
   /**
@@ -28,5 +38,9 @@ export type OptionalImgProperties = {
 };
 
 export type ImgEventProperties = {
+  onload?: (event: Event) => void;
+  /** Released 4.x callback remains callable without an argument. */
   onerror?: () => void;
+  /** Opt-in native error event, after the same fallback chain as onerror. */
+  onimageerror?: (event: Event) => void;
 };

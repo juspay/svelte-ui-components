@@ -55,6 +55,21 @@ wrapper class. Omit it for today's default sizing.
 <EmptyState density="panel" title="Nothing here yet" />
 ```
 
+### Authored Layout
+
+Use `unstyled` when a product owns the illustration size, spacing, and typography.
+The root retains `classes` and `testId`; named snippets render directly beneath it,
+without sized, faded, or padded slot wrappers. The fallback title still respects
+`headingLevel`. Density and component appearance tokens apply only in styled mode.
+
+```svelte
+<EmptyState unstyled title="" classes="product-empty-state">
+  {#snippet icon()}<img src="/empty-orders.svg" alt="" />{/snippet}
+  {#snippet titleSnippet()}<h2>No orders yet</h2>{/snippet}
+  {#snippet descriptionSnippet()}<p>Your orders appear here.</p>{/snippet}
+</EmptyState>
+```
+
 ### Left-Aligned (or any other alignment)
 
 `align-items` was previously hardcoded to `center`. `--empty-state-align-items`
@@ -71,6 +86,7 @@ aligns the text itself, so set both for content that wraps:
 
 | Prop               | Type                         | Required | Default | Description                                                                                                                                                                                                                                                                                                                                      |
 | ------------------ | ---------------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| unstyled           | `boolean`                    | No       | `false` | Render authored layout without component styles or slot wrappers. |
 | title              | `string`                     | Yes      | `-`     | Primary heading text. When `titleSnippet` is provided this value is not rendered, but the prop is still required for backward-compatibility (pass `""` as the minimal valid value).                                                                                                                                                              |
 | description        | `string`                     | No       | `-`     | Supporting text displayed below the title. Omitted entirely when absent or empty. Silently discarded when `descriptionSnippet` is provided.                                                                                                                                                                                                      |
 | titleSnippet       | `Snippet`                    | No       | `-`     | Optional snippet that replaces the `title` string at render time. Use for rich markup (e.g. formatted text, inline icons). Takes full rendering priority over `title`.                                                                                                                                                                           |

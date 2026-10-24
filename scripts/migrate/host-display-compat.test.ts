@@ -12,7 +12,7 @@ import {
 const REAL_COMPONENTS_DIR = resolve(process.cwd(), 'src/wc/components');
 
 /**
- * The 11 components whose new :host default is inline-block, per this PR's own audit
+ * The 12 components whose new :host default is inline-block, per this PR's own audit
  * (Avatar, ChatSuggestions, Checkbox, DateRangePicker, DeltaIndicator, Img, KeyboardInput,
  * Label, LoadingDots, Radio, ThemeSwitcher). Kept here only to CHECK the tool's derived set
  * against — collectHostDisplayEntries below always reads the live .svelte files, never this
@@ -28,6 +28,7 @@ const EXPECTED_INLINE_BLOCK_TAGS = new Set([
   'sui-img',
   'sui-keyboard-input',
   'sui-label',
+  'sui-link',
   'sui-loading-dots',
   'sui-radio',
   'sui-theme-switcher'

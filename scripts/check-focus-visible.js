@@ -95,7 +95,7 @@ const isStyled = (f) => /\.(svelte|css)$/.test(f) && !/\.test\./.test(f);
  */
 const ANCESTOR_FOCUS_WITHIN_ALLOWLIST = new Map([
   [
-    'src/lib/Select/Select.svelte:1316',
+    'src/lib/Select/Select.svelte:1489',
     {
       ancestorToken: '.select-trigger',
       note: '.select-search suppresses its own outline; the ancestor .select-trigger:focus-within paints the enclosing field outline. The source reference follows the current suppression location.'

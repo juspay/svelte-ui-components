@@ -620,3 +620,46 @@ property for those two instead: `el.onchange = (value) => ...`, `el.onclose = ()
 > **Svelte-only:** The `optionIndicator` snippet is not available in Web Component mode. The `option-indicator` slot was removed because Web Component `<slot>` elements do not forward Svelte snippet parameters as HTML attributes, causing the `checked` state to be silently dropped. Use the Svelte component directly when a custom option indicator is needed.
 
 An `aria-labelledby` reference follows a WC host moved into another DOM or shadow root, and subsequent label edits in that root remain reactive.
+
+## Native rendering
+
+`native` uses a real select with the operating-system picker and browser form validation. `required`, `id`, `name`, `disabled`, `multiple`, `nativeAttrs`, and bindable `element` retain native form semantics. `value` and `onchange` still use an array of item IDs. `classes` applies to the select.
+
+The web component uses `fieldId` (`field-id`) for the native picker ID so the host element retains its own native `id`.
+
+### Compact single-selection labels
+
+An object item can provide `displayLabel` for a short, non-editable single-select
+trigger while retaining its full `label` in the menu, search and accessible text.
+For example, `{ id: 'IN', label: 'India (+91)', displayLabel: '+91' }` works well
+with `searchable` and `searchPosition="menu"`. The submitted value stays `IN`.
+The compact label is ignored in multiple mode and trigger-search mode, and an
+empty compact label falls back to the full label. The same item object works in
+Svelte and in the web component's `items` property; no extra WC attribute is needed.
+
+Portaled panels retain the owning Select's scoped `--select-*` properties and
+computed font/color rather than inheriting the page body's defaults. Owner
+class/style changes and document theme/class/style changes refresh that snapshot;
+closing the panel disconnects its observer. Positioning updates preserve those
+properties. This keeps compact, themed country pickers readable in both themes.
+
+### Portaled panel width and theme
+
+A portaled panel retains the owning Select's `--select-*` custom properties and
+computed typography. Owner and document theme changes refresh those values while
+the panel is open. `--select-dropdown-width` and `--select-dropdown-min-width`
+also apply in portal mode: a compact trigger can open a wider searchable panel,
+whose measured width is used to keep it inside the viewport. Without custom
+width tokens, left-aligned panels continue to match their trigger.
+
+An open portaled panel follows scoped ancestor and shadow-host theme changes, as
+well as owner/document changes and viewport resize. Its text direction and
+alignment follow its owner. Percentage dropdown width/min-width/max-width tokens
+remain relative to the trigger after portaling, so `100%` does not expand to the
+viewport width.
+
+Native option rendering preserves each item's `disabled` state.
+
+A Select inside a native `Dialog` keeps its portaled panel inside that dialog.
+This preserves the browser's modal interaction boundary, so options remain
+interactive. Other portals retain their shadow root or document-body target.

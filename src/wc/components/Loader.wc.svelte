@@ -3,6 +3,8 @@
     tag: 'sui-loader',
     shadow: 'open',
     props: {
+      variant: { type: 'String' },
+      loaderAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' }
     }
@@ -11,10 +13,14 @@
 
 <script lang="ts">
   import Loader from '$lib/Loader/Loader.svelte';
-  let props = $props();
+  import type { LoaderProperties } from '$lib/Loader/properties';
+  let {
+    loaderAriaLabel,
+    ...props
+  }: Omit<LoaderProperties, 'ariaLabel'> & { loaderAriaLabel?: string } = $props();
 </script>
 
-<Loader {...props} />
+<Loader {...props} ariaLabel={loaderAriaLabel} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

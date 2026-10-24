@@ -7,6 +7,10 @@ export type MandatoryProgressProperties = {
 };
 
 export type OptionalProgressProperties = {
+  /** Opt-in segmented track; positive integers, capped at 1,000. Indeterminate mode stays continuous. */
+  segments?: number;
+  /** Custom trailing content in place of the built-in percentage label. */
+  trailingLabel?: Snippet;
   /**
    * The maximum value representing 100% completion. Must be a finite,
    * positive number for the percentage to be meaningful. A zero, negative,

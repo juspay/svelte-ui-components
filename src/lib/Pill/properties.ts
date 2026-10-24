@@ -80,6 +80,10 @@ export type PillTone = 'accent' | 'ok' | 'warn' | 'danger' | 'muted';
 export type PillRootTag = 'div' | 'button';
 
 export type OptionalPillProperties = {
+  /** Opt-in inline root without widening the released as discriminator. */
+  inline?: boolean;
+  /** Retain host-authored tag/control appearance without default pill styling. */
+  unstyled?: boolean;
   dismissible?: boolean;
   disabled?: boolean;
   /**

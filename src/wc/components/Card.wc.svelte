@@ -3,6 +3,10 @@
     tag: 'sui-card',
     shadow: 'open',
     props: {
+      unstyled: { type: 'Boolean' },
+      interactive: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      oncardkeydown: { type: 'Object' },
       cardTitle: { type: 'String', reflect: true, attribute: 'title' },
       description: { type: 'String', reflect: true },
       classes: { type: 'String' },
@@ -65,6 +69,7 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+  const oncardkeydown = $derived(dispatchers.oncardkeydown ?? props.oncardkeydown);
 </script>
 
 <!--
@@ -97,6 +102,7 @@
 {/snippet}
 
 <Card
+  onkeydown={oncardkeydown}
   {...props}
   {...dispatchers}
   title={cardTitle}

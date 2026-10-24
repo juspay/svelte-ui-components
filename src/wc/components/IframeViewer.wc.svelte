@@ -3,6 +3,11 @@
     tag: 'sui-iframe-viewer',
     shadow: 'open',
     props: {
+      onframeerror: { type: 'Object' },
+      onframeload: { type: 'Object' },
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       src: { type: 'String', reflect: true },
       iframeViewerTitle: { type: 'String', reflect: true, attribute: 'title' },
       allowedOrigins: { type: 'Object', attribute: 'allowed-origins' },
@@ -26,10 +31,13 @@
   // HTMLElement. The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.
   let {
+    element = $bindable<HTMLIFrameElement | null>(null),
     iframeViewerTitle,
     ...props
   }: Omit<IframeViewerProperties, 'title'> & {
     iframeViewerTitle?: IframeViewerProperties['title'];
+    onframeload?: IframeViewerProperties['onload'];
+    onframeerror?: IframeViewerProperties['onerror'];
   } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
@@ -48,9 +56,18 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+  const onframeload = $derived(dispatchers.onframeload ?? props.onframeload);
+  const onframeerror = $derived(dispatchers.onframeerror ?? props.onframeerror);
 </script>
 
-<IframeViewer {...props} {...dispatchers} title={iframeViewerTitle} />
+<IframeViewer
+  onload={onframeload}
+  onerror={onframeerror}
+  bind:element
+  {...props}
+  {...dispatchers}
+  title={iframeViewerTitle}
+/>
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

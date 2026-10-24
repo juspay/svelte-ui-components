@@ -33,6 +33,10 @@
 
 /** Which of a wrapper's props carry the value a form should collect. */
 export type FormValueBinding = {
+  /** Native file-input mode contributes File entries, not its fake-path string. */
+  readonly files?: boolean;
+  /** Dedicated native-file tag; never changes the legacy styled tag association. */
+  readonly nativeFileOnly?: boolean;
   /** Prop holding the submitted value. Defaults to `'value'`. */
   readonly value?: string;
   /**
@@ -117,6 +121,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
   const checkedFallback = binding.checkedFallback ?? 'on';
 
   return <T extends HostConstructor>(Base: T): T => {
+    const nativeValidity = Object.getOwnPropertyDescriptor(Base.prototype, 'native') !== undefined;
     // Every prop that can change what the form should collect. Wrapping their
     // setters is what makes a programmatic assignment reach setFormValue.
     const watched = [
@@ -128,6 +133,21 @@ export function formAssociated(binding: FormValueBinding = {}) {
       disabledProp,
       requiredProp
     ].filter((prop): prop is string => typeof prop === 'string');
+    const synced =
+      nativeValidity || binding.files
+        ? [
+            ...new Set([
+              ...watched,
+              'native',
+              'nativeAttrs',
+              'dataType',
+              'min',
+              'max',
+              'minLength',
+              'maxLength'
+            ])
+          ]
+        : watched;
 
     const Associated = class extends Base {
       static readonly formAssociated = true;
@@ -215,10 +235,35 @@ export function formAssociated(binding: FormValueBinding = {}) {
         return null;
       }
 
+      #fileControl(): HTMLInputElement | null {
+        if (!binding.files || (!binding.nativeFileOnly && !readBoolean(this, 'native'))) {
+          return null;
+        }
+        const control = this.#innerControl();
+        return control instanceof HTMLInputElement && control.type === 'file' ? control : null;
+      }
+
       /** The value this control contributes, or null when it contributes none. */
       #formValue(): string | FormData | null {
         if (readBoolean(this, disabledProp) || this.matches(':disabled')) {
           return null;
+        }
+        if (binding.files) {
+          const control = this.#fileControl();
+          if (!control) {
+            return null;
+          }
+          const name = this.getAttribute('name') ?? control.name;
+          const data = new FormData();
+          if (name) {
+            const files = Array.from(control.files ?? []);
+            if (files.length === 0) {
+              data.append(name, new File([], '', { type: 'application/octet-stream' }));
+            } else {
+              files.forEach((file) => data.append(name, file));
+            }
+          }
+          return data;
         }
         // Multi-select first: the array is the value when there is one, and the
         // single-value paths below cannot represent it. `setFormValue` takes a
@@ -287,18 +332,54 @@ export function formAssociated(binding: FormValueBinding = {}) {
         if (internals === null) {
           return;
         }
-        const isRequired = readBoolean(this, requiredProp);
+        const file = this.#fileControl();
+        const isRequired = binding.files
+          ? Boolean(file?.required)
+          : readBoolean(this, requiredProp);
         const missing =
           isRequired &&
           !readBoolean(this, disabledProp) &&
           !this.matches(':disabled') &&
-          this.#formValue() === null;
+          (binding.files ? !file?.files?.length : this.#formValue() === null);
         if (missing) {
           // The anchor is the host: the inner control lives in a shadow root,
           // and reportValidity() must scroll and point at something the user
           // and the form can both see.
-          internals.setValidity({ valueMissing: true }, 'Please fill in this field.', this);
+          internals.setValidity({ valueMissing: true }, 'Please fill in this field.', file ?? this);
           return;
+        }
+        if (
+          nativeValidity &&
+          readBoolean(this, 'native') &&
+          !readBoolean(this, disabledProp) &&
+          !this.matches(':disabled')
+        ) {
+          const control = this.#innerControl();
+          if (control && !control.validity.valid) {
+            const flags: ValidityStateFlags = {};
+            for (const key of [
+              'valueMissing',
+              'typeMismatch',
+              'patternMismatch',
+              'tooLong',
+              'tooShort',
+              'rangeUnderflow',
+              'rangeOverflow',
+              'stepMismatch',
+              'badInput',
+              'customError'
+            ] as const) {
+              if (control.validity[key]) {
+                flags[key] = true;
+              }
+            }
+            internals.setValidity(
+              flags,
+              control.validationMessage || 'Please check this field.',
+              control
+            );
+            return;
+          }
         }
         internals.setValidity({});
       }
@@ -345,6 +426,7 @@ export function formAssociated(binding: FormValueBinding = {}) {
         // afterwards".
         this.shadowRoot?.addEventListener('input', this.#onInnerChange, true);
         this.shadowRoot?.addEventListener('change', this.#onInnerChange, true);
+        if (binding.files) this.shadowRoot?.addEventListener('cancel', this.#onInnerChange, true);
         this.addEventListener('click', this.#onInnerChange, true);
         this.addEventListener('keyup', this.#onInnerChange, true);
         // Props are applied asynchronously on first render, so the initial
@@ -364,6 +446,8 @@ export function formAssociated(binding: FormValueBinding = {}) {
         }
         this.shadowRoot?.removeEventListener('input', this.#onInnerChange, true);
         this.shadowRoot?.removeEventListener('change', this.#onInnerChange, true);
+        if (binding.files)
+          this.shadowRoot?.removeEventListener('cancel', this.#onInnerChange, true);
         this.removeEventListener('click', this.#onInnerChange, true);
         this.removeEventListener('keyup', this.#onInnerChange, true);
         // @ts-expect-error -- the base class defines it; TS cannot see through T.
@@ -390,6 +474,14 @@ export function formAssociated(binding: FormValueBinding = {}) {
       };
 
       formResetCallback(): void {
+        if (binding.files) {
+          const control = this.#fileControl();
+          if (control) {
+            control.value = '';
+          }
+          this.syncFormState();
+          return;
+        }
         this.#captureDefaults();
         for (const [prop, value] of this.#defaults) {
           Reflect.set(this, prop, value);
@@ -441,15 +533,21 @@ export function formAssociated(binding: FormValueBinding = {}) {
       }
 
       checkValidity(): boolean {
+        if (nativeValidity && readBoolean(this, 'native')) {
+          this.syncFormState();
+        }
         return this.#elementInternals()?.checkValidity() ?? true;
       }
 
       reportValidity(): boolean {
+        if (nativeValidity && readBoolean(this, 'native')) {
+          this.syncFormState();
+        }
         return this.#elementInternals()?.reportValidity() ?? true;
       }
     };
 
-    for (const prop of watched) {
+    for (const prop of synced) {
       const descriptor = Object.getOwnPropertyDescriptor(Base.prototype, prop);
       if (descriptor === undefined || typeof descriptor.set !== 'function') {
         continue;

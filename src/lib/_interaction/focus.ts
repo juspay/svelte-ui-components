@@ -29,7 +29,7 @@
  */
 
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
 export type FocusTrapBoundary = {
   readonly first: HTMLElement | null;
@@ -78,10 +78,66 @@ function canReceiveFocus(el: HTMLElement): boolean {
   if (el.getAttribute('aria-disabled') === 'true') {
     return false;
   }
+  if (
+    (typeof el.matches === 'function' && el.matches(':disabled')) ||
+    (el.hasAttribute('tabindex') && el.tabIndex < 0)
+  ) {
+    return false;
+  }
+  if (el.localName === 'input' && el.getAttribute('type')?.toLowerCase() === 'hidden') {
+    return false;
+  }
+  const style = el.ownerDocument?.defaultView?.getComputedStyle(el);
+  if (style?.visibility === 'hidden' || style?.visibility === 'collapse') {
+    return false;
+  }
   return el.closest('[inert]') === null;
 }
 
 function collectFocusableCandidates(container: ParentNode): HTMLElement[] {
+  // The composed tree owns keyboard order: slotted controls and controls in
+  // nested open shadow roots are absent from a light-DOM querySelectorAll.
+  // Keep the query-only path for non-DOM callers used by the pure boundary tests.
+  const elementChildren = container.children;
+  if (elementChildren) {
+    const candidates: HTMLElement[] = [];
+    const visit = (element: Element): void => {
+      if (element.hasAttribute('hidden') || element.hasAttribute('inert')) {
+        return;
+      }
+      if (element.ownerDocument?.defaultView?.getComputedStyle(element).display === 'none') {
+        return;
+      }
+      if (element instanceof HTMLDialogElement && !element.open) {
+        return;
+      }
+      if (
+        element instanceof HTMLElement &&
+        element.matches(FOCUSABLE_SELECTOR) &&
+        canReceiveFocus(element)
+      ) {
+        candidates.push(element);
+      }
+      if (element instanceof HTMLDetailsElement && !element.open) {
+        const summary = element.querySelector(':scope > summary');
+        if (summary) {
+          visit(summary);
+        }
+        return;
+      }
+      const children =
+        element instanceof HTMLSlotElement
+          ? element.assignedElements({ flatten: true }).length > 0
+            ? element.assignedElements({ flatten: true })
+            : Array.from(element.children)
+          : element.shadowRoot
+            ? Array.from(element.shadowRoot.children)
+            : Array.from(element.children);
+      children.forEach(visit);
+    };
+    Array.from(elementChildren).forEach(visit);
+    return candidates;
+  }
   const matches = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
   const candidates: HTMLElement[] = [];
   for (let index = 0; index < matches.length; index += 1) {
@@ -150,8 +206,17 @@ export function focusTrapTabTarget(params: {
  * must carry tabindex="-1" for that fallback to actually take focus). A no-op
  * when the container is null.
  */
-export function focusEntryPoint(container: HTMLElement | null): void {
+export function focusEntryPoint(container: HTMLElement | null, preferAutofocus = false): void {
   if (container === null) {
+    return;
+  }
+  if (preferAutofocus) {
+    const candidates = collectFocusableCandidates(container);
+    (
+      candidates.find((element) => element.hasAttribute('autofocus')) ??
+      candidates[0] ??
+      container
+    ).focus();
     return;
   }
   const { first } = getFocusTrapBoundary(container);
@@ -173,5 +238,10 @@ export function getActiveElement(node: Node | null): Element | null {
     return null;
   }
   const root = node.getRootNode();
-  return root instanceof Document || root instanceof ShadowRoot ? root.activeElement : null;
+  let active = root instanceof Document || root instanceof ShadowRoot ? root.activeElement : null;
+  active ??= node.ownerDocument?.activeElement ?? null;
+  while (active?.shadowRoot?.activeElement) {
+    active = active.shadowRoot.activeElement;
+  }
+  return active;
 }

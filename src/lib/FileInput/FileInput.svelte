@@ -1,9 +1,16 @@
 <script lang="ts">
   import { describeField } from '../_field/description';
+  import { watchFormReset } from '../_field/form-reset';
   import { provideFileInputOwner } from './context';
   import type { FileInputProperties } from './properties';
 
   let {
+    native = false,
+    name,
+    required,
+    nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
+    element = $bindable(),
     trigger,
     activation = 'region',
     accept,
@@ -43,8 +50,45 @@
   });
 
   let dragOver = $state(false);
-  let inputEl: HTMLInputElement | null = $state(null);
+  let inputEl = $state<HTMLInputElement | null>(null);
+  const assignInputElement = (node: HTMLInputElement | null) => {
+    inputEl = node;
+    element = node;
+  };
   let pickerBusy = false;
+  let selectionBeforePicker: File[] | null = null;
+  let resetDuringPicker: Event | null = null;
+
+  // A cancelled picker must not undo a reset that happened while it was open.
+  // Retain the event so a consumer's later preventDefault is respected as well.
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    const node = inputEl;
+    if (!native || !node) {
+      return;
+    }
+    const stop = watchFormReset(
+      node,
+      (event) => {
+        if (selectionBeforePicker !== null) {
+          resetDuringPicker = event;
+        }
+      },
+      () => {
+        if (node.form) {
+          return node.form;
+        }
+        const root = node.getRootNode();
+        const owner = root instanceof ShadowRoot ? Reflect.get(root.host, 'form') : null;
+        return owner instanceof HTMLFormElement ? owner : null;
+      }
+    );
+    return () => {
+      stop();
+      selectionBeforePicker = null;
+      resetDuringPicker = null;
+    };
+  });
 
   export const openFilePicker = (): void => {
     if (disabled || pickerBusy) {
@@ -117,8 +161,40 @@
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
+    selectionBeforePicker = null;
+    resetDuringPicker = null;
     processFiles(target.files);
+    if (!native) {
+      target.value = '';
+    }
+  }
+
+  function prepareNativePicker(event: MouseEvent): void {
+    const target = event.currentTarget;
+    if (disabled || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    selectionBeforePicker = Array.from(target.files ?? []);
+    resetDuringPicker = null;
     target.value = '';
+  }
+
+  function cancelNativePicker(event: Event): void {
+    const target = event.currentTarget;
+    if (target !== inputEl) {
+      return;
+    }
+    if (
+      target instanceof HTMLInputElement &&
+      selectionBeforePicker?.length &&
+      (!resetDuringPicker || resetDuringPicker.defaultPrevented)
+    ) {
+      const transfer = new DataTransfer();
+      selectionBeforePicker.forEach((file) => transfer.items.add(file));
+      target.files = transfer.files;
+    }
+    selectionBeforePicker = null;
+    resetDuringPicker = null;
   }
 
   function handleDragOver(event: DragEvent): void {
@@ -163,42 +239,65 @@
   }
 </script>
 
-<!-- The role is a ternary Svelte cannot resolve, so it reads the element as a plain div. Whenever
-     the tabindex renders, the role is "button" on the very same expression. -->
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
-  class="file-input {classes ?? ''}"
-  class:file-input-dragover={dragOver}
-  class:file-input-disabled={disabled}
-  class:file-input-passive={!regionOwnsActivation}
-  data-pw={testId}
-  testID={testId}
-  role={regionOwnsActivation ? 'button' : null}
-  tabindex={regionOwnsActivation ? (disabled ? -1 : 0) : null}
-  aria-disabled={regionOwnsActivation ? disabled : null}
-  aria-describedby={regionOwnsActivation ? field.describedBy : null}
-  ondragover={handleDragOver}
-  ondragleave={handleDragLeave}
-  ondrop={handleDrop}
-  onkeydown={regionOwnsActivation ? handleKeyDown : null}
-  onclick={regionOwnsActivation ? handleClick : null}
->
+{#if native}
   <input
-    bind:this={inputEl}
+    {...nativeAttrs}
+    bind:this={() => inputEl, assignInputElement}
     type="file"
-    class="file-input-hidden"
+    class={classes ?? ''}
+    class:file-input-native={true}
     {accept}
     {multiple}
     {disabled}
-    data-pw={typeof testId === 'string' ? `${testId}-input` : null}
-    testID={typeof testId === 'string' ? `${testId}-input` : null}
+    name={name ?? nativeAttrs?.name}
+    required={required ?? nativeAttrs?.required}
+    aria-invalid={nativeAttrs?.['aria-invalid'] ?? field.ariaInvalid}
+    aria-describedby={[nativeAttrs?.['aria-describedby'], field.describedBy]
+      .filter(Boolean)
+      .join(' ') || null}
+    data-pw={testId}
+    onclick={prepareNativePicker}
+    oncancel={cancelNativePicker}
     onchange={handleInputChange}
-    tabindex="-1"
-    aria-hidden="true"
   />
+{:else}
+  <!-- The role is a ternary Svelte cannot resolve, so it reads the element as a plain div. Whenever
+     the tabindex renders, the role is "button" on the very same expression. -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div
+    class="file-input {classes ?? ''}"
+    class:file-input-dragover={dragOver}
+    class:file-input-disabled={disabled}
+    class:file-input-passive={!regionOwnsActivation}
+    data-pw={testId}
+    testID={testId}
+    role={regionOwnsActivation ? 'button' : null}
+    tabindex={regionOwnsActivation ? (disabled ? -1 : 0) : null}
+    aria-disabled={regionOwnsActivation ? disabled : null}
+    aria-describedby={regionOwnsActivation ? field.describedBy : null}
+    ondragover={handleDragOver}
+    ondragleave={handleDragLeave}
+    ondrop={handleDrop}
+    onkeydown={regionOwnsActivation ? handleKeyDown : null}
+    onclick={regionOwnsActivation ? handleClick : null}
+  >
+    <input
+      bind:this={() => inputEl, assignInputElement}
+      type="file"
+      class="file-input-hidden"
+      {accept}
+      {multiple}
+      {disabled}
+      data-pw={typeof testId === 'string' ? `${testId}-input` : null}
+      testID={typeof testId === 'string' ? `${testId}-input` : null}
+      onchange={handleInputChange}
+      tabindex="-1"
+      aria-hidden="true"
+    />
 
-  {@render trigger({ openFilePicker, dragOver, disabled, describedBy: field.describedBy })}
-</div>
+    {@render trigger?.({ openFilePicker, dragOver, disabled, describedBy: field.describedBy })}
+  </div>
+{/if}
 
 {#if field.showsError}
   <div
@@ -234,7 +333,7 @@
     margin-top: var(--file-input-info-margin-top, 4px);
   }
 
-  .file-input {
+  .file-input:where(:not(.file-input-native)) {
     display: var(--file-input-display, inline-flex);
     flex-direction: var(--file-input-flex-direction, column);
     align-items: var(--file-input-align-items, center);
@@ -260,7 +359,7 @@
      is the library's convention for a ring that needs no colour literal (Card, Pill, StatCard):
      it follows the surrounding text colour, so it clears 3:1 on the light and the dark ground
      alike and stays visible in forced-colors mode. :focus-visible keeps it off pointer clicks. */
-  .file-input:focus-visible {
+  .file-input:where(:not(.file-input-native)):focus-visible {
     outline: var(--file-input-focus-outline, 2px solid currentColor);
     outline-offset: var(--file-input-focus-outline-offset, 2px);
   }

@@ -1,3 +1,5 @@
+import './components/Link.wc.svelte';
+import './components/Dialog.wc.svelte';
 import './components/AnimatedNumber.wc.svelte';
 import './components/Avatar.wc.svelte';
 import './components/Badge.wc.svelte';
@@ -109,3 +111,5 @@ import './components/RatingGroup.wc.svelte';
 // consumer's separate `svelte` import close over different runtime state and fail
 // when this bundle renders them, so expose the matching factory from this entry.
 export { createRawSnippet } from 'svelte';
+
+import './components/NativeFileInput.wc.svelte';

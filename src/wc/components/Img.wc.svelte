@@ -3,12 +3,17 @@
     tag: 'sui-img',
     shadow: 'open',
     props: {
+      unstyled: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       src: { type: 'String', reflect: true },
       alt: { type: 'String', reflect: true },
       fallback: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       onerror: { type: 'Object' },
+      onimageerror: { type: 'Object' },
+      onimageload: { type: 'Object' },
       inlineSvg: { type: 'Boolean', attribute: 'inline-svg' },
       transformSvg: { type: 'Object' }
     }
@@ -17,8 +22,12 @@
 
 <script lang="ts">
   import Img from '$lib/Img/Img.svelte';
+  import type { ImgProperties } from '$lib/Img/properties';
   import { dispatchEvents } from '../dispatch';
-  let props = $props();
+  let {
+    element = $bindable<HTMLImageElement | SVGSVGElement | null>(null),
+    ...props
+  }: Omit<ImgProperties, 'onload'> & { onimageload?: ImgProperties['onload'] } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's
   // name minus its `$` with the rune itself (sveltejs/svelte#13715), reporting `$host`
@@ -41,9 +50,10 @@
   // the value eagerly is exactly what the helper is written not to do.
   // svelte-ignore state_referenced_locally
   const dispatchers = $derived(dispatchEvents(hostEl, props));
+  const onimageload = $derived(dispatchers.onimageload ?? props.onimageload);
 </script>
 
-<Img {...props} {...dispatchers} />
+<Img bind:element {...props} {...dispatchers} onload={onimageload} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

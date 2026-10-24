@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { HTMLSelectAttributes } from 'svelte/elements';
 
 /**
  * Corner the dropdown anchors to. Mirrors `MenuPlacement` so the two components
@@ -13,6 +14,8 @@ export type SelectProperties = MandatorySelectProperties &
 export type SelectItem = {
   id: string;
   label: string;
+  /** Compact visual label; full label remains in options/search and accessible text. */
+  displayLabel?: string;
   /** Optional per-option test id, emitted as `data-pw` on the option element. */
   testId?: string;
   /**
@@ -44,6 +47,17 @@ export type SelectHierarchy = 'default' | 'ghost';
 export type SelectSearchPosition = 'trigger' | 'menu';
 
 export type OptionalSelectProperties = {
+  /** Native select rendering for browser form validation and mobile pickers. */
+  native?: boolean;
+  /** Native option/optgroup content for Svelte consumers. */
+  children?: Snippet;
+  required?: boolean;
+  id?: string;
+  element?: HTMLSelectElement | null;
+  nativeAttrs?: Omit<
+    HTMLSelectAttributes,
+    'value' | 'class' | 'onchange' | 'multiple' | 'required' | 'disabled'
+  >;
   value?: string[];
   multiple?: boolean;
   searchable?: boolean;

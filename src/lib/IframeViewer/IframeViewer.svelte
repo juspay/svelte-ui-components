@@ -3,7 +3,13 @@
   import type { IframeViewerProperties } from './properties';
 
   let {
+    unstyled = false,
     src,
+    nativeAttrs,
+    // eslint-disable-next-line no-useless-assignment -- Bindable output is assigned by the mounted DOM reference.
+    element = $bindable(),
+    onload,
+    onerror,
     title = 'Embedded Content',
     allowedOrigins = [],
     allow = 'fullscreen',
@@ -17,7 +23,11 @@
     onmessage = () => {}
   }: IframeViewerProperties = $props();
 
-  let iframeEl: HTMLIFrameElement | null = $state(null);
+  let iframeEl = $state<HTMLIFrameElement | null>(null);
+  const assignFrameElement = (node: HTMLIFrameElement | null) => {
+    iframeEl = node;
+    element = node;
+  };
 
   export const postMessage = (message: unknown, targetOrigin: string): void => {
     iframeEl?.contentWindow?.postMessage(message, targetOrigin);
@@ -48,10 +58,16 @@
   });
 </script>
 
-<div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
+{#snippet frame()}
   {#if src}
     <iframe
-      bind:this={iframeEl}
+      {...nativeAttrs}
+      {...unstyled && typeof testId === 'string' ? { 'data-pw': testId, testID: testId } : {}}
+      class={unstyled ? (classes ?? '') : nativeAttrs?.class}
+      class:iframe-unstyled={unstyled}
+      bind:this={() => iframeEl, assignFrameElement}
+      {onload}
+      {onerror}
       {src}
       {title}
       {allow}
@@ -61,7 +77,15 @@
       {...credentialless ? { credentialless: '' } : {}}
     ></iframe>
   {/if}
-</div>
+{/snippet}
+
+{#if unstyled}
+  {@render frame()}
+{:else}
+  <div class="iframe-viewer {classes ?? ''}" data-pw={testId} testID={testId}>
+    {@render frame()}
+  </div>
+{/if}
 
 <style>
   .iframe-viewer {
@@ -70,7 +94,7 @@
     display: flex;
   }
 
-  iframe {
+  iframe:where(:not(.iframe-unstyled)) {
     width: 100%;
     height: 100%;
     border: var(--iframe-viewer-border, none);

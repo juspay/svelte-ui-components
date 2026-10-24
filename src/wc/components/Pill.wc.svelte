@@ -3,6 +3,8 @@
     tag: 'sui-pill',
     shadow: 'open',
     props: {
+      unstyled: { type: 'Boolean' },
+      inline: { type: 'Boolean' },
       text: { type: 'String', reflect: true },
       dismissible: { type: 'Boolean', reflect: true },
       disabled: { type: 'Boolean', reflect: true },

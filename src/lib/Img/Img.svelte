@@ -1,8 +1,21 @@
 <script lang="ts">
   import type { ImgProperties } from './properties';
 
-  let { src, alt, fallback, onerror, classes, inlineSvg, transformSvg, testId }: ImgProperties =
-    $props();
+  let {
+    unstyled = false,
+    src,
+    alt,
+    fallback,
+    onerror,
+    onimageerror,
+    onload,
+    classes,
+    inlineSvg,
+    transformSvg,
+    testId,
+    nativeAttrs,
+    element = $bindable()
+  }: ImgProperties = $props();
 
   let currentSrc = $derived(src);
   // Per-source failure marker: when inlining a given URL fails we fall back to
@@ -24,11 +37,12 @@
       failedInlineSrc !== currentSrc
   );
 
-  function handleFallback(): void {
+  function handleFallback(event: Event): void {
     if (typeof fallback === 'string' && fallback.length > 0 && currentSrc !== fallback) {
       currentSrc = fallback;
     } else {
       onerror?.();
+      onimageerror?.(event);
     }
   }
 
@@ -329,8 +343,10 @@
 
 {#if shouldInline}
   <svg
+    bind:this={element}
     use:inlineSvgInto={{ url: currentSrc, transform: transformSvg ?? null }}
     class={classes ?? ''}
+    class:image-unstyled={unstyled}
     role={label.length > 0 ? 'img' : null}
     aria-label={label.length > 0 ? label : null}
     aria-hidden={label.length === 0 ? 'true' : null}
@@ -339,7 +355,11 @@
   ></svg>
 {:else}
   <img
+    {...nativeAttrs}
+    bind:this={element}
+    {onload}
     class={classes ?? ''}
+    class:image-unstyled={unstyled}
     src={currentSrc}
     alt={label}
     onerror={handleFallback}
@@ -349,8 +369,8 @@
 {/if}
 
 <style>
-  img,
-  svg {
+  img:where(:not(.image-unstyled)),
+  svg:where(:not(.image-unstyled)) {
     object-fit: var(--image-object-fit);
     height: var(--image-height, 24px);
     width: var(--image-width, 24px);
@@ -363,8 +383,8 @@
     transition: var(--image-transition);
   }
 
-  img:hover,
-  svg:hover {
+  img:where(:not(.image-unstyled)):hover,
+  svg:where(:not(.image-unstyled)):hover {
     background: var(--image-hover-background, var(--image-background));
     border: var(--image-hover-border, var(--image-border));
   }
@@ -374,12 +394,12 @@
      they existed, beside whatever max-width rule the app already has.
 
      A layer loses to every rule outside a layer, whatever its selector and
-     whichever stylesheet loads first, so an app's `img { max-width: 100% }`, its
-     `* { max-width: 100% }` and a zero-specificity `:where(img)` reset all keep
+     whichever stylesheet loads first, so an app's `img:where(:not(.image-unstyled)) { max-width: 100% }`, its
+     `* { max-width: 100% }` and a zero-specificity `:where(img:where(:not(.image-unstyled)))` reset all keep
      winning. A zero-specificity rule outside a layer would not do that: it ties
      with the app's `*` and `:where()` rules, and the later stylesheet takes it.
      :where() keeps the rule at zero specificity should it ever leave the layer;
-     Svelte compiles :where(img) to :where(img.svelte-hash).
+     Svelte compiles :where(img:where(:not(.image-unstyled))) to :where(img:where(:not(.image-unstyled)).svelte-hash).
 
      The fallback is `revert-layer`, not `none`. `none` is the initial value, but
      as a declaration it would outrank a reset an app keeps in an earlier layer
@@ -387,7 +407,7 @@
      layers below this one, and to `none` when there are none, so an unset token
      declares nothing. */
   @layer svelte-ui-img {
-    :where(img, svg) {
+    :where(img:where(:not(.image-unstyled)), svg:where(:not(.image-unstyled))) {
       max-width: var(--image-max-width, revert-layer);
       max-height: var(--image-max-height, revert-layer);
     }

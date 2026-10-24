@@ -19,10 +19,8 @@ if [[ $BRANCH_NAME != *"no branch"* ]]; then
   # Adding formatted files to git stage.
   git add $(git diff --name-only --cached --diff-filter=d | xargs)
 
-  # Adding commit linter. Validates commit messges are according to format.
-  # Runs before commit is created.
-  # To try and fail VSCode and other editor commits if not properly fomratted.
-  npx --no -- commitlint --edit "${1}"
+  # Git has not written COMMIT_EDITMSG yet, particularly in a fresh worktree.
+  # The commit-msg hook validates the actual message after Git creates it.
 fi
 
 finish() {

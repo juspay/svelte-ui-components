@@ -154,20 +154,9 @@
 </div>
 
 <!--
-  The two pacing demos below assign `text` a tick after mount instead of as
-  the prop's initial value. TypewriterText's typing engine has a pre-existing
-  quirk, unrelated to variableDelay: when a full, non-empty `text` is already
-  present at mount together with `isStreaming={true}`, BOTH its mount $effect
-  and its onMount hook independently start the typing loop (TypewriterText.svelte,
-  the `typeNextCharacter()` calls inside the first `$effect` and inside
-  `onMount`), racing two interleaved timer chains and typing far faster than
-  `speed`/`variableDelay` call for. It reproduces identically against the
-  pre-`variableDelay` build of this component (git show HEAD on this branch's
-  parent commit), so it predates and is independent of the pacing work here.
-  Growing `text` from empty after mount — the same shape the "Streaming" demo
-  above already relies on — goes through the $effect's growth path only, so
-  these two demos (and the Playwright pacing assertions against them) measure
-  `resolveTypingDelay` cleanly instead of that race.
+  The pacing demos assign text after mount to exercise the same empty-to-nonempty
+  transition as streamed content. Initially nonempty text is covered by the live
+  answer above and the component's reveal timer ownership tests.
 -->
 <h2>Baseline pacing — no variableDelay, default speed</h2>
 <div class="demo-row">

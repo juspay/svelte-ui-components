@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, untrack } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { prefersReducedMotion } from '../utils';
   import type { TypewriterTextProperties, TypewriterCharacterDelayRange } from './properties';
 
@@ -38,6 +38,7 @@
   let displayedText = $state('');
   let currentIndex = $state(0);
   let timeoutId = $state<ReturnType<typeof setTimeout> | null>(null);
+  let destroyed = false;
 
   // Where typing left off, so newly streamed-in text continues rather than restarts.
   let previousTextLength = $state(0);
@@ -114,6 +115,10 @@
   };
 
   const typeNextCharacter = (): void => {
+    if (destroyed) {
+      return;
+    }
+    timeoutId = null;
     // Typing IS the animation here, so a reduced-motion request has to suppress the
     // reveal itself rather than a transition around it: disclose the text instead.
     // `ChatController` already bypasses its own drain loop on this setting, and the two
@@ -135,6 +140,10 @@
       displayedText = text.substring(0, currentIndex + 1);
       currentIndex++;
       onprogress?.({ index: currentIndex, total: text.length, displayedText });
+      // A progress callback may synchronously remove its own component.
+      if (destroyed) {
+        return;
+      }
       timeoutId = setTimeout(
         typeNextCharacter,
         resolveTypingDelay(revealedCharacter, revealedCharacterIndex)
@@ -185,16 +194,11 @@
     }
   });
 
-  onMount(() => {
-    if (text.length > 0) {
-      previousTextLength = text.length;
-      typeNextCharacter();
-    }
-  });
-
   onDestroy(() => {
+    destroyed = true;
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
+      timeoutId = null;
     }
   });
 </script>

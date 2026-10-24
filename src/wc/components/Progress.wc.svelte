@@ -5,11 +5,14 @@
     props: {
       value: { type: 'Number', reflect: true },
       max: { type: 'Number', reflect: true },
+      segments: { type: 'Number' },
+      progressAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       showLabel: { type: 'Boolean', reflect: true, attribute: 'show-label' },
       animateValue: { type: 'Boolean', reflect: true, attribute: 'animate-value' },
       testId: { type: 'String', attribute: 'test-id' },
       classes: { type: 'String' },
       leadingLabel: { type: 'Object' },
+      trailingLabel: { type: 'Object' },
       headerStart: { type: 'Object' },
       headerEnd: { type: 'Object' },
       note: { type: 'Object' }
@@ -21,10 +24,14 @@
   import Progress from '$lib/Progress/Progress.svelte';
   import type { ProgressProperties } from '$lib/Progress/properties';
 
-  let props: ProgressProperties = $props();
+  let {
+    progressAriaLabel,
+    ...props
+  }: Omit<ProgressProperties, 'ariaLabel'> & { progressAriaLabel?: string } = $props();
   // Each of these gates a wrapper row in Progress.svelte. Supplying the snippet
   // when the slot is empty would add that row to every <sui-progress>.
   const hasLeadingLabelSlot = $host().querySelector('[slot="leading-label"]') !== null;
+  const hasTrailingLabelSlot = $host().querySelector('[slot="trailing-label"]') !== null;
   const hasHeaderStartSlot = $host().querySelector('[slot="header-start"]') !== null;
   const hasHeaderEndSlot = $host().querySelector('[slot="header-end"]') !== null;
   const hasNoteSlot = $host().querySelector('[slot="note"]') !== null;
@@ -41,6 +48,10 @@
 {#snippet headerStartImpl()}
   {#if props.headerStart}{@render props.headerStart()}{:else}<slot name="header-start"></slot>{/if}
 {/snippet}
+{#snippet trailingLabelImpl()}
+  {#if props.trailingLabel}{@render props.trailingLabel()}{:else}<slot name="trailing-label"
+    ></slot>{/if}
+{/snippet}
 {#snippet headerEndImpl()}
   {#if props.headerEnd}{@render props.headerEnd()}{:else}<slot name="header-end"></slot>{/if}
 {/snippet}
@@ -50,7 +61,9 @@
 
 <Progress
   {...props}
+  ariaLabel={progressAriaLabel}
   leadingLabel={hasLeadingLabelSlot ? leadingLabelImpl : props.leadingLabel}
+  trailingLabel={hasTrailingLabelSlot ? trailingLabelImpl : props.trailingLabel}
   headerStart={hasHeaderStartSlot ? headerStartImpl : props.headerStart}
   headerEnd={hasHeaderEndSlot ? headerEndImpl : props.headerEnd}
   note={hasNoteSlot ? noteImpl : props.note}

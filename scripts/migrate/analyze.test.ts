@@ -538,10 +538,10 @@ describe('analyzeSvelte / analyzeStylesheet — chat-composer recording reflect'
 describe('readWcComponents', () => {
   const components = readWcComponents(process.cwd());
 
-  it('finds all 101 wc wrappers, split 89 block / 12 inline-block', () => {
-    expect(components).toHaveLength(101);
-    expect(components.filter((c) => c.display === 'block')).toHaveLength(89);
-    expect(components.filter((c) => c.display === 'inline-block')).toHaveLength(12);
+  it('finds all 104 wc wrappers, split 91 block / 13 inline-block', () => {
+    expect(components).toHaveLength(104);
+    expect(components.filter((c) => c.display === 'block')).toHaveLength(91);
+    expect(components.filter((c) => c.display === 'inline-block')).toHaveLength(13);
   });
 
   it('reads InputButton as sui-input-button, not the guessed sui-inputbutton', () => {

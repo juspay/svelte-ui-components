@@ -3,6 +3,10 @@
     tag: 'sui-icon',
     shadow: 'open',
     props: {
+      mask: { type: 'Boolean', reflect: true },
+      size: { type: 'Number', reflect: true },
+      color: { type: 'String', reflect: true },
+      label: { type: 'String', reflect: true },
       icon: { type: 'String', reflect: true },
       svg: { type: 'String', reflect: true },
       text: { type: 'String', reflect: true },

@@ -5,7 +5,11 @@
   import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
   import { createDebouncer, acquireScrollLock, resolveScrollContainer } from '../utils';
   import { focusEntryPoint, focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
-  import { registerDismissible } from '../_interaction/dismissal';
+  import {
+    registerDismissible,
+    isTopmostDismissible,
+    eventHitsInside
+  } from '../_interaction/dismissal';
   import Button from '$lib/Button/Button.svelte';
   import Img from '$lib/Img/Img.svelte';
 
@@ -19,6 +23,7 @@
   let previouslyFocusedElement: HTMLElement | null = null;
 
   let {
+    containFocus = false,
     size = 'fit-content',
     align = 'center',
     showOverlay = true,
@@ -213,8 +218,22 @@
   // matters generally: a stale layer left registered after unmount would
   // swallow every later Escape in the app, and would never come back).
   let releaseDismissible: (() => void) | null = null;
+  let releaseFocusGuard: (() => void) | null = null;
+  const handleFocusIn = (event: FocusEvent): void => {
+    if (
+      containFocus &&
+      modalContent &&
+      isTopmostDismissible(modalContent) &&
+      !eventHitsInside(modalContent, event)
+    ) {
+      focusEntryPoint(modalContent);
+    }
+  };
 
   onMount(() => {
+    const ownerDocument = modalContent?.ownerDocument ?? document;
+    ownerDocument.addEventListener('focusin', handleFocusIn, true);
+    releaseFocusGuard = () => ownerDocument.removeEventListener('focusin', handleFocusIn, true);
     releaseDismissible = registerDismissible({
       element: () => modalContent,
       onEscape: handleEscape
@@ -244,6 +263,8 @@
   });
 
   onDestroy(() => {
+    releaseFocusGuard?.();
+    releaseFocusGuard = null;
     releaseDismissible?.();
     releaseDismissible = null;
     if (dismissTimer !== null) {

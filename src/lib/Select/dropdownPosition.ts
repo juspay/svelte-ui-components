@@ -44,6 +44,8 @@ export function computeSelectDropdownPosition(opts: {
   dropdown: Size;
   viewport: Size;
   align: 'left' | 'right';
+  /** Set false when public CSS width tokens size the portaled panel. */
+  matchTriggerWidth?: boolean;
   vertical?: SelectVerticalPlacement;
   gap: number;
   margin?: number;
@@ -53,9 +55,10 @@ export function computeSelectDropdownPosition(opts: {
   const { trigger, dropdown, viewport, align, gap } = opts;
 
   const minWidth = trigger.width;
-  const width = align === 'left' ? trigger.width : null;
+  const matchTriggerWidth = opts.matchTriggerWidth !== false;
+  const width = align === 'left' && matchTriggerWidth ? trigger.width : null;
   const effectiveWidth = Math.max(
-    align === 'right' ? dropdown.width : trigger.width,
+    align === 'right' || !matchTriggerWidth ? dropdown.width : trigger.width,
     trigger.width
   );
 

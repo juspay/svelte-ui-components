@@ -17,6 +17,11 @@
     // the selection. Combobox needed this for the same reason.
     extend: formAssociated({ values: 'value', innerControlIsNotTheValue: true }),
     props: {
+      required: { type: 'Boolean' },
+      fieldId: { type: 'String', attribute: 'field-id' },
+      native: { type: 'Boolean' },
+      nativeAttrs: { type: 'Object' },
+      element: { type: 'Object' },
       items: { type: 'Object' },
       value: { type: 'Object' },
       multiple: { type: 'Boolean', reflect: true },
@@ -67,10 +72,13 @@
   // The attributes are unchanged: `<sui-select aria-label="Country">` works, and only
   // the JavaScript property name differs.
   let {
+    element = $bindable<HTMLSelectElement | null>(null),
+    fieldId,
     selectAriaLabel,
     selectAriaLabelledby,
     ...props
-  }: Omit<SelectProperties, 'ariaLabel' | 'ariaLabelledby'> & {
+  }: Omit<SelectProperties, 'ariaLabel' | 'ariaLabelledby' | 'id'> & {
+    fieldId?: string;
     selectAriaLabel?: SelectProperties['ariaLabel'];
     selectAriaLabelledby?: SelectProperties['ariaLabelledby'];
   } = $props();
@@ -127,6 +135,8 @@
      aria-label is a string, so the resolved name above wins and the raw id is only
      emitted when the reference resolved to nothing, where it is inert either way. -->
 <Select
+  id={fieldId}
+  bind:element
   {...props}
   {...dispatchers}
   ariaLabel={selectAriaLabel?.trim() ? selectAriaLabel : referencedLabel}

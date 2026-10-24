@@ -95,3 +95,7 @@ a second, synthetic one under it would double-deliver to any
 | _(default)_ | `children`      | Content rendered inside the accordion body. |
 
 > **Svelte-only:** `trigger` (receives `{ expanded: boolean }`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+## Native rendering
+
+`native` uses real details/summary markup, including prehydration interaction. `nativeAttrs` and `summaryAttrs` forward native metadata; `element` is a bindable details reference. `classes` and `triggerClasses` apply to details and summary respectively.

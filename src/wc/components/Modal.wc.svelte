@@ -3,6 +3,7 @@
     tag: 'sui-modal',
     shadow: 'open',
     props: {
+      containFocus: { type: 'Boolean', attribute: 'contain-focus' },
       scrollContainer: { type: 'Object' },
       size: { type: 'String', reflect: true },
       align: { type: 'String', reflect: true },

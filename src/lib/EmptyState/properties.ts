@@ -14,6 +14,10 @@ export type MandatoryEmptyStateProperties = {
 };
 
 export type OptionalEmptyStateProperties = {
+  /** Render caller-owned layout and named snippets without styled slot wrappers.
+   * Fallback title/description semantics and root test hooks remain available.
+   * Omit to retain the existing styled EmptyState layout. */
+  unstyled?: boolean;
   description?: string;
   icon?: Snippet;
   children?: Snippet;

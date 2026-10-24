@@ -438,3 +438,18 @@ to a `card.addEventListener('click', ...)` listener.
 | `description-snippet` | `descriptionSnippet` | Replaces the plain `description` text with custom markup. Falls back to the `description` attribute when empty. |
 | `header-right`        | `headerRight`        | Content placed opposite the title/description in the header row. Nothing renders when the slot is empty.        |
 | `footer`              | `footer`             | Content placed in a footer element below the body. Nothing renders when the slot is empty.                      |
+
+## Host-authored composition
+
+`unstyled` retains the native card root and keyboard behavior while rendering
+`children` directly and leaving appearance to the host recipe. `nativeAttrs`
+forwards native metadata/focus/pointer handlers; dedicated props keep precedence.
+`interactive` also enables keyboard interaction for focus/key-driven cards without
+a click callback. `onkeydown` runs before the built-in Enter/Space activation and
+can prevent default when the host already handled the key.
+
+Web components expose `oncardkeydown` / `cardkeydown` for pre-activation key customization, preserving the native host `onkeydown` accessor.
+
+Keyboard events from nested controls keep their own native activation. The
+consumer's `onkeydown` callback is also available on anchor and passive Card roots;
+only interactive non-anchor roots add the synthetic Enter/Space activation.

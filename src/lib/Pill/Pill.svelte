@@ -6,6 +6,8 @@
   import { pillToneClass } from './pillTone';
 
   let {
+    unstyled = false,
+    inline = false,
     text,
     dismissible = false,
     disabled = false,
@@ -56,7 +58,9 @@
   // controls. A neutral div holds independent primary and dismiss buttons when
   // both actions are present, preserving native activation for each action.
   const isButtonRoot = $derived(as === 'button' && !dismissible);
-  const rootTag = $derived(isButtonRoot ? 'button' : 'div');
+  const rootTag = $derived(
+    isButtonRoot ? 'button' : inline && !(interactive && dismissible) ? 'span' : 'div'
+  );
   const hasSeparateAction = $derived(interactive && dismissible);
   const rootAttrs = $derived(
     hasSeparateAction
@@ -113,7 +117,7 @@
 <svelte:element
   this={rootTag}
   {...rootAttrs ?? {}}
-  class="pill {pillToneClass(tone)} {classes ?? ''}"
+  class={unstyled ? (classes ?? '') : `pill ${pillToneClass(tone)} ${classes ?? ''}`}
   class:disabled
   class:separate-action={hasSeparateAction}
   type={isButtonRoot ? 'button' : null}
@@ -147,7 +151,7 @@
   {#if typeof leadingIcon === 'function'}
     <span class="pill-leading-icon">{@render leadingIcon()}</span>
   {/if}
-  <span class="pill-text">{text}</span>
+  {#if unstyled}{text}{:else}<span class="pill-text">{text}</span>{/if}
   {#if dismissible}
     <div class="pill-dismiss">
       <!-- A dismiss action is a bare icon, not a primary call to action. -->

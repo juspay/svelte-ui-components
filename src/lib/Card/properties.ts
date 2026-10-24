@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
 import type { AttrsEscapeHatch, LegacyAttrs } from '../types';
 
 export type CardProperties = OptionalCardProperties;
@@ -54,6 +55,15 @@ export type CardStrictAttrs = AttrsEscapeHatch<Extract<keyof CardManagedAttrs, s
 export type MandatoryCardProperties = Record<string, never>;
 
 export type OptionalCardProperties = {
+  /** Keep host-authored card composition without default appearance/content wrappers. */
+  unstyled?: boolean;
+  /** Explicitly keyboard-interactive even when interaction is focus/key driven. */
+  interactive?: boolean;
+  nativeAttrs?: Omit<
+    HTMLAttributes<HTMLElement>,
+    'class' | 'style' | 'role' | 'tabindex' | 'onclick' | 'onkeydown'
+  >;
+  onkeydown?: (event: KeyboardEvent) => void;
   /**
    * Main content body of the card. Rendered inside the `.card-content` container.
    */

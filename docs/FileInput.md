@@ -201,3 +201,42 @@ Because `trigger` is a Snippet prop (not serialisable as an HTML attribute), the
 The `activation` attribute also exists on the element, but slotted content cannot receive `openFilePicker` (see the note below), so `activation="trigger"` is only useful there with the fallback: leave the slot empty and the fallback becomes a real "Choose file" `<button>` that opens the picker. For your own control, use the Svelte component.
 
 > **Svelte-only:** `trigger` (receives `FileInputSnippetProps`) takes argument, so it cannot be expressed as a named slot: a Web Component `<slot>` projects markup, it does not forward Svelte snippet parameters, so the argument above would be silently dropped. Use the Svelte component directly when you need this.
+
+## Native picker integration
+
+`native` renders only the real file input. `classes`, `testId`, `nativeAttrs`, and
+bindable `element` apply to that input. The existing `accept`, size validation,
+`onfiles`, `onerror`, and same-file reselection behavior remain shared with the
+drop-zone rendering. The released required `trigger` contract stays intact; an empty trigger snippet is sufficient for native mode and is not rendered.
+
+### Native selection and form behavior
+
+In `native` mode, the selected files remain on the input after `change`, so
+`required`, the visible filename and `FormData` work normally. Picker activation
+permits choosing the same file again; cancellation restores the previous selection.
+The styled drop-zone mode keeps its existing reset-after-callback behavior.
+The mounted field owns its reference, so replacing props does not disable
+`openFilePicker()`.
+
+### Native resets and web-component forms
+
+Native `name` and `required` props take precedence when supplied; otherwise the
+corresponding `nativeAttrs` values apply. Error and hint IDs are merged with the
+caller's native description relationship, and `invalid` marks the native field.
+A form reset clears the selection even if a pending picker subsequently emits
+cancel. A prevented reset preserves the previous selection.
+
+`<sui-native-file-input>` is the separate form-associated native tag. The released
+`<sui-file-input>` stays non-form-associated, including when its new native rendering
+is explicitly selected. Give the host a `name` (or use its
+native input's name), and use the host's standard `form` attribute for an external
+form owner across the shadow boundary. Outer `FormData` receives actual `File`
+entries, including multiple selections; required validity, form reset and disabled
+fieldsets follow the native control. The styled drop-zone mode continues to use
+its accepted-file callbacks and contributes no automatic file entry.
+
+Cancelling the native picker also resynchronizes the web component's outer form
+contribution after restoring a previous selection. This includes a prevented reset
+while an externally associated picker is pending.
+
+`FileInputProperties.trigger` and the inferred component trigger remain required for existing 4.x wrappers. Use [NativeFileInput](./NativeFileInput.md) for the explicit native picker without a trigger. See [4.x compatibility](./COMPATIBILITY_4X.md).

@@ -160,3 +160,15 @@ edge: no first-column gutter and no margin for the left clamp, no last-column gu
 header for the right one. `tests/sankey-label-plate-inset.spec.ts` asserts every header plate stays
 inside the svg, so the clamp cases stay out of the public `/components/sankey-chart` demo and its
 full-page visual baseline.
+
+`native-review/` exercises native file form submission, same-file reselection, a
+simulated picker-cancel notification, quoted mask URLs and real media source/track
+selection. `tests/native-review-contracts.spec.ts` also covers all WC input icon-slot
+branches and media metadata ownership across rendering changes. These fixtures
+stay outside the public Pages application and its visual baselines.
+
+- `adversarial-native/`: native reset/undo/cancel, nested activation, dialog mode
+  and focus, scoped portal themes, width bounds, and native/WC form participation.
+  Run `playwright.adversarial.config.ts` against this fixture; browser artifacts
+  default to the OS temporary directory and can be relocated with
+  `SUI_AUDIT_ARTIFACT_ROOT`.

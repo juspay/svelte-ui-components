@@ -2,6 +2,7 @@ import { createRawSnippet } from 'svelte';
 import { render } from '@testing-library/svelte';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import Select from './Select.svelte';
+import type { SelectItem } from './properties';
 import '../../wc/components/Select.wc.svelte';
 
 const flushCustomElement = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -91,5 +92,28 @@ describe('Select accessible name', () => {
       false
     );
     element.remove();
+  });
+});
+
+describe('Select WC compact labels', () => {
+  it('preserves item metadata through the items property and exposes the full accessible label', async () => {
+    const element = document.createElement('sui-select') as HTMLElement & {
+      items: SelectItem[];
+      value: string[];
+    };
+    element.items = [{ id: 'IN', label: 'India (+91)', displayLabel: '+91' }];
+    element.value = ['IN'];
+    document.body.append(element);
+    try {
+      await flushCustomElement();
+      expect(
+        element.shadowRoot?.querySelector('.select-value [aria-hidden="true"]')?.textContent
+      ).toBe('+91');
+      expect(element.shadowRoot?.querySelector('.select-a11y-value')?.textContent).toBe(
+        'India (+91)'
+      );
+    } finally {
+      element.remove();
+    }
   });
 });

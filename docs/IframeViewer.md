@@ -29,7 +29,7 @@ A security-conscious iframe embed. It renders an `<iframe>` for the given `src` 
 | credentialless | `boolean`           | No       | `-`                  | Sets the iframe's `credentialless` attribute. Applied in the same render statement as `src`, so it is present before the iframe's first load — no dependency on effect-scheduling order. |
 | loading        | `'eager' \| 'lazy'` | No       | `-`                  | Loading strategy for the iframe. Omitted when not set.                                                                                                                                   |
 | referrerpolicy | `ReferrerPolicy`    | No       | `-`                  | Referrer policy for the iframe. Omitted when not set.                                                                                                                                    |
-| testId         | `string`            | No       | `-`                  | Test selector applied as `data-pw` on the container.                                                                                                                                     |
+| testId         | `string`            | No       | `-`                  | Test selector on the wrapper, or the iframe in unstyled mode.                                                                                                                                     |
 | classes        | `string`            | No       | `-`                  | Additional CSS classes applied to the container.                                                                                                                                         |
 
 ## Events
@@ -109,3 +109,20 @@ frame.addEventListener('message', (e) => console.log(e.detail.data));
 ```
 
 `postMessage` is **not** exposed on `<sui-iframe-viewer>` — it is a Svelte-only instance accessor (see Instance Methods above). Web Component consumers already have a standard way to reach the same outcome: query the rendered `<iframe>` inside the element's shadow root and call its `contentWindow.postMessage` directly.
+
+## Native consumer integration
+
+`nativeAttrs` forwards typed native attributes to the actual control/media element.
+Use dedicated props for component-owned state, source, classes, events, and test
+hooks; those props retain precedence over an attribute spread. `element` is a
+bindable native reference for Svelte controllers that measure, focus, animate, or
+manage media. `unstyled` renders the native element without layout wrappers or
+component appearance, so a host's centralized recipe can preserve its composition.
+Default rendering and appearance remain unchanged when these props are omitted.
+
+Web components expose `onframeload` / `frameload` and `onframeerror` / `frameerror` for native frame callbacks, preserving host accessors.
+
+In unstyled mode, `testId` targets the iframe directly. In styled mode it continues
+to target the wrapper. Native-attribute hooks are preserved when no dedicated
+`testId` is supplied. The iframe owns its DOM reference, so `postMessage()` remains
+available after props are replaced.

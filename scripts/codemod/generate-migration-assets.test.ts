@@ -141,13 +141,16 @@ describe('collectWcDisplayEntries', () => {
 // ------------------------------------------------ against this repo's own real components
 
 describe('collectWcDisplayEntries — against this repo’s own real src/wc/components', () => {
-  it('proves reachability: the real directory this build reads from yields all 101 wrapper rules, with nothing skipped', () => {
+  it('proves reachability: the real directory this build reads from yields all 104 wrapper rules, with nothing skipped', () => {
     const realDir = resolve(process.cwd(), 'src/wc/components');
 
     const entries = collectWcDisplayEntries(realDir);
 
-    expect(entries.length).toBe(101);
-    expect(new Set(entries.map((e) => e.tag)).size).toBe(101);
+    expect(entries.length).toBe(104);
+    expect(entries.map((entry) => entry.tag)).toContain('sui-link');
+    expect(entries.map((entry) => entry.tag)).toContain('sui-dialog');
+    expect(entries.map((entry) => entry.tag)).toContain('sui-native-file-input');
+    expect(new Set(entries.map((e) => e.tag)).size).toBe(104);
   });
 });
 

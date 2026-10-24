@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
 export type LoaderType = 'Circular' | 'ProgressBar';
 
@@ -11,6 +12,18 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 export type ButtonProperties = OptionalButtonProperties & ButtonEventProperties;
 
 export type OptionalButtonProperties = {
+  /** Render only the native element, without component appearance or layout wrappers. */
+  unstyled?: boolean;
+  /** Extra native attributes on the actual control, never the wrapper.
+   * Dedicated props retain precedence for managed behavior and accessibility. */
+  nativeAttrs?: Omit<
+    HTMLButtonAttributes & HTMLAnchorAttributes,
+    'class' | 'onclick' | 'disabled' | 'href' | 'type' | 'target' | 'rel'
+  >;
+  /** Bindable reference to the actual button or anchor. */
+  element?: HTMLButtonElement | HTMLAnchorElement | null;
+  /** Class names applied to the actual control rather than its wrapper. */
+  elementClasses?: string;
   text?: string;
   /**
    * Visual style: `primary` (default, filled), `secondary` (outlined), `ghost`

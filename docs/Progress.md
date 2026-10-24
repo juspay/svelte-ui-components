@@ -103,3 +103,31 @@ Tag: `<sui-progress>`
 | `note` | `note` | Row after the progressbar. |
 
 The element claims each snippet only when that slot is filled, because supplying it is what creates the header or note row. A JavaScript-assigned snippet still applies when its slot is empty.
+
+## Segmented tracks and trailing labels
+
+Pass `segments` to opt into complete-segment fill (rounded upward). The continuous
+track remains the default, and negative values retain the existing indeterminate
+track even when segments are requested. Segment counts must be positive and are
+bounded to 1,000. A `trailingLabel` snippet replaces the percentage display without
+adding a wrapper; `leadingLabel` remains independent.
+
+```svelte
+<Progress value={40} segments={3} ariaLabel="Product tour">
+  {#snippet leadingLabel()}<span>02</span>{/snippet}
+  {#snippet trailingLabel()}<span>03</span>{/snippet}
+</Progress>
+```
+
+| Token | Default | Purpose |
+| --- | --- | --- |
+| `--progress-segment-gap` | `4px` | Gap between segments |
+| `--progress-segment-padding` | `0` | Optional track inset |
+| `--progress-segment-height` | track height / `8px` | Segment height |
+| `--progress-segment-border-radius` | radius / `4px` | Segment rounding |
+| `--progress-segment-transition` | `background-color 0.3s ease` | Fill transition |
+
+Track and bar background tokens still provide passive/filled colors. Segment fill
+transitions stop under reduced motion. `<sui-progress>` supports the `segments`
+attribute and `trailing-label` slot. `aria-label` is forwarded through the
+`progressAriaLabel` adapter without replacing the native host accessor.

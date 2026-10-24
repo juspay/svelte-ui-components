@@ -1,3 +1,5 @@
+import type { HTMLIframeAttributes } from 'svelte/elements';
+
 export type IframeViewerProperties = MandatoryIframeViewerProperties &
   OptionalIframeViewerProperties &
   IframeViewerEventProperties;
@@ -8,8 +10,17 @@ export type MandatoryIframeViewerProperties = {
 };
 
 export type OptionalIframeViewerProperties = {
+  /** Render only the native element, without component appearance or layout wrappers. */
+  unstyled?: boolean;
   /** Accessible title for the iframe (default: `'Embedded Content'`). */
   title?: string;
+  /** Bindable native frame reference. */
+  element?: HTMLIFrameElement | null;
+  /** Native frame attributes; dedicated permission/source props retain precedence. */
+  nativeAttrs?: Omit<
+    HTMLIframeAttributes,
+    'src' | 'title' | 'allow' | 'sandbox' | 'onload' | 'onerror'
+  >;
   /**
    * Origins allowed to send `postMessage` events to `onMessage`. An empty array (the
    * default) processes nothing — secure by default.
@@ -37,6 +48,8 @@ export type OptionalIframeViewerProperties = {
 };
 
 export type IframeViewerEventProperties = {
+  onload?: (event: Event) => void;
+  onerror?: (event: Event) => void;
   /**
    * Called with the `MessageEvent` for `postMessage` events whose origin is in
    * `allowedOrigins` and whose source is the embedded iframe window.

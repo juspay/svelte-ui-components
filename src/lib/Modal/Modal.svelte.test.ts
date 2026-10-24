@@ -4,6 +4,44 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import Modal from './Modal.svelte';
 import { registerDismissible } from '../_interaction/dismissal';
 
+beforeAll(() => {
+  if (typeof Element.prototype.animate !== 'function') {
+    const stub = { cancel: () => {}, finished: Promise.resolve() };
+    Element.prototype.animate = () => stub as unknown as Animation;
+  }
+});
+
+describe('Modal opt-in focus containment', () => {
+  it('contains background focus and yields to a later registered foreground layer', async () => {
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    const view = render(Modal, {
+      containFocus: true,
+      role: 'dialog',
+      ariaLabel: 'Confirmation',
+      content: createRawSnippet(() => ({
+        render: () => '<button data-focus-inside>Confirm</button>'
+      }))
+    });
+    await tick();
+    const inside = view.container.querySelector<HTMLButtonElement>('[data-focus-inside]')!;
+    outside.focus();
+    expect(document.activeElement).toBe(inside);
+    const release = registerDismissible({ element: () => outside });
+    outside.focus();
+    expect(document.activeElement).toBe(outside);
+    release();
+    inside.focus();
+    outside.focus();
+    expect(document.activeElement).toBe(inside);
+    view.unmount();
+    await tick();
+    outside.focus();
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+});
+
 const press = (key: string): boolean =>
   document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
 
@@ -105,12 +143,6 @@ describe('Modal dismissal ownership', () => {
 describe('Modal debounceTime reactivity', () => {
   // Overlay and content transitions run through the Web Animations API, which jsdom lacks.
   // Stubbed here rather than in vitest-setup.ts for the reason Sheet's suite gives.
-  beforeAll(() => {
-    if (typeof Element.prototype.animate !== 'function') {
-      const stub = { cancel: () => {}, finished: Promise.resolve() };
-      Element.prototype.animate = () => stub as unknown as Animation;
-    }
-  });
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });

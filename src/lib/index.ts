@@ -1,3 +1,7 @@
+export { default as Link } from './Link/Link.svelte';
+export type { LinkProperties } from './Link/properties';
+export { default as Dialog } from './Dialog/Dialog.svelte';
+export type { DialogProperties } from './Dialog/properties';
 export { default as ArmedButton } from './ArmedButton/ArmedButton.svelte';
 export { default as Modal } from './Modal/Modal.svelte';
 export { default as DockPanel } from './DockPanel/DockPanel.svelte';
@@ -266,3 +270,6 @@ export { TEL_PRESETS, TEL_PRESET_IN_MOBILE } from './utils';
 export type { TelPreset, ValidateInputOptions } from './utils';
 export { formatNumberIndian } from './_chart/format';
 export { createNarrationHighlighter } from './_chart/narrationHighlighter';
+
+export { default as NativeFileInput } from './NativeFileInput/NativeFileInput.svelte';
+export type * from './NativeFileInput/properties';

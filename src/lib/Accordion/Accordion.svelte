@@ -2,6 +2,11 @@
   import type { AccordionProperties } from './properties';
 
   let {
+    native = false,
+    attachment,
+    nativeAttrs,
+    summaryAttrs,
+    element = $bindable(),
     expand = $bindable(false),
     children,
     trigger,
@@ -48,39 +53,65 @@
   }
 </script>
 
-{#if trigger}
-  <div
-    class="accordion-trigger {triggerClasses ?? ''}"
-    class:disabled
-    id={triggerId}
-    role="button"
-    tabindex={disabled ? -1 : 0}
-    aria-expanded={expand}
-    aria-controls={effectivePanelId}
-    aria-disabled={disabled}
-    onclick={handleTriggerClick}
-    onkeydown={(event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        handleTriggerClick();
-      }
-    }}
+{#if native}
+  <details
+    {@attach attachment}
+    {...nativeAttrs}
+    bind:open={expand}
+    bind:this={element}
+    class={classes ?? ''}
+    data-pw={testId}
+    ontoggle={(event) => ontoggle?.(event.currentTarget.open)}
   >
-    {@render trigger({ expanded: expand })}
-  </div>
-{/if}
+    <summary
+      {...summaryAttrs}
+      class={triggerClasses ?? ''}
+      aria-disabled={disabled || null}
+      tabindex={disabled ? -1 : null}
+      onclick={(event) => {
+        if (disabled) {
+          event.preventDefault();
+        }
+      }}
+    >
+      {@render trigger?.({ expanded: expand })}
+    </summary>
+    {@render children?.()}
+  </details>
+{:else}
+  {#if trigger}
+    <div
+      class="accordion-trigger {triggerClasses ?? ''}"
+      class:disabled
+      id={triggerId}
+      role="button"
+      tabindex={disabled ? -1 : 0}
+      aria-expanded={expand}
+      aria-controls={effectivePanelId}
+      aria-disabled={disabled}
+      onclick={handleTriggerClick}
+      onkeydown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleTriggerClick();
+        }
+      }}
+    >
+      {@render trigger({ expanded: expand })}
+    </div>
+  {/if}
 
-<div
-  id={effectivePanelId}
-  role={trigger ? 'region' : null}
-  aria-labelledby={trigger ? triggerId : null}
-  class="accordion {classes ?? ''}"
-  class:expanded={expand}
-  inert={lazy && !expand}
-  data-pw={typeof testId === 'string' ? testId : null}
-  testID={typeof testId === 'string' ? testId : null}
->
-  <!-- `inert` while collapsed, lazy only: a lazy panel's content stays mounted
+  <div
+    id={effectivePanelId}
+    role={trigger ? 'region' : null}
+    aria-labelledby={trigger ? triggerId : null}
+    class="accordion {classes ?? ''}"
+    class:expanded={expand}
+    inert={lazy && !expand}
+    data-pw={typeof testId === 'string' ? testId : null}
+    testID={typeof testId === 'string' ? testId : null}
+  >
+    <!-- `inert` while collapsed, lazy only: a lazy panel's content stays mounted
        (not torn down) between opens, so without this its links/buttons would
        stay in the tab order and the accessibility tree while clipped to 0px
        and invisible. A non-lazy panel never reaches this state: `mounted` is
@@ -89,10 +120,11 @@
        The children are chosen by a conditional snippet, not an {#if}: an {#if} would be a
        new block around them, so a local transition inside would stop following the outer
        block that adds or removes the Accordion. This stays the bare render tag it was. -->
-  <div class="accordion-content">
-    {@render (mounted ? children : null)?.()}
+    <div class="accordion-content">
+      {@render (mounted ? children : null)?.()}
+    </div>
   </div>
-</div>
+{/if}
 
 <style>
   .accordion-trigger {

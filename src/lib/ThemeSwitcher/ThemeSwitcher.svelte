@@ -144,6 +144,7 @@
       <button
         bind:this={segmentButtons[i]}
         class="segment-button"
+        data-mode={option.value}
         class:selected={currentValue === option.value}
         onclick={() => applyValue(option.value)}
         aria-label={option.label ?? option.value}
@@ -233,6 +234,7 @@
   }
 
   .segment-indicator {
+    display: var(--theme-switcher-segment-indicator-display, block);
     position: absolute;
     top: var(--theme-switcher-segment-padding, 4px);
     bottom: var(--theme-switcher-segment-padding, 4px);
@@ -248,6 +250,8 @@
   }
 
   .segment-button {
+    width: var(--theme-switcher-segment-button-width, auto);
+    height: var(--theme-switcher-segment-button-height, auto);
     position: relative;
     z-index: 1;
     display: inline-flex;
@@ -265,6 +269,7 @@
   }
 
   .segment-button.selected {
+    background: var(--theme-switcher-segment-selected-background, transparent);
     color: var(--theme-switcher-icon-color-active, #1f2937);
   }
 

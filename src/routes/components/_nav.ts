@@ -29,6 +29,7 @@ export const componentNav: NavGroup[] = [
     category: 'Navigation',
     items: [
       { name: 'Breadcrumb', slug: 'breadcrumb' },
+      { name: 'Link', slug: 'link' },
       { name: 'Tabs', slug: 'tabs' },
       { name: 'Stepper', slug: 'stepper' },
       { name: 'Pagination', slug: 'pagination' },
@@ -55,6 +56,7 @@ export const componentNav: NavGroup[] = [
       { name: 'ChipInput', slug: 'chip-input' },
       { name: 'FileDropzoneTrigger', slug: 'file-dropzone-trigger' },
       { name: 'FileInput', slug: 'file-input' },
+      { name: 'NativeFileInput', slug: 'native-file-input' },
       { name: 'Label', slug: 'label' },
       { name: 'RatingGroup', slug: 'rating-group' }
     ]
@@ -119,6 +121,7 @@ export const componentNav: NavGroup[] = [
     category: 'Overlays',
     items: [
       { name: 'Modal', slug: 'modal' },
+      { name: 'Dialog', slug: 'dialog' },
       { name: 'Sheet', slug: 'sheet' },
       { name: 'Menu', slug: 'menu' },
       { name: 'ContextMenu', slug: 'context-menu' },

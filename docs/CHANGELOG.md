@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.54.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.55.0)
+
+-
+ci: shard the Playwright suite across four parallel runners ([5e649c6](https://github.com/juspay/svelte-ui-components/commit/5e649c61c7da37889ef8cf2b582a4db88fbe5347))
+-
+ci: warn when the merged Playwright report is missing shards ([2168421](https://github.com/juspay/svelte-ui-components/commit/216842140ed01d9d1f47be033411d1207eda8740))
+
+## [4.55.0](https://github.com/juspay/svelte-ui-components/compare/4.55.0..4.54.2) - 11 October 2026
 
 - Add inlineTriggers: a trigger such as "@" opens the menu on the word at the caret, anywhere in the text
 - Picking a row replaces only that word and keeps the rest of the text

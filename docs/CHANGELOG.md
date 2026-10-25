@@ -2,7 +2,9 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.55.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.55.3)
+
+## [4.55.3](https://github.com/juspay/svelte-ui-components/compare/4.55.3..4.55.2) - 25 October 2026
 
 ## [4.55.2](https://github.com/juspay/svelte-ui-components/compare/4.55.2..4.55.1) - 24 October 2026
 

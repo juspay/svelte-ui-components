@@ -35,6 +35,7 @@
   let active: {
     edge: ResizeEdge;
     pointerId: number;
+    handle: HTMLElement;
     startX: number;
     startY: number;
     startW: number;
@@ -82,33 +83,40 @@
     event: PointerEvent & { currentTarget: HTMLElement },
     edge: ResizeEdge
   ): void {
-    if (disabled) {
+    if (disabled || active !== null) {
       return;
     }
     event.preventDefault();
     const startW = clampWidth(measuredWidth());
     const startH = clampHeight(measuredHeight());
     const direction = DIRS[edge];
+    active = {
+      edge,
+      pointerId: event.pointerId,
+      handle: event.currentTarget,
+      startX: event.clientX,
+      startY: event.clientY,
+      startW,
+      startH
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // A pointer that already ended cannot own a resize session.
+      active = null;
+      return;
+    }
     if (direction.x !== 0) {
       width = startW;
     }
     if (direction.y !== 0) {
       height = startH;
     }
-    active = {
-      edge,
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      startW,
-      startH
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
     onresizestart?.({ width: startW, height: startH });
   }
 
   function moveResize(event: PointerEvent): void {
-    if (active === null) {
+    if (active === null || event.pointerId !== active.pointerId) {
       return;
     }
     const dir = DIRS[active.edge];
@@ -121,15 +129,40 @@
     onresize?.({ width: measuredWidth(), height: measuredHeight() });
   }
 
-  function endResize(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (active === null) {
+  function finishResize(notify: boolean): void {
+    const session = active;
+    if (session === null) {
       return;
     }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
+    // Clear ownership before release, which can synchronously dispatch capture loss.
     active = null;
-    onresizeend?.({ width: measuredWidth(), height: measuredHeight() });
+    try {
+      if (session.handle.hasPointerCapture(session.pointerId)) {
+        session.handle.releasePointerCapture(session.pointerId);
+      }
+    } catch {
+      // Capture may already have been removed by the browser or a detached handle.
+    }
+    if (notify) {
+      onresizeend?.({ width: measuredWidth(), height: measuredHeight() });
+    }
+  }
+
+  function endResize(event: PointerEvent): void {
+    if (active === null || event.pointerId !== active.pointerId) {
+      return;
+    }
+    finishResize(!disabled && handles.includes(active.edge));
+  }
+
+  function trackResizeHandle(handle: HTMLElement): { destroy: () => void } {
+    return {
+      destroy: () => {
+        if (active?.handle === handle) {
+          finishResize(false);
+        }
+      }
+    };
   }
 
   function keyResize(event: KeyboardEvent, edge: ResizeEdge): void {
@@ -198,6 +231,7 @@
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="handle"
+      use:trackResizeHandle
       data-edge={edge}
       role="separator"
       tabindex="0"
@@ -209,6 +243,8 @@
       onpointerdown={(event) => startResize(event, edge)}
       onpointermove={moveResize}
       onpointerup={endResize}
+      onpointercancel={endResize}
+      onlostpointercapture={endResize}
       onkeydown={(event) => keyResize(event, edge)}
     ></div>
   {/each}

@@ -373,7 +373,7 @@
     while (ancestor) {
       observer.observe(ancestor, {
         attributes: true,
-        attributeFilter: ['class', 'style', 'data-theme', 'dir']
+        attributeFilter: ['class', 'style', 'theme', 'data-theme', 'dir']
       });
       const root = ancestor.getRootNode();
       ancestor = ancestor.parentElement ?? (root instanceof ShadowRoot ? root.host : null);

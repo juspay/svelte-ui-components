@@ -5,6 +5,7 @@
     props: {
       containFocus: { type: 'Boolean', attribute: 'contain-focus' },
       scrollContainer: { type: 'Object' },
+      restoreFocusTo: { type: 'Object' },
       size: { type: 'String', reflect: true },
       align: { type: 'String', reflect: true },
       showOverlay: { type: 'Boolean', reflect: true, attribute: 'show-overlay' },

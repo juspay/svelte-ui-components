@@ -24,6 +24,15 @@ export type ModalRole = 'dialog' | 'alertdialog';
 export type ModalProperties = OptionalModalProperties & ModalEventProperties;
 
 export type OptionalModalProperties = {
+  /**
+   * Focus destination snapshotted once per mounted open. Omit to restore the
+   * previously focused element unchanged. A getter resolves once at actual
+   * teardown, after dismissal/scroll cleanup; it must only return a target.
+   * Explicit null, a null/throwing getter, or a disconnected/foreign-document
+   * element skips restoration without falling back. Changes while mounted
+   * apply to the next mount. Custom elements accept property assignment only.
+   */
+  restoreFocusTo?: HTMLElement | (() => HTMLElement | null) | null;
   /** Pull programmatic/background focus back into this modal while it owns the foreground. */
   containFocus?: boolean;
   /** Scroll owner, resolved once per open span. Omit for the overlay's ownerDocument.body.

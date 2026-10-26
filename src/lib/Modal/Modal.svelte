@@ -21,8 +21,11 @@
   // Not $state: it's read-once bookkeeping for the mount/destroy pair, not
   // something the template reacts to.
   let previouslyFocusedElement: HTMLElement | null = null;
+  let mountedRestoreFocusTo: ModalProperties['restoreFocusTo'];
+  let restoreFocusDocument: Document | null = null;
 
   let {
+    restoreFocusTo,
     containFocus = false,
     size = 'fit-content',
     align = 'center',
@@ -232,6 +235,9 @@
 
   onMount(() => {
     const ownerDocument = modalContent?.ownerDocument ?? document;
+    // Keep this open instance's option, not a newer presentation's prop.
+    mountedRestoreFocusTo = restoreFocusTo;
+    restoreFocusDocument = ownerDocument;
     ownerDocument.addEventListener('focusin', handleFocusIn, true);
     releaseFocusGuard = () => ownerDocument.removeEventListener('focusin', handleFocusIn, true);
     releaseDismissible = registerDismissible({
@@ -284,8 +290,30 @@
     // isConnected: the trigger can have been unmounted while the modal was
     // open (e.g. the page navigated), and .focus() on a detached element is
     // a silent no-op at best.
-    if (previouslyFocusedElement !== null && previouslyFocusedElement.isConnected) {
-      previouslyFocusedElement.focus();
+    if (typeof mountedRestoreFocusTo === 'undefined') {
+      if (previouslyFocusedElement !== null && previouslyFocusedElement.isConnected) {
+        previouslyFocusedElement.focus();
+      }
+    } else {
+      try {
+        const target =
+          typeof mountedRestoreFocusTo === 'function'
+            ? mountedRestoreFocusTo()
+            : mountedRestoreFocusTo;
+        const OwnerNode = restoreFocusDocument?.defaultView?.Node;
+        if (
+          target !== null &&
+          target.ownerDocument === restoreFocusDocument &&
+          target.namespaceURI === 'http://www.w3.org/1999/xhtml' &&
+          target.isConnected &&
+          typeof OwnerNode === 'function' &&
+          OwnerNode.prototype.getRootNode.call(target, { composed: true }) === restoreFocusDocument
+        ) {
+          target.focus();
+        }
+      } catch {
+        // An explicit owner can withdraw its target; never restore the old opener instead.
+      }
     }
   });
 </script>

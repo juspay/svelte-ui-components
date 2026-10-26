@@ -16,6 +16,7 @@ A dialog overlay component that renders on top of the page with configurable siz
 
 | Prop                     | Type                                                                                                                                                      | Required | Default         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| restoreFocusTo           | `HTMLElement` / getter / `null`                                                                                                                           | No       | omitted         | Optional focus destination snapshotted per mounted open; resolved once at actual teardown after cleanup. Null, invalid/disconnected/foreign-document targets or getter errors skip restoration without fallback. Property-only on custom elements.                                                                                                                                                                                                                                                                                           |
 | size                     | `ModalSize = 'large' \| 'medium' \| 'small' \| 'fit-content'`                                                                                             | No       | `'fit-content'` | Controls the height of the modal content panel. 'small'=20vh, 'medium'=50vh, 'large'=80vh, 'fit-content'=auto with 80vh max.                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | align                    | `ModalAlign = 'top' \| 'center' \| 'bottom'`                                                                                                              | No       | `'center'`      | Vertical alignment of the modal within the viewport. 'top' aligns to the top (flex-start), 'center' centers vertically, 'bottom' aligns to the bottom (flex-end).                                                                                                                                                                                                                                                                                                                                                                            |
 | showOverlay              | `boolean`                                                                                                                                                 | No       | `true`          | When true, shows a dark semi-transparent overlay behind the modal. When false, the overlay is transparent with pointer-events disabled.                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -350,3 +351,43 @@ values are ignored without falling back to the host body.
 modal while it owns the foreground. It yields to later registered library popups
 and native Dialog surfaces, and removes its listener on unmount. It complements
 the existing Tab trap without forcing a new policy on existing consumers.
+
+## Focus restoration
+
+Omitting `restoreFocusTo` keeps the existing captured-opener restoration unchanged.
+To return to a different owned control, pass an element or a getter:
+
+```svelte
+<Modal restoreFocusTo={() => currentLabelInput} {content} />
+```
+
+The option's value or function reference is captured once when the Modal mounts.
+Changing the prop while that instance is mounted does not replace its return
+owner; use a new mount for a new presentation. A getter reads the current target
+synchronously once at **actual teardown**, after focus/dismissal listeners,
+scroll locking and hardware-back cleanup are released. Close-intent callbacks
+such as `onclose`, `onoverlayclick` and `ondismiss` retain their current timing;
+they are not after-close hooks. An outro can retain the Modal after intent, so
+neither `tick()` nor a guessed delay establishes this restoration point.
+
+Explicit `null`, a getter returning `null` or throwing, and disconnected,
+non-HTML or foreign-document targets suppress restoration without falling back
+to the old opener. A target must be connected in the Modal's captured owning
+document; elements within its shadow trees are supported. Native Node brand and
+composed-root checks accept genuine HTML targets across JavaScript realms,
+including adopted elements, without accepting plain object lookalikes. The
+existing `.focus()` call semantics are unchanged.
+
+The consumer owns generation, route, app-root and intentional-focus fences, and
+must return only an enabled, visible, non-inert target in its current context.
+A getter must only select an element or return `null`: do not call `focus()`,
+mutate business state, or schedule another focus operation inside it.
+
+For the custom element, assign the Object property **before the mounted open**:
+
+```js
+modal.restoreFocusTo = () => currentLabelInput; // or an HTMLElement / null
+```
+
+This is not a selector-string attribute. There is no new after-close event,
+focus timer or automatic root/route ownership policy.

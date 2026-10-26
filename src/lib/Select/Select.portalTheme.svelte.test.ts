@@ -115,7 +115,7 @@ describe('Select portalled owner theme lifecycle', () => {
     document.documentElement.setAttribute('theme', 'dark');
     await settleThemeMutation();
     expect(first.style.getPropertyValue('--select-dropdown-background')).toBe(dark);
-    await fireEvent.click(screen.getByRole('option', { name: 'Beta', exact: true }));
+    await fireEvent.click(screen.getByRole('option', { name: /^Beta$/ }));
     expect(onchange).toHaveBeenCalledExactlyOnceWith(['beta']);
     expect(screen.queryByRole('listbox')).toBeNull();
 

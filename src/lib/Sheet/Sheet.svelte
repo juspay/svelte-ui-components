@@ -8,7 +8,8 @@
   import { toStore } from 'svelte/store';
   import Button from '../Button/Button.svelte';
   import { focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
-  import { registerDismissible } from '../_interaction/dismissal';
+  import { registerDismissible, isTopmostDismissible } from '../_interaction/dismissal';
+  import { composedParent } from '../_interaction/focusable';
 
   let {
     open = $bindable(false),
@@ -155,10 +156,12 @@
   let scrollLockNode: HTMLElement | null = null;
   let releaseScrollLock: (() => void) | null = null;
   let scrollLockSpanEnded = false;
+  let reopenFocusRevision = 0;
 
   onMount(() =>
     toStore(() => open).subscribe((isOpen) => {
       if (!isOpen) {
+        reopenFocusRevision += 1;
         scrollLockSpanEnded = true;
       } else if (scrollLockSpanEnded && scrollLockNode !== null) {
         // Reversing an outro reuses the action. Resolve the next logical open's
@@ -169,6 +172,34 @@
         );
         releaseScrollLock?.();
         releaseScrollLock = releaseNext;
+        const node = scrollLockNode;
+        const panel = untrack(() => sheetPanel);
+        const revision = ++reopenFocusRevision;
+        void tick().then(() => {
+          if (
+            revision !== reopenFocusRevision ||
+            !open ||
+            scrollLockNode !== node ||
+            sheetPanel !== panel ||
+            panel === null ||
+            !node.isConnected ||
+            !panel.isConnected ||
+            !isTopmostDismissible(panel)
+          ) {
+            return;
+          }
+          // Keep focus/selection already owned through slot or shadow projection.
+          for (
+            let current = getActiveElement(panel);
+            current !== null;
+            current = composedParent(current)
+          ) {
+            if (current === panel) {
+              return;
+            }
+          }
+          panel.focus();
+        });
       }
     })
   );
@@ -201,6 +232,7 @@
     return {
       destroy() {
         active = false;
+        reopenFocusRevision += 1;
         releaseDismissible();
         releaseScrollLock?.();
         releaseScrollLock = null;

@@ -30,6 +30,7 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/modal-viewport/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/modal-hidden-input/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/modal-restore-focus/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/sheet-reversal-focus/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chat-message-list-scroll/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/banner-right-margin/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/drp-footer-contrast/index.html'),

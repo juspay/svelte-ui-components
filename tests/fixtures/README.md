@@ -100,6 +100,11 @@ message list each one renders. The spec also injects `dist-wc/index.js` to mount
 `pnpm run build:wc` first), so the pair stays out of the docs demo and that route's visual baseline does
 not move.
 
+`chat-composer-selection/` mounts two ChatComposers with `inlineTriggers` set and a draft, one with
+nothing set and one with `--chat-composer-selection-background`, so
+`tests/chat-composer-mention-selection.spec.ts` can select part of the draft and read the highlight each
+one paints.
+
 `scroller-justify-content/` mounts the real Scroller, in 400px hosts with three or eight 80px items, and the
 real AttachmentChipRow, with two or eight chips, each beside what an app might have: nothing set, the
 `--scroller-justify-content` token on the root class (`flex-end`, `center`, `safe flex-end`), and an app rule that

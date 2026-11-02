@@ -40,6 +40,7 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/chat-message-list-inner/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chat-message-body-list/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chat-hide-scrollbar/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/chat-composer-selection/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/scroller-justify-content/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/toast-close-lifecycle/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/chart-label-plate/index.html'),

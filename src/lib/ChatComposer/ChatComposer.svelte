@@ -900,8 +900,11 @@
     caret-color: var(--chat-composer-color, #18181b);
   }
 
+  /* A ::selection rule replaces the browser's whole highlight, so it has to paint its own
+     background too; Highlight is the colour a composer without inline mentions selects with. */
   .input.inline-mentions::selection {
     color: var(--chat-composer-color, #18181b);
+    background-color: var(--chat-composer-selection-background, Highlight);
   }
 
   .input-highlights {

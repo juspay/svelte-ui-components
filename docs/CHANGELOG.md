@@ -2,7 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.2)
+
+With inlineTriggers set, the textarea text is transparent and its ::selection
+rule restores the colour. That rule set only `color`, and a ::selection rule
+replaces the browser's whole highlight, so the highlight background fell to
+transparent: selected text looked unselected in Chromium, WebKit and Firefox.
+
+Paint the background too, from a new --chat-composer-selection-background
+token whose default is the system Highlight colour, the one a composer
+without inline mentions already selects with.
+
+Co-Authored-By: Claude Opus 5.5 &lt;noreply@anthropic.com&gt;
+
+## [4.57.2](https://github.com/juspay/svelte-ui-components/compare/4.57.2..4.57.1) - 26 October 2026
 
 ## [4.57.1](https://github.com/juspay/svelte-ui-components/compare/4.57.1..4.57.0) - 26 October 2026
 

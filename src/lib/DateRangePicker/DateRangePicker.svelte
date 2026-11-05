@@ -141,6 +141,17 @@
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+  // Whole calendar days from one date to another, ignoring the time of day. A boundary
+  // can carry a time while a clicked or typed date is midnight, and rounding the elapsed
+  // time then miscounts: from 13:00, midnight of the same day rounds to a day away and
+  // midnight of the next day to none. Date.UTC also keeps a daylight-saving change from
+  // shortening or lengthening a day.
+  function calendarDaysBetween(from: Date, to: Date): number {
+    const fromDay = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+    const toDay = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+    return (toDay - fromDay) / MS_PER_DAY;
+  }
+
   function isBaseDisabledDate(date: Date): boolean {
     if (typeof disabledDates === 'function') {
       return disabledDates(date);
@@ -168,7 +179,7 @@
       if (!selecting || anchor === null) {
         return false;
       }
-      const diffDays = Math.abs(Math.round((date.getTime() - anchor.getTime()) / MS_PER_DAY));
+      const diffDays = Math.abs(calendarDaysBetween(anchor, date));
       return diffDays > limit - 1;
     };
   });
@@ -757,7 +768,8 @@
   // Three ways a parsed date is refused:
   //   1. it isn't selectable at all (minDate/maxDate/disabled, and the maxRangeDays
   //      span while a range is mid-selection),
-  //   2. it crosses the opposite boundary (a start after the end, or vice versa),
+  //   2. it crosses the opposite boundary (a start after the end, or vice versa; with
+  //      the time inputs showing, only a different day can cross),
   //   3. it would stretch an *already-complete* range past maxRangeDays.
   // Case 3 is not covered by isDateSelectable: rangeConstrainedDisabledDates only
   // applies its span check while `selecting` is true (draftStart set, draftEnd still
@@ -771,16 +783,22 @@
     if (otherBoundaryDate === null) {
       return true;
     }
+    // A typed date has no time of day, so a same-day range with times (an hour preset,
+    // 06:00 to 18:00) parses its end to midnight, before the start. With the time inputs
+    // showing, isTimeRangeValid already keeps a same-day start time at or before the end
+    // time, so the date only crosses the other boundary when it is a different day.
+    // Without them the draft's own time is the only one there is, so it is compared too.
+    const isSameDayWithTimeInputs = showTimeSelection && isSameDay(candidate, otherBoundaryDate);
     const crossesOtherBoundary =
-      boundary === 'start'
+      !isSameDayWithTimeInputs &&
+      (boundary === 'start'
         ? candidate.getTime() > otherBoundaryDate.getTime()
-        : candidate.getTime() < otherBoundaryDate.getTime();
+        : candidate.getTime() < otherBoundaryDate.getTime());
     if (crossesOtherBoundary) {
       return false;
     }
     if (maxRangeDays !== null) {
-      const spanDays =
-        Math.abs(Math.round((candidate.getTime() - otherBoundaryDate.getTime()) / MS_PER_DAY)) + 1;
+      const spanDays = Math.abs(calendarDaysBetween(otherBoundaryDate, candidate)) + 1;
       if (spanDays > maxRangeDays) {
         return false;
       }

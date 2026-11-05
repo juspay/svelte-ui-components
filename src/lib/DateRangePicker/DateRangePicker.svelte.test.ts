@@ -997,3 +997,135 @@ describe('DateRangePicker single-month calendar', () => {
     expect(visibleMonthLabel(panel)).toBe('March 2019');
   });
 });
+
+describe('DateRangePicker typed dates on a range with times', () => {
+  const typeEndDate = async (endDateInput: HTMLElement, text: string): Promise<void> => {
+    await fireEvent.input(endDateInput, { target: { value: text } });
+    await fireEvent.keyDown(endDateInput, { key: 'Enter' });
+  };
+
+  it('does not flag the end date of a same-day hour range as invalid', async () => {
+    const { getByLabelText } = await openPanel({
+      showTimeSelection: true,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 6, 0),
+      rangeEnd: new Date(2026, 5, 15, 18, 0)
+    });
+
+    expect(getByLabelText('End date').getAttribute('aria-invalid')).toBe('false');
+    expect(getByLabelText('Start date').getAttribute('aria-invalid')).toBe('false');
+  });
+
+  it('accepts a typed end date on the start day when the time inputs are showing', async () => {
+    const onapply = vi.fn();
+    const { getByLabelText, getByRole } = await openPanel({
+      showTimeSelection: true,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 6, 0),
+      rangeEnd: new Date(2026, 5, 16, 18, 0),
+      onapply
+    });
+
+    await typeEndDate(getByLabelText('End date'), 'Jun 15, 2026');
+    await fireEvent.click(getByRole('button', { name: 'Apply date selection' }));
+
+    expect(onapply).toHaveBeenCalledTimes(1);
+    const { rangeEnd } = onapply.mock.calls[0][0];
+    expect(rangeEnd.getDate()).toBe(15);
+    expect(rangeEnd.getHours()).toBe(18);
+  });
+
+  it('still refuses an end date before a timed start when there are no time inputs', async () => {
+    const onapply = vi.fn();
+    const { getByLabelText, getByRole } = await openPanel({
+      showDateInputs: true,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 6, 0),
+      rangeEnd: new Date(2026, 5, 16, 18, 0),
+      onapply
+    });
+
+    // Midnight on the start day is before 06:00, and nothing would put a time back on it.
+    await typeEndDate(getByLabelText('End date'), 'Jun 15, 2026');
+    await fireEvent.click(getByRole('button', { name: 'Apply date selection' }));
+
+    expect(onapply).toHaveBeenCalledTimes(1);
+    expect(onapply.mock.calls[0][0].rangeEnd.getDate()).toBe(16);
+  });
+
+  it('refuses a typed end date before the start day when the time inputs are showing', async () => {
+    const onapply = vi.fn();
+    const { getByLabelText, getByRole } = await openPanel({
+      showTimeSelection: true,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 6, 0),
+      rangeEnd: new Date(2026, 5, 16, 18, 0),
+      onapply
+    });
+
+    await typeEndDate(getByLabelText('End date'), 'Jun 14, 2026');
+    await fireEvent.click(getByRole('button', { name: 'Apply date selection' }));
+
+    expect(onapply).toHaveBeenCalledTimes(1);
+    expect(onapply.mock.calls[0][0].rangeEnd.getDate()).toBe(16);
+  });
+
+  // From a 13:00 start, rounding the elapsed time put midnight of the same day a day away
+  // and midnight of the next day none away, so maxRangeDays counted both wrong.
+  it('lets maxRangeDays 1 keep a same-day typed end date from a start after noon', async () => {
+    const onapply = vi.fn();
+    const { getByLabelText, getByRole } = await openPanel({
+      showTimeSelection: true,
+      maxRangeDays: 1,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 13, 0),
+      rangeEnd: new Date(2026, 5, 16, 18, 0),
+      onapply
+    });
+
+    await typeEndDate(getByLabelText('End date'), 'Jun 15, 2026');
+    await fireEvent.click(getByRole('button', { name: 'Apply date selection' }));
+
+    expect(onapply).toHaveBeenCalledTimes(1);
+    expect(onapply.mock.calls[0][0].rangeEnd.getDate()).toBe(15);
+  });
+
+  it('lets maxRangeDays 1 refuse a next-day typed end date from a start after noon', async () => {
+    const onapply = vi.fn();
+    const { getByLabelText, getByRole } = await openPanel({
+      showTimeSelection: true,
+      maxRangeDays: 1,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 13, 0),
+      rangeEnd: new Date(2026, 5, 15, 18, 0),
+      onapply
+    });
+
+    await typeEndDate(getByLabelText('End date'), 'Jun 16, 2026');
+    await fireEvent.click(getByRole('button', { name: 'Apply date selection' }));
+
+    expect(onapply).toHaveBeenCalledTimes(1);
+    expect(onapply.mock.calls[0][0].rangeEnd.getDate()).toBe(15);
+  });
+
+  it('counts maxRangeDays by calendar day on the grid from a start after noon', async () => {
+    const { panel } = await openPanel({
+      dualMonth: false,
+      maxRangeDays: 1,
+      locale: 'en-US',
+      rangeStart: new Date(2026, 5, 15, 13, 0),
+      rangeEnd: null
+    });
+
+    const dayButton = (day: number): HTMLButtonElement => {
+      const button = panel.querySelector<HTMLButtonElement>(`.cell[data-day="${day}"]`);
+      if (button === null) {
+        throw new Error(`day ${day} not found`);
+      }
+      return button;
+    };
+
+    expect(dayButton(15).disabled).toBe(false);
+    expect(dayButton(16).disabled).toBe(true);
+  });
+});

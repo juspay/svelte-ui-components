@@ -2,7 +2,31 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.2)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.3)
+
+A typed date has no time of day, so with the time inputs showing, a
+same-day range such as an hour preset (06:00 to 18:00) parsed its end date
+to midnight, before the start. The end-date field was marked invalid and
+the consumer saw it empty after Apply. With the time inputs showing,
+isTimeRangeValid already keeps a same-day start time at or before the end
+time, so the date now only crosses the other boundary on a different day.
+Without time inputs the full comparison stays, so a typed date can never
+produce a range that ends before it starts.
+
+maxRangeDays rounded the elapsed time between a timed boundary and a
+midnight date, so from a start after noon it counted the same day as two
+days and the next day as none. The typed-date check and the calendar grid
+now both count calendar days.
+
+The change moves DateRangePicker's two allowlisted outline suppressions
+down, so their entries in check-focus-visible.js move with them.
+
+-
+fix(ci): pin Playwright jobs to ubuntu-24.04 ([16801c3](https://github.com/juspay/svelte-ui-components/commit/16801c3456217cf4996294e07dd8663686823709))
+-
+fix(package): export CheckListItem, GridItem and Toggle property types ([d93ac38](https://github.com/juspay/svelte-ui-components/commit/d93ac386d7cc8b105d605f3a83a371fe3bcf2699))
+
+## [4.57.3](https://github.com/juspay/svelte-ui-components/compare/4.57.3..4.57.2) - 3 November 2026
 
 With inlineTriggers set, the textarea text is transparent and its ::selection
 rule restores the colour. That rule set only `color`, and a ::selection rule

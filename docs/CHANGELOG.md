@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.4)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.5)
+
+Root pnpm-lock.yaml: brace-expansion 5.0.9 -&gt; 5.0.13, devalue 5.8.1 -&gt; 5.9.4, source-map-js 1.2.1 -&gt; 1.2.4. mcp/package-lock.json: @modelcontextprotocol/sdk 1.29.0 -&gt; 1.32.2 plus the in-range fixes npm audit offered, taking the mcp package from 7 advisories to 0. Replaces the Dependabot PR, which carried the same bumps but also wrote an mcp importer into the root pnpm-lock.yaml although the repo has no pnpm workspace.
+
+-
+build(deps): bump vulnerable transitive dependencies in both lockfiles ([53d47e3](https://github.com/juspay/svelte-ui-components/commit/53d47e37f96b65ff959259f39523108480107808))
+
+## [4.57.5](https://github.com/juspay/svelte-ui-components/compare/4.57.5..4.57.4) - 20 November 2026
 
 Select.children is rendered only as the children of the native &lt;select&gt;. A &lt;select&gt; builds its option list from its own tree children and ignores options a &lt;slot&gt; projects into it (checked in Chromium and WebKit: the slot reports the options as assigned, the select still has none). A slot would look wired and give an empty picker, so the prop is recorded as structurally unreachable with a new nativeSelectContent shape, and the test re-derives that shape from Select.svelte. The items property stays the host path; docs/Select.md now says so.
 

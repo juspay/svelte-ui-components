@@ -155,11 +155,62 @@ const destructuredProps = (component: string): ReadonlySet<string> => {
 const isComponentLevelProp = (component: string, prop: string): boolean =>
   destructuredProps(component).has(prop);
 
+/** Is the character at `index` between a `<select …>` open tag and its `</select>`? */
+const isInsideSelect = (text: string, index: number): boolean => {
+  let depth = 0;
+  for (const tag of text.slice(0, index).matchAll(/<select\b|<\/select>/g)) {
+    depth += tag[0] === '</select>' ? -1 : 1;
+  }
+  return depth > 0;
+};
+
+/** The `{#snippet name(…)}` block enclosing `index`, or `null` at the template's top level. */
+const enclosingSnippet = (text: string, index: number): string | null => {
+  let current: string | null = null;
+  for (const token of text.slice(0, index).matchAll(/\{#snippet (\w+)\(|\{\/snippet\}/g)) {
+    current = token[0] === '{/snippet}' ? null : token[1];
+  }
+  return current;
+};
+
+/**
+ * Is every place `prop` renders the content of a native `<select>`?
+ *
+ * A render site counts when it sits inside `<select>` directly, or inside a snippet
+ * whose own render sites all do -- Select wraps `children` in `nativeOptions` so the
+ * single and multiple `<select>` branches share it. One level of indirection only, and
+ * at least one site: a prop rendered nowhere must not pass by having nothing to check.
+ */
+const rendersOnlyInsideSelect = (component: string, prop: string): boolean => {
+  const text = source(component);
+  const sitesOf = (name: string): number[] =>
+    [...text.matchAll(new RegExp(`\\{@render\\s+${name}\\s*(?:\\?\\.)?\\s*\\(`, 'g'))].map(
+      (m) => m.index
+    );
+  const sites = sitesOf(prop);
+  if (sites.length === 0) {
+    return false;
+  }
+  return sites.every((site) => {
+    if (isInsideSelect(text, site)) {
+      return true;
+    }
+    const snippet = enclosingSnippet(text, site);
+    if (snippet === null) {
+      return false;
+    }
+    const snippetSites = sitesOf(snippet);
+    return snippetSites.length > 0 && snippetSites.every((at) => isInsideSelect(text, at));
+  });
+};
+
 /**
  * Props left unreachable from markup on purpose, and the shape that makes a named slot
  * the wrong tool. `perItem` means the component renders it once per array entry;
  * `notAComponentProp` means the `Snippet` declaration belongs to an item type in
- * properties.ts rather than to the component's own props.
+ * properties.ts rather than to the component's own props; `nativeSelectContent` means
+ * it renders as the children of a native `<select>`, which takes its options from its
+ * own tree children and ignores anything a `<slot>` projects into it.
  *
  * Re-exported from scripts/wc2-unreachable.mjs rather than declared here a second
  * time, so a decision recorded once has a single home rather than two copies that
@@ -168,7 +219,7 @@ const isComponentLevelProp = (component: string, prop: string): boolean =>
 const NOT_BRIDGED: ReadonlyArray<{
   component: string;
   prop: string;
-  shape: 'perItem' | 'notAComponentProp';
+  shape: 'perItem' | 'notAComponentProp' | 'nativeSelectContent';
   why: string;
 }> = WC2_UNREACHABLE;
 
@@ -263,6 +314,11 @@ describe('argument-less content props reachable from markup', () => {
     expect(declaredSlots(component).has(kebab(prop))).toBe(false);
     if (shape === 'perItem') {
       expect(readInsideEach(component, prop)).toBe(true);
+    } else if (shape === 'nativeSelectContent') {
+      // The wrapper must not offer a default slot either: that is the path a
+      // `children` prop would otherwise be bridged through.
+      expect(wrapper(component)).not.toMatch(/<slot(?![^>]*\bname=)[^>]*>/);
+      expect(rendersOnlyInsideSelect(component, prop)).toBe(true);
     } else {
       expect(isComponentLevelProp(component, prop)).toBe(false);
     }

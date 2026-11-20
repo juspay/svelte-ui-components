@@ -619,6 +619,8 @@ property for those two instead: `el.onchange = (value) => ...`, `el.onclose = ()
 
 > **Svelte-only:** The `optionIndicator` snippet is not available in Web Component mode. The `option-indicator` slot was removed because Web Component `<slot>` elements do not forward Svelte snippet parameters as HTML attributes, causing the `checked` state to be silently dropped. Use the Svelte component directly when a custom option indicator is needed.
 
+> **Svelte-only:** The `children` snippet (custom `<option>` / `<optgroup>` markup for `native`) is not available in Web Component mode, and `<sui-select>` has no default slot. A native `<select>` builds its option list from its own children and ignores options projected into it through a `<slot>`, so slotted options would leave the picker empty. Set the `items` property instead; `native` renders one `<option>` per item.
+
 An `aria-labelledby` reference follows a WC host moved into another DOM or shadow root, and subsequent label edits in that root remain reactive.
 
 ## Native rendering

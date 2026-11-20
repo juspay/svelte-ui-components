@@ -2,7 +2,11 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.3)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.4)
+
+Select.children is rendered only as the children of the native &lt;select&gt;. A &lt;select&gt; builds its option list from its own tree children and ignores options a &lt;slot&gt; projects into it (checked in Chromium and WebKit: the slot reports the options as assigned, the select still has none). A slot would look wired and give an empty picker, so the prop is recorded as structurally unreachable with a new nativeSelectContent shape, and the test re-derives that shape from Select.svelte. The items property stays the host path; docs/Select.md now says so.
+
+## [4.57.4](https://github.com/juspay/svelte-ui-components/compare/4.57.4..4.57.3) - 20 November 2026
 
 A typed date has no time of day, so with the time inputs showing, a
 same-day range such as an hour preset (06:00 to 18:00) parsed its end date

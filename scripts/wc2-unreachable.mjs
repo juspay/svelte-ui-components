@@ -14,6 +14,14 @@
  * all, so there is no single prop on the wrapped component to bridge in the first
  * place.
  *
+ * `nativeSelectContent` is a different reason with the same outcome. The snippet is
+ * rendered as the children of a native `<select>`, and a `<select>` builds its option
+ * list from its OWN tree children only -- never from nodes a `<slot>` projects into it.
+ * Verified in Chromium and WebKit with a `<select>` holding a `<slot>` inside a shadow
+ * root: the slot reported both light-DOM `<option>`s as assigned, and the select still
+ * had `options.length === 0` and an empty value. A slot here would look wired and
+ * produce an empty picker. The host path for the same content is the `items` property.
+ *
  * This module is the single source of truth for that list. src/wc-content-slots.test.ts
  * re-derives each `why` from the component source, so a refactor that changes the shape
  * fails the test rather than quietly keeping a restriction that has expired.
@@ -27,7 +35,7 @@
  * @typedef {{
  *   component: string,
  *   prop: string,
- *   shape: 'perItem' | 'notAComponentProp',
+ *   shape: 'perItem' | 'notAComponentProp' | 'nativeSelectContent',
  *   why: string
  * }} UnreachableSnippetProp
  */
@@ -87,6 +95,12 @@ export const WC2_UNREACHABLE = [
     prop: 'fileIcon',
     shape: 'perItem',
     why: 'rendered once per non-image card'
+  },
+  {
+    component: 'Select',
+    prop: 'children',
+    shape: 'nativeSelectContent',
+    why: 'rendered only as the children of the native <select>, which ignores slotted options; the items property is the host path'
   },
   {
     component: 'Stepper',

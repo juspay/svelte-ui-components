@@ -1,12 +1,13 @@
 name: Firefox and WebKit verification
 
 on:
-  # The weekly schedule is paused, not removed: the first run (38037081715, manual dispatch on
-  # release 4.53.0) failed on Linux with 12 functional failures, so a scheduled run would only
-  # report red. Restore `schedule: [{ cron: '30 4 * * 1' }]` once those are fixed or deliberately
-  # guarded and a dispatched run is green on both engines; scheduled workflows run from the
-  # default branch, so the restored schedule takes effect only once that change is on `release`.
-  # See issue #681.
+  # Weekly, Monday 04:30 UTC. Scheduled workflows run from the default branch (release).
+  # The last dispatched run (45003303232, release 4.57.10) was still red: WebKit has 7
+  # functional failures (clipboard, motion, 320px overflow, caption scroll); Firefox had 10,
+  # 3 since fixed, leaving 5 VoiceOrb audio plus a WAV playback and a Sankey timeout that
+  # pass locally. All are known, so a red week is news only when that list changes.
+  schedule:
+    - cron: '30 4 * * 1'
   workflow_dispatch:
 
 permissions:

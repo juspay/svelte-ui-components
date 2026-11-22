@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.8)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.9)
+
+Every publish warned that npm auto-corrected package.json: it rewrote bin.sui-codemod without its leading ./ and reported the original as invalid, and normalised repository.url. The published package was already right; the warning was noise that could hide a real one. This applies npm pkg fix and updates the layout test that pinned the ./ form.
+
+-
+chore: normalise package.json so npm publish stops correcting it ([af6566f](https://github.com/juspay/svelte-ui-components/commit/af6566f72a19db4df25c86f04afce83b40f1a000))
+
+## [4.57.9](https://github.com/juspay/svelte-ui-components/compare/4.57.9..4.57.8) - 22 November 2026
 
 SvelteKit 3 removed $lib in favour of the #lib subpath import, and the SvelteKit 3 upgrade kept $lib alive only through the deprecated alias option. This moves the 698 imports in src/ and tests/ to #lib with explicit file extensions, declares #lib in package.json imports, and drops the alias from vite.config.ts and the hand-written $lib aliases in the web-component, fixture and overlay-host builds.
 

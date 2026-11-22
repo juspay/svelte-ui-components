@@ -2,7 +2,16 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.7)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.8)
+
+SvelteKit 3 removed $lib in favour of the #lib subpath import, and the SvelteKit 3 upgrade kept $lib alive only through the deprecated alias option. This moves the 698 imports in src/ and tests/ to #lib with explicit file extensions, declares #lib in package.json imports, and drops the alias from vite.config.ts and the hand-written $lib aliases in the web-component, fixture and overlay-host builds.
+
+Five scripts identify a wrapper's component by its first $lib import (check-wc-contract.js, migrate/analyze.ts, migrate/remove-wc-alias-props.ts, migrate/rename-internal-usages.ts, wc-parity/prop-parity.ts). Left alone, their patterns would have matched 0 of 104 wrappers and passed silently. They now accept #lib and $lib, and match 104 of 104 as before.
+
+-
+refactor: replace the $lib alias with #lib subpath imports ([23299f6](https://github.com/juspay/svelte-ui-components/commit/23299f61a2bd7763b6e8977cc232d05fc05994ff))
+
+## [4.57.8](https://github.com/juspay/svelte-ui-components/compare/4.57.8..4.57.7) - 22 November 2026
 
 Clears the last 5 root audit advisories, which are fixed only in SvelteKit 3: @sveltejs/kit 2.70.4 -&gt; 3.4, adapter-static 3 -&gt; 4, @sveltejs/package 2 -&gt; 3, and Svelte 5.56 -&gt; 5.59 (SvelteKit 3 needs 5.57.1 or later). The unused @sveltejs/adapter-auto is dropped.
 

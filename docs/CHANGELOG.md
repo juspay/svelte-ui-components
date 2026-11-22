@@ -2,7 +2,15 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.9)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.10)
+
+BZ-7160 made the dismissal layer call preventDefault() on the Escape it handles,
+which cancels Firefox's native clear of an input[type=search]. The ISSUE-023 spec
+still required that clear to happen in Firefox, so it failed in the
+browser-engines run on release. It now asserts that no input event follows
+Escape in any engine, which also fails if the native clear ever returns.
+
+## [4.57.10](https://github.com/juspay/svelte-ui-components/compare/4.57.10..4.57.9) - 22 November 2026
 
 Every publish warned that npm auto-corrected package.json: it rewrote bin.sui-codemod without its leading ./ and reported the original as invalid, and normalised repository.url. The published package was already right; the warning was noise that could hide a real one. This applies npm pkg fix and updates the layout test that pinned the ./ form.
 

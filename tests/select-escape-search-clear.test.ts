@@ -15,9 +15,13 @@ import { gotoHydrated } from './support/hydrated';
  * Every keystroke here is a real one (`page.keyboard`), delivered through the
  * browser's own input pipeline, so Firefox performs its real native clear. That
  * is the point: a synthetic `dispatchEvent('input')` cannot reproduce it, because
- * the clear and its ordering are the browser's, not the test's. Each spec records
- * `isTrusted` for the input events it sees, and the Firefox one asserts the native
- * clear actually happened, so a pass cannot come from the test never reaching it.
+ * the clear and its ordering are the browser's, not the test's.
+ *
+ * Since BZ-7160 the dismissal layer calls `preventDefault()` on the Escape it
+ * handles, which cancels that native clear in every engine: Escape now closes the
+ * panel and no input event follows. The Escape spec records the input events it
+ * sees and asserts there are none, so it fails if the native clear ever comes
+ * back and the `handleSearchInput` guard has to carry the fix on its own again.
  */
 
 type InputRecord = { inputType: string; value: string; trusted: boolean };
@@ -127,8 +131,7 @@ test.describe('Select -- Escape and the native search clear (ISSUE-023)', () => 
   for (const variant of PAGE_VARIANTS) {
     test.describe(variant.name, () => {
       test('no results, Tokyo, Escape closes, the next click opens with an empty query', async ({
-        page,
-        browserName
+        page
       }) => {
         const select = await openAndFocusSearch(page, variant.testId);
         await noResultsThenTokyo(page, select);
@@ -137,18 +140,8 @@ test.describe('Select -- Escape and the native search clear (ISSUE-023)', () => 
         await page.keyboard.press('Escape');
 
         await expectClosedWithFocusOnTrigger(select);
-        const seen = await takeInputEvents(page);
-        // Real events only: the test never dispatches one.
-        expect(seen.every((event) => event.trusted)).toBe(true);
-        if (browserName === 'firefox') {
-          // Proves the repro is real: Firefox's own clear ran and its input event
-          // reached the page after the panel had been dismissed.
-          expect(seen).toContainEqual({
-            inputType: 'insertReplacementText',
-            value: '',
-            trusted: true
-          });
-        }
+        // The dismissal layer consumed Escape, so no engine ran its native clear.
+        expect(await takeInputEvents(page)).toEqual([]);
 
         await select.trigger.click();
         await expectReopensFresh(select, variant);

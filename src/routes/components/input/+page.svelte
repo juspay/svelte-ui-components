@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Input from '$lib/Input/Input.svelte';
-  import { TEL_PRESET_IN_MOBILE } from '$lib/utils';
+  import Input from '#lib/Input/Input.svelte';
+  import { TEL_PRESET_IN_MOBILE } from '#lib/utils.js';
 
   let inputValue = $state('');
   let notes = $state('');

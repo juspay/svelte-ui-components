@@ -36,11 +36,11 @@
 />
 
 <script lang="ts">
-  import Gallery from '$lib/Gallery/Gallery.svelte';
-  import Icon from '$lib/Icon/Icon.svelte';
-  import closeSvg from '$lib/assets/close.svg?raw';
-  import chevronLeftSvg from '$lib/assets/chevron-left-lg.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right-lg.svg?raw';
+  import Gallery from '#lib/Gallery/Gallery.svelte';
+  import Icon from '#lib/Icon/Icon.svelte';
+  import closeSvg from '#lib/assets/close.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left-lg.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right-lg.svg?raw';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

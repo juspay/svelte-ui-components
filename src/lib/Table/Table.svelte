@@ -17,10 +17,10 @@
   import Pagination from '../Pagination/Pagination.svelte';
   import Select from '../Select/Select.svelte';
   import Checkbox from '../Checkbox/Checkbox.svelte';
-  import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
-  import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
-  import searchSvg from '$lib/assets/search.svg?raw';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import chevronDownSmSvg from '#lib/assets/chevron-down-sm.svg?raw';
+  import sortDefaultSvg from '#lib/assets/sort-default.svg?raw';
+  import searchSvg from '#lib/assets/search.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
 
   let {
     tableTitle = '',

@@ -204,11 +204,11 @@ export function readWcComponents(repoRoot: string): readonly WcComponent[] {
     const source = readFileSync(join(dir, file), 'utf8');
 
     // The wrapped component's own name, read off the import that brings it in
-    // -- `Card.wc.svelte` always imports `Card` from `$lib/Card/Card.svelte` --
+    // -- `Card.wc.svelte` always imports `Card` from `#lib/Card/Card.svelte` (`$lib` before SvelteKit 3) --
     // rather than assumed equal to the filename, so a wrapper that diverges
     // from that convention is skipped instead of silently mismatched.
     const importPattern = new RegExp(
-      `import\\s+\\w+\\s+from\\s+'\\$lib/${component}/${component}\\.svelte'`
+      `import\\s+\\w+\\s+from\\s+'[$#]lib/${component}/${component}\\.svelte'`
     );
     const tagMatch = /tag:\s*'([^']+)'/.exec(source);
     const displayMatch = /display:\s*var\(--sui-[\w-]+-display,\s*(block|inline-block)\)/.exec(

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Browser from '$lib/Browser/Browser.svelte';
+  import Browser from '#lib/Browser/Browser.svelte';
 </script>
 
 <div class="page-header">

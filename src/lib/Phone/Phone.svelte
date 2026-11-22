@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PhoneProperties } from './properties';
-  import signalSvg from '$lib/assets/signal.svg?raw';
-  import wifiSvg from '$lib/assets/wifi.svg?raw';
-  import batterySvg from '$lib/assets/battery.svg?raw';
+  import signalSvg from '#lib/assets/signal.svg?raw';
+  import wifiSvg from '#lib/assets/wifi.svg?raw';
+  import batterySvg from '#lib/assets/battery.svg?raw';
 
   let {
     children,

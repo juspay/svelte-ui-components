@@ -10,7 +10,6 @@ export default defineConfig({
   plugins: [
     svelte({ configFile: false, preprocess: vitePreprocess(), compilerOptions: { runes: true } })
   ],
-  resolve: { alias: { $lib: resolve(import.meta.dirname, 'src/lib') } },
   build: {
     outDir: resolve(import.meta.dirname, '.playwright-fixtures'),
     emptyOutDir: true,

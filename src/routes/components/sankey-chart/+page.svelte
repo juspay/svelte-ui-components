@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SankeyChart from '$lib/SankeyChart/SankeyChart.svelte';
+  import SankeyChart from '#lib/SankeyChart/SankeyChart.svelte';
 
   const simpleNodes = [
     { id: 'source-a', label: 'Source A' },

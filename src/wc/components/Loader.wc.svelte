@@ -12,8 +12,8 @@
 />
 
 <script lang="ts">
-  import Loader from '$lib/Loader/Loader.svelte';
-  import type { LoaderProperties } from '$lib/Loader/properties';
+  import Loader from '#lib/Loader/Loader.svelte';
+  import type { LoaderProperties } from '#lib/Loader/properties.js';
   let {
     loaderAriaLabel,
     ...props

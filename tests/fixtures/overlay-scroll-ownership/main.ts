@@ -1,5 +1,5 @@
 import { mount } from 'svelte';
-import { acquireScrollLock } from '$lib';
+import { acquireScrollLock } from '#lib';
 import OverlayOwnership from './OverlayOwnership.svelte';
 const app = document.getElementById('app');
 if (app === null) {

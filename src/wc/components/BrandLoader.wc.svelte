@@ -13,7 +13,7 @@
 />
 
 <script lang="ts">
-  import BrandLoader from '$lib/BrandLoader/BrandLoader.svelte';
+  import BrandLoader from '#lib/BrandLoader/BrandLoader.svelte';
   let props = $props();
 </script>
 

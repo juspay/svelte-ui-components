@@ -14,9 +14,9 @@
   import { registerDismissible } from '../_interaction/dismissal';
   import { findInteractive } from '../_interaction/focusable';
   import { describeField } from '../_field/description';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right.svg?raw';
   import {
     TIME_DISPLAY_PATTERN,
     applyTimeDisplay,

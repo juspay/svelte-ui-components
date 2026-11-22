@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
+  import ChatHeader from '#lib/ChatHeader/ChatHeader.svelte';
   let expanded = $state(false);
 </script>
 

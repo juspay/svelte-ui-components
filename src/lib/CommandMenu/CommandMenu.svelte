@@ -5,10 +5,10 @@
   import { acquireScrollLock, resolveScrollContainer } from '../utils';
   import { registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
-  import { tokenizedFly } from '$lib/Animations/tokenizedFly';
+  import { tokenizedFly } from '#lib/Animations/tokenizedFly.js';
   import { SvelteMap } from 'svelte/reactivity';
-  import Img from '$lib/Img/Img.svelte';
-  import searchSvg from '$lib/assets/search.svg?raw';
+  import Img from '#lib/Img/Img.svelte';
+  import searchSvg from '#lib/assets/search.svg?raw';
 
   function defaultFilter(item: CommandItem, needle: string): boolean {
     return item.label.toLowerCase().includes(needle.toLowerCase());

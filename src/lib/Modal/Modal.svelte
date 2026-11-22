@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { ModalProperties } from './properties';
   import { onMount, onDestroy, tick } from 'svelte';
-  import ModalAnimation from '$lib/Animations/ModalAnimation.svelte';
-  import OverlayAnimation from '$lib/Animations/OverlayAnimation.svelte';
+  import ModalAnimation from '#lib/Animations/ModalAnimation.svelte';
+  import OverlayAnimation from '#lib/Animations/OverlayAnimation.svelte';
   import { createDebouncer, acquireScrollLock, resolveScrollContainer } from '../utils';
   import { focusEntryPoint, focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
   import {
@@ -10,8 +10,8 @@
     isTopmostDismissible,
     eventHitsInside
   } from '../_interaction/dismissal';
-  import Button from '$lib/Button/Button.svelte';
-  import Img from '$lib/Img/Img.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Img from '#lib/Img/Img.svelte';
 
   let overlayDiv: HTMLDivElement | null = $state(null);
   let overlayButton: HTMLButtonElement | null = $state(null);

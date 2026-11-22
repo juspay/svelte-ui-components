@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '../Button/Button.svelte';
   import ChatMessage from '../ChatMessage/ChatMessage.svelte';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
   import { partyOf } from '../Chat/roles';
   import type { Action } from 'svelte/action';
   import type { ChatMessageData } from '../Chat/types';

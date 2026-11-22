@@ -18,7 +18,7 @@
 />
 
 <script lang="ts">
-  import Carousel from '$lib/Carousel/Carousel.svelte';
+  import Carousel from '#lib/Carousel/Carousel.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

@@ -25,11 +25,11 @@
 />
 
 <script lang="ts">
-  import Calendar from '$lib/Calendar/Calendar.svelte';
+  import Calendar from '#lib/Calendar/Calendar.svelte';
   // Mirrors Calendar.svelte's own previousMonthIcon/nextMonthIcon defaults so the
   // fallback below is the same artwork, not a retyped copy.
-  import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right.svg?raw';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

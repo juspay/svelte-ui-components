@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Tabs from '$lib/Tabs/Tabs.svelte';
+  import Tabs from '#lib/Tabs/Tabs.svelte';
 
   const query = new URLSearchParams(window.location.search);
   const direction = query.get('direction') === 'rtl' ? 'rtl' : 'ltr';

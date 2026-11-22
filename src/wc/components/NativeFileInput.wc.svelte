@@ -25,7 +25,7 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import NativeFileInput from '$lib/NativeFileInput/NativeFileInput.svelte';
+  import NativeFileInput from '#lib/NativeFileInput/NativeFileInput.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let { element = $bindable<HTMLInputElement | null>(null), ...props } = $props();

@@ -27,10 +27,10 @@
 />
 
 <script lang="ts">
-  import Banner from '$lib/Banner/Banner.svelte';
-  import type { BannerProperties } from '$lib/Banner/properties';
+  import Banner from '#lib/Banner/Banner.svelte';
+  import type { BannerProperties } from '#lib/Banner/properties.js';
   // Mirrors Banner.svelte's own dismissIcon default.
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
   import { dispatchEvents } from '../dispatch';
   // The element renames `role` to `bannerRole` because the platform already defines `role` on every
   // HTMLElement. The rest still carries the component's own props -- saying so is what

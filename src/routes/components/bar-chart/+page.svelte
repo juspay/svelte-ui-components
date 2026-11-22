@@ -1,6 +1,6 @@
 <script lang="ts">
-  import BarChart from '$lib/BarChart/BarChart.svelte';
-  import type { ChartHighlightAPI } from '$lib/_chart/highlight';
+  import BarChart from '#lib/BarChart/BarChart.svelte';
+  import type { ChartHighlightAPI } from '#lib/_chart/highlight.js';
 
   const monthlyRevenue = [
     { label: 'Jan', value: 4200 },

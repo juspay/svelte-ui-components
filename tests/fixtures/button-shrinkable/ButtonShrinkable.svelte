@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   const longLabel =
     'A very long button label that is far wider than the 240px column it is placed in';

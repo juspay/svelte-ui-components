@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import TaskList from '$lib/TaskList/TaskList.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import type { TaskListRow, TaskStatus } from '$lib/TaskList/properties';
+  import TaskList from '#lib/TaskList/TaskList.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import type { TaskListRow, TaskStatus } from '#lib/TaskList/properties.js';
 
   const ROWS_TEMPLATE: Array<Omit<TaskListRow, 'status'>> = [
     { label: 'Scan repository structure', secondary: '128 files' },

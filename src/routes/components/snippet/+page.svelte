@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import SnippetComponent from '$lib/Snippet/Snippet.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import { createCopyState } from '$lib/Snippet/copyState.svelte';
+  import SnippetComponent from '#lib/Snippet/Snippet.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import { createCopyState } from '#lib/Snippet/copyState.svelte.js';
 
   // The affordance without the presentation: a bare copy control beside a
   // truncating value, which is the shape Snippet cannot produce and which

@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
   import type { SnippetProperties } from './properties';
   import Button from '../Button/Button.svelte';
-  import copySvg from '$lib/assets/copy.svg?raw';
+  import copySvg from '#lib/assets/copy.svg?raw';
   import { createCopyState } from './copyState.svelte';
 
   let {

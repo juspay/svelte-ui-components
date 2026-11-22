@@ -2,7 +2,7 @@
   import { describeField } from '../_field/description';
   import { joinChoiceboxGroup, moveWithinChoiceboxGroup, selectExclusively } from './group';
   import type { ChoiceboxProperties } from './properties';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
 
   let {
     children,

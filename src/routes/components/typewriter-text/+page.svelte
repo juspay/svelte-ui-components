@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import TypewriterText from '$lib/TypewriterText/TypewriterText.svelte';
-  import type { TypewriterProgress, TypewriterDelayContext } from '$lib/TypewriterText/properties';
+  import TypewriterText from '#lib/TypewriterText/TypewriterText.svelte';
+  import type {
+    TypewriterProgress,
+    TypewriterDelayContext
+  } from '#lib/TypewriterText/properties.js';
 
   const answer =
     'Refunds are down 12% this month. Card refunds cleared fastest, UPI refunds took a median of 2.1 days, and three orders are still awaiting gateway confirmation.';

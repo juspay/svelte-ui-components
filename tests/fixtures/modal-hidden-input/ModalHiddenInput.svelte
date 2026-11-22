@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
 
   const params = new URLSearchParams(window.location.search);
   const hiddenOnly = params.get('controls') === 'none';

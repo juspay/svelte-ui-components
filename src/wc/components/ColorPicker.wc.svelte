@@ -20,7 +20,7 @@
 />
 
 <script lang="ts">
-  import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
+  import ColorPicker from '#lib/ColorPicker/ColorPicker.svelte';
   import { dispatchEvents } from '../dispatch';
 
   // `value` is $bindable on ColorPicker; see ChipInput.wc.svelte for why a one-way spread

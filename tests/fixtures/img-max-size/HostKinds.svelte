@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Img from '$lib/Img/Img.svelte';
+  import Img from '#lib/Img/Img.svelte';
 
   type Props = { rasterSrc: string; svgSrc: string };
   const { rasterSrc, svgSrc }: Props = $props();

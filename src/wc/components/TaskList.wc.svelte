@@ -12,7 +12,7 @@
 />
 
 <script lang="ts">
-  import TaskList from '$lib/TaskList/TaskList.svelte';
+  import TaskList from '#lib/TaskList/TaskList.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

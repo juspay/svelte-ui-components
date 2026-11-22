@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Toast from '$lib/Toast/Toast.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Toast from '#lib/Toast/Toast.svelte';
 
   let showToast = $state(false);
   let showBottomToast = $state(false);

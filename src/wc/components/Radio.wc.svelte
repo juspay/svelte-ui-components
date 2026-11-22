@@ -23,7 +23,7 @@
 
 <script module lang="ts">
   import { formAssociated } from '../form-associated';
-  import { getActiveElement } from '$lib/_interaction/focus';
+  import { getActiveElement } from '#lib/_interaction/focus.js';
 
   /**
    * Same constraint as `HostConstructor` in form-associated.ts: a class
@@ -343,7 +343,7 @@
 </script>
 
 <script lang="ts">
-  import Radio from '$lib/Radio/Radio.svelte';
+  import Radio from '#lib/Radio/Radio.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

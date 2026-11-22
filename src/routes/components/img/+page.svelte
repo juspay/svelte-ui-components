@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import Img from '$lib/Img/Img.svelte';
+  import Img from '#lib/Img/Img.svelte';
 
   const markTransformed = (svg: string): string =>
     svg.replace('<svg', '<svg data-demo-transformed="true"');

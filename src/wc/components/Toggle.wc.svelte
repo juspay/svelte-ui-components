@@ -27,7 +27,7 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Toggle from '$lib/Toggle/Toggle.svelte';
+  import Toggle from '#lib/Toggle/Toggle.svelte';
   import { dispatchEvents } from '../dispatch';
 
   // Keep the host's native identity and ARIA accessors independent of its shadow input.

@@ -47,8 +47,8 @@
 />
 
 <script lang="ts">
-  import DateRangePicker from '$lib/DateRangePicker/DateRangePicker.svelte';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import DateRangePicker from '#lib/DateRangePicker/DateRangePicker.svelte';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

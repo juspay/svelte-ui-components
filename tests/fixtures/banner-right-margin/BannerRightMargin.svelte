@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Banner from '$lib/Banner/Banner.svelte';
+  import Banner from '#lib/Banner/Banner.svelte';
 
   type Scenario = {
     id: string;

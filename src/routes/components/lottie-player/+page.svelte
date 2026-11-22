@@ -1,7 +1,7 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
   import { asset } from '$app/paths';
-  import { LottiePlayer } from '$lib';
+  import { LottiePlayer } from '#lib';
   import animationData from './motion.json';
 
   let player: LottiePlayer | null = $state(null);

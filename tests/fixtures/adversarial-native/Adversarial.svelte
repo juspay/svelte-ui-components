@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Input from '$lib/Input/Input.svelte';
-  import Card from '$lib/Card/Card.svelte';
-  import Dialog from '$lib/Dialog/Dialog.svelte';
-  import Select from '$lib/Select/Select.svelte';
-  import NativeFileInput from '$lib/NativeFileInput/NativeFileInput.svelte';
+  import Input from '#lib/Input/Input.svelte';
+  import Card from '#lib/Card/Card.svelte';
+  import Dialog from '#lib/Dialog/Dialog.svelte';
+  import Select from '#lib/Select/Select.svelte';
+  import NativeFileInput from '#lib/NativeFileInput/NativeFileInput.svelte';
   let inputValue = $state('initial');
   let textareaValue = $state('initial');
   let open = $state(false);

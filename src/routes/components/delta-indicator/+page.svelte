@@ -1,5 +1,5 @@
 <script lang="ts">
-  import DeltaIndicator from '$lib/DeltaIndicator/DeltaIndicator.svelte';
+  import DeltaIndicator from '#lib/DeltaIndicator/DeltaIndicator.svelte';
 
   const currencyFormat = (input: number): string => {
     const sign = input >= 0 ? '+' : '-';

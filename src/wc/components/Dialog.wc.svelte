@@ -20,7 +20,7 @@
 />
 
 <script lang="ts">
-  import Dialog from '$lib/Dialog/Dialog.svelte';
+  import Dialog from '#lib/Dialog/Dialog.svelte';
   import { dispatchEvents } from '../dispatch';
   let {
     element = $bindable<HTMLDialogElement | null>(null),

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Sheet from '$lib/Sheet/Sheet.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Sheet from '#lib/Sheet/Sheet.svelte';
 
   let showRight = $state(false);
   let showLeft = $state(false);

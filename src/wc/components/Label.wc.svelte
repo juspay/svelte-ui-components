@@ -12,8 +12,8 @@
 />
 
 <script lang="ts">
-  import Label from '$lib/Label/Label.svelte';
-  import type { LabelProperties } from '$lib/Label/properties';
+  import Label from '#lib/Label/Label.svelte';
+  import type { LabelProperties } from '#lib/Label/properties.js';
 
   // `for` can't be a destructured binding name -- it's a reserved word -- so
   // it's pulled in under `htmlFor` and re-emitted as the real `for` prop

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SplitButton from '$lib/SplitButton/SplitButton.svelte';
+  import SplitButton from '#lib/SplitButton/SplitButton.svelte';
 </script>
 
 <div class="page-header">

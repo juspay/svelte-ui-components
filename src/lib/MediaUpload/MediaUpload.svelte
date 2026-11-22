@@ -3,9 +3,9 @@
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
   import Shimmer from '../Shimmer/Shimmer.svelte';
-  import addSvg from '$lib/assets/add.svg?raw';
-  import closeSvg from '$lib/assets/close.svg?raw';
-  import fileSvg from '$lib/assets/file.svg?raw';
+  import addSvg from '#lib/assets/add.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
+  import fileSvg from '#lib/assets/file.svg?raw';
   import type { MediaUploadItem, MediaUploadProperties, MediaUploadRejection } from './properties';
 
   let {

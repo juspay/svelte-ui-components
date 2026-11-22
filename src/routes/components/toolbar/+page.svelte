@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Toolbar from '$lib/Toolbar/Toolbar.svelte';
+  import Toolbar from '#lib/Toolbar/Toolbar.svelte';
 
   // Proves onbackclick still fires as the anchor's click handler alongside backHref —
   // navigation and a side effect coexist, exactly like Button's href + onclick.

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ThemeSwitcher from '$lib/ThemeSwitcher/ThemeSwitcher.svelte';
+  import ThemeSwitcher from '#lib/ThemeSwitcher/ThemeSwitcher.svelte';
 
   let callbackValue = $state('');
   let callbackResolved = $state('');

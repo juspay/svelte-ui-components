@@ -57,14 +57,14 @@
 />
 
 <script lang="ts">
-  import Chat from '$lib/Chat/Chat.svelte';
-  import type { ChatProperties } from '$lib/Chat/properties';
+  import Chat from '#lib/Chat/Chat.svelte';
+  import type { ChatProperties } from '#lib/Chat/properties.js';
   import { dispatchEvents } from '../dispatch';
-  import sendSvg from '$lib/assets/send.svg?raw';
-  import stopSvg from '$lib/assets/stop.svg?raw';
-  import micSvg from '$lib/assets/mic.svg?raw';
-  import attachSvg from '$lib/assets/attach.svg?raw';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import sendSvg from '#lib/assets/send.svg?raw';
+  import stopSvg from '#lib/assets/stop.svg?raw';
+  import micSvg from '#lib/assets/mic.svg?raw';
+  import attachSvg from '#lib/assets/attach.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
   // The element renames `title` to `chatTitle` because the platform already defines `title` on every
   // HTMLElement. The rest still carries the component's own props -- saying so is what
   // a destructured `$props()` no longer infers on its own.

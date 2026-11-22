@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import HITL from '$lib/HITL/HITL.svelte';
-  import type { HITLEvent } from '$lib/HITL/properties';
+  import HITL from '#lib/HITL/HITL.svelte';
+  import type { HITLEvent } from '#lib/HITL/properties.js';
 
   const query = new URLSearchParams(window.location.search);
   const initialSeconds = Number(query.get('seconds') ?? 30);

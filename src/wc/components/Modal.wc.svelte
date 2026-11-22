@@ -61,8 +61,8 @@
 />
 
 <script lang="ts">
-  import Modal from '$lib/Modal/Modal.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import Button from '#lib/Button/Button.svelte';
   import { dispatchEvents } from '../dispatch';
 
   // Pulled out so they forward to the panel under Modal's own `ariaLabel`/`role`

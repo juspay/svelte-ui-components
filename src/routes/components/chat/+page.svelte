@@ -1,22 +1,22 @@
 <script lang="ts">
   import { asset } from '$app/paths';
   import { onMount } from 'svelte';
-  import Chat from '$lib/Chat/Chat.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import Resizable from '$lib/Resizable/Resizable.svelte';
-  import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import ChatSuggestions from '$lib/ChatSuggestions/ChatSuggestions.svelte';
-  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
-  import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
-  import TaskList from '$lib/TaskList/TaskList.svelte';
-  import { ChatController } from '$lib/Chat/controller.svelte';
-  import type { ChatMessageData, ChatTransport } from '$lib/Chat/types';
-  import type { ThinkingIndicatorTraceRow } from '$lib/ThinkingIndicator/properties';
-  import type { ToolCallChip } from '$lib/ToolCallLog/properties';
-  import type { TaskListRow, TaskStatus } from '$lib/TaskList/properties';
-  import type { ChatSuggestion } from '$lib/ChatSuggestions/properties';
+  import Chat from '#lib/Chat/Chat.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Resizable from '#lib/Resizable/Resizable.svelte';
+  import ChatMessageList from '#lib/ChatMessageList/ChatMessageList.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import ChatSuggestions from '#lib/ChatSuggestions/ChatSuggestions.svelte';
+  import ThinkingIndicator from '#lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import ToolCallLog from '#lib/ToolCallLog/ToolCallLog.svelte';
+  import TaskList from '#lib/TaskList/TaskList.svelte';
+  import { ChatController } from '#lib/Chat/controller.svelte.js';
+  import type { ChatMessageData, ChatTransport } from '#lib/Chat/types.js';
+  import type { ThinkingIndicatorTraceRow } from '#lib/ThinkingIndicator/properties.js';
+  import type { ToolCallChip } from '#lib/ToolCallLog/properties.js';
+  import type { TaskListRow, TaskStatus } from '#lib/TaskList/properties.js';
+  import type { ChatSuggestion } from '#lib/ChatSuggestions/properties.js';
 
   type ChatOption = { label: string };
 

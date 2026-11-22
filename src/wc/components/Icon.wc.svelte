@@ -19,7 +19,7 @@
 />
 
 <script lang="ts">
-  import Icon from '$lib/Icon/Icon.svelte';
+  import Icon from '#lib/Icon/Icon.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

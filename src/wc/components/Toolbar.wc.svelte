@@ -33,7 +33,7 @@
 />
 
 <script lang="ts">
-  import Toolbar from '$lib/Toolbar/Toolbar.svelte';
+  import Toolbar from '#lib/Toolbar/Toolbar.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let { heading, ...props } = $props();

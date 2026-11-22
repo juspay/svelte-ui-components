@@ -56,8 +56,8 @@
 />
 
 <script lang="ts">
-  import LineChart from '$lib/LineChart/LineChart.svelte';
-  import type { LineChartProperties } from '$lib/LineChart/properties';
+  import LineChart from '#lib/LineChart/LineChart.svelte';
+  import type { LineChartProperties } from '#lib/LineChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   // The rest still carries every other prop of the component; the two chart-prefixed

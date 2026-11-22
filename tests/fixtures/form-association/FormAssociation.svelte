@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Checkbox from '$lib/Checkbox/Checkbox.svelte';
-  import Toggle from '$lib/Toggle/Toggle.svelte';
-  import Select from '$lib/Select/Select.svelte';
+  import Checkbox from '#lib/Checkbox/Checkbox.svelte';
+  import Toggle from '#lib/Toggle/Toggle.svelte';
+  import Select from '#lib/Select/Select.svelte';
 
   let agree = $state(false);
   let subscribe = $state(true);

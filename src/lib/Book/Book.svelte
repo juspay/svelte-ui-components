@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { BookProperties } from './properties';
-  import chevronLeftLgSvg from '$lib/assets/chevron-left-lg.svg?raw';
-  import chevronRightLgSvg from '$lib/assets/chevron-right-lg.svg?raw';
+  import chevronLeftLgSvg from '#lib/assets/chevron-left-lg.svg?raw';
+  import chevronRightLgSvg from '#lib/assets/chevron-right-lg.svg?raw';
   import Button from '../Button/Button.svelte';
 
   let {

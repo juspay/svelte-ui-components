@@ -26,10 +26,5 @@ export default defineConfig({
         inlineDynamicImports: true
       }
     }
-  },
-  resolve: {
-    alias: {
-      $lib: resolve(__dirname, 'src/lib')
-    }
   }
 });

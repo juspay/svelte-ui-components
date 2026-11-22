@@ -24,7 +24,7 @@
 />
 
 <script lang="ts">
-  import Sheet from '$lib/Sheet/Sheet.svelte';
+  import Sheet from '#lib/Sheet/Sheet.svelte';
   import { dispatchEvents } from '../dispatch';
   let { sheetTitle, ...props } = $props();
 

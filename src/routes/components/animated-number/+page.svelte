@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AnimatedNumber from '$lib/AnimatedNumber/AnimatedNumber.svelte';
+  import AnimatedNumber from '#lib/AnimatedNumber/AnimatedNumber.svelte';
 
   let counter = $state(99);
   let revenue = $state(1234567);

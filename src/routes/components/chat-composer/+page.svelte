@@ -1,7 +1,7 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   let focusComposer: ChatComposer | null = $state(null);
   let focusCount = $state(0);

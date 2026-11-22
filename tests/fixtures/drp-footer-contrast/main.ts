@@ -1,5 +1,5 @@
 import { mount } from 'svelte';
-import '$lib/styles/theme-dark.css';
+import '#lib/styles/theme-dark.css';
 import DrpFooterContrast from './DrpFooterContrast.svelte';
 
 const target = document.getElementById('app');

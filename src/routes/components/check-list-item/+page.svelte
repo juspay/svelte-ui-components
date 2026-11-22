@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CheckListItem from '$lib/CheckListItem/CheckListItem.svelte';
+  import CheckListItem from '#lib/CheckListItem/CheckListItem.svelte';
 
   let checklistItem1 = $state(false);
   let checklistItem2 = $state(true);

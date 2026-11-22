@@ -1,4 +1,4 @@
-import type { ScrollContainer } from '$lib/types';
+import type { ScrollContainer } from '#lib/types.js';
 import type { Snippet } from 'svelte';
 
 export type CommandItem = {

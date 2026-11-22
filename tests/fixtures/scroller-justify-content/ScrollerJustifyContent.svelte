@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import AttachmentChipRow from '$lib/AttachmentChipRow/AttachmentChipRow.svelte';
-  import Scroller from '$lib/Scroller/Scroller.svelte';
+  import AttachmentChipRow from '#lib/AttachmentChipRow/AttachmentChipRow.svelte';
+  import Scroller from '#lib/Scroller/Scroller.svelte';
 
   type ScrollerScenario = {
     name: string;

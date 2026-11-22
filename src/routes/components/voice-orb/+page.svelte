@@ -1,6 +1,6 @@
 <script lang="ts">
-  import VoiceOrb from '$lib/VoiceOrb/VoiceOrb.svelte';
-  import type { VoiceOrbVariant } from '$lib/VoiceOrb/properties';
+  import VoiceOrb from '#lib/VoiceOrb/VoiceOrb.svelte';
+  import type { VoiceOrbVariant } from '#lib/VoiceOrb/properties.js';
 
   import { onDestroy } from 'svelte';
 

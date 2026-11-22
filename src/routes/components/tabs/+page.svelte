@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import Tabs from '$lib/Tabs/Tabs.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Tabs from '#lib/Tabs/Tabs.svelte';
 
   let activeTab = $state(0);
   let activeOverflow = $state(0);

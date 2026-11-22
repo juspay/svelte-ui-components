@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import CommandMenu from '#lib/CommandMenu/CommandMenu.svelte';
 
   let showCommandMenu = $state(false);
 </script>

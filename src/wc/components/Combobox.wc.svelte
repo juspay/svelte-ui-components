@@ -71,8 +71,8 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Combobox from '$lib/Combobox/Combobox.svelte';
-  import type { ComboboxProperties } from '$lib/Combobox/properties';
+  import Combobox from '#lib/Combobox/Combobox.svelte';
+  import type { ComboboxProperties } from '#lib/Combobox/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   // Combobox reassigns all five of these; see ChipInput.wc.svelte for why a one-way spread

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Accordion from '$lib/Accordion/Accordion.svelte';
+  import Accordion from '#lib/Accordion/Accordion.svelte';
 
   let accordionExpanded = $state(false);
   let latePanelId = $state<string>();

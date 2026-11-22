@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ProportionBar from '$lib/ProportionBar/ProportionBar.svelte';
+  import ProportionBar from '#lib/ProportionBar/ProportionBar.svelte';
 
   const paymentMethodSegments = [
     { label: 'UPI', value: 4820 },

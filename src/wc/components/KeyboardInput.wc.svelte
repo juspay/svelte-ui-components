@@ -14,7 +14,7 @@
 />
 
 <script lang="ts">
-  import KeyboardInput from '$lib/KeyboardInput/KeyboardInput.svelte';
+  import KeyboardInput from '#lib/KeyboardInput/KeyboardInput.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

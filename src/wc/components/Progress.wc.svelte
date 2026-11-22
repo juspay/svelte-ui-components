@@ -21,8 +21,8 @@
 />
 
 <script lang="ts">
-  import Progress from '$lib/Progress/Progress.svelte';
-  import type { ProgressProperties } from '$lib/Progress/properties';
+  import Progress from '#lib/Progress/Progress.svelte';
+  import type { ProgressProperties } from '#lib/Progress/properties.js';
 
   let {
     progressAriaLabel,

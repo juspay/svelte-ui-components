@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { FunnelChartProperties, FunnelStage } from './properties';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import { getColor, getContrastColor } from '$lib/_chart/colors';
-  import { formatNumber, formatPercent } from '$lib/_chart/format';
-  import { measureText, readCssVarPx } from '$lib/_chart/measure';
-  import { truncateToWidth } from '$lib/_chart/labels';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
-  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import { getColor, getContrastColor } from '#lib/_chart/colors.js';
+  import { formatNumber, formatPercent } from '#lib/_chart/format.js';
+  import { measureText, readCssVarPx } from '#lib/_chart/measure.js';
+  import { truncateToWidth } from '#lib/_chart/labels.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
 
   // ── Props ──────────────────────────────────────────────────────
 

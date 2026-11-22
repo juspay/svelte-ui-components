@@ -1,6 +1,6 @@
 <script lang="ts">
-  import StatCard from '$lib/StatCard/StatCard.svelte';
-  import ProportionBar from '$lib/ProportionBar/ProportionBar.svelte';
+  import StatCard from '#lib/StatCard/StatCard.svelte';
+  import ProportionBar from '#lib/ProportionBar/ProportionBar.svelte';
 
   let checkboxChecked = $state(false);
   let headerlessChecked = $state(false);

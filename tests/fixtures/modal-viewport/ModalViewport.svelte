@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
-  import type { ModalAlign, ModalSize, ModalProperties } from '$lib/Modal/properties';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import type { ModalAlign, ModalSize, ModalProperties } from '#lib/Modal/properties.js';
 
   const sizes: readonly ModalSize[] = ['small', 'medium', 'large', 'fit-content'];
   const aligns: readonly ModalAlign[] = ['top', 'center', 'bottom'];

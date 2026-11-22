@@ -12,7 +12,7 @@
 />
 
 <script lang="ts">
-  import Separator from '$lib/Separator/Separator.svelte';
+  import Separator from '#lib/Separator/Separator.svelte';
   let props = $props();
 </script>
 

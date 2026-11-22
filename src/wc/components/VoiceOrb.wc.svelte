@@ -24,7 +24,7 @@
 />
 
 <script lang="ts">
-  import VoiceOrb from '$lib/VoiceOrb/VoiceOrb.svelte';
+  import VoiceOrb from '#lib/VoiceOrb/VoiceOrb.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

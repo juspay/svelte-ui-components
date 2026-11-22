@@ -21,7 +21,7 @@
 />
 
 <script lang="ts">
-  import Draggable from '$lib/Draggable/Draggable.svelte';
+  import Draggable from '#lib/Draggable/Draggable.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

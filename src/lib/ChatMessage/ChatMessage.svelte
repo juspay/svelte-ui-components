@@ -2,11 +2,11 @@
   import Button from '../Button/Button.svelte';
   import LoadingDots from '../LoadingDots/LoadingDots.svelte';
   import TypewriterText from '../TypewriterText/TypewriterText.svelte';
-  import copySvg from '$lib/assets/copy.svg?raw';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
-  import retrySvg from '$lib/assets/retry.svg?raw';
-  import thumbUpSvg from '$lib/assets/thumb-up.svg?raw';
-  import thumbDownSvg from '$lib/assets/thumb-down.svg?raw';
+  import copySvg from '#lib/assets/copy.svg?raw';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
+  import retrySvg from '#lib/assets/retry.svg?raw';
+  import thumbUpSvg from '#lib/assets/thumb-up.svg?raw';
+  import thumbDownSvg from '#lib/assets/thumb-down.svg?raw';
   import { onDestroy, onMount } from 'svelte';
   import { partyOf } from '../Chat/roles';
   import type { ChatMessageProperties } from './properties';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Modal } from '$lib';
+  import { Modal } from '#lib';
   let { resolve }: { resolve: () => HTMLElement | null } = $props();
 </script>
 

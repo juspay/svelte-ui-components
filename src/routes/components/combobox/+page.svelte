@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Combobox from '$lib/Combobox/Combobox.svelte';
-  import type { ComboboxItem } from '$lib/Combobox/properties';
+  import Combobox from '#lib/Combobox/Combobox.svelte';
+  import type { ComboboxItem } from '#lib/Combobox/properties.js';
 
   const fruits = [
     { id: 'apple', label: 'Apple' },

@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import RelativeTime from '$lib/RelativeTime/RelativeTime.svelte';
+  import RelativeTime from '#lib/RelativeTime/RelativeTime.svelte';
   let props = $props();
 </script>
 

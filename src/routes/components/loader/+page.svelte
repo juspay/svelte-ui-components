@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Loader from '$lib/Loader/Loader.svelte';
+  import Loader from '#lib/Loader/Loader.svelte';
 </script>
 
 <div class="page-header">

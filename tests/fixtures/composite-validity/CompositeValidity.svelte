@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Radio from '$lib/Radio/Radio.svelte';
-  import Choicebox from '$lib/Choicebox/Choicebox.svelte';
-  import RatingGroup from '$lib/RatingGroup/RatingGroup.svelte';
+  import Radio from '#lib/Radio/Radio.svelte';
+  import Choicebox from '#lib/Choicebox/Choicebox.svelte';
+  import RatingGroup from '#lib/RatingGroup/RatingGroup.svelte';
 
   let payment = $state('');
   let accepted = $state(false);

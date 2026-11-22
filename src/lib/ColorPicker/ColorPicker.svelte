@@ -1,11 +1,11 @@
 <script lang="ts">
   import { registerDismissible } from '../_interaction/dismissal';
   import { describeField } from '../_field/description';
-  import Button from '$lib/Button/Button.svelte';
-  import Input from '$lib/Input/Input.svelte';
-  import Slider from '$lib/Slider/Slider.svelte';
-  import SplitInput from '$lib/SplitInput/SplitInput.svelte';
-  import swapVerticalSvg from '$lib/assets/swap-vertical.svg?raw';
+  import Button from '#lib/Button/Button.svelte';
+  import Input from '#lib/Input/Input.svelte';
+  import Slider from '#lib/Slider/Slider.svelte';
+  import SplitInput from '#lib/SplitInput/SplitInput.svelte';
+  import swapVerticalSvg from '#lib/assets/swap-vertical.svg?raw';
   import type { ColorPickerProperties } from './properties';
   import {
     hexToHsv,
@@ -16,7 +16,7 @@
     rgbToHsv,
     isValidHex,
     clampInt
-  } from '$lib/utils';
+  } from '#lib/utils.js';
 
   let {
     value = $bindable('#000000'),

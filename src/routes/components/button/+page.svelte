@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Menu from '$lib/Menu/Menu.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Menu from '#lib/Menu/Menu.svelte';
 
   let loadingDemo = $state(false);
 

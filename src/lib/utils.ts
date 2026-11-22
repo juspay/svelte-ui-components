@@ -6,7 +6,7 @@ import type {
   Rgb,
   ValidationState,
   ScrollContainer
-} from '$lib/types';
+} from '#lib/types.js';
 
 /**
  * A phone-number shape a consumer opts into, as the pair of patterns the

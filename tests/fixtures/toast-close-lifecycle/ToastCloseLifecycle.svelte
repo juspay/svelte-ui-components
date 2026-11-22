@@ -1,6 +1,6 @@
 <script lang="ts">
   import { flushSync } from 'svelte';
-  import Toast from '$lib/Toast/Toast.svelte';
+  import Toast from '#lib/Toast/Toast.svelte';
 
   let mounted = $state(false);
   let message = $state('Saved');

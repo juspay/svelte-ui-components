@@ -1,6 +1,6 @@
 <script lang="ts">
-  import NativeFileInput from '$lib/NativeFileInput/NativeFileInput.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import NativeFileInput from '#lib/NativeFileInput/NativeFileInput.svelte';
+  import Button from '#lib/Button/Button.svelte';
   let selected = $state('No file selected');
 </script>
 

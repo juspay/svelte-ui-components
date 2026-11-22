@@ -1,6 +1,6 @@
 <script lang="ts">
-  import DualAxisBarChart from '$lib/DualAxisBarChart/DualAxisBarChart.svelte';
-  import type { DualAxisTooltipContext } from '$lib/DualAxisBarChart/properties';
+  import DualAxisBarChart from '#lib/DualAxisBarChart/DualAxisBarChart.svelte';
+  import type { DualAxisTooltipContext } from '#lib/DualAxisBarChart/properties.js';
 
   // ── Demo 1: Revenue (columns, left) + CTR (line, right) ────────
 

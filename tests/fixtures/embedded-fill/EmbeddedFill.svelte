@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Calendar from '$lib/Calendar/Calendar.svelte';
-  import DateRangePicker from '$lib/DateRangePicker/DateRangePicker.svelte';
+  import Calendar from '#lib/Calendar/Calendar.svelte';
+  import DateRangePicker from '#lib/DateRangePicker/DateRangePicker.svelte';
 
   onMount(() => {
     document.documentElement.dataset.fixtureReady = 'true';

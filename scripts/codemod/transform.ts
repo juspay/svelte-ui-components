@@ -21,7 +21,7 @@ export type TransformResult = {
 /**
  * How imports are attributed to this library. The defaults describe a
  * consumer (`@juspay/svelte-ui-components` specifiers, no default imports);
- * this repository's own migration script overrides both so a `$lib/X/X.svelte`
+ * this repository's own migration script overrides both so a `#lib/X/X.svelte`
  * default import counts as component `X`.
  */
 export type TransformOptions = {

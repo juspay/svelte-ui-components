@@ -2,8 +2,8 @@
   import { flushSync } from 'svelte';
   import { describeField } from '../_field/description';
   import type { CheckboxProperties } from './properties';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
-  import minusSvg from '$lib/assets/minus.svg?raw';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
+  import minusSvg from '#lib/assets/minus.svg?raw';
 
   let {
     text = '',

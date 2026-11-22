@@ -23,15 +23,15 @@
 />
 
 <script lang="ts">
-  import Scroller from '$lib/Scroller/Scroller.svelte';
-  import type { ScrollerProperties } from '$lib/Scroller/properties';
+  import Scroller from '#lib/Scroller/Scroller.svelte';
+  import type { ScrollerProperties } from '#lib/Scroller/properties.js';
   import { dispatchEvents } from '../dispatch';
   // Mirrors Scroller.svelte's own arrowPrevious/arrowNext defaults, which pick their
   // glyph from `direction` the same way.
-  import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
-  import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right.svg?raw';
+  import chevronUpSvg from '#lib/assets/chevron-up.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
   // The element renames `ariaLabel` to `scrollerAriaLabel` because the platform already defines `ariaLabel` on every
   // HTMLElement. The rest still carries the component's own props.
   let {

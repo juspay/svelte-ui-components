@@ -31,10 +31,10 @@
 <script lang="ts">
   import { formAssociated } from '../form-associated';
   import { dispatchEvents } from '../dispatch';
-  import Checkbox from '$lib/Checkbox/Checkbox.svelte';
-  import type { CheckboxProperties } from '$lib/Checkbox/properties';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
-  import minusSvg from '$lib/assets/minus.svg?raw';
+  import Checkbox from '#lib/Checkbox/Checkbox.svelte';
+  import type { CheckboxProperties } from '#lib/Checkbox/properties.js';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
+  import minusSvg from '#lib/assets/minus.svg?raw';
   // The element renames `ariaLabel` to `checkboxAriaLabel` because the platform already defines `ariaLabel` on every
   // HTMLElement, and `attributes` to `checkboxAttributes` for the same reason -- with a sharper consequence.
   // `Element.prototype.attributes` is the live NamedNodeMap that Svelte's own generated `connectedCallback`

@@ -23,7 +23,7 @@
 />
 
 <script lang="ts">
-  import Resizable from '$lib/Resizable/Resizable.svelte';
+  import Resizable from '#lib/Resizable/Resizable.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

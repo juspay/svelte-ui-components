@@ -1,6 +1,6 @@
-import type { ScrollContainer } from '$lib/types';
-import type { ButtonProperties } from '$lib/Button/properties';
-import type { ModalTransition } from '$lib/types';
+import type { ScrollContainer } from '#lib/types.js';
+import type { ButtonProperties } from '#lib/Button/properties.js';
+import type { ModalTransition } from '#lib/types.js';
 import type { Snippet } from 'svelte';
 
 export type ModalSize = 'large' | 'medium' | 'small' | 'fit-content';

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import MarkdownText from '$lib/MarkdownText/MarkdownText.svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
+  import MarkdownText from '#lib/MarkdownText/MarkdownText.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
 
   const assistantReply = [
     '## Order summary',

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import DateRangePicker from '$lib/DateRangePicker/DateRangePicker.svelte';
+  import DateRangePicker from '#lib/DateRangePicker/DateRangePicker.svelte';
 
   const scenarios = ['range', 'range-empty', 'single', 'compare', 'compare-empty'] as const;
 

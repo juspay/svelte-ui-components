@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
-  import type { ChatMessageData } from '$lib/Chat/types';
+  import ChatMessageList from '#lib/ChatMessageList/ChatMessageList.svelte';
+  import type { ChatMessageData } from '#lib/Chat/types.js';
 
   type Scenario = {
     id: string;

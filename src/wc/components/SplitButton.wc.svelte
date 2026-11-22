@@ -17,9 +17,9 @@
 />
 
 <script lang="ts">
-  import SplitButton from '$lib/SplitButton/SplitButton.svelte';
+  import SplitButton from '#lib/SplitButton/SplitButton.svelte';
   import { dispatchEvents } from '../dispatch';
-  import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
+  import chevronDownSmSvg from '#lib/assets/chevron-down-sm.svg?raw';
   let props = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Phone from '$lib/Phone/Phone.svelte';
+  import Phone from '#lib/Phone/Phone.svelte';
 </script>
 
 <div class="page-header">

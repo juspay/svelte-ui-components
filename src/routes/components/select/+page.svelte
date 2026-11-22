@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
-  import Select from '$lib/Select/Select.svelte';
-  import type { SelectItem } from '$lib/Select/properties';
+  import Button from '#lib/Button/Button.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import Select from '#lib/Select/Select.svelte';
+  import type { SelectItem } from '#lib/Select/properties.js';
 
   const fruits: SelectItem[] = [
     { id: 'apple', label: 'Apple' },

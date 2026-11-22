@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Banner from '$lib/Banner/Banner.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Banner from '#lib/Banner/Banner.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   let dismissVisible = $state(true);
 </script>

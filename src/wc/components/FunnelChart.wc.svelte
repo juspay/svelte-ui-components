@@ -31,8 +31,8 @@
 />
 
 <script lang="ts">
-  import FunnelChart from '$lib/FunnelChart/FunnelChart.svelte';
-  import type { FunnelChartProperties } from '$lib/FunnelChart/properties';
+  import FunnelChart from '#lib/FunnelChart/FunnelChart.svelte';
+  import type { FunnelChartProperties } from '#lib/FunnelChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

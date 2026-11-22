@@ -61,8 +61,8 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Select from '$lib/Select/Select.svelte';
-  import type { SelectProperties } from '$lib/Select/properties';
+  import Select from '#lib/Select/Select.svelte';
+  import type { SelectProperties } from '#lib/Select/properties.js';
   import { dispatchEvents } from '../dispatch';
   import { labelRootOf, watchReferencedText } from '../label-reference';
 

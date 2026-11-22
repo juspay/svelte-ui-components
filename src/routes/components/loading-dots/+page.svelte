@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingDots from '$lib/LoadingDots/LoadingDots.svelte';
+  import LoadingDots from '#lib/LoadingDots/LoadingDots.svelte';
 </script>
 
 <div class="page-header">

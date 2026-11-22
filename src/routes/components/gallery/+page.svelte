@@ -1,9 +1,9 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import Button from '$lib/Button/Button.svelte';
-  import Gallery from '$lib/Gallery/Gallery.svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
-  import type { GalleryImage } from '$lib/Gallery/properties';
+  import Button from '#lib/Button/Button.svelte';
+  import Gallery from '#lib/Gallery/Gallery.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import type { GalleryImage } from '#lib/Gallery/properties.js';
 
   const images: GalleryImage[] = [
     {

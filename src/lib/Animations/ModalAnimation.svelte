@@ -3,8 +3,8 @@
   import { linear } from 'svelte/easing';
   import { tokenizedFly } from './tokenizedFly';
   import { prefersReducedMotion } from '../utils';
-  import type { ModalAlign, ModalEntryAnimation } from '$lib/Modal/properties';
-  import type { ModalTransition } from '$lib/types';
+  import type { ModalAlign, ModalEntryAnimation } from '#lib/Modal/properties.js';
+  import type { ModalTransition } from '#lib/types.js';
 
   type Props = {
     enable?: boolean;

@@ -86,13 +86,13 @@
 
 <script lang="ts">
   import { createRawSnippet, onMount } from 'svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import type { ChatComposerDictationState } from '$lib/ChatComposer/dictationState';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import type { ChatComposerDictationState } from '#lib/ChatComposer/dictationState.js';
   import { dispatchEvents } from '../dispatch';
-  import sendSvg from '$lib/assets/send.svg?raw';
-  import stopSvg from '$lib/assets/stop.svg?raw';
-  import micSvg from '$lib/assets/mic.svg?raw';
-  import attachSvg from '$lib/assets/attach.svg?raw';
+  import sendSvg from '#lib/assets/send.svg?raw';
+  import stopSvg from '#lib/assets/stop.svg?raw';
+  import micSvg from '#lib/assets/mic.svg?raw';
+  import attachSvg from '#lib/assets/attach.svg?raw';
 
   // `{ type: 'Boolean' }` is presence-based: an absent attribute arrives as
   // `false`, never `null`. That flattens the tri-state `boolean | null`

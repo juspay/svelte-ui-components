@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ChipInput from '$lib/ChipInput/ChipInput.svelte';
+  import ChipInput from '#lib/ChipInput/ChipInput.svelte';
 
   let productTags = $state(['sale', 'featured']);
   let blockedEmails = $state<string[]>([]);

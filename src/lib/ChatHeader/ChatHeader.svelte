@@ -1,9 +1,9 @@
 <script lang="ts">
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
-  import closeSvg from '$lib/assets/close.svg?raw';
-  import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
-  import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
+  import fullscreenSvg from '#lib/assets/fullscreen.svg?raw';
+  import exitFullscreenSvg from '#lib/assets/exit-fullscreen.svg?raw';
   import type { ChatHeaderProperties } from './properties';
 
   let {

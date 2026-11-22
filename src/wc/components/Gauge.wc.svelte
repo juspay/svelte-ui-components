@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import Gauge from '$lib/Gauge/Gauge.svelte';
+  import Gauge from '#lib/Gauge/Gauge.svelte';
   let props = $props();
 </script>
 

@@ -2,10 +2,10 @@
   import Button from '../Button/Button.svelte';
   import Pill from '../Pill/Pill.svelte';
   import AttachmentChipRow from '../AttachmentChipRow/AttachmentChipRow.svelte';
-  import sendSvg from '$lib/assets/send.svg?raw';
-  import stopSvg from '$lib/assets/stop.svg?raw';
-  import micSvg from '$lib/assets/mic.svg?raw';
-  import attachSvg from '$lib/assets/attach.svg?raw';
+  import sendSvg from '#lib/assets/send.svg?raw';
+  import stopSvg from '#lib/assets/stop.svg?raw';
+  import micSvg from '#lib/assets/mic.svg?raw';
+  import attachSvg from '#lib/assets/attach.svg?raw';
   import { tick } from 'svelte';
   import type { Action } from 'svelte/action';
   import { registerDismissible } from '../_interaction/dismissal';

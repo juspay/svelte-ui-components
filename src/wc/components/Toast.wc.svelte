@@ -27,7 +27,7 @@
 />
 
 <script lang="ts">
-  import Toast from '$lib/Toast/Toast.svelte';
+  import Toast from '#lib/Toast/Toast.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

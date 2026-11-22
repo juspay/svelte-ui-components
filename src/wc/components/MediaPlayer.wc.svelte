@@ -50,16 +50,16 @@
 />
 
 <script lang="ts">
-  import MediaPlayer from '$lib/MediaPlayer/MediaPlayer.svelte';
-  import type { MediaPlayerProperties } from '$lib/MediaPlayer/properties';
-  import playSvg from '$lib/assets/play.svg?raw';
-  import pauseSvg from '$lib/assets/pause.svg?raw';
-  import volumeSvg from '$lib/assets/volume.svg?raw';
-  import muteSvg from '$lib/assets/mute.svg?raw';
-  import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
-  import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
-  import captionsSvg from '$lib/assets/captions.svg?raw';
-  import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
+  import MediaPlayer from '#lib/MediaPlayer/MediaPlayer.svelte';
+  import type { MediaPlayerProperties } from '#lib/MediaPlayer/properties.js';
+  import playSvg from '#lib/assets/play.svg?raw';
+  import pauseSvg from '#lib/assets/pause.svg?raw';
+  import volumeSvg from '#lib/assets/volume.svg?raw';
+  import muteSvg from '#lib/assets/mute.svg?raw';
+  import fullscreenSvg from '#lib/assets/fullscreen.svg?raw';
+  import exitFullscreenSvg from '#lib/assets/exit-fullscreen.svg?raw';
+  import captionsSvg from '#lib/assets/captions.svg?raw';
+  import captionsOnSvg from '#lib/assets/captions-on.svg?raw';
   import { dispatchEvents } from '../dispatch';
   import { adoptMediaChildren } from '../media-children';
 

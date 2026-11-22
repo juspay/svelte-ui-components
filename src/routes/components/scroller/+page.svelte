@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Scroller from '$lib/Scroller/Scroller.svelte';
+  import Scroller from '#lib/Scroller/Scroller.svelte';
 
   // Drives the "content and size changes" demo: the scroll region has to become keyboard
   // reachable when the content starts to overflow, and stop being a Tab stop when it no

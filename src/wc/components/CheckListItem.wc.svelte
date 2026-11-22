@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import CheckListItem from '$lib/CheckListItem/CheckListItem.svelte';
+  import CheckListItem from '#lib/CheckListItem/CheckListItem.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

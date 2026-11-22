@@ -4,22 +4,22 @@
     AreaChartProperties,
     AreaChartTooltipContext
   } from './properties';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import Axis from '$lib/_chart/Axis.svelte';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import Legend from '$lib/_chart/Legend.svelte';
-  import { createLinearScale, niceLinearDomain, computeLinearTicks } from '$lib/_chart/scales';
-  import { computeAutoLayout, computeStackedValues, joinByX } from '$lib/_chart/geometry';
-  import { linePath, areaPath } from '$lib/_chart/paths';
-  import { getColor } from '$lib/_chart/colors';
-  import { formatNumber, formatPercent, defaultTickFormat } from '$lib/_chart/format';
-  import { measureText } from '$lib/_chart/measure';
-  import { resolvePointLabels } from '$lib/_chart/labels';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
-  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import type { LegendItem, Point, TooltipAnchor } from '$lib/_chart/types';
-  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import Axis from '#lib/_chart/Axis.svelte';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import Legend from '#lib/_chart/Legend.svelte';
+  import { createLinearScale, niceLinearDomain, computeLinearTicks } from '#lib/_chart/scales.js';
+  import { computeAutoLayout, computeStackedValues, joinByX } from '#lib/_chart/geometry.js';
+  import { linePath, areaPath } from '#lib/_chart/paths.js';
+  import { getColor } from '#lib/_chart/colors.js';
+  import { formatNumber, formatPercent, defaultTickFormat } from '#lib/_chart/format.js';
+  import { measureText } from '#lib/_chart/measure.js';
+  import { resolvePointLabels } from '#lib/_chart/labels.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
+  import { formatSeriesAggregate } from '#lib/_chart/aggregate.js';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import type { LegendItem, Point, TooltipAnchor } from '#lib/_chart/types.js';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
 
   // ── Props ──────────────────────────────────────────────────────
 

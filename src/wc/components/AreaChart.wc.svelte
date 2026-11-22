@@ -49,8 +49,8 @@
 />
 
 <script lang="ts">
-  import AreaChart from '$lib/AreaChart/AreaChart.svelte';
-  import type { AreaChartProperties } from '$lib/AreaChart/properties';
+  import AreaChart from '#lib/AreaChart/AreaChart.svelte';
+  import type { AreaChartProperties } from '#lib/AreaChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   // The rest still carries every other prop of the component; the two chart-prefixed

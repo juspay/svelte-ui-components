@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { StatusProperties } from './properties';
-  import Button from '$lib/Button/Button.svelte';
-  import Img from '$lib/Img/Img.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Img from '#lib/Img/Img.svelte';
 
   /**
    * What `statusIcon` used to default to. It is a relative URL resolved against

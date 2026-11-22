@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Stepper from '$lib/Stepper/Stepper.svelte';
-  import Step from '$lib/Stepper/Step.svelte';
+  import Stepper from '#lib/Stepper/Stepper.svelte';
+  import Step from '#lib/Stepper/Step.svelte';
 
   let currentStep = $state(1);
   let currentVerticalStep = $state(1);

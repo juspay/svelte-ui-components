@@ -24,7 +24,7 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Choicebox from '$lib/Choicebox/Choicebox.svelte';
+  import Choicebox from '#lib/Choicebox/Choicebox.svelte';
   import { dispatchEvents } from '../dispatch';
   // Checkbox-shaped for the form even in `radio` mode: `selected` is a boolean
   // per card, so an unselected card submits nothing and a selected one submits

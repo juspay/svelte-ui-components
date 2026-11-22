@@ -29,8 +29,8 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Slider from '$lib/Slider/Slider.svelte';
-  import type { SliderProperties } from '$lib/Slider/properties';
+  import Slider from '#lib/Slider/Slider.svelte';
+  import type { SliderProperties } from '#lib/Slider/properties.js';
   import { dispatchEvents } from '../dispatch';
   // The element renames `ariaLabel`/`ariaLabelledby` because ARIAMixin already
   // defines both on every HTMLElement, and declaring them here would replace the

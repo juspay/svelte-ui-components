@@ -12,8 +12,8 @@
 />
 
 <script lang="ts">
-  import ChatToolStatus from '$lib/ChatToolStatus/ChatToolStatus.svelte';
-  import Loader from '$lib/Loader/Loader.svelte';
+  import ChatToolStatus from '#lib/ChatToolStatus/ChatToolStatus.svelte';
+  import Loader from '#lib/Loader/Loader.svelte';
   let props = $props();
 </script>
 

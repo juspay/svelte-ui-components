@@ -17,7 +17,7 @@
 />
 
 <script lang="ts">
-  import Tooltip from '$lib/Tooltip/Tooltip.svelte';
+  import Tooltip from '#lib/Tooltip/Tooltip.svelte';
   let props = $props();
 </script>
 

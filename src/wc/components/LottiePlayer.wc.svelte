@@ -19,7 +19,7 @@
 />
 
 <script lang="ts">
-  import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
+  import LottiePlayer from '#lib/LottiePlayer/LottiePlayer.svelte';
   import { dispatchEvents } from '../dispatch';
   import { ariaBoolean } from '../aria-boolean';
   let { lottiePlayerAriaHidden, ...props } = $props();

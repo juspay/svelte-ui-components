@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Chat from '$lib/Chat/Chat.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import ChatBubble from '$lib/ChatBubble/ChatBubble.svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  import { ChatController } from '$lib/Chat/controller.svelte';
-  import type { ChatTransport } from '$lib/Chat/types';
+  import Chat from '#lib/Chat/Chat.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import ChatBubble from '#lib/ChatBubble/ChatBubble.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
+  import { ChatController } from '#lib/Chat/controller.svelte.js';
+  import type { ChatTransport } from '#lib/Chat/types.js';
 
   function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

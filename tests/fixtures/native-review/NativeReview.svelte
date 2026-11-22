@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import NativeFileInput from '$lib/NativeFileInput/NativeFileInput.svelte';
-  import Icon from '$lib/Icon/Icon.svelte';
-  import MediaPlayer from '$lib/MediaPlayer/MediaPlayer.svelte';
-  import Loader from '$lib/Loader/Loader.svelte';
-  import Progress from '$lib/Progress/Progress.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import NativeFileInput from '#lib/NativeFileInput/NativeFileInput.svelte';
+  import Icon from '#lib/Icon/Icon.svelte';
+  import MediaPlayer from '#lib/MediaPlayer/MediaPlayer.svelte';
+  import Loader from '#lib/Loader/Loader.svelte';
+  import Progress from '#lib/Progress/Progress.svelte';
 
   let selections = $state(0);
   let submitted = $state('');

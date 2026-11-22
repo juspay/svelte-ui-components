@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import type { ThemeSwitcherOption, ThemeSwitcherProperties } from './properties';
-  import { getStorageItem, setStorageItem } from '$lib/utils';
-  import sunSvg from '$lib/assets/sun.svg?raw';
-  import moonSvg from '$lib/assets/moon.svg?raw';
-  import monitorSvg from '$lib/assets/monitor.svg?raw';
-  import paletteSvg from '$lib/assets/palette.svg?raw';
+  import { getStorageItem, setStorageItem } from '#lib/utils.js';
+  import sunSvg from '#lib/assets/sun.svg?raw';
+  import moonSvg from '#lib/assets/moon.svg?raw';
+  import monitorSvg from '#lib/assets/monitor.svg?raw';
+  import paletteSvg from '#lib/assets/palette.svg?raw';
 
   const DEFAULT_OPTIONS: ThemeSwitcherOption[] = [
     { value: 'light', label: 'Light theme' },

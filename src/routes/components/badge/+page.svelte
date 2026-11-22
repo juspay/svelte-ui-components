@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import Badge from '$lib/Badge/Badge.svelte';
+  import Badge from '#lib/Badge/Badge.svelte';
 </script>
 
 <div class="page-header">

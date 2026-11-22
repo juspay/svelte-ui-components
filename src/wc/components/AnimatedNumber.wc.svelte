@@ -54,8 +54,8 @@
 />
 
 <script lang="ts">
-  import AnimatedNumber from '$lib/AnimatedNumber/AnimatedNumber.svelte';
-  import type { AnimatedNumberProperties } from '$lib/AnimatedNumber/properties';
+  import AnimatedNumber from '#lib/AnimatedNumber/AnimatedNumber.svelte';
+  import type { AnimatedNumberProperties } from '#lib/AnimatedNumber/properties.js';
 
   let {
     animatedNumberAriaLabel,

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import PieChart from '$lib/PieChart/PieChart.svelte';
-  import type { ChartHighlightAPI } from '$lib/_chart/highlight';
+  import PieChart from '#lib/PieChart/PieChart.svelte';
+  import type { ChartHighlightAPI } from '#lib/_chart/highlight.js';
 
   const marketShare = [
     { label: 'Chrome', value: 65 },

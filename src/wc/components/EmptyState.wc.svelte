@@ -18,7 +18,7 @@
 />
 
 <script lang="ts">
-  import EmptyState from '$lib/EmptyState/EmptyState.svelte';
+  import EmptyState from '#lib/EmptyState/EmptyState.svelte';
   let { emptyStateTitle, ...props } = $props();
 </script>
 

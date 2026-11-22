@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import type { ToolCallChip } from '$lib/ToolCallLog/properties';
+  import ToolCallLog from '#lib/ToolCallLog/ToolCallLog.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import type { ToolCallChip } from '#lib/ToolCallLog/properties.js';
 
   const READ_CHIP: ToolCallChip = {
     label: 'Read',

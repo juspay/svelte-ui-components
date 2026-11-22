@@ -45,7 +45,7 @@ for (const file of readdirSync(WC_DIR)
   const lines = source.split('\n');
   // The component this wraps, which is what `canonicalEventName` keys its
   // per-component overrides on.
-  const imported = /import\s+\w+\s+from\s+'\$lib\/[^']*\/(\w+)\.svelte'/.exec(source);
+  const imported = /import\s+\w+\s+from\s+'[$#]lib\/[^']*\/(\w+)\.svelte'/.exec(source);
   const component = imported === null ? '' : imported[1];
 
   const declared = new Set<string>();

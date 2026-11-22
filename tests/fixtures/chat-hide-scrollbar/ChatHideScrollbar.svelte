@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Chat from '$lib/Chat/Chat.svelte';
-  import type { ChatMessageData } from '$lib/Chat/types';
+  import Chat from '#lib/Chat/Chat.svelte';
+  import type { ChatMessageData } from '#lib/Chat/types.js';
 
   const messages: ChatMessageData[] = Array.from({ length: 12 }, (_, index) => ({
     id: `message-${index}`,

@@ -16,7 +16,6 @@ await build({
   plugins: [
     svelte({ configFile: false, preprocess: vitePreprocess(), compilerOptions: { runes: true } })
   ],
-  resolve: { alias: { $lib: resolve('src/lib') } },
   ssr: { noExternal: true },
   build: {
     ssr: resolve('tests/fixtures/modal-restore-focus/ssr.ts'),

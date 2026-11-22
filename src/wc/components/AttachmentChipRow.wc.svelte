@@ -24,7 +24,7 @@
 />
 
 <script lang="ts">
-  import AttachmentChipRow from '$lib/AttachmentChipRow/AttachmentChipRow.svelte';
+  import AttachmentChipRow from '#lib/AttachmentChipRow/AttachmentChipRow.svelte';
   import { dispatchEvents } from '../dispatch';
   let { attachmentChipRowAriaLabel, ...props } = $props();
 

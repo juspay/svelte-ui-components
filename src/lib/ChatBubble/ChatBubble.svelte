@@ -2,8 +2,8 @@
   import { tick } from 'svelte';
   import Button from '../Button/Button.svelte';
   import Resizable from '../Resizable/Resizable.svelte';
-  import chatSvg from '$lib/assets/chat.svg?raw';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import chatSvg from '#lib/assets/chat.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
   import type { ResizeEdge } from '../Resizable/properties';
   import type { BubbleDrag, ChatBubbleProperties } from './properties';
 

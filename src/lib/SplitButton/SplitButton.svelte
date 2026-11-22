@@ -3,7 +3,7 @@
   import type { MenuItem } from '../Menu/properties';
   import Button from '../Button/Button.svelte';
   import Menu from '../Menu/Menu.svelte';
-  import chevronDownSmSvg from '$lib/assets/chevron-down-sm.svg?raw';
+  import chevronDownSmSvg from '#lib/assets/chevron-down-sm.svg?raw';
 
   let {
     text,

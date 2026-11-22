@@ -1,6 +1,6 @@
 <script lang="ts">
-  import ThinkingOrb from '$lib/ThinkingOrb/ThinkingOrb.svelte';
-  import type { OrbState } from '$lib/ThinkingOrb/properties';
+  import ThinkingOrb from '#lib/ThinkingOrb/ThinkingOrb.svelte';
+  import type { OrbState } from '#lib/ThinkingOrb/properties.js';
 
   const STATES: Array<{ state: OrbState; blurb: string }> = [
     { state: 'working', blurb: 'dots trail along six tilted loops around a centre' },
